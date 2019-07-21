@@ -132,4 +132,5 @@
 //															// Changed executable name, folder names, and file names to lowercase.
 //															// Made program search for "tutorials" folder in standard locations.
 //static const char* szVEROROUTE_VERSION = "1.55";			// Improvement: List recent VRT files in File menu.
-static const char* szVEROROUTE_VERSION = "1.56";			// Tweaked dialog layouts to better handle 11 point fonts.
+//static const char* szVEROROUTE_VERSION = "1.56";			// Tweaked dialog layouts to better handle 11 point fonts.
+static const char* szVEROROUTE_VERSION = "1.57";			// Improvement: Faster routing algorithm.

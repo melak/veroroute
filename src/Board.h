@@ -397,11 +397,10 @@ public:
 	void WipeAutoSetPoints();
 	void BuildTargetPins(const int& nodeId);
 	void Route();
-//	void RouteNodeId_old(const int& nodeId);	// Old routing algorithm
+	void RouteNodeId(const int& nodeId);
+	void Backtrace(Element* pEnd, const int& nodeId);
 	void UpdateMHvector(Element* p, const unsigned int& iMH, const unsigned int& iTargetRouteId, Element*& pOut);
-	unsigned int Manhatten(Element* pStart, Element*& pOut, const unsigned int& iTargetRouteId, const unsigned int threshMH = BAD_MH);
-	void RouteNodeId_new(const int& nodeId);	// New routing algorithm (much faster)
-	void Backtrace(Element* pEnd, const int& nodeId, const unsigned int& iRouteId, bool bNewAlgo = true);
+	unsigned int Manhatten(Element* pStart, Element*& pOut, const unsigned int& iTargetRouteId);
 	void CheckAllComplete();
 	void PasteTracks(bool bTidy);
 	void WipeTracks();

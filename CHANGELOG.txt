@@ -138,3 +138,4 @@ V1.54  Added Zoom buttons to toolbar.
        Made program search for "tutorials" folder in standard locations.
 V1.55  Improvement: List recent VRT files in File menu.
 V1.56  Tweaked dialog layouts to better handle 11 point fonts.
+V1.57  Improvement: Faster routing algorithm.

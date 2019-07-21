@@ -77,7 +77,7 @@ void Board::Route()
 	{
 		const int& nodeId = m_nodeInfoMgr.GetAt(ii)->GetNodeId();
 		if ( nodeId != BAD_NODEID )
-			RouteNodeId_new(nodeId);	// Try route all pins of the specified nodeId
+			RouteNodeId(nodeId);	// Try route all pins of the specified nodeId
 	}
 //	const auto elapsed		= std::chrono::steady_clock::now() - start;
 //	const auto duration_ms	= std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
@@ -86,175 +86,7 @@ void Board::Route()
 	m_tmpIsRouting = false;
 }
 
-/*
-void Board::RouteNodeId_old(const int& nodeId)	// Try route all pins of the specified nodeId
-{
-	assert(nodeId != BAD_NODEID);
-
-	// Wipe RouteId at all points
-	const int iSize = GetSize();
-	for (int i = 0; i < iSize; i++) GetAt(i)->SetRouteId(BAD_ROUTEID);
-
-	BuildTargetPins(nodeId);	// Populate m_targetPins
-
-	unsigned int RID(BAD_ROUTEID);
-	while(true)
-	{
-		RID++;	assert(RID < BAD_ROUTEID);	// Should be safely < UINT_MAX in practice
-
-		// Get next target pin with invalid route id and set its route ID to RID. (i.e. start a new route)
-		Element* pNew(nullptr);
-		auto iterEnd = m_targetPins.end();
-		for(auto iterI = m_targetPins.begin(); iterI != iterEnd && pNew == nullptr; ++iterI)
-		{
-			Element* p = *iterI;
-			if ( p->GetRouteId() != BAD_ROUTEID ) continue;
-			p->SetRouteId(RID);
-			pNew = p;
-		}
-		if ( !pNew ) break;	// All target pins done
-
-		bool bRouteHasOnePoint = true;
-
-		while(true)  // Try to grow the route
-		{
-			if ( bRouteHasOnePoint )
-			{
-				Element* pBestTarget(nullptr);
-
-				// Populate the board with increasing Manhatten style distances starting at "pNew".
-
-				Manhatten(pNew, pBestTarget, BAD_ROUTEID);	// Quits early if hit a target pin with invalid routeID
-				if ( !pBestTarget ) break;					// No target points could reach pNew
-				Backtrace(pBestTarget, nodeId, RID, false);	// Extend route. (false ==> we're calling with the old algorithm)
-				bRouteHasOnePoint = false;
-			}
-			else
-			{
-				Element* pBestTarget(nullptr);
-				Element* pBestRoutePoint(nullptr);
-				unsigned int iBestMH(BAD_MH);
-				// Loop p through all target pins with invalid routeID
-				for(auto iterI = m_targetPins.begin(); iterI != iterEnd; ++iterI)
-				{
-					Element* p = *iterI;
-					if ( p->GetRouteId() != BAD_ROUTEID ) continue;
-
-					Element* pOut(nullptr);
-					const unsigned int MH = Manhatten(p, pOut, RID, iBestMH);	// Quits early if hit any pixel with routeID == RID or MH is >= iBestMH
-					if ( MH < iBestMH ) { iBestMH = MH; pBestTarget = p; pBestRoutePoint = pOut; }	// Update info on best so far
-				}
-				if ( !pBestTarget ) break;	// No target points could reach routeID == RID
-
-				Manhatten(pBestTarget, pBestRoutePoint, RID);
-				Backtrace(pBestRoutePoint, nodeId, RID, false);	// Extend route. (false ==> we're calling with the old algorithm)
-			}
-		}	// Continue growing the route
-	}
-}
-*/
-
-void Board::UpdateMHvector(Element* p, const unsigned int& iMH, const unsigned int& iTargetRouteId, Element*& pOut)
-{
-	pOut = nullptr;
-
-	if ( p->GetMH() != BAD_MH ) return;	// MH already set to something.  We won't improve on it !!!
-
-	const int& nodeId = p->GetNodeId();
-	if ( nodeId == m_tmpNodeId || ( m_tmpIsRouting && nodeId == BAD_NODEID ) )
-	{
-		p->SetMH(iMH);
-		m_tmpVec[m_tmpVecSize++] = p;
-		m_tmpMaxMH = std::max(m_tmpMaxMH, iMH);	// Update m_tmpMaxMH
-
-		Element* pW = p->GetW();	// The other end of the wire (if any)
-
-		// If we're routing then set pOut if p is a component pin we've not yet encountered
-		if ( m_tmpIsRouting && p->GetRouteId() == iTargetRouteId )
-		{
-			if ( iTargetRouteId != BAD_ROUTEID || p->GetIsPin() )
-			{
-				const bool bFreeWire = pW && nodeId == BAD_NODEID;
-				if ( !bFreeWire ) pOut = p;	// Don't treat unpainted wires as component pins (or we get dog-leg tracks)
-			}
-		}
-		if ( pW )
-		{
-			assert( nodeId == pW->GetNodeId() );	// Sanity check
-			const unsigned int iOtherWireEndMH = iMH + WIRE_MH;	// Wires always increase MH by WIRE_MH
-			pW->SetMH(iOtherWireEndMH);
-			m_tmpVec[m_tmpVecSize++] = pW;
-			m_tmpMaxMH = std::max(m_tmpMaxMH, iOtherWireEndMH);	// Update m_tmpMaxMH
-		}
-	}
-}
-
-unsigned int Board::Manhatten(Element* pStart, Element*& pOut, const unsigned int& iTargetRouteId, const unsigned int threshMH)
-{
-	// Populate the grid with connected Manhatten-style "distances" to pStart.
-	// Horizontally/Vertically adjacent grid points give a "distance" of 2.
-	// Diagonally adjacent grid points give a "distance" of 3.
-	// Wires give a "distance" of WIRE_MH regardless of their length.
-
-	pOut = nullptr;
-
-	const bool bDiagsOK = ( GetDiagsMode() != DIAGSMODE::OFF );
-
-	const int iSize = GetSize();
-	for (int i = 0; i < iSize; i++)	GetAt(i)->SetMH(BAD_MH); 	// Set "infinite" MH distance at each grid element
-
-	m_tmpNodeId = pStart->GetNodeId();	// The NodeId to trace
-	if ( m_tmpNodeId == BAD_NODEID ) return BAD_MH;	// Don't trace invalid NodeID
-
-	m_tmpVec.resize(iSize, nullptr);	// Clear the set of visited points ...
-	m_tmpVecSize	= 0;				//
-	m_tmpMaxMH		= 0;				// ... and the max MH value in the set
-
-	const unsigned int iMaxDeltaMH = ( bDiagsOK ) ? 3 : 2;	// The max MH increment depends on if diagonals are allowed
-
-	unsigned int iMH(0);	// Strictly increasing MH value, starting with 0 on the start point
-
-	// Set MH distance on start point
-	Element* pA1 = pStart;
-	if ( pA1 ) UpdateMHvector(pA1, iMH, iTargetRouteId, pOut);	if ( pOut ) return 0;
-
-	while ( true )
-	{
-		iMH++;	// Increase MH (think of this as distance from start point).
-
-		// Now see what visited points have an MH value that is "one step away" from this target value.
-		// For visited wires, both wires-ends are in the set of visited points.
-		// Therefore we only need to consider the 8 neighbours for each visited point.
-		if ( iMH >= threshMH ) break;					// Quit if iMH exceeds threshMH
-		if ( iMH > m_tmpMaxMH + iMaxDeltaMH ) break;	// Can't reach out further from the set of visited points
-
-		const size_t iSize = m_tmpVecSize;	// m_tmpVecSize gets modified in loop so take a copy
-		for (size_t i = 0; i < iSize; i++)	// Loop through visited points
-		{
-			const Element* p = m_tmpVec[i];
-			const bool bOK = p->GetNodeId() == m_tmpNodeId;	// true ==> p already has correct NodeId
-
-			const int iDiagMax = ( bDiagsOK ) ? 2 : 1;		// Diags allowed ==> 2 passes
-			for (int iDiag = 0; iDiag < iDiagMax; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
-			{
-				const int iDeltaMH = 2 + iDiag;
-				if ( p->GetMH() + iDeltaMH != iMH )	continue;	// Point p has wrong MH for connection
-
-				// Visit point p's neighbours
-				for (int iNbr = iDiag; iNbr < 8; iNbr += 2)	// Even/Odd iNbr ==> Non-diagonal/Diagonal
-				{
-					Element* pNbr = p->GetNbr(iNbr);
-					const bool bDirOK = ( bOK && p->GetUsed(iNbr) ) ||
-										( m_tmpIsRouting && p->HaveNonBlankPins(iNbr) && !p->IsBlocked(iNbr, m_tmpNodeId) && !p->IsUselessWire(iNbr, m_tmpNodeId) );
-					if ( bDirOK ) { UpdateMHvector(pNbr, iMH, iTargetRouteId, pOut); if ( pOut ) return iMH; }
-				}
-			}
-		}
-	}
-	return BAD_MH;
-}
-
-void Board::RouteNodeId_new(const int& nodeId)	// Try route all pins of the specified nodeId
+void Board::RouteNodeId(const int& nodeId)	// Try route all pins of the specified nodeId
 {
 	assert(nodeId != BAD_NODEID);
 
@@ -310,7 +142,7 @@ void Board::RouteNodeId_new(const int& nodeId)	// Try route all pins of the spec
 	{
 		iMH++;	// Increase MH (think of this as distance from start points).
 
-		if ( iMH >= BAD_MH ) break;						//TODO threshMH ???
+		if ( iMH == BAD_MH ) break;						// Quit if iMH reaches "infinity"
 		if ( iMH > m_tmpMaxMH + iMaxDeltaMH ) break;	// Can't reach out further from the set of visited points
 
 		const size_t iSize = m_tmpVecSize;	// m_tmpVecSize gets modified in loop so take a copy
@@ -363,8 +195,8 @@ void Board::RouteNodeId_new(const int& nodeId)	// Try route all pins of the spec
 					{
 						if ( !ppConn[j][k] )	// If no j-k connection yet ...
 						{
-							Backtrace(p,    m_tmpNodeId, j);	// Trace p    back to its source
-							Backtrace(pNbr, m_tmpNodeId, k);	// Trace pNbr back to its source
+							Backtrace(p,    m_tmpNodeId);	// Trace p    back to its source, painting m_tmpNodeId along the way
+							Backtrace(pNbr, m_tmpNodeId);	// Trace pNbr back to its source, painting m_tmpNodeId along the way
 
 							// Make j-k connection and enforce transitivity
 							assert( list.empty() );
@@ -411,10 +243,9 @@ void Board::RouteNodeId_new(const int& nodeId)	// Try route all pins of the spec
 	delete[] pConn;
 }
 
-// Backtrace from pEnd to point with MH = 0
-void Board::Backtrace(Element* pEnd, const int& nodeId, const unsigned int& iRouteId, bool bNewAlgo)
+// Backtrace route from pEnd to point with MH = 0
+void Board::Backtrace(Element* pEnd, const int& nodeId)
 {
-	assert(iRouteId != BAD_ROUTEID);
 	assert(m_tmpIsRouting);
 
 	Element* p = pEnd;
@@ -427,13 +258,6 @@ void Board::Backtrace(Element* pEnd, const int& nodeId, const unsigned int& iRou
 	{
 		Element* pW = p->GetW();
 		assert( !p->GetIsHole() );
-
-		if ( !bNewAlgo )
-		{
-			// Old algorithm only sets routeIds during backtrace
-			p->SetRouteId(iRouteId);
-			if ( pW ) pW->SetRouteId(iRouteId);
-		}
 
 		if ( !p->GetIsPin() || pW != nullptr ) // For non-pins and wires
 		{
@@ -471,9 +295,9 @@ void Board::Backtrace(Element* pEnd, const int& nodeId, const unsigned int& iRou
 				for (int iNbr = iDiag; iNbr < 8 && !bOK; iNbr += 2)	// Even/Odd iNbr ==> Non-diagonal/Diagonal
 				{
 					Element* pNbr = p->GetNbr(iNbr);
-					if ( iLoop == 0 &&  pNbr->GetW() ) continue;	// Skip if nbr is a wire
-					if ( iLoop == 1 && !pNbr->GetW() ) continue;	// Skip if nbr is a non-wire
-					if ( bNewAlgo && pNbr->GetRouteId() != p->GetRouteId() ) continue;
+					if ( pNbr->GetRouteId() != p->GetRouteId() ) continue;	// Skip if nbr has wrong routeId
+					if ( iLoop == 0 &&  pNbr->GetW() ) continue;			// Skip if nbr is a wire
+					if ( iLoop == 1 && !pNbr->GetW() ) continue;			// Skip if nbr is a non-wire
 					if ( !p->IsBlocked(iNbr, nodeId) && pNbr->GetMH() == MH - iDeltaMH )
 					{
 						p = pNbr;	MH -= iDeltaMH;	bOK = true;
@@ -486,6 +310,106 @@ void Board::Backtrace(Element* pEnd, const int& nodeId, const unsigned int& iRou
 		assert(0);	// Oh dear. Something went badly wrong !!!
 		break;
 	}
+}
+
+void Board::UpdateMHvector(Element* p, const unsigned int& iMH, const unsigned int& iTargetRouteId, Element*& pOut)
+{
+	pOut = nullptr;
+
+	if ( p->GetMH() != BAD_MH ) return;	// MH already set to something.  We won't improve on it !!!
+
+	const int& nodeId = p->GetNodeId();
+	if ( nodeId == m_tmpNodeId || ( m_tmpIsRouting && nodeId == BAD_NODEID ) )
+	{
+		p->SetMH(iMH);
+		m_tmpVec[m_tmpVecSize++] = p;
+		m_tmpMaxMH = std::max(m_tmpMaxMH, iMH);	// Update m_tmpMaxMH
+
+		Element* pW = p->GetW();	// The other end of the wire (if any)
+
+		// If we're routing then set pOut if p is a component pin we've not yet encountered
+		if ( m_tmpIsRouting && p->GetRouteId() == iTargetRouteId )
+		{
+			if ( iTargetRouteId != BAD_ROUTEID || p->GetIsPin() )
+			{
+				const bool bFreeWire = pW && nodeId == BAD_NODEID;
+				if ( !bFreeWire ) pOut = p;	// Don't treat unpainted wires as component pins (or we get dog-leg tracks)
+			}
+		}
+		if ( pW )
+		{
+			assert( nodeId == pW->GetNodeId() );	// Sanity check
+			const unsigned int iOtherWireEndMH = iMH + WIRE_MH;	// Wires always increase MH by WIRE_MH
+			pW->SetMH(iOtherWireEndMH);
+			m_tmpVec[m_tmpVecSize++] = pW;
+			m_tmpMaxMH = std::max(m_tmpMaxMH, iOtherWireEndMH);	// Update m_tmpMaxMH
+		}
+	}
+}
+
+unsigned int Board::Manhatten(Element* pStart, Element*& pOut, const unsigned int& iTargetRouteId)
+{
+	// Populate the grid with connected Manhatten-style "distances" to pStart.
+	// Horizontally/Vertically adjacent grid points give a "distance" of 2.
+	// Diagonally adjacent grid points give a "distance" of 3.
+	// Wires give a "distance" of WIRE_MH regardless of their length.
+
+	pOut = nullptr;
+
+	const bool bDiagsOK = ( GetDiagsMode() != DIAGSMODE::OFF );
+
+	const int iSize = GetSize();
+	for (int i = 0; i < iSize; i++)	GetAt(i)->SetMH(BAD_MH); 	// Set "infinite" MH distance at each grid element
+
+	m_tmpNodeId = pStart->GetNodeId();	// The NodeId to trace
+	if ( m_tmpNodeId == BAD_NODEID ) return BAD_MH;	// Don't trace invalid NodeID
+
+	m_tmpVec.resize(iSize, nullptr);	// Clear the set of visited points ...
+	m_tmpVecSize	= 0;				//
+	m_tmpMaxMH		= 0;				// ... and the max MH value in the set
+
+	const unsigned int iMaxDeltaMH = ( bDiagsOK ) ? 3 : 2;	// The max MH increment depends on if diagonals are allowed
+
+	unsigned int iMH(0);	// Strictly increasing MH value, starting with 0 on the start point
+
+	// Set MH distance on start point
+	Element* pA1 = pStart;
+	if ( pA1 ) UpdateMHvector(pA1, iMH, iTargetRouteId, pOut);	if ( pOut ) return 0;
+
+	while ( true )
+	{
+		iMH++;	// Increase MH (think of this as distance from start point).
+
+		// Now see what visited points have an MH value that is "one step away" from this target value.
+		// For visited wires, both wires-ends are in the set of visited points.
+		// Therefore we only need to consider the 8 neighbours for each visited point.
+		if ( iMH == BAD_MH ) break;						// Quit if iMH reaches "infinity"
+		if ( iMH > m_tmpMaxMH + iMaxDeltaMH ) break;	// Can't reach out further from the set of visited points
+
+		const size_t iSize = m_tmpVecSize;	// m_tmpVecSize gets modified in loop so take a copy
+		for (size_t i = 0; i < iSize; i++)	// Loop through visited points
+		{
+			const Element* p = m_tmpVec[i];
+			const bool bOK = p->GetNodeId() == m_tmpNodeId;	// true ==> p already has correct NodeId
+
+			const int iDiagMax = ( bDiagsOK ) ? 2 : 1;		// Diags allowed ==> 2 passes
+			for (int iDiag = 0; iDiag < iDiagMax; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
+			{
+				const int iDeltaMH = 2 + iDiag;
+				if ( p->GetMH() + iDeltaMH != iMH )	continue;	// Point p has wrong MH for connection
+
+				// Visit point p's neighbours
+				for (int iNbr = iDiag; iNbr < 8; iNbr += 2)	// Even/Odd iNbr ==> Non-diagonal/Diagonal
+				{
+					Element* pNbr = p->GetNbr(iNbr);
+					const bool bDirOK = ( bOK && p->GetUsed(iNbr) ) ||
+										( m_tmpIsRouting && p->HaveNonBlankPins(iNbr) && !p->IsBlocked(iNbr, m_tmpNodeId) && !p->IsUselessWire(iNbr, m_tmpNodeId) );
+					if ( bDirOK ) { UpdateMHvector(pNbr, iMH, iTargetRouteId, pOut); if ( pOut ) return iMH; }
+				}
+			}
+		}
+	}
+	return BAD_MH;
 }
 
 void Board::CheckAllComplete()
