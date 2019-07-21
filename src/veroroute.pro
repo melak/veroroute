@@ -30,7 +30,11 @@ SOURCES += main.cpp\
     FootPrint.cpp \
     CompDefiner.cpp \
     compdialog.cpp \
-    Component.cpp
+    Component.cpp \
+    Board_routing.cpp \
+    Board_components.cpp \
+    Board_import.cpp \
+    Board.cpp
 
 
 HEADERS  += mainwindow.h \

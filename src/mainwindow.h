@@ -32,6 +32,7 @@
 #include <QNetworkRequest>
 #include <QNetworkReply>
 #include "HistoryManager.h"
+#include "myscrollarea.h"
 
 namespace Ui { class MainWindow; }
 
@@ -43,7 +44,6 @@ class CompDialog;
 class TextDialog;
 class BomDialog;
 class PinDialog;
-class MyScrollArea;
 
 #define MAX_RECENT_FILES 10
 

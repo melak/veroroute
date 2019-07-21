@@ -68,13 +68,9 @@ void MainWindow::wheelEvent(QWheelEvent* event)
 	else if ( !m_board.GetMirrored() )
 	{
 		if ( m_board.GetCompEdit() )
-		{
 			DefinerIncPinNumber(!bBack);
-		}
 		else
-		{
-			if ( bBack ) CompShrink(); else CompGrow();
-		}
+			CompStretch(!bBack);
 	}
 	event->accept();	// If we don't do this, we can get the same event passed multiple times if we're on MS Windows.
 }
@@ -556,9 +552,9 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
 		switch( event->key() )
 		{
 			case Qt::Key_Underscore:
-			case Qt::Key_Minus:		CompStretch(false);	break;
+			case Qt::Key_Minus:		CompShrink();	break;
 			case Qt::Key_Plus:
-			case Qt::Key_Equal:		CompStretch(true);	break;
+			case Qt::Key_Equal:		CompGrow();		break;
 			case Qt::Key_Left:		m_board.MoveUserComps(0,-1); UpdateHistory("Move part(s) left");  RepaintWithRouting();	break;
 			case Qt::Key_Right:		m_board.MoveUserComps(0, 1); UpdateHistory("Move part(s) right"); RepaintWithRouting();	break;
 			case Qt::Key_Up:		m_board.MoveUserComps(-1,0); UpdateHistory("Move part(s) up");	  RepaintWithRouting();	break;

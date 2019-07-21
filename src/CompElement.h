@@ -24,7 +24,7 @@
 const int			TRAX_COMPID = -2;		// The component manager member m_trax has this ID
 const int			BAD_COMPID  = -1;		// Invalid component ID
 const int			BAD_NODEID  =  0;		// Invalid node (i.e. netlist) ID
-const unsigned int	BAD_ROUTEID =  0;		// Invalid route (i.e. track section) ID
+const unsigned int	BAD_ROUTEID = UINT_MAX;	// Invalid route (i.e. track section) ID
 const unsigned int	BAD_MH		= UINT_MAX;	// "Infinite" MH distance
 
 // Flag is a bitfield describing the status of the nodeId at an element.

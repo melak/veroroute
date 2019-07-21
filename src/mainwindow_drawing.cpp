@@ -941,32 +941,30 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	}
 
 	// Draw the User-defined "trax" component ====================================================
+	Component& trax = compMgr.GetTrax();
+	if ( trax.GetSize() > 0 )
 	{
-		Component& comp = compMgr.GetTrax();
-		if ( comp.GetSize() > 0 )
-		{
-			if ( comp.GetIsPlaced() )
-				m_varBrush.setColor( QColor(128,128,128,128) );	// light grey
-			else
-				m_varBrush.setColor( QColor(192,128,192,128) );	// magenta tint
-			painter.setPen(Qt::NoPen);
-			painter.setBrush(m_varBrush);
+		if ( trax.GetIsPlaced() )
+			m_varBrush.setColor( QColor(128,128,128,128) );	// light grey
+		else
+			m_varBrush.setColor( QColor(192,128,192,128) );	// magenta tint
+		painter.setPen(Qt::NoPen);
+		painter.setBrush(m_varBrush);
 
-			const int&	rowTL		= comp.GetRow();
-			const int&	colTL		= comp.GetCol();
-			const int&	compCols	= comp.GetCompCols();
-			const int&	compRows	= comp.GetCompRows();
-			int jRow(rowTL);
-			for (int j = 0; j < compRows; j++, jRow++)
+		const int&	rowTL		= trax.GetRow();
+		const int&	colTL		= trax.GetCol();
+		const int&	compCols	= trax.GetCompCols();
+		const int&	compRows	= trax.GetCompRows();
+		int jRow(rowTL);
+		for (int j = 0; j < compRows; j++, jRow++)
+		{
+			int iCol(colTL);
+			for (int i = 0; i < compCols; i++, iCol++)
 			{
-				int iCol(colTL);
-				for (int i = 0; i < compCols; i++, iCol++)
+				if ( trax.GetCompElement(j, i)->ReadFlagBits(RECTSET) )
 				{
-					if ( comp.GetCompElement(j, i)->ReadFlagBits(RECTSET) )
-					{
-						GetLRTB(board, 100, jRow, iCol, L, R, T, B);	// 100% size square
-						painter.drawRect(L,T,R-L,B-T);
-					}
+					GetLRTB(board, 100, jRow, iCol, L, R, T, B);	// 100% size square
+					painter.drawRect(L,T,R-L,B-T);
 				}
 			}
 		}

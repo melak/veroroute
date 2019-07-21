@@ -20,7 +20,6 @@
 #include "Version.h"
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "myscrollarea.h"
 #include "controldialog.h"
 #include "renderingdialog.h"
 #include "infodialog.h"
