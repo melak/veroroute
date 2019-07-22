@@ -40,9 +40,6 @@ public:
 	, GuiControl()
 	, m_infoStr("Use this box to enter a circuit description or other info")
 	, m_tmpVecSize(0)
-	, m_tmpMaxMH(0)
-	, m_tmpNodeId(BAD_NODEID)
-	, m_tmpIsRouting(false)
 	{
 		GlueNbrs();		// Set pointers between neighbouring grid elements
 	}
@@ -92,12 +89,9 @@ public:
 		m_compDefiner	= o.m_compDefiner;
 
 		// Routing algorithm variables are cleared, not copied
-		m_tmpVec.clear();
 		m_targetPins.clear();
+		m_tmpVec.clear();
 		m_tmpVecSize	= 0;
-		m_tmpMaxMH		= 0;
-		m_tmpNodeId		= BAD_NODEID;
-		m_tmpIsRouting	= false;
 
 		return *this;
 	}
@@ -105,8 +99,8 @@ public:
 	~Board()
 	{
 		m_infoStr.clear();
-		m_tmpVec.clear();
 		m_targetPins.clear();
+		m_tmpVec.clear();
 	}
 
 	bool operator==(const Board& o) const	// Compare persisted info
@@ -130,8 +124,8 @@ public:
 		GlueNbrs();	// Set pointers between neighbouring grid elements
 		SetInfoStr("Use this box to enter a circuit description or other info");
 		m_compMgr.Clear();
-		m_tmpVec.clear();
 		m_targetPins.clear();
+		m_tmpVec.clear();
 		m_nodeInfoMgr.DeAllocate();
 		m_adjInfoMgr.DeAllocate();
 		m_groupMgr.Clear();
@@ -399,8 +393,7 @@ public:
 	void Route();
 	void RouteNodeId(const int& nodeId);
 	void Backtrace(Element* pEnd, const int& nodeId);
-	void UpdateMHvector(Element* p, const unsigned int& iMH, const unsigned int& iTargetRouteId, Element*& pOut);
-	unsigned int Manhatten(Element* pStart, Element*& pOut, const unsigned int& iTargetRouteId);
+	unsigned int Manhatten(Element* p);
 	void CheckAllComplete();
 	void PasteTracks(bool bTidy);
 	void WipeTracks();
@@ -595,10 +588,7 @@ private:
 	ColorManager			m_colorMgr;		// Handles color assignment to nodeIds
 
 	// Routing algorithm // Don't persist or copy
-	std::vector<Element*>	m_tmpVec;		// For MH calc.  For the set of nodes considered so far
-	std::vector<Element*>	m_targetPins;	// Set of pins with correct nodeId
-	size_t					m_tmpVecSize;	// Set of visited elements during routing and ...
-	unsigned int			m_tmpMaxMH;		// ... the largest MH value in the set
-	int						m_tmpNodeId;	// The node ID that were using in the MH calc
-	bool					m_tmpIsRouting;	// true ==> auto-routing is in progress
+	std::vector<Element*>	m_targetPins;	// Set of pins to route.
+	std::vector<Element*>	m_tmpVec;		// The set of visited points.
+	size_t					m_tmpVecSize;	// The number of visited points.
 };

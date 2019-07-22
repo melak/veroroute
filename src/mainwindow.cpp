@@ -343,7 +343,6 @@ void MainWindow::HandleRouting()
 {
 	if ( m_board.GetTrackMode() == TRACKMODE::OFF ) return;
 
-	Element* pDummy(nullptr);
 	if ( m_board.GetRoutingEnabled() )
 	{
 		grabMouse(Qt::WaitCursor);
@@ -362,7 +361,7 @@ void MainWindow::HandleRouting()
 			pC = m_board.GetAt(i);
 			bOK = ( pC->GetNodeId() == GetCurrentNodeId() );
 		}
-		if ( bOK ) m_board.Manhatten(pC, pDummy, 0);	// Only calc MH over relevant elements
+		if ( bOK ) m_board.Manhatten(pC);	// Only calc MH over relevant elements
 		releaseMouse();
 	}
 }

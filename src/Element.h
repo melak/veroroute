@@ -45,6 +45,7 @@ public:
 	, m_bSolderR(false)
 	, m_iRoutable(0)
 	, m_MH(BAD_MH)
+	, m_maxMH(0)
 	, m_routeId(BAD_ROUTEID)
 	{
 		memset(m_pNbr, 0, 8 * sizeof(Element*));
@@ -58,6 +59,7 @@ public:
 		m_bSolderR		= o.m_bSolderR;
 		//m_iRoutable		= o.m_iRoutable;	// This should only be set by the Board::Glue() method
 		m_MH			= o.m_MH;
+		m_maxMH			= o.m_maxMH;
 		m_routeId		= o.m_routeId;
 		// Zero the connection pointers m_pNbr[] and m_pW.
 		// These should only be set by Board::GlueNbrs() and Board::GlueWires().
@@ -91,6 +93,7 @@ public:
 	void SetSolderR(const bool& b)				{ m_bSolderR	= b; }
 	void SetRoutable(const int& i)				{ m_iRoutable	= i; }
 	void SetMH(const unsigned int& i)			{ m_MH			= i; }
+	void SetMaxMH(const unsigned int& i)		{ m_maxMH		= i; }
 	void SetRouteId(const unsigned int& i)		{ m_routeId		= i; }
 	void SetNbr(const int& iNbr, Element* p)	{ m_pNbr[iNbr]	= p; }
 	void SetW(Element* p)						{ m_pW			= p; }
@@ -98,6 +101,7 @@ public:
 	const bool&			GetSolderR() const				{ return m_bSolderR; }
 	const int&			GetRoutable() const				{ return m_iRoutable; }
 	const unsigned int&	GetMH() const					{ return m_MH; }
+	const unsigned int& GetMaxMH() const				{ return m_maxMH; }
 	const unsigned int&	GetRouteId() const				{ return m_routeId; }
 	Element*			GetNbr(const int& iNbr) const	{ return m_pNbr[iNbr]; }
 	Element*			GetW() const					{ return m_pW; }
@@ -200,6 +204,7 @@ private:
 	bool			m_bSolderR;		// true ==> have blob of solder to right (for joining vero tracks)
 	int				m_iRoutable;	// Set by Board::GlueNbrs().  An 8-bit code used to enable/disable connections to the 8 neighbours
 	unsigned int	m_MH;			// Manhatten distance to another element.  For the routing/connectivity algorithm.
+	unsigned int	m_maxMH;		// For the routing algorithm.
 	unsigned int	m_routeId;		// For the routing algorithm.
 	// Connection pointers. Set by Board::GlueNbrs() and Board::GlueWires().	Don't persist.
 	Element*		m_pNbr[8];		// 0 to 7 <==> NBR_L to NBR_LB
