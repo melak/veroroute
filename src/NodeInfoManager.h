@@ -107,8 +107,8 @@ private:
 		bool operator()(const NodeInfo* pA, const NodeInfo* pB) const
 		{
 			// Put complete things on the end of the list
-			if ( pA->GetIsComplete() && !pB->GetIsComplete() ) return false;
-			if ( pB->GetIsComplete() && !pA->GetIsComplete() ) return true;
+			if ( pA->GetComplete() && !pB->GetComplete() ) return false;
+			if ( pB->GetComplete() && !pA->GetComplete() ) return true;
 			if ( pA->GetArea()		!= pB->GetArea() )	 return ( pA->GetArea()   < pB->GetArea()   );
 			if ( pA->GetLength()	!= pB->GetLength() ) return ( pA->GetLength() < pB->GetLength() );
 			return pA->GetNumComps() < pB->GetNumComps();

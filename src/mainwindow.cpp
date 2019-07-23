@@ -1053,23 +1053,21 @@ void MainWindow::SetNodeId(QListWidgetItem* item)
 }
 void MainWindow::ListNodes(bool bRebuild)
 {
-	if ( bRebuild)
+	if ( bRebuild )
 	{
-		// Use a copy of the m_board so CheckAllComplete() doesn't
-		// overwrite current routing calculations or results.
-		Board boardCopy(m_board, false);	// false ==> fast copy without RebuildAdjacencies()
-		Board* pBoard = &boardCopy;
+		// If auto-routing is enabled, then the "RoutedOK" flags will have been set
+		// and we can use those instead of the "Complete" flags.
 
-		pBoard->CheckAllComplete();	// Slow !!!
+		const bool& bAutoRouting = m_board.GetRoutingEnabled();
+		if ( !bAutoRouting ) m_board.CheckAllComplete();	// Slow !!!
 
 		m_controlDlg->ClearLists();
 
-		CompManager&		compMgr		= pBoard->GetCompMgr();
-		NodeInfoManager&	nodeInfoMgr	= pBoard->GetNodeInfoMgr();
-		nodeInfoMgr.SortByLowestDifficulty(compMgr);
-		for (size_t iNode = 0; iNode < nodeInfoMgr.GetSize(); iNode++)
+		CompManager&		compMgr		= m_board.GetCompMgr();
+		NodeInfoManager&	nodeInfoMgr	= m_board.GetNodeInfoMgr();
+		for (size_t i = 0; i < nodeInfoMgr.GetSize(); i++)
 		{
-			NodeInfo* p = nodeInfoMgr.GetAt(iNode);
+			NodeInfo* p = nodeInfoMgr.GetAt(i);
 			if ( p->GetNodeId() == BAD_NODEID ) continue;
 
 			std::stringstream mystream;
@@ -1077,7 +1075,8 @@ void MainWindow::ListNodes(bool bRebuild)
 			std::string myStr = mystream.str();
 
 			const bool bFloating = p->GetHasFloatingComp(compMgr);
-			const bool bBroken	 = bFloating || !p->GetIsComplete();
+			const bool bComplete = ( bAutoRouting ) ? p->GetRoutedOK() : p->GetComplete();
+			const bool bBroken	 = bFloating || !bComplete;
 			m_controlDlg->AddListItem(myStr, bBroken, bFloating);
 		}
 	}

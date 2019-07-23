@@ -65,25 +65,31 @@ void Board::BuildTargetPins(const int& nodeId)
 
 void Board::Route()
 {
-	WipeAutoSetPoints();
+	// When routing is enabled,  this method will build tracks and update the "RoutedOK" flags.
+	// When routing is disabled, this method will update the "RoutedOK" flags without building new tracks.
+
+	if ( GetRoutingEnabled() ) WipeAutoSetPoints();
 
 	m_nodeInfoMgr.SortByLowestDifficulty(m_compMgr);
 
 	const size_t numNodes = m_nodeInfoMgr.GetSize();
-	for (size_t ii = 0; ii < numNodes; ii++)	// Loop all nodeIds used by components
+	for (size_t i = 0; i < numNodes; i++)	// Loop all nodeIds used by components
 	{
-		const int& nodeId = m_nodeInfoMgr.GetAt(ii)->GetNodeId();
-		if ( nodeId != BAD_NODEID )
-			RouteNodeId(nodeId);	// Try route all pins of the specified nodeId
+		NodeInfo* pNodeInfo = m_nodeInfoMgr.GetAt(i);
+		const int& nodeId = pNodeInfo->GetNodeId();
+		const bool bRoutedOK = ( nodeId != BAD_NODEID ) ? Flood(nodeId) : false;	// Flood with MH values, starting from the m_targetPins
+		pNodeInfo->SetRoutedOK(bRoutedOK);
 	}
 }
 
-void Board::RouteNodeId(const int& iTraceNodeId)	// Try route all pins of the specified nodeId
+bool Board::Flood(const int& iFloodNodeId)	// Flood with MH values, starting from the m_targetPins
 {
-	assert(iTraceNodeId != BAD_NODEID);
+	assert(iFloodNodeId != BAD_NODEID);
 
-	BuildTargetPins(iTraceNodeId);	// Populate m_targetPins
-	if ( m_targetPins.size() < 2 ) return;
+	const bool& bAutoRoute = GetRoutingEnabled();	// true ==> build new tracks based on the flood of MH values
+
+	BuildTargetPins(iFloodNodeId);	// Populate m_targetPins
+	if ( m_targetPins.size() < 2 ) return true;
 
 	const int iSize = GetSize();
 	for (int i = 0; i < iSize; i++)	// Loop all grid points
@@ -150,7 +156,7 @@ void Board::RouteNodeId(const int& iTraceNodeId)	// Try route all pins of the sp
 				continue;
 			}
 
-			const bool bOK = pJ->GetNodeId() == iTraceNodeId;	// true ==> pJ already painted with correct NodeId
+			const bool bOK = pJ->GetNodeId() == iFloodNodeId;	// true ==> pJ already painted with correct NodeId
 
 			const int iDiagMax = ( bDiagsOK ) ? 2 : 1;		// Diags allowed ==> 2 passes
 			for (int iDiag = 0; iDiag < iDiagMax && !bDone; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
@@ -164,14 +170,14 @@ void Board::RouteNodeId(const int& iTraceNodeId)	// Try route all pins of the sp
 					Element* pK = pJ->GetNbr(iNbr);
 					const unsigned int& k = pK->GetRouteId();
 
-					const bool bDirOK = ( bOK && pJ->GetUsed(iNbr) ) ||
-										( pJ->HaveNonBlankPins(iNbr) && !pJ->IsBlocked(iNbr, iTraceNodeId) && !pJ->IsUselessWire(iNbr, iTraceNodeId) );
+					const bool bDirOK = ( bOK && pJ->GetUsed(iNbr) ) ||	// i.e. if already painted with correct nodeId
+										( bAutoRoute && pJ->HaveNonBlankPins(iNbr) && !pJ->IsBlocked(iNbr, iFloodNodeId) && !pJ->IsUselessWire(iNbr, iFloodNodeId) );
 					if ( !bDirOK ) continue;
 
 					if ( pK->GetMH() == BAD_MH ) // Grow route with RID j (from pJ to pK)
 					{
 						const int& nodeId = pK->GetNodeId();
-						if ( nodeId == iTraceNodeId || nodeId == BAD_NODEID )
+						if ( nodeId == iFloodNodeId || nodeId == BAD_NODEID )
 						{
 							m_tmpVec[m_tmpVecSize++] = pK;	// Add pK to set of visited points
 							iMaxMH = std::max(iMaxMH, iMH);	// Update iMaxMH
@@ -196,8 +202,11 @@ void Board::RouteNodeId(const int& iTraceNodeId)	// Try route all pins of the sp
 					{
 						if ( !ppConn[j][k] )	// If no j-k connection yet ...
 						{
-							Backtrace(pJ, iTraceNodeId);	// Trace pJ back to its source, painting iTraceNodeId along the way
-							Backtrace(pK, iTraceNodeId);	// Trace pK back to its source, painting iTraceNodeId along the way
+							if ( bAutoRoute )	// If auto-routing is enabled ...
+							{
+								Backtrace(pJ, iFloodNodeId);	// ... trace pJ back to its source, painting iFloodNodeId along the way
+								Backtrace(pK, iFloodNodeId);	// ... trace pK back to its source, painting iFloodNodeId along the way
+							}
 
 							// Make j-k connection and enforce transitivity
 							assert( list.empty() );
@@ -236,6 +245,7 @@ void Board::RouteNodeId(const int& iTraceNodeId)	// Try route all pins of the sp
 	// Deallocate connection matrix
 	delete[] ppConn;
 	delete[] pConn;
+	return bDone;
 }
 
 // Backtrace route from pEnd to point with MH = 0
@@ -406,10 +416,26 @@ unsigned int Board::Manhatten(Element* p)
 
 void Board::CheckAllComplete()
 {
+	assert( !GetRoutingEnabled() );	// If routing is enabled, use the "RoutedOK" flags instead of the "Complete" flags.
+
+	// New algorithm.
+	/*
+	// Calling Route() when routing is not enabled sets the "RoutedOK" flags without building new tracks.
+	// So we can do that and then copy the flags over to the "Complete" flags
+	Route();
 	for (size_t n = 0; n < m_nodeInfoMgr.GetSize(); n++)
 	{
 		NodeInfo* pNodeInfo = m_nodeInfoMgr.GetAt(n);
-		pNodeInfo->SetIsComplete(false);
+		pNodeInfo->SetComplete( pNodeInfo->GetRoutedOK() );
+	}
+	return;
+	*/
+
+	// Old algorithm.  In most cases this is faster than the new algorithm, but worst-case performance is worse
+	for (size_t n = 0; n < m_nodeInfoMgr.GetSize(); n++)
+	{
+		NodeInfo* pNodeInfo = m_nodeInfoMgr.GetAt(n);
+		pNodeInfo->SetComplete(false);
 
 		const int& nodeId = pNodeInfo->GetNodeId();
 		if ( nodeId == BAD_NODEID ) continue;
@@ -430,8 +456,9 @@ void Board::CheckAllComplete()
 				bComplete = ( pJ->GetMH() != BAD_MH );
 			}
 		}
-		pNodeInfo->SetIsComplete(bComplete);
+		pNodeInfo->SetComplete(bComplete);
 	}
+	m_nodeInfoMgr.SortByLowestDifficulty(m_compMgr);
 }
 
 void Board::PasteTracks(bool bTidy)
