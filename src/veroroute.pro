@@ -21,6 +21,7 @@ SOURCES += main.cpp\
     mainwindow_drawing.cpp \
     mainwindow_events.cpp \
     renderingdialog.cpp \
+    hotkeysdialog.cpp \
     infodialog.cpp \
     controldialog.cpp \
     bomdialog.cpp \
@@ -41,6 +42,7 @@ HEADERS  += mainwindow.h \
     controldialog.h \
     compdialog.h \
     renderingdialog.h \
+    hotkeysdialog.h \
     infodialog.h \
     bomdialog.h \
     templatesdialog.h \
@@ -82,12 +84,14 @@ HEADERS  += mainwindow.h \
 FORMS    += mainwindow.ui \
     controldialog.ui \
     renderingdialog.ui \
+    hotkeysdialog.ui \
     infodialog.ui \
     bomdialog.ui \
     templatesdialog.ui \
     pindialog.ui \
     textdialog.ui \
     compdialog.ui
+    
 
 RESOURCES     = veroroute.qrc
 

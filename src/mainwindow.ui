@@ -193,6 +193,7 @@
     </property>
     <addaction name="actionAbout"/>
     <addaction name="separator"/>
+    <addaction name="actionHotkeysDlg"/>
     <addaction name="actionTutorial"/>
     <addaction name="separator"/>
     <addaction name="actionSupport"/>
@@ -1106,6 +1107,11 @@
    </property>
    <property name="toolTip">
     <string>Add chord</string>
+   </property>
+  </action>
+  <action name="actionHotkeysDlg">
+   <property name="text">
+    <string>Key/Mouse Actions</string>
    </property>
   </action>
  </widget>

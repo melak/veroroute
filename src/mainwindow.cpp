@@ -22,6 +22,7 @@
 #include "ui_mainwindow.h"
 #include "controldialog.h"
 #include "renderingdialog.h"
+#include "hotkeysdialog.h"
 #include "infodialog.h"
 #include "compdialog.h"
 #include "textdialog.h"
@@ -64,6 +65,7 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 
 	m_controlDlg	= new ControlDialog(this);
 	m_renderingDlg	= new RenderingDialog(this);
+	m_hotkeysDlg	= new HotkeysDialog(this);
 	m_infoDlg		= new InfoDialog(this);
 	m_compDlg		= new CompDialog(this);
 	m_textDlg		= new TextDialog(this);
@@ -176,6 +178,7 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	QObject::connect(ui->actionRenderingDlg,			SIGNAL(triggered()), this, SLOT(ShowRenderingDialog()));
 	QObject::connect(ui->actionControlDlg,				SIGNAL(triggered()), this, SLOT(ShowControlDialog()));
 	QObject::connect(ui->actionTemplatesDlg,			SIGNAL(triggered()), this, SLOT(ShowTemplatesDialog()));
+	QObject::connect(ui->actionHotkeysDlg,				SIGNAL(triggered()), this, SLOT(ShowHotkeysDialog()));
 	QObject::connect(ui->actionInfoDlg,					SIGNAL(triggered()), this, SLOT(ShowInfoDialog()));
 	QObject::connect(ui->actionBomDlg,					SIGNAL(triggered()), this, SLOT(ShowBomDialog()));
 	QObject::connect(ui->actionTemplatesDlg,			SIGNAL(triggered()), this, SLOT(ShowTemplatesDialog()));
@@ -795,12 +798,13 @@ void MainWindow::Delete()
 // Windows menu items
 void MainWindow::ShowControlDialog()	{ m_controlDlg->showNormal();	m_controlDlg->raise();		m_controlDlg->activateWindow(); }
 void MainWindow::ShowRenderingDialog()	{ m_renderingDlg->showNormal();	m_renderingDlg->raise();	m_renderingDlg->activateWindow(); }
+void MainWindow::ShowHotkeysDialog()	{ m_hotkeysDlg->showNormal();	m_hotkeysDlg->raise();	m_hotkeysDlg->activateWindow(); }
 void MainWindow::ShowInfoDialog()		{ m_infoDlg->showNormal();		m_infoDlg->raise();			m_infoDlg->activateWindow(); }
 void MainWindow::ShowCompDialog()		{ m_compDlg->showNormal();		m_compDlg->raise();			m_compDlg->activateWindow(); }
 void MainWindow::ShowTextDialog()		{ m_textDlg->showNormal();		m_textDlg->raise();			m_textDlg->activateWindow(); }
-void MainWindow::ShowBomDialog()		{ UpdateBOM();					m_bomDlg->showNormal(); m_bomDlg->raise(); m_bomDlg->activateWindow(); }
-void MainWindow::ShowTemplatesDialog()	{ UpdateTemplatesDialog();		m_templatesDlg->showNormal(); m_templatesDlg->raise(); m_templatesDlg->activateWindow(); }
-void MainWindow::ShowPinDialog()		{ m_pinDlg->Update(); m_pinDlg->showNormal(); m_pinDlg->raise(); m_pinDlg->activateWindow(); }
+void MainWindow::ShowBomDialog()		{ UpdateBOM();					m_bomDlg->showNormal();		m_bomDlg->raise(); m_bomDlg->activateWindow(); }
+void MainWindow::ShowTemplatesDialog()	{ UpdateTemplatesDialog();		m_templatesDlg->showNormal();	m_templatesDlg->raise(); m_templatesDlg->activateWindow(); }
+void MainWindow::ShowPinDialog()		{ m_pinDlg->Update();			m_pinDlg->showNormal();		m_pinDlg->raise(); m_pinDlg->activateWindow(); }
 
 // Help menu items
 void MainWindow::ShowAbout()

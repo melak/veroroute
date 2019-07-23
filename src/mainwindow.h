@@ -39,6 +39,7 @@ namespace Ui { class MainWindow; }
 class ControlDialog;
 class TemplatesDialog;
 class RenderingDialog;
+class HotkeysDialog;
 class InfoDialog;
 class CompDialog;
 class TextDialog;
@@ -52,6 +53,7 @@ class MainWindow : public QMainWindow
 	friend class ControlDialog;
 	friend class TemplatesDialog;
 	friend class RenderingDialog;
+	friend class HotkeysDialog;
 	friend class InfoDialog;
 	friend class CompDialog;
 	friend class TextDialog;
@@ -199,6 +201,7 @@ public slots:
 	void ShowControlDialog();
 	void ShowTemplatesDialog();
 	void ShowRenderingDialog();
+	void ShowHotkeysDialog();
 	void ShowInfoDialog();
 	void ShowCompDialog();
 	void ShowTextDialog();
@@ -424,6 +427,7 @@ private:
 
 	ControlDialog*			m_controlDlg;
 	RenderingDialog*		m_renderingDlg;
+	HotkeysDialog*			m_hotkeysDlg;
 	InfoDialog*				m_infoDlg;
 	CompDialog*				m_compDlg;
 	TextDialog*				m_textDlg;
