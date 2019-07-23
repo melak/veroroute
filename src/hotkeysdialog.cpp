@@ -41,14 +41,14 @@ void HotkeysDialog::Setup()
 	typedef std::pair<std::string, std::string> KEY_ACTION ;
 	std::list<KEY_ACTION> list;
 	list.push_back( KEY_ACTION("Ctrl + click-drag mouse",		"Move whole circuit") );
-	list.push_back( KEY_ACTION("Ctrl + A",						"Select all parts") );
+	list.push_back( KEY_ACTION("R + click-drag mouse",			"Select parts/tracks by area") );
+	list.push_back( KEY_ACTION("Ctrl+A",						"Select all parts") );
 	list.push_back( KEY_ACTION("Shift + mouse button",			"Add/Remove to selected parts") );
 	list.push_back( KEY_ACTION("Z",								"Rotate selected parts counter-clockwise") );
 	list.push_back( KEY_ACTION("X",								"Rotate selected parts clockwise") );
 	list.push_back( KEY_ACTION("V",								"Copy and paste selected parts") );
 	list.push_back( KEY_ACTION("G",								"Group selected parts") );
 	list.push_back( KEY_ACTION("U",								"Un-group selected parts") );
-	list.push_back( KEY_ACTION("R",								"Select parts/tracks by area (On/Off)") );
 	list.push_back( KEY_ACTION("W",								"Wipe all tracks") );
 	list.push_back( KEY_ACTION("P + left mouse button",			"Paint pin") );
 	list.push_back( KEY_ACTION("P + right mouse button",		"Un-paint pin") );
