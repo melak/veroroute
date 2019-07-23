@@ -134,4 +134,6 @@
 //static const char* szVEROROUTE_VERSION = "1.55";			// Improvement: List recent VRT files in File menu.
 //static const char* szVEROROUTE_VERSION = "1.56";			// Tweaked dialog layouts to better handle 11 point fonts.
 //static const char* szVEROROUTE_VERSION = "1.57";			// Improvement: Faster routing algorithm.
-static const char* szVEROROUTE_VERSION = "1.58";			// Improvement: Faster routing and connectivity checking.
+//static const char* szVEROROUTE_VERSION = "1.58";			// Improvement: Faster routing and connectivity checking.
+static const char* szVEROROUTE_VERSION = "1.59";			// Improvement: Added Key/Mouse Actions dialog under Help menu.
+
