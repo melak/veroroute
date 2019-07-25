@@ -338,7 +338,7 @@ void MainWindow::ResetView(bool bTutorial)
 	activateWindow();	// Select mainwindow rather than child dialogs
 	DestroyPixmapCache();
 
-	RepaintWithRouting();
+	RepaintWithRouting(true);	// true  ==> force use of repaint() rather than update()
 	ListNodes();		// Slow due lots of MH calcs
 }
 

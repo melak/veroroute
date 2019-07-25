@@ -169,37 +169,23 @@ public:
 
 	void GlueWires()	// Set pointers between wired grid elements
 	{
-		const int iSize = GetSize();
-		for (int i = 0; i < iSize; i++)	// Loop all elements
+		for (const auto& mapObj : m_compMgr.GetMapIdToComp())	// Iterate components
 		{
-			Element* pA = GetAt(i);
-
-			const int& compId = pA->GetCompId();
-			if ( compId == BAD_COMPID ) continue;			// Skip if element doesn't have a component ID (and therefore no pin)
-			const Component& comp = m_compMgr.GetComponentById(compId);
-			if ( !comp.GetIsPlaced() ) continue;			// Skip floating components
-			if ( comp.GetType() != COMP::WIRE ) continue;	// Skip non-wires
-			if ( pA->GetPinIndex() != 0 ) continue;			// Always want "A" to be pin 0 of the wire
-
-			// Definitely have a wire now ...
-			int row(0), col(0);
-			GetRowCol(pA, row, col);
-			const int length = comp.GetSize() - 1;	assert(length > 0);
-
-			switch( comp.GetDirection() )
+			const Component& comp = mapObj.second;
+			if ( comp.GetType() == COMP::WIRE && comp.GetIsPlaced() )
 			{
-				case 'W':	col += length;	 break;
-				case 'E':	col -= length;	 break;
-				case 'N':	row += length;	 break;
-				case 'S':	row -= length;	 break;
+				const int& rowA = comp.GetRow();
+				const int& colA = comp.GetCol();
+				const int  rowB = rowA + comp.GetCompRows() - 1;
+				const int  colB = colA + comp.GetCompCols() - 1;
+
+				Element* pA = Get(rowA, colA);	assert(pA->GetW() == nullptr);
+				Element* pB = Get(rowB, colB);	assert(pB->GetW() == nullptr);
+
+				assert(pB->GetNodeId() == pA->GetNodeId());	// Wire ends must have same NodeId
+				pA->SetW(pB);	// Give pA a pointer to pB
+				pB->SetW(pA);	// Give pB a pointer to pA
 			}
-
-			MakeToroid(row, col);	// Make co-ordinates wrap around at grid edges
-
-			Element* pB = Get(row, col);	// The element for the other wire-end
-			assert(pB->GetNodeId() == pA->GetNodeId());	// Wire ends must have same NodeId
-			pA->SetW(pB);	// Give pA a pointer to pB
-			pB->SetW(pA);	// Give pB a pointer to pA
 		}
 	}
 
@@ -326,7 +312,7 @@ public:
 		// Move all user-defined rectangles
 		GetRectMgr().MoveAll(iDown, iRight);
 
-		// Move all ueser-defined text
+		// Move all user-defined text
 		GetTextMgr().MoveAll(iDown, iRight);
 	}
 
@@ -377,7 +363,6 @@ public:
 	// Methods to get objects at a grid location
 	int  GetComponentId(int row, int col);	// Pick the most relevant component at the location
 	int  GetTextId(int row, int col);		// Pick the most relevant text box at the location
-	bool GetPinRowCol(const int& compId, const size_t& iPinIndex, int& row, int& col) const;
 
 	// Methods to paint/unpaint nodeIds
 	void SetNodeId(Element* p, const int& nodeId);	// Helper to make sure we do UpdateCounts() before painting an element
@@ -388,12 +373,12 @@ public:
 	void SetSolder(const int& nodeId, const int& col, const bool& bVertical);
 
 	// Routing methods
-	void WipeAutoSetPoints();
+	void WipeAutoSetPoints(const int nodeId = BAD_NODEID);
 	void BuildTargetPins(const int& nodeId);
 	void Route();
 	bool Flood(const int& nodeId);
 	void Backtrace(Element* pEnd, const int& nodeId);
-	unsigned int Manhatten(Element* p);
+	void Manhatten(Element* p);
 	void CheckAllComplete();
 	void PasteTracks(bool bTidy);
 	void WipeTracks();
@@ -403,7 +388,6 @@ public:
 	int  CreateComponent(MyScrollArea* pScrollArea, const COMP& eType, const Component* pComp = nullptr);
 	int  AddComponent(MyScrollArea* pScrollArea, const Component& tmp, bool bDoPlace = true);
 	void AddTextBox(MyScrollArea* pScrollArea);
-	bool BreakComponentIntoPads(Component& comp);
 
 	// Methods for component placement/removal
 	bool CanPutDown(Component& comp);	// Checks if its possible to place the (floating) component on the board
@@ -455,6 +439,8 @@ public:
 
 	// Import Protel V1 / Tango netlist (exported from TinyCAD / gEDA)
 	bool Import(const TemplateManager& templateMgr, const std::string& filename, std::string& errorStr);
+	bool BreakComponentIntoPads(Component& comp);
+	bool GetPinRowCol(const int& compId, const size_t& iPinIndex, int& row, int& col) const;
 
 	// Merge interface functions
 	virtual void UpdateMergeOffsets(MergeOffsets& o) override

@@ -90,20 +90,6 @@ int Board::GetTextId(int row, int col)	// Pick the most relevant text box at the
 	return bestId;
 }
 
-bool Board::GetPinRowCol(const int& compId, const size_t& iPinIndex, int& row, int& col) const
-{
-	if ( compId == BAD_COMPID || iPinIndex == BAD_PININDEX ) return false;
-
-	for (row = 0; row < GetRows(); row++)
-	for (col = 0; col < GetCols(); col++)
-	{
-		Element* p = Get(row, col);
-		if ( p->GetCompId() == compId && p->GetPinIndex() == iPinIndex )
-			return true;	// (row, col) ==> output
-	}
-	return false;
-}
-
 
 // Methods to paint/unpaint nodeIds
 

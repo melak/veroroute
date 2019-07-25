@@ -19,19 +19,27 @@
 
 #include "Board.h"
 
-#define WIRE_MH 1
+// MH_LRTB = Manhatten "distance" for horizontally/vertically adjacent grid points.
+// MH_DIAG = Manhatten "distance" for diagonally adjacent grid points.
+// MH_WIRE = Manhatten "distance" for wires, regardless of their length.
+
+#define MH_LRTB 2
+#define MH_DIAG 3
+#define MH_WIRE 1
 
 // Routing methods
 
-void Board::WipeAutoSetPoints()
+void Board::WipeAutoSetPoints(int nodeId)
 {
+	const bool bWipeAll = ( nodeId == BAD_NODEID );
 	const int iSize = GetSize();
 	for (int i = 0; i < iSize; i++)
 	{
 		Element* p	= GetAt(i);
 		Element* pW	= p->GetW();
+		if ( !bWipeAll && p->GetNodeId() != nodeId ) continue;	// Skip points with wrong nodeId
 		bool bWipe = p->ReadFlagBits(AUTOSET) & !p->ReadFlagBits(USERSET);	// Clear if AUTOSET and not USERSET
-		if ( pW ) bWipe &= ( !pW->ReadFlagBits(USERSET) );	// If it's a wire, the other end must not be USETSET either
+		if ( pW ) bWipe &= ( !pW->ReadFlagBits(USERSET) );	// If it's a wire, the other end must not be USERSET either
 
 		if ( bWipe ) SetNodeId(p, BAD_NODEID);
 		p->ClearFlagBits(AUTOSET);
@@ -72,13 +80,47 @@ void Board::Route()
 
 	m_nodeInfoMgr.SortByLowestDifficulty(m_compMgr);
 
+	const bool bRipUpEnabled	= false;	//TODO Provide a switch to enable rip-up
+	const bool bAllowRipUp		= bRipUpEnabled && GetRoutingEnabled();
+
 	const size_t numNodes = m_nodeInfoMgr.GetSize();
 	for (size_t i = 0; i < numNodes; i++)	// Loop all nodeIds used by components
 	{
-		NodeInfo* pNodeInfo = m_nodeInfoMgr.GetAt(i);
-		const int& nodeId = pNodeInfo->GetNodeId();
-		const bool bRoutedOK = ( nodeId != BAD_NODEID ) ? Flood(nodeId) : false;	// Flood with MH values, starting from the m_targetPins
-		pNodeInfo->SetRoutedOK(bRoutedOK);
+		NodeInfo* pI = m_nodeInfoMgr.GetAt(i);
+		const int& nodeIdI = pI->GetNodeId();
+		bool bRoutedOK = ( nodeIdI != BAD_NODEID ) ? Flood(nodeIdI) : false;	// Flood with MH values, starting from the m_targetPins
+
+		if ( bAllowRipUp && nodeIdI != BAD_NODEID && !bRoutedOK && i > 0 )
+		{
+			WipeAutoSetPoints(nodeIdI);		// Rip-up I
+
+			size_t j(i-1);
+			while( !bRoutedOK )
+			{
+				NodeInfo* pJ = m_nodeInfoMgr.GetAt(j);
+				const int& nodeIdJ = pJ->GetNodeId();
+				if ( nodeIdJ != BAD_NODEID )
+				{
+					WipeAutoSetPoints(nodeIdJ);	// Rip-up J
+					if ( Flood(nodeIdI) )			// Try I
+					{
+						if ( Flood(nodeIdJ) )			// Try J
+						{
+							pJ->SetRoutedOK(true);
+							bRoutedOK = true;
+							break;
+						}
+						WipeAutoSetPoints(nodeIdJ);		// Rip-up J
+					}
+					WipeAutoSetPoints(nodeIdI);		// Rip-up I
+					Flood(nodeIdJ);				// Restore J
+				}
+				if ( j == 0 ) break; else j--;
+			}
+			if ( !bRoutedOK )
+				Flood(nodeIdI);				// Restore I
+		}
+		pI->SetRoutedOK(bRoutedOK);
 	}
 }
 
@@ -127,7 +169,7 @@ bool Board::Flood(const int& iFloodNodeId)	// Flood with MH values, starting fro
 	std::list<CONNECTION> list;	// Helper for updating the connection matrix
 
 	const bool bDiagsOK = ( GetDiagsMode() != DIAGSMODE::OFF );
-	const unsigned int iMaxDeltaMH = ( bDiagsOK ) ? 3 : 2;	// The max MH increment depends on if diagonals are allowed
+	const unsigned int iMaxDeltaMH = ( bDiagsOK ) ? MH_DIAG : MH_LRTB;	// The max MH increment depends on if diagonals are allowed
 
 	size_t jjStart(0);
 	unsigned int iMH(0), iMaxMH(0);
@@ -161,7 +203,7 @@ bool Board::Flood(const int& iFloodNodeId)	// Flood with MH values, starting fro
 			const int iDiagMax = ( bDiagsOK ) ? 2 : 1;		// Diags allowed ==> 2 passes
 			for (int iDiag = 0; iDiag < iDiagMax && !bDone; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
 			{
-				const int iDeltaMH = 2 + iDiag;
+				const int iDeltaMH = ( iDiag ) ? MH_DIAG : MH_LRTB;
 				if ( pJ->GetMH() + iDeltaMH != iMH ) continue;	// pJ has wrong MH for (Non-diagonal/Diagonal) connection
 
 				// Visit pJ's neighbours
@@ -189,7 +231,7 @@ bool Board::Flood(const int& iFloodNodeId)	// Flood with MH values, starting fro
 							if ( pW )
 							{
 								assert( pK->GetNodeId() == pW->GetNodeId() );	// Sanity check
-								const unsigned int iOtherMH = iMH + WIRE_MH;	// Wires always increase MH by WIRE_MH
+								const unsigned int iOtherMH = iMH + MH_WIRE;	// Wires always increase MH by MH_WIRE
 								m_tmpVec[m_tmpVecSize++] = pW;					// Add pW to set of visited points
 								iMaxMH = std::max(iMaxMH, iOtherMH);			// Update iMaxMH
 								pW->SetRouteId(j);
@@ -282,11 +324,11 @@ void Board::Backtrace(Element* pEnd, const int& nodeId)
 		// Now decide where to back trace to.
 
 		// Check wire first...
-		bool bOK = ( pW && pW->GetMH() == MH - WIRE_MH );	// Wires always change MH by WIRE_MH
+		bool bOK = ( pW && pW->GetMH() == MH - MH_WIRE );	// Wires always change MH by MH_WIRE
 		if ( bOK )
 		{
 			p = pW;
-			MH -= WIRE_MH;
+			MH -= MH_WIRE;
 			continue;
 		}
 		for (int iLoop = 0; iLoop < 2 && !bOK; iLoop++)	// First pass to give preference to nbrs that are not wire ends
@@ -294,7 +336,7 @@ void Board::Backtrace(Element* pEnd, const int& nodeId)
 			const int iDiagMax = ( bDiagsOK ) ? 2 : 1;		// Diags allowed ==> 2 passes
 			for (int iDiag = 0; iDiag < iDiagMax; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
 			{
-				const int iDeltaMH = 2 + iDiag;
+				const int iDeltaMH = ( iDiag ) ? MH_DIAG : MH_LRTB;
 				for (int iNbr = iDiag; iNbr < 8 && !bOK; iNbr += 2)	// Even/Odd iNbr ==> Non-diagonal/Diagonal
 				{
 					Element* pNbr = p->GetNbr(iNbr);
@@ -315,15 +357,12 @@ void Board::Backtrace(Element* pEnd, const int& nodeId)
 	}
 }
 
-unsigned int Board::Manhatten(Element* p)
+void Board::Manhatten(Element* p)
 {
 	// Populate the grid with connected Manhatten-style "distances" to p.
-	// Horizontally/Vertically adjacent grid points give a "distance" of 2.
-	// Diagonally adjacent grid points give a "distance" of 3.
-	// Wires give a "distance" of WIRE_MH regardless of their length.
 
-	const int iTraceNodeId = p->GetNodeId();			// The NodeID to trace
-	if ( iTraceNodeId == BAD_NODEID ) return BAD_MH;	// Don't trace invalid NodeID
+	const int iTraceNodeId = p->GetNodeId();	// The NodeID to trace
+	if ( iTraceNodeId == BAD_NODEID ) return;	// Don't trace invalid NodeID
 
 	const int iSize = GetSize();
 	for (int i = 0; i < iSize; i++)	// Loop all grid points
@@ -337,7 +376,7 @@ unsigned int Board::Manhatten(Element* p)
 	m_tmpVecSize = 0;
 
 	const bool bDiagsOK = ( GetDiagsMode() != DIAGSMODE::OFF );
-	const unsigned int iMaxDeltaMH = ( bDiagsOK ) ? 3 : 2;	// The max MH increment depends on if diagonals are allowed
+	const unsigned int iMaxDeltaMH = ( bDiagsOK ) ? MH_DIAG : MH_LRTB;	// The max MH increment depends on if diagonals are allowed
 
 	size_t jjStart(0);
 	unsigned int iMH(0), iMaxMH(0);
@@ -349,7 +388,7 @@ unsigned int Board::Manhatten(Element* p)
 	if ( pW )
 	{
 		assert( p->GetNodeId() == pW->GetNodeId() );	// Sanity check
-		const unsigned int iOtherMH = iMH + WIRE_MH;	// Wires always increase MH by WIRE_MH
+		const unsigned int iOtherMH = iMH + MH_WIRE;	// Wires always increase MH by MH_WIRE
 		m_tmpVec[m_tmpVecSize++] = pW;					// Add pW to set of visited points
 		iMaxMH = std::max(iMaxMH, iOtherMH);			// Update iMaxMH
 		pW->SetMH(iOtherMH);
@@ -382,7 +421,7 @@ unsigned int Board::Manhatten(Element* p)
 			const int iDiagMax = ( bDiagsOK ) ? 2 : 1;		// Diags allowed ==> 2 passes
 			for (int iDiag = 0; iDiag < iDiagMax; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
 			{
-				const int iDeltaMH = 2 + iDiag;
+				const int iDeltaMH = ( iDiag ) ? MH_DIAG : MH_LRTB;
 				if ( pJ->GetMH() + iDeltaMH != iMH ) continue;	// pJ has wrong MH for connection
 
 				// Visit pJ's neighbours
@@ -400,7 +439,7 @@ unsigned int Board::Manhatten(Element* p)
 						if ( pW )
 						{
 							assert( pK->GetNodeId() == pW->GetNodeId() );	// Sanity check
-							const unsigned int iOtherMH = iMH + WIRE_MH;	// Wires always increase MH by WIRE_MH
+							const unsigned int iOtherMH = iMH + MH_WIRE;	// Wires always increase MH by MH_WIRE
 							m_tmpVec[m_tmpVecSize++] = pW;					// Add pW to set of visited points
 							iMaxMH = std::max(iMaxMH, iOtherMH);			// Update iMaxMH
 							pW->SetMH(iOtherMH);
@@ -411,7 +450,6 @@ unsigned int Board::Manhatten(Element* p)
 			}
 		}
 	}
-	return BAD_MH;
 }
 
 void Board::CheckAllComplete()

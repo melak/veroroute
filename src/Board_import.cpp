@@ -251,3 +251,52 @@ bool Board::Import(const TemplateManager& templateMgr, const std::string& filena
 
 	return bOK;
 }
+
+bool Board::BreakComponentIntoPads(Component& comp)
+{
+	const COMP& eType = comp.GetType();
+	if ( eType == COMP::VIA || eType == COMP::PAD || eType == COMP::WIRE ) return false;	// Not real components
+	if ( !comp.GetIsPlaced() ) return false;	// Can't break a floating component
+
+	std::vector<int> nodeList;	// Re-used for each new pad
+	nodeList.resize(1, BAD_NODEID);
+
+	const size_t numPins = comp.GetNumPins();
+	for (size_t iPinIndex = 0; iPinIndex < numPins; iPinIndex++)	// Loop component pins
+	{
+		// Create a new PAD component for the pin, with suitable name, value, nodeId
+		static char buffer[32];
+		sprintf(buffer, "_%d", (int)(iPinIndex+1));
+		nodeList[0] = comp.GetNodeId(iPinIndex);
+		Component tmp(comp.GetNameStr() + std::string(buffer), comp.GetValueStr(), COMP::PAD, nodeList);
+
+		// Find board location of existing pin, and put the new PAD there
+		int row, col;
+		if ( GetPinRowCol(comp.GetId(), iPinIndex, row, col) )
+		{
+			tmp.SetRow(row);
+			tmp.SetCol(col);
+			AddComponent(nullptr, tmp, false);	// Add PAD floating over the existing pin
+		}
+	}
+	DestroyComponent(comp);	// All pins have been copied, so destroy the old component
+	PlaceFloaters();		// Unfloat the new PADs
+	return true;
+}
+
+bool Board::GetPinRowCol(const int& compId, const size_t& iPinIndex, int& row, int& col) const
+{
+	if ( compId == BAD_COMPID || iPinIndex == BAD_PININDEX ) return false;
+
+	const int iSize = GetSize();
+	for (int i = 0; i < iSize; i++)
+	{
+		Element* p = GetAtConst(i);
+		if ( p->GetCompId() == compId && p->GetPinIndex() == iPinIndex )
+		{
+			GetRowCol(p, row, col);
+			return true;
+		}
+	}
+	return false;
+}
