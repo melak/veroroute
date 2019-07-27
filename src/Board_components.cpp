@@ -639,7 +639,7 @@ void Board::ChangeTypeUserComp(const COMP& eType)
 	const int oldLength			= ( oldPinSeparation > 0 ) ? oldPinSeparation : comp.GetCols();
 	WipeAutoSetPoints();
 	TakeOff(comp);
-	comp.FootPrint::Build(eType);
+	comp.BuildDefault(eType);
 	comp.SetDefaultPinFlags();
 	comp.SetDefaultStrings();
 	comp.AddDefaultShapes();

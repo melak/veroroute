@@ -99,6 +99,10 @@ public:
 	virtual void ApplyMergeOffsets(const MergeOffsets&) override
 	{
 	}
+	void Merge(const Pin& o)
+	{
+		*this = o;
+	}
 	// Persist interface functions
 	virtual void Load(DataStream& inStream) override
 	{

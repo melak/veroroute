@@ -21,7 +21,7 @@
 #include "CompManager.h"
 #include "RectManager.h"
 
-void FootPrint::Build(const COMP& type)
+void FootPrint::BuildDefault(const COMP& type)
 {
 	// This method is for building a regular component (not a "tracks" component, or "custom" component)
 	SetType(type);
@@ -52,7 +52,7 @@ void FootPrint::Build(const COMP& type)
 	}
 }
 
-void FootPrint::Build(CompManager* pCompMgr, const RectManager& rectMgr, const ElementGrid& o, const int& nRowMin, const int& nRowMax, const int& nColMin, const int& nColMax)
+void FootPrint::BuildTracks(CompManager* pCompMgr, const RectManager& rectMgr, const ElementGrid& o, const int& nRowMin, const int& nRowMax, const int& nColMin, const int& nColMax)
 {
 	// This method is for building a "tracks" component
 	SetType(COMP::TRACKS);
@@ -79,14 +79,9 @@ void FootPrint::Build(CompManager* pCompMgr, const RectManager& rectMgr, const E
 				const Component& comp = pCompMgr->GetComponentById( pSource->GetCompId() );
 				iNodeId = comp.GetOrigId( pSource->GetPinIndex() );
 			}
-			pTarget->SetPinIndex(BAD_PININDEX);
-			pTarget->SetSurface(SURFACE_FREE);
-			pTarget->SetCompId(BAD_COMPID);
 			pTarget->SetNodeId(iNodeId);
 			pTarget->SetCode(pSource->GetCode());	//TDDO This is wrong at boundaries
 			pTarget->SetFlagBits(RECTSET);
-			pTarget->SetPinIndex(BAD_PININDEX);
-			pTarget->SetIsVia(false);
 		}
 	}
 }

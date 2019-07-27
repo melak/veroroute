@@ -57,7 +57,7 @@ public:
 	{
 		Clear();
 
-		Build(pCompMgr, rectMgr, grid, nRowMin, nRowMax, nColMin, nColMax);	// This method is for building a "tracks" component
+		BuildTracks(pCompMgr, rectMgr, grid, nRowMin, nRowMax, nColMin, nColMax);	// Build method for "tracks" component
 
 		SetDefaultStrings();
 
@@ -69,7 +69,7 @@ public:
 	{
 		Clear();
 
-		Build(eType);
+		BuildDefault(eType);	// Build method for default component
 
 		SetDefaultPinFlags();
 		SetDefaultStrings();

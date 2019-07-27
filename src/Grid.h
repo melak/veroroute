@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "Element.h"	// For definition of CompElement and Element
+#include "Element.h"	// For definitions of Pin, Track, CompElement, Element
 #include "CompTypes.h"	// For component length limits
 
 // Grid is a templatized 2-dimensional array, with data that can be indexed by row and column
@@ -150,6 +150,8 @@ public:
 	bool operator==(const PinGrid& o) const { return Grid<Pin>::operator==(o); }
 	bool operator!=(const PinGrid& o) const	{ return Grid<Pin>::operator!=(o); }
 };
+
+typedef Grid<TrackElement> TrackElementGrid;
 
 // The CompElementGrid class is used for component footprints and "track footprints".
 // It can handle simple transformations like stretching and rotating.
@@ -303,7 +305,8 @@ public:
 	}
 	void CopyTo(CompElementGrid& o) const
 	{
-		o.Allocate(GetRows(), GetCols());
+		if ( o.GetRows() != GetRows() || o.GetCols() != GetCols() )
+			o.Allocate(GetRows(), GetCols());
 		const int iSize = GetSize();
 		for (int i = 0; i < iSize; i++)
 			o.GetAt(i)->operator=(*GetAtConst(i));

@@ -37,16 +37,15 @@
 // So within a layer there would still be 8 neighbours per element, but at pin element
 // there would be 8*numlayer neighbours.
 
+const int			TRAX_COMPID = -2;		// The component manager member m_trax has this ID
+const int			BAD_COMPID  = -1;		// Invalid component ID
+const unsigned int	BAD_ROUTEID = UINT_MAX;	// Invalid route (i.e. track section) ID
+const unsigned int	BAD_MH		= UINT_MAX;	// "Infinite" MH distance
+
 class Element : public CompElement
 {
 public:
-	Element()
-	: CompElement()
-	, m_bSolderR(false)
-	, m_iRoutable(0)
-	, m_MH(BAD_MH)
-	, m_maxMH(0)
-	, m_routeId(BAD_ROUTEID)
+	Element() : CompElement()
 	{
 		memset(m_pNbr, 0, 8 * sizeof(Element*));
 		m_pW = nullptr;
@@ -56,11 +55,13 @@ public:
 	Element& operator=(const Element& o)
 	{
 		CompElement::operator=(o);	// Call operator= in base class
+		m_bIsVia		= o.m_bIsVia;
+		m_compId		= o.m_compId;
 		m_bSolderR		= o.m_bSolderR;
-		//m_iRoutable		= o.m_iRoutable;	// This should only be set by the Board::Glue() method
 		m_MH			= o.m_MH;
 		m_maxMH			= o.m_maxMH;
 		m_routeId		= o.m_routeId;
+		//m_iRoutable	= o.m_iRoutable;	// This should only be set by the Board::Glue() method
 		// Zero the connection pointers m_pNbr[] and m_pW.
 		// These should only be set by Board::GlueNbrs() and Board::GlueWires().
 		// m_pW can also be modified by the methods Board::PutDown() and Board::TakeOff().
@@ -68,9 +69,11 @@ public:
 		m_pW = nullptr;
 		return *this;
 	}
-	bool operator==(const Element& o) const	// Compare persisted info
+	bool operator==(const Element& o) const	// Compare persisted info only
 	{
-		return CompElement::operator==(o);
+		return	CompElement::operator==(o)
+			&&	m_bIsVia	== o.m_bIsVia
+			&&	m_compId	== o.m_compId;
 	}
 	bool operator!=(const Element& o) const
 	{
@@ -90,19 +93,24 @@ public:
 		GetNbr(NBR_L)->UpdateUsed(NBR_RT);	GetNbr(NBR_R)->UpdateUsed(NBR_LT);	// LTX, RTX
 		GetNbr(NBR_L)->UpdateUsed(NBR_RB);	GetNbr(NBR_R)->UpdateUsed(NBR_LB);	// LBX, RBX
 	}
+
+	void SetIsVia(const bool& b)				{ m_bIsVia = b; }
+	void SetCompId(const int& i)				{ m_compId = i; }
 	void SetSolderR(const bool& b)				{ m_bSolderR	= b; }
-	void SetRoutable(const int& i)				{ m_iRoutable	= i; }
 	void SetMH(const unsigned int& i)			{ m_MH			= i; }
 	void SetMaxMH(const unsigned int& i)		{ m_maxMH		= i; }
 	void SetRouteId(const unsigned int& i)		{ m_routeId		= i; }
+	void SetRoutable(const int& i)				{ m_iRoutable	= i; }
 	void SetNbr(const int& iNbr, Element* p)	{ m_pNbr[iNbr]	= p; }
 	void SetW(Element* p)						{ m_pW			= p; }
 
+	const bool&			GetIsVia() const				{ return m_bIsVia; }
+	const int&			GetCompId() const				{ return m_compId; }
 	const bool&			GetSolderR() const				{ return m_bSolderR; }
-	const int&			GetRoutable() const				{ return m_iRoutable; }
 	const unsigned int&	GetMH() const					{ return m_MH; }
 	const unsigned int& GetMaxMH() const				{ return m_maxMH; }
 	const unsigned int&	GetRouteId() const				{ return m_routeId; }
+	const int&			GetRoutable() const				{ return m_iRoutable; }
 	Element*			GetNbr(const int& iNbr) const	{ return m_pNbr[iNbr]; }
 	Element*			GetW() const					{ return m_pW; }
 
@@ -185,14 +193,47 @@ public:
 			default:	 return false;
 		}
 	}
+	// Merge interface functions
+	virtual void UpdateMergeOffsets(MergeOffsets& o) override
+	{
+		CompElement::UpdateMergeOffsets(o);
+		if ( m_compId != BAD_COMPID && m_compId != TRAX_COMPID )
+			o.deltaCompId = std::max(o.deltaCompId,  m_compId + 1);
+	}
+	virtual void ApplyMergeOffsets(const MergeOffsets& o) override
+	{
+		CompElement::ApplyMergeOffsets(o);
+		if ( m_compId != BAD_COMPID	&& m_compId != TRAX_COMPID)
+			m_compId += o.deltaCompId;
+	}
+	void Merge(const Element& o)
+	{
+		CompElement::Merge(o);
+		m_bIsVia = o.m_bIsVia;
+		m_compId = o.m_compId;
+	}
 	// Persist interface functions
 	virtual void Load(DataStream& inStream) override
 	{
-		CompElement::Load(inStream);	// Load() base class
+		if ( inStream.GetVersion() < VRT_VERSION_25 )
+		{
+			Pin::Load(inStream);			// Load() base class
+			inStream.Load(m_compId);
+			TrackElement::Load(inStream);	// Load() base class
+			inStream.Load(m_bIsVia);
+		}
+		else
+		{
+			CompElement::Load(inStream);	// Load() base class
+			inStream.Load(m_bIsVia);
+			inStream.Load(m_compId);
+		}
 	}
 	virtual void Save(DataStream& outStream) override
 	{
-		CompElement::Save(outStream);	// Save() base class
+		CompElement::Save(outStream);		// Save() base class
+		outStream.Save(m_bIsVia);
+		outStream.Save(m_compId);
 	}
 private:
 	bool CheckUsed(const int& iNbr) const
@@ -200,13 +241,16 @@ private:
 		return GetNodeId() != BAD_NODEID && GetNodeId() == GetNbr(iNbr)->GetNodeId() && !IsBlocked(iNbr, GetNodeId());
 	}
 private:
+	// Persist info
+	bool			m_bIsVia	= false;
+	int				m_compId	= BAD_COMPID;	// For elements with a valid pinindex, this is the ID of the parent component
 	// Working variables.	Don't persist.
-	bool			m_bSolderR;		// true ==> have blob of solder to right (for joining vero tracks)
-	int				m_iRoutable;	// Set by Board::GlueNbrs().  An 8-bit code used to enable/disable connections to the 8 neighbours
-	unsigned int	m_MH;			// Manhatten distance to another element.  For the routing/connectivity algorithm.
-	unsigned int	m_maxMH;		// For the routing algorithm.
-	unsigned int	m_routeId;		// For the routing algorithm.
+	bool			m_bSolderR	= false;		// true ==> have blob of solder to right (for joining vero tracks)
+	unsigned int	m_MH		= BAD_MH;		// Manhatten distance to another element.  For the routing/connectivity algorithm.
+	unsigned int	m_maxMH		= 0;			// For the routing algorithm.
+	unsigned int	m_routeId	= BAD_ROUTEID;	// For the routing algorithm.
+	int				m_iRoutable	= 0;			// Set by Board::GlueNbrs().  An 8-bit code used to enable/disable connections to the 8 neighbours
 	// Connection pointers. Set by Board::GlueNbrs() and Board::GlueWires().	Don't persist.
-	Element*		m_pNbr[8];		// 0 to 7 <==> NBR_L to NBR_LB
-	Element*		m_pW;			// Element at other end of wire/jumper (if one end is here)
+	Element*		m_pNbr[8];					// 0 to 7 <==> NBR_L to NBR_LB
+	Element*		m_pW;						// Element at other end of wire/jumper (if one end is here)
 };

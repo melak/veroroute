@@ -24,4 +24,5 @@ const int VRT_VERSION_21 = 21;	// Added target board size
 const int VRT_VERSION_22 = 22;	// Label offsets measured in 1/16th of a square instead of 1/4
 const int VRT_VERSION_23 = 23;	// Added component definer
 const int VRT_VERSION_24 = 24;	// Added routing method parameter
-const int VRT_VERSION_CURRENT = VRT_VERSION_24;
+const int VRT_VERSION_25 = 25;	// Moves some variables from CompElement to Element
+const int VRT_VERSION_CURRENT = VRT_VERSION_25;

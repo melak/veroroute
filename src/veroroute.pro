@@ -56,6 +56,7 @@ HEADERS  += mainwindow.h \
     CompDefiner.h \
     Component.h \
     Pin.h \
+    TrackElement.h \
     CompElement.h \
     Element.h \
     Grid.h \
