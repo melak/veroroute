@@ -135,5 +135,6 @@
 //static const char* szVEROROUTE_VERSION = "1.56";			// Tweaked dialog layouts to better handle 11 point fonts.
 //static const char* szVEROROUTE_VERSION = "1.57";			// Improvement: Faster routing algorithm.
 //static const char* szVEROROUTE_VERSION = "1.58";			// Improvement: Faster routing and connectivity checking.
-static const char* szVEROROUTE_VERSION = "1.59";			// Improvement: Added Key/Mouse Actions dialog under Help menu.
-
+//static const char* szVEROROUTE_VERSION = "1.59";			// Improvement: Added Key/Mouse Actions dialog under Help menu.
+static const char* szVEROROUTE_VERSION = "1.60";			// Bug fix: Since V1.58, connected tracks were not always rendered properly.
+															// Improvement: Added option to disable "Fast" routing (to try reduce Bad Nodes).

@@ -141,3 +141,5 @@ V1.56  Tweaked dialog layouts to better handle 11 point fonts.
 V1.57  Improvement: Faster routing algorithm.
 V1.58  Improvement: Faster routing and connectivity checking.
 V1.59  Improvement: Added Key/Mouse Actions dialog under Help menu.
+V1.60  Bug fix: Since V1.58, connected tracks were not always rendered properly.
+       Improvement: Added option to disable "Fast" routing (to try reduce Bad Nodes).
