@@ -338,7 +338,7 @@ void MainWindow::ResetView(bool bTutorial)
 	activateWindow();	// Select mainwindow rather than child dialogs
 	DestroyPixmapCache();
 
-	RepaintWithRouting(true);	// true  ==> force use of repaint() rather than update()
+	RepaintWithRouting();
 	ListNodes();		// Slow due lots of MH calcs
 }
 
@@ -1059,16 +1059,22 @@ void MainWindow::ListNodes(bool bRebuild)
 {
 	if ( bRebuild )
 	{
+		const bool& bAutoRouting = m_board.GetRoutingEnabled();
+
 		// If auto-routing is enabled, then the "RoutedOK" flags will have been set
 		// and we can use those instead of the "Complete" flags.
 
-		const bool& bAutoRouting = m_board.GetRoutingEnabled();
-		if ( !bAutoRouting ) m_board.CheckAllComplete();	// Slow !!!
+		// If auto-routing is disabled, we need to call CheckAllComplete() with a copy of
+		// the board so that current routing results are not wiped (e.g. we may have a nodeId selected and showing connectivity).
+
+		Board* pBoard = ( bAutoRouting ) ? &m_board : new Board(m_board, false);	// false ==> fast copy without RebuildAdjacencies()
+
+		if ( !bAutoRouting ) pBoard->CheckAllComplete();	// Slow !!!
 
 		m_controlDlg->ClearLists();
 
-		CompManager&		compMgr		= m_board.GetCompMgr();
-		NodeInfoManager&	nodeInfoMgr	= m_board.GetNodeInfoMgr();
+		CompManager&		compMgr		= pBoard->GetCompMgr();
+		NodeInfoManager&	nodeInfoMgr	= pBoard->GetNodeInfoMgr();
 		for (size_t i = 0; i < nodeInfoMgr.GetSize(); i++)
 		{
 			NodeInfo* p = nodeInfoMgr.GetAt(i);
@@ -1083,6 +1089,7 @@ void MainWindow::ListNodes(bool bRebuild)
 			const bool bBroken	 = bFloating || !bComplete;
 			m_controlDlg->AddListItem(myStr, bBroken, bFloating);
 		}
+		if ( !bAutoRouting) delete pBoard;	// If we made a copy of the board then delete it
 	}
 	m_controlDlg->SetListItems( GetCurrentNodeId() );	// Highlight current NodeId in the lists
 }
@@ -1097,6 +1104,18 @@ void MainWindow::EnableRouting(bool b)
 	RepaintWithRouting();
 	ListNodes();
 }
+
+void MainWindow::EnableFastRouting(bool b)
+{
+	const int iMethod = ( b ) ? 0 : 1;
+	if ( !m_board.SetRoutingMethod(iMethod) ) return;	// Quit if no change
+	if ( !b ) m_board.WipeAutoSetPoints();
+	UpdateHistory(b ? "Enable Fast-Routing" : "Disable Fast-Routing");
+	UpdateControls();
+	RepaintWithRouting();
+	ListNodes();
+}
+
 void MainWindow::Paste()		// On hitting the Paste button ...
 {
 	if ( !m_board.GetRoutingEnabled() ) return;

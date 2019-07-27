@@ -56,6 +56,7 @@ public:
 		m_iTargetCols		= o.m_iTargetCols;
 		m_iTextSizeComp		= o.m_iTextSizeComp;
 		m_iTextSizePins		= o.m_iTextSizePins;
+		m_iRoutingMethod	= o.m_iRoutingMethod;
 		m_bShowTarget		= o.m_bShowTarget;
 		m_bVeroTracks		= o.m_bVeroTracks;
 		m_bCurvedTracks		= o.m_bCurvedTracks;
@@ -91,6 +92,7 @@ public:
 			&&	m_iTargetCols		== o.m_iTargetCols
 			&&	m_iTextSizeComp		== o.m_iTextSizeComp
 			&&	m_iTextSizePins		== o.m_iTextSizePins
+			&&	m_iRoutingMethod	== o.m_iRoutingMethod
 			&&	m_bShowTarget		== o.m_bShowTarget
 			&&	m_bVeroTracks		== o.m_bVeroTracks
 			&&	m_bCurvedTracks		== o.m_bCurvedTracks
@@ -187,6 +189,9 @@ public:
 		m_iTextSizePins = 9;
 		if ( inStream.GetVersion() >= VRT_VERSION_17 )
 			inStream.Load(m_iTextSizePins);		// Added in VRT_VERSION_17
+		m_iRoutingMethod = 0;
+		if ( inStream.GetVersion() >= VRT_VERSION_24 )
+			inStream.Load(m_iRoutingMethod);	// Added in VRT_VERSION_24
 		m_bShowTarget = false;
 		if ( inStream.GetVersion() >= VRT_VERSION_21 )
 			inStream.Load(m_bShowTarget);		// Added in VRT_VERSION_21
@@ -237,6 +242,7 @@ public:
 		outStream.Save(m_iTargetCols);		// Added in VRT_VERSION_21
 		outStream.Save(m_iTextSizeComp);	// Added in VRT_VERSION_17
 		outStream.Save(m_iTextSizePins);	// Added in VRT_VERSION_17
+		outStream.Save(m_iRoutingMethod);	// Added in VRT_VERSION_24
 		outStream.Save(m_bShowTarget);		// Added in VRT_VERSION_21
 		outStream.Save(m_bVeroTracks);
 		outStream.Save(m_bCurvedTracks);
@@ -269,6 +275,7 @@ public:
 	bool SetTargetCols(const int& i)		{ const bool bChanged = ( m_iTargetCols		!= i ); m_iTargetCols	  = i; return bChanged; }
 	bool SetTextSizeComp(const int& i)		{ const bool bChanged = ( m_iTextSizeComp	!= i ); m_iTextSizeComp	  = i; return bChanged; }
 	bool SetTextSizePins(const int& i)		{ const bool bChanged = ( m_iTextSizePins	!= i ); m_iTextSizePins	  = i; return bChanged; }
+	bool SetRoutingMethod(const int& i)		{ const bool bChanged = ( m_iRoutingMethod	!= i ); m_iRoutingMethod  = i; return bChanged; }
 	bool SetShowTarget(const bool& b)		{ const bool bChanged = ( m_bShowTarget		!= b ); m_bShowTarget	  = b; return bChanged; }
 	bool SetVeroTracks(const bool& b)		{ const bool bChanged = ( m_bVeroTracks		!= b ); m_bVeroTracks	  = b; return bChanged; }
 	bool SetCurvedTracks(const bool& b)		{ const bool bChanged = ( m_bCurvedTracks	!= b ); m_bCurvedTracks	  = b; return bChanged; }
@@ -300,6 +307,7 @@ public:
 	const int&			GetTargetCols() const		{ return m_iTargetCols; }
 	const int&			GetTextSizeComp() const		{ return m_iTextSizeComp; }
 	const int&			GetTextSizePins() const		{ return m_iTextSizePins; }
+	const int&			GetRoutingMethod() const	{ return m_iRoutingMethod; }
 	const bool&			GetShowTarget() const		{ return m_bShowTarget; }
 	const bool&			GetVeroTracks() const		{ return m_bVeroTracks; }
 	const bool&			GetCurvedTracks() const		{ return m_bCurvedTracks; }
@@ -342,6 +350,7 @@ private:
 	int			m_iTargetCols		= 10;				// Desired board size
 	int			m_iTextSizeComp		= 9;				// Point size for component text
 	int			m_iTextSizePins		= 9;				// Point size for component pins
+	int			m_iRoutingMethod	= 0;				// Routing method. 0 ==> fast, 1 ==> allow rip-up
 	bool		m_bShowTarget		= false;			// true ==> show target board area
 	bool		m_bVeroTracks		= false;
 	bool		m_bCurvedTracks		= false;

@@ -376,7 +376,7 @@ public:
 	void WipeAutoSetPoints(const int nodeId = BAD_NODEID);
 	void BuildTargetPins(const int& nodeId);
 	void Route();
-	bool Flood(const int& nodeId);
+	unsigned int Flood(const int& nodeId);
 	void Backtrace(Element* pEnd, const int& nodeId);
 	void Manhatten(Element* p);
 	void CheckAllComplete();

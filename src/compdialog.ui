@@ -34,6 +34,9 @@
      <height>24</height>
     </rect>
    </property>
+   <property name="mouseTracking">
+    <bool>true</bool>
+   </property>
    <property name="focusPolicy">
     <enum>Qt::ClickFocus</enum>
    </property>
@@ -46,6 +49,9 @@
      <width>181</width>
      <height>24</height>
     </rect>
+   </property>
+   <property name="mouseTracking">
+    <bool>true</bool>
    </property>
    <property name="focusPolicy">
     <enum>Qt::ClickFocus</enum>
@@ -60,6 +66,9 @@
      <height>24</height>
     </rect>
    </property>
+   <property name="mouseTracking">
+    <bool>true</bool>
+   </property>
    <property name="focusPolicy">
     <enum>Qt::ClickFocus</enum>
    </property>
@@ -72,6 +81,9 @@
      <width>181</width>
      <height>24</height>
     </rect>
+   </property>
+   <property name="mouseTracking">
+    <bool>true</bool>
    </property>
    <property name="focusPolicy">
     <enum>Qt::ClickFocus</enum>
@@ -699,6 +711,12 @@
       <width>81</width>
       <height>27</height>
      </rect>
+    </property>
+    <property name="mouseTracking">
+     <bool>false</bool>
+    </property>
+    <property name="focusPolicy">
+     <enum>Qt::NoFocus</enum>
     </property>
     <property name="text">
      <string>Labels</string>

@@ -76,11 +76,13 @@ void Board::Route()
 	// When routing is enabled,  this method will build tracks and update the "RoutedOK" flags.
 	// When routing is disabled, this method will update the "RoutedOK" flags without building new tracks.
 
+//	const auto start = std::chrono::steady_clock::now();
+
 	if ( GetRoutingEnabled() ) WipeAutoSetPoints();
 
 	m_nodeInfoMgr.SortByLowestDifficulty(m_compMgr);
 
-	const bool bRipUpEnabled	= false;	//TODO Provide a switch to enable rip-up
+	const bool bRipUpEnabled	= GetRoutingMethod() == 1;
 	const bool bAllowRipUp		= bRipUpEnabled && GetRoutingEnabled();
 
 	const size_t numNodes = m_nodeInfoMgr.GetSize();
@@ -88,13 +90,24 @@ void Board::Route()
 	{
 		NodeInfo* pI = m_nodeInfoMgr.GetAt(i);
 		const int& nodeIdI = pI->GetNodeId();
-		bool bRoutedOK = ( nodeIdI != BAD_NODEID ) ? Flood(nodeIdI) : false;	// Flood with MH values, starting from the m_targetPins
+
+		// Flood with MH values, starting from the m_targetPins
+		unsigned int costImin = ( nodeIdI != BAD_NODEID ) ? Flood(nodeIdI) : UINT_MAX;
+		bool bRoutedOK = ( costImin == 0 );
+
+		pI->SetRoutedOK(bRoutedOK);
 
 		if ( bAllowRipUp && nodeIdI != BAD_NODEID && !bRoutedOK && i > 0 )
 		{
+			CompElementGrid Ibest, Iripped;
+
+			CopyTo(Ibest);
+
 			WipeAutoSetPoints(nodeIdI);		// Rip-up I
 
-			size_t j(i-1);
+			CopyTo(Iripped);
+
+			size_t j(i-1);	// Loop j through previously routed nodeIds
 			while( !bRoutedOK )
 			{
 				NodeInfo* pJ = m_nodeInfoMgr.GetAt(j);
@@ -102,36 +115,47 @@ void Board::Route()
 				if ( nodeIdJ != BAD_NODEID )
 				{
 					WipeAutoSetPoints(nodeIdJ);	// Rip-up J
-					if ( Flood(nodeIdI) )			// Try I
+
+					const unsigned int costI = Flood(nodeIdI);	// Route I ...
+					if ( costI < costImin )						// ... and if the route was improved ...
 					{
-						if ( Flood(nodeIdJ) )			// Try J
+						if ( Flood(nodeIdJ) == 0 )				// ... then route J
 						{
-							pJ->SetRoutedOK(true);
-							bRoutedOK = true;
-							break;
+							// J was routed OK
+							bRoutedOK = ( costI == 0 );
+							if ( bRoutedOK )					// If I was routed OK too ...
+								pI->SetRoutedOK(true);			// ... we're done swapping
+							else
+							{
+								CopyTo(Ibest);					// ... otherwise log the improved route for I
+								costImin = costI;				// ... and update costI
+							}
 						}
-						WipeAutoSetPoints(nodeIdJ);		// Rip-up J
 					}
-					WipeAutoSetPoints(nodeIdI);		// Rip-up I
-					Flood(nodeIdJ);				// Restore J
+					if ( !bRoutedOK ) CopyFrom(Iripped);	// Revert to ripped-up I
 				}
 				if ( j == 0 ) break; else j--;
 			}
-			if ( !bRoutedOK )
-				Flood(nodeIdI);				// Restore I
+			if ( !bRoutedOK ) CopyFrom(Ibest);
 		}
-		pI->SetRoutedOK(bRoutedOK);
 	}
+//	const auto elapsed = std::chrono::steady_clock::now() - start;
+//	const auto duration_ms	= std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
+//	std::cout << "Time : " << duration_ms << std::endl;
 }
 
-bool Board::Flood(const int& iFloodNodeId)	// Flood with MH values, starting from the m_targetPins
+unsigned int Board::Flood(const int& iFloodNodeId)
 {
+	// Flood the board with MH values, starting from the m_targetPins.
+	// The return value is a cost that shows how unconnected the pins are.
+	// Zero cost means the pins are all inter-connected.
+
 	assert(iFloodNodeId != BAD_NODEID);
 
 	const bool& bAutoRoute = GetRoutingEnabled();	// true ==> build new tracks based on the flood of MH values
 
 	BuildTargetPins(iFloodNodeId);	// Populate m_targetPins
-	if ( m_targetPins.size() < 2 ) return true;
+	if ( m_targetPins.size() < 2 ) return 0;	// Return cost of zero
 
 	const int iSize = GetSize();
 	for (int i = 0; i < iSize; i++)	// Loop all grid points
@@ -158,12 +182,13 @@ bool Board::Flood(const int& iFloodNodeId)	// Flood with MH values, starting fro
 	const unsigned int numRIDs = RID + 1;	assert( m_targetPins.size() == (size_t) numRIDs );
 
 	// Set up the connection matrix ppConn[][] to indicate which pairs of targetPins are connected
-	const size_t connSize = numRIDs * numRIDs;
+	const unsigned int connSize = numRIDs * numRIDs;
 	bool*	pConn	= new bool[connSize];
 	bool**	ppConn	= new bool*[numRIDs];
 	memset(pConn, 0, connSize * sizeof(bool));
 	for (size_t i = 0; i < numRIDs; i++) ppConn[i] = pConn + i * numRIDs;
 	for (size_t i = 0; i < numRIDs; i++) ppConn[i][i] = true;	// Each pin is connected to itself
+	unsigned int cost(connSize - numRIDs);	// Cost = number of false values in the connection matrix
 
 	typedef std::pair<unsigned int, unsigned int> CONNECTION;
 	std::list<CONNECTION> list;	// Helper for updating the connection matrix
@@ -263,7 +288,7 @@ bool Board::Flood(const int& iFloodNodeId)	// Flood with MH values, starting fro
 								if ( !ppConn[a][b] )	// If no a-b connection ...
 								{
 									ppConn[a][b] = ppConn[b][a] = true;	// Make a-b connection ...
-
+									cost -= 2;							// Update cost
 									for (unsigned int c = 0; c < numRIDs; c++)	// Update 1st-order transitive relations
 									{
 										if ( c == a || c == b ) continue;
@@ -272,12 +297,7 @@ bool Board::Flood(const int& iFloodNodeId)	// Flood with MH values, starting fro
 									}
 								}
 							}
-
-							// If the connection matrix is totally filled, then we're done
-							bDone = true;
-							for (size_t i = 0; i < numRIDs && bDone; i++)
-								for (size_t j = i + 1; j < numRIDs && bDone; j++)
-									bDone = ppConn[i][j];
+							bDone = ( cost == 0 );	// Zero cost ==> done
 						}
 					}
 				}
@@ -287,7 +307,7 @@ bool Board::Flood(const int& iFloodNodeId)	// Flood with MH values, starting fro
 	// Deallocate connection matrix
 	delete[] ppConn;
 	delete[] pConn;
-	return bDone;
+	return cost;	// Returned cost
 }
 
 // Backtrace route from pEnd to point with MH = 0

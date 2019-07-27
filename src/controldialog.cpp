@@ -75,6 +75,7 @@ ControlDialog::ControlDialog(MainWindow* parent)
 	QObject::connect(ui->autoRoute,			SIGNAL(toggled(bool)),		m_pMainWindow,	SLOT(EnableRouting(bool)));
 	QObject::connect(ui->autoRoute,			SIGNAL(toggled(bool)),		ui->paste,		SLOT(setEnabled(bool)));
 	QObject::connect(ui->autoRoute,			SIGNAL(toggled(bool)),		ui->pasteTidy,	SLOT(setEnabled(bool)));
+	QObject::connect(ui->fast,				SIGNAL(toggled(bool)),		m_pMainWindow,	SLOT(EnableFastRouting(bool)));
 	QObject::connect(ui->paste,				SIGNAL(clicked()),			m_pMainWindow,	SLOT(Paste()));
 	QObject::connect(ui->pasteTidy,			SIGNAL(clicked()),			m_pMainWindow,	SLOT(PasteTidy()));
 	QObject::connect(ui->wipe,				SIGNAL(clicked()),			m_pMainWindow,	SLOT(WipeTracks()));
@@ -206,6 +207,8 @@ void ControlDialog::UpdateControls()	// Non-component controls
 
 	ui->autoRoute->setChecked( board.GetRoutingEnabled() );
 	ui->autoRoute->setDisabled( bCompEdit );
+	ui->fast->setChecked( board.GetRoutingMethod() == 0 );
+	ui->fast->setDisabled( bCompEdit );
 	ui->wipe->setDisabled( bCompEdit || board.GetDisableWipe() );
 
 	// Do sliders last (they can trigger a redraw)

@@ -199,6 +199,12 @@
       <height>24</height>
      </rect>
     </property>
+    <property name="mouseTracking">
+     <bool>false</bool>
+    </property>
+    <property name="focusPolicy">
+     <enum>Qt::NoFocus</enum>
+    </property>
     <property name="toolTip">
      <string>Draw area outside the target board in a darker shade</string>
     </property>

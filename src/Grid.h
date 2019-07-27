@@ -293,4 +293,19 @@ public:
 		for (int iCol = 0; iCol < GetCols(); iCol++)
 			Set(iRow, iCol, *(tmp.Get(iRow - iDown, iCol - iRight)));	// ElementGrid::Get() accounts for toroidal behaviour
 	}
+	bool CopyFrom(const CompElementGrid& o)
+	{
+		if ( o.GetRows() != GetRows() || o.GetCols() != GetCols() ) return false;
+		const int iSize = GetSize();
+		for (int i = 0; i < iSize; i++)
+			GetAt(i)->CompElement::operator=(*o.GetAtConst(i));
+		return true;
+	}
+	void CopyTo(CompElementGrid& o) const
+	{
+		o.Allocate(GetRows(), GetCols());
+		const int iSize = GetSize();
+		for (int i = 0; i < iSize; i++)
+			o.GetAt(i)->operator=(*GetAtConst(i));
+	}
 };

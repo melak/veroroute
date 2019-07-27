@@ -251,6 +251,7 @@ public slots:
 	void ListNodes(bool bRebuild = true);
 	// Routing controls
 	void EnableRouting(bool b);
+	void EnableFastRouting(bool b);
 	void Paste();
 	void PasteTidy();
 	void WipeTracks();
