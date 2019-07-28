@@ -99,7 +99,7 @@ void Board::Route()
 
 		if ( bAllowRipUp && nodeIdI != BAD_NODEID && !bRoutedOK && i > 0 )
 		{
-			CompElementGrid Ibest, Iripped;
+			TrackElementGrid Ibest, Iripped;
 
 			CopyTo(Ibest);
 
@@ -197,7 +197,7 @@ unsigned int Board::Flood(const int& iFloodNodeId)
 	const unsigned int iMaxDeltaMH = ( bDiagsOK ) ? MH_DIAG : MH_LRTB;	// The max MH increment depends on if diagonals are allowed
 
 	size_t jjStart(0);
-	unsigned int iMH(0), iMaxMH(0);
+	unsigned int iMH(MH_LRTB-1), iMaxMH(0);	// Set iMH so it's incremented to MH_LRTB on loop entry
 
 	bool bDone(false);
 	while( !bDone )

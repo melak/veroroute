@@ -575,14 +575,12 @@ private:
 					int iCol( comp.GetCol() );
 					for (int i = 0; i < comp.GetCompCols(); i++, iCol++)
 					{
-						Element* pGrid = Get(jRow, iCol);
-						assert( comp.GetCompElement(j, i)->GetIsPin() == pGrid->GetIsPin() );
-						assert( pGrid->GetSurface() == SURFACE_PLUG || pGrid->GetSurface() == SURFACE_FULL );
-						const bool bGap = ( pGrid->GetSurface() & SURFACE_GAP ) > 0;
-						uchar surface = pGrid->GetIsPin() ? SURFACE_WIRE_END : SURFACE_WIRE;
-						if ( bGap ) surface += SURFACE_GAP;
-						pGrid->SetSurface( surface );
-						pGrid->SetHoleUse( pGrid->GetIsPin() ? HOLE_WIRE : HOLE_FREE );
+						Element* p = Get(jRow, iCol);
+						assert( comp.GetCompElement(j, i)->GetIsPin() == p->GetIsPin() );
+						assert( p->GetSurface() == SURFACE_PLUG || p->GetSurface() == SURFACE_FULL );
+						const bool bGap = ( p->GetSurface() & SURFACE_GAP ) > 0;
+						p->SetWireOccupancies();
+						if ( bGap ) p->SetSurface( p->GetSurface() + SURFACE_GAP );
 					}
 				}
 			}

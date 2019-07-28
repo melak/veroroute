@@ -19,7 +19,8 @@
 
 #pragma once
 
-#include "Element.h"	// For definitions of Pin, Track, CompElement, Element
+#include "CompElement.h"
+#include "Element.h"
 #include "CompTypes.h"	// For component length limits
 
 // Grid is a templatized 2-dimensional array, with data that can be indexed by row and column
@@ -140,16 +141,7 @@ private:
 };
 
 // The PinGrid class is used by the component editor class (CompDefiner)
-class PinGrid : public Grid<Pin>
-{
-public:
-	PinGrid(int rows = 0, int cols = 0) : Grid<Pin>(rows, cols) {}
-	PinGrid(const PinGrid& o) : Grid<Pin>(o) { *this = o; }
-	virtual ~PinGrid() {}
-	PinGrid& operator=(const PinGrid& o) { Grid<Pin>::operator=(o); return *this; }
-	bool operator==(const PinGrid& o) const { return Grid<Pin>::operator==(o); }
-	bool operator!=(const PinGrid& o) const	{ return Grid<Pin>::operator!=(o); }
-};
+typedef Grid<Pin> PinGrid;
 
 typedef Grid<TrackElement> TrackElementGrid;
 
@@ -199,12 +191,7 @@ public:
 	{
 		assert( GetRows() == 1 && GetCols() > 1 );
 		const int iSize = GetSize();
-		for (int i = 0; i < iSize; i++)
-		{
-			CompElement* p = GetAt(i);
-			p->SetSurface( p->GetIsPin() ? SURFACE_WIRE_END	: SURFACE_WIRE );
-			p->SetHoleUse( p->GetIsPin() ? HOLE_WIRE		: HOLE_FREE );
-		}
+		for (int i = 0; i < iSize; i++) GetAt(i)->SetWireOccupancies();
 	}
 	void StretchSimple(bool bGrow, const CompElement& initVal)	// For simple 2-pin components like resistors, wires, diodes, caps
 	{
@@ -306,15 +293,15 @@ public:
 		for (int iCol = 0; iCol < GetCols(); iCol++)
 			Set(iRow, iCol, *(tmp.Get(iRow - iDown, iCol - iRight)));	// ElementGrid::Get() accounts for toroidal behaviour
 	}
-	bool CopyFrom(const CompElementGrid& o)
+	bool CopyFrom(const TrackElementGrid& o)
 	{
 		if ( o.GetRows() != GetRows() || o.GetCols() != GetCols() ) return false;
 		const int iSize = GetSize();
 		for (int i = 0; i < iSize; i++)
-			GetAt(i)->CompElement::operator=(*o.GetAtConst(i));
+			GetAt(i)->TrackElement::operator=(*o.GetAtConst(i));
 		return true;
 	}
-	void CopyTo(CompElementGrid& o) const
+	void CopyTo(TrackElementGrid& o) const
 	{
 		if ( o.GetRows() != GetRows() || o.GetCols() != GetCols() )
 			o.Allocate(GetRows(), GetCols());

@@ -19,7 +19,8 @@
 
 #pragma once
 
-#include "CompElement.h"
+#include "Pin.h"
+#include "TrackElement.h"
 
 // The board is basically a Grid of "Element" objects.
 // "Element" derives from "Pin" and therefore has a description
@@ -42,19 +43,20 @@ const int			BAD_COMPID  = -1;		// Invalid component ID
 const unsigned int	BAD_ROUTEID = UINT_MAX;	// Invalid route (i.e. track section) ID
 const unsigned int	BAD_MH		= UINT_MAX;	// "Infinite" MH distance
 
-class Element : public CompElement
+class Element : public Pin, public TrackElement
 {
 public:
-	Element() : CompElement()
+	Element() : Pin(), TrackElement()
 	{
 		memset(m_pNbr, 0, 8 * sizeof(Element*));
 		m_pW = nullptr;
 	}
-	Element(const Element& o) : CompElement(o)	{ assert(0); *this = o; }	// The assert just shows this is never used
+	Element(const Element& o) : Pin(o), TrackElement(o)	{ assert(0); *this = o; }	// The assert just shows this is never used
 	~Element() {}
 	Element& operator=(const Element& o)
 	{
-		CompElement::operator=(o);	// Call operator= in base class
+		Pin::operator=(o);			// Call operator= in base class
+		TrackElement::operator=(o);	// Call operator= in base class
 		m_bIsVia		= o.m_bIsVia;
 		m_compId		= o.m_compId;
 		m_bSolderR		= o.m_bSolderR;
@@ -71,7 +73,8 @@ public:
 	}
 	bool operator==(const Element& o) const	// Compare persisted info only
 	{
-		return	CompElement::operator==(o)
+		return	Pin::operator==(o)
+			&&	TrackElement::operator==(o)
 			&&	m_bIsVia	== o.m_bIsVia
 			&&	m_compId	== o.m_compId;
 	}
@@ -81,7 +84,7 @@ public:
 	}
 	void SetNodeId(const int& i)	// Only called via the parent board method Board::SetNodeId()
 	{
-		CompElement::SetNodeId(i);
+		TrackElement::SetNodeId(i);
 
 		// Update usage flags for connections emanating from "this" element.
 		for (int iNbr = 0; iNbr < 8; iNbr++) UpdateUsed(iNbr);
@@ -124,7 +127,9 @@ public:
 	// Connectivity helpers
 	void UpdateUsed(const int& iNbr)
 	{
-		const bool bUsed = CheckUsed(iNbr);
+		const bool bUsed = GetNodeId() != BAD_NODEID
+						&& GetNodeId() == GetNbr(iNbr)->GetNodeId()
+						&& !IsBlocked(iNbr, GetNodeId());
 		SetUsed(iNbr, bUsed);
 		m_pNbr[iNbr]->SetUsed(Opposite(iNbr), bUsed);			// Keep consistent with nbr
 	}
@@ -196,19 +201,22 @@ public:
 	// Merge interface functions
 	virtual void UpdateMergeOffsets(MergeOffsets& o) override
 	{
-		CompElement::UpdateMergeOffsets(o);
+		Pin::UpdateMergeOffsets(o);	// Does nothing
+		TrackElement::UpdateMergeOffsets(o);
 		if ( m_compId != BAD_COMPID && m_compId != TRAX_COMPID )
 			o.deltaCompId = std::max(o.deltaCompId,  m_compId + 1);
 	}
 	virtual void ApplyMergeOffsets(const MergeOffsets& o) override
 	{
-		CompElement::ApplyMergeOffsets(o);
+		Pin::ApplyMergeOffsets(o);	// Does nothing
+		TrackElement::ApplyMergeOffsets(o);
 		if ( m_compId != BAD_COMPID	&& m_compId != TRAX_COMPID)
 			m_compId += o.deltaCompId;
 	}
 	void Merge(const Element& o)
 	{
-		CompElement::Merge(o);
+		Pin::Merge(o);
+		TrackElement::Merge(o);
 		m_bIsVia = o.m_bIsVia;
 		m_compId = o.m_compId;
 	}
@@ -224,26 +232,32 @@ public:
 		}
 		else
 		{
-			CompElement::Load(inStream);	// Load() base class
+			Pin::Load(inStream);			// Load() base class
+			TrackElement::Load(inStream);	// Load() base class
 			inStream.Load(m_bIsVia);
 			inStream.Load(m_compId);
 		}
 	}
 	virtual void Save(DataStream& outStream) override
 	{
-		CompElement::Save(outStream);		// Save() base class
+		Pin::Save(outStream);				// Save() base class
+		TrackElement::Save(outStream);		// Save() base class
 		outStream.Save(m_bIsVia);
 		outStream.Save(m_compId);
 	}
-private:
-	bool CheckUsed(const int& iNbr) const
-	{
-		return GetNodeId() != BAD_NODEID && GetNodeId() == GetNbr(iNbr)->GetNodeId() && !IsBlocked(iNbr, GetNodeId());
-	}
+	/*
+	void	SetPinIndex2(const size_t& i)	{ m_pinChar 2= ( i >= BAD_PINCHAR ) ? BAD_PINCHAR : static_cast<uchar> (i); }
+	size_t	GetPinIndex2() const			{ return ( m_pinChar2 == BAD_PINCHAR ) ? BAD_PININDEX : m_pinChar2; }
+	*/
 private:
 	// Persist info
 	bool			m_bIsVia	= false;
 	int				m_compId	= BAD_COMPID;	// For elements with a valid pinindex, this is the ID of the parent component
+	/*
+	int				m_compId2	= BAD_COMPID;	// Only used when we have 2 wires sharing a hole
+	uchar			m_pinChar2	= BAD_PIN_CHAR;	// Only used when we have 2 wires sharing a hole
+	*/
+
 	// Working variables.	Don't persist.
 	bool			m_bSolderR	= false;		// true ==> have blob of solder to right (for joining vero tracks)
 	unsigned int	m_MH		= BAD_MH;		// Manhatten distance to another element.  For the routing/connectivity algorithm.

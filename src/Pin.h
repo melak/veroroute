@@ -21,13 +21,16 @@
 
 #include "Persist.h"
 
-//	"Pin" is a base class for "CompElement" which in turn is a base class for "Element".
+//	"Pin" is a base class for "CompElement" and "Element".
 //	A component's spatial layout (or "Footprint") is a two-dimensional array of "CompElement" objects.
 //	The "Board" object used for designing a circuit is a two-dimensional array of "Element" objects.
 //
 //	There are 3 parts to the description of a "Pin":
 //
-//	1)	The surface description "m_surface" models the interaction between a component and the board surface.
+//	1)	The pin character "m_pinChar" is just a pinIndex in the range 0 to 254.
+//		Places with no pin (e.g. the middle of a resistor) have m_pinChar of 255 and an invalid pinIndex.
+//
+//	2)	The surface occupancy "m_surface" models the interaction between a component and the board surface.
 //
 //		SURFACE_FREE		==> the board surface is not occupied.
 //		SURFACE_GAP			==> the gap between IC pins.
@@ -38,28 +41,27 @@
 //		SURFACE_NOPAINT		==> If this bit is set, then no paint can be applied.
 //		SURFACE_HOLE		==> SURFACE_FULL + SURFACE_NOPAINT
 //
-//	2)	The pin character "m_pinChar" is just a pinIndex in the range 0 to 254.
-//		Places with no pin (e.g. the middle of a resistor) have m_pinChar of 255 and an invalid pinIndex.
+//	3)	The hole occupancy "m_holeUse" models the interaction between a component and the board holes.
 //
-//	3)	The hole occupancy (for places with a pin).  The surface description is not enough
-//		to limit the number of wires that can share a hole.
-//		So we introduce another code to describe hole-occupancy and allow 2 wire-ends per hole.
+//		HOLE_FREE			==> the hole is not occupied.
+//		HOLE_WIRE			==> the hole is occupied by one wire.
+//		HOLE_FULL			==> the hole is fully occupied.  (By a regular component pin, or by 2 wires).
+
+const uchar	 BAD_PINCHAR		= 255;
+const size_t BAD_PININDEX		= -1;
 
 const uchar  SURFACE_FREE		= 0;
 const uchar  SURFACE_GAP		= 1;
 const uchar  SURFACE_WIRE_END	= 2;	// Hence: "SURFACE_WIRE_END + SURFACE_WIRE_END == SURFACE_WIRE"
 const uchar  SURFACE_WIRE		= 4;	// Hence: "SURFACE_WIRE + SURFACE_WIRE == SURFACE_PLUG"
 const uchar  SURFACE_PLUG		= 8;
-const uchar  SURFACE_FULL		= 9;
+const uchar  SURFACE_FULL		= 9;	// Hence: "SURFACE_PLUG + SURFACE_GAP == SURFACE_FULL"
 const uchar  SURFACE_NOPAINT	= 16;	// Should only be used as part of SURFACE_HOLE
 const uchar  SURFACE_HOLE		= 25;	// Hence: "SURFACE_FULL + SURFACE_NOPAINT = SURFACE_HOLE"
 
 const uchar  HOLE_FREE			= 0;
 const uchar  HOLE_WIRE			= 1;	// Hence: "HOLE_WIRE + HOLE_WIRE == HOLE_FULL"
 const uchar  HOLE_FULL			= 2;
-
-const uchar	 BAD_PINCHAR	= 255;
-const size_t BAD_PININDEX	= -1;
 
 static size_t GetPinIndexFromLegacyPinChar(const uchar& c)	// Legacy VRT format had messy mapping of pinChar to pinIndex
 {
@@ -123,6 +125,12 @@ public:
 	const uchar& GetHoleUse() const				{ return m_holeUse; }
 	bool		 GetIsPin() const				{ return m_pinChar != BAD_PINCHAR; }
 	bool		 GetIsHole() const				{ return m_surface == SURFACE_HOLE; }
+
+	void SetWireOccupancies()	// Helper to handle wires
+	{
+		SetSurface( GetIsPin() ? SURFACE_WIRE_END	: SURFACE_WIRE );	// Set surface occupancy for pins/non-pins
+		SetHoleUse( GetIsPin() ? HOLE_WIRE			: HOLE_FREE );		// Set hole occupancy for pins/non-pins
+	}
 
 	// Merge interface functions
 	virtual void UpdateMergeOffsets(MergeOffsets&) override
