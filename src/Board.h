@@ -531,6 +531,9 @@ public:
 
 		GlueWires();	// Set pointers between wired grid elements
 
+		if ( inStream.GetVersion() < VRT_VERSION_26 )
+			FixLegacyWires();
+
 		m_groupMgr.Load(inStream);			// Call Load() on group manager
 
 		if ( inStream.GetVersion() >= VRT_VERSION_10 )
@@ -557,7 +560,34 @@ public:
 		m_textMgr.Save(outStream);		// Call Save() on text manager			// Added in VRT_VERSION_14
 		m_compDefiner.Save(outStream);	// Call Save() on component definer		// Added in VRT_VERSION_23
 	}
-
+private:
+	void FixLegacyWires()
+	{
+		// Find all placed wires and update the surface and hole codes on the board
+		for (const auto& mapObj : m_compMgr.GetMapIdToComp())
+		{
+			const Component& comp = mapObj.second;
+			if ( comp.GetType() == COMP::WIRE && comp.GetIsPlaced() )
+			{
+				int jRow( comp.GetRow() );
+				for (int j = 0; j < comp.GetCompRows(); j++, jRow++)
+				{
+					int iCol( comp.GetCol() );
+					for (int i = 0; i < comp.GetCompCols(); i++, iCol++)
+					{
+						Element* pGrid = Get(jRow, iCol);
+						assert( comp.GetCompElement(j, i)->GetIsPin() == pGrid->GetIsPin() );
+						assert( pGrid->GetSurface() == SURFACE_PLUG || pGrid->GetSurface() == SURFACE_FULL );
+						const bool bGap = ( pGrid->GetSurface() & SURFACE_GAP ) > 0;
+						uchar surface = pGrid->GetIsPin() ? SURFACE_WIRE_END : SURFACE_WIRE;
+						if ( bGap ) surface += SURFACE_GAP;
+						pGrid->SetSurface( surface );
+						pGrid->SetHoleUse( pGrid->GetIsPin() ? HOLE_WIRE : HOLE_FREE );
+					}
+				}
+			}
+		}
+	}
 private:
 	std::string				m_infoStr;		// General info
 

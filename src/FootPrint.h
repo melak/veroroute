@@ -89,90 +89,101 @@ public:
 		assert( CanStretch(bGrow) );	// Sanity check.  We should have already checked that we can stretch
 		const bool	bPlug = IsPlug(m_type);
 		CompElement initVal;
-		initVal.SetPinIndex(BAD_PINCHAR);
+		assert( initVal.GetPinIndex() == BAD_PININDEX );
+		assert( initVal.GetHoleUse() == HOLE_FREE );
 		initVal.SetSurface(bPlug ? SURFACE_PLUG : SURFACE_FULL);
+
 		switch( m_type )
 		{
-			case COMP::WIRE:
+			case COMP::WIRE:	// Special case for wires
+				StretchSimple(bGrow, initVal);
+				return SetupWire();
 			case COMP::DIODE:
 			case COMP::RESISTOR:
 			case COMP::INDUCTOR:
 			case COMP::CAP_CERAMIC:
-			case COMP::CAP_FILM:		return CompElementGrid::StretchSimple(bGrow, initVal);
+			case COMP::CAP_FILM:		return StretchSimple(bGrow, initVal);
 			case COMP::CAP_FILM_WIDE:
-				CompElementGrid::StretchComplex(m_type, bGrow);
+				StretchComplex(m_type, bGrow);
 				for (int iRow = 0; iRow < GetRows(); iRow++)
 				for (int iCol = 0; iCol < GetCols(); iCol++)
 				{
 					CompElement* p = Get(iRow,iCol);
 					p->SetPinIndex( ( iRow == 1 && iCol == 0 ) ? 0 :
 									( iRow == 1 && iCol == GetCols()-1 ) ? 1 : BAD_PININDEX );
-					p->SetSurface(SURFACE_FULL);
+					p->SetSurface( SURFACE_FULL );
+					p->SetHoleUse( p->GetIsPin() ? HOLE_FULL : HOLE_FREE );
 				}
 				return;
 			case COMP::SIP:
-				CompElementGrid::StretchComplex(m_type, bGrow);
+				StretchComplex(m_type, bGrow);
 				for (int i = 0; i < GetSize(); i++)
 				{
 					CompElement* p = GetAt(i);
-					p->SetPinIndex(i);
-					p->SetSurface(SURFACE_FULL);
+					p->SetPinIndex( i );
+					p->SetSurface( SURFACE_FULL );
+					p->SetHoleUse( HOLE_FULL );
 				}
 				return;
 			case COMP::DIP:
-				CompElementGrid::StretchComplex(m_type, bGrow);
+				StretchComplex(m_type, bGrow);
 				for (int iRow = 0; iRow < GetRows(); iRow++)
 				for (int iCol = 0; iCol < GetCols(); iCol++)
 				{
 					CompElement* p = Get(iRow,iCol);
 					p->SetPinIndex( ( iRow == 0 ) ? 2*GetCols()-1-iCol :
 									( iRow == GetRows()-1 ) ? iCol : BAD_PININDEX );
-					p->SetSurface( ( iRow == 0 || iRow == GetRows()-1 ) ? SURFACE_FULL : SURFACE_GAP );
+					p->SetSurface( p->GetIsPin() ? SURFACE_FULL : SURFACE_GAP );
+					p->SetHoleUse( p->GetIsPin() ? HOLE_FULL    : HOLE_FREE );
 				}
 				return;
 			case COMP::STRIP_100:
-				CompElementGrid::StretchComplex(m_type, bGrow);
+				StretchComplex(m_type, bGrow);
 				for (int i = 0; i < GetSize(); i++)
 				{
 					CompElement* p = GetAt(i);
-					p->SetPinIndex(i);
-					p->SetSurface(SURFACE_FULL);
+					p->SetPinIndex( i );
+					p->SetSurface( SURFACE_FULL );
+					p->SetHoleUse( HOLE_FULL );
 				}
 				return;
 			case COMP::BLOCK_100:
-				CompElementGrid::StretchComplex(m_type, bGrow);
+				StretchComplex(m_type, bGrow);
 				for (int iRow = 0; iRow < GetRows(); iRow++)
 				for (int iCol = 0; iCol < GetCols(); iCol++)
 				{
 					CompElement* p = Get(iRow,iCol);
 					p->SetPinIndex( ( iRow == 1 ) ? iCol : BAD_PININDEX );
 					p->SetSurface( SURFACE_FULL );
+					p->SetHoleUse( p->GetIsPin() ? HOLE_FULL : HOLE_FREE );
 				}
 				return;
 			case COMP::BLOCK_200:
-				CompElementGrid::StretchComplex(m_type, bGrow);
+				StretchComplex(m_type, bGrow);
 				for (int iRow = 0; iRow < GetRows(); iRow++)
 				for (int iCol = 0; iCol < GetCols(); iCol++)
 				{
 					CompElement* p = Get(iRow,iCol);
 					p->SetPinIndex( ( iRow == 1 && iCol % 2 == 1 ) ? ( iCol - 1 ) / 2 : BAD_PININDEX );
 					p->SetSurface( ( iCol == 0 || iCol == GetCols()-1 ) ? SURFACE_FREE : SURFACE_FULL );
+					p->SetHoleUse( p->GetIsPin() ? HOLE_FULL : HOLE_FREE );
 				}
 				return;
 			case COMP::SWITCH_ST:
 			case COMP::SWITCH_DT:
-				CompElementGrid::StretchComplex(m_type, bGrow);
+				StretchComplex(m_type, bGrow);
 				for (int iRow = 0; iRow < GetRows(); iRow++)
 				for (int iCol = 0; iCol < GetCols(); iCol++)
 				{
 					CompElement* p = Get(iRow,iCol);
 					p->SetPinIndex( ( iCol % 2 == 0 && iRow % 2 == 0 ) ? (iCol/2 + (iRow/2)*((1 + GetCols())/2)) : BAD_PININDEX );
 					p->SetSurface( SURFACE_FULL );
+					p->SetHoleUse( p->GetIsPin() ? HOLE_FULL : HOLE_FREE );
 				}
 				return;
 			case COMP::SWITCH_ST_DIP:
 				assert( GetRows() == 4 );	// DIPs should have 4 rows on construction
-				CompElementGrid::StretchComplex(m_type, bGrow);
+				StretchComplex(m_type, bGrow);
 				for (int iRow = 0; iRow < GetRows(); iRow++)
 				for (int iCol = 0; iCol < GetCols(); iCol++)
 				{
@@ -180,6 +191,7 @@ public:
 					p->SetPinIndex( ( iRow == 0 ) ? iCol :
 									( iRow == 3 ) ? iCol + GetCols() : BAD_PININDEX );
 					p->SetSurface( SURFACE_FULL );
+					p->SetHoleUse( p->GetIsPin() ? HOLE_FULL : HOLE_FREE );
 				}
 				return;
 			default:	assert(0);	// Unhandled m_type
@@ -189,7 +201,7 @@ public:
 	{
 		assert( CanStretchWidth(bGrow) );	// Sanity check.  We should have already checked that we can stretch the width
 
-		CompElementGrid::StretchWidthIC(bGrow);
+		StretchWidthIC(bGrow);
 		for (int iRow = 0; iRow < GetRows(); iRow++)
 		for (int iCol = 0; iCol < GetCols(); iCol++)
 		{
@@ -197,6 +209,7 @@ public:
 			p->SetPinIndex( ( iRow == 0 ) ? 2*GetCols()-1-iCol :
 							( iRow == GetRows()-1 ) ? iCol : BAD_PININDEX );
 			p->SetSurface( ( iRow == 0 || iRow == GetRows()-1 ) ? SURFACE_FULL : SURFACE_GAP );
+			p->SetHoleUse( p->GetIsPin() ? HOLE_FULL : HOLE_FREE );
 		}
 		return;
 	}
@@ -207,6 +220,8 @@ public:
 		int type(0);
 		inStream.Load(type);
 		m_type = static_cast<COMP> (type);
+		if ( inStream.GetVersion() < VRT_VERSION_26 )
+			if ( m_type == COMP::WIRE ) SetupWire();
 	}
 	virtual void Save(DataStream& outStream) override
 	{

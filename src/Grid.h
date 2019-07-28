@@ -195,6 +195,17 @@ public:
 		Transform(row, col, direction);	// Handle direction transformation
 		return Grid<CompElement>::Get(row, col);
 	}
+	void SetupWire()
+	{
+		assert( GetRows() == 1 && GetCols() > 1 );
+		const int iSize = GetSize();
+		for (int i = 0; i < iSize; i++)
+		{
+			CompElement* p = GetAt(i);
+			p->SetSurface( p->GetIsPin() ? SURFACE_WIRE_END	: SURFACE_WIRE );
+			p->SetHoleUse( p->GetIsPin() ? HOLE_WIRE		: HOLE_FREE );
+		}
+	}
 	void StretchSimple(bool bGrow, const CompElement& initVal)	// For simple 2-pin components like resistors, wires, diodes, caps
 	{
 		// Pins are assumed to be first and last element on the row

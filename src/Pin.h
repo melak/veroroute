@@ -25,26 +25,38 @@
 //	A component's spatial layout (or "Footprint") is a two-dimensional array of "CompElement" objects.
 //	The "Board" object used for designing a circuit is a two-dimensional array of "Element" objects.
 //
-//	There are 2 parts to the description of a "Pin":
+//	There are 3 parts to the description of a "Pin":
 //
 //	1)	The surface description "m_surface" models the interaction between a component and the board surface.
 //
-//		SURFACE_FREE	==> the board surface is not occupied.
-//		SURFACE_GAP		==> the gap between IC pins.  We may place a "PLUG" component there.
-//		SURFACE_PLUG	==> e.g. a wire/resistor/diode/pad/via etc.  Can be placed in a "GAP".
-//		SURFACE_FULL	==> the board surface is occupied.  Nothing else can be placed there.
-//		SURFACE_NOPAINT ==> If this bit is set, then no paint can be applied.
-//		SURFACE_HOLE	==> SURFACE_FULL + SURFACE_NOPAINT
+//		SURFACE_FREE		==> the board surface is not occupied.
+//		SURFACE_GAP			==> the gap between IC pins.
+//		SURFACE_WIRE_END	==> a wire (endpoint).
+//		SURFACE_WIRE		==> a wire (not endpoint).
+//		SURFACE_PLUG		==> e.g. resistor/diode/pad/via etc.  Can be placed in a "GAP".
+//		SURFACE_FULL		==> the board surface is fully occupied.  Nothing else can be placed there.
+//		SURFACE_NOPAINT		==> If this bit is set, then no paint can be applied.
+//		SURFACE_HOLE		==> SURFACE_FULL + SURFACE_NOPAINT
 //
 //	2)	The pin character "m_pinChar" is just a pinIndex in the range 0 to 254.
 //		Places with no pin (e.g. the middle of a resistor) have m_pinChar of 255 and an invalid pinIndex.
+//
+//	3)	The hole occupancy (for places with a pin).  The surface description is not enough
+//		to limit the number of wires that can share a hole.
+//		So we introduce another code to describe hole-occupancy and allow 2 wire-ends per hole.
 
 const uchar  SURFACE_FREE		= 0;
 const uchar  SURFACE_GAP		= 1;
-const uchar  SURFACE_PLUG		= 2;
-const uchar  SURFACE_FULL		= 3;	// Hence: "SURFACE_GAP + SURFACE_PLUG = SURFACE_FULL"
-const uchar  SURFACE_NOPAINT	= 4;	// Should only be used as part of SURFACE_HOLE.
-const uchar  SURFACE_HOLE		= 7;	// Hence: "SURFACE_FULL + SURFACE_NOPAINT = SURFACE_HOLE"
+const uchar  SURFACE_WIRE_END	= 2;	// Hence: "SURFACE_WIRE_END + SURFACE_WIRE_END == SURFACE_WIRE"
+const uchar  SURFACE_WIRE		= 4;	// Hence: "SURFACE_WIRE + SURFACE_WIRE == SURFACE_PLUG"
+const uchar  SURFACE_PLUG		= 8;
+const uchar  SURFACE_FULL		= 9;
+const uchar  SURFACE_NOPAINT	= 16;	// Should only be used as part of SURFACE_HOLE
+const uchar  SURFACE_HOLE		= 25;	// Hence: "SURFACE_FULL + SURFACE_NOPAINT = SURFACE_HOLE"
+
+const uchar  HOLE_FREE			= 0;
+const uchar  HOLE_WIRE			= 1;	// Hence: "HOLE_WIRE + HOLE_WIRE == HOLE_FULL"
+const uchar  HOLE_FULL			= 2;
 
 const uchar	 BAD_PINCHAR	= 255;
 const size_t BAD_PININDEX	= -1;
@@ -60,12 +72,28 @@ static size_t GetPinIndexFromLegacyPinChar(const uchar& c)	// Legacy VRT format 
 	else			return 74 + c - '{';	// Char '{' to 255 ==> Index 74 to 206
 }
 
+static uchar GetSurfaceFromLegacySurfaceChar(const uchar& c)
+{
+	// The following are the old SURFACE codes before the introduction of SURFACE_WIRE_END and SURFACE_WIRE
+	switch(c)
+	{
+		case 0:		return SURFACE_FREE;
+		case 1:		return SURFACE_GAP;
+		case 2:		return SURFACE_PLUG;
+		case 3:		return SURFACE_FULL;
+		case 4:		return SURFACE_NOPAINT;
+		case 7:		return SURFACE_HOLE;
+		default:	assert(0); return SURFACE_FREE;
+	}
+}
+
 class Pin : public Persist, public Merge
 {
 public:
-	Pin(uchar pinChar = BAD_PINCHAR, uchar surface = SURFACE_FREE)
+	Pin(uchar pinChar = BAD_PINCHAR, uchar surface = SURFACE_FREE, uchar holeUse = HOLE_FREE)
 	: m_pinChar(pinChar)
 	, m_surface(surface)
+	, m_holeUse(holeUse)
 	{}
 	Pin(const Pin& o) { *this = o; }
 	~Pin() {}
@@ -73,22 +101,26 @@ public:
 	{
 		m_pinChar	= o.m_pinChar;
 		m_surface	= o.m_surface;
+		m_holeUse	= o.m_holeUse;
 		return *this;
 	}
 	bool operator==(const Pin& o) const	// Compare persisted info
 	{
 		return m_pinChar == o.m_pinChar
-			&& m_surface == o.m_surface;
+			&& m_surface == o.m_surface
+			&& m_holeUse == o.m_holeUse;
 	}
 	bool operator!=(const Pin& o) const
 	{
 		return !(*this == o);
 	}
 	void		 Clear()						{ SetSurface(SURFACE_FREE); SetPinIndex(BAD_PININDEX); }
-	void		 SetSurface(const uchar& c)		{ m_surface = c; }
 	void		 SetPinIndex(const size_t& i)	{ m_pinChar = ( i >= BAD_PINCHAR ) ? BAD_PINCHAR : static_cast<uchar> (i); }
-	const uchar& GetSurface() const				{ return m_surface; }
+	void		 SetSurface(const uchar& c)		{ m_surface = c; }
+	void		 SetHoleUse(const uchar& c)		{ m_holeUse = c; }
 	size_t		 GetPinIndex() const			{ return ( m_pinChar == BAD_PINCHAR ) ? BAD_PININDEX : m_pinChar; }
+	const uchar& GetSurface() const				{ return m_surface; }
+	const uchar& GetHoleUse() const				{ return m_holeUse; }
 	bool		 GetIsPin() const				{ return m_pinChar != BAD_PINCHAR; }
 	bool		 GetIsHole() const				{ return m_surface == SURFACE_HOLE; }
 
@@ -110,14 +142,21 @@ public:
 		inStream.Load(m_surface);
 		if ( inStream.GetVersion() < VRT_VERSION_4 )	// Remap m_pinChar if file is older than VRT_VERSION_4
 			SetPinIndex( GetPinIndexFromLegacyPinChar(m_pinChar) );
+		if ( inStream.GetVersion() < VRT_VERSION_26 )	// Remap m_surface if file is older than VRT_VERSION_26
+			SetSurface( GetSurfaceFromLegacySurfaceChar(m_surface) );
+		m_holeUse = GetIsPin() ? HOLE_FULL : HOLE_FREE;
+		if ( inStream.GetVersion() >= VRT_VERSION_26 )
+			inStream.Load(m_holeUse);	// Added in VRT_VERSION_26
 	}
 	virtual void Save(DataStream& outStream) override
 	{
 		outStream.Save(m_pinChar);	// New mapping from VRT_VERSION_4
 		outStream.Save(m_surface);
+		outStream.Save(m_holeUse);	// Added in VRT_VERSION_26
 	}
 private:
 	// Data
 	uchar	m_pinChar;
 	uchar	m_surface;
+	uchar	m_holeUse;
 };

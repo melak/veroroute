@@ -25,4 +25,5 @@ const int VRT_VERSION_22 = 22;	// Label offsets measured in 1/16th of a square i
 const int VRT_VERSION_23 = 23;	// Added component definer
 const int VRT_VERSION_24 = 24;	// Added routing method parameter
 const int VRT_VERSION_25 = 25;	// Moves some variables from CompElement to Element
-const int VRT_VERSION_CURRENT = VRT_VERSION_25;
+const int VRT_VERSION_26 = 26;	// Reworked codes in Pin to allow 2 wires per grid point
+const int VRT_VERSION_CURRENT = VRT_VERSION_26;

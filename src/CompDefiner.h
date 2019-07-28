@@ -44,7 +44,7 @@ public:
 		m_iPinFlags = 0;
 		m_valueStr = m_prefixStr = m_typeStr = m_importStr = "";
 		m_grid.Allocate(4,4);
-		m_grid.Clear( Pin(BAD_PINCHAR, SURFACE_FULL) );
+		m_grid.Clear( Pin(BAD_PINCHAR, SURFACE_FULL, HOLE_FREE) );
 		m_mapShapes.clear();
 		AddRect();	// Provide a Rect by default
 	}
@@ -140,6 +140,7 @@ public:
 		auto& o =  GetCurrentPin();
 		o.SetPinIndex( i - 1 );
 		o.SetSurface( SURFACE_FULL );
+		o.SetHoleUse( HOLE_FULL );
 		return true;
 	}
 	bool IncPinNumber(bool bInc)
@@ -153,9 +154,9 @@ public:
 			{
 				switch( o.GetSurface() )
 				{
-					case SURFACE_HOLE:	o.SetSurface(SURFACE_FREE);	return true;
-					case SURFACE_FREE:	o.SetSurface(SURFACE_FULL);	return true;
-					case SURFACE_FULL:	o.SetPinIndex(0);			return true;
+					case SURFACE_HOLE:	o.SetSurface(SURFACE_FREE);	o.SetHoleUse(HOLE_FREE);	return true;
+					case SURFACE_FREE:	o.SetSurface(SURFACE_FULL);	o.SetHoleUse(HOLE_FREE);	return true;
+					case SURFACE_FULL:	o.SetPinIndex(0);			o.SetHoleUse(HOLE_FULL);	return true;
 					default:			assert(0);					return false;	// Don't yet handle SURFACE_GAP / SURFACE_PLUG
 				}
 			}
@@ -173,15 +174,21 @@ public:
 				switch( o.GetSurface() )
 				{
 					case SURFACE_HOLE:								return false;
-					case SURFACE_FREE:	o.SetSurface(SURFACE_HOLE);	return true;
-					case SURFACE_FULL:	o.SetSurface(SURFACE_FREE);	return true;
+					case SURFACE_FREE:	o.SetSurface(SURFACE_HOLE);	o.SetHoleUse(HOLE_FREE);	return true;
+					case SURFACE_FULL:	o.SetSurface(SURFACE_FREE);	o.SetHoleUse(HOLE_FREE);	return true;
 					default:			assert(0);					return false;	// Don't yet handle SURFACE_GAP / SURFACE_PLUG
 				}
 			}
 			else if ( iPinIndex > 0 )
+			{
 				o.SetPinIndex(iPinIndex-1);
+				o.SetHoleUse(HOLE_FULL);
+			}
 			else
+			{
 				o.SetPinIndex(BAD_PININDEX);
+				o.SetHoleUse(HOLE_FREE);
+			}
 			return true;
 		}
 	}
@@ -285,7 +292,7 @@ public:
 		}
 	}
 private:
-	int		AddShape(const Shape& o)
+	int AddShape(const Shape& o)
 	{
 		const int id = GetNewShapeId();
 		if ( id != BAD_ID ) m_mapShapes[id] = o;

@@ -47,6 +47,13 @@ void CompDefiner::Populate(const Component& o)
 			case SURFACE_PLUG:	m_grid.GetAt(i)->SetSurface(SURFACE_FULL);	break;
 			default:			break;
 		}
+
+		// The editor does not yet support HOLE_WIRE, so map this to HOLE_FULL
+		switch( o.GetAtConst(i)->GetHoleUse() )
+		{
+			case HOLE_WIRE:		m_grid.GetAt(i)->SetHoleUse(HOLE_FULL);	break;
+			default:			break;
+		}
 	}
 
 	// Copy shapes
@@ -119,7 +126,7 @@ bool CompDefiner::SetWidth(const int& i)
 		SetCurrentPinId(BAD_ID);
 		SetCurrentShapeId(BAD_ID);
 		m_grid.Allocate(m_grid.GetRows(), i);
-		m_grid.Clear( Pin(BAD_PINCHAR, SURFACE_FULL) );
+		m_grid.Clear( Pin(BAD_PINCHAR, SURFACE_FULL, HOLE_FREE) );
 		m_mapShapes.clear();
 		AddRect();	// Provide a Rect by default
 	}
@@ -134,7 +141,7 @@ bool CompDefiner::SetHeight(const int& i)
 		SetCurrentPinId(BAD_ID);
 		SetCurrentShapeId(BAD_ID);
 		m_grid.Allocate(i, m_grid.GetCols());
-		m_grid.Clear( Pin(BAD_PINCHAR, SURFACE_FULL) );
+		m_grid.Clear( Pin(BAD_PINCHAR, SURFACE_FULL, HOLE_FREE) );
 		m_mapShapes.clear();
 		AddRect();	// Provide a Rect by default
 	}

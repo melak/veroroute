@@ -223,12 +223,18 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 			{
 				const uchar& boardSurface	= pGrid->GetSurface();
 				const uchar& compSurface	= pComp->GetSurface();
+				const uchar& boardHoleUse	= pGrid->GetHoleUse();
+				const uchar& compHoleUse	= pComp->GetHoleUse();
 
-				// Check surface
+				// Check surface and hole use.
+				// Need separate checks for SURFACE_FREE since that can be
+				// added to anything including SURFACE_HOLE.
 				bOK =	( boardSurface == SURFACE_FREE ) ||
 						( compSurface  == SURFACE_FREE ) ||
-						( boardSurface == SURFACE_GAP && compSurface  == SURFACE_PLUG ) ||
-						( compSurface  == SURFACE_GAP && boardSurface == SURFACE_PLUG );
+						( boardSurface + compSurface <= SURFACE_FULL );
+				bOK &=	( boardHoleUse + compHoleUse <= HOLE_FULL );
+				if ( bWire ) bOK &= ( boardSurface <= SURFACE_GAP );	//TODO Remove this when wires can share holes
+
 				if ( !bOK ) continue;
 
 				// Check pins
@@ -336,8 +342,9 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 			{
 				assert( !(pGrid->GetIsHole() && pComp->GetIsHole()) );	// Can't overlay holes
 
-				// Update surface
+				// Update surface and hole use
 				pGrid->SetSurface( pGrid->GetSurface() + pComp->GetSurface() );
+				pGrid->SetHoleUse( pGrid->GetHoleUse() + pComp->GetHoleUse() );
 
 				const size_t	pinIndex		= pComp->GetPinIndex();
 				const bool		bExistingPin	= pGrid->GetIsPin();
@@ -415,8 +422,9 @@ bool Board::TakeOff(Component& comp)
 			{
 				assert( !pComp->GetIsHole() || pGrid->GetIsHole() );	// Component hole can only be taken off a grid hole
 
-				// Update surface
+				// Update surface and hole use
 				pGrid->SetSurface( pGrid->GetSurface() - pComp->GetSurface() );
+				pGrid->SetHoleUse( pGrid->GetHoleUse() - pComp->GetHoleUse() );
 				switch ( pGrid->GetSurface() )	// Could move this switch statement to SetSurface()
 				{
 					case SURFACE_GAP:	pGrid->SetPinIndex(BAD_PININDEX);	break;

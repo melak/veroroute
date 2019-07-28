@@ -50,6 +50,7 @@ void FootPrint::BuildDefault(const COMP& type)
 		}
 		p->SetPinIndex(GetPinIndexFromLegacyPinChar(pinChar));
 	}
+	if ( m_type == COMP::WIRE ) SetupWire();
 }
 
 void FootPrint::BuildTracks(CompManager* pCompMgr, const RectManager& rectMgr, const ElementGrid& o, const int& nRowMin, const int& nRowMax, const int& nColMin, const int& nColMax)
