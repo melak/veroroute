@@ -56,9 +56,9 @@
    </property>
    <property name="geometry">
     <rect>
-     <x>60</x>
+     <x>70</x>
      <y>580</y>
-     <width>71</width>
+     <width>81</width>
      <height>24</height>
     </rect>
    </property>
@@ -72,15 +72,15 @@
     <string>Paste</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="pasteTidy">
+  <widget class="QPushButton" name="tidy">
    <property name="enabled">
     <bool>false</bool>
    </property>
    <property name="geometry">
     <rect>
-     <x>140</x>
+     <x>160</x>
      <y>580</y>
-     <width>101</width>
+     <width>81</width>
      <height>24</height>
     </rect>
    </property>
@@ -91,7 +91,7 @@
     <string>Paste auto-routed tracks and remove surplus tracks</string>
    </property>
    <property name="text">
-    <string>Paste+Tidy</string>
+    <string>Tidy</string>
    </property>
   </widget>
   <widget class="QLineEdit" name="nameEdit">

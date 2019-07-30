@@ -34,7 +34,7 @@ static MyRGB g_color[MYNUMCOLORS] = { MyRGB(60,24,200),   MyRGB(192,36,248),  My
 									, MyRGB(96,200,88),   MyRGB(88,150,200),  MyRGB(96,16,255),  MyRGB(225,66,210)
 									, MyRGB(225,140,48),  MyRGB(160,200,40),  MyRGB(72,200,150), MyRGB(80,128,255) };
 
-static int g_selectedNodeShade = 64;	// Very dark grey for selected node
+static int g_selectedNodeShade = 96;	// Dark grey for selected node
 
 // Manager class to handle assignment of colors to nodeIds
 

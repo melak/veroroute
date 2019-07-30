@@ -74,10 +74,9 @@ ControlDialog::ControlDialog(MainWindow* parent)
 
 	QObject::connect(ui->autoRoute,			SIGNAL(toggled(bool)),		m_pMainWindow,	SLOT(EnableRouting(bool)));
 	QObject::connect(ui->autoRoute,			SIGNAL(toggled(bool)),		ui->paste,		SLOT(setEnabled(bool)));
-	QObject::connect(ui->autoRoute,			SIGNAL(toggled(bool)),		ui->pasteTidy,	SLOT(setEnabled(bool)));
 	QObject::connect(ui->fast,				SIGNAL(toggled(bool)),		m_pMainWindow,	SLOT(EnableFastRouting(bool)));
 	QObject::connect(ui->paste,				SIGNAL(clicked()),			m_pMainWindow,	SLOT(Paste()));
-	QObject::connect(ui->pasteTidy,			SIGNAL(clicked()),			m_pMainWindow,	SLOT(PasteTidy()));
+	QObject::connect(ui->tidy,				SIGNAL(clicked()),			m_pMainWindow,	SLOT(Tidy()));
 	QObject::connect(ui->wipe,				SIGNAL(clicked()),			m_pMainWindow,	SLOT(WipeTracks()));
 }
 
@@ -105,6 +104,7 @@ void ControlDialog::SetListItems(const int nodeId)
 		}
 		if ( !bFound ) pList->setCurrentRow(0, QItemSelectionModel::Clear);
 	}
+	ui->tidy->setEnabled( !ui->autoRoute->isChecked() && ui->brokenList->count() == 0 );
 }
 
 void ControlDialog::AddListItem(const std::string& str, bool bBroken, bool bFloating)

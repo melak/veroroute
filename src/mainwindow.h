@@ -253,7 +253,7 @@ public slots:
 	void EnableRouting(bool b);
 	void EnableFastRouting(bool b);
 	void Paste();
-	void PasteTidy();
+	void Tidy();
 	void WipeTracks();
 	// Track controls
 	void SetTracksVeroV(bool b);

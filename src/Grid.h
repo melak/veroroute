@@ -216,7 +216,7 @@ public:
 		if ( !bGrow && GetRows() == 2 ) return;	// Don't shrink DIP width to less than 2 rows
 		return Allocate(bGrow ? GetRows() + 1 : GetRows() - 1, GetCols());	// Resize
 	}
-	virtual void Load(DataStream& inStream)
+	virtual void Load(DataStream& inStream) override
 	{
 		if ( inStream.GetVersion() >= VRT_VERSION_11 )
 			return Grid<CompElement>::Load(inStream);

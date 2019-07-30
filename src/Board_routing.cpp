@@ -23,6 +23,8 @@
 // MH_DIAG = Manhatten "distance" for diagonally adjacent grid points.
 // MH_WIRE = Manhatten "distance" for wires, regardless of their length.
 
+// Routing algorithm assumes:  MH_DIAG > MH_LRTB > MH_WIRE > 0
+
 #define MH_LRTB 2
 #define MH_DIAG 3
 #define MH_WIRE 1
@@ -71,73 +73,91 @@ void Board::BuildTargetPins(const int& nodeId)
 	}
 }
 
-void Board::Route()
+void Board::Route(bool bMinimal)
 {
-	// When routing is enabled,  this method will build tracks and update the "RoutedOK" flags.
-	// When routing is disabled, this method will update the "RoutedOK" flags without building new tracks.
+	m_bRouteMinimal = bMinimal;
 
 //	const auto start = std::chrono::steady_clock::now();
 
+	// When routing is enabled,  this method will build tracks and update the cost in each NodeInfo.
+	// When routing is disabled, this method will update each NodeInfo cost without building new tracks.
 	if ( GetRoutingEnabled() ) WipeAutoSetPoints();
 
 	m_nodeInfoMgr.SortByLowestDifficulty(m_compMgr);
 
-	const bool bRipUpEnabled	= GetRoutingMethod() == 1;
-	const bool bAllowRipUp		= bRipUpEnabled && GetRoutingEnabled();
+	const bool bRipUpEnabled = GetRoutingMethod() == 1;
 
 	const size_t numNodes = m_nodeInfoMgr.GetSize();
-	for (size_t i = 0; i < numNodes; i++)	// Loop all nodeIds used by components
+
+	for (size_t i = 0; i < numNodes; i++)
+		m_nodeInfoMgr.GetAt(i)->SetCost(UINT_MAX);	// i.e. Mark all nodesIds as unrouted
+
+	int iPasses(0);
+	bool bImproved(true), bAllowRipUp( bRipUpEnabled && GetRoutingEnabled() );
+	while ( bImproved )
 	{
-		NodeInfo* pI = m_nodeInfoMgr.GetAt(i);
-		const int& nodeIdI = pI->GetNodeId();
+		bImproved = false;	// Gets set true if we manage to lower any route costs on this pass
 
-		// Flood with MH values, starting from the m_targetPins
-		unsigned int costImin = ( nodeIdI != BAD_NODEID ) ? Flood(nodeIdI) : UINT_MAX;
-		bool bRoutedOK = ( costImin == 0 );
+		// Allowing multiple passes fixes some simplistic cases but kills speed. So only do one pass.
+		// The code for multiple passes has been left in place for future tests.
+		iPasses++; if ( iPasses > 1 ) break;
 
-		pI->SetRoutedOK(bRoutedOK);
-
-		if ( bAllowRipUp && nodeIdI != BAD_NODEID && !bRoutedOK && i > 0 )
+		for (size_t i = 0; i < numNodes; i++)	// Loop all nodeIds used by components
 		{
-			TrackElementGrid Ibest, Iripped;
+			NodeInfo* pI = m_nodeInfoMgr.GetAt(i);
+			if ( pI->GetCost() == 0 ) continue;	// Skip if fully routed
 
-			CopyTo(Ibest);
+			const int& nodeIdI = pI->GetNodeId();
 
-			WipeAutoSetPoints(nodeIdI);		// Rip-up I
-
-			CopyTo(Iripped);
-
-			size_t j(i-1);	// Loop j through previously routed nodeIds
-			while( !bRoutedOK )
+			// Flood with MH values, starting from the m_targetPins
+			const unsigned int costI = ( nodeIdI != BAD_NODEID ) ? Flood(nodeIdI) : UINT_MAX;
+			if ( costI < pI->GetCost() )
 			{
-				NodeInfo* pJ = m_nodeInfoMgr.GetAt(j);
-				const int& nodeIdJ = pJ->GetNodeId();
-				if ( nodeIdJ != BAD_NODEID )
-				{
-					WipeAutoSetPoints(nodeIdJ);	// Rip-up J
+				pI->SetCost( costI );
+				bImproved = true;
+			}
 
-					const unsigned int costI = Flood(nodeIdI);	// Route I ...
-					if ( costI < costImin )						// ... and if the route was improved ...
+			if ( bAllowRipUp && nodeIdI != BAD_NODEID && pI->GetCost() > 0 && i > 0 )
+			{
+				TrackElementGrid Ibest, Iripped;
+
+				CopyTo(Ibest);
+
+				WipeAutoSetPoints(nodeIdI);	// Rip-up I
+
+				CopyTo(Iripped);
+
+				size_t j(i-1);	// Loop j through previously routed nodeIds
+				while( pI->GetCost() > 0 )
+				{
+					NodeInfo* pJ = m_nodeInfoMgr.GetAt(j);
+					const int& nodeIdJ = pJ->GetNodeId();
+					if ( pJ->GetCost() == 0 )	// Only consider J if it is fully routed
 					{
-						if ( Flood(nodeIdJ) == 0 )				// ... then route J
+						WipeAutoSetPoints(nodeIdJ);	// Rip-up J
+
+						const unsigned int costI = Flood(nodeIdI);	// Route I ...
+						if ( costI < pI->GetCost() )				// ... and if I improved
 						{
-							// J was routed OK
-							bRoutedOK = ( costI == 0 );
-							if ( bRoutedOK )					// If I was routed OK too ...
-								pI->SetRoutedOK(true);			// ... we're done swapping
-							else
+							const unsigned int costJ = Flood(nodeIdJ);	// Route J ...
+							if ( costJ == 0 )							// ... and if J is still fully routed
 							{
-								CopyTo(Ibest);					// ... otherwise log the improved route for I
-								costImin = costI;				// ... and update costI
+								bImproved = true;
+
+								pI->SetCost( costI );	// Update cost I
+
+								if ( costI > 0 )		// If we've not solved I ...
+									CopyTo(Ibest);		// ... log the improved route (it's the best so far)
 							}
 						}
+						if ( pI->GetCost() > 0 ) CopyFrom(Iripped);	// Revert to ripped-up I
 					}
-					if ( !bRoutedOK ) CopyFrom(Iripped);	// Revert to ripped-up I
+					if ( j == 0 ) break; else j--;
 				}
-				if ( j == 0 ) break; else j--;
+				if ( pI->GetCost() > 0 ) CopyFrom(Ibest);
 			}
-			if ( !bRoutedOK ) CopyFrom(Ibest);
 		}
+		if ( !bAllowRipUp ) break;
 	}
 //	const auto elapsed = std::chrono::steady_clock::now() - start;
 //	const auto duration_ms	= std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
@@ -152,11 +172,33 @@ unsigned int Board::Flood(const int& iFloodNodeId)
 
 	assert(iFloodNodeId != BAD_NODEID);
 
-	const bool& bAutoRoute = GetRoutingEnabled();	// true ==> build new tracks based on the flood of MH values
-
 	BuildTargetPins(iFloodNodeId);	// Populate m_targetPins
 	if ( m_targetPins.size() < 2 ) return 0;	// Return cost of zero
 
+	// Allocate the connection matrix ppConn[][] to indicate which pairs of targetPins are connected
+	const size_t N	= m_targetPins.size();
+	const size_t N2	= N * N;
+	bool*	pConn	= new bool[N2];
+	bool**	ppConn	= new bool*[N];
+	memset(pConn, 0, N2 * sizeof(bool));
+	for (size_t i = 0; i < N; i++) ppConn[i] = pConn + i * N;
+	for (size_t i = 0; i < N; i++) ppConn[i][i] = true;	// Each pin is connected to itself
+	unsigned int cost(N2 - N);	// Cost = number of false values in the connection matrix
+
+	if ( m_bRouteMinimal )	// For minimal routing, first do a preliminary flood to see which pins are connected
+		Flood_Helper(iFloodNodeId, ppConn, cost, false);	// false ==> don't build new tracks
+
+	if ( GetRoutingEnabled() )
+		Flood_Helper(iFloodNodeId, ppConn, cost, true);		// true ==> build new tracks
+
+	// Deallocate connection matrix
+	delete[] ppConn;
+	delete[] pConn;
+	return cost;
+}
+
+void Board::Flood_Helper(const int& iFloodNodeId, bool** ppConn, unsigned int& cost, const bool bBuildTracks)
+{
 	const int iSize = GetSize();
 	for (int i = 0; i < iSize; i++)	// Loop all grid points
 	{
@@ -173,22 +215,13 @@ unsigned int Board::Flood(const int& iFloodNodeId)
 	unsigned int RID(BAD_ROUTEID);
 	for (auto p : m_targetPins)
 	{
-		m_tmpVec[m_tmpVecSize++] = p;	// Add p to set of visited points
+		m_tmpVec[m_tmpVecSize++] = p;		// Add p to set of visited points
 		RID++;	assert(RID < BAD_ROUTEID);	// Should be safely < UINT_MAX in practice
 		p->SetRouteId(RID);
 		p->SetMH(0);
 	}
 
 	const unsigned int numRIDs = RID + 1;	assert( m_targetPins.size() == (size_t) numRIDs );
-
-	// Set up the connection matrix ppConn[][] to indicate which pairs of targetPins are connected
-	const unsigned int connSize = numRIDs * numRIDs;
-	bool*	pConn	= new bool[connSize];
-	bool**	ppConn	= new bool*[numRIDs];
-	memset(pConn, 0, connSize * sizeof(bool));
-	for (size_t i = 0; i < numRIDs; i++) ppConn[i] = pConn + i * numRIDs;
-	for (size_t i = 0; i < numRIDs; i++) ppConn[i][i] = true;	// Each pin is connected to itself
-	unsigned int cost(connSize - numRIDs);	// Cost = number of false values in the connection matrix
 
 	typedef std::pair<unsigned int, unsigned int> CONNECTION;
 	std::list<CONNECTION> list;	// Helper for updating the connection matrix
@@ -238,7 +271,7 @@ unsigned int Board::Flood(const int& iFloodNodeId)
 					const unsigned int& k = pK->GetRouteId();
 
 					const bool bDirOK = ( bOK && pJ->GetUsed(iNbr) ) ||	// i.e. if already painted with correct nodeId
-										( bAutoRoute && pJ->HaveNonBlankPins(iNbr) && !pJ->IsBlocked(iNbr, iFloodNodeId) && !pJ->IsUselessWire(iNbr, iFloodNodeId) );
+										( bBuildTracks && pJ->HaveNonBlankPins(iNbr) && !pJ->IsBlocked(iNbr, iFloodNodeId) && !pJ->IsUselessWire(iNbr, iFloodNodeId) );
 					if ( !bDirOK ) continue;
 
 					if ( pK->GetMH() == BAD_MH ) // Grow route with RID j (from pJ to pK)
@@ -269,7 +302,7 @@ unsigned int Board::Flood(const int& iFloodNodeId)
 					{
 						if ( !ppConn[j][k] )	// If no j-k connection yet ...
 						{
-							if ( bAutoRoute )	// If auto-routing is enabled ...
+							if ( bBuildTracks )	// If building tracks ...
 							{
 								Backtrace(pJ, iFloodNodeId);	// ... trace pJ back to its source, painting iFloodNodeId along the way
 								Backtrace(pK, iFloodNodeId);	// ... trace pK back to its source, painting iFloodNodeId along the way
@@ -304,15 +337,12 @@ unsigned int Board::Flood(const int& iFloodNodeId)
 			}
 		}
 	}
-	// Deallocate connection matrix
-	delete[] ppConn;
-	delete[] pConn;
-	return cost;	// Returned cost
 }
 
-// Backtrace route from pEnd to point with MH = 0
 void Board::Backtrace(Element* pEnd, const int& nodeId)
 {
+	// Backtrace route from pEnd to point with MH = 0
+
 	Element* p = pEnd;
 	if ( p->GetMH() == BAD_MH ) return;
 
@@ -504,15 +534,10 @@ void Board::CheckAllComplete()
 		auto iterEnd = m_targetPins.end();
 		for (auto iterI = m_targetPins.begin(); iterI != iterEnd && bComplete; ++iterI)
 		{
-			Element* pI = *iterI;
-
-			Manhatten(pI);
+			Manhatten(*iterI);
 
 			for (auto iterJ = iterI; iterJ != iterEnd && bComplete; ++iterJ)
-			{
-				Element* pJ = *iterJ;
-				bComplete = ( pJ->GetMH() != BAD_MH );
-			}
+				bComplete = ( (*iterJ)->GetMH() != BAD_MH );
 		}
 		pNodeInfo->SetComplete(bComplete);
 	}
@@ -521,20 +546,25 @@ void Board::CheckAllComplete()
 
 void Board::PasteTracks(bool bTidy)
 {
-	assert( GetRoutingEnabled() );
+	assert( GetRoutingEnabled() != bTidy );
+
+	if ( bTidy )
+	{
+		SetRoutingEnabled(true);
+		Route(false);	// false ==> non minimal routing
+	}
+
 	const int iSize = GetSize();
 	for (int i = 0; i < iSize; i++)
 	{
 		Element* p	= GetAt(i);
 		Element* pW	= p->GetW();
 
-		if ( bTidy )	// Clear all non-pins and wires that are USER_SET ...
+		// Tidy clears all non-pins and wires that are USER_SET ...
+		if ( bTidy && ( !p->GetIsPin() || pW ) && p->ReadFlagBits(USERSET) && !p->ReadFlagBits(AUTOSET|VEROSET) )
 		{
-			if ( ( !p->GetIsPin() || pW ) && p->ReadFlagBits(USERSET) && !p->ReadFlagBits(AUTOSET|VEROSET) )
-			{
-				SetNodeId(p, BAD_NODEID);
-				if ( pW ) SetNodeId(pW, BAD_NODEID);
-			}
+			SetNodeId(p, BAD_NODEID);
+			if ( pW ) SetNodeId(pW, BAD_NODEID);
 		}
 
 		p->ClearFlagBits(AUTOSET|VEROSET); p->SetFlagBits(USERSET);	// Don't do this on pW, or the tidy option will wipe wires !!!
@@ -549,6 +579,7 @@ void Board::PasteTracks(bool bTidy)
 			comp.SetOrigId(0, nodeId);	comp.SetOrigId(1, nodeId);
 		}
 	}
+	SetRoutingEnabled(false);
 }
 
 void Board::WipeTracks()

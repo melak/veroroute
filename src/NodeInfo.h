@@ -28,7 +28,7 @@ class NodeInfo
 public:
 	NodeInfo(int nodeId = BAD_NODEID)
 	: m_bComplete(false)
-	, m_bRoutedOK(false)
+	, m_iCost(UINT_MAX)
 	, m_nodeId(nodeId)
 	, m_minRow(INT_MAX)
 	, m_minCol(INT_MAX)
@@ -40,7 +40,7 @@ public:
 	NodeInfo& operator=(const NodeInfo& o)
 	{
 		m_bComplete	= o.m_bComplete;
-		m_bRoutedOK	= o.m_bRoutedOK;
+		m_iCost		= o.m_iCost;
 		m_nodeId	= o.m_nodeId;
 		m_minRow	= o.m_minRow;
 		m_maxRow	= o.m_maxRow;
@@ -50,12 +50,12 @@ public:
 		std::copy(o.m_compIds.begin(), o.m_compIds.end(), m_compIds.begin());
 		return *this;
 	}
-	void		SetComplete(bool b)				{ m_bComplete = b; }
-	void		SetRoutedOK(bool b)				{ m_bRoutedOK = b; }
-	void		SetNodeId(int i)				{ m_nodeId = i; }
-	const bool& GetComplete() const				{ return m_bComplete; }
-	const bool& GetRoutedOK() const				{ return m_bRoutedOK; }
-	const int&  GetNodeId() const				{ return m_nodeId; }
+	void				SetComplete(bool b)		{ m_bComplete = b; }
+	void				SetCost(unsigned int i)	{ m_iCost = i; }
+	void				SetNodeId(int i)		{ m_nodeId = i; }
+	const bool&			GetComplete() const		{ return m_bComplete; }
+	const unsigned int&	GetCost() const			{ return m_iCost; }
+	const int&			GetNodeId() const		{ return m_nodeId; }
 	size_t		GetNumComps() const				{ return m_compIds.size(); }
 	const int&	GetCompId(size_t i) const		{ return m_compIds[i]; }
 	bool		GetHasCompId(int compId) const	{ return std::find(m_compIds.begin(), m_compIds.end(), compId) != m_compIds.end(); }
@@ -122,7 +122,7 @@ public:
 	}
 private:
 	bool				m_bComplete;	// true ==> All component pins with the nodeId are connected (before routing)
-	bool				m_bRoutedOK;	// true ==> All component pins with the nodeId are connected (after routing)
+	unsigned int		m_iCost;		// zero ==> All component pins with the nodeId are connected (after routing)
 	int					m_nodeId;		// The NodeID
 	int					m_minRow;		// For the bounding rectangle based on comp pins
 	int					m_minCol;		// For the bounding rectangle based on comp pins

@@ -680,12 +680,12 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				if ( pC->GetNodeId() == BAD_NODEID ) continue;
 				GetLRTB(board, 100, j, i, L, R, T, B);	// 100% size square
 
-				if ( pC->GetNodeId() != GetCurrentNodeId() && pC->ReadFlagBits(AUTOSET) && !pC->ReadFlagBits(USERSET) ) // Don't draw hatched lines on selected NodeId
+				if ( pC->ReadFlagBits(AUTOSET) && !pC->ReadFlagBits(USERSET) )
 				{
 					painter.setPen(m_backgroundPen);
 					painter.drawLine(L, T, R, B);		// Draw "\" (hatched) line
 					painter.drawLine(L+C, T, R, B-C);	// Draw "\" (hatched) line
-					painter.drawLine(L, T+C, L+C, B);	// Draw "\" (hatched) line
+					painter.drawLine(L, T+C, R-C, B);	// Draw "\" (hatched) line
 					painter.drawLine(L, B, R, T);		// Draw "/" (hatched) line
 					painter.drawLine(L+C, B, R, B-C);	// Draw "/" (hatched) line
 					painter.drawLine(L, T+C, L+C, T);	// Draw "/" (hatched) line

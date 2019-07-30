@@ -138,7 +138,7 @@ bool Board::SetNodeIdByUser(const int& row, const int& col, const int& nodeId, c
 
 	// Now do regular cases:  Paint the board as needed...
 
-	if ( nodeId == p->GetNodeId() ) return false;	// No change
+	if ( nodeId == p->GetNodeId() && p->ReadFlagBits(USERSET) ) return false;	// No change
 
 	// Set the NodeId on the element
 	SetNodeId(p, nodeId);

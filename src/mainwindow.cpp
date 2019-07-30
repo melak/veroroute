@@ -349,7 +349,7 @@ void MainWindow::HandleRouting()
 	if ( m_board.GetRoutingEnabled() )
 	{
 		grabMouse(Qt::WaitCursor);
-		m_board.Route();
+		m_board.Route(true);	// true ==> Use minimal routing
 		releaseMouse();
 	}
 	if ( GetCurrentNodeId() != BAD_NODEID )
@@ -1061,8 +1061,8 @@ void MainWindow::ListNodes(bool bRebuild)
 	{
 		const bool& bAutoRouting = m_board.GetRoutingEnabled();
 
-		// If auto-routing is enabled, then the "RoutedOK" flags will have been set
-		// and we can use those instead of the "Complete" flags.
+		// If auto-routing is enabled, then the routing costs will have been set
+		// and we can check them instead of looking at "Complete" flags.
 
 		// If auto-routing is disabled, we need to call CheckAllComplete() with a copy of
 		// the board so that current routing results are not wiped (e.g. we may have a nodeId selected and showing connectivity).
@@ -1085,7 +1085,7 @@ void MainWindow::ListNodes(bool bRebuild)
 			std::string myStr = mystream.str();
 
 			const bool bFloating = p->GetHasFloatingComp(compMgr);
-			const bool bComplete = ( bAutoRouting ) ? p->GetRoutedOK() : p->GetComplete();
+			const bool bComplete = ( bAutoRouting ) ? ( p->GetCost() == 0 ) : p->GetComplete();
 			const bool bBroken	 = bFloating || !bComplete;
 			m_controlDlg->AddListItem(myStr, bBroken, bFloating);
 		}
@@ -1120,20 +1120,18 @@ void MainWindow::Paste()		// On hitting the Paste button ...
 {
 	if ( !m_board.GetRoutingEnabled() ) return;
 	m_board.PasteTracks(false);	// false ==> Don't wipe redundant track portions
-	m_board.SetRoutingEnabled(false);
 	if ( m_board.GetVeroTracks() )  m_board.AutoFillVero();
 	UpdateHistory("Paste Track");
 	UpdateControls();
 	RepaintWithRouting();
 	ListNodes();
 }
-void MainWindow::PasteTidy()	// On hitting the Paste+Tidy button ...
+void MainWindow::Tidy()	// On hitting the Paste+Tidy button ...
 {
-	if ( !m_board.GetRoutingEnabled() ) return;
+	if ( m_board.GetRoutingEnabled() ) return;
 	m_board.PasteTracks(true);	// true ==> Wipe redundant track portions
-	m_board.SetRoutingEnabled(false);
 	if ( m_board.GetVeroTracks() ) m_board.AutoFillVero();
-	UpdateHistory("Paste+Tidy Tracks");
+	UpdateHistory("Tidy Tracks");
 	UpdateControls();
 	RepaintWithRouting();
 	ListNodes();

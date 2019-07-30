@@ -40,6 +40,7 @@ public:
 	, GuiControl()
 	, m_infoStr("Use this box to enter a circuit description or other info")
 	, m_tmpVecSize(0)
+	, m_bRouteMinimal(true)
 	{
 		GlueNbrs();		// Set pointers between neighbouring grid elements
 	}
@@ -92,6 +93,7 @@ public:
 		m_targetPins.clear();
 		m_tmpVec.clear();
 		m_tmpVecSize	= 0;
+		m_bRouteMinimal	= true;
 
 		return *this;
 	}
@@ -375,8 +377,9 @@ public:
 	// Routing methods
 	void WipeAutoSetPoints(const int nodeId = BAD_NODEID);
 	void BuildTargetPins(const int& nodeId);
-	void Route();
+	void Route(bool bMinimal);
 	unsigned int Flood(const int& nodeId);
+	void Flood_Helper(const int& nodeId, bool** ppConn, unsigned int& cost, const bool bBuildTracks);
 	void Backtrace(Element* pEnd, const int& nodeId);
 	void Manhatten(Element* p);
 	void CheckAllComplete();
@@ -605,4 +608,5 @@ private:
 	std::vector<Element*>	m_targetPins;	// Set of pins to route.
 	std::vector<Element*>	m_tmpVec;		// The set of visited points.
 	size_t					m_tmpVecSize;	// The number of visited points.
+	bool					m_bRouteMinimal;// true ==> don't build tracks between pins that are already connected
 };
