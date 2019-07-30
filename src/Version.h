@@ -136,5 +136,9 @@
 //static const char* szVEROROUTE_VERSION = "1.57";			// Improvement: Faster routing algorithm.
 //static const char* szVEROROUTE_VERSION = "1.58";			// Improvement: Faster routing and connectivity checking.
 //static const char* szVEROROUTE_VERSION = "1.59";			// Improvement: Added Key/Mouse Actions dialog under Help menu.
-static const char* szVEROROUTE_VERSION = "1.60";			// Bug fix: Since V1.58, connected tracks were not always rendered properly.
-															// Improvement: Added option to disable "Fast" routing (to try reduce Bad Nodes).
+//static const char* szVEROROUTE_VERSION = "1.60";			// Bug fix: Since V1.58, connected tracks were not always rendered properly.
+//															// Improvement: Added option to disable "Fast" routing (to try reduce Bad Nodes).
+static const char* szVEROROUTE_VERSION = "1.61";			// Improvement: Auto-router respects manually painted track between two pins.
+															// Allow manual over-painting of auto-routed track, and show
+															// all auto-routed tracks with hatched lines (including the current selection).
+															// Split "Paste" and "Tidy" buttons, and only allow "Tidy" on completed circuits.
