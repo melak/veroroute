@@ -359,10 +359,14 @@ bool Board::GetDisableCompText()
 bool Board::GetDisableRotate()
 {
 	if ( GetMirrored() ) return true;
-	if ( ( GetGroupMgr().GetNumUserComps() < 1 ) || ( GetCompMode() == COMPSMODE::OFF ) ) return true;
-	if ( GetGroupMgr().GetNumUserComps() > 1 ) return false;
-	const Component& comp = GetUserComponent();
-	return ( comp.GetType() == COMP::VIA );	// Can't rotate a via
+	Component& trax			= m_compMgr.GetTrax();
+	const bool bHidingComps	= ( GetGroupMgr().GetNumUserComps() > 0 ) && ( GetCompMode()  == COMPSMODE::OFF );
+	const bool bHidingTrax	= ( trax.GetSize() > 0 ) && ( GetTrackMode() == TRACKMODE::OFF );
+	if ( bHidingComps || bHidingTrax ) return true;
+	const bool bNoComps		= ( GetGroupMgr().GetNumUserComps() == 0 );
+	const bool bVia			= ( GetGroupMgr().GetNumUserComps() == 1 && GetUserComponent().GetType() == COMP::VIA );	// Can't rotate a via
+	const bool bNoTrax		= ( trax.GetSize() == 0 );
+	return ( bNoComps || bVia ) && bNoTrax;
 }
 
 bool Board::GetDisableStretch(bool bGrow)

@@ -733,6 +733,14 @@ bool Board::MoveComps(const std::list<int>& compIds, const int& deltaRow, const 
 
 	if ( deltaRow == 0 && deltaCol == 0 ) return bPanned;
 
+	Component& trax			= m_compMgr.GetTrax();
+	const bool bHidingComps	= ( GetGroupMgr().GetNumUserComps() > 0 ) && ( GetCompMode()  == COMPSMODE::OFF );
+	const bool bHidingTrax	= ( trax.GetSize() > 0 ) && ( GetTrackMode() == TRACKMODE::OFF );
+	if ( bHidingComps || bHidingTrax ) return bPanned;
+	const bool bNoComps		= ( GetGroupMgr().GetNumUserComps() == 0 );
+	const bool bNoTrax		= ( trax.GetSize() == 0 );
+	if ( bNoComps && bNoTrax ) return bPanned;
+
 	// Treat the components as a single large footprint with LT at (minRow, minCol)
 	Rect rect = GetFootprintBounds(compIds);
 	if ( !rect.GetIsValid() ) return false;
@@ -764,7 +772,6 @@ bool Board::MoveComps(const std::list<int>& compIds, const int& deltaRow, const 
 		comp.SetCol(newCol);
 	}
 	// The trax comp
-	Component& trax = m_compMgr.GetTrax();
 	if ( trax.GetSize() > 0 )
 	{
 		int newRow = trax.GetRow() + deltaRow;
