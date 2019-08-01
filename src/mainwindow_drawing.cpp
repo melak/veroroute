@@ -566,21 +566,17 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					painter.drawPoint(pCentre);
 
 					// Emphasize strip breaks
-					if ( (  bVertical && j > minRow && j < maxRow ) || 
-						 ( !bVertical && i > minCol && i < maxCol )	)
+					painter.setPen(Qt::NoPen);
+					painter.setBrush(m_backgroundBrush);
+					if ( bVertical )
 					{
-						painter.setPen(Qt::NoPen);
-						painter.setBrush(m_backgroundBrush);
-						if ( bVertical )
-						{
-							if ( pC->GetNbr(NBR_T)->IsClash(nodeId) ) painter.drawRect(L, T-iHalfGap, R-L, iGap);
-							if ( pC->GetNbr(NBR_B)->IsClash(nodeId) ) painter.drawRect(L, B-iHalfGap, R-L, iGap);
-						}
-						else
-						{
-							if ( pC->GetNbr(NBR_L)->IsClash(nodeId) ) painter.drawRect(L-iHalfGap, T, iGap, B-T);
-							if ( pC->GetNbr(NBR_R)->IsClash(nodeId) ) painter.drawRect(R-iHalfGap, B, iGap, B-T);
-						}
+						if ( j > minRow && pC->GetNbr(NBR_T)->IsClash(nodeId) ) painter.drawRect(L, T-iHalfGap, R-L, iGap);
+						if ( j < maxRow && pC->GetNbr(NBR_B)->IsClash(nodeId) ) painter.drawRect(L, B-iHalfGap, R-L, iGap);
+					}
+					else
+					{
+						if ( i > minCol && pC->GetNbr(NBR_L)->IsClash(nodeId) ) painter.drawRect(L-iHalfGap, T, iGap, B-T);
+						if ( i < maxCol && pC->GetNbr(NBR_R)->IsClash(nodeId) ) painter.drawRect(R-iHalfGap, B, iGap, B-T);
 					}
 					continue;	// Next grid square
 				}

@@ -183,7 +183,7 @@ unsigned int Board::Flood(const int& iFloodNodeId)
 	memset(pConn, 0, N2 * sizeof(bool));
 	for (size_t i = 0; i < N; i++) ppConn[i] = pConn + i * N;
 	for (size_t i = 0; i < N; i++) ppConn[i][i] = true;	// Each pin is connected to itself
-	unsigned int cost(N2 - N);	// Cost = number of false values in the connection matrix
+	unsigned int cost = (unsigned int)(N2 - N);	// Cost = number of false values in the connection matrix
 
 	if ( m_bRouteMinimal )	// For minimal routing, first do a preliminary flood to see which pins are connected
 		Flood_Helper(iFloodNodeId, ppConn, cost, false);	// false ==> don't build new tracks
@@ -203,9 +203,9 @@ void Board::Flood_Helper(const int& iFloodNodeId, bool** ppConn, unsigned int& c
 	for (int i = 0; i < iSize; i++)	// Loop all grid points
 	{
 		Element* p = GetAt(i);
-		p->SetRouteId(BAD_ROUTEID);		// Wipe RouteId at point
-		p->SetMH(BAD_MH);				// Set "infinite" MH distance
-		p->SetMaxMH(0);					// Zero max MH algorithm parameter
+		p->SetRouteId(BAD_ROUTEID);	// Wipe RouteId at point
+		p->SetMH(BAD_MH);			// Set "infinite" MH distance
+		p->SetMaxMH(0);				// Zero max MH algorithm parameter
 	}
 
 	m_tmpVec.resize(iSize, nullptr);	// Clear the set of visited points
