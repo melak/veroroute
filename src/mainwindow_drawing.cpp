@@ -730,6 +730,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		pinsFont.setPointSize( m_board.GetTextSizePins() );
 		painter.setFont(pinsFont);
 
+		compMgr.CalculateWireShifts();
+
 		for (const auto& mapObj : compMgr.GetMapIdToComp())	// Iterate components
 		{
 			const Component& comp			= mapObj.second;
@@ -875,6 +877,15 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			painter.setBrush(m_clearBrush);
 
 			GetXY(board, comp, X, Y);	// Get footprint centre
+
+			// Implement wire shift
+			if ( compType == COMP::WIRE && comp.GetIsPlaced() )
+			{
+				if ( comp.GetCompRows() == 1 )	// Horizontal
+					Y += compMgr.GetWireShift( &comp ) * 0.1 * W;
+				else
+					X += compMgr.GetWireShift( &comp ) * 0.1 * W;
+			}
 
 			painter.save();
 			painter.translate(X, Y);	// Shape coordinates are relative to footprint centre

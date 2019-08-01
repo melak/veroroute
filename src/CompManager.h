@@ -33,6 +33,7 @@ public:
 	void Clear()
 	{
 		m_mapIdToComp.clear();
+		m_mapWireToShift.clear();
 		ClearTrax();
 	}
 	CompManager& operator=(const CompManager& o)
@@ -44,6 +45,7 @@ public:
 			m_mapIdToComp[ comp.GetId() ] = comp;
 		}
 		m_trax = o.m_trax;
+		// Don't copy m_mapWireToShift (it's just a helper)
 		return *this;
 	}
 	bool operator==(const CompManager& o) const	// Compare persisted info
@@ -117,6 +119,55 @@ public:
 		if ( m_trax.GetSize() > 0 )	// If have a trax pattern
 			bounding |= m_trax.GetFootprintRect();
 		return bounding;
+	}
+	void CalculateWireShifts()
+	{
+		m_mapWireToShift.clear();
+
+		std::vector<const Component*> wiresH, wiresV;	// Lists of placed wires in H and V directions
+		for (const auto& mapObj : m_mapIdToComp)
+		{
+			const Component& comp = mapObj.second;
+			if ( comp.GetType() != COMP::WIRE || !comp.GetIsPlaced() ) continue;
+			if ( comp.GetCompRows() == 1 )
+				wiresH.push_back(&comp);
+			else
+				wiresV.push_back(&comp);
+		}
+		std::sort(wiresH.begin(), wiresH.end(), IsEarlierWire());
+		std::sort(wiresV.begin(), wiresV.end(), IsEarlierWire());
+
+		const Component* pLast(nullptr);
+		for (auto& p : wiresH)
+		{
+			if ( pLast == nullptr || p->GetRow() != pLast->GetRow() )	// Reset if new row
+				m_mapWireToShift[p] = 0;
+			else if ( p->GetCol() < pLast->GetCol() + pLast->GetCompCols() - 1 )	// If have overlap ...
+			{
+				if ( m_mapWireToShift[pLast] == 0 )					// ... shift last wire if necessary
+					m_mapWireToShift[pLast] = -1;
+				m_mapWireToShift[p] = -m_mapWireToShift[pLast]	;	// ... give this wire opposite shift
+			}
+			pLast = p;
+		}
+		pLast = nullptr;
+		for (auto& p : wiresV)
+		{
+			if ( pLast == nullptr || p->GetCol() != pLast->GetCol() )	// Reset if new col
+				m_mapWireToShift[p] = 0;
+			else if ( p->GetRow() < pLast->GetRow() + pLast->GetCompRows() - 1 )	// If have overlap ...
+			{
+				if ( m_mapWireToShift[pLast] == 0 )					// ... shift last wire if necessary
+					m_mapWireToShift[pLast] = -1;
+				m_mapWireToShift[p] = -m_mapWireToShift[pLast]	;	// ... give this wire opposite shift
+			}
+			pLast = p;
+		}
+	}
+	int GetWireShift(const Component* pWire) const
+	{
+		auto iter = m_mapWireToShift.find( pWire );
+		return ( iter != m_mapWireToShift.end() ) ? iter->second : 0;
 	}
 	// Merge interface functions
 	virtual void UpdateMergeOffsets(MergeOffsets& o) override
@@ -205,7 +256,25 @@ private:
 	{
 		return m_mapIdToComp.find(compId) != m_mapIdToComp.end();
 	}
+	struct IsEarlierWire
+	{
+		bool operator()(const Component* pA, const Component* pB) const
+		{
+			if ( pA->GetCompRows() == 1 )	// Horizontal
+			{
+				if ( pA->GetRow() != pB->GetRow() ) return pA->GetRow() < pB->GetRow();
+				return pA->GetCol() < pB->GetCol();
+			}
+			else							// Vertical
+			{
+				if ( pA->GetCol() != pB->GetCol() ) return pA->GetCol() < pB->GetCol();
+				return pA->GetRow() < pB->GetRow();
+			}
+		}
+	};
 private:
-	std::unordered_map<int, Component>	m_mapIdToComp;	// The components (indexed by compId)
-	Component							m_trax;			// The "trax" component
+	std::unordered_map<int, Component>			m_mapIdToComp;		// The components (indexed by compId)
+	Component									m_trax;				// The "trax" component
+	// Helpers. Don't persist.
+	std::unordered_map<const Component*, int>	m_mapWireToShift;	// For stacking wires
 };
