@@ -156,16 +156,17 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 {
 	if ( comp.GetIsPlaced() ) return false;	// Already on board
 
-	const int	rowTL		= comp.GetRow();
-	const int	colTL		= comp.GetCol();
-	const bool	bWire 		= comp.GetType() == COMP::WIRE;	// Wire's only get NodeIDs while placed
-	const bool	bVia		= comp.GetType() == COMP::VIA;	// Via can go anywhere without a pin
-	const bool	bTrax		= comp.GetType() == COMP::TRACKS;
-	const int&	compCols	= comp.GetCompCols();
-	const int&	compRows	= comp.GetCompRows();
-	const int&	boardCols	= GetCols();
-	const int&	boardRows	= GetRows();
-	const bool	bDiagsOK	= GetDiagsMode() != DIAGSMODE::OFF;
+	const int	rowTL			= comp.GetRow();
+	const int	colTL			= comp.GetCol();
+	const bool	bWire			= comp.GetType() == COMP::WIRE;	// Wire's only get NodeIDs while placed
+	const bool	bVia			= comp.GetType() == COMP::VIA;	// Via can go anywhere without a pin
+	const bool	bTrax			= comp.GetType() == COMP::TRACKS;
+	const int&	compCols		= comp.GetCompCols();
+	const int&	compRows		= comp.GetCompRows();
+	const int&	boardCols		= GetCols();
+	const int&	boardRows		= GetRows();
+	const bool	bDiagsOK		= GetDiagsMode() != DIAGSMODE::OFF;
+	const bool	bAllowWireCross	= true;	// TODO Could make this configurable in the GUI
 
 	// Check limits
 	const bool bLimitsOK = ( compRows <= boardRows && compCols <= boardCols );
@@ -233,7 +234,9 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 						( compSurface  == SURFACE_FREE ) ||
 						( boardSurface + compSurface <= SURFACE_FULL );
 				bOK &=	( boardHoleUse + compHoleUse <= HOLE_FULL );
-				if ( bWire ) bOK &= ( boardSurface <= SURFACE_GAP );	//TODO Remove this when wires can share holes
+
+				if ( bWire ) bOK &= ( boardHoleUse + compHoleUse <= HOLE_WIRE );	//TODO Remove this to allow wires to share a hole
+				if ( bWire ) bOK &= ( bAllowWireCross || ( boardSurface <= SURFACE_GAP ) );
 
 				if ( !bOK ) continue;
 
@@ -427,15 +430,16 @@ bool Board::TakeOff(Component& comp)
 				pGrid->SetHoleUse( pGrid->GetHoleUse() - pComp->GetHoleUse() );
 				switch ( pGrid->GetSurface() )	// Could move this switch statement to SetSurface()
 				{
-					case SURFACE_GAP:	pGrid->SetPinIndex(BAD_PININDEX);	break;
-					case SURFACE_FREE:	pGrid->SetPinIndex(BAD_PININDEX);	break;
+					case SURFACE_GAP:
+					case SURFACE_FREE:
+					case SURFACE_WIRE:	pGrid->SetPinIndex(BAD_PININDEX); pGrid->SetCompId(BAD_COMPID); break;
 				}
 
 				// Update IDs at pin location
 				const size_t pinIndex = pComp->GetPinIndex();
 				if ( pinIndex == BAD_PININDEX ) continue;
 
-				pGrid->SetCompId(BAD_COMPID);	// Clear compId at pin locations
+				assert( pGrid->GetCompId() == BAD_COMPID );	// Sanity check on preceeding switch statement
 
 				const int origNodeId = comp.GetOrigId(pinIndex);
 
