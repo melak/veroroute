@@ -22,9 +22,9 @@
 
 void MainWindow::DestroyPixmapCache()
 {
-	if ( m_ppPixmapPad )	for (int i = 0; i <    MYNUMCOLORS+2;  i++) delete m_ppPixmapPad[i];	delete[] m_ppPixmapPad;		m_ppPixmapPad	= nullptr;
-	if ( m_ppPixmapDiag )	for (int i = 0; i < 2*(MYNUMCOLORS+2); i++) delete m_ppPixmapDiag[i];	delete[] m_ppPixmapDiag;	m_ppPixmapDiag	= nullptr;
-	if ( m_ppPixmapBlob )	for (int i = 0; i < 256; i++)				delete m_ppPixmapBlob[i];	delete[] m_ppPixmapBlob;	m_ppPixmapBlob	= nullptr;
+	if ( m_ppPixmapPad )	for (int i = 0; i <     NUM_PIXMAP_COLORS; i++) delete m_ppPixmapPad[i];	delete[] m_ppPixmapPad;		m_ppPixmapPad	= nullptr;
+	if ( m_ppPixmapDiag )	for (int i = 0; i < 2 * NUM_PIXMAP_COLORS; i++) delete m_ppPixmapDiag[i];	delete[] m_ppPixmapDiag;	m_ppPixmapDiag	= nullptr;
+	if ( m_ppPixmapBlob )	for (int i = 0; i < 256; i++)					delete m_ppPixmapBlob[i];	delete[] m_ppPixmapBlob;	m_ppPixmapBlob	= nullptr;
 }
 
 void MainWindow::CreatePixmapCache(const GuiControl& guiCtrl, ColorManager& colorMgr)
@@ -44,12 +44,12 @@ void MainWindow::CreatePixmapCache(const GuiControl& guiCtrl, ColorManager& colo
 	const int	C	= W / 2;						// Half square width in pixels
 	const int	D	= guiCtrl.GetHalfPadWidth();	// Half pad width in pixels
 	const int	H	= (int) ceil(1.414 * guiCtrl.GetHalfTrackWidth());
-	m_ppPixmapPad	= new QPixmap*[MYNUMCOLORS+2];
-	m_ppPixmapDiag	= new QPixmap*[2*(MYNUMCOLORS+2)];
+	m_ppPixmapPad	= new QPixmap*[NUM_PIXMAP_COLORS];
+	m_ppPixmapDiag	= new QPixmap*[2 * NUM_PIXMAP_COLORS];
 	m_ppPixmapBlob	= new QPixmap*[256];
 
 	QPainter painter;
-	for (int i = 0; i < MYNUMCOLORS+2; i++)
+	for (int i = 0; i < NUM_PIXMAP_COLORS; i++)
 	{
 		int R(0), G(0), B(0);
 		colorMgr.GetPixmapRGB(i, R, G, B);
@@ -64,7 +64,7 @@ void MainWindow::CreatePixmapCache(const GuiControl& guiCtrl, ColorManager& colo
 
 		for (int jDiagCode = 0; jDiagCode < 2; jDiagCode++)	// 0 ==> LT, 1 ==> RT
 		{
-			const int ii = i + jDiagCode*(MYNUMCOLORS+2);
+			const int ii = i + jDiagCode * NUM_PIXMAP_COLORS;
 
 			m_ppPixmapDiag[ii] = new QPixmap(2*H, 2*H);
 			m_ppPixmapDiag[ii]->fill(Qt::transparent);
@@ -515,11 +515,11 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 				if ( colorId == BAD_COLORID && !pC->GetW() ) continue;	// Usually don't color places with no NodeID assigned unless they are wire ends
 
-				// Use GetPixmapRGB for pixmaps.  It can handle "MYNUMCOLORS" "MYNUMCOLORS+1" as special cases
+				// Use GetPixmapRGB for pixmaps.  It can handle MY_GREY, MY_BLACK as special cases
 				const bool		bInvalidColor	=  colorId == BAD_COLORID ||
 												  ( trackMode == TRACKMODE::MONO && nodeId != GetCurrentNodeId() );
-				const int		iEffColorId		= ( bInvalidColor )					? MYNUMCOLORS + 1 :
-												  ( nodeId == GetCurrentNodeId() )	? MYNUMCOLORS : colorId %  MYNUMCOLORS;
+				const int		iEffColorId		= ( bInvalidColor ) ? MY_BLACK :
+												  ( nodeId == GetCurrentNodeId() ) ? MY_GREY : ( colorId % MYNUMCOLORS );
 
 				colorMgr.GetPixmapRGB(iEffColorId, cR, cG, cB);
 				const QColor color(cR, cG, cB, 255);
@@ -605,7 +605,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						const bool bUsedLT = ReadCodeBit(NBR_LT, iPerimeterCode);
 						const bool bUsedRT = ReadCodeBit(NBR_RT, iPerimeterCode);
 						if ( bUsedLT ) painter.drawPixmap(L-H, T-H,*(m_ppPixmapDiag[iEffColorId]));
-						if ( bUsedRT ) painter.drawPixmap(R-H, T-H,*(m_ppPixmapDiag[iEffColorId + (MYNUMCOLORS+2)]));
+						if ( bUsedRT ) painter.drawPixmap(R-H, T-H,*(m_ppPixmapDiag[iEffColorId + NUM_PIXMAP_COLORS]));
 					}
 					continue;
 				}
@@ -687,13 +687,13 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					painter.drawLine(L+C, T, R, B-C);	// Draw "\" (hatched) line
 					painter.drawLine(L, T+C, R-C, B);	// Draw "\" (hatched) line
 					painter.drawLine(L, B, R, T);		// Draw "/" (hatched) line
-					painter.drawLine(L+C, B, R, B-C);	// Draw "/" (hatched) line
-					painter.drawLine(L, T+C, L+C, T);	// Draw "/" (hatched) line
+					painter.drawLine(L+C, B, R, T+C);	// Draw "/" (hatched) line
+					painter.drawLine(L, B-C, R-C, T);	// Draw "/" (hatched) line
 				}
 				if ( pC->GetNodeId() == GetCurrentNodeId() && pC->GetMH() == BAD_MH )
 				{
 					painter.setPen(m_yellowPen);
-					painter.drawLine(L, B, R, T);	// Draw "/" (hatched) line
+					painter.drawLine(L, B, R, T);		// Draw "/" (hatched) line
 				}
 			}
 			painter.restore();
@@ -783,13 +783,13 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					if ( !comp.GetIsPlaced() )	// Color pins of floating components
 					{
 						const int&	nodeId	= comp.GetNodeId(iPinIndex);
-						const int	colorId	= colorMgr.GetColorId(nodeId);
-
-						int cR(0), cG(0), cB(0);
-						colorMgr.GetRGB(colorId, cR, cG, cB);
+						int			colorId	= colorMgr.GetColorId(nodeId);
 
 						if ( colorId != BAD_COLORID && nodeId == GetCurrentNodeId() )
-							cR = cG = cB = g_selectedNodeShade;
+							colorId = MY_GREY;
+
+						int cR, cG, cB;
+						colorMgr.GetPixmapRGB(colorId, cR, cG, cB);
 
 						const QColor color(cR, cG, cB, 255);
 						m_varBrush.setColor(color);

@@ -324,9 +324,14 @@ void Board::Flood_Helper(const int& iFloodNodeId, bool** ppConn, unsigned int& c
 									cost -= 2;							// Update cost
 									for (unsigned int c = 0; c < numRIDs; c++)	// Update 1st-order transitive relations
 									{
-										if ( c == a || c == b ) continue;
-										if ( ppConn[a][c] ) list.push_back( CONNECTION(b,c) );	// a-c connection ==> b-c connection
-										if ( ppConn[b][c] ) list.push_back( CONNECTION(a,c) );	// b-c connection ==> a-c connection
+										if ( ppConn[a][c] )
+										{
+											if ( !ppConn[b][c] ) list.push_back( CONNECTION(b,c) );	// a-c connection ==> b-c connection
+										}
+										else
+										{
+											if (  ppConn[b][c] ) list.push_back( CONNECTION(a,c) );	// b-c connection ==> a-c connection
+										}
 									}
 								}
 							}

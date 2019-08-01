@@ -21,7 +21,10 @@
 
 #include "AdjInfoManager.h"
 
-#define MYNUMCOLORS 12
+#define MYNUMCOLORS 		12
+#define MY_GREY				(MYNUMCOLORS)
+#define MY_BLACK			(MYNUMCOLORS+1)
+#define NUM_PIXMAP_COLORS	(MYNUMCOLORS+2)
 
 struct MyRGB
 {
@@ -34,8 +37,6 @@ static MyRGB g_color[MYNUMCOLORS] = { MyRGB(60,24,200),   MyRGB(192,36,248),  My
 									, MyRGB(96,200,88),   MyRGB(88,150,200),  MyRGB(96,16,255),  MyRGB(225,66,210)
 									, MyRGB(225,140,48),  MyRGB(160,200,40),  MyRGB(72,200,150), MyRGB(80,128,255) };
 
-static int g_selectedNodeShade = 96;	// Dark grey for selected node
-
 // Manager class to handle assignment of colors to nodeIds
 
 const int BAD_COLORID = -1;
@@ -44,7 +45,7 @@ class ColorManager
 {
 public:
 	ColorManager() : m_iSaturation(100),m_bReAssign(true) {}
-//	ColorManager(const ColorManager& o) { *this = o; }
+	ColorManager(const ColorManager& o) { assert(0); *this = o; }	// Never called
 	ColorManager& operator=(const ColorManager& o)
 	{
 		m_mapNodeIdToColorId.clear();
@@ -138,9 +139,9 @@ public:
 	}
 	void GetPixmapRGB(const int& iEffColorId, int& R, int& G, int& B) const
 	{
-		if ( iEffColorId <  MYNUMCOLORS ) return GetRGB(iEffColorId, R, G, B);
-		if ( iEffColorId == MYNUMCOLORS ) { R = G = B = g_selectedNodeShade; return; }
-		R = G = B = 0;
+		if ( iEffColorId < MYNUMCOLORS ) return GetRGB(iEffColorId, R, G, B);
+		if ( iEffColorId == MY_GREY ) { R = G = B = 96;	return; }
+		R = G = B = 0;	assert( iEffColorId == MY_BLACK );
 	}
 private:
 	std::unordered_map<int,int>	m_mapNodeIdToColorId;
