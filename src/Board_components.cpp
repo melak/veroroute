@@ -432,7 +432,9 @@ bool Board::TakeOff(Component& comp)
 				{
 					case SURFACE_GAP:
 					case SURFACE_FREE:
-					case SURFACE_WIRE:	pGrid->SetPinIndex(BAD_PININDEX); pGrid->SetCompId(BAD_COMPID); break;
+					case SURFACE_WIRE:
+					case SURFACE_WIRE|SURFACE_GAP:
+						pGrid->SetPinIndex(BAD_PININDEX); pGrid->SetCompId(BAD_COMPID); break;
 				}
 
 				// Update IDs at pin location

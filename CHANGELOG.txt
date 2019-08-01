@@ -150,3 +150,4 @@ V1.61  Improvement: Auto-router respects manually painted track between two pins
 V1.62  Bug fix: Don't allow parts/tracks selected by area to be manipulated if a control slider is hiding some of the selection.
        Bug fix: Don't show selected area if both control sliders are moved to Off.
        New feature: Allow wires to cross, and allow up to two wires to be stacked next to each other (but no hole sharing yet).
+V1.63  Bug fix.  V1.62 could crash or corrupt the layout if stacking wires under an IC.

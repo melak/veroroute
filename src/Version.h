@@ -142,6 +142,7 @@
 //															// Allow manual over-painting of auto-routed track, and show
 //															// all auto-routed tracks with hatched lines (including the current selection).
 //															// Split "Paste" and "Tidy" buttons, and only allow "Tidy" on completed circuits.
-static const char* szVEROROUTE_VERSION = "1.62";			// Bug fix: Don't allow parts/tracks selected by area to be manipulated if a control slider is hiding some of the selection.
-															// Bug fix: Don't show selected area if both control sliders are moved to Off.
-															// New feature: Allow wires to cross, and allow up to two wires to be stacked next to each other (but no hole sharing yet).
+//static const char* szVEROROUTE_VERSION = "1.62";			// Bug fix: Don't allow parts/tracks selected by area to be manipulated if a control slider is hiding some of the selection.
+//															// Bug fix: Don't show selected area if both control sliders are moved to Off.
+//															// New feature: Allow wires to cross, and allow up to two wires to be stacked next to each other (but no hole sharing yet).
+static const char* szVEROROUTE_VERSION = "1.63";			// Bug fix.  1.62 could crash or corrupt the layout if stacking wires under an IC.
