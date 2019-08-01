@@ -144,10 +144,12 @@ public:
 				m_mapWireToShift[p] = 0;
 			else if ( p->GetCol() < pLast->GetCol() + pLast->GetCompCols() - 1 )	// If have overlap ...
 			{
-				if ( m_mapWireToShift[pLast] == 0 )					// ... shift last wire if necessary
+				if ( m_mapWireToShift[pLast] == 0 )				// ... shift last wire if necessary
 					m_mapWireToShift[pLast] = -1;
-				m_mapWireToShift[p] = -m_mapWireToShift[pLast]	;	// ... give this wire opposite shift
+				m_mapWireToShift[p] = -m_mapWireToShift[pLast];	// ... give this wire opposite shift
 			}
+			else												// If no overlap ...
+				m_mapWireToShift[p] = m_mapWireToShift[pLast];	// ... give this wire same shift
 			pLast = p;
 		}
 		pLast = nullptr;
@@ -157,10 +159,12 @@ public:
 				m_mapWireToShift[p] = 0;
 			else if ( p->GetRow() < pLast->GetRow() + pLast->GetCompRows() - 1 )	// If have overlap ...
 			{
-				if ( m_mapWireToShift[pLast] == 0 )					// ... shift last wire if necessary
+				if ( m_mapWireToShift[pLast] == 0 )				// ... shift last wire if necessary
 					m_mapWireToShift[pLast] = -1;
-				m_mapWireToShift[p] = -m_mapWireToShift[pLast]	;	// ... give this wire opposite shift
+				m_mapWireToShift[p] = -m_mapWireToShift[pLast];	// ... give this wire opposite shift
 			}
+			else												// If no overlap ...
+				m_mapWireToShift[p] = m_mapWireToShift[pLast];	// ... give this wire same shift
 			pLast = p;
 		}
 	}
