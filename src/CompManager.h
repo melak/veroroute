@@ -138,10 +138,13 @@ public:
 		std::sort(wiresV.begin(), wiresV.end(), IsEarlierWire());
 
 		const Component* pLast(nullptr);
+		int maxCol(0), maxRow(0);
 		for (auto& p : wiresH)
 		{
-			if ( pLast == nullptr || p->GetRow() != pLast->GetRow() )	// Reset if new row
-				m_mapWireToShift[p] = 0;
+			if ( pLast == nullptr || p->GetRow() != pLast->GetRow() )	// Reset all if new row
+				m_mapWireToShift[p] = maxCol = 0;
+			else if ( p->GetCol() > maxCol )					// If past all wires ...
+				m_mapWireToShift[p] = 0;						// ... set zero shift
 			else if ( p->GetCol() < pLast->GetCol() + pLast->GetCompCols() - 1 )	// If have overlap ...
 			{
 				if ( m_mapWireToShift[pLast] == 0 )				// ... shift last wire if necessary
@@ -150,13 +153,16 @@ public:
 			}
 			else												// If no overlap ...
 				m_mapWireToShift[p] = m_mapWireToShift[pLast];	// ... give this wire same shift
-			pLast = p;
+			pLast	= p;
+			maxCol	= std::max(maxCol, p->GetCol() + p->GetCompCols() - 1);
 		}
 		pLast = nullptr;
 		for (auto& p : wiresV)
 		{
-			if ( pLast == nullptr || p->GetCol() != pLast->GetCol() )	// Reset if new col
-				m_mapWireToShift[p] = 0;
+			if ( pLast == nullptr || p->GetCol() != pLast->GetCol() )	// Reset all if new col
+				m_mapWireToShift[p] = maxRow = 0;
+			else if ( p->GetRow() > maxRow )					// If past all wires ...
+				m_mapWireToShift[p] = 0;						// ... set zero shift
 			else if ( p->GetRow() < pLast->GetRow() + pLast->GetCompRows() - 1 )	// If have overlap ...
 			{
 				if ( m_mapWireToShift[pLast] == 0 )				// ... shift last wire if necessary
@@ -165,7 +171,8 @@ public:
 			}
 			else												// If no overlap ...
 				m_mapWireToShift[p] = m_mapWireToShift[pLast];	// ... give this wire same shift
-			pLast = p;
+			pLast	= p;
+			maxRow	= std::max(maxRow, p->GetRow() + p->GetCompRows() - 1);
 		}
 	}
 	int GetWireShift(const Component* pWire) const
