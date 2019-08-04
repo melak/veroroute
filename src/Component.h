@@ -254,7 +254,9 @@ public:
 	// Helpers (account for component direction)
 	const int&			GetCompRows() const	{ return GetRows( GetDirection() ); }
 	const int&			GetCompCols() const	{ return GetCols( GetDirection() ); }
-	const CompElement* 	GetCompElement(const int& compRow, const int& compCol) const
+	int					GetLastRow() const	{ return GetRow() + GetCompRows() - 1; }
+	int					GetLastCol() const	{ return GetCol() + GetCompCols() - 1; }
+	const CompElement*	GetCompElement(const int& compRow, const int& compCol) const
 	{
 		return FootPrint::Get(compRow, compCol, GetDirection());
 	}
@@ -265,7 +267,7 @@ public:
 	}
 	void Rotate(const bool& bClockWise)
 	{
-		switch ( GetDirection() )	// Component direction: 'W','E','N','S'
+		switch( GetDirection() )	// Component direction: 'W','E','N','S'
 		{
 			case 'W': return SetDirection( bClockWise ? 'N' : 'S' );
 			case 'E': return SetDirection( bClockWise ? 'S' : 'N' );
@@ -333,11 +335,11 @@ public:
 	}
 	Rect GetFootprintRect() const
 	{
-		return Rect(GetRow(), GetRow() + GetCompRows() - 1, GetCol(), GetCol() + GetCompCols() - 1);
+		return Rect(GetRow(), GetLastRow(), GetCol(), GetLastCol());
 	}
 	bool GetIsTrueComp() const	// A true component has pins and "owns" the nodeIds on them
 	{
-		switch ( GetType() )
+		switch( GetType() )
 		{
 			case COMP::VIA:
 			case COMP::WIRE:
