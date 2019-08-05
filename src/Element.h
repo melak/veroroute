@@ -45,7 +45,16 @@ const unsigned int	BAD_MH		= UINT_MAX;	// "Infinite" MH distance
 
 class Element;
 
-typedef std::unordered_map<const Element*, unsigned int> WIRELIST;	// Helper for chains of wires
+// Quicker to use struct than a std::pair
+struct ElementInt
+{
+	ElementInt(const Element* p, unsigned int i) : first(p), second(i) {}
+	const Element*	first;
+	unsigned int	second;
+};
+
+// Quicker to use a list than an unordered_map since list is typically small
+typedef std::list<ElementInt> WIRELIST;	// Helper for chains of wires
 
 class Element : public Pin, public TrackElement
 {
@@ -361,10 +370,13 @@ public:
 private:
 	bool WireListHelper(WIRELIST& wireList, const Element* p, unsigned int iStep) const
 	{
-		auto iter = wireList.find(p);
-		if ( iter == wireList.end() )	{ wireList[p]  = iStep;	return true; }
-		if ( iStep < iter->second )		{ iter->second = iStep;	return true; }
-		return false;
+		for (auto& o : wireList)
+		{
+			if ( o.first != p ) continue;
+			if ( iStep < o.second )	{ o.second = iStep; return true; } else return false;
+		}
+		wireList.push_back(ElementInt(p, iStep));
+		return true;
 	}
 	void UpdateWireList(WIRELIST& wireList, unsigned int iStep) const
 	{
