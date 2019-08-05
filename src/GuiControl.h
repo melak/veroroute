@@ -58,6 +58,8 @@ public:
 		m_iTextSizePins		= o.m_iTextSizePins;
 		m_iRoutingMethod	= o.m_iRoutingMethod;
 		m_bShowTarget		= o.m_bShowTarget;
+		m_bWireShare		= o.m_bWireShare;
+		m_bWireCross		= o.m_bWireCross;
 		m_bVeroTracks		= o.m_bVeroTracks;
 		m_bCurvedTracks		= o.m_bCurvedTracks;
 		m_bRoutingEnabled	= o.m_bRoutingEnabled;
@@ -94,6 +96,8 @@ public:
 			&&	m_iTextSizePins		== o.m_iTextSizePins
 			&&	m_iRoutingMethod	== o.m_iRoutingMethod
 			&&	m_bShowTarget		== o.m_bShowTarget
+			&&	m_bWireShare		== o.m_bWireShare
+			&&	m_bWireCross		== o.m_bWireCross
 			&&	m_bVeroTracks		== o.m_bVeroTracks
 			&&	m_bCurvedTracks		== o.m_bCurvedTracks
 			&&	m_bRoutingEnabled	== o.m_bRoutingEnabled
@@ -195,6 +199,12 @@ public:
 		m_bShowTarget = false;
 		if ( inStream.GetVersion() >= VRT_VERSION_21 )
 			inStream.Load(m_bShowTarget);		// Added in VRT_VERSION_21
+		m_bWireShare = true;
+		if ( inStream.GetVersion() >= VRT_VERSION_28 )
+			inStream.Load(m_bWireShare);		// Added in VRT_VERSION_28
+		m_bWireCross = false;
+		if ( inStream.GetVersion() >= VRT_VERSION_28 )
+			inStream.Load(m_bWireCross);		// Added in VRT_VERSION_28
 		inStream.Load(m_bVeroTracks);
 		inStream.Load(m_bCurvedTracks);
 		inStream.Load(m_bRoutingEnabled);
@@ -244,6 +254,8 @@ public:
 		outStream.Save(m_iTextSizePins);	// Added in VRT_VERSION_17
 		outStream.Save(m_iRoutingMethod);	// Added in VRT_VERSION_24
 		outStream.Save(m_bShowTarget);		// Added in VRT_VERSION_21
+		outStream.Save(m_bWireShare);		// Added in VRT_VERSION_28
+		outStream.Save(m_bWireCross);		// Added in VRT_VERSION_28
 		outStream.Save(m_bVeroTracks);
 		outStream.Save(m_bCurvedTracks);
 		outStream.Save(m_bRoutingEnabled);
@@ -277,6 +289,8 @@ public:
 	bool SetTextSizePins(const int& i)		{ const bool bChanged = ( m_iTextSizePins	!= i ); m_iTextSizePins	  = i; return bChanged; }
 	bool SetRoutingMethod(const int& i)		{ const bool bChanged = ( m_iRoutingMethod	!= i ); m_iRoutingMethod  = i; return bChanged; }
 	bool SetShowTarget(const bool& b)		{ const bool bChanged = ( m_bShowTarget		!= b ); m_bShowTarget	  = b; return bChanged; }
+	bool SetWireShare(const bool& b)		{ const bool bChanged = ( m_bWireShare		!= b ); m_bWireShare	  = b; return bChanged; }
+	bool SetWireCross(const bool& b)		{ const bool bChanged = ( m_bWireCross		!= b ); m_bWireCross	  = b; return bChanged; }
 	bool SetVeroTracks(const bool& b)		{ const bool bChanged = ( m_bVeroTracks		!= b ); m_bVeroTracks	  = b; return bChanged; }
 	bool SetCurvedTracks(const bool& b)		{ const bool bChanged = ( m_bCurvedTracks	!= b ); m_bCurvedTracks	  = b; return bChanged; }
 	bool SetRoutingEnabled(const bool& b)	{ const bool bChanged = ( m_bRoutingEnabled	!= b ); m_bRoutingEnabled = b; return bChanged; }
@@ -309,6 +323,8 @@ public:
 	const int&			GetTextSizePins() const		{ return m_iTextSizePins; }
 	const int&			GetRoutingMethod() const	{ return m_iRoutingMethod; }
 	const bool&			GetShowTarget() const		{ return m_bShowTarget; }
+	const bool&			GetWireShare() const		{ return m_bWireShare; }
+	const bool&			GetWireCross() const		{ return m_bWireCross; }
 	const bool&			GetVeroTracks() const		{ return m_bVeroTracks; }
 	const bool&			GetCurvedTracks() const		{ return m_bCurvedTracks; }
 	const bool&			GetRoutingEnabled() const	{ return m_bRoutingEnabled; }
@@ -352,6 +368,8 @@ private:
 	int			m_iTextSizePins		= 9;				// Point size for component pins
 	int			m_iRoutingMethod	= 0;				// Routing method. 0 ==> fast, 1 ==> allow rip-up
 	bool		m_bShowTarget		= false;			// true ==> show target board area
+	bool		m_bWireShare		= true;				// true ==> allow 2 wires per hole
+	bool		m_bWireCross		= false;			// true ==> allow wires to cross/overlay
 	bool		m_bVeroTracks		= false;
 	bool		m_bCurvedTracks		= false;
 	bool		m_bRoutingEnabled	= false;

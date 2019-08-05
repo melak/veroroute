@@ -39,6 +39,7 @@ namespace Ui { class MainWindow; }
 class ControlDialog;
 class TemplatesDialog;
 class RenderingDialog;
+class WireDialog;
 class HotkeysDialog;
 class InfoDialog;
 class CompDialog;
@@ -53,6 +54,7 @@ class MainWindow : public QMainWindow
 	friend class ControlDialog;
 	friend class TemplatesDialog;
 	friend class RenderingDialog;
+	friend class WireDialog;
 	friend class HotkeysDialog;
 	friend class InfoDialog;
 	friend class CompDialog;
@@ -201,6 +203,7 @@ public slots:
 	void ShowControlDialog();
 	void ShowTemplatesDialog();
 	void ShowRenderingDialog();
+	void ShowWireDialog();
 	void ShowHotkeysDialog();
 	void ShowInfoDialog();
 	void ShowCompDialog();
@@ -276,6 +279,9 @@ public slots:
 	void SetAntialiasOff(bool b);
 	void SetAntialiasOn(bool b);
 	void SetAntialiasHigh(bool b);
+	// Wire Options
+	void SetWireShare(bool b);
+	void SetWireCross(bool b);
 	// For text box dialog
 	void SizeChanged(int i);
 	void ToggleBold();
@@ -428,6 +434,7 @@ private:
 
 	ControlDialog*			m_controlDlg;
 	RenderingDialog*		m_renderingDlg;
+	WireDialog*				m_wireDlg;
 	HotkeysDialog*			m_hotkeysDlg;
 	InfoDialog*				m_infoDlg;
 	CompDialog*				m_compDlg;

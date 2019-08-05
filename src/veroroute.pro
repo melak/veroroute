@@ -28,6 +28,7 @@ SOURCES += main.cpp\
     templatesdialog.cpp \
     pindialog.cpp \
     textdialog.cpp \
+    wiredialog.cpp \
     FootPrint.cpp \
     CompDefiner.cpp \
     compdialog.cpp \
@@ -48,6 +49,7 @@ HEADERS  += mainwindow.h \
     templatesdialog.h \
     pindialog.h \
     textdialog.h \
+    wiredialog.h \
     myscrollarea.h \
     Board.h \
     GuiControl.h \
@@ -84,6 +86,7 @@ HEADERS  += mainwindow.h \
 
 FORMS    += mainwindow.ui \
     controldialog.ui \
+    compdialog.ui \
     renderingdialog.ui \
     hotkeysdialog.ui \
     infodialog.ui \
@@ -91,7 +94,7 @@ FORMS    += mainwindow.ui \
     templatesdialog.ui \
     pindialog.ui \
     textdialog.ui \
-    compdialog.ui
+    wiredialog.ui
     
 
 RESOURCES     = veroroute.qrc

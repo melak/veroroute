@@ -167,8 +167,8 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 	const int&	boardCols		= GetCols();
 	const int&	boardRows		= GetRows();
 	const bool	bDiagsOK		= GetDiagsMode() != DIAGSMODE::OFF;
-	const bool	bAllowWireCross	= true;	// TODO Could make this configurable in the GUI
-	const bool	bAllowHoleShare	= true;	// TODO Could make this configurable in the GUI
+	const bool	bAllowWireCross	= GetWireCross();
+	const bool	bAllowHoleShare	= GetWireShare();
 
 	if ( bAllowHoleShare && bWire )
 	{

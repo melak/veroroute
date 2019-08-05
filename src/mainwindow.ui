@@ -183,6 +183,7 @@
     <addaction name="actionTemplatesDlg"/>
     <addaction name="actionInfoDlg"/>
     <addaction name="actionRenderingDlg"/>
+    <addaction name="actionWireDlg"/>
     <addaction name="actionBomDlg"/>
     <addaction name="actionPinDlg"/>
     <addaction name="actionCompDlg"/>
@@ -1112,6 +1113,11 @@
   <action name="actionHotkeysDlg">
    <property name="text">
     <string>Key/Mouse Actions</string>
+   </property>
+  </action>
+  <action name="actionWireDlg">
+   <property name="text">
+    <string>Wire Options</string>
    </property>
   </action>
  </widget>

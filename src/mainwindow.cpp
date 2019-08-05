@@ -22,6 +22,7 @@
 #include "ui_mainwindow.h"
 #include "controldialog.h"
 #include "renderingdialog.h"
+#include "wiredialog.h"
 #include "hotkeysdialog.h"
 #include "infodialog.h"
 #include "compdialog.h"
@@ -65,6 +66,7 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 
 	m_controlDlg	= new ControlDialog(this);
 	m_renderingDlg	= new RenderingDialog(this);
+	m_wireDlg		= new WireDialog(this);
 	m_hotkeysDlg	= new HotkeysDialog(this);
 	m_infoDlg		= new InfoDialog(this);
 	m_compDlg		= new CompDialog(this);
@@ -176,6 +178,7 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	QObject::connect(ui->actionSwitchST_DIP,			SIGNAL(triggered()), this, SLOT(AddSwitchST_DIP()));
 	QObject::connect(ui->actionTextBox,					SIGNAL(triggered()), this, SLOT(AddTextBox()));
 	QObject::connect(ui->actionRenderingDlg,			SIGNAL(triggered()), this, SLOT(ShowRenderingDialog()));
+	QObject::connect(ui->actionWireDlg,					SIGNAL(triggered()), this, SLOT(ShowWireDialog()));
 	QObject::connect(ui->actionControlDlg,				SIGNAL(triggered()), this, SLOT(ShowControlDialog()));
 	QObject::connect(ui->actionTemplatesDlg,			SIGNAL(triggered()), this, SLOT(ShowTemplatesDialog()));
 	QObject::connect(ui->actionHotkeysDlg,				SIGNAL(triggered()), this, SLOT(ShowHotkeysDialog()));
@@ -211,6 +214,7 @@ MainWindow::~MainWindow()
 	delete m_controlDlg;
 	delete m_templatesDlg;
 	delete m_renderingDlg;
+	delete m_wireDlg;
 	delete m_infoDlg;
 	delete m_bomDlg;
 	delete m_pinDlg;
@@ -798,7 +802,8 @@ void MainWindow::Delete()
 // Windows menu items
 void MainWindow::ShowControlDialog()	{ m_controlDlg->showNormal();	m_controlDlg->raise();		m_controlDlg->activateWindow(); }
 void MainWindow::ShowRenderingDialog()	{ m_renderingDlg->showNormal();	m_renderingDlg->raise();	m_renderingDlg->activateWindow(); }
-void MainWindow::ShowHotkeysDialog()	{ m_hotkeysDlg->showNormal();	m_hotkeysDlg->raise();	m_hotkeysDlg->activateWindow(); }
+void MainWindow::ShowWireDialog()		{ m_wireDlg->showNormal();		m_wireDlg->raise();			m_wireDlg->activateWindow(); }
+void MainWindow::ShowHotkeysDialog()	{ m_hotkeysDlg->showNormal();	m_hotkeysDlg->raise();		m_hotkeysDlg->activateWindow(); }
 void MainWindow::ShowInfoDialog()		{ m_infoDlg->showNormal();		m_infoDlg->raise();			m_infoDlg->activateWindow(); }
 void MainWindow::ShowCompDialog()		{ m_compDlg->showNormal();		m_compDlg->raise();			m_compDlg->activateWindow(); }
 void MainWindow::ShowTextDialog()		{ m_textDlg->showNormal();		m_textDlg->raise();			m_textDlg->activateWindow(); }
@@ -1229,6 +1234,10 @@ void MainWindow::SetAntialiasOff(bool b)	{ if ( b && m_board.SetRenderQuality(0)
 void MainWindow::SetAntialiasOn(bool b)		{ if ( b && m_board.SetRenderQuality(1) ) { UpdateHistory("Anti-alias on");   DestroyPixmapCache(); RepaintSkipRouting(); } }
 void MainWindow::SetAntialiasHigh(bool b)	{ if ( b && m_board.SetRenderQuality(2) ) { UpdateHistory("Anti-alias high"); DestroyPixmapCache(); RepaintSkipRouting(); } }
 
+// Wire dialog
+void MainWindow::SetWireShare(bool b)		{ if ( m_board.SetWireShare(b) )		  { UpdateHistory("Wire hole-sharing on/off");	RepaintSkipRouting(); } }
+void MainWindow::SetWireCross(bool b)		{ if ( m_board.SetWireCross(b) )		  { UpdateHistory("Wire crossing on/off");		RepaintSkipRouting(); } }
+
 // Text box dialog
 void MainWindow::SizeChanged(int i)			{ if ( GetCurrentTextId() != BAD_TEXTID && GetCurrentTextRect().SetSize(i) )												{ UpdateTextDialog(); RepaintSkipRouting(); } }
 void MainWindow::ToggleBold()				{ if ( GetCurrentTextId() != BAD_TEXTID && GetCurrentTextRect().SetStyle(GetCurrentTextRect().GetStyle() ^ TEXT_BOLD     ) ){ UpdateTextDialog(); RepaintSkipRouting(); } }
@@ -1465,6 +1474,7 @@ void MainWindow::UpdateControls()
 
 	m_pinDlg->Update();
 	m_renderingDlg->UpdateControls();
+	m_wireDlg->UpdateControls();
 	m_controlDlg->UpdateCompControls();
 	m_controlDlg->UpdateControls();
 
