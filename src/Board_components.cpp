@@ -156,7 +156,6 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 {
 	if ( comp.GetIsPlaced() ) return false;	// Already on board
 
-	const int&	compId			= comp.GetId();
 	const int	rowTL			= comp.GetRow();
 	const int	colTL			= comp.GetCol();
 	const bool	bWire			= comp.GetType() == COMP::WIRE;	// Wire's only get NodeIDs while placed
@@ -175,7 +174,7 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 		// pA and pB are the opposite ends of the wire
 		Element* pA = Get(rowTL, colTL);						assert(pA);
 		Element* pB = Get(rowTL+compRows-1, colTL+compCols-1);	assert(pB);
-		assert( !pA->GetCompExists(compId) && !pB->GetCompExists(compId) );
+		assert( !pA->GetCompExists(comp.GetId()) && !pB->GetCompExists(comp.GetId()) );
 		if ( pA->GetWireExists(pB) || pB->GetWireExists(pA) ) return false;	// No duplicates !!!
 	}
 	// Check limits

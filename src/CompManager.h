@@ -139,7 +139,7 @@ public:
 
 		const Component* pPrev(nullptr);	// The previous wire on the line
 		const Component* pLast(nullptr);	// The wire that reaches most along the line
-		size_t i(0);
+		int i(0);
 		for (auto& p : wiresH)
 		{
 			if ( pPrev == nullptr || p->GetRow() != pPrev->GetRow() )	// Reset all if new row
