@@ -151,3 +151,6 @@ V1.62  Bug fix: Don't allow parts/tracks selected by area to be manipulated if a
        Bug fix: Don't show selected area if both control sliders are moved to Off.
        New feature: Allow wires to cross, and allow up to two wires to be stacked next to each other (but no hole sharing yet).
 V1.63  Bug fix.  V1.62 could crash or corrupt the layout if stacking wires under an IC.
+V1.64  Bug fix.  Fixed algorithm for stacking wires.
+       New feature: Allow 2 wires to share a hole.
+       Added "Wire Options" dialog to set allowed wire operations.

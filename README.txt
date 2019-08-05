@@ -1,6 +1,6 @@
 VeroRoute - Qt based Veroboard/Perfboard/PCB layout & routing application.
 
-Version 1.63
+Version 1.64
 
 Copyright (C) 2017  Alex Lawrow    ( dralx@users.sourceforge.net )
 
@@ -46,6 +46,11 @@ This has been tested on Cinnamon/MATE/Xfce/KDE versions.
 It may also work on other recent 64-bit Linux distributions depending on whether
 they have the necessary Qt libraries installed.
 There is no installer. Just unzip everything to a folder and run it from there.
+
+To install the pre-compiled version of VeroRoute on Linux Mint 18.3, unzip everything
+to a folder.  Then open a command line prompt in that folder and type
+
+sudo ./veroroute-install.sh
 
 
 
