@@ -139,6 +139,7 @@ public:
 
 		const Component* pPrev(nullptr);	// The previous wire on the line
 		const Component* pLast(nullptr);	// The wire that reaches most along the line
+		size_t i(0);
 		for (auto& p : wiresH)
 		{
 			if ( pPrev == nullptr || p->GetRow() != pPrev->GetRow() )	// Reset all if new row
@@ -153,7 +154,15 @@ public:
 			else if ( p->GetCol() < pPrev->GetLastCol() )		// If overlap pPrev ...
 			{
 				if ( m_mapWireToShift[pPrev] == 0 )				// ... shift pPrev if necessary
+				{
 					m_mapWireToShift[pPrev] = -1;
+					for (int j = i - 2; j >= 0; j--)			// ... and also back along its chain
+					{
+						if ( wiresH[j]->GetRow()	 != wiresH[j+1]->GetRow() ||
+							 wiresH[j]->GetLastCol() != wiresH[j+1]->GetCol() ) break;
+						m_mapWireToShift[ wiresH[j] ] = -1;
+					}
+				}
 				m_mapWireToShift[p] = -m_mapWireToShift[pPrev];	// ... give this opposite shift to pPrev
 			}
 			else												// If no overlap ...
@@ -161,8 +170,10 @@ public:
 			pPrev = p;
 			if ( pLast == nullptr || p->GetLastCol() > pLast->GetLastCol() )
 				pLast = p;
+			i++;
 		}
 		pPrev = pLast = nullptr;
+		i = 0;
 		for (auto& p : wiresV)
 		{
 			if ( pPrev == nullptr || p->GetCol() != pPrev->GetCol() )	// Reset all if new col
@@ -178,6 +189,12 @@ public:
 			{
 				if ( m_mapWireToShift[pPrev] == 0 )				// ... shift pPrev if necessary
 					m_mapWireToShift[pPrev] = -1;
+				for (int j = i - 2; j >= 0; j--)				// ... and also back along its chain
+				{
+					if ( wiresV[j]->GetCol()	 != wiresV[j+1]->GetCol() ||
+						 wiresV[j]->GetLastRow() != wiresV[j+1]->GetRow() ) break;
+					m_mapWireToShift[ wiresV[j] ] = -1;
+				}
 				m_mapWireToShift[p] = -m_mapWireToShift[pPrev];	// ... give this opposite shift to pPrev
 			}
 			else												// If no overlap ...
@@ -185,6 +202,7 @@ public:
 			pPrev = p;
 			if ( pLast == nullptr || p->GetLastRow() > pLast->GetLastRow() )
 				pLast = p;
+			i++;
 		}
 	}
 	int GetWireShift(const Component* pWire) const
