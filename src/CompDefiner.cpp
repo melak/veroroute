@@ -176,7 +176,7 @@ int CompDefiner::GetShapeId(const double& dRowIn, const double& dColIn) const	//
 		double dArea(INT_MAX);
 		bool bOK(false);
 
-		switch ( s.GetType() )
+		switch( s.GetType() )
 		{
 			case SHAPE::LINE:	// Check for distance within a narrow ellipse with foci at the endpoints
 			{

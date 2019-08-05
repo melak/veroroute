@@ -43,13 +43,17 @@ const int			BAD_COMPID  = -1;		// Invalid component ID
 const unsigned int	BAD_ROUTEID = UINT_MAX;	// Invalid route (i.e. track section) ID
 const unsigned int	BAD_MH		= UINT_MAX;	// "Infinite" MH distance
 
+class Element;
+
+typedef std::unordered_map<const Element*, unsigned int> WIRELIST;	// Helper for chains of wires
+
 class Element : public Pin, public TrackElement
 {
 public:
 	Element() : Pin(), TrackElement()
 	{
 		memset(m_pNbr, 0, 8 * sizeof(Element*));
-		m_pW = nullptr;
+		memset(m_pW,   0, 2 * sizeof(Element*));
 	}
 	Element(const Element& o) : Pin(o), TrackElement(o)	{ assert(0); *this = o; }	// The assert just shows this is never used
 	~Element() {}
@@ -59,16 +63,18 @@ public:
 		TrackElement::operator=(o);	// Call operator= in base class
 		m_bIsVia		= o.m_bIsVia;
 		m_compId		= o.m_compId;
+		m_compId2		= o.m_compId2;
+		m_pinChar2		= o.m_pinChar2;
 		m_bSolderR		= o.m_bSolderR;
 		m_MH			= o.m_MH;
 		m_maxMH			= o.m_maxMH;
 		m_routeId		= o.m_routeId;
 		//m_iRoutable	= o.m_iRoutable;	// This should only be set by the Board::Glue() method
-		// Zero the connection pointers m_pNbr[] and m_pW.
+		// Zero the connection pointers m_pNbr[] and m_pW[].
 		// These should only be set by Board::GlueNbrs() and Board::GlueWires().
 		// m_pW can also be modified by the methods Board::PutDown() and Board::TakeOff().
 		memset(m_pNbr, 0, 8 * sizeof(Element*));
-		m_pW = nullptr;
+		memset(m_pW,   0, 2 * sizeof(Element*));
 		return *this;
 	}
 	bool operator==(const Element& o) const	// Compare persisted info only
@@ -76,7 +82,9 @@ public:
 		return	Pin::operator==(o)
 			&&	TrackElement::operator==(o)
 			&&	m_bIsVia	== o.m_bIsVia
-			&&	m_compId	== o.m_compId;
+			&&	m_compId	== o.m_compId
+			&&	m_compId2	== o.m_compId2
+			&&	m_pinChar2	== o.m_pinChar2;
 	}
 	bool operator!=(const Element& o) const
 	{
@@ -96,33 +104,114 @@ public:
 		GetNbr(NBR_L)->UpdateUsed(NBR_RT);	GetNbr(NBR_R)->UpdateUsed(NBR_LT);	// LTX, RTX
 		GetNbr(NBR_L)->UpdateUsed(NBR_RB);	GetNbr(NBR_R)->UpdateUsed(NBR_LB);	// LBX, RBX
 	}
+	void SetIsVia(const bool& b)		{ m_bIsVia = b; }
+	void SetCompId(const int& i)		{ m_compId = i; }
+	void SetCompId2(const int& i)		{ m_compId2 = i; }
+	void SetPinIndex2(const size_t& i)	{ m_pinChar2= ( i >= BAD_PINCHAR ) ? BAD_PINCHAR : static_cast<uchar> (i); }
+	void SetSolderR(const bool& b)		{ m_bSolderR	= b; }
+	void ResetMH()
+	{
+		m_routeId	= BAD_ROUTEID;	// Wipe RouteId
+		m_MH		= BAD_MH;		// Set "infinite" MH distance.
+		m_maxMH		= 0;			// Zero max MH parameter
+	}
+	void UpdateMH(const unsigned int& routeID, const unsigned int& iMH, unsigned int& iMaxMH)
+	{
+		assert( m_MH == BAD_MH );	// Should only ever write the MH once
 
-	void SetIsVia(const bool& b)				{ m_bIsVia = b; }
-	void SetCompId(const int& i)				{ m_compId = i; }
-	void SetSolderR(const bool& b)				{ m_bSolderR	= b; }
-	void SetMH(const unsigned int& i)			{ m_MH			= i; }
-	void SetMaxMH(const unsigned int& i)		{ m_maxMH		= i; }
+		iMaxMH		= std::max(iMaxMH, iMH);	// Update iMaxMH for output before storing it
+		m_routeId	= routeID;
+		m_MH		= iMH;
+		m_maxMH		= iMaxMH;
+	}
 	void SetRouteId(const unsigned int& i)		{ m_routeId		= i; }
 	void SetRoutable(const int& i)				{ m_iRoutable	= i; }
 	void SetNbr(const int& iNbr, Element* p)	{ m_pNbr[iNbr]	= p; }
-	void SetW(Element* p)						{ m_pW			= p; }
-
+	void ClearWires()							{ m_pW[0] = m_pW[1] = nullptr; }
+	bool GetHasWire() const						{ return m_pW[0] != nullptr || m_pW[1] != nullptr; }
+	int  GetNumWires() const
+	{
+		int i(0);
+		if ( m_pW[0] != nullptr ) i++;
+		if ( m_pW[1] != nullptr ) i++;
+		return i;
+	}
+	int  GetUsedSlot() const
+	{
+		return	( GetCompId()  != BAD_COMPID ) ? 0 :
+				( GetCompId2() != BAD_COMPID ) ? 1 : -1;
+	}
+	int  GetFreeSlot() const
+	{
+		return	( GetCompId()  == BAD_COMPID ) ? 0 :
+				( GetCompId2() == BAD_COMPID ) ? 1 : -1;
+	}
+	int  GetSlotFromCompId(const int& compId)
+	{
+		assert( GetCompId() != GetCompId2() || GetCompId() == BAD_COMPID );
+		if ( compId == GetCompId()  ) return 0;
+		if ( compId == GetCompId2() ) return 1;
+		assert(0);	// Error
+		return -1;
+	}
+	void SetSlotInfo(const int& iSlot, const size_t& pinIndex, const int& compId)
+	{
+		switch( iSlot )
+		{
+			case 0:		SetPinIndex(pinIndex);	SetCompId(compId);	return;
+			case 1:		SetPinIndex2(pinIndex);	SetCompId2(compId);	return;
+			default:	assert(0);
+		}
+	}
+	void GetSlotInfo(const int& iSlot, size_t& pinIndex, int& compId) const
+	{
+		switch( iSlot )
+		{
+			case 0:		pinIndex = GetPinIndex();	compId = GetCompId();	return;
+			case 1:		pinIndex = GetPinIndex2();	compId = GetCompId2();	return;
+			default:	pinIndex = BAD_PININDEX;	compId = BAD_COMPID;	assert(0);
+		}
+	}
+	bool GetWireExists(Element* p) const
+	{
+		return p != nullptr && ( m_pW[0] == p || m_pW[1] == p );
+	}
+	bool GetCompExists(const int& compId) const
+	{
+		return compId != BAD_COMPID && ( m_compId == compId || m_compId2 == compId );
+	}
+	void SetW(const int& iSlot, Element* p)
+	{
+		assert( !GetWireExists(p) );	// No duplicates allowed
+		assert(iSlot == 0 || iSlot == 1);
+		m_pW[iSlot] = p;
+	}
 	const bool&			GetIsVia() const				{ return m_bIsVia; }
 	const int&			GetCompId() const				{ return m_compId; }
+	const int&			GetCompId2() const				{ return m_compId2; }
+	int					GetNumCompIds() const			{ int i(0); if ( m_compId != BAD_COMPID ) i++; if ( m_compId2 != BAD_COMPID ) i++; return i; }
+	bool				GetHasComp() const				{ return GetCompId() != BAD_COMPID || GetCompId2() != BAD_COMPID; }
+	bool				GetHasPin() const				{ return GetIsPin() || m_pinChar2 != BAD_PINCHAR; }
+	size_t				GetPinIndex2() const			{ return ( m_pinChar2 == BAD_PINCHAR ) ? BAD_PININDEX : m_pinChar2; }
 	const bool&			GetSolderR() const				{ return m_bSolderR; }
 	const unsigned int&	GetMH() const					{ return m_MH; }
 	const unsigned int& GetMaxMH() const				{ return m_maxMH; }
 	const unsigned int&	GetRouteId() const				{ return m_routeId; }
 	const int&			GetRoutable() const				{ return m_iRoutable; }
 	Element*			GetNbr(const int& iNbr) const	{ return m_pNbr[iNbr]; }
-	Element*			GetW() const					{ return m_pW; }
+	Element*			GetW(const int& i) const		{ return m_pW[i]; }
 
 	// Helpers
 	bool HaveNonBlankPins(const int& iNbr) const
 	{
 		Element* pNbr = GetNbr(iNbr);
-		return 	( !this->GetIsPin() || this->GetNodeId() != BAD_NODEID || this->GetW() ) &&	// Only allow routing FROM blank pins if they are on wires
-				( !pNbr->GetIsPin() || pNbr->GetNodeId() != BAD_NODEID || pNbr->GetW() );	// Only allow routing  TO  blank pins if they are on wires
+		return	( !this->GetHasPin() || this->GetNodeId() != BAD_NODEID || this->GetHasWire() ) &&	// Only allow routing FROM blank pins if they are on wires
+				( !pNbr->GetHasPin() || pNbr->GetNodeId() != BAD_NODEID || pNbr->GetHasWire() );	// Only allow routing  TO  blank pins if they are on wires
+	}
+	void GetWireList(WIRELIST& wireList) const
+	{
+		wireList.clear();
+		return UpdateWireList(wireList, 0);
 	}
 	// Connectivity helpers
 	void UpdateUsed(const int& iNbr)
@@ -142,8 +231,10 @@ public:
 		ClearFlagBits(AUTOSET|VEROSET);			SetFlagBits(USERSET);
 		pNbr->ClearFlagBits(AUTOSET|VEROSET);	pNbr->SetFlagBits(USERSET);
 		// Handle wire ends
-		Element* pW = GetW();	if ( pW ) { pW->ClearFlagBits(AUTOSET|VEROSET);	pW->SetFlagBits(USERSET); }
-		pW = pNbr->GetW();		if ( pW ) { pW->ClearFlagBits(AUTOSET|VEROSET);	pW->SetFlagBits(USERSET); }
+		Element* pW = GetW(0);	if ( pW ) { pW->ClearFlagBits(AUTOSET|VEROSET);	pW->SetFlagBits(USERSET); }
+		pW = GetW(1);			if ( pW ) { pW->ClearFlagBits(AUTOSET|VEROSET);	pW->SetFlagBits(USERSET); }
+		pW = pNbr->GetW(0);		if ( pW ) { pW->ClearFlagBits(AUTOSET|VEROSET);	pW->SetFlagBits(USERSET); }
+		pW = pNbr->GetW(1);		if ( pW ) { pW->ClearFlagBits(AUTOSET|VEROSET);	pW->SetFlagBits(USERSET); }
 	}
 	bool SwapDiagLinks()
 	{
@@ -169,17 +260,22 @@ public:
 	}			
 	bool IsUselessWire(const int& iNbr, const int& nodeId) const	// Helper: true ==> painting nbr with nodeId is wasteful
 	{
-		const Element* pW1 = GetNbr(iNbr);
-		const Element* pW2 = pW1->GetW();
-		if ( pW2 == nullptr ) return false;
-		// pW1 and pW2 are opposite ends of a wire.
-		// If these ends both neighbour a common element with the specified nodeId,
-		// then it is wasteful to paint the wire with that nodeId too, since the
-		// common element already provides a connection.
-		for (int iNbr = 0; iNbr < 8; iNbr++)
+		const Element* pWA = GetNbr(iNbr);
+		if ( pWA->GetHasWire() )
 		{
-			const Element* p = pW1->GetNbr(iNbr);
-			if ( p->GetNodeId() == nodeId && pW2->IsNbr(p) ) return true;
+			const Element* pWB0 = pWA->GetW(0);
+			const Element* pWB1 = pWA->GetW(1);
+			// pWA and pWB are opposite ends of a wire.
+			// If these ends both neighbour a common element with the specified nodeId,
+			// then it is wasteful to paint the wire with that nodeId too, since the
+			// common element already provides a connection.
+			for (int iNbr = 0; iNbr < 8; iNbr++)
+			{
+				const Element* p = pWA->GetNbr(iNbr);
+				if ( p->GetNodeId() != nodeId ) continue;
+				if ( pWB0 != nullptr && pWB0->IsNbr(p) ) return true;
+				if ( pWB1 != nullptr && pWB1->IsNbr(p) ) return true;
+			}
 		}
 		return false;
 	}
@@ -205,6 +301,9 @@ public:
 		TrackElement::UpdateMergeOffsets(o);
 		if ( m_compId != BAD_COMPID && m_compId != TRAX_COMPID )
 			o.deltaCompId = std::max(o.deltaCompId,  m_compId + 1);
+		assert( m_compId2 != TRAX_COMPID );
+		if ( m_compId2 != BAD_COMPID && m_compId2 != TRAX_COMPID )
+			o.deltaCompId = std::max(o.deltaCompId,  m_compId2 + 1);
 	}
 	virtual void ApplyMergeOffsets(const MergeOffsets& o) override
 	{
@@ -212,13 +311,18 @@ public:
 		TrackElement::ApplyMergeOffsets(o);
 		if ( m_compId != BAD_COMPID	&& m_compId != TRAX_COMPID)
 			m_compId += o.deltaCompId;
+		assert( m_compId2 != TRAX_COMPID );
+		if ( m_compId2 != BAD_COMPID && m_compId2 != TRAX_COMPID)
+			m_compId2 += o.deltaCompId;
 	}
 	void Merge(const Element& o)
 	{
 		Pin::Merge(o);
 		TrackElement::Merge(o);
-		m_bIsVia = o.m_bIsVia;
-		m_compId = o.m_compId;
+		m_bIsVia	= o.m_bIsVia;
+		m_compId	= o.m_compId;
+		m_compId2	= o.m_compId2;
+		m_pinChar2	= o.m_pinChar2;
 	}
 	// Persist interface functions
 	virtual void Load(DataStream& inStream) override
@@ -237,6 +341,13 @@ public:
 			inStream.Load(m_bIsVia);
 			inStream.Load(m_compId);
 		}
+		m_compId2	= BAD_COMPID;
+		m_pinChar2	= BAD_PINCHAR;
+		if ( inStream.GetVersion() >= VRT_VERSION_27 )
+		{
+			inStream.Load(m_compId2);	// Added in VRT_VERSION_27
+			inStream.Load(m_pinChar2);	// Added in VRT_VERSION_27
+		}
 	}
 	virtual void Save(DataStream& outStream) override
 	{
@@ -244,19 +355,32 @@ public:
 		TrackElement::Save(outStream);		// Save() base class
 		outStream.Save(m_bIsVia);
 		outStream.Save(m_compId);
+		outStream.Save(m_compId2);		// Added in VRT_VERSION_27
+		outStream.Save(m_pinChar2);		// Added in VRT_VERSION_27
 	}
-	/*
-	void	SetPinIndex2(const size_t& i)	{ m_pinChar 2= ( i >= BAD_PINCHAR ) ? BAD_PINCHAR : static_cast<uchar> (i); }
-	size_t	GetPinIndex2() const			{ return ( m_pinChar2 == BAD_PINCHAR ) ? BAD_PININDEX : m_pinChar2; }
-	*/
+private:
+	bool WireListHelper(WIRELIST& wireList, const Element* p, unsigned int iStep) const
+	{
+		auto iter = wireList.find(p);
+		if ( iter == wireList.end() )	{ wireList[p]  = iStep;	return true; }
+		if ( iStep < iter->second )		{ iter->second = iStep;	return true; }
+		return false;
+	}
+	void UpdateWireList(WIRELIST& wireList, unsigned int iStep) const
+	{
+		WireListHelper(wireList, this, iStep);
+		bool bOK_0	= m_pW[0] != nullptr && WireListHelper(wireList, m_pW[0], iStep + 1);
+		bool bOK_1	= m_pW[1] != nullptr && WireListHelper(wireList, m_pW[1], iStep + 1);
+
+		if ( bOK_0 ) m_pW[0]->UpdateWireList(wireList, iStep + 1);
+		if ( bOK_1 ) m_pW[1]->UpdateWireList(wireList, iStep + 1);
+	}
 private:
 	// Persist info
 	bool			m_bIsVia	= false;
 	int				m_compId	= BAD_COMPID;	// For elements with a valid pinindex, this is the ID of the parent component
-	/*
 	int				m_compId2	= BAD_COMPID;	// Only used when we have 2 wires sharing a hole
-	uchar			m_pinChar2	= BAD_PIN_CHAR;	// Only used when we have 2 wires sharing a hole
-	*/
+	uchar			m_pinChar2	= BAD_PINCHAR;	// Only used when we have 2 wires sharing a hole
 
 	// Working variables.	Don't persist.
 	bool			m_bSolderR	= false;		// true ==> have blob of solder to right (for joining vero tracks)
@@ -266,5 +390,5 @@ private:
 	int				m_iRoutable	= 0;			// Set by Board::GlueNbrs().  An 8-bit code used to enable/disable connections to the 8 neighbours
 	// Connection pointers. Set by Board::GlueNbrs() and Board::GlueWires().	Don't persist.
 	Element*		m_pNbr[8];					// 0 to 7 <==> NBR_L to NBR_LB
-	Element*		m_pW;						// Element at other end of wire/jumper (if one end is here)
+	Element*		m_pW[2];					// Up to 2 wires per element. These point to the other end of the wire(s).
 };

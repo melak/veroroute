@@ -45,7 +45,7 @@ struct StringHelper
 		while(true)
 		{
 			const int c = sb->sbumpc();
-			switch(c)
+			switch( c )
 			{
 				case '\n':
 					return inStream;

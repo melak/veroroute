@@ -150,7 +150,7 @@ public:
 private:
 	void ConvertLegacyFlag()	// Map legacy flag values to new bitfield based values
 	{
-		switch (m_flag)
+		switch( m_flag )
 		{
 			case 0:	m_flag = USERSET;	break;
 			case 1: m_flag = AUTOKEPT;	break;

@@ -77,7 +77,7 @@ static size_t GetPinIndexFromLegacyPinChar(const uchar& c)	// Legacy VRT format 
 static uchar GetSurfaceFromLegacySurfaceChar(const uchar& c)
 {
 	// The following are the old SURFACE codes before the introduction of SURFACE_WIRE_END and SURFACE_WIRE
-	switch(c)
+	switch( c )
 	{
 		case 0:		return SURFACE_FREE;
 		case 1:		return SURFACE_GAP;

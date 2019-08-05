@@ -166,7 +166,7 @@ public:
 	bool operator!=(const CompElementGrid& o) const	{ return Grid<CompElement>::operator!=(o); }
 	const int& GetCols(char direction = 'W') const
 	{
-		switch ( direction )	// Component direction: 'W','E','N','S'
+		switch( direction )	// Component direction: 'W','E','N','S'
 		{
 			case 'N':
 			case 'S':	return Grid<CompElement>::GetRows();
@@ -175,7 +175,7 @@ public:
 	}
 	const int& GetRows(char direction = 'W') const
 	{
-		switch ( direction )	// Component direction: 'W','E','N','S'
+		switch( direction )	// Component direction: 'W','E','N','S'
 		{
 			case 'N':
 			case 'S':	return Grid<CompElement>::GetCols();

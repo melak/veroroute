@@ -72,7 +72,7 @@ void TemplatesDialog::Update()
 		for (int i = 0; i < tableHeader.size(); i++)
 		{
 			int iWidth(0);
-			switch(i)
+			switch( i )
 			{
 				case 0: iWidth = bGeneric ? 220 : 160; break;
 				case 1: iWidth = (numRows > 20) ? 160 : 180; // Small reduction when have a vertical scroll bar

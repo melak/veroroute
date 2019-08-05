@@ -33,24 +33,38 @@
 
 void Board::WipeAutoSetPoints(int nodeId)
 {
+	WIRELIST wireList;	// Helper for chains of wires
+
 	const bool bWipeAll = ( nodeId == BAD_NODEID );
 	const int iSize = GetSize();
 	for (int i = 0; i < iSize; i++)
 	{
-		Element* p	= GetAt(i);
-		Element* pW	= p->GetW();
+		Element* p = GetAt(i);
 		if ( !bWipeAll && p->GetNodeId() != nodeId ) continue;	// Skip points with wrong nodeId
-		bool bWipe = p->ReadFlagBits(AUTOSET) & !p->ReadFlagBits(USERSET);	// Clear if AUTOSET and not USERSET
-		if ( pW ) bWipe &= ( !pW->ReadFlagBits(USERSET) );	// If it's a wire, the other end must not be USERSET either
-
-		if ( bWipe ) SetNodeId(p, BAD_NODEID);
-		p->ClearFlagBits(AUTOSET);
-		p->SetFlagBits(USERSET);
-		if ( pW )
+		bool bWipe = p->ReadFlagBits(AUTOSET) && !p->ReadFlagBits(USERSET);
+		if ( p->GetHasWire() )
 		{
-			if ( bWipe ) SetNodeId(pW, BAD_NODEID);
-			pW->ClearFlagBits(AUTOSET);
-			pW->SetFlagBits(USERSET);
+			p->GetWireList(wireList);	// Get list containing p and its wired points ...
+			for (auto& o : wireList)	// ... and disable wipe if any of them are USERSET
+			{
+				const Element* pW = o.first;
+				if ( pW == p ) continue;	// Skip p
+				bWipe &= ( !pW->ReadFlagBits(USERSET) );
+				if ( !bWipe ) break;
+			}
+			for (auto& o : wireList)
+			{
+				Element* pW = const_cast<Element*> (o.first);
+				if ( bWipe ) SetNodeId(pW, BAD_NODEID);
+				pW->ClearFlagBits(AUTOSET);
+				pW->SetFlagBits(USERSET);
+			}
+		}
+		else
+		{
+			if ( bWipe ) SetNodeId(p, BAD_NODEID);
+			p->ClearFlagBits(AUTOSET);
+			p->SetFlagBits(USERSET);
 		}
 	}
 }
@@ -66,9 +80,9 @@ void Board::BuildTargetPins(const int& nodeId)
 	for (int i = 0; i < iSize; i++)
 	{
 		Element* p = GetAt(i);
-		if ( !p->GetIsPin() ) continue;
+		if ( !p->GetHasPin() ) continue;
 		if ( p->GetNodeId() != nodeId ) continue;
-		if ( p->GetW() ) continue;	// Wires are not really target pins
+		if ( p->GetHasWire() ) continue;	// Wires are not really target pins
 		m_targetPins.push_back(p);
 	}
 }
@@ -201,15 +215,12 @@ void Board::Flood_Helper(const int& iFloodNodeId, bool** ppConn, unsigned int& c
 {
 	const int iSize = GetSize();
 	for (int i = 0; i < iSize; i++)	// Loop all grid points
-	{
-		Element* p = GetAt(i);
-		p->SetRouteId(BAD_ROUTEID);	// Wipe RouteId at point
-		p->SetMH(BAD_MH);			// Set "infinite" MH distance
-		p->SetMaxMH(0);				// Zero max MH algorithm parameter
-	}
+		GetAt(i)->ResetMH();	// Wipe RouteId. Set "infinite" MH distance.  Zero max MH parameter.
 
 	m_tmpVec.resize(iSize, nullptr);	// Clear the set of visited points
 	m_tmpVecSize = 0;
+
+	unsigned int iMH(0), iMaxMH(0);
 
 	// Add each target pin to the set of visited points, with a unique routeId, and MH value of zero
 	unsigned int RID(BAD_ROUTEID);
@@ -217,21 +228,21 @@ void Board::Flood_Helper(const int& iFloodNodeId, bool** ppConn, unsigned int& c
 	{
 		m_tmpVec[m_tmpVecSize++] = p;		// Add p to set of visited points
 		RID++;	assert(RID < BAD_ROUTEID);	// Should be safely < UINT_MAX in practice
-		p->SetRouteId(RID);
-		p->SetMH(0);
+		p->UpdateMH(RID, iMH, iMaxMH);
 	}
 
 	const unsigned int numRIDs = RID + 1;	assert( m_targetPins.size() == (size_t) numRIDs );
 
 	typedef std::pair<unsigned int, unsigned int> CONNECTION;
-	std::list<CONNECTION> list;	// Helper for updating the connection matrix
+	std::list<CONNECTION> list;		// Helper for updating the connection matrix
+	WIRELIST wireList;				// Helper for chains of wires
 
 	const bool bDiagsOK = ( GetDiagsMode() != DIAGSMODE::OFF );
 	const unsigned int iMaxDeltaMH = ( bDiagsOK ) ? MH_DIAG : MH_LRTB;	// The max MH increment depends on if diagonals are allowed
 
 	size_t jjStart(0);
-	unsigned int iMH(MH_LRTB-1), iMaxMH(0);	// Set iMH so it's incremented to MH_LRTB on loop entry
 
+	iMH = MH_LRTB - 1;	// Set iMH so it's incremented to MH_LRTB on loop entry
 	bool bDone(false);
 	while( !bDone )
 	{
@@ -280,21 +291,20 @@ void Board::Flood_Helper(const int& iFloodNodeId, bool** ppConn, unsigned int& c
 						if ( nodeId == iFloodNodeId || nodeId == BAD_NODEID )
 						{
 							m_tmpVec[m_tmpVecSize++] = pK;	// Add pK to set of visited points
-							iMaxMH = std::max(iMaxMH, iMH);	// Update iMaxMH
-							pK->SetRouteId(j);
-							pK->SetMH(iMH);
-							pK->SetMaxMH(iMaxMH);
-							
-							Element* pW = pK->GetW();	// The other end of the wire (if any)
-							if ( pW )
+							pK->UpdateMH(j, iMH, iMaxMH);
+							if ( pK->GetHasWire() )
 							{
-								assert( pK->GetNodeId() == pW->GetNodeId() );	// Sanity check
-								const unsigned int iOtherMH = iMH + MH_WIRE;	// Wires always increase MH by MH_WIRE
-								m_tmpVec[m_tmpVecSize++] = pW;					// Add pW to set of visited points
-								iMaxMH = std::max(iMaxMH, iOtherMH);			// Update iMaxMH
-								pW->SetRouteId(j);
-								pW->SetMH(iOtherMH);
-								pW->SetMaxMH(iMaxMH);
+								pK->GetWireList(wireList);	// Get list of pK and its wired points
+								for (auto& o : wireList)	// Ideally want these in order of increasing MH
+								{
+									Element* pW = const_cast<Element*> (o.first);
+									if ( pW == pK ) continue;	// Skip pK
+									assert( pK->GetNodeId() == pW->GetNodeId() );			// Sanity check
+									if ( pW->GetMH() != BAD_MH ) continue;					// Don't overwrite visited points (even if MH is improved)
+									const unsigned int iOtherMH = iMH + MH_WIRE * o.second;	// Each wire increases MH by MH_WIRE
+									m_tmpVec[m_tmpVecSize++] = pW;							// Add pW to set of visited points
+									pW->UpdateMH(j, iOtherMH, iMaxMH);
+								}
 							}
 						}
 					}
@@ -351,41 +361,61 @@ void Board::Backtrace(Element* pEnd, const int& nodeId)
 	Element* p = pEnd;
 	if ( p->GetMH() == BAD_MH ) return;
 
+	WIRELIST wireList;	// Helper for chains of wires
+
 	const bool bDiagsOK = ( GetDiagsMode() != DIAGSMODE::OFF );
 
 	unsigned int MH = p->GetMH();
 	while ( true )	// Backtrace
 	{
-		Element* pW = p->GetW();
 		assert( !p->GetIsHole() );
 
-		if ( !p->GetIsPin() || pW != nullptr ) // For non-pins and wires
+		Element* pW0 = p->GetW(0);
+		Element* pW1 = p->GetW(1);
+		if ( !p->GetHasPin() || p->GetHasWire() ) // For non-pins and wires
 		{
 			if ( p->GetNodeId() == BAD_NODEID )	// Set NodeId if not set yet.
 			{
 				SetNodeId(p, nodeId);	p->ClearFlagBits(USERSET); p->SetFlagBits(AUTOSET);
-				if ( pW ) { SetNodeId(pW, nodeId); pW->ClearFlagBits(USERSET); pW->SetFlagBits(AUTOSET); }
+				if ( p->GetHasWire() )
+				{
+					p->GetWireList(wireList);	// Get list of p and its wired points
+					for (auto& o : wireList)
+					{
+						Element* pW = const_cast<Element*> (o.first);
+						if ( pW == p ) continue;	// Skip p
+						SetNodeId(pW, nodeId); pW->ClearFlagBits(USERSET); pW->SetFlagBits(AUTOSET);
+					}
+				}
 			}
 			else if ( p->ReadFlagBits(USERSET) )
 			{
 				assert(p->GetNodeId() == nodeId);
 				p->SetFlagBits(AUTOSET);
-				if ( pW ) pW->SetFlagBits(AUTOSET);
+				if ( p->GetHasWire() )
+				{
+					p->GetWireList(wireList);	// Get list of p and its wired points
+					for (auto& o : wireList)
+					{
+						Element* pW = const_cast<Element*> (o.first);
+						if ( pW == p ) continue;	// Skip p
+						pW->SetFlagBits(AUTOSET);
+					}
+				}
 			}
 		}
 
 		if ( MH == 0 ) break;
 
+		bool bOK(false);
 		// Now decide where to back trace to.
 
-		// Check wire first...
-		bool bOK = ( pW && pW->GetMH() == MH - MH_WIRE );	// Wires always change MH by MH_WIRE
-		if ( bOK )
-		{
-			p = pW;
-			MH -= MH_WIRE;
-			continue;
-		}
+		// Check wires first...
+		bOK = ( pW0 && pW0->GetMH() == MH - MH_WIRE );
+		if ( bOK ) { p = pW0; MH -= MH_WIRE; continue; }
+		bOK = ( pW1 && pW1->GetMH() == MH - MH_WIRE );
+		if ( bOK ) { p = pW1; MH -= MH_WIRE; continue; }
+
 		for (int iLoop = 0; iLoop < 2 && !bOK; iLoop++)	// First pass to give preference to nbrs that are not wire ends
 		{
 			const int iDiagMax = ( bDiagsOK ) ? 2 : 1;		// Diags allowed ==> 2 passes
@@ -396,8 +426,8 @@ void Board::Backtrace(Element* pEnd, const int& nodeId)
 				{
 					Element* pNbr = p->GetNbr(iNbr);
 					if ( pNbr->GetRouteId() != p->GetRouteId() ) continue;	// Skip if nbr has wrong routeId
-					if ( iLoop == 0 &&  pNbr->GetW() ) continue;			// Skip if nbr is a wire
-					if ( iLoop == 1 && !pNbr->GetW() ) continue;			// Skip if nbr is a non-wire
+					if ( iLoop == 0 &&  pNbr->GetHasWire() ) continue;		// Skip if nbr is a wire
+					if ( iLoop == 1 && !pNbr->GetHasWire() ) continue;		// Skip if nbr is a non-wire
 					if ( !p->IsBlocked(iNbr, nodeId) && pNbr->GetMH() == MH - iDeltaMH )
 					{
 						p = pNbr;	MH -= iDeltaMH;	bOK = true;
@@ -419,13 +449,11 @@ void Board::Manhatten(Element* p)
 	const int iTraceNodeId = p->GetNodeId();	// The NodeID to trace
 	if ( iTraceNodeId == BAD_NODEID ) return;	// Don't trace invalid NodeID
 
+	WIRELIST wireList;	// Helper for chains of wires
+
 	const int iSize = GetSize();
 	for (int i = 0; i < iSize; i++)	// Loop all grid points
-	{
-		Element* p = GetAt(i);
-		p->SetMH(BAD_MH);	// Set "infinite" MH distance
-		p->SetMaxMH(0);		// Zero max MH algorithm parameter
-	}
+		GetAt(i)->ResetMH();	// Wipe RouteId. Set "infinite" MH distance.  Zero max MH parameter.
 
 	m_tmpVec.resize(iSize, nullptr);	// Clear the set of visited points
 	m_tmpVecSize = 0;
@@ -434,22 +462,26 @@ void Board::Manhatten(Element* p)
 	const unsigned int iMaxDeltaMH = ( bDiagsOK ) ? MH_DIAG : MH_LRTB;	// The max MH increment depends on if diagonals are allowed
 
 	size_t jjStart(0);
+	const unsigned int RID(0);
 	unsigned int iMH(0), iMaxMH(0);
 
 	// Add p to set of visited points, with MH value of zero
 	m_tmpVec[m_tmpVecSize++] = p;
-	p->SetMH(0);
-	Element* pW = p->GetW();	// ... and the other end of the wire (if any)
-	if ( pW )
+	p->UpdateMH(RID, iMH, iMaxMH);
+	if ( p->GetHasWire() )
 	{
-		assert( p->GetNodeId() == pW->GetNodeId() );	// Sanity check
-		const unsigned int iOtherMH = iMH + MH_WIRE;	// Wires always increase MH by MH_WIRE
-		m_tmpVec[m_tmpVecSize++] = pW;					// Add pW to set of visited points
-		iMaxMH = std::max(iMaxMH, iOtherMH);			// Update iMaxMH
-		pW->SetMH(iOtherMH);
-		pW->SetMaxMH(iMaxMH);
+		p->GetWireList(wireList);	// Get list of p and its wired points
+		for (auto& o : wireList)	// Ideally want these in order of increasing MH
+		{
+			Element* pW = const_cast<Element*> (o.first);
+			if ( pW == p ) continue;	// Skip p
+			assert( p->GetNodeId() == pW->GetNodeId() );			// Sanity check
+			if ( pW->GetMH() != BAD_MH ) continue;					// Don't overwrite visited points (even if MH is improved)
+			const unsigned int iOtherMH = iMH + MH_WIRE * o.second;	// Each wire increases MH by MH_WIRE
+			m_tmpVec[m_tmpVecSize++] = pW;							// Add pW to set of visited points
+			pW->UpdateMH(RID, iOtherMH, iMaxMH);
+		}
 	}
-
 	while ( true )
 	{
 		iMH++;	// Increase MH (think of this as distance from start point).
@@ -486,19 +518,20 @@ void Board::Manhatten(Element* p)
 					if ( pJ->GetUsed(iNbr) && pK->GetMH() == BAD_MH )
 					{
 						m_tmpVec[m_tmpVecSize++] = pK;	// Add pK to set of visited points
-						iMaxMH = std::max(iMaxMH, iMH);	// Update iMaxMH
-						pK->SetMH(iMH);
-						pK->SetMaxMH(iMaxMH);
-
-						Element* pW = pK->GetW();	// The other end of the wire (if any)
-						if ( pW )
+						pK->UpdateMH(RID, iMH, iMaxMH);
+						if ( pK->GetHasWire() )
 						{
-							assert( pK->GetNodeId() == pW->GetNodeId() );	// Sanity check
-							const unsigned int iOtherMH = iMH + MH_WIRE;	// Wires always increase MH by MH_WIRE
-							m_tmpVec[m_tmpVecSize++] = pW;					// Add pW to set of visited points
-							iMaxMH = std::max(iMaxMH, iOtherMH);			// Update iMaxMH
-							pW->SetMH(iOtherMH);
-							pW->SetMaxMH(iMaxMH);
+							pK->GetWireList(wireList);	// Get list of pK and its wired points
+							for (auto& o : wireList)	// Ideally want these in order of increasing MH
+							{
+								Element* pW = const_cast<Element*> (o.first);
+								if ( pW == pK ) continue;	// Skip pK
+								assert( pK->GetNodeId() == pW->GetNodeId() );			// Sanity check
+								if ( pW->GetMH() != BAD_MH ) continue;					// Don't overwrite visited points (even if MH is improved)
+								const unsigned int iOtherMH = iMH + MH_WIRE * o.second;	// Each wire increases MH by MH_WIRE
+								m_tmpVec[m_tmpVecSize++] = pW;							// Add pW to set of visited points
+								pW->UpdateMH(RID, iOtherMH, iMaxMH);
+							}
 						}
 					}
 				}
@@ -559,29 +592,40 @@ void Board::PasteTracks(bool bTidy)
 		Route(false);	// false ==> non minimal routing
 	}
 
+	size_t	iPinIndex;
+	int		tmpCompId;
+
 	const int iSize = GetSize();
 	for (int i = 0; i < iSize; i++)
 	{
-		Element* p	= GetAt(i);
-		Element* pW	= p->GetW();
+		Element* p = GetAt(i);
 
 		// Tidy clears all non-pins and wires that are USER_SET ...
-		if ( bTidy && ( !p->GetIsPin() || pW ) && p->ReadFlagBits(USERSET) && !p->ReadFlagBits(AUTOSET|VEROSET) )
+		if ( bTidy && ( !p->GetHasPin() || p->GetHasWire() ) && p->ReadFlagBits(USERSET) && !p->ReadFlagBits(AUTOSET|VEROSET) )
 		{
 			SetNodeId(p, BAD_NODEID);
-			if ( pW ) SetNodeId(pW, BAD_NODEID);
+			for (int iSlot = 0; iSlot < 2; iSlot++)
+			{
+				Element* pW = p->GetW(iSlot);
+				if ( pW ) SetNodeId(pW, BAD_NODEID);
+			}
 		}
 
 		p->ClearFlagBits(AUTOSET|VEROSET); p->SetFlagBits(USERSET);	// Don't do this on pW, or the tidy option will wipe wires !!!
 
 		// For wires, the "Paste" operation either paints the board at the wire-ends or wipes it.
-		// Fix-up the nodeId info on the wire component...
-		if ( pW )
+		// Fix-up the nodeId info on any wire components ...
+		const int& nodeId = p->GetNodeId();
+		for (int iSlot = 0; iSlot < 2; iSlot++)
 		{
-			const int& nodeId	= p->GetNodeId();
-			Component& comp		= m_compMgr.GetComponentById( p->GetCompId() );
-			comp.SetNodeId(0, nodeId);	comp.SetNodeId(1, nodeId);
-			comp.SetOrigId(0, nodeId);	comp.SetOrigId(1, nodeId);
+			Element* pW = p->GetW(iSlot);
+			if ( pW )
+			{
+				p->GetSlotInfo(iSlot, iPinIndex, tmpCompId);
+				Component& comp = m_compMgr.GetComponentById( tmpCompId );
+				comp.SetNodeId(0, nodeId);	comp.SetNodeId(1, nodeId);
+				comp.SetOrigId(0, nodeId);	comp.SetOrigId(1, nodeId);
+			}
 		}
 	}
 	SetRoutingEnabled(false);
@@ -608,7 +652,7 @@ void Board::WipeTracks()
 			{
 				if ( !trax.GetCompElement(j,i)->ReadFlagBits(RECTSET) ) continue;
 				Element* p = Get(jRow, iCol);
-				assert( !p->GetIsPin() && !p->GetIsHole() && !p->GetW() && p->GetCompId() == BAD_COMPID );	// Sanity check
+				assert( !p->GetHasPin() && !p->GetIsHole() && !p->GetHasComp() );	// Sanity check
 				SetNodeId(p, BAD_NODEID);
 				p->SetSurface(SURFACE_FREE);
 				p->ClearFlagBits(AUTOSET|VEROSET|RECTSET);
@@ -623,12 +667,12 @@ void Board::WipeTracks()
 		for (int j = 0; j < GetRows(); j++)	for (int i = 0; i <= GetCols(); i++)
 		{
 			Element* p = Get(j, i);
-			assert( !p->GetIsPin() && !p->GetIsHole() && !p->GetW() && p->GetCompId() == BAD_COMPID );	// Sanity check
+			assert( !p->GetHasPin() && !p->GetIsHole() && !p->GetHasComp() );	// Sanity check
 			SetNodeId(p, BAD_NODEID);
 			p->SetSurface(SURFACE_FREE);
 			p->ClearFlagBits(AUTOSET|VEROSET);
 			p->SetFlagBits(USERSET);
 		}
 	}
-	PlaceFloaters();		// Unfloat components
+	PlaceFloaters();	// Unfloat components
 }

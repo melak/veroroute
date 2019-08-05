@@ -63,6 +63,9 @@ void FootPrint::BuildTracks(CompManager* pCompMgr, const RectManager& rectMgr, c
 
 	Allocate(numRows, numCols);
 
+	size_t	pinIndex;
+	int		compId;
+
 	int jRow(nRowMin);
 	for (int j = 0; j < numRows; j++, jRow++)
 	{
@@ -75,10 +78,18 @@ void FootPrint::BuildTracks(CompManager* pCompMgr, const RectManager& rectMgr, c
 			Element*		pSource = o.Get(jRow, iCol);	assert(pSource);
 
 			int iNodeId = pSource->GetNodeId();
-			if ( pSource->GetIsPin() )	// For pins, let the track contain the origId before the part was placed
+
+			if ( pSource->GetHasPin() )	// For pins/wires, let the track contain the origId before the part was placed
 			{
-				const Component& comp = pCompMgr->GetComponentById( pSource->GetCompId() );
-				iNodeId = comp.GetOrigId( pSource->GetPinIndex() );
+				for (int iSlot = 0; iSlot < 2; iSlot++)
+				{
+					pSource->GetSlotInfo(iSlot, pinIndex, compId);
+					if ( pinIndex == BAD_PININDEX ) continue;
+					assert(compId != BAD_COMPID);
+					const Component& comp = pCompMgr->GetComponentById( compId );
+					iNodeId = comp.GetOrigId( pinIndex );
+					break;
+				}
 			}
 			pTarget->SetNodeId(iNodeId);
 			pTarget->SetCode(pSource->GetCode());	//TDDO This is wrong at boundaries

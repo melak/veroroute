@@ -104,16 +104,14 @@ bool Board::SetNodeIdByUser(const int& row, const int& col, const int& nodeId, c
 	// returns false if nothing changed
 
 	Element*		p			= Get(row, col);
-	const int&		compId		= p->GetCompId();
-	const size_t	pinIndex	= p->GetPinIndex();
-	Element*		pW			= p->GetW();	// Other end of wire
-	const bool		bWire		= ( pW != nullptr );
-	const bool		bPin		= p->GetIsPin();
 	const bool		bHole		= p->GetIsHole();
-
 	if ( bHole ) return false;	// No change
+	const bool		bWire		= p->GetHasWire();
+	const bool		bPin		= p->GetHasPin();
+	assert( !bPin || p->GetHasComp() );	// Sanity check
+	assert( !bWire || bPin );			// Wires must have pins
 
-	assert( !bPin || compId != BAD_COMPID );	// Sanity check
+	WIRELIST wireList;	// Helper for chains of wires
 
 	// Handle special case first.
 	if ( bPin && !bWire && !bPaintPins )
@@ -122,7 +120,9 @@ bool Board::SetNodeIdByUser(const int& row, const int& col, const int& nodeId, c
 		// ... we can modify the "origId" for the pin, but are only allowed
 		// ... to wipe it or make it match the nodeId of the pin. Then quit.
 
-		Component& comp = m_compMgr.GetComponentById(compId);
+		const size_t	pinIndex	= p->GetPinIndex();
+		const int&		compId		= p->GetCompId();
+		Component&		comp		= m_compMgr.GetComponentById(compId);
 		assert( comp.GetType() != COMP::WIRE );	// Sanity check
 
 		if ( nodeId != BAD_NODEID && nodeId != comp.GetNodeId(pinIndex) ) return false;	// Can't set a bad origId
@@ -137,16 +137,27 @@ bool Board::SetNodeIdByUser(const int& row, const int& col, const int& nodeId, c
 	}
 
 	// Now do regular cases:  Paint the board as needed...
-
-	if ( nodeId == p->GetNodeId() && p->ReadFlagBits(USERSET) ) return false;	// No change
-
-	// Set the NodeId on the element
-	SetNodeId(p, nodeId);
-	p->ClearFlagBits(AUTOSET|VEROSET);
-	p->SetFlagBits(USERSET);
-	// .. and on the element at the other wire end
 	if ( bWire )
 	{
+		// Just need to get origId.  Any used slot will do
+		size_t	pinIndex;
+		int		compId;
+		p->GetSlotInfo(p->GetUsedSlot(), pinIndex, compId);
+
+		Component& comp = m_compMgr.GetComponentById(compId);	assert( comp.GetType() == COMP::WIRE );
+		const int origId = comp.GetOrigId(pinIndex);
+
+		if ( nodeId == p->GetNodeId() && origId == nodeId && p->ReadFlagBits(USERSET) )
+			return false;	// No change
+	}
+	else if ( nodeId == p->GetNodeId() && p->ReadFlagBits(USERSET) )
+		return false;		// No change
+
+	// Set the NodeId on the element and all connected wire points
+	p->GetWireList(wireList);	// Get list containing p and its wired points
+	for (auto& o : wireList)
+	{
+		Element* pW = const_cast<Element*> (o.first);
 		SetNodeId(pW, nodeId);
 		pW->ClearFlagBits(AUTOSET|VEROSET);
 		pW->SetFlagBits(USERSET);
@@ -155,19 +166,42 @@ bool Board::SetNodeIdByUser(const int& row, const int& col, const int& nodeId, c
 	// Set the nodeId at the component pin
 	if ( bPin )
 	{
-		Component& comp = m_compMgr.GetComponentById(compId);
-		assert( bWire == (comp.GetType() == COMP::WIRE) );	// Sanity check
-
 		if ( bWire )	// Wire
 		{
-			const size_t otherPinIndex = ( pinIndex == 0 ) ? 1 : 0;
-			comp.SetNodeId(pinIndex, nodeId);
-			comp.SetOrigId(pinIndex, nodeId);
-			comp.SetNodeId(otherPinIndex, nodeId);
-			comp.SetOrigId(otherPinIndex, ( comp.GetOrigId(otherPinIndex) > 0 ) ? nodeId : 0);
+			size_t	pinIndex;
+			int		compId;
+			for (auto& o : wireList)
+			{
+				Element* pL = const_cast<Element*> (o.first);
+				for (int iSlot = 0; iSlot < 2; iSlot++)
+				{
+					Element* pW = pL->GetW(iSlot);
+
+					pL->GetSlotInfo(iSlot, pinIndex, compId);
+					assert( (pW == nullptr && compId == BAD_COMPID && pinIndex == BAD_PININDEX) ||
+							(pW != nullptr && compId != BAD_COMPID && pinIndex != BAD_PININDEX) );
+
+					if ( pW == nullptr ) continue;
+
+					Component& comp = m_compMgr.GetComponentById(compId);
+					assert( comp.GetType() == COMP::WIRE );	// Sanity check
+					const size_t otherPinIndex = ( pinIndex == 0 ) ? 1 : 0;
+					if ( pL == p )	// If it's the point that was clicked on, then set both the nodeId and origId
+					{
+						comp.SetNodeId(pinIndex, nodeId);
+						comp.SetOrigId(pinIndex, nodeId);
+					}
+					comp.SetNodeId(otherPinIndex, nodeId);
+					comp.SetOrigId(otherPinIndex, ( comp.GetOrigId(otherPinIndex) != BAD_NODEID ) ? nodeId : BAD_NODEID);
+				}
+			}
 		}
 		else			// Regular component
 		{
+			const size_t	pinIndex	= p->GetPinIndex();
+			const int&		compId		= p->GetCompId();
+			Component&		comp		= m_compMgr.GetComponentById(compId);
+			assert( comp.GetType() != COMP::WIRE );	// Sanity check
 			assert( bPaintPins );	// Sanity check
 
 			// Need to do (RemoveComp/ SetNodeId/ AddComp) to ensure m_nodeInfoMgr is updated OK
@@ -222,7 +256,7 @@ void Board::AutoFillVero()
 				}
 				continue;
 			}
-			if ( pC->GetIsPin() ) continue;		// Can't assign pins, so skip
+			if ( pC->GetHasPin() ) continue;	// Can't assign pins, so skip
 			if ( pC->GetIsHole() ) continue;	// Can't assign holes, so skip
 
 			// Have a blank non-pin element at this point
@@ -304,16 +338,16 @@ void Board::SetSolder(const int& nodeId, const int& col, const bool& bVertical)
 		{
 			int rowPins(0), rowPads(0);	// Try avoid putting a blob where we have a pad. Otherwise prefer pin locations.
 
-			if ( pC->GetIsPin() )
+			if ( pC->GetHasPin() )
 			{
-				if ( m_compMgr.GetComponentById(pC->GetCompId()).GetType() == COMP::PAD )
+				if ( !pC->GetHasWire() && m_compMgr.GetComponentById(pC->GetCompId()).GetType() == COMP::PAD )
 					rowPads++;
 				else
 					rowPins++;
 			}
-			if ( pR->GetIsPin() )
+			if ( pR->GetHasPin() )
 			{
-				if ( m_compMgr.GetComponentById(pR->GetCompId()).GetType() == COMP::PAD )
+				if ( !pR->GetHasWire() && m_compMgr.GetComponentById(pR->GetCompId()).GetType() == COMP::PAD )
 					rowPads++;
 				else
 					rowPins++;

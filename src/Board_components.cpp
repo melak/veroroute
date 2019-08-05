@@ -156,6 +156,7 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 {
 	if ( comp.GetIsPlaced() ) return false;	// Already on board
 
+	const int&	compId			= comp.GetId();
 	const int	rowTL			= comp.GetRow();
 	const int	colTL			= comp.GetCol();
 	const bool	bWire			= comp.GetType() == COMP::WIRE;	// Wire's only get NodeIDs while placed
@@ -167,7 +168,16 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 	const int&	boardRows		= GetRows();
 	const bool	bDiagsOK		= GetDiagsMode() != DIAGSMODE::OFF;
 	const bool	bAllowWireCross	= true;	// TODO Could make this configurable in the GUI
+	const bool	bAllowHoleShare	= true;	// TODO Could make this configurable in the GUI
 
+	if ( bAllowHoleShare && bWire )
+	{
+		// pA and pB are the opposite ends of the wire
+		Element* pA = Get(rowTL, colTL);						assert(pA);
+		Element* pB = Get(rowTL+compRows-1, colTL+compCols-1);	assert(pB);
+		assert( !pA->GetCompExists(compId) && !pB->GetCompExists(compId) );
+		if ( pA->GetWireExists(pB) || pB->GetWireExists(pA) ) return false;	// No duplicates !!!
+	}
 	// Check limits
 	const bool bLimitsOK = ( compRows <= boardRows && compCols <= boardCols );
 	if ( !bLimitsOK ) return false;
@@ -188,23 +198,28 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 
 				bOK =  ( traxNodeId == BAD_NODEID )
 					|| ( traxNodeId == pGrid->GetNodeId() )
-					|| ( !pGrid->GetIsPin() && pGrid->GetNodeId() == BAD_NODEID && !pGrid->GetIsHole() );
+					|| ( !pGrid->GetHasPin() && pGrid->GetNodeId() == BAD_NODEID && !pGrid->GetIsHole() );
 
 				if ( !bOK ) // Special check for unpainted wires on the board
 				{
 					// If have blank wire ...
-					if ( pGrid->GetW() && pGrid->GetNodeId() == BAD_NODEID && !pGrid->GetIsHole() )
+					if ( pGrid->GetHasWire() && pGrid->GetNodeId() == BAD_NODEID && !pGrid->GetIsHole() )
 					{
 						const CompElement* pTraxEnd(nullptr);	// The point in trax corresponding to the other wire end
 
-						int jj(0), ii(0);	// row,col of wire end (w.r.t. board)
-						GetRowCol(pGrid->GetW(), jj, ii);
+						for (int iSlot = 0; iSlot < 2 && bOK; iSlot++)
+						{
+							Element* pW = pGrid->GetW(iSlot);
+							if ( pW == nullptr ) continue;
+							int jj(0), ii(0);	// row,col of wire end (w.r.t. board)
+							GetRowCol(pW, jj, ii);
 
-						const int jEndRow(j + jj - jRow), jEndCol(i + ii - iCol);	// row, col of wire end (w.r.t. comp)
+							const int jEndRow(j + jj - jRow), jEndCol(i + ii - iCol);	// row, col of wire end (w.r.t. comp)
 
-						if ( jEndRow >= 0 && jEndRow < compRows && jEndCol >= 0 && jEndCol < compCols )
-							pTraxEnd = comp.GetCompElement(jEndRow, jEndCol);
-						bOK = pTraxEnd == nullptr || pTraxEnd->GetNodeId() == traxNodeId || pTraxEnd->GetNodeId() == BAD_NODEID;
+							if ( jEndRow >= 0 && jEndRow < compRows && jEndCol >= 0 && jEndCol < compCols )
+								pTraxEnd = comp.GetCompElement(jEndRow, jEndCol);
+							bOK = pTraxEnd == nullptr || pTraxEnd->GetNodeId() == traxNodeId || pTraxEnd->GetNodeId() == BAD_NODEID;
+						}
 					}
 				}
 				if ( bOK && bDiagsOK )
@@ -235,7 +250,7 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 						( boardSurface + compSurface <= SURFACE_FULL );
 				bOK &=	( boardHoleUse + compHoleUse <= HOLE_FULL );
 
-				if ( bWire ) bOK &= ( boardHoleUse + compHoleUse <= HOLE_WIRE );	//TODO Remove this to allow wires to share a hole
+				if ( bWire ) bOK &= ( bAllowHoleShare || ( boardHoleUse + compHoleUse <= HOLE_WIRE ) );
 				if ( bWire ) bOK &= ( bAllowWireCross || ( boardSurface <= SURFACE_GAP ) );
 
 				if ( !bOK ) continue;
@@ -243,7 +258,7 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 				// Check pins
 				if ( bVia )	// Via can go anywhere except for pins, holes, (or other vias)
 				{
-					bOK = !pGrid->GetIsPin() && !pGrid->GetIsHole() && !pGrid->GetIsVia();
+					bOK = !pGrid->GetHasPin() && !pGrid->GetIsHole() && !pGrid->GetIsVia();
 				}
 				else if ( pComp->GetIsHole() )	// Check holes
 				{
@@ -287,6 +302,7 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 	const bool bOK = CanPutDown(comp);
 	if ( !bOK ) return false;
 
+	const int&	compId		= comp.GetId();
 	const int&	rowTL		= comp.GetRow();
 	const int&	colTL		= comp.GetCol();
 	const bool	bWire		= comp.GetType() == COMP::WIRE;	// Wire's only get NodeIDs while placed
@@ -306,9 +322,11 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 			{
 				const CompElement*	pComp = comp.GetCompElement(j, i);
 				Element*			pGrid = Get(jRow, iCol);
-				if ( !pComp->ReadFlagBits(RECTSET) ) continue;				// Skip non-rect points
-				if ( pGrid->GetW() && pGrid->GetNodeId() == BAD_NODEID )	// If have unpainted wire ...
-					blankWireIds.insert( pGrid->GetCompId() );				// ... store its compId
+				if ( !pComp->ReadFlagBits(RECTSET) ) continue;		// Skip non-rect points
+				if ( pGrid->GetNodeId() != BAD_NODEID ) continue;	// Skip painted points
+				// If have wire(s) ...
+				if ( pGrid->GetW(0) ) blankWireIds.insert( pGrid->GetCompId()  );	// ... store its compId
+				if ( pGrid->GetW(1) ) blankWireIds.insert( pGrid->GetCompId2() );	// ... store its compId
 			}
 		}
 	}
@@ -327,7 +345,9 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 				assert( traxNodeId == BAD_NODEID || pComp->ReadFlagBits(RECTSET) );	// Sanity check
 				if ( traxNodeId == BAD_NODEID ) continue;	// Skip blank trax points
 
-				const bool bBlankWire		= pGrid->GetW() && blankWireIds.find( pGrid->GetCompId() ) != blankWireIds.end();
+				const bool bBlankWire		= pGrid->GetHasWire() &&
+											( blankWireIds.find( pGrid->GetCompId()  ) != blankWireIds.end() ||
+											  blankWireIds.find( pGrid->GetCompId2() ) != blankWireIds.end() );
 				const bool bExistingNodeId	= !bBlankWire && ( pGrid->GetNodeId() == traxNodeId );
 
 				SetNodeIdByUser(jRow, iCol, traxNodeId, false);	// false ==> don't paint pins
@@ -337,7 +357,7 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 				else
 					pGrid->ClearFlagBits(RECTSET);
 
-					// Fix up crossing diagonals
+				// Fix up crossing diagonals
 				if ( bDiagsOK && j > 0 && i > 0 && pComp->GetUsed(NBR_LT) != pGrid->GetUsed(NBR_LT) )
 					pGrid->SwapDiagLinks();
 			}
@@ -349,18 +369,38 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 				pGrid->SetSurface( pGrid->GetSurface() + pComp->GetSurface() );
 				pGrid->SetHoleUse( pGrid->GetHoleUse() + pComp->GetHoleUse() );
 
-				const size_t	pinIndex		= pComp->GetPinIndex();
-				const bool		bExistingPin	= pGrid->GetIsPin();
-				if ( !bExistingPin ) pGrid->SetPinIndex(pinIndex);	// Don't wipe existing pins (e.g. with an IC gap)
-
-				// Update IDs at pin location
+				// Update IDs at pin location (No pin ==> Leave existing pinIndexes and compIds)
+				const size_t pinIndex = pComp->GetPinIndex();
 				if ( pinIndex == BAD_PININDEX ) continue;
 
-				pGrid->SetCompId( comp.GetId() );
+				// Work out which slot to use if we have a wire
+				const int iSlot = pGrid->GetFreeSlot();
+				// Want GetIsPin() methods to be private so commented out following assert
+				// assert( ( iSlot == 0 && !pGrid->GetIsPin() ) || ( iSlot == 1 && !pGrid->GetIsPin2() ) );
 
-				// Store any user-painted nodeId's under the pins BEFORE placing
-				const int& origId = ( pGrid->ReadFlagBits(USERSET) ) ? pGrid->GetNodeId() : BAD_NODEID;
-				comp.SetOrigId(pinIndex, origId);
+				// Store any user-painted nodeId's under the pin (i.e. "oridId") BEFORE placing
+				// If we are about to place a wire in the same hole as an existing wire, then
+				// inherit origId from the existing wire
+				if ( bWire && pGrid->GetNumWires() == 1 )
+				{
+					const int iSlotOther = ( iSlot == 0 ) ? 1 : 0;
+					size_t	iOtherPinIndex;
+					int		iOtherCompId;
+					pGrid->GetSlotInfo(iSlotOther, iOtherPinIndex, iOtherCompId);
+					assert( iOtherPinIndex != BAD_PININDEX && iOtherCompId != BAD_COMPID );
+
+					const Component& otherComp = m_compMgr.GetComponentById( iOtherCompId );
+					assert( otherComp.GetType() == COMP::WIRE );
+					const int& origId = otherComp.GetOrigId(iOtherPinIndex);
+					comp.SetOrigId(pinIndex, origId);
+				}
+				else
+				{
+					const int origId = ( pGrid->ReadFlagBits(USERSET) ) ? pGrid->GetNodeId() : BAD_NODEID;
+					comp.SetOrigId(pinIndex, origId);
+				}
+
+				pGrid->SetSlotInfo(iSlot, pinIndex, compId);
 
 				const int& iCompNodeId = comp.GetNodeId(pinIndex);
 
@@ -371,19 +411,40 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 	}
 	if ( bWire )	// Handle wires setting the wire ends on the board to same value
 	{
-		Element* pW0 = Get(rowTL, colTL);						assert(pW0);
-		Element* pW1 = Get(rowTL+compRows-1, colTL+compCols-1);	assert(pW1);
+		// pA and pB are the opposite ends of the wire
+		Element*	pA		= Get(rowTL, colTL);						assert(pA);
+		Element*	pB		= Get(rowTL+compRows-1, colTL+compCols-1);	assert(pB);
+		const int	iSlotA	= pA->GetSlotFromCompId(compId);
+		const int	iSlotB	= pB->GetSlotFromCompId(compId);
+		const int	nodeIdA	= pA->GetNodeId();
+		const int	nodeIdB	= pB->GetNodeId();
 
-		if ( pW0->GetNodeId() == BAD_NODEID ) { SetNodeId(pW0, pW1->GetNodeId() ); pW0->SetFlagBits( pW1->GetFlag() & (USERSET|AUTOSET|VEROSET) ); }	// Write nodeId & flag
-		if ( pW1->GetNodeId() == BAD_NODEID ) { SetNodeId(pW1, pW0->GetNodeId() ); pW1->SetFlagBits( pW0->GetFlag() & (USERSET|AUTOSET|VEROSET) ); }	// Write nodeId & flag
+		pA->SetW(iSlotA, pB);	// Link wire ends
+		pB->SetW(iSlotB, pA);	// Link wire ends
 
-		comp.SetNodeId(0, pW0->GetNodeId());
-		comp.SetNodeId(1, pW1->GetNodeId());
+		if ( nodeIdA == BAD_NODEID ) { SetNodeId(pA, nodeIdB ); pA->SetFlagBits( pB->GetFlag() & (USERSET|AUTOSET|VEROSET) ); }	// Write nodeId & flag
+		if ( nodeIdB == BAD_NODEID ) { SetNodeId(pB, nodeIdA ); pB->SetFlagBits( pA->GetFlag() & (USERSET|AUTOSET|VEROSET) ); }	// Write nodeId & flag
+		assert(pA->GetNodeId() == pB->GetNodeId());	// Wire ends must have same NodeId
 
-		assert(pW0->GetNodeId() == pW1->GetNodeId());	// Wire ends must have same NodeId
+		const int&	nodeId	= pA->GetNodeId();
+		const char& iFlag	= pA->GetFlag();
 
-		pW0->SetW(pW1);	// Link wire ends
-		pW1->SetW(pW0);	// Link wire ends
+		comp.SetNodeId(0, nodeId);
+		comp.SetNodeId(1, nodeId);
+
+		WIRELIST wireList;	// Helper for chains of wires
+
+		// Handle all connected wires.  (We just need the wirelist on one end, so use pA)
+		pA->GetWireList(wireList);	// Get list containing pA and its wired points
+		if ( wireList.size() > 2 )
+		{
+			for (auto& o : wireList)
+			{
+				Element* p = const_cast<Element*> (o.first);
+				if ( p == pA || p == pB ) continue;	// Can skip pA and pB (we've done these already)
+				if ( p->GetNodeId() == BAD_NODEID ) { SetNodeId(p, nodeId); p->SetFlagBits( iFlag & (USERSET|AUTOSET|VEROSET) ); }	// Write nodeId & flag
+			}
+		}
 	}
 	comp.SetRow(rowTL);
 	comp.SetCol(colTL);
@@ -400,10 +461,30 @@ bool Board::TakeOff(Component& comp)
 
 	const bool	bWire 		= comp.GetType() == COMP::WIRE;	// Wire's only get NodeIDs while placed
 	const bool	bTrax		= comp.GetType() == COMP::TRACKS;
+	const int&	compId		= comp.GetId();
 	const int&	compCols	= comp.GetCompCols();
 	const int&	compRows	= comp.GetCompRows();
 	const int&	rowTL		= comp.GetRow();
 	const int&	colTL		= comp.GetCol();
+
+	// If we have a wire, then pA and pB are the opposite ends of the wire.
+	// Find out which wire slots are used before we take off the wire.
+	Element*	pA			= ( bWire ) ? Get(rowTL, colTL) : nullptr;
+	Element*	pB			= ( bWire ) ? Get(rowTL+compRows-1, colTL+compCols-1) : nullptr;
+	int		iSlotA(-1), iSlotB(-1), iOrigIdA(BAD_NODEID), iOrigIdB(BAD_NODEID), tmpCompId;
+	size_t	iPinIndex;
+	if ( pA )
+	{
+		iSlotA = pA->GetSlotFromCompId(compId);
+		pA->GetSlotInfo(iSlotA, iPinIndex, tmpCompId);	assert(tmpCompId == compId);
+		iOrigIdA = comp.GetOrigId( iPinIndex );
+	}
+	if ( pB )
+	{
+		iSlotB = pB->GetSlotFromCompId(compId) ;
+		pB->GetSlotInfo(iSlotB, iPinIndex, tmpCompId);	assert(tmpCompId == compId);
+		iOrigIdB = comp.GetOrigId( iPinIndex );
+	}
 
 	int jRow(rowTL);
 	for (int j = 0; j < compRows; j++, jRow++)
@@ -417,7 +498,7 @@ bool Board::TakeOff(Component& comp)
 			{
 				if ( !pComp->ReadFlagBits(RECTSET) ) continue;		// Skip non-rect points
 				if ( pComp->GetNodeId() == BAD_NODEID ) continue;	// Skip blank areas of the trax comp
-				if ( !pGrid->ReadFlagBits(RECTSET) && ( !pGrid->GetIsPin() || pGrid->GetW() ) )
+				if ( !pGrid->ReadFlagBits(RECTSET) && ( !pGrid->GetHasPin() || pGrid->GetHasWire() ) )
 					SetNodeIdByUser(jRow, iCol, BAD_NODEID, false);	// false ==> don't paint pins
 				pGrid->ClearFlagBits(RECTSET);
 			}
@@ -428,29 +509,31 @@ bool Board::TakeOff(Component& comp)
 				// Update surface and hole use
 				pGrid->SetSurface( pGrid->GetSurface() - pComp->GetSurface() );
 				pGrid->SetHoleUse( pGrid->GetHoleUse() - pComp->GetHoleUse() );
-				switch ( pGrid->GetSurface() )	// Could move this switch statement to SetSurface()
+				if ( pGrid->GetHoleUse() == HOLE_FREE )
 				{
-					case SURFACE_GAP:
-					case SURFACE_FREE:
-					case SURFACE_WIRE:
-					case SURFACE_WIRE|SURFACE_GAP:
-						pGrid->SetPinIndex(BAD_PININDEX); pGrid->SetCompId(BAD_COMPID); break;
+					pGrid->SetSlotInfo(0, BAD_PININDEX, BAD_COMPID);	// Slot 0
+					pGrid->SetSlotInfo(1, BAD_PININDEX, BAD_COMPID);	// Slot 1
+				}
+				else if ( bWire && ( pGrid == pA || pGrid == pB ) )	// Taking off a wire-end
+				{
+					pGrid->SetSlotInfo( ( pGrid == pA ) ? iSlotA : iSlotB, BAD_PININDEX, BAD_COMPID);
 				}
 
-				// Update IDs at pin location
+				// Update IDs at pin locations of component
 				const size_t pinIndex = pComp->GetPinIndex();
 				if ( pinIndex == BAD_PININDEX ) continue;
 
-				assert( pGrid->GetCompId() == BAD_COMPID );	// Sanity check on preceeding switch statement
-
-				const int origNodeId = comp.GetOrigId(pinIndex);
-
+				const int origNodeId = comp.GetOrigId(pinIndex);	// Note the original NodeId ...
+				comp.SetOrigId(pinIndex, BAD_NODEID);				// ... before wiping it
 				assert( origNodeId == BAD_NODEID || origNodeId == comp.GetNodeId(pinIndex) );
 
-				SetNodeId(pGrid, origNodeId);			// Restore grid element to original nodeId
-				pGrid->ClearFlagBits(AUTOSET|VEROSET);
-				pGrid->SetFlagBits(USERSET);
-				comp.SetOrigId(pinIndex, BAD_NODEID);	// ...
+				// Wire-ends need special treatment, so just handle non-wires here
+				if ( !bWire )
+				{
+					SetNodeId(pGrid, origNodeId);			// Restore grid element to original nodeId
+					pGrid->ClearFlagBits(AUTOSET|VEROSET);
+					pGrid->SetFlagBits(USERSET);
+				}
 			}
 		}
 	}
@@ -458,10 +541,66 @@ bool Board::TakeOff(Component& comp)
 	{
 		comp.SetNodeId(0, BAD_NODEID);
 		comp.SetNodeId(1, BAD_NODEID);
-		Element* pW0 = Get(rowTL, colTL);	assert(pW0);
-		Element* pW1 = pW0->GetW();			assert(pW1);
-		pW0->SetW(nullptr);	// Break pointers between board points
-		pW1->SetW(nullptr);	// Break pointers between board points
+		pA->SetW(iSlotA, nullptr);	// Break pointers between board points
+		pB->SetW(iSlotB, nullptr);	// Break pointers between board points
+
+		WIRELIST wireList;	// Helper for chains of wires
+		for (int iEnd = 0; iEnd < 2; iEnd++)
+		{
+			Element* pEnd = ( iEnd == 0 ) ? pA : pB;
+			pEnd->GetWireList(wireList);	// Get list containing pEnd and its wired points
+
+			int origId(BAD_NODEID);
+			for (auto& o : wireList)	// See if any of the wires in the set have a valid origId
+			{
+				const Element* pW = o.first;
+				for (int iSlot = 0; iSlot < 2 && origId == BAD_NODEID; iSlot++)
+				{
+					pW->GetSlotInfo(iSlot, iPinIndex, tmpCompId);
+					if ( iPinIndex == BAD_PININDEX ) continue;
+					assert(tmpCompId != BAD_COMPID);
+					Component& comp = m_compMgr.GetComponentById( tmpCompId );
+					assert( comp.GetType() == COMP::WIRE );
+					origId = comp.GetOrigId(iPinIndex);
+					assert(origId == BAD_NODEID || origId == comp.GetNodeId(iPinIndex));
+				}
+				if ( origId != BAD_NODEID ) break;
+			}
+			if ( origId == BAD_NODEID )	// If no wired points connected to pEnd have a valid origId ...
+			{
+				// ... wipe all their nodeIds
+				for (auto& o : wireList)
+				{
+					Element* pW = const_cast<Element*> (o.first);
+					// Wipe the nodeId's on the wire components ...
+					for (int iSlot = 0; iSlot < 2; iSlot++)
+					{
+						pW->GetSlotInfo(iSlot, iPinIndex, tmpCompId);
+						if ( iPinIndex == BAD_PININDEX ) continue;
+						assert(tmpCompId != BAD_COMPID);
+						Component& comp = m_compMgr.GetComponentById( tmpCompId );
+						comp.SetNodeId(iPinIndex, BAD_NODEID);
+					}
+					// ... and on the corresponding board points
+					SetNodeId(pW, BAD_NODEID);
+					pW->ClearFlagBits(AUTOSET|VEROSET);
+					pW->SetFlagBits(USERSET);	//PROBABLY A BUG >>>>> pW->SetFlagBits(AUTOSET|VEROSET);
+				}
+			}
+		}
+		// Finally fix up case where we had a single wire
+		if ( !pA->GetHasWire() )	// If we've taken off the last wire at the location
+		{
+			SetNodeId(pA, iOrigIdA);
+			pA->ClearFlagBits(AUTOSET|VEROSET);
+			pA->SetFlagBits(USERSET);
+		}
+		if ( !pB->GetHasWire() )	// If we've taken off the last wire at the location
+		{
+			SetNodeId(pB, iOrigIdB);
+			pB->ClearFlagBits(AUTOSET|VEROSET);
+			pB->SetFlagBits(USERSET);
+		}
 	}
 	comp.SetIsPlaced(false);
 	if ( comp.GetType() == COMP::VIA ) Get(rowTL, colTL)->SetIsVia(false);	// Clear via flag
@@ -470,11 +609,7 @@ bool Board::TakeOff(Component& comp)
 
 void Board::FloatAllComps()	// Float all components (i.e. take them off the board)
 {
-	for (auto& mapObj : m_compMgr.m_mapIdToComp)
-	{
-		Component& comp = mapObj.second;
-		TakeOff(comp);
-	}
+	for (auto& mapObj : m_compMgr.m_mapIdToComp) TakeOff( mapObj.second );
 }
 
 void Board::PlaceFloaters()	// Try to place down all the floating components
@@ -515,8 +650,8 @@ void Board::SelectAllComps(bool bRestrictToRects)
 			// ... only select components within them.
 			const int&	L = comp.GetCol();
 			const int&	T = comp.GetRow();
-			const int	R = L + comp.GetCompCols() - 1;
-			const int	B = T + comp.GetCompRows() - 1;
+			const int	R = comp.GetLastCol();
+			const int	B = comp.GetLastRow();
 
 			const bool bOK = rectMgr.ContainsPoint(T, L) || rectMgr.ContainsPoint(T, R) ||
 							 rectMgr.ContainsPoint(B, L) || rectMgr.ContainsPoint(B, R);
@@ -579,8 +714,8 @@ void Board::StretchUserComp(const bool& bGrow)	// Stretch the selected component
 	if ( bGrow )
 	{
 		// Get bottom-right corner of footprint
-		int maxRow(comp.GetRow() + comp.GetCompRows() - 1);
-		int maxCol(comp.GetCol() + comp.GetCompCols() - 1);
+		int maxRow( comp.GetLastRow() );
+		int maxCol( comp.GetLastCol() );
 
 		// Work out what the stretch will do to it
 		if ( comp.GetDirection() == 'W' || comp.GetDirection() == 'E' )
@@ -606,8 +741,8 @@ void Board::StretchWidthUserComp(const bool& bGrow)	// Stretch the selected comp
 	if ( bGrow )
 	{
 		// Get bottom-right corner of footprint
-		int maxRow(comp.GetRow() + comp.GetCompRows() - 1);
-		int maxCol(comp.GetCol() + comp.GetCompCols() - 1);
+		int maxRow( comp.GetLastRow() );
+		int maxCol( comp.GetLastCol() );
 
 		// Work out what the stretch will do to it
 		if ( comp.GetDirection() == 'W' || comp.GetDirection() == 'E' )

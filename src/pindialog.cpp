@@ -80,7 +80,7 @@ void PinDialog::Update()
 		for (int iCol = 0; iCol < 2; iCol++)
 		{
 			std::string str;
-			switch(iCol)
+			switch( iCol )
 			{
 				case 0:	str = GetDefaultPinLabel(iPinIndex);	break;
 				case 1:	str = pComp->GetPinLabel(iPinIndex);	break;

@@ -292,7 +292,7 @@ bool Board::GetPinRowCol(const int& compId, const size_t& iPinIndex, int& row, i
 	for (int i = 0; i < iSize; i++)
 	{
 		Element* p = GetAtConst(i);
-		if ( p->GetCompId() == compId && p->GetPinIndex() == iPinIndex )
+		if ( !p->GetHasWire() && p->GetCompId() == compId && p->GetPinIndex() == iPinIndex )
 		{
 			GetRowCol(p, row, col);
 			return true;

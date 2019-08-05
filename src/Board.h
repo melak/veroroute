@@ -156,7 +156,7 @@ public:
 				p->SetNbr(NBR_RB,	Get(iB,   iR));
 				p->SetNbr(NBR_B,	Get(iB,   iCol));
 				p->SetNbr(NBR_LB,	Get(iB,   iL));
-				p->SetW(nullptr);	// Must be set by GlueWires()
+				p->ClearWires();	// Wires must be set by GlueWires()
 
 				// Prevent toroidal routing at board edges
 				int okDirs = 0xFF;	// All 8 directions OK by default
@@ -173,20 +173,27 @@ public:
 	{
 		for (const auto& mapObj : m_compMgr.GetMapIdToComp())	// Iterate components
 		{
-			const Component& comp = mapObj.second;
+			const int&			compId	= mapObj.first;
+			const Component&	comp	= mapObj.second;
 			if ( comp.GetType() == COMP::WIRE && comp.GetIsPlaced() )
 			{
 				const int& rowA = comp.GetRow();
 				const int& colA = comp.GetCol();
-				const int  rowB = rowA + comp.GetCompRows() - 1;
-				const int  colB = colA + comp.GetCompCols() - 1;
+				const int  rowB = comp.GetLastRow();
+				const int  colB = comp.GetLastCol();
 
-				Element* pA = Get(rowA, colA);	assert(pA->GetW() == nullptr);
-				Element* pB = Get(rowB, colB);	assert(pB->GetW() == nullptr);
+				Element* pA = Get(rowA, colA);	assert(pA->GetNumWires() < 2);
+				Element* pB = Get(rowB, colB);	assert(pB->GetNumWires() < 2);
+
+				assert(pA->GetNumCompIds() > 0 && pA->GetNumCompIds() < 3);
+				assert(pB->GetNumCompIds() > 0 && pB->GetNumCompIds() < 3);
 
 				assert(pB->GetNodeId() == pA->GetNodeId());	// Wire ends must have same NodeId
-				pA->SetW(pB);	// Give pA a pointer to pB
-				pB->SetW(pA);	// Give pB a pointer to pA
+
+				const int iSlotA = pA->GetSlotFromCompId(compId);
+				const int iSlotB = pB->GetSlotFromCompId(compId);
+				pA->SetW( iSlotA, pB );	// Give pA a pointer to pB
+				pB->SetW( iSlotB, pA );	// Give pB a pointer to pA
 			}
 		}
 	}
@@ -579,7 +586,8 @@ private:
 					for (int i = 0; i < comp.GetCompCols(); i++, iCol++)
 					{
 						Element* p = Get(jRow, iCol);
-						assert( comp.GetCompElement(j, i)->GetIsPin() == p->GetIsPin() );
+						// Want GetIsPin() methods to be private so commented out following assert
+						// assert( comp.GetCompElement(j, i)->GetIsPin() == p->GetIsPin() );
 						assert( p->GetSurface() == SURFACE_PLUG || p->GetSurface() == SURFACE_FULL );
 						const bool bGap = ( p->GetSurface() & SURFACE_GAP ) > 0;
 						p->SetWireOccupancies();

@@ -486,7 +486,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		for (int j = 0; j < board.GetRows(); j++)	for (int i = 0; i < board.GetCols(); i++)
 		{
 			const Element* pC = board.Get(j,i);
-			if ( trackMode == TRACKMODE::OFF || ( !pC->GetIsPin() && pC->GetNodeId() == BAD_NODEID ) )
+			if ( trackMode == TRACKMODE::OFF || ( !pC->GetHasPin() && pC->GetNodeId() == BAD_NODEID ) )
 			{
 				GetXY(board, j, i, X, Y);
 				painter.drawPoint(X, Y);
@@ -510,10 +510,10 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				const Element*	pC				= board.Get(j,i);
 				const int&		nodeId			= pC->GetNodeId();
 				const int		colorId			= colorMgr.GetColorId(nodeId);
-				const bool		bPin			= pC->GetIsPin();	// true ==> real pin
+				const bool		bPin			= pC->GetHasPin();	// true ==> real pin
 				const int		iPerimeterCode	= pC->GetPerimeterCode(bDiagsOK, bMinDiags);	// 0 to 255
 
-				if ( colorId == BAD_COLORID && !pC->GetW() ) continue;	// Usually don't color places with no NodeID assigned unless they are wire ends
+				if ( colorId == BAD_COLORID && !pC->GetHasWire() ) continue;	// Usually don't color places with no NodeID assigned unless they are wire ends
 
 				// Use GetPixmapRGB for pixmaps.  It can handle MY_GREY, MY_BLACK as special cases
 				const bool		bInvalidColor	=  colorId == BAD_COLORID ||
@@ -529,7 +529,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				const QPointF pCentre(X,Y);
 
 				// Common special case: Draw blank wire-ends as squares (so we can easily see them)
-				if ( colorId == BAD_COLORID && pC->GetW() )
+				if ( colorId == BAD_COLORID && pC->GetHasWire() )
 				{
 					QPen& wirePen = ( bGroundFill ) ? m_whitePen : m_blackPen;
 					wirePen.setWidth(iWirePenWidth);
@@ -1051,7 +1051,7 @@ void MainWindow::GetLRTB(const GuiControl& guiCtrl, const Component& comp, int& 
 	// For rendering.
 	// Takes a component in the Board and returns bounding box coordinates in the drawn image.
 	GetXY(guiCtrl, comp.GetRow(), comp.GetCol(), L, T);
-	GetXY(guiCtrl, comp.GetRow() + comp.GetCompRows()-1, comp.GetCol() + comp.GetCompCols()-1, R, B);
+	GetXY(guiCtrl, comp.GetLastRow(), comp.GetLastCol(), R, B);
 }
 
 void MainWindow::GetLRTB(const GuiControl& guiCtrl, const Rect& rect, int& L, int& R, int& T, int& B) const
