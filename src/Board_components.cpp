@@ -249,7 +249,7 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 						( boardSurface + compSurface <= SURFACE_FULL );
 				bOK &=	( boardHoleUse + compHoleUse <= HOLE_FULL );
 				bOK &=	( !bWire || bAllowHoleShare || ( boardHoleUse + compHoleUse <= HOLE_WIRE ) );
-				bOK &=	( !bWire || bAllowWireCross || ( boardSurface <= ( bAllowHoleShare ? SURFACE_WIRE_END : SURFACE_GAP ) ) );
+				bOK &=	( !bWire || bAllowWireCross || ( boardSurface <= ( bAllowHoleShare ? SURFACE_WIRE_END | SURFACE_GAP : SURFACE_GAP ) ) );
 				if ( !bOK ) continue;
 
 				// Check pins
