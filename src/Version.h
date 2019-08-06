@@ -146,8 +146,8 @@
 //															// Bug fix: Don't show selected area if both control sliders are moved to Off.
 //															// New feature: Allow wires to cross, and allow up to two wires to be stacked next to each other (but no hole sharing yet).
 //static const char* szVEROROUTE_VERSION = "1.63";			// Bug fix.  1.62 could crash or corrupt the layout if stacking wires under an IC.
-static const char* szVEROROUTE_VERSION = "1.64";			// Bug fix.  Fixed algorithm for stacking wires.
-															// New feature: Allow 2 wires to share a hole.
-															// Added "Wire Options" dialog to set allowed wire operations.
-
-
+//static const char* szVEROROUTE_VERSION = "1.64";			// Bug fix.  Fixed algorithm for stacking wires.
+//															// New feature: Allow 2 wires to share a hole.
+//															// Added "Wire Options" dialog to set allowed wire operations.
+static const char* szVEROROUTE_VERSION = "1.65";			// Bug fix. Wire hole-sharing under an IC only worked with wire-crossing enabled.
+															// Improvement: Render wires as rounded rectangles so hole-sharing looks clearer.
