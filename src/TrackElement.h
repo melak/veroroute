@@ -45,7 +45,7 @@ static void ToggleCodeBit(const int& NBR, int& iCode)		{ iCode ^=  (1<<NBR); }
 // Flag is a bitfield describing the status of the nodeId at point.
 // USERSET points will not have their nodeId modified during the auto-routing.
 // The algorithm will change the flag from USERSET to AUTOKEPT if it thinks the point is useful.
-// On hitting "Paste+Tidy", only the AUTOKEPT and AUTOSET points are kept, and the USERSET
+// On hitting "Tidy", only AUTOKEPT and AUTOSET points are kept, and any USERSET
 // points will be wiped (if they are not component pins).
 const char USERSET	= 1;					// ==> user assigned the nodeId
 const char AUTOSET	= 2;					// ==> routing algorithm assigned the nodeId

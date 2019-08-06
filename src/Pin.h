@@ -159,7 +159,7 @@ public:
 	virtual void Save(DataStream& outStream) override
 	{
 		outStream.Save(m_pinChar);	// New mapping from VRT_VERSION_4
-		outStream.Save(m_surface);
+		outStream.Save(m_surface);	// New mapping from VRT_VERSION_26
 		outStream.Save(m_holeUse);	// Added in VRT_VERSION_26
 	}
 private:

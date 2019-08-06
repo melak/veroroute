@@ -206,8 +206,8 @@ void Component::AddDefaultShapes()
 		}
 		case COMP::WIRE:
 		{
-			double w(0.1 + 0.5*(GetCols() - 1)), h(0.1 + 0.5*(GetRows()-1));
-			Add( Shape(SHAPE::RECT, -w,  w, -h,  h) );
+			double w(0.5*(GetCols() - 1)), h(0.1 + 0.5*(GetRows()-1));
+			Add( Shape(SHAPE::ROUNDED_RECT, -w,  w, -h,  h) );
 			break;
 		}
 		case COMP::DIODE:
