@@ -156,3 +156,5 @@ V1.64  Bug fix.  Fixed algorithm for stacking wires.
        Added "Wire Options" dialog to set allowed wire operations.
 V1.65  Bug fix. Wire hole-sharing under an IC only worked with wire-crossing enabled.
        Improvement: Render wires as rounded rectangles so hole-sharing looks clearer.
+V1.66  New feature: Allow shapes to be filled with colors.
+

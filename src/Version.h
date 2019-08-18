@@ -149,5 +149,6 @@
 //static const char* szVEROROUTE_VERSION = "1.64";			// Bug fix.  Fixed algorithm for stacking wires.
 //															// New feature: Allow 2 wires to share a hole.
 //															// Added "Wire Options" dialog to set allowed wire operations.
-static const char* szVEROROUTE_VERSION = "1.65";			// Bug fix. Wire hole-sharing under an IC only worked with wire-crossing enabled.
-															// Improvement: Render wires as rounded rectangles so hole-sharing looks clearer.
+//static const char* szVEROROUTE_VERSION = "1.65";			// Bug fix. Wire hole-sharing under an IC only worked with wire-crossing enabled.
+//															// Improvement: Render wires as rounded rectangles so hole-sharing looks clearer.
+static const char* szVEROROUTE_VERSION = "1.66";			// New feature: Allow shapes to be filled with colors.
