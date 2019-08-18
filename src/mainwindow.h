@@ -227,6 +227,7 @@ public slots:
 	void TrackSliderChanged(int i);
 	void SaturationSliderChanged(int i);
 	void CompSliderChanged(int i);
+	void FillSliderChanged(int i);
 	void MarginChanged(int i);
 	void SetShowGrid(bool b);
 	void SetShowText(bool b);
@@ -309,6 +310,8 @@ public slots:
 	void DefinerHeightChanged(int i);
 	void DefinerSetPinShapeType(const QString& str);
 	void DefinerToggledPinLabels(bool b);
+	void DefinerToggleShapeLine(bool b);
+	void DefinerToggleShapeFill(bool b);
 	void DefinerSetPinNumber(int i);
 	void DefinerIncPinNumber(bool b);
 	void DefinerSetShapeType(const QString& str);
@@ -318,6 +321,7 @@ public slots:
 	void DefinerSetDY(double d);
 	void DefinerSetA1(double d);
 	void DefinerSetA2(double d);
+	void DefinerSetA3(double d);
 	void DefinerBuild();
 	void DefinerToggleEditor();
 	void DefinerAddLine();
@@ -326,6 +330,9 @@ public slots:
 	void DefinerAddEllipse();
 	void DefinerAddArc();
 	void DefinerAddChord();
+	void DefinerChooseColor();
+	void DefinerRaise();
+	void DefinerLower();
 private:
 	void DestroyPixmapCache();
 	void CreatePixmapCache(const GuiControl& guiCtrl, ColorManager& colorManager);
@@ -418,7 +425,6 @@ private:
 	QPen	m_dashPen;
 	QBrush	m_backgroundBrush;
 	QBrush	m_darkBrush;
-	QBrush	m_clearBrush;
 	QBrush	m_varBrush;
 private:
 

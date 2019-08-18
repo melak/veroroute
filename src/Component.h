@@ -206,7 +206,13 @@ public:
 	void SetDirection(const char& d)								{ m_direction = d; }
 	void SetIsPlaced(const bool& b)									{ m_bIsPlaced = b; }
 	void SetPinFlags(const uchar& i)								{ m_iPinFlags = i; }
-	void Add(const Shape& s)										{ m_shapes.push_back(s); }
+	void AddOne(const Shape& s)										{ m_shapes.push_back(s); }
+	void AddTwo(const Shape& s)	// Adds the shape twice.  Once with fill only, and once with line only
+	{
+		Shape tmp(s);
+		tmp.SetDrawFill(true);	tmp.SetDrawLine(false);	m_shapes.push_back(tmp);
+		tmp.SetDrawFill(false);	tmp.SetDrawLine(true);	m_shapes.push_back(tmp);
+	}
 	bool				GetIsTemplate() const						{ return GetId() == BAD_COMPID; }
 	const int&			GetId() const								{ return m_id; }
 	const std::string&	GetNameStr() const							{ return m_nameStr; }
@@ -228,6 +234,18 @@ public:
 	const bool&			GetIsPlaced() const							{ return m_bIsPlaced; }
 	const uchar&		GetPinFlags() const							{ return m_iPinFlags; }
 	const std::vector<Shape>&	GetShapes() const					{ return m_shapes; }
+	void				GetSafeBounds(double& L, double& R, double& T, double& B) const
+	{
+		L = T =  DBL_MAX;
+		R = B = -DBL_MAX;
+		double l,r,t,b;
+		for (auto& o : m_shapes)
+		{
+			o.GetSafeBounds(l,r,t,b);
+			L = std::min(L,l);	T = std::min(T,t);
+			R = std::max(R,r);	B = std::max(B,b);
+		}
+	}
 	std::string GetFullTypeStr() const		// For SIP/DIP types, append the number of pins
 	{
 		std::string str = GetTypeStr();
@@ -347,6 +365,23 @@ public:
 			default:			return true;
 		}
 	}
+	void SetFillColor(const RGB& r)	// Gives all shapes the same fill color
+	{
+		for (auto& o : m_shapes) o.SetFillColor(r);
+	}
+	RGB GetNewColor() const	// returns an un-used color
+	{
+		for (int iColor = 1; iColor <= 0xFFFFFF; iColor++)	// Black is used for outlines so start at 1
+		{
+			bool bOK(true);
+			RGB tmp(iColor);
+			for (auto& o : m_shapes)
+				if ( o.GetFillColor() == tmp ) { bOK = false; break; }
+			if ( bOK ) return tmp;
+		}
+		assert(0);
+		return RGB(0x000000);
+	}
 	// Merge interface functions
 	virtual void UpdateMergeOffsets(MergeOffsets& o) override
 	{
@@ -385,6 +420,7 @@ public:
 			SetImportStr( GetDefaultImportStr( GetType() ) );
 	}
 	void AddDefaultShapes();
+	void SetDefaultColor();
 	// Persist interface functions
 	virtual void Load(DataStream& inStream) override
 	{

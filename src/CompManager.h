@@ -84,6 +84,12 @@ public:
 	{
 		return m_mapIdToComp;
 	}
+	void GetSortedComps(std::vector<const Component*>& comps) const	// Sorted by render order
+	{
+		comps.clear();
+		for (const auto& mapObj : m_mapIdToComp) comps.push_back(&mapObj.second);
+		std::sort(comps.begin(), comps.end(), HasLowerRenderOrder());
+	}
 	int CreateComp(const Component& tmp)	// Creates a copy of tmp and returns its compId
 	{
 		// Find the first unused compId.
@@ -144,7 +150,7 @@ public:
 		{
 			if ( pPrev == nullptr || p->GetRow() != pPrev->GetRow() )	// Reset all if new row
 			{
-				m_mapWireToShift[p];
+				m_mapWireToShift[p] = 0;
 				pLast = nullptr;
 			}
 			else if ( p->GetCol() == pLast->GetLastCol() )		// If touches pLast ...
@@ -178,7 +184,7 @@ public:
 		{
 			if ( pPrev == nullptr || p->GetCol() != pPrev->GetCol() )	// Reset all if new col
 			{
-				m_mapWireToShift[p];
+				m_mapWireToShift[p] = 0;
 				pLast = nullptr;
 			}
 			else if ( p->GetRow() == pLast->GetLastRow() )		// If touches pLast ...
@@ -311,6 +317,16 @@ private:
 				if ( pA->GetCol() != pB->GetCol() ) return pA->GetCol() < pB->GetCol();
 				return pA->GetRow() < pB->GetRow();
 			}
+		}
+	};
+	struct HasLowerRenderOrder
+	{
+		bool operator()(const Component* pA, const Component* pB) const
+		{
+			const COMP& eTypeA = pA->GetType();
+			const COMP& eTypeB = pB->GetType();
+			if ( IsPlug(eTypeA) != IsPlug(eTypeB) ) return IsPlug(eTypeB);
+			return static_cast<int>(eTypeA) < static_cast<int>(eTypeB);
 		}
 	};
 private:

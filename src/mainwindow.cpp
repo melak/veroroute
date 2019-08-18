@@ -101,7 +101,6 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	m_dashPen			= QPen(QColor(96,96,96,255), 0,			Qt::DashLine,   Qt::RoundCap, Qt::RoundJoin);
 	m_backgroundBrush	= QBrush(Qt::white,						Qt::SolidPattern);
 	m_darkBrush			= QBrush(QColor(0, 0, 0, 150),			Qt::SolidPattern);	// using alpha
-	m_clearBrush		= QBrush(QColor(255,255,255,0),			Qt::SolidPattern);
 	m_varBrush			= QBrush(QColor(255,255,255,0),			Qt::SolidPattern);
 
 	QObject::connect(ui->actionNew,						SIGNAL(triggered()), this, SLOT(New()));
@@ -927,6 +926,7 @@ void MainWindow::HandleNetworkReply(QNetworkReply* pReply)
 void MainWindow::TrackSliderChanged(int i)		{ if ( m_board.SetTrackSliderValue(i) )	{ UpdateHistory("Track slider change");		UpdateControls(); RepaintSkipRouting(); } }
 void MainWindow::SaturationSliderChanged(int i) { if ( m_board.SetSaturation(i) )		{ UpdateHistory("Saturation change");		UpdateControls(); DestroyPixmapCache(); RepaintSkipRouting();  } }
 void MainWindow::CompSliderChanged(int i)		{ if ( m_board.SetCompSliderValue(i) )	{ UpdateHistory("Part slider change");		UpdateControls(); RepaintSkipRouting();  } }
+void MainWindow::FillSliderChanged(int i)		{ if ( m_board.SetFillSaturation(i) )	{ UpdateHistory("Fill opacity change");		UpdateControls(); DestroyPixmapCache();	RepaintSkipRouting();  } }
 void MainWindow::SetShowGrid(bool b)			{ if ( m_board.SetShowGrid(b) )			{ UpdateHistory("Toggle grid");				UpdateControls(); RepaintSkipRouting();  } }
 void MainWindow::SetShowText(bool b)			{ if ( m_board.SetShowText(b) )			{ UpdateHistory("Toggle text");				UpdateControls(); RepaintSkipRouting();  } }
 void MainWindow::SetFlipH(bool b)				{ if ( m_board.SetFlipH(b) )			{ UpdateHistory("Toggle flip horizontal");	UpdateControls(); RepaintSkipRouting();  } }
@@ -1283,8 +1283,28 @@ void MainWindow::DefinerToggledPinLabels(bool b)
 		EnableCompDialogControls();
 	}
 }
-void MainWindow::DefinerWidthChanged(int i)	{ if ( GetCompDefiner().SetWidth(i)		) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
-void MainWindow::DefinerHeightChanged(int i){ if ( GetCompDefiner().SetHeight(i)	) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
+void MainWindow::DefinerToggleShapeLine(bool b)
+{
+	const bool bChanged = GetCompDefiner().SetLine(b);
+	if ( bChanged )
+	{
+		UpdateHistory("Toggle shape line");
+		EnableCompDialogControls();
+		RepaintSkipRouting();
+	}
+}
+void MainWindow::DefinerToggleShapeFill(bool b)
+{
+	const bool bChanged = GetCompDefiner().SetFill(b);
+	if ( bChanged )
+	{
+		UpdateHistory("Toggle shape fill");
+		EnableCompDialogControls();
+		RepaintSkipRouting();
+	}
+}
+void MainWindow::DefinerWidthChanged(int i)	{ if ( GetCompDefiner().SetWidth(i)		) { UpdateHistory("Action"); EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
+void MainWindow::DefinerHeightChanged(int i){ if ( GetCompDefiner().SetHeight(i)	) { UpdateHistory("Action"); EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
 void MainWindow::DefinerSetPinNumber(int i)	{ if ( GetCompDefiner().SetPinNumber(i)	) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
 void MainWindow::DefinerIncPinNumber(bool b){ if ( GetCompDefiner().IncPinNumber(b)	) { UpdateHistory("Action"); UpdateCompDialog();		 RepaintSkipRouting(); } }	// Called using mouse wheel in view
 void MainWindow::DefinerSetCX(double d)		{ if ( GetCompDefiner().SetCX(d)		) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
@@ -1293,6 +1313,7 @@ void MainWindow::DefinerSetDX(double d)		{ if ( GetCompDefiner().SetDX(d)		) { U
 void MainWindow::DefinerSetDY(double d)		{ if ( GetCompDefiner().SetDY(d)		) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
 void MainWindow::DefinerSetA1(double d)		{ if ( GetCompDefiner().SetA1(d)		) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
 void MainWindow::DefinerSetA2(double d)		{ if ( GetCompDefiner().SetA2(d)		) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
+void MainWindow::DefinerSetA3(double d)		{ if ( GetCompDefiner().SetA3(d)		) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
 void MainWindow::DefinerBuild()
 {
 	assert( GetCompDefiner().GetIsValid() );
@@ -1342,6 +1363,42 @@ void MainWindow::DefinerAddRoundedRect(){ const int id = GetCompDefiner().AddRou
 void MainWindow::DefinerAddEllipse()	{ const int id = GetCompDefiner().AddEllipse();		if ( id != BAD_ID ) { SetCurrentShapeId(id); UpdateCompDialog(); UpdateHistory("Add shape"); RepaintSkipRouting(); } }
 void MainWindow::DefinerAddArc()		{ const int id = GetCompDefiner().AddArc();			if ( id != BAD_ID ) { SetCurrentShapeId(id); UpdateCompDialog(); UpdateHistory("Add shape"); RepaintSkipRouting(); } }
 void MainWindow::DefinerAddChord()		{ const int id = GetCompDefiner().AddChord();		if ( id != BAD_ID ) { SetCurrentShapeId(id); UpdateCompDialog(); UpdateHistory("Add shape"); RepaintSkipRouting(); } }
+void MainWindow::DefinerChooseColor()
+{
+	auto& def = GetCompDefiner();
+	assert(def.GetCurrentShapeId() != BAD_ID );
+	if ( def.GetCurrentShapeId() == BAD_ID ) return;
+	const RGB& rgb = def.GetCurrentShape().GetFillColor();
+	QColor oldColor = QColor(rgb.GetR(), rgb.GetG(), rgb.GetB());
+	QColor newColor	= QColorDialog::getColor(oldColor, this );
+	if ( newColor.isValid() && oldColor != newColor )
+	{
+		int r(0), g(0), b(0);
+		newColor.getRgb(&r,&g,&b);
+		if ( def.SetFillColor( RGB((r<<16) + (g<<8) + b) ) )
+		{
+			UpdateCompDialog(); UpdateHistory("Set fill color"); RepaintSkipRouting();
+		}
+	}
+}
+void MainWindow::DefinerRaise()
+{
+	auto& def = GetCompDefiner();
+	assert(def.GetCurrentShapeId() != BAD_ID );
+	if ( def.Raise() )
+	{
+		UpdateCompDialog(); UpdateHistory("Raise"); RepaintSkipRouting();
+	}
+}
+void MainWindow::DefinerLower()
+{
+	auto& def = GetCompDefiner();
+	assert(def.GetCurrentShapeId() != BAD_ID );
+	if ( def.Lower() )
+	{
+		UpdateCompDialog(); UpdateHistory("Lower"); RepaintSkipRouting();
+	}
+}
 
 // GUI update
 void MainWindow::UpdateRecentFiles(const QString* pFileName, bool bAdd)

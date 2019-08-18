@@ -71,7 +71,7 @@ void Board::WipeAutoSetPoints(int nodeId)
 
 void Board::BuildTargetPins(const int& nodeId)
 {
-	// Populate m_targetPins with all (non-wire) component pins with the specified NodeId;
+	// Populate m_targetPins with all (non-wire) component pins with the specified NodeId.
 	// These are the things on the board that the routing algorithm will try and connect together.
 
 	assert( nodeId != BAD_NODEID );
@@ -80,10 +80,8 @@ void Board::BuildTargetPins(const int& nodeId)
 	for (int i = 0; i < iSize; i++)
 	{
 		Element* p = GetAt(i);
-		if ( !p->GetHasPin() ) continue;
-		if ( p->GetNodeId() != nodeId ) continue;
-		if ( p->GetHasWire() ) continue;	// Wires are not really target pins
-		m_targetPins.push_back(p);
+		if ( p->GetHasPin() && p->GetNodeId() == nodeId && !p->GetHasWire() )
+			m_targetPins.push_back(p);
 	}
 }
 
@@ -419,7 +417,7 @@ void Board::Backtrace(Element* pEnd, const int& nodeId)
 		for (int iLoop = 0; iLoop < 2 && !bOK; iLoop++)	// First pass to give preference to nbrs that are not wire ends
 		{
 			const int iDiagMax = ( bDiagsOK ) ? 2 : 1;		// Diags allowed ==> 2 passes
-			for (int iDiag = 0; iDiag < iDiagMax; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
+			for (int iDiag = 0; iDiag < iDiagMax && !bOK; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
 			{
 				const int iDeltaMH = ( iDiag ) ? MH_DIAG : MH_LRTB;
 				for (int iNbr = iDiag; iNbr < 8 && !bOK; iNbr += 2)	// Even/Odd iNbr ==> Non-diagonal/Diagonal

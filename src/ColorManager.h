@@ -20,22 +20,16 @@
 #pragma once
 
 #include "AdjInfoManager.h"
+#include "RGB.h"
 
 #define MYNUMCOLORS 		12
 #define MY_GREY				(MYNUMCOLORS)
 #define MY_BLACK			(MYNUMCOLORS+1)
 #define NUM_PIXMAP_COLORS	(MYNUMCOLORS+2)
 
-struct MyRGB
-{
-	MyRGB(int r, int g, int b) : R(r), G(g), B(b){}
-	MyRGB(const MyRGB& o) : R(o.R), G(o.G), B(o.B) {}
-	int R,G,B;
-};
-
-static MyRGB g_color[MYNUMCOLORS] = { MyRGB(60,24,200),   MyRGB(192,36,248),  MyRGB(210,96,96),  MyRGB(220,220,88)
-									, MyRGB(96,200,88),   MyRGB(88,150,200),  MyRGB(96,16,255),  MyRGB(225,66,210)
-									, MyRGB(225,140,48),  MyRGB(160,200,40),  MyRGB(72,200,150), MyRGB(80,128,255) };
+static RGB g_color[MYNUMCOLORS] = { RGB(0x3C18C8), RGB(0xC024F8), RGB(0xD26060), RGB(0xDCDC58)
+								  , RGB(0x60C858), RGB(0x5896C8), RGB(0x6010FF), RGB(0xE142D2)
+								  , RGB(0xE18C30), RGB(0xA0C828), RGB(0x48C896), RGB(0x5080FF) };
 
 // Manager class to handle assignment of colors to nodeIds
 
@@ -44,19 +38,21 @@ const int BAD_COLORID = -1;
 class ColorManager
 {
 public:
-	ColorManager() : m_iSaturation(100),m_bReAssign(true) {}
+	ColorManager() : m_iSaturation(100), m_iFillSaturation(0), m_bReAssign(true) {}
 	ColorManager(const ColorManager& o) { assert(0); *this = o; }	// Never called
 	ColorManager& operator=(const ColorManager& o)
 	{
 		m_mapNodeIdToColorId.clear();
 		m_mapNodeIdToColorId.insert(o.m_mapNodeIdToColorId.begin(), o.m_mapNodeIdToColorId.end());
-		m_iSaturation	= o.m_iSaturation;
-		m_bReAssign		= o.m_bReAssign;
+		m_iSaturation		= o.m_iSaturation;
+		m_iFillSaturation	= o.m_iFillSaturation;
+		m_bReAssign			= o.m_bReAssign;
 		return *this;
 	}
 	~ColorManager()					{ m_mapNodeIdToColorId.clear(); }
 	void ReAssignColors()			{ m_bReAssign = true; }
 	void SetSaturation(int i)		{ m_iSaturation = i; }
+	void SetFillSaturation(int i)	{ m_iFillSaturation = i; }
 	void CalculateColors(AdjInfoManager& adjManager, ElementGrid* pBoard)	// The coloring algorithm
 	{
 		adjManager.SortByLowestNodeId();
@@ -133,9 +129,17 @@ public:
 	{
 		if ( colorId == BAD_COLORID ) { R = G = B = 255; return; }
 		const int iA = (100 - m_iSaturation) * 255;
-		R = ( iA + m_iSaturation * g_color[colorId % MYNUMCOLORS].R ) / 100;
-		G = ( iA + m_iSaturation * g_color[colorId % MYNUMCOLORS].G ) / 100;
-		B = ( iA + m_iSaturation * g_color[colorId % MYNUMCOLORS].B ) / 100;
+		if ( m_iFillSaturation == 0 )
+		{
+			RGB& rgb = g_color[colorId % MYNUMCOLORS];
+			R = ( iA + m_iSaturation * rgb.GetR() ) / 100;
+			G = ( iA + m_iSaturation * rgb.GetG() ) / 100;
+			B = ( iA + m_iSaturation * rgb.GetB() ) / 100;
+		}
+		else
+		{
+			R = G = B = iA / 100;
+		}
 	}
 	void GetPixmapRGB(const int& iEffColorId, int& R, int& G, int& B) const
 	{
@@ -146,5 +150,6 @@ public:
 private:
 	std::unordered_map<int,int>	m_mapNodeIdToColorId;
 	int							m_iSaturation;			// 0 to 100. At 0 the colors would all fade to white.
+	int							m_iFillSaturation;		// 0 to 100. If non-zero then turn colors grey.
 	bool						m_bReAssign;
 };

@@ -71,8 +71,8 @@ public:
 		if ( m_pData ) 	{ delete[] m_pData;		m_pData  = nullptr; }
 		m_rows = m_cols = 0;
 	}
-	const int&  GetCols() const					{ return m_cols; }
-	const int&  GetRows() const					{ return m_rows; }
+	const int& GetCols() const					{ return m_cols; }
+	const int& GetRows() const					{ return m_rows; }
 	int	 GetSize() const						{ return m_rows * m_cols; }
 	void GetRowCol(T* p, int& row, int& col) const
 	{

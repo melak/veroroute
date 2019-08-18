@@ -76,6 +76,7 @@ HEADERS  += mainwindow.h \
     Persist.h \
     Rect.h \
     RectManager.h \
+    RGB.h \
     Shape.h \
     StringHelper.h \
     TextRect.h \

@@ -27,6 +27,7 @@
 #include <sstream>
 #include <ios>
 #include <assert.h>
+#include <cfloat>
 #include <limits.h>
 #include <algorithm>
 #include <vector>

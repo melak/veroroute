@@ -51,6 +51,7 @@ public:
 		m_GAP_PERCENT		= o.m_GAP_PERCENT;
 		m_iRenderQuality	= o.m_iRenderQuality;
 		m_iSaturation		= o.m_iSaturation;
+		m_iFillSaturation	= o.m_iFillSaturation;
 		m_iCropMargin		= o.m_iCropMargin;
 		m_iTargetRows		= o.m_iTargetRows;
 		m_iTargetCols		= o.m_iTargetCols;
@@ -89,6 +90,7 @@ public:
 			&&	m_GAP_PERCENT		== o.m_GAP_PERCENT
 			&&	m_iRenderQuality	== o.m_iRenderQuality
 			&&	m_iSaturation		== o.m_iSaturation
+			&&	m_iFillSaturation	== o.m_iFillSaturation
 			&&	m_iCropMargin		== o.m_iCropMargin
 			&&	m_iTargetRows		== o.m_iTargetRows
 			&&	m_iTargetCols		== o.m_iTargetCols
@@ -178,6 +180,9 @@ public:
 		m_iSaturation = 100;
 		if ( inStream.GetVersion() >= VRT_VERSION_6 )
 			inStream.Load(m_iSaturation);		// Added in VRT_VERSION_6
+		m_iFillSaturation = 0;
+		if ( inStream.GetVersion() >= VRT_VERSION_29 )
+			inStream.Load(m_iFillSaturation);	// Added in VRT_VERSION_29
 		m_iCropMargin = 0;
 		if ( inStream.GetVersion() >= VRT_VERSION_13 )
 			inStream.Load(m_iCropMargin);		// Added in VRT_VERSION_13
@@ -247,6 +252,7 @@ public:
 		outStream.Save(m_GAP_PERCENT);		// Added in VRT_VERSION_3
 		outStream.Save(m_iRenderQuality);
 		outStream.Save(m_iSaturation);		// Added in VRT_VERSION_6
+		outStream.Save(m_iFillSaturation);	// Added in VRT_VERSION_29
 		outStream.Save(m_iCropMargin);		// Added in VRT_VERSION_13
 		outStream.Save(m_iTargetRows);		// Added in VRT_VERSION_21
 		outStream.Save(m_iTargetCols);		// Added in VRT_VERSION_21
@@ -282,6 +288,7 @@ public:
 	bool SetGAP_PERCENT(const int& i)		{ const bool bChanged = ( m_GAP_PERCENT		!= i ); m_GAP_PERCENT	  = i; return bChanged; }
 	bool SetRenderQuality(const int& i)		{ const bool bChanged = ( m_iRenderQuality	!= i ); m_iRenderQuality  = i; return bChanged; }
 	bool SetSaturation(const int& i)		{ const bool bChanged = ( m_iSaturation		!= i ); m_iSaturation	  = i; return bChanged; }
+	bool SetFillSaturation(const int& i)	{ const bool bChanged = ( m_iFillSaturation	!= i ); m_iFillSaturation = i; return bChanged; }
 	bool SetCropMargin(const int& i)		{ const bool bChanged = ( m_iCropMargin		!= i ); m_iCropMargin	  = i; return bChanged; }
 	bool SetTargetRows(const int& i)		{ const bool bChanged = ( m_iTargetRows		!= i ); m_iTargetRows	  = i; return bChanged; }
 	bool SetTargetCols(const int& i)		{ const bool bChanged = ( m_iTargetCols		!= i ); m_iTargetCols	  = i; return bChanged; }
@@ -316,6 +323,7 @@ public:
 	const int&			GetGAP_PERCENT() const		{ return m_GAP_PERCENT; }
 	const int&			GetRenderQuality() const	{ return m_iRenderQuality; }
 	const int&			GetSaturation() const		{ return m_iSaturation; }
+	const int&			GetFillSaturation() const	{ return m_iFillSaturation; }
 	const int&			GetCropMargin() const		{ return m_iCropMargin; }
 	const int&			GetTargetRows() const		{ return m_iTargetRows; }
 	const int&			GetTargetCols() const		{ return m_iTargetCols; }
@@ -360,7 +368,8 @@ private:
 	int			m_HOLE_PERCENT		= 26;				// Range 20 to 40 of a grid square   (i.e. 1 PERCENT = 1 mil)
 	int			m_GAP_PERCENT		= 10;				// Range  5 to 30 of a grid square   (i.e. 1 PERCENT = 1 mil)
 	int			m_iRenderQuality	= 1;				// 0 (Low) to 2 (High)
-	int			m_iSaturation		= 60;				// Color saturation (20 to 100 percent)
+	int			m_iSaturation		= 60;				// Track color saturation (20 to 100 percent)
+	int			m_iFillSaturation	= 0;				// Component fill saturation (0 to 100 percent)
 	int			m_iCropMargin		= 0;				// Number of border squares after auto-crop
 	int			m_iTargetRows		= 10;				// Desired board size
 	int			m_iTargetCols		= 10;				// Desired board size

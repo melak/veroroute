@@ -32,6 +32,34 @@ const uchar PIN_LABELS	= 2;	// Allow pin labels to be drawn
 
 const int BAD_ID = -1;
 
+// Quicker to use struct than a std::pair
+struct IntShape
+{
+	IntShape(const int& i, Shape s) : first(i), second(s) {}
+	IntShape(const IntShape& o) { *this = o; }
+	IntShape& operator=(const IntShape& o)
+	{
+		first	= o.first;
+		second	= o.second;
+		return *this;
+	}
+	bool operator<(const IntShape& o) const
+	{
+		if ( second != o.second ) return second < o.second;
+		return first < o.first;
+	}
+	bool operator==(const IntShape& o) const
+	{
+		return first == o.first && second == o.second;
+	}
+	bool operator!=(const IntShape& o) const
+	{
+		return !(*this == o);
+	}
+	int		first;
+	Shape	second;
+};
+
 class CompDefiner : public Persist
 {
 public:
@@ -59,7 +87,7 @@ public:
 		m_importStr			= o.m_importStr;
 		m_grid				= o.m_grid;
 		m_mapShapes.clear();
-		for (const auto& mapObj : o.m_mapShapes) m_mapShapes[ mapObj.first ] = mapObj.second;
+		for (const auto& mapObj : o.m_mapShapes) m_mapShapes.push_back(mapObj);
 		return *this;
 	}
 	bool operator==(const CompDefiner& o) const	// Compare persisted info
@@ -74,12 +102,9 @@ public:
 				&& m_grid				== o.m_grid
 				&& m_mapShapes.size()	== o.m_mapShapes.size();
 		if ( !bOK ) return false;
-		for (const auto& mapObj : m_mapShapes)
-		{
-			const auto iterOther = o.m_mapShapes.find( mapObj.first );
-			if ( iterOther == o.m_mapShapes.end() ) return false;
-			if ( mapObj.second != iterOther->second ) return false;
-		}
+		auto iterB = o.m_mapShapes.begin();
+		for (auto iterA = m_mapShapes.begin(); iterA != m_mapShapes.end() && iterB != o.m_mapShapes.end(); ++iterA, ++iterB)
+			if ( (*iterA) != (*iterB) ) return false;
 		return true;
 	}
 	~CompDefiner()
@@ -95,36 +120,42 @@ public:
 	bool SetTypeStr(const std::string& s)			{ const bool bChanged = ( m_typeStr			!= s );	m_typeStr			= s; return bChanged; }
 	bool SetImportStr(const std::string& s)			{ const bool bChanged = ( m_importStr		!= s );	m_importStr			= s; return bChanged; }
 	bool SetGrid(const PinGrid& o)					{ const bool bChanged = ( m_grid			!= o );	m_grid				= o; return bChanged; }
-	bool SetShape(const int& id, const Shape& o)	{ const bool bChanged = ( m_mapShapes[id]	!= o );	m_mapShapes[id]		= o; return bChanged; }
-	const int&			GetCurrentPinId() const		{ return m_currentPinId; }
-	const int&			GetCurrentShapeId() const	{ return m_currentShapeId; }
-	const uchar&		GetPinFlags() const			{ return m_iPinFlags; }
-	const std::string&	GetValueStr() const			{ return m_valueStr; }
-	const std::string&	GetPrefixStr() const		{ return m_prefixStr; }
-	const std::string&	GetTypeStr() const			{ return m_typeStr; }
-	const std::string&	GetImportStr() const		{ return m_importStr; }
-	const PinGrid&		GetGrid() const				{ return m_grid; }
-	const std::map<int, Shape>& GetShapes() const	{ return m_mapShapes; }
-
-	int		GetMinMargin() const;	// The margin around the footprint on the screen
-	int		GetScreenRows() const	{ return 2 * GetMinMargin() + GetGridRows(); }
-	int		GetScreenCols() const	{ return 2 * GetMinMargin() + GetGridCols(); }
+	void AddShape(const int& id, const Shape& o)	{ assert( id != BAD_ID );	m_mapShapes.push_back( IntShape(id, o) ); }
+	const int&				GetCurrentPinId() const		{ return m_currentPinId; }
+	const int&				GetCurrentShapeId() const	{ return m_currentShapeId; }
+	const uchar&			GetPinFlags() const			{ return m_iPinFlags; }
+	const std::string&		GetValueStr() const			{ return m_valueStr; }
+	const std::string&		GetPrefixStr() const		{ return m_prefixStr; }
+	const std::string&		GetTypeStr() const			{ return m_typeStr; }
+	const std::string&		GetImportStr() const		{ return m_importStr; }
+	const PinGrid&			GetGrid() const				{ return m_grid; }
+	std::list<IntShape>&	GetShapes()					{ return m_mapShapes; }
+	int  GetMinMargin() const;	// The margin around the footprint on the screen
+	int  GetScreenRows() const	{ return 2 * GetMinMargin() + GetGridRows(); }
+	int  GetScreenCols() const	{ return 2 * GetMinMargin() + GetGridCols(); }
 
 	// Footprint size and extents
-	int		GetGridRows() const		{ return m_grid.GetRows(); }
-	int		GetGridCols() const		{ return m_grid.GetCols(); }
-	int		GetGridRowMin() const	{ return GetMinMargin(); }
-	int		GetGridColMin() const	{ return GetMinMargin(); }
-	int		GetGridRowMax() const	{ return GetGridRowMin() + GetGridRows() - 1; }
-	int		GetGridColMax() const	{ return GetGridColMin() + GetGridCols() - 1; }
-	void	GetGridCentre(double& dCentreRow, double& dCentreCol) const	// Footprint centre w.r.t. screen
+	int  GetGridRows() const	{ return m_grid.GetRows(); }
+	int  GetGridCols() const	{ return m_grid.GetCols(); }
+	int  GetGridRowMin() const	{ return GetMinMargin(); }
+	int  GetGridColMin() const	{ return GetMinMargin(); }
+	int  GetGridRowMax() const	{ return GetGridRowMin() + GetGridRows() - 1; }
+	int  GetGridColMax() const	{ return GetGridColMin() + GetGridCols() - 1; }
+	void GetGridCentre(double& dCentreRow, double& dCentreCol) const	// Footprint centre w.r.t. screen
 	{
 		dCentreRow = 0.5 * ( GetGridRowMin() + GetGridRowMax() );
 		dCentreCol = 0.5 * ( GetGridColMin() + GetGridColMax() );
 	}
 
 	Pin&	GetCurrentPin()		{ assert(m_currentPinId   != BAD_ID); return *m_grid.GetAt(m_currentPinId); }
-	Shape&	GetCurrentShape()	{ assert(m_currentShapeId != BAD_ID); return m_mapShapes[m_currentShapeId]; }
+	Shape&	GetCurrentShape()
+	{
+		assert(m_currentShapeId != BAD_ID);
+		for (auto& s : m_mapShapes)
+			if ( s.first == m_currentShapeId ) return s.second;
+		assert(0);
+		return m_mapShapes.begin()->second;
+	}
 	void	MoveCurrentShape(const double& dDown, const double& dRight);
 	size_t	GetNumTruePins() const
 	{
@@ -215,36 +246,67 @@ public:
 		else
 			return SetPinFlags( GetPinFlags() & ~PIN_RECT );	// Clear bit
 	}
-	bool SetCX(const double& d)	{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetCX(d); return true; }
-	bool SetCY(const double& d)	{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetCY(d); return true; }
-	bool SetDX(const double& d)	{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetDX(d); return true; }
-	bool SetDY(const double& d)	{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetDY(d); return true; }
-	bool SetA1(const double& d)	{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetA1(d); return true; }
-	bool SetA2(const double& d)	{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetA2(d); return true; }
-
-	int AddLine()			{ return AddDefaultShape(SHAPE::LINE); }
-	int AddRect()			{ return AddDefaultShape(SHAPE::RECT); }
-	int AddRoundedRect()	{ return AddDefaultShape(SHAPE::ROUNDED_RECT); }
-	int AddEllipse()		{ return AddDefaultShape(SHAPE::ELLIPSE); }
-	int AddArc()			{ return AddDefaultShape(SHAPE::ARC); }
-	int AddChord()			{ return AddDefaultShape(SHAPE::CHORD); }
-	int AddDefaultShape(SHAPE eType)
+	bool SetCX(const double& d)		{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetCX(d); return true; }
+	bool SetCY(const double& d)		{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetCY(d); return true; }
+	bool SetDX(const double& d)		{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetDX(d); return true; }
+	bool SetDY(const double& d)		{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetDY(d); return true; }
+	bool SetA1(const double& d)		{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetA1(d); return true; }
+	bool SetA2(const double& d)		{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetA2(d); return true; }
+	bool SetA3(const double& d)		{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetA3(d); return true; }
+	bool SetLine(const bool& b)		{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetDrawLine(b); return true; }
+	bool SetFill(const bool& b)		{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetDrawFill(b); return true; }
+	bool SetFillColor(const RGB& r)	{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetFillColor(r); return true; }
+	bool GetCanLower() const
+	{
+		const int& id = GetCurrentShapeId();
+		return ( id != BAD_ID ) && ( id != m_mapShapes.begin()->first );
+	}
+	bool GetCanRaise() const
+	{
+		const int& id = GetCurrentShapeId();
+		return ( id != BAD_ID ) && ( id != m_mapShapes.rbegin()->first );
+	}
+	bool Lower()
+	{
+		assert( GetCanLower() );
+		auto iterPrior	= m_mapShapes.begin();
+		auto iter		= iterPrior; ++iter;
+		for (; iter != m_mapShapes.end(); ++iter, iterPrior++)
+			if ( iter->first == GetCurrentShapeId() ) { std::swap(*iter, *iterPrior); return true; }
+		return false;
+	}
+	bool Raise()
+	{
+		assert( GetCanRaise() );
+		auto iterPrior	= m_mapShapes.rbegin();
+		auto iter		= iterPrior; ++iter;
+		for (; iter != m_mapShapes.rend(); ++iter, iterPrior++)
+			if ( iter->first == GetCurrentShapeId() ) { std::swap(*iter, *iterPrior); return true; }
+		return false;
+	}
+	int  AddLine()				{ return AddDefaultShape(SHAPE::LINE); }
+	int  AddRect()				{ return AddDefaultShape(SHAPE::RECT); }
+	int  AddRoundedRect()		{ return AddDefaultShape(SHAPE::ROUNDED_RECT); }
+	int  AddEllipse()			{ return AddDefaultShape(SHAPE::ELLIPSE); }
+	int  AddArc()				{ return AddDefaultShape(SHAPE::ARC); }
+	int  AddChord()				{ return AddDefaultShape(SHAPE::CHORD); }
+	int  AddDefaultShape(SHAPE eType)
 	{
 		const double dX = 0.5 * GetGridCols();
 		const double dY = 0.5 * GetGridRows();
 		if ( eType == SHAPE::ARC || eType == SHAPE::CHORD )
-			return AddShape( Shape(eType, -dX, dX, -dY, dY, 0, 90) );
+			return AddShape( Shape(eType, true, false, -dX, dX, -dY, dY, 0, 90) );
 		else
-			return AddShape( Shape(eType, -dX, dX, -dY, dY) );
+			return AddShape( Shape(eType, true, false, -dX, dX, -dY, dY) );
 	}
 	// Helpers
-	void	DestroyShape();
-	int		GetNewShapeId() const;
-	bool	SetWidth(const int& i);
-	bool	SetHeight(const int& i);
-	int		GetPinId(const int& row, const int& col) const;	// Pick the most relevant pin at the location
-	int		GetShapeId(const double& dRowIn, const double& dColIn) const;	// Pick the most relevant shape at the location
-	bool	GetIsValid() const;
+	void DestroyShape();
+	int  GetNewShapeId() const;
+	bool SetWidth(const int& i);
+	bool SetHeight(const int& i);
+	int  GetPinId(const int& row, const int& col) const;	// Pick the most relevant pin at the location
+	int  GetShapeId(const double& dRowIn, const double& dColIn) const;	// Pick the most relevant shape at the location
+	bool GetIsValid() const;
 	// Persist functions
 	virtual void Load(DataStream& inStream) override
 	{
@@ -266,9 +328,8 @@ public:
 			Shape	tmp;
 			inStream.Load(shapeId);
 			tmp.Load(inStream);
-			m_mapShapes[ shapeId ] =  tmp;
+			m_mapShapes.push_back( IntShape(shapeId, tmp) );
 		}
-
 	}
 	virtual void Save(DataStream& outStream) override
 	{
@@ -295,7 +356,7 @@ private:
 	int AddShape(const Shape& o)
 	{
 		const int id = GetNewShapeId();
-		if ( id != BAD_ID ) m_mapShapes[id] = o;
+		if ( id != BAD_ID ) AddShape(id, o);
 		return id;
 	}
 private:
@@ -309,5 +370,5 @@ private:
 	std::string				m_typeStr;			// Component type (e.g. "BBD")
 	std::string				m_importStr;		// For Planet/Tango import
 	PinGrid					m_grid;
-	std::map<int, Shape>	m_mapShapes;		// Map shapeId to Shape.  Coordinates are RELATIVE to footprint centre.
+	std::list<IntShape>		m_mapShapes;		// "Map" of shapeId to Shape.	Coordinates are RELATIVE to footprint centre.
 };

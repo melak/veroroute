@@ -51,6 +51,7 @@ ControlDialog::ControlDialog(MainWindow* parent)
 	QObject::connect(ui->trackSlider,		SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(TrackSliderChanged(int)));
 	QObject::connect(ui->saturationSlider,	SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SaturationSliderChanged(int)));
 	QObject::connect(ui->compSlider,		SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(CompSliderChanged(int)));
+	QObject::connect(ui->fillSlider,		SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(FillSliderChanged(int)));
 	QObject::connect(ui->crop,				SIGNAL(clicked()),			m_pMainWindow,	SLOT(Crop()));
 	QObject::connect(ui->margin,			SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(MarginChanged(int)));
 
@@ -198,12 +199,14 @@ void ControlDialog::UpdateControls()	// Non-component controls
 
 	const bool bCompEdit	= board.GetCompEdit();
 	const bool bColor		= board.GetTrackMode() == TRACKMODE::COLOR;
+	const bool bComps		= board.GetCompMode()  != COMPSMODE::OFF;
 
 	ui->crop->setDisabled( bCompEdit );
 	ui->margin->setDisabled( bCompEdit );
 	ui->margin->setValue( board.GetCropMargin() );
 
 	ui->label_saturation->setEnabled( !bCompEdit && bColor );
+	ui->label_fill->setEnabled( !bCompEdit && bComps );
 
 	ui->autoRoute->setChecked( board.GetRoutingEnabled() );
 	ui->autoRoute->setDisabled( bCompEdit );
@@ -215,9 +218,11 @@ void ControlDialog::UpdateControls()	// Non-component controls
 	ui->trackSlider->setEnabled( !bCompEdit );
 	ui->saturationSlider->setEnabled( !bCompEdit && bColor );
 	ui->compSlider->setEnabled( !bCompEdit );
+	ui->fillSlider->setEnabled( !bCompEdit && bComps );
 	ui->trackSlider->setValue( board.GetTrackSliderValue() );
 	ui->saturationSlider->setValue( board.GetSaturation() );
 	ui->compSlider->setValue( board.GetCompSliderValue() );
+	ui->fillSlider->setValue( board.GetFillSaturation() );
 }
 
 void ControlDialog::keyPressEvent(QKeyEvent* event)

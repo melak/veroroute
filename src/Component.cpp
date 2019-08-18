@@ -100,58 +100,64 @@ void Component::AddDefaultShapes()
 	}
 	switch( GetType() )
 	{
-		case COMP::VIA:						Add( Shape(SHAPE::ELLIPSE,	-0.30,  0.30, -0.30,  0.30) );
-											Add( Shape(SHAPE::LINE,		-0.21,  0.21, -0.21,  0.21) );
-											Add( Shape(SHAPE::LINE,		-0.21,  0.21,  0.21, -0.21) );	break;
-		case COMP::PAD:						Add( Shape(SHAPE::ELLIPSE,	-0.45,  0.45, -0.45,  0.45) );	break;
-		case COMP::LED:						Add( Shape(SHAPE::CHORD,	-0.75,  0.75, -0.75,  0.75, 30, -30) );	break;
-		case COMP::CAP_ELECTRO_200:			Add( Shape(SHAPE::LINE,		 0.77,  0.77, -0.64,  0.64) );
-		case COMP::CAP_ELECTRO_200_NP:		Add( Shape(SHAPE::ELLIPSE,	-1.00,  1.00, -1.00,  1.00) );	break;
-		case COMP::CAP_ELECTRO_250:			Add( Shape(SHAPE::LINE,		 0.96,  0.96, -0.80,  0.80) );
-		case COMP::CAP_ELECTRO_250_NP:		Add( Shape(SHAPE::ELLIPSE,	-1.25,  1.25, -1.25,  1.25) );	break;
-		case COMP::CAP_ELECTRO_300:			Add( Shape(SHAPE::LINE,		 1.15,  1.15, -0.96,  0.96) );
-		case COMP::CAP_ELECTRO_300_NP:		Add( Shape(SHAPE::ELLIPSE,	-1.50,  1.50, -1.50,  1.50) );	break;
-		case COMP::CAP_ELECTRO_400:			Add( Shape(SHAPE::LINE,		 1.53,  1.53, -1.29,  1.29) );
-		case COMP::CAP_ELECTRO_400_NP:		Add( Shape(SHAPE::ELLIPSE,	-2.00,  2.00, -2.00,  2.00) );	break;
-		case COMP::CAP_ELECTRO_500:			Add( Shape(SHAPE::LINE,		 1.92,  1.92, -1.61,  1.61) );
-		case COMP::CAP_ELECTRO_500_NP:		Add( Shape(SHAPE::ELLIPSE,	-2.50,  2.50, -2.50,  2.50) );	break;
-		case COMP::CAP_ELECTRO_600:			Add( Shape(SHAPE::LINE,		 2.30,  2.30, -1.93,  1.93) );
-		case COMP::CAP_ELECTRO_600_NP:		Add( Shape(SHAPE::ELLIPSE,	-3.00,  3.00, -3.00,  3.00) );	break;
-		case COMP::TRIM_VERT:				Add( Shape(SHAPE::RECT,		-1.50,  1.50, -0.50,  0.50) );	break;
-		case COMP::TRIM_VERT_OFFSET:		Add( Shape(SHAPE::RECT,		-1.50,  1.50, -0.75,  0.75) );	break;
-		case COMP::TRIM_VERT_OFFSET_WIDE:	Add( Shape(SHAPE::RECT,		-1.50,  1.50, -1.00,  1.00) );	break;
-		case COMP::TRIM_FLAT:				Add( Shape(SHAPE::RECT,		-1.50,  1.50, -1.50,  1.50) );	break;
-		case COMP::TRIM_FLAT_WIDE:			Add( Shape(SHAPE::RECT,		-1.50,  1.50, -1.50,  1.50) );	break;
-		case COMP::TRIM_3006P:				Add( Shape(SHAPE::RECT,		-3.75,  3.75, -0.50,  0.50) );	break;
-		case COMP::TRIM_3006W:				Add( Shape(SHAPE::RECT,		-3.75,  3.75, -1.45,  1.45) );	break;
-		case COMP::TRIM_3006Y:				Add( Shape(SHAPE::RECT,		-3.75,  3.75, -0.50,  0.50) );	break;
-		case COMP::TRIM_3329H:				Add( Shape(SHAPE::ELLIPSE,	-1.25,  1.25, -1.25,  1.25) );	break;
-		case COMP::TRIM_3329P_DK9_RC:		Add( Shape(SHAPE::ELLIPSE,	-1.25,  1.25, -1.25,  1.25) );	break;
-		case COMP::CRYSTAL:					Add( Shape(SHAPE::ELLIPSE,	-1.00,  1.00, -1.00,  1.00) );	break;
-		case COMP::TO92:					Add( Shape(SHAPE::CHORD,	-1.40,  1.40, -0.65,  1.15, -20, 200) );break;
-		case COMP::TO18:					Add( Shape(SHAPE::ARC,		-0.95,  0.95, -0.95,  0.95, 101, 80) );
-											Add( Shape(SHAPE::LINE,		-0.17, -0.17, -0.95, -1.13) );
-											Add( Shape(SHAPE::LINE,		-0.17,  0.17, -1.13, -1.13) );
-											Add( Shape(SHAPE::LINE,		 0.17,  0.17, -1.13, -0.95) );	break;
-		case COMP::TO39:					Add( Shape(SHAPE::ARC,		-1.80,  1.80, -1.80,  1.80, 145, 125) );
-											Add( Shape(SHAPE::LINE,		-1.47, -1.71, -1.03, -1.27) );
-											Add( Shape(SHAPE::LINE,		-1.71, -1.27, -1.27, -1.71) );
-											Add( Shape(SHAPE::LINE,		-1.27, -1.03, -1.71, -1.47) );	break;
-		case COMP::TO220:					Add( Shape(SHAPE::RECT,		-1.56,  1.56, -0.56,  0.56) );
-											Add( Shape(SHAPE::LINE,		-1.56,  1.56, -0.31, -0.31) );	break;
-		case COMP::SWITCH_BUTTON_4PIN:		Add( Shape(SHAPE::RECT,		-1.35,  1.35, -1.35,  1.35) );	break;
-		case COMP::RELAY_HK19F:				Add( Shape(SHAPE::RECT,		-3.98,  3.98, -1.97,  1.97) );	break;
-		case COMP::RELAY_HJR_4102:			Add( Shape(SHAPE::RECT,		-3.09,  3.09, -2.05,  2.05) );	break;
-		case COMP::RELAY_FTR_B3C:			Add( Shape(SHAPE::RECT,		-2.35,  2.35, -1.42,  1.42) );	break;
-		case COMP::RELAY_G2R_2:				Add( Shape(SHAPE::RECT,		-5.71,  5.71, -2.56,  2.56) );	break;
-		case COMP::RELAY_G2R_2A:			Add( Shape(SHAPE::RECT,		-5.71,  5.71, -2.56,  2.56) );	break;
-		case COMP::RELAY_G2RK_2:			Add( Shape(SHAPE::RECT,		-5.71,  5.71, -2.56,  2.56) );	break;
-		case COMP::RELAY_G2RK_2A:			Add( Shape(SHAPE::RECT,		-5.71,  5.71, -2.56,  2.56) );	break;
-		case COMP::RELAY_G3MB_202P:			Add( Shape(SHAPE::RECT,		-4.82,  4.82, -1.08,  1.08) );	break;
-		case COMP::RELAY_JQC_3F_APPROX:		Add( Shape(SHAPE::RECT,		-3.74,  3.74, -3.05,  3.05) );	break;
-		case COMP::RELAY_S1A050000:			Add( Shape(SHAPE::RECT,		-3.74,  3.74, -1.00,  1.00) );	break;
-		case COMP::RELAY_TRCD:				Add( Shape(SHAPE::RECT,		-4.53,  4.53, -3.17,  3.17) );	break;
-		case COMP::FUSE_HOLDER:				Add( Shape(SHAPE::RECT,		-4.85,  4.85, -1.35,  1.35) );	break;
+		case COMP::VIA:						AddOne( Shape(SHAPE::ELLIPSE,	true, false,	-0.30,  0.30, -0.30,  0.30) );
+											AddOne( Shape(SHAPE::LINE,		true, false,	-0.21,  0.21, -0.21,  0.21) );
+											AddOne( Shape(SHAPE::LINE,		true, false,	-0.21,  0.21,  0.21, -0.21) );	break;
+		case COMP::PAD:						AddTwo( Shape(SHAPE::ELLIPSE,	true, true,		-0.45,  0.45, -0.45,  0.45) );	break;
+		case COMP::LED:						AddTwo( Shape(SHAPE::CHORD,		true, true,		-0.75,  0.75, -0.75,  0.75, 30, -30) );break;
+		case COMP::CAP_ELECTRO_200:			AddOne( Shape(SHAPE::LINE,		true, false,	 0.77,  0.77, -0.64,  0.64) );
+		case COMP::CAP_ELECTRO_200_NP:		AddTwo( Shape(SHAPE::ELLIPSE,	true, true,		-1.00,  1.00, -1.00,  1.00) );	break;
+		case COMP::CAP_ELECTRO_250:			AddOne( Shape(SHAPE::LINE,		true, false,	 0.96,  0.96, -0.80,  0.80) );
+		case COMP::CAP_ELECTRO_250_NP:		AddTwo( Shape(SHAPE::ELLIPSE,	true, true,		-1.25,  1.25, -1.25,  1.25) );	break;
+		case COMP::CAP_ELECTRO_300:			AddOne( Shape(SHAPE::LINE,		true, true,		 1.15,  1.15, -0.96,  0.96) );
+		case COMP::CAP_ELECTRO_300_NP:		AddTwo( Shape(SHAPE::ELLIPSE,	true, true,		-1.50,  1.50, -1.50,  1.50) );	break;
+		case COMP::CAP_ELECTRO_400:			AddOne( Shape(SHAPE::LINE,		true, false,	 1.53,  1.53, -1.29,  1.29) );
+		case COMP::CAP_ELECTRO_400_NP:		AddTwo( Shape(SHAPE::ELLIPSE,	true, true,		-2.00,  2.00, -2.00,  2.00) );	break;
+		case COMP::CAP_ELECTRO_500:			AddOne( Shape(SHAPE::LINE,		true, false,	 1.92,  1.92, -1.61,  1.61) );
+		case COMP::CAP_ELECTRO_500_NP:		AddTwo( Shape(SHAPE::ELLIPSE,	true, true,		-2.50,  2.50, -2.50,  2.50) );	break;
+		case COMP::CAP_ELECTRO_600:			AddOne( Shape(SHAPE::LINE,		true, false,	 2.30,  2.30, -1.93,  1.93) );
+		case COMP::CAP_ELECTRO_600_NP:		AddTwo( Shape(SHAPE::ELLIPSE,	true, true,		-3.00,  3.00, -3.00,  3.00) );	break;
+		case COMP::TRIM_VERT:				AddTwo( Shape(SHAPE::RECT,		true, true,		-1.50,  1.50, -0.50,  0.50) );	break;
+		case COMP::TRIM_VERT_OFFSET:		AddTwo( Shape(SHAPE::RECT,		true, true,		-1.50,  1.50, -0.75,  0.75) );	break;
+		case COMP::TRIM_VERT_OFFSET_WIDE:	AddTwo( Shape(SHAPE::RECT,		true, true,		-1.50,  1.50, -1.00,  1.00) );	break;
+		case COMP::TRIM_FLAT:				AddTwo( Shape(SHAPE::RECT,		true, true,		-1.50,  1.50, -1.50,  1.50) );	break;
+		case COMP::TRIM_FLAT_WIDE:			AddTwo( Shape(SHAPE::RECT,		true, true,		-1.50,  1.50, -1.50,  1.50) );	break;
+		case COMP::TRIM_3006P:				AddTwo( Shape(SHAPE::RECT,		true, true,		-3.75,  3.75, -0.50,  0.50) );	break;
+		case COMP::TRIM_3006W:				AddTwo( Shape(SHAPE::RECT,		true, true,		-3.75,  3.75, -1.45,  1.45) );	break;
+		case COMP::TRIM_3006Y:				AddTwo( Shape(SHAPE::RECT,		true, true,		-3.75,  3.75, -0.50,  0.50) );	break;
+		case COMP::TRIM_3329H:				AddTwo( Shape(SHAPE::ELLIPSE,	true, true,		-1.25,  1.25, -1.25,  1.25) );	break;
+		case COMP::TRIM_3329P_DK9_RC:		AddTwo( Shape(SHAPE::ELLIPSE,	true, true,		-1.25,  1.25, -1.25,  1.25) );	break;
+		case COMP::CRYSTAL:					AddTwo( Shape(SHAPE::ELLIPSE,	true, true,		-1.00,  1.00, -1.00,  1.00) );	break;
+		case COMP::TO92:					AddTwo( Shape(SHAPE::CHORD,		true, true,		-1.40,  1.40, -0.65,  1.15, -20, 200) );break;
+		case COMP::TO18:					AddOne( Shape(SHAPE::ARC,		true, false,	-0.95,  0.95, -0.95,  0.95, 101, 80) );
+											AddOne( Shape(SHAPE::LINE,		true, false,	-0.17, -0.17, -0.94, -1.13) );
+											AddOne( Shape(SHAPE::LINE,		true, false,	-0.17,  0.17, -1.13, -1.13) );
+											AddOne( Shape(SHAPE::LINE,		true, false,	 0.17,  0.17, -1.13, -0.94) );
+											// Fill ...
+											AddOne( Shape(SHAPE::ELLIPSE,	false, true,	-0.95,  0.95, -0.95,  0.95) );
+											AddOne( Shape(SHAPE::RECT,		false, true,	-0.17,  0.17, -1.13, -0.90) );	break;
+		case COMP::TO39:					AddOne( Shape(SHAPE::ARC,		true, false,	-1.80,  1.80, -1.80,  1.80, 145, 125) );
+											AddOne( Shape(SHAPE::LINE,		true, false,	-1.47, -1.71, -1.03, -1.27) );
+											AddOne( Shape(SHAPE::LINE,		true, false,	-1.71, -1.27, -1.27, -1.71) );
+											AddOne( Shape(SHAPE::LINE,		true, false,	-1.27, -1.03, -1.71, -1.47) );
+											// Fill ...
+											AddOne( Shape(SHAPE::ELLIPSE,	false, true,	-1.80,  1.80, -1.80,  1.80) );
+											AddOne( Shape(SHAPE::RECT,		false, true,	-1.68, -1.08, -1.53, -1.10, 0, 0, 45) );	break;
+		case COMP::TO220:					AddTwo( Shape(SHAPE::RECT,		true, true,		-1.56,  1.56, -0.56,  0.56) );
+											AddOne( Shape(SHAPE::LINE,		true, false,	-1.56,  1.56, -0.31, -0.31) );	break;
+		case COMP::SWITCH_BUTTON_4PIN:		AddTwo( Shape(SHAPE::RECT,		true, true,		-1.35,  1.35, -1.35,  1.35) );	break;
+		case COMP::RELAY_HK19F:				AddTwo( Shape(SHAPE::RECT,		true, true,		-3.98,  3.98, -1.97,  1.97) );	break;
+		case COMP::RELAY_HJR_4102:			AddTwo( Shape(SHAPE::RECT,		true, true,		-3.09,  3.09, -2.05,  2.05) );	break;
+		case COMP::RELAY_FTR_B3C:			AddTwo( Shape(SHAPE::RECT,		true, true,		-2.35,  2.35, -1.42,  1.42) );	break;
+		case COMP::RELAY_G2R_2:				AddTwo( Shape(SHAPE::RECT,		true, true,		-5.71,  5.71, -2.56,  2.56) );	break;
+		case COMP::RELAY_G2R_2A:			AddTwo( Shape(SHAPE::RECT,		true, true,		-5.71,  5.71, -2.56,  2.56) );	break;
+		case COMP::RELAY_G2RK_2:			AddTwo( Shape(SHAPE::RECT,		true, true,		-5.71,  5.71, -2.56,  2.56) );	break;
+		case COMP::RELAY_G2RK_2A:			AddTwo( Shape(SHAPE::RECT,		true, true,		-5.71,  5.71, -2.56,  2.56) );	break;
+		case COMP::RELAY_G3MB_202P:			AddTwo( Shape(SHAPE::RECT,		true, true,		-4.82,  4.82, -1.08,  1.08) );	break;
+		case COMP::RELAY_JQC_3F_APPROX:		AddTwo( Shape(SHAPE::RECT,		true, true,		-3.74,  3.74, -3.05,  3.05) );	break;
+		case COMP::RELAY_S1A050000:			AddTwo( Shape(SHAPE::RECT,		true, true,		-3.74,  3.74, -1.00,  1.00) );	break;
+		case COMP::RELAY_TRCD:				AddTwo( Shape(SHAPE::RECT,		true, true,		-4.53,  4.53, -3.17,  3.17) );	break;
+		case COMP::FUSE_HOLDER:				AddTwo( Shape(SHAPE::RECT,		true, true,		-4.85,  4.85, -1.35,  1.35) );	break;
 		// Following handle variable length components
 		case COMP::DIP:
 		case COMP::SIP:
@@ -160,61 +166,67 @@ void Component::AddDefaultShapes()
 		case COMP::RELAY_DIP_8PIN:
 		{
 			double w(0.35 + 0.5*(GetCols() - 1)), h(0.35 + 0.5*(GetRows()-1));
-			Add( Shape(SHAPE::LINE,		-w, -w,  0.25,  h) );
-			Add( Shape(SHAPE::LINE,		-w,  w,  h,  h) );
-			Add( Shape(SHAPE::LINE,		 w,  w,  h, -h) );
-			Add( Shape(SHAPE::LINE,		 w, -w, -h, -h) );
-			Add( Shape(SHAPE::LINE,		-w, -w, -h, -0.25) );
-			Add( Shape(SHAPE::ARC, -w-0.25, -w+0.25, -0.25,  0.25, -90, 90) );
+			AddOne( Shape(SHAPE::LINE,	true, false,	-w, -w,  0.25,  h) );
+			AddOne( Shape(SHAPE::LINE,	true, false,	-w,  w,  h,  h) );
+			AddOne( Shape(SHAPE::LINE,	true, false,	 w,  w,  h, -h) );
+			AddOne( Shape(SHAPE::LINE,	true, false,	 w, -w, -h, -h) );
+			AddOne( Shape(SHAPE::LINE,	true, false,	-w, -w, -h, -0.25) );
+			AddOne( Shape(SHAPE::ARC,	true, false,	-w-0.25, -w+0.25, -0.25,  0.25, -90, 90) );
+			// Fill ...
+			AddOne( Shape(SHAPE::RECT,	false, true,	-w, w, -h,  h));
 			break;
 		}
 		case COMP::CAP_CERAMIC:
 		{
 			double w(0.4 + 0.5*(GetCols() - 1)), h(0.4 + 0.5*(GetRows()-1));
-			Add( Shape(SHAPE::ELLIPSE, -w,  w, -h,  h) );
+			AddTwo( Shape(SHAPE::ELLIPSE, true, true, -w,  w, -h,  h) );
 			break;
 		}
 		case COMP::CAP_FILM:
 		case COMP::CAP_FILM_WIDE:
 		{
 			double w(0.45 + 0.5*(GetCols() - 1)), h(0.45 + 0.5*(GetRows()-1));
-			Add( Shape(SHAPE::ROUNDED_RECT, -w,  w, -h,  h) );
+			AddTwo( Shape(SHAPE::ROUNDED_RECT, true, true, -w,  w, -h,  h) );
 			break;
 		}
 		case COMP::SWITCH_ST:
 		case COMP::SWITCH_DT:
 		{
 			double w(0.7 + 0.5*(GetCols() - 1)), h(0.7 + 0.5*(GetRows()-1));
-			Add( Shape(SHAPE::ROUNDED_RECT, -w,  w, -h,  h) );
+			AddTwo( Shape(SHAPE::ROUNDED_RECT,	true, true, -w,  w, -h,  h) );
 			break;
 		}
 		case COMP::SWITCH_ST_DIP:
 		{
 			double w(0.35 + 0.5*(GetCols() - 1)), h(0.35 + 0.5*(GetRows()-1));
-			Add( Shape(SHAPE::RECT, -w,  w, -h,  h) );
+			AddTwo( Shape(SHAPE::RECT,	true, true, -w,  w, -h,  h) );
 			break;
 		}
 		case COMP::RESISTOR:
 		case COMP::INDUCTOR:
 		{
 			double w(-0.32 + 0.5*(GetCols() - 1)), h(0.32 + 0.5*(GetRows()-1));
-			Add( Shape(SHAPE::ARC, -w - 0.64, -w + 0.16, -h -0.08, -h + 0.72,  53, -53) );
-			Add( Shape(SHAPE::ARC,  w - 0.16,  w + 0.64, -h -0.08, -h + 0.72, 233, 127) );
-			Add( Shape(SHAPE::LINE,	-w, w, -h, -h) );
-			Add( Shape(SHAPE::LINE,	-w, w,  h,  h) );
+			AddOne( Shape(SHAPE::ARC,		true, false,	-w - 0.64, -w + 0.16, -h -0.08, -h + 0.72,  53, -53) );
+			AddOne( Shape(SHAPE::ARC,		true, false,	 w - 0.16,  w + 0.64, -h -0.08, -h + 0.72, 233, 127) );
+			AddOne( Shape(SHAPE::LINE,		true, false,	-w, w, -h, -h) );
+			AddOne( Shape(SHAPE::LINE,		true, false,	-w, w,  h,  h) );
+			// Fill ...
+			AddOne( Shape(SHAPE::ELLIPSE,	false, true,	-w - 0.64, -w + 0.16, -h -0.08, -h + 0.72) );
+			AddOne( Shape(SHAPE::ELLIPSE,	false, true,	 w - 0.16,  w + 0.64, -h -0.08, -h + 0.72) );
+			AddOne( Shape(SHAPE::RECT,		false, true,	-w, w, -h,  h));
 			break;
 		}
 		case COMP::WIRE:
 		{
 			double w(0.5*(GetCols() - 1)), h(0.1 + 0.5*(GetRows()-1));
-			Add( Shape(SHAPE::ROUNDED_RECT, -w,  w, -h,  h) );
+			AddTwo( Shape(SHAPE::ROUNDED_RECT, true, true, -w,  w, -h,  h) );
 			break;
 		}
 		case COMP::DIODE:
 		{
 			double w(0.35 + 0.5*(GetCols() - 1)), h(0.35 + 0.5*(GetRows()-1));
-			Add( Shape(SHAPE::RECT, -w,  w, -h,  h) );
-			Add( Shape(SHAPE::LINE,	w - 0.1666, w - 0.1666, -h, h) );
+			AddTwo( Shape(SHAPE::RECT,	true, true,	-w,  w, -h,  h) );
+			AddOne( Shape(SHAPE::LINE,	true, false, w - 0.1666, w - 0.1666, -h, h) );
 			break;
 		}
 		case COMP::STRIP_100:
@@ -227,10 +239,83 @@ void Component::AddDefaultShapes()
 			{
 				if ( !Get(jj,ii)->GetIsPin() ) continue;
 				double w(0.5*GetCols()- ii), h( 0.5 * GetRows() );
-				Add( Shape(SHAPE::ROUNDED_RECT, -w-dx,  -w+dx+1, -h,  h) );
+				AddTwo( Shape(SHAPE::ROUNDED_RECT,	true, true, -w-dx,  -w+dx+1, -h,  h) );
 			}
 			break;
 		}
+		default:	assert(0);	// Unhandled eType
+	}
+	std::sort(m_shapes.begin(), m_shapes.end());	// Sort shapes so fills are rendered before lines
+	SetDefaultColor();
+}
+
+void Component::SetDefaultColor()
+{
+	switch( GetType() )
+	{
+		case COMP::CUSTOM:
+		case COMP::TRACKS:
+		case COMP::VIA:						return;
+		case COMP::PAD:						return SetFillColor(RGB(0xFFFFDF));
+		case COMP::LED:						return SetFillColor(RGB(0xFF6644));
+		case COMP::CAP_ELECTRO_200:
+		case COMP::CAP_ELECTRO_200_NP:
+		case COMP::CAP_ELECTRO_250:
+		case COMP::CAP_ELECTRO_250_NP:
+		case COMP::CAP_ELECTRO_300:
+		case COMP::CAP_ELECTRO_300_NP:
+		case COMP::CAP_ELECTRO_400:
+		case COMP::CAP_ELECTRO_400_NP:
+		case COMP::CAP_ELECTRO_500:
+		case COMP::CAP_ELECTRO_500_NP:
+		case COMP::CAP_ELECTRO_600:
+		case COMP::CAP_ELECTRO_600_NP:		return SetFillColor(RGB(0x8A8AE4));
+		case COMP::TRIM_VERT:
+		case COMP::TRIM_VERT_OFFSET:
+		case COMP::TRIM_VERT_OFFSET_WIDE:
+		case COMP::TRIM_FLAT:
+		case COMP::TRIM_FLAT_WIDE:
+		case COMP::TRIM_3006P:
+		case COMP::TRIM_3006W:
+		case COMP::TRIM_3006Y:
+		case COMP::TRIM_3329H:
+		case COMP::TRIM_3329P_DK9_RC:		return SetFillColor(RGB(0x506BFD));
+		case COMP::CRYSTAL:					return SetFillColor(RGB(0xC8C8C8));
+		case COMP::TO92:
+		case COMP::TO18:
+		case COMP::TO39:
+		case COMP::TO220:					return SetFillColor(RGB(0xA0A0A0));
+		case COMP::SWITCH_BUTTON_4PIN:		return SetFillColor(RGB(0x3299CC));
+		case COMP::RELAY_HK19F:
+		case COMP::RELAY_HJR_4102:
+		case COMP::RELAY_FTR_B3C:
+		case COMP::RELAY_G2R_2:
+		case COMP::RELAY_G2R_2A:
+		case COMP::RELAY_G2RK_2:
+		case COMP::RELAY_G2RK_2A:
+		case COMP::RELAY_G3MB_202P:
+		case COMP::RELAY_JQC_3F_APPROX:
+		case COMP::RELAY_S1A050000:
+		case COMP::RELAY_TRCD:				return SetFillColor(RGB(0x84C0D0));
+		case COMP::FUSE_HOLDER:				return SetFillColor(RGB(0x909090));
+		case COMP::DIP:
+		case COMP::SIP:
+		case COMP::DIP_RECTIFIER:
+		case COMP::RELAY_DIP_4PIN:
+		case COMP::RELAY_DIP_8PIN:			return SetFillColor(RGB(0xA0A0A0));
+		case COMP::CAP_CERAMIC:				return SetFillColor(RGB(0xFFA050));
+		case COMP::CAP_FILM:				return SetFillColor(RGB(0x1EB450));
+		case COMP::CAP_FILM_WIDE:			return SetFillColor(RGB(0x1EB450));
+		case COMP::SWITCH_ST:				return SetFillColor(RGB(0x3299CC));
+		case COMP::SWITCH_DT:				return SetFillColor(RGB(0x3299CC));
+		case COMP::SWITCH_ST_DIP:			return SetFillColor(RGB(0x3299CC));
+		case COMP::RESISTOR:				return SetFillColor(RGB(0x82CFFD));
+		case COMP::INDUCTOR:				return SetFillColor(RGB(0xFFE080));
+		case COMP::WIRE:					return SetFillColor(RGB(0xDFFFFF));
+		case COMP::DIODE:					return SetFillColor(RGB(0xFF6644));
+		case COMP::STRIP_100:				return SetFillColor(RGB(0xFFFFDF));
+		case COMP::BLOCK_100:				return SetFillColor(RGB(0xFFFFDF));
+		case COMP::BLOCK_200:				return SetFillColor(RGB(0xFFFFDF));
 		default:	assert(0);	// Unhandled eType
 	}
 }

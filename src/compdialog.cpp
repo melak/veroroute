@@ -28,6 +28,16 @@ CompDialog::CompDialog(MainWindow *parent)
 {
 	ui->setupUi(this);
 
+	QFont font = ui->pushButtonU->font();
+	font.setFamily(QString("Arial Unicode MS"));
+	font.setPointSize(12);
+	ui->pushButtonU->setFont(font);
+	ui->pushButtonD->setFont(font);
+
+	// Unicode triangles ...
+	ui->pushButtonU->setText(QChar(0x25b3));
+	ui->pushButtonD->setText(QChar(0x25bd));
+
 	QObject::connect(ui->lineEdit_Value,	SIGNAL(textChanged(const QString&)),		m_pMainWindow,	SLOT(DefinerSetValueStr(const QString&)));
 	QObject::connect(ui->lineEdit_Prefix,	SIGNAL(textChanged(const QString&)),		m_pMainWindow,	SLOT(DefinerSetPrefixStr(const QString&)));
 	QObject::connect(ui->lineEdit_Type,		SIGNAL(textChanged(const QString&)),		m_pMainWindow,	SLOT(DefinerSetTypeStr(const QString&)));
@@ -37,13 +47,19 @@ CompDialog::CompDialog(MainWindow *parent)
 	QObject::connect(ui->comboBox_PinShape,	SIGNAL(currentIndexChanged(const QString&)),m_pMainWindow,	SLOT(DefinerSetPinShapeType(const QString&)));
 	QObject::connect(ui->checkBox_PinLabels,SIGNAL(toggled(bool)),						m_pMainWindow,	SLOT(DefinerToggledPinLabels(bool)));
 	QObject::connect(ui->spinBox_PinNumber,	SIGNAL(valueChanged(int)),					m_pMainWindow,	SLOT(DefinerSetPinNumber(int)));
+	QObject::connect(ui->pushButtonRGB,		SIGNAL(clicked()),							m_pMainWindow,	SLOT(DefinerChooseColor()));
+	QObject::connect(ui->pushButtonU,		SIGNAL(clicked()),							m_pMainWindow,	SLOT(DefinerRaise()));
+	QObject::connect(ui->pushButtonD,		SIGNAL(clicked()),							m_pMainWindow,	SLOT(DefinerLower()));
 	QObject::connect(ui->comboBox_Shape,	SIGNAL(currentIndexChanged(const QString&)),m_pMainWindow,	SLOT(DefinerSetShapeType(const QString&)));
+	QObject::connect(ui->checkBox_Line,		SIGNAL(toggled(bool)),						m_pMainWindow,	SLOT(DefinerToggleShapeLine(bool)));
+	QObject::connect(ui->checkBox_Fill,		SIGNAL(toggled(bool)),						m_pMainWindow,	SLOT(DefinerToggleShapeFill(bool)));
 	QObject::connect(ui->doubleSpinBox_CX,	SIGNAL(valueChanged(double)),				m_pMainWindow,	SLOT(DefinerSetCX(double)));
 	QObject::connect(ui->doubleSpinBox_CY,	SIGNAL(valueChanged(double)),				m_pMainWindow,	SLOT(DefinerSetCY(double)));
 	QObject::connect(ui->doubleSpinBox_DX,	SIGNAL(valueChanged(double)),				m_pMainWindow,	SLOT(DefinerSetDX(double)));
 	QObject::connect(ui->doubleSpinBox_DY,	SIGNAL(valueChanged(double)),				m_pMainWindow,	SLOT(DefinerSetDY(double)));
 	QObject::connect(ui->doubleSpinBox_A1,	SIGNAL(valueChanged(double)),				m_pMainWindow,	SLOT(DefinerSetA1(double)));
 	QObject::connect(ui->doubleSpinBox_A2,	SIGNAL(valueChanged(double)),				m_pMainWindow,	SLOT(DefinerSetA2(double)));
+	QObject::connect(ui->doubleSpinBox_A3,	SIGNAL(valueChanged(double)),				m_pMainWindow,	SLOT(DefinerSetA3(double)));
 	QObject::connect(ui->pushButton_Build,	SIGNAL(clicked()),							m_pMainWindow,	SLOT(DefinerBuild()));
 
 	ui->spinBox_Width->installEventFilter( this );	// Prevent accidental wheel behaviour from wiping the footprint
@@ -105,18 +121,27 @@ void CompDialog::Update()
 		const Pin& pin = def.GetCurrentPin();
 		ui->spinBox_PinNumber->setValue( (int) pin.GetPinIndex() + 1 );
 	}
+	RGB rgb;
 	if ( bValidShapeId )
 	{
 		const Shape& s = def.GetCurrentShape();
 		ui->comboBox_Shape->setCurrentIndex((int) s.GetType() );
+		ui->checkBox_Line->setChecked( s.GetDrawLine() );
+		ui->checkBox_Fill->setChecked( s.GetDrawFill() );
 		ui->doubleSpinBox_CX->setValue(  s.GetCX() );
 		ui->doubleSpinBox_CY->setValue( -s.GetCY() );	// Control assumes CY goes up
 		ui->doubleSpinBox_DX->setValue(  s.GetDX() );
 		ui->doubleSpinBox_DY->setValue(  s.GetDY() );
 		ui->doubleSpinBox_A1->setValue(  s.GetA1() );
 		ui->doubleSpinBox_A2->setValue(  s.GetA2() );
+		ui->doubleSpinBox_A3->setValue(  s.GetA3() );
+		rgb = s.GetFillColor();
 	}
-
+	QPalette pal = ui->pushButtonRGB->palette();
+	pal.setColor(QPalette::Button, QColor(rgb.GetR(),rgb.GetG(),rgb.GetB()));
+	ui->pushButtonRGB->setAutoFillBackground(true);
+	ui->pushButtonRGB->setPalette(pal);
+	ui->pushButtonRGB->update();
 	EnableControls();
 }
 
@@ -128,10 +153,12 @@ void CompDialog::EnableControls()	// Enable/disable controls
 	const bool		bValidDefinition	= def.GetIsValid();
 
 	bool bAngle(false);	// true ==> show angle controls
+	bool bFill(false);	// true ==> allow fill option on shapr
 	if ( bValidShapeId )
 	{
 		const SHAPE& eType = def.GetCurrentShape().GetType();
-		bAngle = eType == SHAPE::ARC || eType == SHAPE::CHORD;
+		bAngle = eType == SHAPE::ARC  || eType == SHAPE::CHORD;
+		bFill  = eType != SHAPE::LINE && eType != SHAPE::ARC;
 	}
 
 	ui->label_Type->setText( StringHelper::IsEmptyStr( def.GetTypeStr() ) ? "Type *" : "Type");
@@ -145,14 +172,21 @@ void CompDialog::EnableControls()	// Enable/disable controls
 	ui->label_DY->setEnabled( bValidShapeId );
 	ui->label_A1->setEnabled( bAngle );
 	ui->label_A2->setEnabled( bAngle );
+	ui->label_A3->setEnabled( bValidShapeId );
 	ui->label_Shape->setEnabled( bValidShapeId );
 	ui->comboBox_Shape->setEnabled( bValidShapeId );
+	ui->checkBox_Line->setEnabled( bFill && ui->checkBox_Fill->isChecked() );
+	ui->checkBox_Fill->setEnabled( bFill && ui->checkBox_Line->isChecked() );
+	ui->pushButtonRGB->setEnabled( bFill && ui->checkBox_Fill->isChecked() );
+	ui->pushButtonU->setEnabled( def.GetCanRaise() );
+	ui->pushButtonD->setEnabled( def.GetCanLower() );
 	ui->doubleSpinBox_CX->setEnabled( bValidShapeId );
 	ui->doubleSpinBox_CY->setEnabled( bValidShapeId );
 	ui->doubleSpinBox_DX->setEnabled( bValidShapeId );
 	ui->doubleSpinBox_DY->setEnabled( bValidShapeId );
 	ui->doubleSpinBox_A1->setEnabled( bAngle );
 	ui->doubleSpinBox_A2->setEnabled( bAngle );
+	ui->doubleSpinBox_A3->setEnabled( bValidShapeId );
 	ui->pushButton_Build->setEnabled( bValidDefinition );
 }
 

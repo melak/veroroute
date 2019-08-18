@@ -29,7 +29,8 @@ void MainWindow::DestroyPixmapCache()
 
 void MainWindow::CreatePixmapCache(const GuiControl& guiCtrl, ColorManager& colorMgr)
 {
-	colorMgr.SetSaturation( guiCtrl.GetSaturation() );	// Must do this BEFORE making pixmaps
+	colorMgr.SetSaturation( guiCtrl.GetSaturation() );			// Must do this BEFORE making pixmaps
+	colorMgr.SetFillSaturation( guiCtrl.GetFillSaturation() );	// Must do this BEFORE making pixmaps
 
 	if ( m_ppPixmapPad ) return;	// Cache exists
 
@@ -255,10 +256,6 @@ void MainWindow::PaintCompDefiner()	// The paint method in "component editor mod
 
 	const Rect rect(def.GetGridRowMin(), def.GetGridRowMax(), def.GetGridColMin(), def.GetGridColMax());
 
-	// Get footprint grid centre
-	double dCX(0), dCY(0);
-	def.GetGridCentre(dCY, dCX);	// Footprint centre w.r.t. screen
-
 	QPainter painter;
 	const int reqWidth  = W * COLS;
 	const int reqHeight = W * ROWS;
@@ -279,17 +276,75 @@ void MainWindow::PaintCompDefiner()	// The paint method in "component editor mod
 
 	m_blackPen.setWidth(0);
 	m_whitePen.setWidth(0);
-	m_varBrush.setColor(QColor(192,192,255,128));	// Light blue
 	painter.setPen(m_blackPen);
 	painter.setBrush(Qt::NoBrush);
 
 	int X(0), Y(0), L(0), R(0), T(0), B(0);
+
+	GetLRTB(board, rect, L, R, T, B);
+	L -= C; R += C; T -= C; B += C;
+	const int AXIS_X = ( L + R ) / 2;
+	const int AXIS_Y = ( T + B ) / 2;
 
 	// Draw rect around whole board area =========================================================
 	int dummy;
 	GetLRTB(board, 110, 0, 0, L, dummy, T, dummy);				// 110% size square
 	GetLRTB(board, 110, ROWS-1, COLS-1, dummy, R, dummy, B);	// 110% size square
 	painter.drawRect(L, T, R-L, B-T);
+
+	// Draw shapes ===============================================================================
+	painter.save();
+	painter.translate(AXIS_X, AXIS_Y);
+
+	for (const auto& mapObj : def.GetShapes() )
+	{
+		const Shape& s = mapObj.second;
+
+		if ( s.GetDrawFill() )
+		{
+			const RGB& fillColor = s.GetFillColor();
+			m_varBrush.setColor(QColor(fillColor.GetR(),fillColor.GetG(),fillColor.GetB(),255));
+		}
+		const bool bCurrentShape = ( mapObj.first == def.GetCurrentShapeId() );
+		m_blackPen.setWidth( bCurrentShape ? 3 : 2 );
+
+		painter.setPen( s.GetDrawLine() ? m_blackPen : Qt::NoPen );
+		painter.setBrush( s.GetDrawFill() ? m_varBrush : Qt::NoBrush );
+
+		painter.save();
+		auto DX = s.GetDX() * W;
+		auto DY = s.GetDY() * W;
+		auto X  = DX * 0.5;
+		auto Y  = DY * 0.5;
+		painter.translate( s.GetCX() * W, s.GetCY() * W );
+		painter.rotate( -s.GetA3() );	// A3 > 0 ==> CCW
+		switch( s.GetType() )
+		{
+			case SHAPE::LINE:			painter.drawLine(-X, -Y, X, Y);		break;
+			case SHAPE::RECT:			painter.drawRect(-X, -Y, DX, DY);	break;
+			case SHAPE::ROUNDED_RECT:	painter.drawRoundedRect(-X, -Y, DX, DY, 0.35 * W, 0.35 * W);	break;
+			case SHAPE::ELLIPSE:		painter.drawEllipse(-X, -Y, DX, DY);	break;
+			case SHAPE::ARC:			painter.drawArc(  -X, -Y, DX, DY, s.GetA1() * 16, s.GetAlen() * 16);	break;
+			case SHAPE::CHORD:			painter.drawChord(-X, -Y, DX, DY, s.GetA1() * 16, s.GetAlen() * 16);	break;
+			default: assert(0);	// Unhandled shape
+		}
+		if ( bCurrentShape )
+		{
+			// Show the base rect/ellipse for line/arc/chord
+			painter.setPen(m_dotPen);
+			painter.setBrush(Qt::NoBrush);
+			switch( s.GetType() )
+			{
+				case SHAPE::LINE:	painter.drawRect(-X, -Y, DX, DY);	break;
+				case SHAPE::ARC:
+				case SHAPE::CHORD:	painter.drawEllipse(-X, -Y, DX, DY);	break;
+				default:			break;
+			}
+		}
+		painter.restore();
+	}
+	painter.restore();
+	//============================================================================================
 
 	// Draw grid points ==========================================================================
 	if ( board.GetShowGrid() )
@@ -302,19 +357,19 @@ void MainWindow::PaintCompDefiner()	// The paint method in "component editor mod
 	}
 
 	// Draw dashed rect around footprint boundary and along central axes =========================
-	GetLRTB(board, rect, L, R, T, B);
-	L -= C; R += C; T -= C; B += C;
 	painter.setPen(m_dashPen);
 	painter.setBrush(Qt::NoBrush);
 	painter.drawRect(L, T, R-L, B-T);
 	painter.setPen(m_dotPen);
-	painter.drawLine(0, (T+B)/2, reqWidth, (T+B)/2);
-	painter.drawLine((L+R)/2, 0, (L+R)/2, reqHeight);
+	painter.drawLine(0, AXIS_Y, reqWidth, AXIS_Y);
+	painter.drawLine(AXIS_X, 0, AXIS_X, reqHeight);
 
 	// Draw pins =================================================================================
 	QFont pinsFont = painter.font();	// Copy of current font
 	pinsFont.setPointSize( m_board.GetTextSizePins() );
 	painter.setFont(pinsFont);
+
+	m_varBrush.setColor(QColor(192,192,255,128));	// Light blue
 
 	int iPinId(0);
 	for (int j = 0; j < grid.GetRows(); j++) for(int i = 0; i < grid.GetCols(); i++, iPinId++)
@@ -344,48 +399,6 @@ void MainWindow::PaintCompDefiner()	// The paint method in "component editor mod
 		}
 		painter.restore();
 	}
-
-	// Draw shapes ===============================================================================
-	painter.save();
-	painter.translate(dCX * W, dCY * W);
-	m_varBrush.setColor(QColor(0,255,255,255));	// Cyan
-
-	for (const auto& mapObj : def.GetShapes())
-	{
-		const Shape& s = mapObj.second;
-		GetXY(board, s.GetY1(), s.GetX1(), L, T);
-		GetXY(board, s.GetY2(), s.GetX2(), R, B);
-
-		const bool bCurrentShape = ( mapObj.first == def.GetCurrentShapeId() );
-		m_blackPen.setWidth( bCurrentShape ? 3 : 2 );
-		painter.setPen(m_blackPen);
-
-		switch( s.GetType() )
-		{
-			case SHAPE::LINE:			painter.drawLine(L, T, R, B);	break;
-			case SHAPE::RECT:			painter.drawRect(L, T, R-L, B-T);	break;
-			case SHAPE::ROUNDED_RECT:	painter.drawRoundedRect(L, T, R-L, B-T, 0.35 * W, 0.35 * W);	break;
-			case SHAPE::ELLIPSE:		painter.drawEllipse(L, T, R-L, B-T);	break;
-			case SHAPE::ARC:			painter.drawArc(L, T, R-L, B-T, s.GetA1() * 16, s.GetAlen() * 16);	break;
-			case SHAPE::CHORD:			painter.drawChord(L, T, R-L, B-T, s.GetA1() * 16, s.GetAlen() * 16);	break;
-			default: assert(0);	// Unhandled shape
-		}
-
-		if ( bCurrentShape )
-		{
-			// Show the base rect/ellipse for line/arc/chord
-			painter.setPen(m_dotPen);
-			switch( s.GetType() )
-			{
-				case SHAPE::LINE:	painter.drawRect(L, T, R-L, B-T);		break;
-				case SHAPE::ARC:
-				case SHAPE::CHORD:	painter.drawEllipse(L, T, R-L, B-T);	break;
-				default:			break;
-			}
-		}
-	}
-	painter.restore();
-	//============================================================================================
 
 	painter.end();
 }
@@ -719,6 +732,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 	// Draw Component outlines and pins ==========================================================
 	QPen& penPlaced	= ( trackMode == TRACKMODE::MONO ) ? m_lightBluePen : m_blackPen;	// For placed (non-floating) components
+	QPen  fillBlackPen = m_blackPen;	// Used for lines in the component pixmap
+	fillBlackPen.setWidth(2);
 
 	if ( compMode != COMPSMODE::OFF || trackMode == TRACKMODE::MONO )	// Mono (i.e. "PCB") mode still needs pin holes drawn
 	{
@@ -728,21 +743,136 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 		compMgr.CalculateWireShifts();
 
-		for (const auto& mapObj : compMgr.GetMapIdToComp())	// Iterate components
+		std::vector<const Component*> sortedComps;
+		compMgr.GetSortedComps(sortedComps);	// Sorted so "plug" components get rendered last
+		for (const auto& pComp : sortedComps)	// Iterate sorted components
 		{
-			const Component& comp			= mapObj.second;
+			const Component& comp			= *pComp;
 			const COMP&		 compType		= comp.GetType();
 			const char&		 compDirection	= comp.GetDirection();
 			const bool		 bVia			= compType == COMP::VIA;
+			const bool		 bWire			= compType == COMP::WIRE;
 			const bool		 bPinLabels		= (comp.GetPinFlags() & PIN_LABELS) > 0;
 			const bool		 bRectPins		= (comp.GetPinFlags() & PIN_RECT)   > 0;
+			const bool		 bHighlightComp	= board.GetGroupMgr().GetIsUserComp( comp.GetId() );
+			const int		 jComp			= comp.GetRow();
+			const int		 iComp			= comp.GetCol();
 
-			const bool	bHighlightComp = board.GetGroupMgr().GetIsUserComp( comp.GetId() );
+			// Begin draw component fill + outline -----------------------------------------------
+			if ( compMode != COMPSMODE::OFF && !comp.GetShapes().empty() )
+			{
+				// Set pen width.  Selected component shown thicker than normal components
+				if ( comp.GetIsPlaced() )
+					penPlaced.setWidth( bHighlightComp ? 3 : bVia ? 1 : 2 );
+				else
+					m_redPen.setWidth(4);	// Make floating components stand out in red
 
-			// Draw component pins first
-			const int jComp = comp.GetRow();
-			const int iComp = comp.GetCol();
+				QPen& linePen = ( comp.GetIsPlaced() ) ? penPlaced : m_redPen;
+				painter.setPen(linePen);
+				painter.setBrush(Qt::NoBrush);
 
+				GetXY(board, comp, X, Y);	// Get footprint centre
+
+				// Implement wire shift
+				if ( bWire && comp.GetIsPlaced() )
+				{
+					if ( comp.GetCompRows() == 1 )	// Horizontal
+						Y += compMgr.GetWireShift( &comp ) * 0.1 * W;
+					else
+						X += compMgr.GetWireShift( &comp ) * 0.1 * W;
+				}
+
+				double SL,ST,SR,SB;
+				comp.GetSafeBounds(SL,SR,ST,SB);
+				const double dReqW = (1 + SR - SL) * W;
+				const double dReqH = (1 + SB - ST) * W;
+				QPainter painterTmp;
+				QPixmap tmpPixmap(dReqW, dReqH);
+				tmpPixmap.setDevicePixelRatio(1.0);
+
+				const RGB		msk	= comp.GetNewColor();	// We'll mask out pixels with this color at the end
+				const QColor	maskColor(msk.GetR(), msk.GetG(), msk.GetB());
+
+				painterTmp.begin(&tmpPixmap);
+				painterTmp.fillRect(0,0,dReqW, dReqH, maskColor);	// This will be turned transparent later
+				painterTmp.setPen(Qt::NoPen);
+
+				for (int iLoop = 0; iLoop < 2; iLoop++)
+				{
+					QPainter* pPainter = ( iLoop == 0 ) ? &painterTmp : &painter;
+
+					pPainter->save();	// Save (original axes)
+					if ( iLoop == 0 )
+						pPainter->translate(dReqW*0.5, dReqH*0.5);	// Shape coordinates are relative to pixmap centre
+					else
+						pPainter->translate(X, Y);					// Shape coordinates are relative to footprint centre
+
+					if ( iLoop == 1 )	// Draw the pixmap created on the previous pass
+					{
+						painter.setOpacity( /*bWire ? 1.0 :*/ board.GetFillSaturation() * 0.01);
+						painter.drawPixmap(-dReqW*0.5, -dReqH*0.5, tmpPixmap);
+						painter.setOpacity(1.0);
+					}
+
+					switch( compDirection )	// Rotated axes at footprint centre
+					{
+						case 'W':	break;
+						case 'E':	pPainter->rotate(180);	break;
+						case 'N':	pPainter->rotate(90);	break;
+						case 'S':	pPainter->rotate(270);	break;
+					}
+
+					const size_t numShapes = comp.GetNumShapes();
+					for (size_t i = 0; i < numShapes; i++)
+					{
+						const Shape& s = comp.GetShape(i);
+
+						if ( iLoop == 0 && !s.GetDrawFill() ) continue;
+						if ( iLoop == 1 && (s.GetDrawFill() || !s.GetDrawLine()) ) continue;
+
+						if ( iLoop == 0 )	// Definitely drawing fill now
+						{
+							const RGB& rgb	= s.GetFillColor();
+							m_varBrush.setColor( QColor(rgb.GetR(), rgb.GetG(), rgb.GetB()) );
+							pPainter->setBrush(m_varBrush);
+							pPainter->setPen( s.GetDrawLine() ? fillBlackPen : Qt::NoPen );
+						}
+
+						pPainter->save();
+						pPainter->translate( s.GetCX() * W, s.GetCY() * W );
+						pPainter->rotate( -s.GetA3() );	// A3 > 0 ==> CCW
+
+						auto DX = s.GetDX() * W;
+						auto DY = s.GetDY() * W;
+						auto X  = DX * 0.5;
+						auto Y  = DY * 0.5;
+
+						switch( s.GetType() )
+						{
+							case SHAPE::LINE:			pPainter->drawLine(-X, -Y, X, Y);	break;
+							case SHAPE::RECT:			pPainter->drawRect(-X, -Y, DX, DY);	break;
+							case SHAPE::ROUNDED_RECT:	pPainter->drawRoundedRect(-X, -Y, DX, DY, 0.35 * W, 0.35 * W);	break;
+							case SHAPE::ELLIPSE:		pPainter->drawEllipse(-X, -Y, DX, DY);	break;
+							case SHAPE::ARC:			pPainter->drawArc(  -X, -Y, DX, DY, s.GetA1() * 16, s.GetAlen() * 16);	break;
+							case SHAPE::CHORD:			pPainter->drawChord(-X, -Y, DX, DY, s.GetA1() * 16, s.GetAlen() * 16);	break;
+							default: assert(0);	// Unhandled shape
+						}
+						pPainter->restore();
+					}
+					pPainter->restore();	// Restore (original axes)
+
+					if ( iLoop == 0 )	// Finish off making the pixmap
+					{
+						painterTmp.end();
+						// Turn the "mask" pixels transparent
+						tmpPixmap.setMask( tmpPixmap.createMaskFromColor(maskColor, Qt::MaskInColor) );
+					}
+				}
+			}
+			// End draw component fill + outline -------------------------------------------------
+
+
+			// Begin draw component pins ---------------------------------------------------------
 			painter.save();
 			if ( trackMode == TRACKMODE::MONO )
 			{
@@ -756,7 +886,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				m_redPen.setWidth(0);		// For pin labels
 				m_darkGreyPen.setWidth(0);	// For pins
 				painter.setPen(m_darkGreyPen);
-				painter.setBrush(m_clearBrush);
+				painter.setBrush(Qt::NoBrush);
 			}
 
 			if ( bVia )	// Vias are a special case since they don't actually have a pin !!!
@@ -852,62 +982,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				}
 			}
 			painter.restore();
-
-
-			// Draw component outlines
-			if ( compMode == COMPSMODE::OFF ) continue;	// Skip if we've forbidden them
-			if ( comp.GetShapes().empty() )	continue;	// Component has no shapes assigned
-
-			// Set pen width.  Selected component shown thicker than normal components
-			if ( comp.GetIsPlaced() )
-			{
-				penPlaced.setWidth( bHighlightComp ? 3 : bVia ? 1 : 2 );
-				painter.setPen(penPlaced);
-			}
-			else
-			{
-				m_redPen.setWidth(4);	// Make floating components stand out in red
-				painter.setPen(m_redPen);
-			}
-
-			painter.setBrush(m_clearBrush);
-
-			GetXY(board, comp, X, Y);	// Get footprint centre
-
-			// Implement wire shift
-			if ( compType == COMP::WIRE && comp.GetIsPlaced() )
-			{
-				if ( comp.GetCompRows() == 1 )	// Horizontal
-					Y += compMgr.GetWireShift( &comp ) * 0.1 * W;
-				else
-					X += compMgr.GetWireShift( &comp ) * 0.1 * W;
-			}
-
-			painter.save();
-			painter.translate(X, Y);	// Shape coordinates are relative to footprint centre
-			switch( compDirection )
-			{
-				case 'W':	break;
-				case 'E':	painter.rotate(180);	break;
-				case 'N':	painter.rotate(90);		break;
-				case 'S':	painter.rotate(270);	break;
-			}
-			const size_t numShapes = comp.GetNumShapes();
-			for (size_t i = 0; i < numShapes; i++)
-			{
-				const Shape& s = comp.GetShape(i);
-				switch( s.GetType() )
-				{
-					case SHAPE::LINE:			painter.drawLine(s.GetX1() * W, s.GetY1() * W, s.GetX2() * W, s.GetY2() * W);	break;
-					case SHAPE::RECT:			painter.drawRect(s.GetX1() * W, s.GetY1() * W, s.GetXlen() * W, s.GetYlen() * W);	break;
-					case SHAPE::ROUNDED_RECT:	painter.drawRoundedRect(s.GetX1() * W, s.GetY1() * W, s.GetXlen() * W, s.GetYlen() * W, 0.35 * W, 0.35 * W);	break;
-					case SHAPE::ELLIPSE:		painter.drawEllipse(s.GetX1() * W, s.GetY1() * W, s.GetXlen() * W, s.GetYlen() * W);	break;
-					case SHAPE::ARC:			painter.drawArc(s.GetX1() * W, s.GetY1() * W, s.GetXlen() * W, s.GetYlen() * W,	s.GetA1() * 16, s.GetAlen() * 16);	break;
-					case SHAPE::CHORD:			painter.drawChord(s.GetX1() * W, s.GetY1() * W, s.GetXlen() * W, s.GetYlen() * W, s.GetA1() * 16, s.GetAlen() * 16);	break;
-					default: assert(0);	// Unhandled shape
-				}
-			}
-			painter.restore();
+			// End draw component pins -----------------------------------------------------------
 		}
 	}
 

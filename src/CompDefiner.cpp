@@ -61,7 +61,7 @@ void CompDefiner::Populate(const Component& o)
 	int iShapeId(0);
 	for (auto& shape : o.GetShapes())
 	{
-		SetShape(iShapeId, shape);
+		AddShape(iShapeId, shape);
 		iShapeId++;
 	}
 }
@@ -85,7 +85,7 @@ void CompDefiner::Build(Component& comp) const
 	// Copy shapes
 	assert( comp.GetNumShapes() == 0 );
 	for (const auto& mapObj : m_mapShapes)
-		comp.Add(mapObj.second);
+		comp.AddOne(mapObj.second);
 
 	comp.AllocatePins( GetNumTruePins() );
 }
@@ -108,13 +108,21 @@ void CompDefiner::MoveCurrentShape(const double& dDown, const double& dRight)
 void CompDefiner::DestroyShape()
 {
 	assert( GetCurrentShapeId() != BAD_ID );
-	m_mapShapes.erase( GetCurrentShapeId() );
+	for (auto iter = m_mapShapes.begin(); iter != m_mapShapes.end(); ++iter)
+		if ( iter->first == GetCurrentShapeId() ) { m_mapShapes.erase(iter); break; }
 	SetCurrentShapeId( BAD_ID );
 }
 int CompDefiner::GetNewShapeId() const
 {
 	int shapeId(0);
-	while ( m_mapShapes.find(shapeId) != m_mapShapes.end() && shapeId != INT_MAX ) shapeId++;
+	while ( shapeId != INT_MAX )
+	{
+		bool bExists(false);
+		for (auto iter = m_mapShapes.begin(); iter != m_mapShapes.end() && !bExists; ++iter)
+			bExists = ( iter->first == shapeId );
+		if ( !bExists ) break;
+		shapeId++;
+	}
 	return ( shapeId == INT_MAX ) ? BAD_ID : shapeId;
 }
 bool CompDefiner::SetWidth(const int& i)
@@ -176,7 +184,7 @@ int CompDefiner::GetShapeId(const double& dRowIn, const double& dColIn) const	//
 		double dArea(INT_MAX);
 		bool bOK(false);
 
-		switch( s.GetType() )
+		switch( s.GetType() )	//TODO Properly handle selection of rotated shapes
 		{
 			case SHAPE::LINE:	// Check for distance within a narrow ellipse with foci at the endpoints
 			{
@@ -232,7 +240,10 @@ bool CompDefiner::GetIsValid() const
 		if ( m_importStr.length() >= L && m_importStr.substr(0, L) == strTmp ) return false;
 	}
 	if ( m_grid.GetSize() == 0 ) return false;	// Should not be possible
-	if ( m_mapShapes.empty() ) return false;	// Must have a shape
+	bool bOK(false);
+	for (auto& mapObj : m_mapShapes)
+		if ( mapObj.second.GetDrawLine() && !mapObj.second.GetDrawFill() ) { bOK = true; break; }
+	if ( !bOK ) return false;	// Must have a shape with line and no fill (so  it can't be faded out)
 	// Pin indexes must be consecutive at start at 0
 	std::list<size_t> pinIndexes;
 	for (int i = 0; i < m_grid.GetSize(); i++)
