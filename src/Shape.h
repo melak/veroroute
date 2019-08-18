@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "RGB.h"
+#include "MyRGB.h"
 
 // Class to describe a simple shape (e.g. for drawing component outlines)
 
@@ -107,18 +107,18 @@ public:
 		if ( m_a2			!= o.m_a2 )			return m_a2 < o.m_a2;
 		return m_a3 < o.m_a3;
 	}
-	void SetType(const SHAPE& c)	{ m_type = c; }
-	void SetX1(const double& d)		{ m_x1 = d; }
-	void SetX2(const double& d)		{ m_x2 = d; }
-	void SetY1(const double& d)		{ m_y1 = d; }
-	void SetY2(const double& d)		{ m_y2 = d; }
-	void SetA1(const double& d)		{ m_a1 = d; }
-	void SetA2(const double& d)		{ m_a2 = d; }
-	void SetA3(const double& d)		{ m_a3 = d; }
-	void SetDrawLine(const bool& b)	{ m_bDrawLine = b; }
-	void SetDrawFill(const bool& b)	{ m_bDrawFill = b; }
-	void SetLineColor(const RGB& r)	{ m_lineColor = r; }
-	void SetFillColor(const RGB& r)	{ m_fillColor = r; }
+	void SetType(const SHAPE& c)		{ m_type = c; }
+	void SetX1(const double& d)			{ m_x1 = d; }
+	void SetX2(const double& d)			{ m_x2 = d; }
+	void SetY1(const double& d)			{ m_y1 = d; }
+	void SetY2(const double& d)			{ m_y2 = d; }
+	void SetA1(const double& d)			{ m_a1 = d; }
+	void SetA2(const double& d)			{ m_a2 = d; }
+	void SetA3(const double& d)			{ m_a3 = d; }
+	void SetDrawLine(const bool& b)		{ m_bDrawLine = b; }
+	void SetDrawFill(const bool& b)		{ m_bDrawFill = b; }
+	void SetLineColor(const MyRGB& r)	{ m_lineColor = r; }
+	void SetFillColor(const MyRGB& r)	{ m_fillColor = r; }
 	void Set(const double& x1, const double& x2,
 			 const double& y1, const double& y2,
 			 const double& a1, const double& a2, const double& a3)
@@ -152,8 +152,8 @@ public:
 	const double&	GetA3() const			{ return m_a3; }
 	const bool&		GetDrawLine() const		{ return m_bDrawLine; }
 	const bool&		GetDrawFill() const		{ return m_bDrawFill; }
-	const RGB&		GetLineColor() const	{ return m_lineColor; }
-	const RGB&		GetFillColor() const	{ return m_fillColor; }
+	const MyRGB&	GetLineColor() const	{ return m_lineColor; }
+	const MyRGB&	GetFillColor() const	{ return m_fillColor; }
 	const double&	GetXmin() const	{ return std::min(m_x1, m_x2); }
 	const double&	GetXmax() const	{ return std::max(m_x1, m_x2); }
 	const double&	GetYmin() const	{ return std::min(m_y1, m_y2); }
@@ -231,6 +231,6 @@ private:
 	double	m_a1, m_a2, m_a3;	// Angles measured CCW degrees.  Zero at 3 o'clock.
 	bool	m_bDrawLine;		// Draw line (can only be false if m_bFill is true)
 	bool	m_bDrawFill;		// Fill with color
-	RGB		m_lineColor;		// Line color.	Always black
-	RGB		m_fillColor;		// Fill color.
+	MyRGB	m_lineColor;		// Line color.	Always black
+	MyRGB	m_fillColor;		// Fill color.
 };

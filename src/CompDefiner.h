@@ -246,16 +246,16 @@ public:
 		else
 			return SetPinFlags( GetPinFlags() & ~PIN_RECT );	// Clear bit
 	}
-	bool SetCX(const double& d)		{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetCX(d); return true; }
-	bool SetCY(const double& d)		{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetCY(d); return true; }
-	bool SetDX(const double& d)		{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetDX(d); return true; }
-	bool SetDY(const double& d)		{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetDY(d); return true; }
-	bool SetA1(const double& d)		{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetA1(d); return true; }
-	bool SetA2(const double& d)		{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetA2(d); return true; }
-	bool SetA3(const double& d)		{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetA3(d); return true; }
-	bool SetLine(const bool& b)		{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetDrawLine(b); return true; }
-	bool SetFill(const bool& b)		{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetDrawFill(b); return true; }
-	bool SetFillColor(const RGB& r)	{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetFillColor(r); return true; }
+	bool SetCX(const double& d)			{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetCX(d); return true; }
+	bool SetCY(const double& d)			{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetCY(d); return true; }
+	bool SetDX(const double& d)			{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetDX(d); return true; }
+	bool SetDY(const double& d)			{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetDY(d); return true; }
+	bool SetA1(const double& d)			{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetA1(d); return true; }
+	bool SetA2(const double& d)			{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetA2(d); return true; }
+	bool SetA3(const double& d)			{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetA3(d); return true; }
+	bool SetLine(const bool& b)			{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetDrawLine(b); return true; }
+	bool SetFill(const bool& b)			{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetDrawFill(b); return true; }
+	bool SetFillColor(const MyRGB& r)	{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetFillColor(r); return true; }
 	bool GetCanLower() const
 	{
 		const int& id = GetCurrentShapeId();

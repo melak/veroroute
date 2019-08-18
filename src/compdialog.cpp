@@ -121,7 +121,7 @@ void CompDialog::Update()
 		const Pin& pin = def.GetCurrentPin();
 		ui->spinBox_PinNumber->setValue( (int) pin.GetPinIndex() + 1 );
 	}
-	RGB rgb;
+	MyRGB rgb;
 	if ( bValidShapeId )
 	{
 		const Shape& s = def.GetCurrentShape();

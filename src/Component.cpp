@@ -256,8 +256,8 @@ void Component::SetDefaultColor()
 		case COMP::CUSTOM:
 		case COMP::TRACKS:
 		case COMP::VIA:						return;
-		case COMP::PAD:						return SetFillColor(RGB(0xFFFFDF));
-		case COMP::LED:						return SetFillColor(RGB(0xFF6644));
+		case COMP::PAD:						return SetFillColor(MyRGB(0xFFFFDF));
+		case COMP::LED:						return SetFillColor(MyRGB(0xFF6644));
 		case COMP::CAP_ELECTRO_200:
 		case COMP::CAP_ELECTRO_200_NP:
 		case COMP::CAP_ELECTRO_250:
@@ -269,7 +269,7 @@ void Component::SetDefaultColor()
 		case COMP::CAP_ELECTRO_500:
 		case COMP::CAP_ELECTRO_500_NP:
 		case COMP::CAP_ELECTRO_600:
-		case COMP::CAP_ELECTRO_600_NP:		return SetFillColor(RGB(0x8A8AE4));
+		case COMP::CAP_ELECTRO_600_NP:		return SetFillColor(MyRGB(0x8A8AE4));
 		case COMP::TRIM_VERT:
 		case COMP::TRIM_VERT_OFFSET:
 		case COMP::TRIM_VERT_OFFSET_WIDE:
@@ -279,13 +279,13 @@ void Component::SetDefaultColor()
 		case COMP::TRIM_3006W:
 		case COMP::TRIM_3006Y:
 		case COMP::TRIM_3329H:
-		case COMP::TRIM_3329P_DK9_RC:		return SetFillColor(RGB(0x506BFD));
-		case COMP::CRYSTAL:					return SetFillColor(RGB(0xC8C8C8));
+		case COMP::TRIM_3329P_DK9_RC:		return SetFillColor(MyRGB(0x506BFD));
+		case COMP::CRYSTAL:					return SetFillColor(MyRGB(0xC8C8C8));
 		case COMP::TO92:
 		case COMP::TO18:
 		case COMP::TO39:
-		case COMP::TO220:					return SetFillColor(RGB(0xA0A0A0));
-		case COMP::SWITCH_BUTTON_4PIN:		return SetFillColor(RGB(0x3299CC));
+		case COMP::TO220:					return SetFillColor(MyRGB(0xA0A0A0));
+		case COMP::SWITCH_BUTTON_4PIN:		return SetFillColor(MyRGB(0x3299CC));
 		case COMP::RELAY_HK19F:
 		case COMP::RELAY_HJR_4102:
 		case COMP::RELAY_FTR_B3C:
@@ -296,26 +296,26 @@ void Component::SetDefaultColor()
 		case COMP::RELAY_G3MB_202P:
 		case COMP::RELAY_JQC_3F_APPROX:
 		case COMP::RELAY_S1A050000:
-		case COMP::RELAY_TRCD:				return SetFillColor(RGB(0x84C0D0));
-		case COMP::FUSE_HOLDER:				return SetFillColor(RGB(0x909090));
+		case COMP::RELAY_TRCD:				return SetFillColor(MyRGB(0x84C0D0));
+		case COMP::FUSE_HOLDER:				return SetFillColor(MyRGB(0x909090));
 		case COMP::DIP:
 		case COMP::SIP:
 		case COMP::DIP_RECTIFIER:
 		case COMP::RELAY_DIP_4PIN:
-		case COMP::RELAY_DIP_8PIN:			return SetFillColor(RGB(0xA0A0A0));
-		case COMP::CAP_CERAMIC:				return SetFillColor(RGB(0xFFA050));
-		case COMP::CAP_FILM:				return SetFillColor(RGB(0x1EB450));
-		case COMP::CAP_FILM_WIDE:			return SetFillColor(RGB(0x1EB450));
-		case COMP::SWITCH_ST:				return SetFillColor(RGB(0x3299CC));
-		case COMP::SWITCH_DT:				return SetFillColor(RGB(0x3299CC));
-		case COMP::SWITCH_ST_DIP:			return SetFillColor(RGB(0x3299CC));
-		case COMP::RESISTOR:				return SetFillColor(RGB(0x82CFFD));
-		case COMP::INDUCTOR:				return SetFillColor(RGB(0xFFE080));
-		case COMP::WIRE:					return SetFillColor(RGB(0xDFFFFF));
-		case COMP::DIODE:					return SetFillColor(RGB(0xFF6644));
-		case COMP::STRIP_100:				return SetFillColor(RGB(0xFFFFDF));
-		case COMP::BLOCK_100:				return SetFillColor(RGB(0xFFFFDF));
-		case COMP::BLOCK_200:				return SetFillColor(RGB(0xFFFFDF));
+		case COMP::RELAY_DIP_8PIN:			return SetFillColor(MyRGB(0xA0A0A0));
+		case COMP::CAP_CERAMIC:				return SetFillColor(MyRGB(0xFFA050));
+		case COMP::CAP_FILM:				return SetFillColor(MyRGB(0x1EB450));
+		case COMP::CAP_FILM_WIDE:			return SetFillColor(MyRGB(0x1EB450));
+		case COMP::SWITCH_ST:				return SetFillColor(MyRGB(0x3299CC));
+		case COMP::SWITCH_DT:				return SetFillColor(MyRGB(0x3299CC));
+		case COMP::SWITCH_ST_DIP:			return SetFillColor(MyRGB(0x3299CC));
+		case COMP::RESISTOR:				return SetFillColor(MyRGB(0x82CFFD));
+		case COMP::INDUCTOR:				return SetFillColor(MyRGB(0xFFE080));
+		case COMP::WIRE:					return SetFillColor(MyRGB(0xDFFFFF));
+		case COMP::DIODE:					return SetFillColor(MyRGB(0xFF6644));
+		case COMP::STRIP_100:				return SetFillColor(MyRGB(0xFFFFDF));
+		case COMP::BLOCK_100:				return SetFillColor(MyRGB(0xFFFFDF));
+		case COMP::BLOCK_200:				return SetFillColor(MyRGB(0xFFFFDF));
 		default:	assert(0);	// Unhandled eType
 	}
 }

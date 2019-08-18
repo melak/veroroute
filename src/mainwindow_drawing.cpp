@@ -302,7 +302,7 @@ void MainWindow::PaintCompDefiner()	// The paint method in "component editor mod
 
 		if ( s.GetDrawFill() )
 		{
-			const RGB& fillColor = s.GetFillColor();
+			const MyRGB& fillColor = s.GetFillColor();
 			m_varBrush.setColor(QColor(fillColor.GetR(),fillColor.GetG(),fillColor.GetB(),255));
 		}
 		const bool bCurrentShape = ( mapObj.first == def.GetCurrentShapeId() );
@@ -790,7 +790,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				QPixmap tmpPixmap(dReqW, dReqH);
 				tmpPixmap.setDevicePixelRatio(1.0);
 
-				const RGB		msk	= comp.GetNewColor();	// We'll mask out pixels with this color at the end
+				const MyRGB		msk	= comp.GetNewColor();	// We'll mask out pixels with this color at the end
 				const QColor	maskColor(msk.GetR(), msk.GetG(), msk.GetB());
 
 				painterTmp.begin(&tmpPixmap);
@@ -832,7 +832,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 						if ( iLoop == 0 )	// Definitely drawing fill now
 						{
-							const RGB& rgb	= s.GetFillColor();
+							const MyRGB& rgb	= s.GetFillColor();
 							m_varBrush.setColor( QColor(rgb.GetR(), rgb.GetG(), rgb.GetB()) );
 							pPainter->setBrush(m_varBrush);
 							pPainter->setPen( s.GetDrawLine() ? fillBlackPen : Qt::NoPen );

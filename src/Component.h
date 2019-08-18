@@ -365,22 +365,22 @@ public:
 			default:			return true;
 		}
 	}
-	void SetFillColor(const RGB& r)	// Gives all shapes the same fill color
+	void SetFillColor(const MyRGB& r)	// Gives all shapes the same fill color
 	{
 		for (auto& o : m_shapes) o.SetFillColor(r);
 	}
-	RGB GetNewColor() const	// returns an un-used color
+	MyRGB GetNewColor() const	// returns an un-used color
 	{
 		for (int iColor = 1; iColor <= 0xFFFFFF; iColor++)	// Black is used for outlines so start at 1
 		{
 			bool bOK(true);
-			RGB tmp(iColor);
+			MyRGB tmp(iColor);
 			for (auto& o : m_shapes)
 				if ( o.GetFillColor() == tmp ) { bOK = false; break; }
 			if ( bOK ) return tmp;
 		}
 		assert(0);
-		return RGB(0x000000);
+		return MyRGB(0x000000);
 	}
 	// Merge interface functions
 	virtual void UpdateMergeOffsets(MergeOffsets& o) override

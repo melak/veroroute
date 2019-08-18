@@ -76,13 +76,13 @@ HEADERS  += mainwindow.h \
     Persist.h \
     Rect.h \
     RectManager.h \
-    RGB.h \
     Shape.h \
     StringHelper.h \
     TextRect.h \
     TextManager.h \
     Version.h \
-    VrtVersion.h
+    VrtVersion.h \
+    MyRGB.h
 
 
 FORMS    += mainwindow.ui \

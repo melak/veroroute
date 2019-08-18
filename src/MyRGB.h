@@ -21,35 +21,35 @@
 
 #include "Persist.h"
 
-class RGB : public Persist
+class MyRGB : public Persist
 {
 public:
-	RGB(int i = 0)
+	MyRGB(int i = 0)
 	{
 		m_B = (i & 0xFF); i >>= 8;
 		m_G = (i & 0xFF); i >>= 8;
 		m_R = (i & 0XFF);
 	}
-	RGB(const RGB& o) { *this = o; }
-	~RGB() {}
-	RGB& operator=(const RGB& o)
+	MyRGB(const MyRGB& o) { *this = o; }
+	~MyRGB() {}
+	MyRGB& operator=(const MyRGB& o)
 	{
 		m_R	= o.m_R;
 		m_G	= o.m_G;
 		m_B	= o.m_B;
 		return *this;
 	}
-	bool operator==(const RGB& o) const	// Compare persisted info
+	bool operator==(const MyRGB& o) const	// Compare persisted info
 	{
 		return m_R == o.m_R
 			&& m_G == o.m_G
 			&& m_B == o.m_B;
 	}
-	bool operator!=(const RGB& o) const
+	bool operator!=(const MyRGB& o) const
 	{
 		return !(*this == o);
 	}
-	bool operator<(const RGB& o) const
+	bool operator<(const MyRGB& o) const
 	{
 		if ( m_R != o.m_R ) return m_R < o.m_R;
 		if ( m_G != o.m_G ) return m_G < o.m_G;

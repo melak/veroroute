@@ -20,7 +20,7 @@
 #pragma once
 
 #include "Rect.h"
-#include "RGB.h"
+#include "MyRGB.h"
 
 // Bitfield for text style
 const int TEXT_NORMAL		= 0;
@@ -28,17 +28,17 @@ const int TEXT_BOLD			= 1;
 const int TEXT_ITALIC		= 2;
 const int TEXT_UNDERLINE	= 4;
 
-class TextRect : public Rect, public RGB
+class TextRect : public Rect, public MyRGB
 {
 public:
-	TextRect() : Rect(), RGB()	{ SetDefaults(); }
-	TextRect(int rowMin, int rowMax, int colMin, int colMax) : Rect(rowMin, rowMax, colMin, colMax), RGB() { SetDefaults(); }
+	TextRect() : Rect(), MyRGB()	{ SetDefaults(); }
+	TextRect(int rowMin, int rowMax, int colMin, int colMax) : Rect(rowMin, rowMax, colMin, colMax), MyRGB() { SetDefaults(); }
 	~TextRect()	{}
-	TextRect(const TextRect& o)	: Rect(o), RGB(o) { *this = o; }
+	TextRect(const TextRect& o)	: Rect(o), MyRGB(o) { *this = o; }
 	TextRect& operator=(const TextRect& o)
 	{
 		Rect::operator=(o);
-		RGB::operator=(o);
+		MyRGB::operator=(o);
 		m_str	= o.m_str;
 		m_size	= o.m_size;
 		m_style	= o.m_style;
@@ -48,7 +48,7 @@ public:
 	bool operator==(const TextRect& o) const
 	{
 		return Rect::operator==(o)
-			&& RGB::operator==(o)
+			&& MyRGB::operator==(o)
 			&& m_str	== o.m_str
 			&& m_size	== o.m_size
 			&& m_style	== o.m_style
@@ -82,7 +82,7 @@ public:
 		inStream.Load(m_style);
 		inStream.Load(m_flags);
 		if ( inStream.GetVersion() >= VRT_VERSION_15 )
-			RGB::Load(inStream);	// Added in VRT_VERSION_15
+			MyRGB::Load(inStream);	// Added in VRT_VERSION_15
 	}
 	virtual void Save(DataStream& outStream) override
 	{
@@ -91,7 +91,7 @@ public:
 		outStream.Save(m_size);
 		outStream.Save(m_style);
 		outStream.Save(m_flags);
-		RGB::Save(outStream);		// Added in VRT_VERSION_15
+		MyRGB::Save(outStream);		// Added in VRT_VERSION_15
 	}
 private:
 	std::string	m_str;

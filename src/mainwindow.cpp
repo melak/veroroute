@@ -1368,14 +1368,14 @@ void MainWindow::DefinerChooseColor()
 	auto& def = GetCompDefiner();
 	assert(def.GetCurrentShapeId() != BAD_ID );
 	if ( def.GetCurrentShapeId() == BAD_ID ) return;
-	const RGB& rgb = def.GetCurrentShape().GetFillColor();
-	QColor oldColor = QColor(rgb.GetR(), rgb.GetG(), rgb.GetB());
-	QColor newColor	= QColorDialog::getColor(oldColor, this );
+	const MyRGB& rgb		= def.GetCurrentShape().GetFillColor();
+	const QColor oldColor	= QColor(rgb.GetR(), rgb.GetG(), rgb.GetB());
+	QColor		 newColor	= QColorDialog::getColor(oldColor, this );
 	if ( newColor.isValid() && oldColor != newColor )
 	{
 		int r(0), g(0), b(0);
 		newColor.getRgb(&r,&g,&b);
-		if ( def.SetFillColor( RGB((r<<16) + (g<<8) + b) ) )
+		if ( def.SetFillColor( MyRGB((r<<16) + (g<<8) + b) ) )
 		{
 			UpdateCompDialog(); UpdateHistory("Set fill color"); RepaintSkipRouting();
 		}

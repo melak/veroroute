@@ -20,16 +20,16 @@
 #pragma once
 
 #include "AdjInfoManager.h"
-#include "RGB.h"
+#include "MyRGB.h"
 
 #define MYNUMCOLORS 		12
 #define MY_GREY				(MYNUMCOLORS)
 #define MY_BLACK			(MYNUMCOLORS+1)
 #define NUM_PIXMAP_COLORS	(MYNUMCOLORS+2)
 
-static RGB g_color[MYNUMCOLORS] = { RGB(0x3C18C8), RGB(0xC024F8), RGB(0xD26060), RGB(0xDCDC58)
-								  , RGB(0x60C858), RGB(0x5896C8), RGB(0x6010FF), RGB(0xE142D2)
-								  , RGB(0xE18C30), RGB(0xA0C828), RGB(0x48C896), RGB(0x5080FF) };
+static MyRGB g_color[MYNUMCOLORS] = { MyRGB(0x3C18C8), MyRGB(0xC024F8), MyRGB(0xD26060), MyRGB(0xDCDC58)
+									, MyRGB(0x60C858), MyRGB(0x5896C8), MyRGB(0x6010FF), MyRGB(0xE142D2)
+									, MyRGB(0xE18C30), MyRGB(0xA0C828), MyRGB(0x48C896), MyRGB(0x5080FF) };
 
 // Manager class to handle assignment of colors to nodeIds
 
@@ -131,7 +131,7 @@ public:
 		const int iA = (100 - m_iSaturation) * 255;
 		if ( m_iFillSaturation == 0 )
 		{
-			RGB& rgb = g_color[colorId % MYNUMCOLORS];
+			MyRGB& rgb = g_color[colorId % MYNUMCOLORS];
 			R = ( iA + m_iSaturation * rgb.GetR() ) / 100;
 			G = ( iA + m_iSaturation * rgb.GetG() ) / 100;
 			B = ( iA + m_iSaturation * rgb.GetB() ) / 100;
