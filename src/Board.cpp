@@ -390,6 +390,18 @@ bool Board::GetDisableCompText()
 	return ( eType == COMP::WIRE || eType == COMP::VIA );	// No labels for wires and vias
 }
 
+bool Board::GetDisableMove()
+{
+	if ( GetMirrored() ) return true;
+	Component& trax			= m_compMgr.GetTrax();
+	const bool bHidingComps	= ( GetGroupMgr().GetNumUserComps() > 0 ) && ( GetCompMode()  == COMPSMODE::OFF );
+	const bool bHidingTrax	= ( trax.GetSize() > 0 ) && ( GetTrackMode() == TRACKMODE::OFF );
+	if ( bHidingComps || bHidingTrax ) return true;
+	const bool bNoComps		= ( GetGroupMgr().GetNumUserComps() == 0 );
+	const bool bNoTrax		= ( trax.GetSize() == 0 );
+	return bNoComps && bNoTrax;
+}
+
 bool Board::GetDisableRotate()
 {
 	if ( GetMirrored() ) return true;

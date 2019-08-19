@@ -821,6 +821,7 @@ void Board::CopyUserComps()	// Make a blank copy of the user-group components an
 bool Board::MoveUserComps(const int& deltaRow, const int& deltaCol)	// Move user-group components, and return true if the grid was panned
 {
 	if ( deltaRow == 0 && deltaCol == 0 ) return false;
+	if ( GetDisableMove() ) return false;
 
 	std::list<int> userCompIds;
 	m_groupMgr.GetGroupCompIds(USER_GROUPID, userCompIds);
@@ -879,21 +880,14 @@ bool Board::MoveTextBox(const int& deltaRow, const int& deltaCol)	// Move text b
 
 bool Board::MoveComps(const std::list<int>& compIds, const int& deltaRow, const int& deltaCol)	// Move components and return true if the grid was panned
 {
-	bool bPanned(false);	// Set true if we pan the grid
-
-	if ( deltaRow == 0 && deltaCol == 0 ) return bPanned;
-
-	Component& trax			= m_compMgr.GetTrax();
-	const bool bHidingComps	= ( GetGroupMgr().GetNumUserComps() > 0 ) && ( GetCompMode()  == COMPSMODE::OFF );
-	const bool bHidingTrax	= ( trax.GetSize() > 0 ) && ( GetTrackMode() == TRACKMODE::OFF );
-	if ( bHidingComps || bHidingTrax ) return bPanned;
-	const bool bNoComps		= ( GetGroupMgr().GetNumUserComps() == 0 );
-	const bool bNoTrax		= ( trax.GetSize() == 0 );
-	if ( bNoComps && bNoTrax ) return bPanned;
+	assert( deltaRow != 0 || deltaCol != 0 );
+	assert( !GetDisableMove() );
 
 	// Treat the components as a single large footprint with LT at (minRow, minCol)
 	Rect rect = GetFootprintBounds(compIds);
 	if ( !rect.GetIsValid() ) return false;
+
+	bool bPanned(false);	// Set true if we pan the grid
 
 	// Work out what the new bounds would be are after the move
 	rect.Move(deltaRow, deltaCol);
@@ -922,6 +916,7 @@ bool Board::MoveComps(const std::list<int>& compIds, const int& deltaRow, const 
 		comp.SetCol(newCol);
 	}
 	// The trax comp
+	Component& trax = m_compMgr.GetTrax();
 	if ( trax.GetSize() > 0 )
 	{
 		int newRow = trax.GetRow() + deltaRow;

@@ -425,6 +425,7 @@ public:
 
 	// Command enablers for GUI
 	bool GetDisableCompText();
+	bool GetDisableMove();
 	bool GetDisableRotate();
 	bool GetDisableStretch(bool bGrow);
 	bool GetDisableStretchWidth(bool bGrow);

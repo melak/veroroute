@@ -546,28 +546,24 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
 	}
 
 	// Component manipulation
-	const bool bCanManipulateComp = ( nComps && compMode != COMPSMODE::OFF );
-	if ( bCanManipulateComp )
+	switch( event->key() )
 	{
-		switch( event->key() )
-		{
-			case Qt::Key_Underscore:
-			case Qt::Key_Minus:		CompShrink();	break;
-			case Qt::Key_Plus:
-			case Qt::Key_Equal:		CompGrow();		break;
-			case Qt::Key_Left:		m_board.MoveUserComps(0,-1); UpdateHistory("Move part(s) left");  RepaintWithRouting();	break;
-			case Qt::Key_Right:		m_board.MoveUserComps(0, 1); UpdateHistory("Move part(s) right"); RepaintWithRouting();	break;
-			case Qt::Key_Up:		m_board.MoveUserComps(-1,0); UpdateHistory("Move part(s) up");	  RepaintWithRouting();	break;
-			case Qt::Key_Down:		m_board.MoveUserComps( 1,0); UpdateHistory("Move part(s) down");  RepaintWithRouting();	break;
-		}
+		case Qt::Key_Underscore:
+		case Qt::Key_Minus:		CompShrink();	break;
+		case Qt::Key_Plus:
+		case Qt::Key_Equal:		CompGrow();		break;
+		case Qt::Key_Left:		if ( !m_board.GetDisableMove() ) { m_board.MoveUserComps(0,-1);	UpdateHistory("Move part(s) left");  RepaintWithRouting(); } break;
+		case Qt::Key_Right:		if ( !m_board.GetDisableMove() ) { m_board.MoveUserComps(0, 1);	UpdateHistory("Move part(s) right"); RepaintWithRouting(); } break;
+		case Qt::Key_Up:		if ( !m_board.GetDisableMove() ) { m_board.MoveUserComps(-1,0);	UpdateHistory("Move part(s) up");    RepaintWithRouting(); } break;
+		case Qt::Key_Down:		if ( !m_board.GetDisableMove() ) { m_board.MoveUserComps( 1,0);	UpdateHistory("Move part(s) down");  RepaintWithRouting(); } break;
 	}
 	if ( !bIsAutoRepeat )
 	{
 		switch( event->key() )
 		{
-			case Qt::Key_Z:			if ( bCanManipulateComp ) { CompRotateCCW();	RepaintWithRouting(); }	break;
-			case Qt::Key_X:			if ( bCanManipulateComp ) { CompRotateCW();		RepaintWithRouting(); }	break;
-			case Qt::Key_Delete:	if ( GetCurrentTextId() != BAD_TEXTID || bCanManipulateComp )
+			case Qt::Key_Z:			CompRotateCCW();	break;
+			case Qt::Key_X:			CompRotateCW();		break;
+			case Qt::Key_Delete:	if ( GetCurrentTextId() != BAD_TEXTID || ( nComps && compMode != COMPSMODE::OFF ) )
 										Delete();	//	So delete works like the backspace keyboard shortcut
 									break;
 		}
