@@ -308,6 +308,18 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 	const int&	compRows	= comp.GetCompRows();
 	const bool	bDiagsOK	= GetDiagsMode() != DIAGSMODE::OFF;
 
+	int iTraxNbrLT(NBR_LT);	// For handling diagonals on a rotated trax
+	if ( bTrax )
+	{
+		switch( comp.GetDirection() )
+		{
+			case 'W': iTraxNbrLT = NBR_LT;	break;
+			case 'E': iTraxNbrLT = NBR_RB;	break;
+			case 'N': iTraxNbrLT = NBR_LB;	break;
+			case 'S': iTraxNbrLT = NBR_RT;	break;
+		}
+	}
+
 	std::set<int> blankWireIds;	// CompIds of unpainted wires in the area covered by trax
 	if ( bTrax )
 	{
@@ -355,7 +367,7 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 					pGrid->ClearFlagBits(RECTSET);
 
 				// Fix up crossing diagonals
-				if ( bDiagsOK && j > 0 && i > 0 && pComp->GetUsed(NBR_LT) != pGrid->GetUsed(NBR_LT) )
+				if ( bDiagsOK && j > 0 && i > 0 && pComp->GetUsed(iTraxNbrLT) != pGrid->GetUsed(NBR_LT) )
 					pGrid->SwapDiagLinks();
 			}
 			else
