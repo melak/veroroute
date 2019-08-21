@@ -281,16 +281,17 @@ void MainWindow::PaintCompDefiner()	// The paint method in "component editor mod
 
 	int X(0), Y(0), L(0), R(0), T(0), B(0);
 
-	GetLRTB(board, rect, L, R, T, B);
-	L -= C; R += C; T -= C; B += C;
-	const int AXIS_X = ( L + R ) / 2;
-	const int AXIS_Y = ( T + B ) / 2;
-
 	// Draw rect around whole board area =========================================================
 	int dummy;
 	GetLRTB(board, 110, 0, 0, L, dummy, T, dummy);				// 110% size square
 	GetLRTB(board, 110, ROWS-1, COLS-1, dummy, R, dummy, B);	// 110% size square
 	painter.drawRect(L, T, R-L, B-T);
+
+	// Get footprint bounds ======================================================================
+	GetLRTB(board, rect, L, R, T, B);
+	L -= C; R += C; T -= C; B += C;
+	const int AXIS_X = ( L + R ) / 2;
+	const int AXIS_Y = ( T + B ) / 2;
 
 	// Draw shapes ===============================================================================
 	painter.save();
