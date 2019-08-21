@@ -152,5 +152,6 @@
 //static const char* szVEROROUTE_VERSION = "1.65";			// Bug fix. Wire hole-sharing under an IC only worked with wire-crossing enabled.
 //															// Improvement: Render wires as rounded rectangles so hole-sharing looks clearer.
 //static const char* szVEROROUTE_VERSION = "1.66";			// New feature: Allow shapes to be filled with colors.
-static const char* szVEROROUTE_VERSION = "1.67";			// Bug fix: Rotating a track pattern did not correctly handle competing diagonals.
-															// Bug fix: Couldn't use keys to move/rotate a track pattern unless components were also selected.
+//static const char* szVEROROUTE_VERSION = "1.67";			// Bug fix: Rotating a track pattern did not correctly handle competing diagonals.
+//															// Bug fix: Couldn't use keys to move/rotate a track pattern unless components were also selected.
+static const char* szVEROROUTE_VERSION = "1.68";			// Bug fix: Component Editor not drawing footprint area with dashed line.
