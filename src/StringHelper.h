@@ -62,6 +62,16 @@ struct StringHelper
 			}
 		}
 	}
+	std::vector<std::string> strList;
+
+	static void GetSubStrings(const std::string& in, std::vector<std::string>& strList)
+	{
+		strList.clear();
+		std::istringstream iss(in);
+		for (std::string s; iss >> s; )
+			strList.push_back(s);
+	}
+
 	StringHelper() { assert(true || PreventBuildWarnings()); }
 private:
 	bool PreventBuildWarnings() const

@@ -62,7 +62,8 @@
     <addaction name="actionSave"/>
     <addaction name="actionSave_As"/>
     <addaction name="separator"/>
-    <addaction name="actionImport"/>
+    <addaction name="actionImportTango"/>
+    <addaction name="actionImportOrcad"/>
     <addaction name="separator"/>
     <addaction name="actionWrite_PDF"/>
     <addaction name="actionWrite_PNG"/>
@@ -372,7 +373,7 @@
     <bool>false</bool>
    </property>
   </action>
-  <action name="actionImport">
+  <action name="actionImportTango">
    <property name="text">
     <string>Import netlist (Protel 1/Tango)</string>
    </property>
@@ -1118,6 +1119,11 @@
   <action name="actionWireDlg">
    <property name="text">
     <string>Wire Options</string>
+   </property>
+  </action>
+  <action name="actionImportOrcad">
+   <property name="text">
+    <string>Import netlist (Orcad2)</string>
    </property>
   </action>
  </widget>

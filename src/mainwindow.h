@@ -118,7 +118,8 @@ public slots:
 	void Merge();
 	void Save();
 	void SaveAs();
-	void Import();
+	void ImportTango();
+	void ImportOrcad();
 	void WritePDF();
 	void WritePNG();
 	void Quit();

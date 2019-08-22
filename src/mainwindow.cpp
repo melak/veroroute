@@ -108,7 +108,8 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	QObject::connect(ui->actionSave,					SIGNAL(triggered()), this, SLOT(Save()));
 	QObject::connect(ui->actionSave_As,					SIGNAL(triggered()), this, SLOT(SaveAs()));
 	QObject::connect(ui->actionMerge,					SIGNAL(triggered()), this, SLOT(Merge()));
-	QObject::connect(ui->actionImport,					SIGNAL(triggered()), this, SLOT(Import()));
+	QObject::connect(ui->actionImportTango,				SIGNAL(triggered()), this, SLOT(ImportTango()));
+	QObject::connect(ui->actionImportOrcad,				SIGNAL(triggered()), this, SLOT(ImportOrcad()));
 	QObject::connect(ui->actionWrite_PDF,				SIGNAL(triggered()), this, SLOT(WritePDF()));
 	QObject::connect(ui->actionWrite_PNG,				SIGNAL(triggered()), this, SLOT(WritePNG()));
 	QObject::connect(ui->actionQuit,					SIGNAL(triggered()), this, SLOT(Quit()));
@@ -547,7 +548,7 @@ void MainWindow::SaveAs()
 	UpdateRecentFiles(&fileName, bOK);	// Remove file from list if bOK == false
 }
 
-void MainWindow::Import()
+void MainWindow::ImportTango()
 {
 	if ( GetIsModified() )
 	{
@@ -562,7 +563,33 @@ void MainWindow::Import()
 
 		const std::string	fileNameStr = fileName.toStdString();
 		std::string			errorStr;
-		const bool bOK = m_board.Import(GetTemplateManager(), fileNameStr, errorStr);
+		const bool bOK = m_board.ImportTango(GetTemplateManager(), fileNameStr, errorStr);
+		m_fileName.clear();
+		ResetView();
+		ResetHistory("File->Import Netlist");
+		if ( !bOK )
+		{
+			QMessageBox::information(this, tr("Error Importing Netlist"), tr(errorStr.c_str()));
+		}
+	}
+}
+
+void MainWindow::ImportOrcad()
+{
+	if ( GetIsModified() )
+	{
+		if ( QMessageBox::question(this, tr("Confirm Import"),
+									 tr("Your circuit is not saved. You will lose it if you Import a new one.  Continue?"),
+									 QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::No ) return;
+	}
+	QString fileName = QFileDialog::getOpenFileName(this, tr("Open file"), ""/*directory*/,	tr("Orcad2 Netlist (*.net);;All Files (*)"));
+	if ( !fileName.isEmpty() )
+	{
+		ui->statusBar->showMessage( tr("Importing..."), 500 );
+
+		const std::string	fileNameStr = fileName.toStdString();
+		std::string			errorStr;
+		const bool bOK = m_board.ImportOrcad(GetTemplateManager(), fileNameStr, errorStr);
 		m_fileName.clear();
 		ResetView();
 		ResetHistory("File->Import Netlist");
