@@ -55,6 +55,13 @@
     <property name="title">
      <string>File</string>
     </property>
+    <widget class="QMenu" name="menuImport">
+     <property name="title">
+      <string>Import netlist</string>
+     </property>
+     <addaction name="actionImportTango"/>
+     <addaction name="actionImportOrcad"/>
+    </widget>
     <addaction name="actionNew"/>
     <addaction name="actionOpen"/>
     <addaction name="actionMerge"/>
@@ -62,8 +69,7 @@
     <addaction name="actionSave"/>
     <addaction name="actionSave_As"/>
     <addaction name="separator"/>
-    <addaction name="actionImportTango"/>
-    <addaction name="actionImportOrcad"/>
+    <addaction name="menuImport"/>
     <addaction name="separator"/>
     <addaction name="actionWrite_PDF"/>
     <addaction name="actionWrite_PNG"/>
@@ -375,13 +381,15 @@
   </action>
   <action name="actionImportTango">
    <property name="text">
-    <string>Import netlist (Protel 1/Tango)</string>
+    <string>Protel1/Tango</string>
    </property>
-   <property name="iconText">
-    <string>Import netlist (Protel 1/Tango)</string>
+   <property name="autoRepeat">
+    <bool>false</bool>
    </property>
-   <property name="toolTip">
-    <string>Import netlist (Protel 1/Tango)</string>
+  </action>
+  <action name="actionImportOrcad">
+   <property name="text">
+    <string>OrCAD2</string>
    </property>
    <property name="autoRepeat">
     <bool>false</bool>
@@ -1119,11 +1127,6 @@
   <action name="actionWireDlg">
    <property name="text">
     <string>Wire Options</string>
-   </property>
-  </action>
-  <action name="actionImportOrcad">
-   <property name="text">
-    <string>Import netlist (Orcad2)</string>
    </property>
   </action>
  </widget>
