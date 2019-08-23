@@ -160,3 +160,4 @@ V1.66  New feature: Allow shapes to be filled with colors.
 V1.67  Bug fix: Rotating a track pattern did not correctly handle competing diagonals.
        Bug fix: Couldn't use keys to move/rotate a track pattern unless components were also selected.
 V1.68  Bug fix: Component Editor not drawing footprint area with dashed line.
+V1.69  New feature: Allow netlist import in OrCAD2 format (so KiCad can be used as schematic editor).
