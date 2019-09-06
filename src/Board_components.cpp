@@ -863,7 +863,7 @@ bool Board::MoveTextBox(const int& deltaRow, const int& deltaCol)	// Move text b
 	GetTextMgr().MoveRect(GetCurrentTextId(), deltaRow, deltaCol);
 
 	TextRect& rect = GetTextMgr().GetTextRectById( GetCurrentTextId() );
-	if ( !rect.GetIsValid() ) return false;	//TODO ???
+	if ( !rect.GetIsValid() ) return false;
 
 	// Pan the circuit as needed if the rect has gone out of bounds
 	if ( rect.m_rowMin < 0 )								// If we've gone too far up ...

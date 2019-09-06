@@ -170,45 +170,61 @@ int CompDefiner::GetShapeId(const double& dRowIn, const double& dColIn) const	//
 	double dCentreRow(0), dCentreCol(0);
 	GetGridCentre(dCentreRow, dCentreCol);	// Footprint centre w.r.t. screen
 
-	const double dRow(dRowIn - dCentreRow);
-	const double dCol(dColIn - dCentreCol);
+	const double dRow(dRowIn - dCentreRow);	// w.r.t. footprint centre
+	const double dCol(dColIn - dCentreCol);	// w.r.t. footprint centre
 
 	int		iBestId(BAD_ID);
 	double	dMinArea(INT_MAX);
 	for (const auto& mapObj : m_mapShapes)
 	{
-		const Shape& s	= mapObj.second;
-		const double DX	= s.GetDX();
-		const double DY	= s.GetDY();
+		const Shape& s		= mapObj.second;
+		const double DX		= s.GetDX();
+		const double DY		= s.GetDY();
+		const double CX		= s.GetCX();
+		const double CY		= s.GetCY();
+		const double dA3	= s.GetA3() * M_PI / 180.0;	// Convert to radians
+		const double dCos	= cos(dA3);
+		const double dSin	= sin(dA3);
+		const double dX		= dCol - CX;
+		const double dY		= dRow - CY;
+		const double rx		= dCos * dX - dSin * dY;	// w.r.t. rotated axes at the shape centre
+		const double ry		= dSin * dX + dCos * dY;	// w.r.t. rotated axes at the shape centre
 
 		double dArea(INT_MAX);
 		bool bOK(false);
-
-		switch( s.GetType() )	//TODO Properly handle selection of rotated shapes
+		switch( s.GetType() )
 		{
 			case SHAPE::LINE:	// Check for distance within a narrow ellipse with foci at the endpoints
 			{
-				const double dx1 = dCol - s.GetX1();
-				const double dy1 = dRow - s.GetY1();
-				const double dx2 = dCol - s.GetX2();
-				const double dy2 = dRow - s.GetY2();
-				dArea	= sqrt(DX*DX + DY*DY);		// "Area" for line is actually length
+				// Get true X1,X2,Y1,Y2 locations w.r.t. footprint centre
+				const double x1  = s.GetX1() - CX;
+				const double x2  = s.GetX2() - CX;
+				const double y1  = s.GetY1() - CY;
+				const double y2  = s.GetY2() - CY;
+				const double X1  = CX + dCos * x1 + dSin * y1;	// w.r.t. footprint centre
+				const double Y1  = CY - dSin * x1 + dCos * y1;	// w.r.t. footprint centre
+				const double X2  = CX + dCos * x2 + dSin * y2;	// w.r.t. footprint centre
+				const double Y2  = CY - dSin * x2 + dCos * y2;	// w.r.t. footprint centre
+				const double DX  = fabs(X2 - X1);
+				const double DY  = fabs(Y2 - Y1);
+				const double dx1 = dCol - X1;
+				const double dy1 = dRow - Y1;
+				const double dx2 = dCol - X2;
+				const double dy2 = dRow - Y2;
+				dArea	= sqrt(DX*DX + DY*DY);	// "Area" for line is actually length
 				bOK		= sqrt(dx1*dx1 + dy1*dy1) + sqrt(dx2*dx2 + dy2*dy2) < 0.1 + dArea;
 				break;
 			}
 			case SHAPE::RECT:
 			case SHAPE::ROUNDED_RECT:
-				dArea	= fabs(DX*DY);				// Area of the rectangle
-				bOK		= dRow >= s.GetYmin() && dRow <= s.GetYmax()
-					   && dCol >= s.GetXmin() && dCol <= s.GetXmax();
+				dArea	= fabs(DX*DY);			// Area of the rectangle
+				bOK		= fabs(2.0*ry) <= DY && fabs(2.0*rx) <= DX;
 				break;
 			case SHAPE::ELLIPSE:
 			case SHAPE::ARC:
 			case SHAPE::CHORD:
 			{
-				const double rx = dCol - s.GetCX();
-				const double ry = dRow - s.GetCY();
-				dArea	= 3.141592 * 0.25*DX*DY;	// Area of the ellipse
+				dArea	= M_PI * 0.25*DX*DY;	// Area of the ellipse
 				bOK		= rx*DY*rx*DY + ry*DX*ry*DX <= 0.25*DX*DX*DY*DY;
 				break;
 			}
