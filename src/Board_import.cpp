@@ -37,10 +37,8 @@ bool Board::ImportTango(const TemplateManager& templateMgr, const std::string& f
 	// List of package identifiers for footprints with variable numbers of pins/lengths.
 	// "PADS" ==> Create separate on-board PAD objects for an off-board part.
 	// "SWITCH_ST_DIP" must be tested before "SWITCH_ST_DIP".
-
-	//TODO Need to add STRIP_100, BLOCK_100, BLOCK_200 to the variable size set as they only support 2 pins by default
-
-	const std::string strVar[10] = {"SIP", "DIP", "PADS", "SWITCH_ST_DIP", "SWITCH_ST", "SWITCH_DT", "RESISTOR", "DIODE", "CAP_CERAMIC", "CAP_FILM"};
+	const int NUM_VARIABLE_PIN_PARTS = 13;
+	const std::string strVar[NUM_VARIABLE_PIN_PARTS] = {"SIP", "DIP", "PADS", "SWITCH_ST_DIP", "SWITCH_ST", "SWITCH_DT", "STRIP_100MIL", "BLOCK_100MIL", "BLOCK_200MIL", "RESISTOR", "DIODE", "CAP_CERAMIC", "CAP_FILM"};
 
 	std::ifstream inStream;
 	inStream.open(filename.c_str(), std::ios::in | std::ios::binary);
@@ -90,7 +88,7 @@ bool Board::ImportTango(const TemplateManager& templateMgr, const std::string& f
 
 				// If footprint is variable length, then get the number of pins/length from typeStr
 				int numPins(0), nLength(0);	// Invalid by default
-				for (int i = 0; i < 10; i++)
+				for (int i = 0; i < NUM_VARIABLE_PIN_PARTS; i++)
 				{
 					const std::string&	strTmp	= strVar[i];	// e.g. "SIP", "DIP, etc
 					const auto			L		= strTmp.length();
@@ -109,7 +107,7 @@ bool Board::ImportTango(const TemplateManager& templateMgr, const std::string& f
 							if ( nLength > 0 )					// The length is in 100ths of a mil ...
 								nLength += 1;					// ... so must add 1 to get part length in grid squares
 						}
-						else	// DIP/SIP/SWITCH
+						else	// DIP/SIP/SWITCH/STRIP/BLOCK
 						{
 							numPins = atoi( pinStr.c_str() );
 							if ( numPins == 0 )					// Missing or zero ...
@@ -269,10 +267,8 @@ bool Board::ImportOrcad(const TemplateManager& templateMgr, const std::string& f
 	// List of package identifiers for footprints with variable numbers of pins/lengths.
 	// "PADS" ==> Create separate on-board PAD objects for an off-board part.
 	// "SWITCH_ST_DIP" must be tested before "SWITCH_ST_DIP".
-
-	//TODO Need to add STRIP_100, BLOCK_100, BLOCK_200 to the variable size set as they only support 2 pins by default
-
-	const std::string strVar[10] = {"SIP", "DIP", "PADS", "SWITCH_ST_DIP", "SWITCH_ST", "SWITCH_DT", "RESISTOR", "DIODE", "CAP_CERAMIC", "CAP_FILM"};
+	const int NUM_VARIABLE_PIN_PARTS = 13;
+	const std::string strVar[NUM_VARIABLE_PIN_PARTS] = {"SIP", "DIP", "PADS", "SWITCH_ST_DIP", "SWITCH_ST", "SWITCH_DT", "STRIP_100MIL", "BLOCK_100MIL", "BLOCK_200MIL", "RESISTOR", "DIODE", "CAP_CERAMIC", "CAP_FILM"};
 
 	std::ifstream inStream;
 	inStream.open(filename.c_str(), std::ios::in | std::ios::binary);
@@ -344,7 +340,7 @@ bool Board::ImportOrcad(const TemplateManager& templateMgr, const std::string& f
 
 			// If footprint is variable length, then get the number of pins/length from typeStr
 			int numPins(0), nLength(0);	// Invalid by default
-			for (int i = 0; i < 10; i++)
+			for (int i = 0; i < NUM_VARIABLE_PIN_PARTS; i++)
 			{
 				const std::string&	strTmp	= strVar[i];	// e.g. "SIP", "DIP, etc
 				const auto			L		= strTmp.length();
@@ -363,7 +359,7 @@ bool Board::ImportOrcad(const TemplateManager& templateMgr, const std::string& f
 						if ( nLength > 0 )					// The length is in 100ths of a mil ...
 							nLength += 1;					// ... so must add 1 to get part length in grid squares
 					}
-					else	// DIP/SIP/SWITCH
+					else	// DIP/SIP/SWITCH/STRIP/BLOCK
 					{
 						numPins = atoi( pinStr.c_str() );
 						if ( numPins == 0 )					// Missing or zero ...

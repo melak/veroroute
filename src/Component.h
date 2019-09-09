@@ -257,11 +257,12 @@ public:
 		}
 		return str;
 	}
-	std::string GetFullImportStr() const	// For SIP/DIP/SWITCH types, append the number of pins
+	std::string GetFullImportStr() const	// For SIP/DIP/SWITCH/STRIP/BLOCK types, append the number of pins
 	{
 		std::string str = GetImportStr();
 		if ( GetType() == COMP::DIP || GetType() == COMP::SIP ||
-			 GetType() == COMP::SWITCH_DT || GetType() == COMP::SWITCH_ST || GetType() == COMP::SWITCH_ST_DIP )
+			 GetType() == COMP::SWITCH_DT || GetType() == COMP::SWITCH_ST || GetType() == COMP::SWITCH_ST_DIP ||
+			 GetType() == COMP::STRIP_100 || GetType() == COMP::BLOCK_100 || GetType() == COMP::BLOCK_200 )
 		{
 			char buffer[32] = {'\0'};
 			sprintf(buffer, "%d", (int) GetNumPins());
@@ -416,7 +417,7 @@ public:
 			SetPrefixStr( GetDefaultPrefixStr( GetType() ) );
 		if ( GetTypeStr().empty() || bForce )
 			SetTypeStr( GetDefaultTypeStr( GetType() ) );
-		if ( GetImportStr().empty() || bForce )
+		if ( GetImportStr().empty() || bForce || GetType() != COMP::CUSTOM )
 			SetImportStr( GetDefaultImportStr( GetType() ) );
 	}
 	void AddDefaultShapes();
@@ -470,7 +471,7 @@ public:
 
 		// Try to fix any missing definitions
 		SetDefaultPinFlags();
-		SetDefaultStrings(false);	// false ==> only set epmty (m_prefixStr, m_guiStr, m_importStr)
+		SetDefaultStrings(false);	// false ==> only set empty (m_prefixStr, m_guiStr, m_importStr)
 		AddDefaultShapes();
 	}
 	virtual void Save(DataStream& outStream) override

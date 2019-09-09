@@ -226,9 +226,9 @@ static void InitMapsCompTypeToStr()
 	UpdateMaps(COMP::SIP,					"SIP",							"SIP");
 	UpdateMaps(COMP::DIP,					"DIP",							"DIP");
 	UpdateMaps(COMP::DIP_RECTIFIER,			"DIP (Rectifier)",				"DIP_RECTIFIER");
-	UpdateMaps(COMP::STRIP_100,				"Pin Strip (100 mil)",			"STRIP_100");
-	UpdateMaps(COMP::BLOCK_100,				"Terminal Block (100 mil)",		"BLOCK_100");
-	UpdateMaps(COMP::BLOCK_200,				"Terminal Block (200 mil)",		"BLOCK_200");
+	UpdateMaps(COMP::STRIP_100,				"Pin Strip (100 mil)",			"STRIP_100MIL");
+	UpdateMaps(COMP::BLOCK_100,				"Terminal Block (100 mil)",		"BLOCK_100MIL");
+	UpdateMaps(COMP::BLOCK_200,				"Terminal Block (200 mil)",		"BLOCK_200MIL");
 	UpdateMaps(COMP::SWITCH_ST,				"Single Throw",					"SWITCH_ST");
 	UpdateMaps(COMP::SWITCH_DT,				"Double Throw",					"SWITCH_DT");
 	UpdateMaps(COMP::SWITCH_ST_DIP,			"Single Throw (DIP)",			"SWITCH_ST_DIP");
