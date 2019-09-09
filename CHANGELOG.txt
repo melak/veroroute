@@ -161,3 +161,5 @@ V1.67  Bug fix: Rotating a track pattern did not correctly handle competing diag
        Bug fix: Couldn't use keys to move/rotate a track pattern unless components were also selected.
 V1.68  Bug fix: Component Editor not drawing footprint area with dashed line.
 V1.69  New feature: Allow netlist import in OrCAD2 format (so KiCad can be used as schematic editor).
+V1.70  Bug fix: Handle selection of rotated shapes in component editor.
+       Bug fix: Make netlist import handle connectors (strip/blocks) with different numbers of pins.

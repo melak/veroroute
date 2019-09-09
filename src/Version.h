@@ -157,4 +157,6 @@ static const char* szVEROROUTE_VERSION =
 //"1.67";	// Bug fix: Rotating a track pattern did not correctly handle competing diagonals.
 //			// Bug fix: Couldn't use keys to move/rotate a track pattern unless components were also selected.
 //"1.68";	// Bug fix: Component Editor not drawing footprint area with dashed line.
-  "1.69";	// New feature: Allow netlist import in OrCAD2 format (so KiCad can be used as schematic editor).
+//"1.69";	// New feature: Allow netlist import in OrCAD2 format (so KiCad can be used as schematic editor).
+  "1.70";	// Bug fix: Handle selection of rotated shapes in component editor.
+			// Bug fix: Make netlist import handle connectors (strip/blocks) with different numbers of pins.
