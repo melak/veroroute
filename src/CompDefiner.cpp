@@ -248,8 +248,9 @@ bool CompDefiner::GetIsValid() const
 	if ( GetTypeFromImportStr(m_importStr) != COMP::INVALID ) return false;	// Reserved string
 	// Following is copied from Board::Import() method.
 	// List of package identifiers for footprints with variable numbers of pins/lengths.
-	const std::string strVar[10] = {"SIP", "DIP", "PADS", "SWITCH_ST_DIP", "SWITCH_ST", "SWITCH_DT", "RESISTOR", "DIODE", "CAP_CERAMIC", "CAP_FILM"};
-	for (int i = 0; i < 10; i++)
+	const int NUM_VARIABLE_PIN_PARTS = 13;
+	const std::string strVar[NUM_VARIABLE_PIN_PARTS] = {"SIP", "DIP", "PADS", "SWITCH_ST_DIP", "SWITCH_ST", "SWITCH_DT", "STRIP_100MIL", "BLOCK_100MIL", "BLOCK_200MIL", "RESISTOR", "DIODE", "CAP_CERAMIC", "CAP_FILM"};
+	for (int i = 0; i < NUM_VARIABLE_PIN_PARTS; i++)
 	{
 		const std::string&	strTmp	= strVar[i];	// e.g. "SIP", "DIP, etc
 		const auto			L		= strTmp.length();
