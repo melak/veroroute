@@ -509,17 +509,17 @@ private:
 	std::string					m_valueStr;			// Value label
 	std::string					m_prefixStr;		// The prefix for new components (overridden for CUSTOM components).
 	std::string					m_typeStr;			// The footprint type (overridden for CUSTOM components).
-	std::string					m_importStr;		// Protel/Tango footprint name. Only for CUSTOM components !!!
+	std::string					m_importStr;		// Protel/Tango/OrCAD2 footprint name. Only for CUSTOM components !!!
 	std::vector<int>			m_nodeIdPins;		// The nodeIds of the pins
 	std::vector<int>			m_origIdPins;		// The nodeIds under the pins BEFORE placement
 	std::vector<std::string>	m_strPinLabel;		// The pin labels for DIPs/SIPs
-	std::vector<Shape>			m_shapes;			// For outline of CUSTOM components. Coordinates are RELATIVE to footprint centre.
+	std::vector<Shape>			m_shapes;			// For rendering components. Coordinates are RELATIVE to footprint centre.
 	uchar						m_iPinFlags;		// 1 ==> PIN_RECT, 2 ==> PIN_LABELS
 	// Current placement in board
 	int							m_row;				// Board row for top-left element of footprint
 	int							m_col;				// Board col for top-left element of footprint
 	int							m_iLabelOffsetRow;	// Label offset in units of 1/16 of a grid square
 	int							m_iLabelOffsetCol;	// Label offset in units of 1/16 of a grid square
-	char						m_direction;		// 'W', 'E', 'N', 'S'
-	bool						m_bIsPlaced;		// true ==> not floating
+	char						m_direction;		// Component orienation:  'W', 'E', 'N', 'S'
+	bool						m_bIsPlaced;		// true ==> placed on board,  false ==> floating
 };

@@ -108,7 +108,7 @@ public:
 		if ( iter != m_mapIdToComp.end() )
 			m_mapIdToComp.erase(iter);
 		else
-		assert(0);	// Should never hit this
+			assert(0);	// Should never hit this
 	}
 	bool GetIsEmpty() const
 	{

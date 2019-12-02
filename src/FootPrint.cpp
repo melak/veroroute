@@ -92,7 +92,7 @@ void FootPrint::BuildTracks(CompManager* pCompMgr, const RectManager& rectMgr, c
 				}
 			}
 			pTarget->SetNodeId(iNodeId);
-			pTarget->SetCode(pSource->GetCode());	//TDDO This is wrong at boundaries
+			pTarget->SetCode(pSource->GetCode());	//TODO This is wrong at boundaries
 			pTarget->SetFlagBits(RECTSET);
 		}
 	}

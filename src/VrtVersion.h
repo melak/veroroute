@@ -28,5 +28,5 @@ const int VRT_VERSION_25 = 25;	// Moves some variables from CompElement to Eleme
 const int VRT_VERSION_26 = 26;	// Reworked codes in Pin to allow 2 wires per grid point
 const int VRT_VERSION_27 = 27;	// Modified Element to store additional wire info
 const int VRT_VERSION_28 = 28;	// Added options for wires to share holes or cross/overlay
-const int VRT_VERSION_29 = 29;	// Added color to component defintion
+const int VRT_VERSION_29 = 29;	// Added color to component definition
 const int VRT_VERSION_CURRENT = VRT_VERSION_29;
