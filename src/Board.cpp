@@ -222,6 +222,18 @@ void Board::FloodNodeId(const int& nodeId)
 	{
 		Element* p = Get(row, col);
 		if ( p->GetMH() == BAD_MH) continue;
+		if ( p->GetHasWire() )
+		{
+			// Just need to get origId.  Any used slot will do
+			size_t pinIndex;
+			int compId;
+			p->GetSlotInfo(p->GetUsedSlot(), pinIndex, compId);
+
+			Component& comp = m_compMgr.GetComponentById(compId); assert( comp.GetType() == COMP::WIRE );
+			const int origId = comp.GetOrigId(pinIndex);
+
+			if ( origId != p->GetNodeId() || !p->ReadFlagBits(USERSET) ) continue; // Don't paint directly if it wasn't painted directly in the first place
+		}
 		SetNodeIdByUser(row, col, nodeId, true);	// true ==> paint pins
 	}
 }
