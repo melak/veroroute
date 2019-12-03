@@ -160,4 +160,5 @@ static const char* szVEROROUTE_VERSION =
 //"1.69";	// New feature: Allow netlist import in OrCAD2 format (so KiCad can be used as schematic editor).
 //"1.70";	// Bug fix: Handle selection of rotated shapes in component editor.
 			// Bug fix: Make netlist import handle connectors (strip/blocks) with different numbers of pins.
-  "1.71";	// Bug fix: Component editor not checking connectors (strip/blocks) for reserved import strings.
+//"1.71";	// Bug fix: Component editor not checking connectors (strip/blocks) for reserved import strings.
+  "1.72";	// Bug fix: Flood fill not preserving status of grid under wires.
