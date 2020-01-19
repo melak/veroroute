@@ -44,7 +44,8 @@ public:
 		m_iPinFlags = 0;
 		m_nodeIdPins.clear();
 		m_origIdPins.clear();
-		m_strPinLabel.clear();
+		m_pinLabels.clear();
+		m_pinAligns.clear();
 		m_shapes.clear();
 	}
 	Component(const CompDefiner& definer)	// This method is for building a custom component
@@ -120,7 +121,8 @@ public:
 		AllocatePins( o.GetNumPins() );
 		std::copy(o.m_nodeIdPins.begin(),	o.m_nodeIdPins.end(),	m_nodeIdPins.begin());
 		std::copy(o.m_origIdPins.begin(),	o.m_origIdPins.end(),	m_origIdPins.begin());
-		std::copy(o.m_strPinLabel.begin(),	o.m_strPinLabel.end(),	m_strPinLabel.begin());
+		std::copy(o.m_pinLabels.begin(),	o.m_pinLabels.end(),	m_pinLabels.begin());
+		std::copy(o.m_pinAligns.begin(),	o.m_pinAligns.end(),	m_pinAligns.begin());
 		CopyShapes( o );
 		return *this;
 	}
@@ -151,7 +153,8 @@ public:
 		{
 			bOK =  m_nodeIdPins[i]	== o.m_nodeIdPins[i]
 				&& m_origIdPins[i]	== o.m_origIdPins[i]
-				&& m_strPinLabel[i]	== o.m_strPinLabel[i];
+				&& m_pinLabels[i]	== o.m_pinLabels[i]
+				&& m_pinAligns[i]	== o.m_pinAligns[i];
 		}
 		for (size_t i = 0; i < GetNumShapes() && bOK; i++)
 		{
@@ -165,7 +168,8 @@ public:
 	{
 		m_nodeIdPins.clear();
 		m_origIdPins.clear();
-		m_strPinLabel.clear();
+		m_pinLabels.clear();
+		m_pinAligns.clear();
 		m_shapes.clear();
 	}
 	void SetId(const int& i)										{ m_id = i; }
@@ -176,12 +180,15 @@ public:
 	void SetImportStr(const std::string& s)							{ m_importStr = s; }
 	void SetNodeId(const size_t& iPinIndex, const int& i)			{ m_nodeIdPins[iPinIndex] = i; }
 	void SetOrigId(const size_t& iPinIndex, const int& i)			{ m_origIdPins[iPinIndex] = i; }
-	void SetPinLabel(const size_t& iPinIndex, const std::string& s)	{ m_strPinLabel[iPinIndex] = s; }
+	void SetPinLabel(const size_t& iPinIndex, const std::string& s)	{ m_pinLabels[iPinIndex] = s; }
+	void SetPinAlign(const size_t& iPinIndex, const int& i)			{ m_pinAligns[iPinIndex] = i; }
 	void SetShape(const size_t& iShapeIndex, const Shape& o)		{ m_shapes[iShapeIndex] = o; }
 	void CopyPinLabels(const Component& o)
 	{
-		assert(m_strPinLabel.size() == o.m_strPinLabel.size());
-		std::copy(o.m_strPinLabel.begin(), o.m_strPinLabel.end(), m_strPinLabel.begin());
+		assert(m_pinLabels.size() == o.m_pinLabels.size());
+		assert(m_pinAligns.size() == o.m_pinAligns.size());
+		std::copy(o.m_pinLabels.begin(), o.m_pinLabels.end(), m_pinLabels.begin());
+		std::copy(o.m_pinAligns.begin(), o.m_pinAligns.end(), m_pinAligns.begin());
 	}
 	void CopyShapes(const Component& o)
 	{
@@ -192,7 +199,8 @@ public:
 	{
 		m_nodeIdPins.clear();	m_nodeIdPins.resize(numPins, BAD_NODEID);
 		m_origIdPins.clear();	m_origIdPins.resize(numPins, BAD_NODEID);
-		m_strPinLabel.clear();	m_strPinLabel.resize(numPins, "");
+		m_pinLabels.clear();	m_pinLabels.resize(numPins, "");
+		m_pinAligns.clear();	m_pinAligns.resize(numPins, Qt::AlignHCenter);
 		SetDefaultPinLabels();
 	}
 	void AllocateShapes(const size_t numShapes)
@@ -223,7 +231,8 @@ public:
 	size_t				GetNumPins() const							{ return m_nodeIdPins.size(); }
 	const int&			GetNodeId(const size_t& iPinIndex) const	{ return m_nodeIdPins[iPinIndex]; }
 	const int&			GetOrigId(const size_t& iPinIndex) const	{ return m_origIdPins[iPinIndex]; }
-	const std::string&	GetPinLabel(const size_t& iPinIndex) const	{ return m_strPinLabel[iPinIndex]; }
+	const std::string&	GetPinLabel(const size_t& iPinIndex) const	{ return m_pinLabels[iPinIndex]; }
+	const int&			GetPinAlign(const size_t& iPinIndex) const	{ return m_pinAligns[iPinIndex]; }
 	size_t				GetNumShapes() const						{ return m_shapes.size(); }
 	const Shape&		GetShape(const size_t& iShapeIndex) const	{ return m_shapes[iShapeIndex]; }
 	const int&			GetRow() const								{ return m_row; }
@@ -298,8 +307,9 @@ public:
 	{
 		for (size_t i = 0; i < GetNumPins(); i++)
 		{
-			if ( m_nodeIdPins[i]  != BAD_NODEID ) return true;
-			if ( m_strPinLabel[i] != GetDefaultPinLabel(i) ) return true;
+			if ( m_nodeIdPins[i] != BAD_NODEID ) return true;
+			if ( m_pinLabels[i]  != GetDefaultPinLabel(i) ) return true;
+			if ( m_pinAligns[i]  != GetDefaultPinAlign(i, GetNumPins(), GetType()) ) return true;
 		}
 		return false;
 	}
@@ -350,7 +360,11 @@ public:
 	}
 	void SetDefaultPinLabels()
 	{
-		for (size_t i = 0; i < GetNumPins(); i++) m_strPinLabel[i] = GetDefaultPinLabel(i);
+		for (size_t i = 0; i < GetNumPins(); i++)
+		{
+			m_pinLabels[i] = GetDefaultPinLabel(i);
+			m_pinAligns[i] = GetDefaultPinAlign(i, GetNumPins(), GetType());
+		}
 	}
 	Rect GetFootprintRect() const
 	{
@@ -458,7 +472,9 @@ public:
 			inStream.Load(m_nodeIdPins[i]);
 			inStream.Load(m_origIdPins[i]);
 			if ( inStream.GetVersion() >= VRT_VERSION_7 )
-				inStream.Load(m_strPinLabel[i]);	// Added in VRT_VERSION_7
+				inStream.Load(m_pinLabels[i]);		// Added in VRT_VERSION_7
+			if ( inStream.GetVersion() >= VRT_VERSION_30 )
+				inStream.Load(m_pinAligns[i]);		// Added in VRT_VERSION_30
 		}
 		if ( inStream.GetVersion() >= VRT_VERSION_18 )
 		{
@@ -496,7 +512,8 @@ public:
 		{
 			outStream.Save(m_nodeIdPins[i]);
 			outStream.Save(m_origIdPins[i]);
-			outStream.Save(m_strPinLabel[i]);	// Added in VRT_VERSION_7
+			outStream.Save(m_pinLabels[i]);		// Added in VRT_VERSION_7
+			outStream.Save(m_pinAligns[i]);		// Added in VRT_VERSION_30
 		}
 		const unsigned int numShapes = static_cast<unsigned int>( GetNumShapes() );
 		outStream.Save(numShapes);				// Added in VRT_VERSION_18
@@ -510,9 +527,10 @@ private:
 	std::string					m_prefixStr;		// The prefix for new components (overridden for CUSTOM components).
 	std::string					m_typeStr;			// The footprint type (overridden for CUSTOM components).
 	std::string					m_importStr;		// Protel/Tango/OrCAD2 footprint name. Only for CUSTOM components !!!
-	std::vector<int>			m_nodeIdPins;		// The nodeIds of the pins
-	std::vector<int>			m_origIdPins;		// The nodeIds under the pins BEFORE placement
-	std::vector<std::string>	m_strPinLabel;		// The pin labels for DIPs/SIPs
+	std::vector<int>			m_nodeIdPins;		// NodeIds of the pins
+	std::vector<int>			m_origIdPins;		// NodeIds under the pins BEFORE placement
+	std::vector<std::string>	m_pinLabels;		// Pin labels
+	std::vector<int>			m_pinAligns;		// Pin label alignments (Qt::AlignLeft,Qt::AlignRight,Qt::AlignHCenter)
 	std::vector<Shape>			m_shapes;			// For rendering components. Coordinates are RELATIVE to footprint centre.
 	uchar						m_iPinFlags;		// 1 ==> PIN_RECT, 2 ==> PIN_LABELS
 	// Current placement in board

@@ -147,11 +147,11 @@ static const char* szVEROROUTE_VERSION =
 //"1.62";	// Bug fix: Don't allow parts/tracks selected by area to be manipulated if a control slider is hiding some of the selection.
 //			// Bug fix: Don't show selected area if both control sliders are moved to Off.
 //			// New feature: Allow wires to cross, and allow up to two wires to be stacked next to each other (but no hole sharing yet).
-//"1.63";	// Bug fix.  1.62 could crash or corrupt the layout if stacking wires under an IC.
-//"1.64";	// Bug fix.  Fixed algorithm for stacking wires.
+//"1.63";	// Bug fix:  1.62 could crash or corrupt the layout if stacking wires under an IC.
+//"1.64";	// Bug fix:  Fixed algorithm for stacking wires.
 //			// New feature: Allow 2 wires to share a hole.
 //			// Added "Wire Options" dialog to set allowed wire operations.
-//"1.65";	// Bug fix. Wire hole-sharing under an IC only worked with wire-crossing enabled.
+//"1.65";	// Bug fix: Wire hole-sharing under an IC only worked with wire-crossing enabled.
 //			// Improvement: Render wires as rounded rectangles so hole-sharing looks clearer.
 //"1.66";	// New feature: Allow shapes to be filled with colors.
 //"1.67";	// Bug fix: Rotating a track pattern did not correctly handle competing diagonals.
@@ -161,4 +161,5 @@ static const char* szVEROROUTE_VERSION =
 //"1.70";	// Bug fix: Handle selection of rotated shapes in component editor.
 			// Bug fix: Make netlist import handle connectors (strip/blocks) with different numbers of pins.
 //"1.71";	// Bug fix: Component editor not checking connectors (strip/blocks) for reserved import strings.
-  "1.72";	// Bug fix: Flood fill not preserving status of grid under wires.
+//"1.72";	// Bug fix: Flood fill not preserving status of grid under wires.
+  "1.73";	// New feature: Make pin label alignment (Left,Centre,Right) editable in pin labels dialog.

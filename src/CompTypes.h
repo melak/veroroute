@@ -527,6 +527,17 @@ static std::string GetDefaultPinLabel(size_t iPinIndex)
 	return buffer;
 }
 
+
+static int GetDefaultPinAlign(size_t iPinIndex, size_t iNumPins, const COMP& eType)
+{
+	switch( eType )
+	{
+		case COMP::DIP:
+		case COMP::DIP_RECTIFIER:	return ( 2 * iPinIndex < iNumPins ) ? Qt::AlignLeft : Qt::AlignRight;
+		default:					return Qt::AlignHCenter;
+	}
+}
+
 static bool StopBuildWarnings()
 {
 	// Following lines are just to avoid pointless build warnings about the previous functions being unused

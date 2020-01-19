@@ -29,4 +29,5 @@ const int VRT_VERSION_26 = 26;	// Reworked codes in Pin to allow 2 wires per gri
 const int VRT_VERSION_27 = 27;	// Modified Element to store additional wire info
 const int VRT_VERSION_28 = 28;	// Added options for wires to share holes or cross/overlay
 const int VRT_VERSION_29 = 29;	// Added color to component definition
-const int VRT_VERSION_CURRENT = VRT_VERSION_29;
+const int VRT_VERSION_30 = 30;	// Added pin label alignment
+const int VRT_VERSION_CURRENT = VRT_VERSION_30;

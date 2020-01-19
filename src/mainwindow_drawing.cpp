@@ -945,21 +945,21 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 							case 'E':	painter.rotate(270);	break;
 						}
 
-						// Use special alignment for DIP pin labels
-						int iFlag = Qt::TextDontClip | Qt::AlignCenter;
-						if ( compType == COMP::DIP || compType == COMP::DIP_RECTIFIER )
+						// Handle L/R pin label alignment
+						int iFlag = comp.GetPinAlign(iPinIndex);
+						if ( iFlag == Qt::AlignLeft || iFlag == Qt::AlignRight )
 						{
-							const bool bLow	= ( iPinIndex < comp.GetNumPins() / 2 );
+							const bool bLeft = ( iFlag == Qt::AlignLeft );
 							switch( compDirection )
 							{
 								case 'E':
-								case 'S':	iFlag = Qt::TextDontClip | Qt::AlignVCenter | ( bLow ? Qt::AlignRight : Qt::AlignLeft );
-											painter.translate(bLow ? C/2 : -C/2, 0);
+								case 'S':	iFlag = bLeft ? Qt::AlignRight : Qt::AlignLeft;	// Swap align L/R
+											painter.translate(bLeft ? C/2 : -C/2, 0);
 											break;
-								default:	iFlag = Qt::TextDontClip | Qt::AlignVCenter | ( bLow ? Qt::AlignLeft  : Qt::AlignRight );
-											painter.translate(bLow ? -C/2 : C/2, 0);
+								default:	painter.translate(bLeft ? -C/2 : C/2, 0);
 							}
 						}
+						iFlag |= ( Qt::TextDontClip | Qt::AlignVCenter );
 
 						painter.scale(dTextScale, dTextScale);
 						painter.setPen( comp.GetIsPlaced() ? penPlaced : m_redPen);

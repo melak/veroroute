@@ -45,15 +45,33 @@ Component* PinDialog::GetUserComp() const
 
 void PinDialog::CellChanged(int row, int col)
 {
-	if ( col != 1 ) return;
+	if ( col == 0 ) return;
+
 	Component*			pComp		= GetUserComp();	assert(pComp);
 	QTableWidgetItem*	pItemLabel	= ui->tableWidget->item(row, col);
 	const size_t		iPinIndex	= row;
 	const std::string	strLabel	= pItemLabel->text().toStdString();
-	if ( pComp->GetPinLabel(iPinIndex) == strLabel ) return;	// No change in label
 
-	pComp->SetPinLabel(iPinIndex, strLabel);
-	m_pMainWindow->RepaintSkipRouting();
+	if ( col == 1 )
+	{
+		if ( pComp->GetPinLabel(iPinIndex) != strLabel ) // If changed
+		{
+			pComp->SetPinLabel(iPinIndex, strLabel);
+			m_pMainWindow->RepaintSkipRouting();
+		}
+	}
+	if ( col == 2)
+	{
+		const int iAlign = ( strLabel == "L" || strLabel == "l" ) ? Qt::AlignLeft  :
+						   ( strLabel == "R" || strLabel == "r" ) ? Qt::AlignRight : Qt::AlignHCenter;
+		if ( pComp->GetPinAlign(iPinIndex) != iAlign ) // If changed
+		{
+			pComp->SetPinAlign(iPinIndex, iAlign);
+			m_pMainWindow->RepaintSkipRouting();
+		}
+		if ( strLabel != "L" && strLabel != "R" && strLabel != "C" )
+			Update();	// Enforce L,R,C in GUI
+	}
 }
 
 void PinDialog::Update()
@@ -63,10 +81,11 @@ void PinDialog::Update()
 	// Set up the table
 	ui->tableWidget->clear();
 	ui->tableWidget->setRowCount(numPins);
-	ui->tableWidget->setColumnCount(2);
+	ui->tableWidget->setColumnCount(3);
 	ui->tableWidget->setColumnWidth(0,40);
-	ui->tableWidget->setColumnWidth(1,105); // Small reduction when have a vertical scroll bar
-	m_tableHeader << "Pin" << "Label";
+	ui->tableWidget->setColumnWidth(1,105);
+	ui->tableWidget->setColumnWidth(2,50);
+	m_tableHeader << "Pin" << "Label" << "Align";
 	ui->tableWidget->setHorizontalHeaderLabels(m_tableHeader);
 	ui->tableWidget->verticalHeader()->setVisible(false);
 	ui->tableWidget->setEditTriggers(QAbstractItemView::AllEditTriggers);
@@ -77,17 +96,26 @@ void PinDialog::Update()
 	// Populate the table with data
 	for (int iPinIndex = 0; iPinIndex < numPins; iPinIndex++)
 	{
-		for (int iCol = 0; iCol < 2; iCol++)
+		const int& iAlign = pComp->GetPinAlign(iPinIndex);
+		for (int iCol = 0; iCol < 3; iCol++)
 		{
 			std::string str;
 			switch( iCol )
 			{
-				case 0:	str = GetDefaultPinLabel(iPinIndex);	break;
-				case 1:	str = pComp->GetPinLabel(iPinIndex);	break;
+				case 0:	str = GetDefaultPinLabel(iPinIndex);			break;
+				case 1:	str = pComp->GetPinLabel(iPinIndex);			break;
+				case 2:	str = ( iAlign == Qt::AlignLeft  ) ? "L" :
+							  ( iAlign == Qt::AlignRight ) ? "R" :"C";	break;
 			}
 			auto pItem = new QTableWidgetItem(QString::fromStdString(str));
-			if ( iCol == 0 ) pItem->setFlags(Qt::NoItemFlags);
-			if ( iCol == 1 ) pItem->setFlags(Qt::ItemIsEditable | Qt::ItemIsEnabled);
+			if ( iCol != 1 )
+				pItem->setData(Qt::TextAlignmentRole, Qt::AlignCenter);
+
+			if ( iCol == 0 )
+				pItem->setFlags(Qt::NoItemFlags);
+			else
+				pItem->setFlags(Qt::ItemIsEditable | Qt::ItemIsEnabled);
+
 			ui->tableWidget->setItem(iPinIndex, iCol, pItem);
 		}
 	}
