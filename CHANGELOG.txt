@@ -166,3 +166,4 @@ V1.70  Bug fix: Handle selection of rotated shapes in component editor.
 V1.71  Bug fix: Component editor not checking connectors (strip/blocks) for reserved import strings.
 V1.72  Bug fix: Flood fill not preserving status of grid under wires.
 V1.73  New feature: Make pin label alignment (Left,Centre,Right) editable in pin labels dialog.
+V1.74  Better treatment of part labels under part rotation.  Offset labels for Pads/Connectors by default.

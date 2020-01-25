@@ -162,4 +162,5 @@ static const char* szVEROROUTE_VERSION =
 			// Bug fix: Make netlist import handle connectors (strip/blocks) with different numbers of pins.
 //"1.71";	// Bug fix: Component editor not checking connectors (strip/blocks) for reserved import strings.
 //"1.72";	// Bug fix: Flood fill not preserving status of grid under wires.
-  "1.73";	// New feature: Make pin label alignment (Left,Centre,Right) editable in pin labels dialog.
+//"1.73";	// New feature: Make pin label alignment (Left,Centre,Right) editable in pin labels dialog.
+  "1.74";	// Better treatment of part labels under part rotation.  Offset labels for Pads/Connectors by default.

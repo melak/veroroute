@@ -360,11 +360,8 @@ void Component::HandleLegacyLabelOffsets()	// For old VRT files
 {
 	switch( GetDirection() )
 	{
-		case 'E':	m_iLabelOffsetRow = -m_iLabelOffsetRow;	m_iLabelOffsetCol = -m_iLabelOffsetCol;
-					return;
-		case 'N':	std::swap(m_iLabelOffsetRow, m_iLabelOffsetCol);	m_iLabelOffsetRow = -m_iLabelOffsetRow;
-			return;
-		case 'S':	std::swap(m_iLabelOffsetRow, m_iLabelOffsetCol);	m_iLabelOffsetCol = -m_iLabelOffsetCol;
-					return;
+		case 'E':	m_iLabelOffsetRow = -m_iLabelOffsetRow;				m_iLabelOffsetCol = -m_iLabelOffsetCol;	return;
+		case 'N':	std::swap(m_iLabelOffsetRow, m_iLabelOffsetCol);	m_iLabelOffsetRow = -m_iLabelOffsetRow;	return;
+		case 'S':	std::swap(m_iLabelOffsetRow, m_iLabelOffsetCol);	m_iLabelOffsetCol = -m_iLabelOffsetCol;	return;
 	}
 }
