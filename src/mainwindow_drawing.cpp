@@ -1006,8 +1006,11 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 			GetXY(board, comp, X, Y);	// Get footprint centre
 
-			X += W * 0.0625 * comp.GetLabelOffsetCol(); // Offset for text is 1/16 of a grid square
-			Y += W * 0.0625 * comp.GetLabelOffsetRow(); // Offset for text is 1/16 of a grid square
+			int offsetRow(0), offsetCol(0);
+			comp.GetLabelOffsets(offsetRow, offsetCol);
+
+			X += W * 0.0625 * offsetCol; // Offset for text is 1/16 of a grid square
+			Y += W * 0.0625 * offsetRow; // Offset for text is 1/16 of a grid square
 
 			painter.save();
 			painter.translate(X, Y);

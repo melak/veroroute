@@ -74,6 +74,7 @@ public:
 
 		SetDefaultPinFlags();
 		SetDefaultStrings();
+		SetDefaultLabelOffsets();
 
 		const size_t numPins = nodeIdPins.size();
 		if ( eType == COMP::DIP || eType == COMP::SIP || eType == COMP::SWITCH_ST_DIP )	// Resize DIP/SIP/SWITCH_DIP as needed
@@ -209,8 +210,8 @@ public:
 	}
 	void SetRow(const int& i)										{ m_row = i; }
 	void SetCol(const int& i)										{ m_col = i; }
-	void SetLabelOffsetRow(const int& i)							{ m_iLabelOffsetRow = i; }
-	void SetLabelOffsetCol(const int& i)							{ m_iLabelOffsetCol = i; }
+//	void SetLabelOffsetRow(const int& i)							{ m_iLabelOffsetRow = i; }
+//	void SetLabelOffsetCol(const int& i)							{ m_iLabelOffsetCol = i; }
 	void SetDirection(const char& d)								{ m_direction = d; }
 	void SetIsPlaced(const bool& b)									{ m_bIsPlaced = b; }
 	void SetPinFlags(const uchar& i)								{ m_iPinFlags = i; }
@@ -237,13 +238,20 @@ public:
 	const Shape&		GetShape(const size_t& iShapeIndex) const	{ return m_shapes[iShapeIndex]; }
 	const int&			GetRow() const								{ return m_row; }
 	const int&			GetCol() const								{ return m_col; }
-	const int&			GetLabelOffsetRow() const					{ return m_iLabelOffsetRow; }
-	const int&			GetLabelOffsetCol() const					{ return m_iLabelOffsetCol; }
+//	const int&			GetLabelOffsetRow() const					{ return m_iLabelOffsetRow; }
+//	const int&			GetLabelOffsetCol() const					{ return m_iLabelOffsetCol; }
 	const char&			GetDirection() const						{ return m_direction; }
 	const bool&			GetIsPlaced() const							{ return m_bIsPlaced; }
 	const uchar&		GetPinFlags() const							{ return m_iPinFlags; }
 	const std::vector<Shape>&	GetShapes() const					{ return m_shapes; }
-	void				GetSafeBounds(double& L, double& R, double& T, double& B) const
+
+	// Helpers for labels
+	void SetDefaultLabelOffsets();
+	void GetLabelOffsets(int& offsetRow, int& offsetCol) const;			// w.r.t. screen, not comp rotation
+	void MoveLabelOffsets(const int& deltaRow, const int& deltaCol);	// w.r.t. screen, not comp rotation
+	void HandleLegacyLabelOffsets();	// For old VRT files
+
+	void GetSafeBounds(double& L, double& R, double& T, double& B) const
 	{
 		L = T =  DBL_MAX;
 		R = B = -DBL_MAX;
@@ -484,7 +492,8 @@ public:
 			for (unsigned int i = 0; i < numShapes; i++)
 				m_shapes[i].Load(inStream);			// Added in VRT_VERSION_18
 		}
-
+		if ( inStream.GetVersion() < VRT_VERSION_31 )
+			HandleLegacyLabelOffsets();
 		// Try to fix any missing definitions
 		SetDefaultPinFlags();
 		SetDefaultStrings(false);	// false ==> only set empty (m_prefixStr, m_guiStr, m_importStr)

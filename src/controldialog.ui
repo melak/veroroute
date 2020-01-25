@@ -782,7 +782,7 @@
     <enum>Qt::NoFocus</enum>
    </property>
    <property name="toolTip">
-    <string>Centre text label</string>
+    <string>Move text label to default position</string>
    </property>
    <property name="text">
     <string>Centre</string>

@@ -319,3 +319,52 @@ void Component::SetDefaultColor()
 		default:	assert(0);	// Unhandled eType
 	}
 }
+
+// Helpers for labels
+void Component::SetDefaultLabelOffsets()
+{
+	m_iLabelOffsetCol = 0;
+	switch( GetType() )
+	{
+		case COMP::PAD:			m_iLabelOffsetRow = 14;	return;
+		case COMP::STRIP_100:	m_iLabelOffsetRow = 14;	return;
+		case COMP::BLOCK_100:	m_iLabelOffsetRow = 30;	return;
+		case COMP::BLOCK_200:	m_iLabelOffsetRow = 30;	return;
+		default:				m_iLabelOffsetRow = 0;
+	}
+}
+
+void Component::GetLabelOffsets(int& offsetRow, int& offsetCol) const	// w.r.t. screen, not comp rotation
+{
+	switch( GetDirection() )
+	{
+		case 'W':	offsetRow =  m_iLabelOffsetRow;	offsetCol =  m_iLabelOffsetCol;	return;
+		case 'E':	offsetRow = -m_iLabelOffsetRow;	offsetCol = -m_iLabelOffsetCol;	return;
+		case 'N':	offsetRow =  m_iLabelOffsetCol;	offsetCol = -m_iLabelOffsetRow;	return;
+		case 'S':	offsetRow = -m_iLabelOffsetCol;	offsetCol =  m_iLabelOffsetRow;	return;
+	}
+}
+
+void Component::MoveLabelOffsets(const int& deltaRow, const int& deltaCol)	// w.r.t. screen, not comp rotation
+{
+	switch( GetDirection() )
+	{
+		case 'W':	m_iLabelOffsetRow += deltaRow;	m_iLabelOffsetCol += deltaCol;	return;
+		case 'E':	m_iLabelOffsetRow -= deltaRow;	m_iLabelOffsetCol -= deltaCol;	return;
+		case 'N':	m_iLabelOffsetCol += deltaRow;	m_iLabelOffsetRow -= deltaCol;	return;
+		case 'S':	m_iLabelOffsetCol -= deltaRow;	m_iLabelOffsetRow += deltaCol;	return;
+	}
+}
+
+void Component::HandleLegacyLabelOffsets()	// For old VRT files
+{
+	switch( GetDirection() )
+	{
+		case 'E':	m_iLabelOffsetRow = -m_iLabelOffsetRow;	m_iLabelOffsetCol = -m_iLabelOffsetCol;
+					return;
+		case 'N':	std::swap(m_iLabelOffsetRow, m_iLabelOffsetCol);	m_iLabelOffsetRow = -m_iLabelOffsetRow;
+			return;
+		case 'S':	std::swap(m_iLabelOffsetRow, m_iLabelOffsetCol);	m_iLabelOffsetCol = -m_iLabelOffsetCol;
+					return;
+	}
+}

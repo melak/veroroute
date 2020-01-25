@@ -706,15 +706,9 @@ void Board::MoveUserCompText(const int& deltaRow, const int& deltaCol)	// Move t
 {
 	Component& comp	= GetUserComponent();
 	if ( deltaRow == 0 && deltaCol == 0 )	// (0,0) ==> reset rather than shift
-	{
-		comp.SetLabelOffsetRow(0);
-		comp.SetLabelOffsetCol(0);
-	}
+		comp.SetDefaultLabelOffsets();
 	else
-	{
-		comp.SetLabelOffsetRow( comp.GetLabelOffsetRow() + deltaRow );
-		comp.SetLabelOffsetCol( comp.GetLabelOffsetCol() + deltaCol );
-	}
+		comp.MoveLabelOffsets(deltaRow, deltaCol);
 }
 
 void Board::StretchUserComp(const bool& bGrow)	// Stretch the selected component length
@@ -800,6 +794,7 @@ void Board::ChangeTypeUserComp(const COMP& eType)
 	comp.BuildDefault(eType);
 	comp.SetDefaultPinFlags();
 	comp.SetDefaultStrings();
+	comp.SetDefaultLabelOffsets();
 	comp.AddDefaultShapes();
 	if ( bStretch )
 	{
