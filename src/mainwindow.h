@@ -32,6 +32,7 @@
 #include <QNetworkRequest>
 #include <QNetworkReply>
 #include "HistoryManager.h"
+#include "GWriter.h"
 #include "myscrollarea.h"
 
 namespace Ui { class MainWindow; }
@@ -122,6 +123,7 @@ public slots:
 	void ImportOrcad();
 	void WritePDF();
 	void WritePNG();
+	void WriteGerber();
 	void Quit();
 	// View menu items
 	void ZoomIn();
@@ -453,8 +455,10 @@ private:
 	Board					m_board;			// *** The main object ***
 	HistoryManager			m_historyMgr;		// Class to manage undo/redo
 	TemplateManager			m_templateMgr;		// For component templates
+	GWriter					m_gWriter;			// Writes Gerber files
 	QString					m_fileName;			// The loaded/saved .vrt file
 	QString					m_pdfFileName;		// The saved PDF file
+	QString					m_gerberFileName;	// The saved Gerber file
 	std::string				m_localDataPathStr;	// The path to the "history" and "templates" folders
 	std::string				m_tutorialsPathStr;	// The path to the "tutorials" folder and "veroroute.png"
 
@@ -474,6 +478,7 @@ private:
 	bool		m_bDefiningRect;	// true ==> user is defining a rectangle
 	bool		m_bResizingText;	// true ==> user is resizing a text rectangle
 	bool		m_bWritePDF;		// true ==> draw to PDF file instead of screen
+	bool		m_bWriteGerber;		// true ==> draw to Gerber file instead of screen
 	bool		m_bHistoryDir;		// true ==> have "history" folder
 	bool		m_bTemplatesDir;	// true ==> have "templates" folder
 	int			m_XGRIDOFFSET;		// So we can centre when writing to PDF

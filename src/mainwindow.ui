@@ -73,6 +73,7 @@
     <addaction name="separator"/>
     <addaction name="actionWrite_PDF"/>
     <addaction name="actionWrite_PNG"/>
+    <addaction name="actionWrite_GBL"/>
     <addaction name="separator"/>
     <addaction name="actionQuit"/>
    </widget>
@@ -1127,6 +1128,11 @@
   <action name="actionWireDlg">
    <property name="text">
     <string>Wire Options</string>
+   </property>
+  </action>
+  <action name="actionWrite_GBL">
+   <property name="text">
+    <string>Export as GBL (Gerber)</string>
    </property>
   </action>
  </widget>

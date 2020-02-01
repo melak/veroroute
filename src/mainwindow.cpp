@@ -112,6 +112,7 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	QObject::connect(ui->actionImportOrcad,				SIGNAL(triggered()), this, SLOT(ImportOrcad()));
 	QObject::connect(ui->actionWrite_PDF,				SIGNAL(triggered()), this, SLOT(WritePDF()));
 	QObject::connect(ui->actionWrite_PNG,				SIGNAL(triggered()), this, SLOT(WritePNG()));
+	QObject::connect(ui->actionWrite_GBL,				SIGNAL(triggered()), this, SLOT(WriteGerber()));
 	QObject::connect(ui->actionQuit,					SIGNAL(triggered()), this, SLOT(Quit()));
 	QObject::connect(ui->actionZoom_In,					SIGNAL(triggered()), this, SLOT(ZoomIn()));
 	QObject::connect(ui->actionZoom_Out,				SIGNAL(triggered()), this, SLOT(ZoomOut()));
@@ -299,7 +300,7 @@ void MainWindow::CheckFolders()
 void MainWindow::ResetView(bool bTutorial)
 {
 	m_bMouseClick	= m_bLeftClick	= m_bRightClick = m_bCtrlKeyDown  = m_bShiftKeyDown	=false;
-	m_bPaintPins	= m_bPaintBoard	= m_bPaintFlood = m_bDefiningRect = m_bResizingText	= m_bWritePDF = false;
+	m_bPaintPins	= m_bPaintBoard	= m_bPaintFlood = m_bDefiningRect = m_bResizingText	= m_bWritePDF = m_bWriteGerber = false;
 	m_XGRIDOFFSET	= m_YGRIDOFFSET	= 0;
 
 	// Try to set m_gridRow, m_gridCol to match the current NodeId in the board
@@ -621,6 +622,34 @@ void MainWindow::WritePDF()
 		m_board.SetGRIDPIXELS(oldGridPixels);	// Restore number of pixels per grid square
 
 		QDesktopServices::openUrl(m_pdfFileName);	// Ask the system to open the PDF file.
+	}
+}
+
+void MainWindow::WriteGerber()
+{
+	//TODO
+	// "Gerber_BoardOutline.GKO"
+	// "Gerber_BottomLayer.GBL"
+	// "Gerber_BottomSolderMaskLayer.GBS"
+	// "Gerber_TopSolderMaskLayer.GTL"
+	// "Gerber_TopSolderMaskLayer.GTS"
+
+	m_gerberFileName = GetSaveFileName(tr("Choose a Gerber File"), tr("(*.GBL);;All Files (*)"), QString("GBL"));
+	if ( !m_gerberFileName.isEmpty() )
+	{
+		ui->statusBar->showMessage( tr("Exporting to Gerber..."), 500 );
+
+		const int oldGridPixels		= m_board.GetGRIDPIXELS();
+		const int gerberGridPixels	= 1000;	// Gerber file had 4 decimal places per inch
+		m_board.SetGRIDPIXELS(gerberGridPixels);
+
+		m_bWriteGerber = true;		// Makes paintEvent() write to Gerber file instead of pixmap
+		RepaintSkipRouting(true);	// true  ==> force use of repaint() rather than update()
+		m_bWriteGerber = false;		// Makes paintEvent() go back to writing to pixmap
+
+		m_board.SetGRIDPIXELS(oldGridPixels);	// Restore number of pixels per grid square
+
+		QDesktopServices::openUrl(m_gerberFileName);	// Ask the system to open the Gerber file.
 	}
 }
 

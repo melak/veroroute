@@ -68,7 +68,9 @@ HEADERS  += mainwindow.h \
     ColorManager.h \
     CompManager.h \
     GroupManager.h \
+    GWriter.h \
     HistoryManager.h \
+    MyRGB.h \
     NodeInfo.h \
     NodeInfoManager.h \
     Template.h \
@@ -81,8 +83,7 @@ HEADERS  += mainwindow.h \
     TextRect.h \
     TextManager.h \
     Version.h \
-    VrtVersion.h \
-    MyRGB.h
+    VrtVersion.h
 
 
 FORMS    += mainwindow.ui \
