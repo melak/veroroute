@@ -112,7 +112,7 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	QObject::connect(ui->actionImportOrcad,				SIGNAL(triggered()), this, SLOT(ImportOrcad()));
 	QObject::connect(ui->actionWrite_PDF,				SIGNAL(triggered()), this, SLOT(WritePDF()));
 	QObject::connect(ui->actionWrite_PNG,				SIGNAL(triggered()), this, SLOT(WritePNG()));
-	QObject::connect(ui->actionWrite_GBL,				SIGNAL(triggered()), this, SLOT(WriteGerber()));
+	QObject::connect(ui->actionWrite_Gerber,			SIGNAL(triggered()), this, SLOT(WriteGerber()));
 	QObject::connect(ui->actionQuit,					SIGNAL(triggered()), this, SLOT(Quit()));
 	QObject::connect(ui->actionZoom_In,					SIGNAL(triggered()), this, SLOT(ZoomIn()));
 	QObject::connect(ui->actionZoom_Out,				SIGNAL(triggered()), this, SLOT(ZoomOut()));
@@ -627,14 +627,7 @@ void MainWindow::WritePDF()
 
 void MainWindow::WriteGerber()
 {
-	//TODO
-	// "Gerber_BoardOutline.GKO"
-	// "Gerber_BottomLayer.GBL"
-	// "Gerber_BottomSolderMaskLayer.GBS"
-	// "Gerber_TopSolderMaskLayer.GTL"
-	// "Gerber_TopSolderMaskLayer.GTS"
-
-	m_gerberFileName = GetSaveFileName(tr("Choose a Gerber File"), tr("(*.GBL);;All Files (*)"), QString("GBL"));
+	m_gerberFileName = GetSaveFileName(tr("Choose a Gerber File"), tr("All Files (*)"), QString(""));	//TODO Was QString("GBL") on end
 	if ( !m_gerberFileName.isEmpty() )
 	{
 		ui->statusBar->showMessage( tr("Exporting to Gerber..."), 500 );
@@ -649,7 +642,10 @@ void MainWindow::WriteGerber()
 
 		m_board.SetGRIDPIXELS(oldGridPixels);	// Restore number of pixels per grid square
 
-		QDesktopServices::openUrl(m_gerberFileName);	// Ask the system to open the Gerber file.
+		// Ask the system to open the Gerber files	//TODO Add more
+		QDesktopServices::openUrl(m_gerberFileName + ".GKO");
+		QDesktopServices::openUrl(m_gerberFileName + ".GBL");
+		QDesktopServices::openUrl(m_gerberFileName + ".GBS");
 	}
 }
 

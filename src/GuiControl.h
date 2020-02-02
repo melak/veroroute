@@ -49,6 +49,7 @@ public:
 		m_TRACK_PERCENT		= o.m_TRACK_PERCENT;
 		m_HOLE_PERCENT		= o.m_HOLE_PERCENT;
 		m_GAP_PERCENT		= o.m_GAP_PERCENT;
+		m_MASK_PERCENT		= o.m_MASK_PERCENT;
 		m_iRenderQuality	= o.m_iRenderQuality;
 		m_iSaturation		= o.m_iSaturation;
 		m_iFillSaturation	= o.m_iFillSaturation;
@@ -88,6 +89,7 @@ public:
 			&&	m_TRACK_PERCENT		== o.m_TRACK_PERCENT
 			&&	m_HOLE_PERCENT		== o.m_HOLE_PERCENT
 			&&	m_GAP_PERCENT		== o.m_GAP_PERCENT
+			&&	m_MASK_PERCENT		== o.m_MASK_PERCENT
 			&&	m_iRenderQuality	== o.m_iRenderQuality
 			&&	m_iSaturation		== o.m_iSaturation
 			&&	m_iFillSaturation	== o.m_iFillSaturation
@@ -176,6 +178,9 @@ public:
 		m_GAP_PERCENT = 10;
 		if ( inStream.GetVersion() >= VRT_VERSION_3 )
 			inStream.Load(m_GAP_PERCENT);		// Added in VRT_VERSION_3
+		m_MASK_PERCENT = 4;
+		if ( inStream.GetVersion() >= VRT_VERSION_32 )
+			inStream.Load(m_MASK_PERCENT);		// Added in VRT_VERSION_32
 		inStream.Load(m_iRenderQuality);
 		m_iSaturation = 100;
 		if ( inStream.GetVersion() >= VRT_VERSION_6 )
@@ -250,6 +255,7 @@ public:
 		outStream.Save(m_TRACK_PERCENT);
 		outStream.Save(m_HOLE_PERCENT);
 		outStream.Save(m_GAP_PERCENT);		// Added in VRT_VERSION_3
+		outStream.Save(m_MASK_PERCENT);		// Added in VRT_VERSION_32
 		outStream.Save(m_iRenderQuality);
 		outStream.Save(m_iSaturation);		// Added in VRT_VERSION_6
 		outStream.Save(m_iFillSaturation);	// Added in VRT_VERSION_29
@@ -286,6 +292,7 @@ public:
 	bool SetTRACK_PERCENT(const int& i)		{ const bool bChanged = ( m_TRACK_PERCENT	!= i ); m_TRACK_PERCENT	  = i; return bChanged; }
 	bool SetHOLE_PERCENT(const int& i)		{ const bool bChanged = ( m_HOLE_PERCENT	!= i ); m_HOLE_PERCENT	  = i; return bChanged; }
 	bool SetGAP_PERCENT(const int& i)		{ const bool bChanged = ( m_GAP_PERCENT		!= i ); m_GAP_PERCENT	  = i; return bChanged; }
+	bool SetMASK_PERCENT(const int& i)		{ const bool bChanged = ( m_MASK_PERCENT	!= i ); m_MASK_PERCENT	  = i; return bChanged; }
 	bool SetRenderQuality(const int& i)		{ const bool bChanged = ( m_iRenderQuality	!= i ); m_iRenderQuality  = i; return bChanged; }
 	bool SetSaturation(const int& i)		{ const bool bChanged = ( m_iSaturation		!= i ); m_iSaturation	  = i; return bChanged; }
 	bool SetFillSaturation(const int& i)	{ const bool bChanged = ( m_iFillSaturation	!= i ); m_iFillSaturation = i; return bChanged; }
@@ -321,6 +328,8 @@ public:
 	const int&			GetTRACK_PERCENT() const	{ return m_TRACK_PERCENT; }
 	const int&			GetHOLE_PERCENT() const		{ return m_HOLE_PERCENT; }
 	const int&			GetGAP_PERCENT() const		{ return m_GAP_PERCENT; }
+	const int&			GetMASK_PERCENT() const		{ return m_MASK_PERCENT; }
+	int					GetRELIEF_PERCENT() const	{ return 30; }
 	const int&			GetRenderQuality() const	{ return m_iRenderQuality; }
 	const int&			GetSaturation() const		{ return m_iSaturation; }
 	const int&			GetFillSaturation() const	{ return m_iFillSaturation; }
@@ -350,9 +359,10 @@ public:
 	bool SetCompSliderValue(int i)		{ const bool bChanged = ( GetCompSliderValue()  != i ); SetCompMode(  static_cast<COMPSMODE>(i) ); return bChanged; }
 	int  GetTrackSliderValue() const	{ return static_cast<int>(GetTrackMode()); }
 	int  GetCompSliderValue() const		{ return static_cast<int>(GetCompMode());  }
-	int  GetHalfPadWidth() const		{ return std::max(1, static_cast<int> (GetGRIDPIXELS() * GetPAD_PERCENT()   * 0.005 )); }	// Half pad width in pixels
-	int  GetHalfTrackWidth() const		{ return std::max(1, static_cast<int> (GetGRIDPIXELS() * GetTRACK_PERCENT() * 0.005 )); }	// Half track width in pixels
-	int  GetGapWidth() const			{ return std::max(1, static_cast<int> (GetGRIDPIXELS() * GetGAP_PERCENT()	* 0.010 )); }	// Gap width in pixels
+	int  GetHalfPadWidth() const		{ return std::max(1, static_cast<int> (GetGRIDPIXELS() * GetPAD_PERCENT()	 * 0.005 )); }	// Half pad width in pixels
+	int  GetHalfTrackWidth() const		{ return std::max(1, static_cast<int> (GetGRIDPIXELS() * GetTRACK_PERCENT()	 * 0.005 )); }	// Half track width in pixels
+	int  GetGapWidth() const			{ return std::max(1, static_cast<int> (GetGRIDPIXELS() * GetGAP_PERCENT()	 * 0.010 )); }	// Gap width in pixels
+	int  GetReliefWidth() const			{ return std::max(1, static_cast<int> (GetGRIDPIXELS() * GetRELIEF_PERCENT() * 0.010 )); }	// Thermal relief hole width
 	//const int H = std::min(GetHalfPadWidth(), (int) ( GetGRIDPIXELS() * (sqrt(2.0)-1) * 0.5));	// Biggest OK half track width in pixels
 private:
 	int			m_currentCompId		= BAD_COMPID;		// Currently selected component ID
@@ -367,6 +377,7 @@ private:
 	int			m_TRACK_PERCENT		= 46;				// Range 30 to 50 of a grid square   (i.e. 1 PERCENT = 1 mil)
 	int			m_HOLE_PERCENT		= 26;				// Range 20 to 40 of a grid square   (i.e. 1 PERCENT = 1 mil)
 	int			m_GAP_PERCENT		= 10;				// Range  5 to 30 of a grid square   (i.e. 1 PERCENT = 1 mil)
+	int			m_MASK_PERCENT		= 4;				// Range  0 to 30 of a grid square   (i.e. 1 PERCENT = 1 mil)
 	int			m_iRenderQuality	= 1;				// 0 (Low) to 2 (High)
 	int			m_iSaturation		= 60;				// Track color saturation (20 to 100 percent)
 	int			m_iFillSaturation	= 0;				// Component fill saturation (0 to 100 percent)

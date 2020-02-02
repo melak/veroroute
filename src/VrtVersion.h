@@ -31,4 +31,5 @@ const int VRT_VERSION_28 = 28;	// Added options for wires to share holes or cros
 const int VRT_VERSION_29 = 29;	// Added color to component definition
 const int VRT_VERSION_30 = 30;	// Added pin label alignment
 const int VRT_VERSION_31 = 31;	// New treatment of labels under part rotation and centering.
-const int VRT_VERSION_CURRENT = VRT_VERSION_31;
+const int VRT_VERSION_32 = 32;	// Added size of solder mask
+const int VRT_VERSION_CURRENT = VRT_VERSION_32;

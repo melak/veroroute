@@ -23,126 +23,170 @@
 #include "Version.h"
 #include "Board.h"
 
-// Wrapper for writing to a Gerber file
+enum class GPEN			{MIL10 = 0, PAD, TRACK, HOLE, PAD_GAP, TRACK_GAP, PAD_MASK, RELIEF};
+enum class GPOLARITY	{DARK = 0, CLEAR};
+enum class GFILE		{GKO = 0, GBL, GBS, GTL, GTS};	//TODO Add drill and silk screens
 
-enum class GPEN {PAD = 0, TRACK, HOLE, PAD_GAP, TRACK_GAP};
-enum class GPOLARITY {DARK = 0, CLEAR};
+const int NUM_STREAMS = 1 + (int)(GFILE::GTS);
 
 const bool FULL_LINE = false;	// Set to true to force each Gerber line to be written in long format
 
-class GWriter
+static void AppendFileType(const GFILE& eType, std::string& outStr)
 {
-public:
-	GWriter()	{}
-	~GWriter()	{ Close(); }
-	bool Open(const char* fileName, const Board& board)
+	switch(eType)
 	{
-		if ( fileName == nullptr ) return false;
-		m_os.open(fileName, std::ios::out);	// Open file
-		if ( !m_os.is_open() ) return false;
+		case GFILE::GKO:	outStr += "BoardOutline";			return;
+		case GFILE::GBL:	outStr += "BottomLayer";			return;
+		case GFILE::GBS:	outStr += "BottomSolderMaskLayer";	return;
+		case GFILE::GTL:	outStr += "TopLayer";				return;
+		case GFILE::GTS:	outStr += "TopSolderMaskLayer";		return;
+	}
+}
+
+static void AppendFileSuffix(const GFILE& eType, std::string& outStr)
+{
+	switch(eType)
+	{
+		case GFILE::GKO:	outStr += ".GKO";	return;
+		case GFILE::GBL:	outStr += ".GBL";	return;
+		case GFILE::GBS:	outStr += ".GBS";	return;
+		case GFILE::GTL:	outStr += ".GTL";	return;
+		case GFILE::GTS:	outStr += ".GTS";	return;
+	}
+}
+
+// Wrapper for a stream to a Gerber file
+struct GStream : public std::ofstream
+{
+	// Methods
+	void Close()
+	{
+		if ( !is_open() ) return;
+		if ( m_eType == GFILE::GKO )	// Not sure if this is really needed at the end
+		{
+			(*this) << "%LPD*%";	EndLine();
+		}
+		(*this) << "M00";	EndLine();
+		(*this) << "M02";	EndLine();
+		close();
+	}
+	void Initialise(const GFILE& eType, const Board& board)
+	{
+		m_eType	 = eType;
 		m_pBoard = &board;
 		WriteHeader();
 		MakeApertures();
-		return true;
+		if ( m_eType != GFILE::GKO )	// Not sure if this is really needed at the start
+		{
+			(*this) << "%LPD*%";	EndLine();
+		}
 	}
-	void Close()
-	{
-		if ( !m_os.is_open() ) return;
-		m_os << "M00";	EndLine();
-		m_os << "M02";	EndLine();
-		m_os.close();
-	}
-	void WriteHeader()
+	void WriteHeader()	// Write header for current stream
 	{
 		assert( m_pBoard->GetGRIDPIXELS() == 1000 );	// ==> 4 decimal places per inch
-
-		const std::string strProgram = std::string("VeroRoute V") + std::string(szVEROROUTE_VERSION);
-		Comment("Layer: BottomLayer"); //TODO Use correct layer name.  Maybe filename minus suffix
+		std::string	strProgram = std::string("VeroRoute V") + std::string(szVEROROUTE_VERSION);
+		std::string	strLayer   = std::string("Layer: ");	AppendFileType(m_eType, strLayer);
+		Comment(strLayer.c_str());
 		Comment(strProgram.c_str());
 		Comment("Gerber Generator version 0.1");
 		Comment("Scale: 100 percent, Rotated: No, Reflected: No");
 		Comment("Dimensions in inches");
 		Comment("Leading zeros omitted, Absolute positions, 2 integer and 4 decimal");
-		m_os << "%FSLAX24Y24*%"	<< std::endl;
-		m_os << "%MOIN*%"		<< std::endl;	// MOIN/MOCM ==> Inches/cm
-		m_os << "G90";		EndLine();			// G90/G91   ==> Absolute/relative coords
-		m_os << "G70D02";	EndLine();			// G70/G71   ==> in/mm
+		(*this) << "%FSLAX24Y24*%"	<< std::endl;
+		(*this) << "%MOIN*%"		<< std::endl;	// MOIN/MOCM ==> Inches/cm
+		(*this) << "G90";			EndLine();		// G90/G91   ==> Absolute/relative coords
+		(*this) << "G70D02";		EndLine();		// G70/G71   ==> in/mm
 		m_iLastG = 70;
 		m_iLastD = 2;
 	}
-	void MakeApertures()	// Make "Pens"
+	void MakeApertures()	// Make "pens" for current stream
 	{
-		const int pad		= m_pBoard->GetPAD_PERCENT();	assert(pad   > 0 && pad   < 100);
-		const int track		= m_pBoard->GetTRACK_PERCENT();	assert(track > 0 && track < 100);
-		const int hole		= m_pBoard->GetHOLE_PERCENT();	assert(hole  > 0 && hole  < 100);
-		const int gap		= m_pBoard->GetGAP_PERCENT();	assert(gap   > 0 && gap  < 100);
-		const int padgap	= pad   + 2 * gap;	// Gap is the radius increase
-		const int trackgap	= track + 2 * gap;	// Gap is the radius increase
+		const int pad		= m_pBoard->GetPAD_PERCENT();
+		const int track		= m_pBoard->GetTRACK_PERCENT();
+		const int hole		= m_pBoard->GetHOLE_PERCENT();
+		const int gap		= m_pBoard->GetGAP_PERCENT();
+		const int mask		= m_pBoard->GetMASK_PERCENT();
+		const int relief	= m_pBoard->GetRELIEF_PERCENT();
+		const int padgap	= pad   + 2 * gap;	// Gap  is the radius increase
+		const int trackgap	= track + 2 * gap;	// Gap  is the radius increase
+		const int padmask	= pad   + 2 * mask;	// Mask is the radius increase
 
-		m_os << "%ADD10C,0.";	// Aperture Define:  D10 is a circle with diameter of a pad
-		if ( pad < 100 ) m_os << "0";
-		if ( pad < 10  ) m_os << "0";
-		m_os << pad << "*%" << std::endl;
+		(*this) << "%ADD10C,0.010*%" << std::endl;	// D10 is a circle with diameter of 10 mil
 
-		m_os << "%ADD11C,0.";	// Aperture Define:  D11 is a circle with diameter of a track
-		if ( track < 100 ) m_os << "0";
-		if ( track < 10  ) m_os << "0";
-		m_os << track << "*%" << std::endl;
+		(*this) << "%ADD11C,0.";					// D11 is a circle with diameter of a pad
+		if ( pad < 100 ) (*this) << "0";
+		if ( pad < 10  ) (*this) << "0";
+		(*this) << pad << "*%" << std::endl;
 
-		m_os << "%ADD12C,0.";	// Aperture Define:  D12 is a circle with diameter of a hole
-		if ( hole < 100 ) m_os << "0";
-		if ( hole < 10  ) m_os << "0";
-		m_os << hole << "*%" << std::endl;
+		(*this) << "%ADD12C,0.";					// D12 is a circle with diameter of a track
+		if ( track < 100 ) (*this) << "0";
+		if ( track < 10  ) (*this) << "0";
+		(*this) << track << "*%" << std::endl;
 
-		m_os << "%ADD13C,0.";	// Aperture Define:  D13 is a circle with diameter of a (pad + gap)
-		if ( padgap < 100 ) m_os << "0";
-		if ( padgap < 10  ) m_os << "0";
-		m_os << padgap << "*%" << std::endl;
+		(*this) << "%ADD13C,0.";					// D13 is a circle with diameter of a hole
+		if ( hole < 100 ) (*this) << "0";
+		if ( hole < 10  ) (*this) << "0";
+		(*this) << hole << "*%" << std::endl;
 
-		m_os << "%ADD14C,0.";	// Aperture Define:  D14 is a circle with diameter of a (track + gap)
-		if ( trackgap < 100 ) m_os << "0";
-		if ( trackgap < 10  ) m_os << "0";
-		m_os << trackgap << "*%" << std::endl;
+		(*this) << "%ADD14C,0.";					// D14 is a circle with diameter of a (pad + gap)
+		if ( padgap < 100 ) (*this) << "0";
+		if ( padgap < 10  ) (*this) << "0";
+		(*this) << padgap << "*%" << std::endl;
+
+		(*this) << "%ADD15C,0.";					// D15 is a circle with diameter of a (track + gap)
+		if ( trackgap < 100 ) (*this) << "0";
+		if ( trackgap < 10  ) (*this) << "0";
+		(*this) << trackgap << "*%" << std::endl;
+
+		(*this) << "%ADD16C,0.";					// D16 is a circle with diameter of a (track + mask)
+		if ( padmask < 100 ) (*this) << "0";
+		if ( padmask < 10  ) (*this) << "0";
+		(*this) << padmask << "*%" << std::endl;
+
+		(*this) << "%ADD17C,0.";					// D16 is a circle with diameter of a thermal relief hole
+		if ( relief < 100 ) (*this) << "0";
+		if ( relief < 10  ) (*this) << "0";
+		(*this) << relief << "*%" << std::endl;
 	}
 	void SetPolarity(const GPOLARITY& eType)
 	{
 		switch( eType )
 		{
-			case GPOLARITY::DARK:	m_os << "%LPD*%" << std::endl;	return;
-			case GPOLARITY::CLEAR:	m_os << "%LPC*%" << std::endl;	return;
+			case GPOLARITY::DARK:	(*this) << "%LPD*%" << std::endl;	return;
+			case GPOLARITY::CLEAR:	(*this) << "%LPC*%" << std::endl;	return;
 		}
 	}
 	void SetPen(const GPEN& eType)
 	{
-		// G54 ==> tool select.  D10,D11,D12,D13,D14 ==> PAD,TRACK,HOLE,PAD_GAP,TRACK_GAP
+		// G54 ==> tool select.  D10 - D17 ==> MIL10, PAD, TRACK, HOLE, PAD_GAP, TRACK_GAP, PAD_MASK, RELIEF
 		switch( eType )
 		{
-			case GPEN::PAD:			m_os << "G54D10"; EndLine(); m_iLastG = 54; m_iLastD = 10; return;
-			case GPEN::TRACK:		m_os << "G54D11"; EndLine(); m_iLastG = 54; m_iLastD = 11; return;
-			case GPEN::HOLE:		m_os << "G54D12"; EndLine(); m_iLastG = 54; m_iLastD = 12; return;
-			case GPEN::PAD_GAP:		m_os << "G54D13"; EndLine(); m_iLastG = 54; m_iLastD = 13; return;
-			case GPEN::TRACK_GAP:	m_os << "G54D14"; EndLine(); m_iLastG = 54; m_iLastD = 14; return;
+			case GPEN::MIL10:		(*this) << "G54D10"; EndLine(); m_iLastG = 54; m_iLastD = 10; return;
+			case GPEN::PAD:			(*this) << "G54D11"; EndLine(); m_iLastG = 54; m_iLastD = 11; return;
+			case GPEN::TRACK:		(*this) << "G54D12"; EndLine(); m_iLastG = 54; m_iLastD = 12; return;
+			case GPEN::HOLE:		(*this) << "G54D13"; EndLine(); m_iLastG = 54; m_iLastD = 13; return;
+			case GPEN::PAD_GAP:		(*this) << "G54D14"; EndLine(); m_iLastG = 54; m_iLastD = 14; return;
+			case GPEN::TRACK_GAP:	(*this) << "G54D15"; EndLine(); m_iLastG = 54; m_iLastD = 15; return;
+			case GPEN::PAD_MASK:	(*this) << "G54D16"; EndLine(); m_iLastG = 54; m_iLastD = 16; return;
+			case GPEN::RELIEF:		(*this) << "G54D17"; EndLine(); m_iLastG = 54; m_iLastD = 17; return;
 		}
 	}
 	void Flash(const QPointF& p)
 	{
-		LinearInterpolation();
-		WriteXY(p, true);	// Always specify X and Y for a flash
-		m_os << "D03";
-		EndLine();	m_iLastD = 3;
+		WriteXY(p, true);	// Always specify X and Y for a flash //TODO test false
+		(*this) << "D03";	// Always specify a flash
+		EndLine();	m_iLastD =3;
 	}
 	void Move(const QPointF& p)
 	{
-		LinearInterpolation();
 		WriteXY(p, FULL_LINE);
-		if ( FULL_LINE || m_iLastD != 2 ) m_os << "D02";
+		if ( FULL_LINE || m_iLastD != 2 ) (*this) << "D02";
 		EndLine();	m_iLastD = 2;
 	}
 	void Draw(const QPointF& p)
 	{
-		LinearInterpolation();
 		WriteXY(p, FULL_LINE);
-		if ( FULL_LINE || m_iLastD != 1 ) m_os << "D01";
+		if ( FULL_LINE || m_iLastD != 1 ) (*this) << "D01";
 		EndLine();	m_iLastD = 1;
 	}
 	void Line(const QPointF& pA, const QPointF& pB)
@@ -152,10 +196,10 @@ public:
 	}
 	void DrawRegion(const QPolygonF& polygon)	// A filled polygon (with zero width pen)
 	{
-		if ( polygon.size() < 3 ) return;			// Polygon must have >=3 points
-		m_os << "G36";	EndLine();	m_iLastG = 36;	// "Begin region"
+		if ( polygon.size() < 3 ) return;	// Region must have >= 3 points
+		(*this) << "G36";	EndLine();	m_iLastG = 36;	// "Begin region"
 		DrawOutLine(polygon);
-		m_os << "G37";	EndLine();	m_iLastG = 37;	// "End region"
+		(*this) << "G37";	EndLine();	m_iLastG = 37;	// "End region"
 	}
 	void DrawPolygon(const QPolygonF& polygon, const bool& bFill)
 	{
@@ -164,20 +208,16 @@ public:
 			DrawRegion(polygon);	// Fill the polygon (using a zero width pen)
 	}
 private:
-	void EndLine()					{ m_os << "*" << std::endl;	}
-	void Comment(const char* sz)	{ m_os << "G04 " << sz << " ";	EndLine();	m_iLastG = 4;  }
-	void LinearInterpolation()
-	{
-		if ( FULL_LINE || m_iLastG != 1 ) m_os << "G01";
-		m_iLastG = 1;
-	}
 	void WriteXY(const QPointF& p, const bool& bFullLine)
 	{
+		if ( FULL_LINE || m_iLastG != 1 ) (*this) << "G01";	// Linear interpolation
+		m_iLastG = 1;
+
 		const int ix = (int) p.x();
 		const int iy = m_pBoard->GetGRIDPIXELS() * m_pBoard->GetRows() - (int) p.y();	// Gerber y-axis goes up screen
-		if ( bFullLine || m_iLastX != ix ) m_os << "X" << ix;
+		if ( bFullLine || m_iLastX != ix ) (*this) << "X" << ix;
 		m_iLastX = ix;
-		if ( bFullLine || m_iLastY != iy ) m_os << "Y" << iy;
+		if ( bFullLine || m_iLastY != iy ) (*this) << "Y" << iy;
 		m_iLastY = iy;
 	}
 	void DrawOutLine(const QPolygonF& polygon)	// Outline of a closed shape
@@ -190,12 +230,47 @@ private:
 			if ( polygon[i] != polygon[i-1] ) Draw( polygon[i] );
 		if ( polygon[0] != polygon[N-1] ) Draw( polygon[0] );	// Force closed polygon
 	}
+	void Comment(const char* sz)	{ (*this) << "G04 " << sz << " ";	EndLine();	m_iLastG = 4;  }
+	void EndLine()					{ (*this) << "*" << std::endl;	}
+	// Data
+	GFILE			m_eType		= GFILE::GBL;	// GKO, GBL, GBS, GTL, GTS
+	const Board*	m_pBoard	= nullptr;		// The board, so we can get dimensions and track sizes
+	int				m_iLastX	= INT_MAX;		// Last X used
+	int				m_iLastY	= INT_MAX;		// Last Y used
+	int				m_iLastG	= INT_MAX;		// Last G-code used
+	int				m_iLastD	= INT_MAX;		// Last D-code used
+};
+
+// Wrapper for handling a set of Gerber files
+class GWriter
+{
+public:
+	GWriter() {}
+	~GWriter()	{ Close(); }
+	bool Open(const char* fileName, const Board& board)
+	{
+		// Open all Gerber files for writing
+		bool bOK(fileName != nullptr);
+		for (int i = 0; i < NUM_STREAMS && bOK; i++)
+		{
+			std::string str(fileName);
+			AppendFileSuffix(GFILE(i), str);
+
+			m_os[i].open(str.c_str(), std::ios::out);
+			bOK = m_os[i].is_open();
+			if ( bOK )
+				m_os[i].Initialise(GFILE(i), board);
+		}
+		if ( !bOK )
+			for (int i = 0; i < NUM_STREAMS; i++)
+				if ( m_os[i].is_open() ) m_os[i].close();
+		return bOK;
+	}
+	void Close()	// Close all Gerber files
+	{
+		for (int i = 0; i < NUM_STREAMS; i++) m_os[i].Close();
+	}
+	GStream&	GetStream(const GFILE& eType)	{ return m_os[(size_t)(eType)]; }
 private:
-	const Board*	m_pBoard = nullptr;	// The board, so we can get info like dimensions and track sizes
-	std::ofstream	m_os;				// Output file stream
-	// The following allow for smaller Gerber files by not repeating co-ordinates and commands
-	int				m_iLastX = 0;		// Last X used
-	int				m_iLastY = 0;		// Last Y used
-	int				m_iLastG = -1;		// Last G-code used
-	int				m_iLastD = -1;		// Last D-code used
+	GStream		m_os[NUM_STREAMS];	// Output streams
 };
