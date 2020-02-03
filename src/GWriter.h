@@ -23,13 +23,12 @@
 #include "Version.h"
 #include "Board.h"
 
-enum class GPEN			{MIL10 = 0, PAD, TRACK, HOLE, PAD_GAP, TRACK_GAP, PAD_MASK, RELIEF};
-enum class GPOLARITY	{DARK = 0, CLEAR};
-enum class GFILE		{GKO = 0, GBL, GBS, GTL, GTS};	//TODO Add drill and silk screens
+enum class	GPEN		{UNKNOWN = 0, MIL10, PAD, TRACK, HOLE, PAD_GAP, TRACK_GAP, PAD_MASK, RELIEF};
+enum class	GPOLARITY	{DARK = 0, CLEAR};
+enum class	GFILE		{GKO = 0, GBL, GBS, GTL, GTS};	//TODO Add drill and silk screens
 
-const int NUM_STREAMS = 1 + (int)(GFILE::GTS);
-
-const bool FULL_LINE = false;	// Set to true to force each Gerber line to be written in long format
+const int	NUM_STREAMS	= 1 + (int)(GFILE::GTS);
+const bool	FULL_LINE	= false;	// Set to true to force each Gerber line to be written in long format
 
 static void AppendFileType(const GFILE& eType, std::string& outStr)
 {
@@ -59,6 +58,8 @@ static void AppendFileSuffix(const GFILE& eType, std::string& outStr)
 struct GStream : public std::ofstream
 {
 	// Methods
+	GStream()  {}
+	~GStream() {}
 	void Close()
 	{
 		if ( !is_open() ) return;
@@ -73,9 +74,13 @@ struct GStream : public std::ofstream
 	void Initialise(const GFILE& eType, const Board& board)
 	{
 		m_eType	 = eType;
+		m_ePen	 = GPEN::UNKNOWN;
 		m_pBoard = &board;
+		m_iLastX = INT_MAX;
+		m_iLastY = INT_MAX;
 		WriteHeader();
 		MakeApertures();
+		LinearInterpolation();
 		if ( m_eType != GFILE::GKO )	// Not sure if this is really needed at the start
 		{
 			(*this) << "%LPD*%";	EndLine();
@@ -96,8 +101,6 @@ struct GStream : public std::ofstream
 		(*this) << "%MOIN*%"		<< std::endl;	// MOIN/MOCM ==> Inches/cm
 		(*this) << "G90";			EndLine();		// G90/G91   ==> Absolute/relative coords
 		(*this) << "G70D02";		EndLine();		// G70/G71   ==> in/mm
-		m_iLastG = 70;
-		m_iLastD = 2;
 	}
 	void MakeApertures()	// Make "pens" for current stream
 	{
@@ -143,7 +146,7 @@ struct GStream : public std::ofstream
 		if ( padmask < 10  ) (*this) << "0";
 		(*this) << padmask << "*%" << std::endl;
 
-		(*this) << "%ADD17C,0.";					// D16 is a circle with diameter of a thermal relief hole
+		(*this) << "%ADD17C,0.";					// D17 is a circle with diameter of a thermal relief hole
 		if ( relief < 100 ) (*this) << "0";
 		if ( relief < 10  ) (*this) << "0";
 		(*this) << relief << "*%" << std::endl;
@@ -156,69 +159,88 @@ struct GStream : public std::ofstream
 			case GPOLARITY::CLEAR:	(*this) << "%LPC*%" << std::endl;	return;
 		}
 	}
-	void SetPen(const GPEN& eType)
+	void SetPen(const GPEN& ePen)
 	{
-		// G54 ==> tool select.  D10 - D17 ==> MIL10, PAD, TRACK, HOLE, PAD_GAP, TRACK_GAP, PAD_MASK, RELIEF
-		switch( eType )
+		//(*this) << "G54";	// G54 (tool select) can be omitted
+		if ( m_ePen == ePen ) return;
+		m_ePen = ePen;
+		switch( m_ePen )
 		{
-			case GPEN::MIL10:		(*this) << "G54D10"; EndLine(); m_iLastG = 54; m_iLastD = 10; return;
-			case GPEN::PAD:			(*this) << "G54D11"; EndLine(); m_iLastG = 54; m_iLastD = 11; return;
-			case GPEN::TRACK:		(*this) << "G54D12"; EndLine(); m_iLastG = 54; m_iLastD = 12; return;
-			case GPEN::HOLE:		(*this) << "G54D13"; EndLine(); m_iLastG = 54; m_iLastD = 13; return;
-			case GPEN::PAD_GAP:		(*this) << "G54D14"; EndLine(); m_iLastG = 54; m_iLastD = 14; return;
-			case GPEN::TRACK_GAP:	(*this) << "G54D15"; EndLine(); m_iLastG = 54; m_iLastD = 15; return;
-			case GPEN::PAD_MASK:	(*this) << "G54D16"; EndLine(); m_iLastG = 54; m_iLastD = 16; return;
-			case GPEN::RELIEF:		(*this) << "G54D17"; EndLine(); m_iLastG = 54; m_iLastD = 17; return;
+			case GPEN::UNKNOWN:		return;
+			case GPEN::MIL10:		(*this) << "D10"; EndLine(); return;
+			case GPEN::PAD:			(*this) << "D11"; EndLine(); return;
+			case GPEN::TRACK:		(*this) << "D12"; EndLine(); return;
+			case GPEN::HOLE:		(*this) << "D13"; EndLine(); return;
+			case GPEN::PAD_GAP:		(*this) << "D14"; EndLine(); return;
+			case GPEN::TRACK_GAP:	(*this) << "D15"; EndLine(); return;
+			case GPEN::PAD_MASK:	(*this) << "D16"; EndLine(); return;
+			case GPEN::RELIEF:		(*this) << "D17"; EndLine(); return;
 		}
 	}
 	void Flash(const QPointF& p)
 	{
-		WriteXY(p, true);	// Always specify X and Y for a flash //TODO test false
-		(*this) << "D03";	// Always specify a flash
-		EndLine();	m_iLastD =3;
+		WriteXY(p, FULL_LINE);
+		(*this) << "D03";		// Always specify D03 code
+		EndLine();
 	}
 	void Move(const QPointF& p)
 	{
+		const int ix = (int) p.x();
+		const int iy = m_pBoard->GetGRIDPIXELS() * m_pBoard->GetRows() - (int) p.y();	// Gerber y-axis goes up screen
+		if ( m_iLastX == ix && m_iLastY == iy ) return;
 		WriteXY(p, FULL_LINE);
-		if ( FULL_LINE || m_iLastD != 2 ) (*this) << "D02";
-		EndLine();	m_iLastD = 2;
+		(*this) << "D02";		// Always specify D02 code
+		EndLine();
 	}
 	void Draw(const QPointF& p)
 	{
 		WriteXY(p, FULL_LINE);
-		if ( FULL_LINE || m_iLastD != 1 ) (*this) << "D01";
-		EndLine();	m_iLastD = 1;
+		 (*this) << "D01";		// Always specify D01 code
+		EndLine();
 	}
 	void Line(const QPointF& pA, const QPointF& pB)
 	{
 		Move(pA);
 		Draw(pB);
 	}
+	void Rect(const QPointF& pA, const QPointF& delta)
+	{
+		Move(pA);
+		Draw(pA + QPointF(delta.x(), 0));
+		Draw(pA + QPointF(delta.x(), delta.y()));
+		Draw(pA + QPointF(0,         delta.y()));
+		Draw(pA);
+	}
+	void RoundedRect(const QPointF& pA, const QPointF& delta, double d1)	//TODO
+	{
+		if ( d1 == 0 || d1 != 0 )
+			Rect(pA, delta);
+	}
+	void Ellipse(const QPointF& pA, const QPointF& delta)	//TODO
+	{
+		Rect(pA, delta);
+	}
+	void Arc(const QPointF& pA, const QPointF& delta, double d1, double d2)	//TODO
+	{
+		if ( d1 == 0 || d1 != 0 || d2 == 0 )
+		Rect(pA, delta);
+	}
+	void Chord(const QPointF& pA, const QPointF& delta, double d1, double d2)	//TODO
+	{
+		if ( d1 == 0 || d1 != 0 || d2 == 0 )
+		Rect(pA, delta);
+	}
 	void DrawRegion(const QPolygonF& polygon)	// A filled polygon (with zero width pen)
 	{
 		if ( polygon.size() < 3 ) return;	// Region must have >= 3 points
-		(*this) << "G36";	EndLine();	m_iLastG = 36;	// "Begin region"
+		(*this) << "G36";	EndLine();		// "Begin region"
 		DrawOutLine(polygon);
-		(*this) << "G37";	EndLine();	m_iLastG = 37;	// "End region"
+		(*this) << "G37";	EndLine();		// "End region"
 	}
-	void DrawPolygon(const QPolygonF& polygon, const bool& bFill)
+	void DrawPolygon(const QPolygonF& polygon)
 	{
-		DrawOutLine(polygon);		// Draw polygon outline (in the current pen)
-		if ( bFill )
-			DrawRegion(polygon);	// Fill the polygon (using a zero width pen)
-	}
-private:
-	void WriteXY(const QPointF& p, const bool& bFullLine)
-	{
-		if ( FULL_LINE || m_iLastG != 1 ) (*this) << "G01";	// Linear interpolation
-		m_iLastG = 1;
-
-		const int ix = (int) p.x();
-		const int iy = m_pBoard->GetGRIDPIXELS() * m_pBoard->GetRows() - (int) p.y();	// Gerber y-axis goes up screen
-		if ( bFullLine || m_iLastX != ix ) (*this) << "X" << ix;
-		m_iLastX = ix;
-		if ( bFullLine || m_iLastY != iy ) (*this) << "Y" << iy;
-		m_iLastY = iy;
+		DrawOutLine(polygon);	// Draw polygon outline (in the current pen)
+		DrawRegion(polygon);	// Fill the polygon (using a zero width pen)
 	}
 	void DrawOutLine(const QPolygonF& polygon)	// Outline of a closed shape
 	{
@@ -230,15 +252,25 @@ private:
 			if ( polygon[i] != polygon[i-1] ) Draw( polygon[i] );
 		if ( polygon[0] != polygon[N-1] ) Draw( polygon[0] );	// Force closed polygon
 	}
-	void Comment(const char* sz)	{ (*this) << "G04 " << sz << " ";	EndLine();	m_iLastG = 4;  }
+private:
+	void WriteXY(const QPointF& p, const bool& bFullLine)
+	{
+		const int ix = (int) p.x();
+		const int iy = m_pBoard->GetGRIDPIXELS() * m_pBoard->GetRows() - (int) p.y();	// Gerber y-axis goes up screen
+		if ( bFullLine || m_iLastX != ix ) (*this) << "X" << ix;
+		m_iLastX = ix;
+		if ( bFullLine || m_iLastY != iy ) (*this) << "Y" << iy;
+		m_iLastY = iy;
+	}
+	void LinearInterpolation()		{ (*this) << "G01"; }
+	void Comment(const char* sz)	{ (*this) << "G04 " << sz << " ";	EndLine(); }
 	void EndLine()					{ (*this) << "*" << std::endl;	}
 	// Data
 	GFILE			m_eType		= GFILE::GBL;	// GKO, GBL, GBS, GTL, GTS
+	GPEN			m_ePen		= GPEN::UNKNOWN;
 	const Board*	m_pBoard	= nullptr;		// The board, so we can get dimensions and track sizes
 	int				m_iLastX	= INT_MAX;		// Last X used
 	int				m_iLastY	= INT_MAX;		// Last Y used
-	int				m_iLastG	= INT_MAX;		// Last G-code used
-	int				m_iLastD	= INT_MAX;		// Last D-code used
 };
 
 // Wrapper for handling a set of Gerber files

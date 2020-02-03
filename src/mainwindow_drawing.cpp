@@ -169,16 +169,20 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 	// Construct polygon ("blob") based on used perimeter points
 	polygon.clear();
 
-	// Find first used perimeter point
-	int iFirst(-1);
-	for (int i = 0; i < 8 && iFirst == -1; i++) if ( bUsed[i] ) iFirst = i;
+	// Count used perimeter points and find the first
+	int iFirst(-1), N(0);	// N ==> number of perimeter points
+	for (int i = 0; i < 8; i++)
+		if ( bUsed[i] ) { N++; if ( iFirst == -1 ) iFirst = i; }
 
-	if ( iFirst != -1 )
+	if ( N == 0 )
+		polygon << pC;
+	else if ( N == 1 )
+		polygon << p[iFirst] << pC;
+	else
 	{
-		polygon << p[iFirst];	// Add first point to polygon
-
-		int iL, iR(iFirst);		// Indexes of consecutive used perimeter points
-		for (int ii = 1; ii <= 8; ii++)	// We want a full clockwise loop around the perimeter back to the start
+		int nCount(0);	// Perimeter points
+		int iL, iR(iFirst);	// Indexes of consecutive used perimeter points
+		for (int ii = 1; ii <= 8 && nCount < N; ii++)	// We want a full clockwise loop around the perimeter back to the start
 		{
 			const int jj = ( ii + iFirst ) % 8;
 			if ( !bUsed[jj] ) continue;
@@ -203,11 +207,16 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 					polygon << p[iL] << pC << p[iR];
 				}
 			}
-			else if ( iR != iFirst )	// L-C-R is not bent, so simply add "R" to the polygon if it isn't the first point
-				polygon << p[iR];
+			else	// L-C-R is not bent
+			{
+				if ( iL == iFirst )	polygon << p[iL];	// Add "L" to the polygon is it's the first point
+				if ( iR != iFirst )	polygon << p[iR];	// Add "R" to the polygon if it isn't the first point
+			}
+			nCount++;
 		}
+		if ( polygon.size() == 2 && ( 8 + iR - iL ) % 4 != 0)	// If points are not opposite the centre ...
+			polygon << pC;										// ... add centre point
 	}
-	if ( polygon.size() < 3 ) polygon << pC;	// Add centre point if necessary
 
 	// Pens for drawing (not Gerber)
 	static QPen		pen(Qt::black, 2, Qt::SolidLine);
@@ -218,23 +227,7 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 	brush.setColor(color);
 
 	// Draw
-	if ( polygon.size() > 1 )
-	{
-		if ( m_bWriteGerber )
-		{
-			auto& os = m_gWriter.GetStream(GFILE::GBL);	// Bottom copper layer
-			os.SetPen(bGap ? GPEN::TRACK_GAP : GPEN::TRACK);
-			os.DrawPolygon(polygon, !bGap);	// "Gap" polygon doesn't need to be filled.
-		}
-		else
-		{
-			pen.setWidth(trackWidth);
-			painter.setPen(pen);
-			painter.setBrush(brush);
-			painter.drawPolygon(polygon);
-		}
-	}
-	else	// Isolated node drawn as a pad
+	if ( polygon.size() == 1 )	// Isolated node drawn as a pad
 	{
 		if ( m_bWriteGerber )
 		{
@@ -247,6 +240,41 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 			pen.setWidth(padWidth);
 			painter.setPen(pen);
 			painter.drawPoint(pC);
+		}
+	}
+	else if ( polygon.size() == 2 )	// Draw line segment
+	{
+		if ( m_bWriteGerber )
+		{
+			auto& os = m_gWriter.GetStream(GFILE::GBL);	// Bottom copper layer
+			os.SetPen(bGap ? GPEN::TRACK_GAP : GPEN::TRACK);
+			os.Line(polygon.first(), polygon.last());
+		}
+		else
+		{
+			pen.setWidth(trackWidth);
+			painter.setPen(pen);
+			painter.setBrush(brush);
+			painter.drawLine(polygon.first(), polygon.last());
+		}
+	}
+	else	// Draw closed polygon
+	{
+		if ( m_bWriteGerber )
+		{
+			auto& os = m_gWriter.GetStream(GFILE::GBL);	// Bottom copper layer
+			os.SetPen(bGap ? GPEN::TRACK_GAP : GPEN::TRACK);
+			if ( bGap )
+				os.DrawOutLine(polygon);	// "Gap" polygon doesn't need to be filled.
+			else
+				os.DrawPolygon(polygon);
+		}
+		else
+		{
+			pen.setWidth(trackWidth);
+			painter.setPen(pen);
+			painter.setBrush(brush);
+			painter.drawPolygon(polygon);
 		}
 	}
 
@@ -542,10 +570,10 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	if ( m_bWriteGerber )
 	{
 		border.clear();
-		border << QPointF (0,0);
-		border << QPointF (W * board.GetCols(), 0);
-		border << QPointF (W * board.GetCols(), W * board.GetRows());
-		border << QPointF (0, W * board.GetRows());
+		border << QPointF(0,0);
+		border << QPointF(W * board.GetCols(), 0);
+		border << QPointF(W * board.GetCols(), W * board.GetRows());
+		border << QPointF(0, W * board.GetRows());
 		if ( bGroundFill )
 		{
 			auto& os = m_gWriter.GetStream(GFILE::GBL);	// Bottom copper layer
@@ -567,7 +595,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	{
 		auto& os = m_gWriter.GetStream(GFILE::GKO);	// Board outline
 		os.SetPen(GPEN::MIL10);
-		os.DrawPolygon(border, false);	// false ==> no fill
+		os.DrawOutLine(border);
 	}
 	else
 	{
@@ -739,19 +767,19 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						if ( bPin ) PaintPad(board, painter, color, pCentre, false, false);	// Draw pad
 					}
 				}
-				if ( !bVero && bLastPass )	// Add thermal relief for 4 square clusters
+				if ( !bVero && bLastPass )	// Add thermal relief for 4-square clusters
 				{
 					const Element* pLT = pC->GetNbr(NBR_LT);
 					const bool bCluster = pC->GetUsed(NBR_L)  && pC->GetUsed(NBR_T) &&
 										  pLT->GetUsed(NBR_R) && pLT->GetUsed(NBR_B);
-					if ( bCluster )		// Check is any of the squares has a pin
+					if ( bCluster )		// Check if any of the squares has a pin
 					{
 						if ( bPin || pLT->GetHasPin() || pC->GetNbr(NBR_L)->GetHasPin() || pC->GetNbr(NBR_T)->GetHasPin() )
 							PaintPad(board, painter, backgroundColor, pCentre - QPointF(C,C), true, true);	// Add thermal relief hole at cluster centre
 					}
 				}
 			}
-		}
+		}	// Next iLoop
 		if ( !m_bWriteGerber )	//TODO Make this less of a hack
 			painter.restore();
 	}
