@@ -105,6 +105,9 @@ void MainWindow::PaintPad(const GuiControl& guiCtrl, QPainter& painter, const QC
 			auto& os = m_gWriter.GetStream(GFILE::GBS);	// Bottom solder mask layer
 			os.SetPen(GPEN::PAD_MASK);
 			os.Flash(pC);
+
+			auto& osDrill = m_gWriter.GetStream(GFILE::DRL);	// Drill hole layer
+			osDrill.Drill(pC);
 		}
 	}
 	else

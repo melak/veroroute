@@ -25,34 +25,10 @@
 
 enum class	GPEN		{UNKNOWN = 0, MIL10, PAD, TRACK, HOLE, PAD_GAP, TRACK_GAP, PAD_MASK, RELIEF};
 enum class	GPOLARITY	{DARK = 0, CLEAR};
-enum class	GFILE		{GKO = 0, GBL, GBS, GTL, GTS};	//TODO Add drill and silk screens
+enum class	GFILE		{GKO = 0, DRL, GBL, GBS, GTL, GTS};	//TODO Add silk screens
 
 const int	NUM_STREAMS	= 1 + (int)(GFILE::GTS);
 const bool	FULL_LINE	= false;	// Set to true to force each Gerber line to be written in long format
-
-static void AppendFileType(const GFILE& eType, std::string& outStr)
-{
-	switch(eType)
-	{
-		case GFILE::GKO:	outStr += "BoardOutline";			return;
-		case GFILE::GBL:	outStr += "BottomLayer";			return;
-		case GFILE::GBS:	outStr += "BottomSolderMaskLayer";	return;
-		case GFILE::GTL:	outStr += "TopLayer";				return;
-		case GFILE::GTS:	outStr += "TopSolderMaskLayer";		return;
-	}
-}
-
-static void AppendFileSuffix(const GFILE& eType, std::string& outStr)
-{
-	switch(eType)
-	{
-		case GFILE::GKO:	outStr += ".GKO";	return;
-		case GFILE::GBL:	outStr += ".GBL";	return;
-		case GFILE::GBS:	outStr += ".GBS";	return;
-		case GFILE::GTL:	outStr += ".GTL";	return;
-		case GFILE::GTS:	outStr += ".GTS";	return;
-	}
-}
 
 // Wrapper for a stream to a Gerber file
 struct GStream : public std::ofstream
@@ -63,47 +39,97 @@ struct GStream : public std::ofstream
 	void Close()
 	{
 		if ( !is_open() ) return;
-		if ( m_eType == GFILE::GKO )	// Not sure if this is really needed at the end
+		if ( m_eType == GFILE::DRL )
 		{
-			(*this) << "%LPD*%";	EndLine();
+			(*this) << "M30";	EndLine();	// End of program
 		}
-		(*this) << "M00";	EndLine();
-		(*this) << "M02";	EndLine();
+		else
+		{
+			if ( m_eType == GFILE::GKO )	// Not sure if this is really needed at the end
+			{
+				(*this) << "%LPD*%";	EndLine();
+			}
+			(*this) << "M00";	EndLine();	// End of program (Format 2 command)
+			(*this) << "M02";	EndLine();	// End of program (Format 1 command)
+		}
 		close();
 	}
-	void Initialise(const GFILE& eType, const Board& board)
+	void Initialise(const GFILE& eType, const Board& board, const QString& UTC)
 	{
 		m_eType	 = eType;
 		m_ePen	 = GPEN::UNKNOWN;
 		m_pBoard = &board;
 		m_iLastX = INT_MAX;
 		m_iLastY = INT_MAX;
-		WriteHeader();
+		WriteHeader(UTC);
 		MakeApertures();
 		LinearInterpolation();
-		if ( m_eType != GFILE::GKO )	// Not sure if this is really needed at the start
+		if ( m_eType != GFILE::DRL && m_eType != GFILE::GKO )	// Not sure if this is really needed at the start
 		{
 			(*this) << "%LPD*%";	EndLine();
 		}
 	}
-	void WriteHeader()	// Write header for current stream
+	void WriteHeader(const QString& UTC)	// Write header for current stream
 	{
 		assert( m_pBoard->GetGRIDPIXELS() == 1000 );	// ==> 4 decimal places per inch
-		std::string	strProgram = std::string("VeroRoute V") + std::string(szVEROROUTE_VERSION);
-		std::string	strLayer   = std::string("Layer: ");	AppendFileType(m_eType, strLayer);
+		std::string	strLayer	= std::string("Layer: ");
+		std::string	strProgram	= std::string("VeroRoute V") + std::string(szVEROROUTE_VERSION);
+		std::string	strUTC		= UTC.toStdString();
+		std::string	strGen		= std::string("Gerber Generator version 0.1");
+		switch(m_eType)
+		{
+			case GFILE::GKO: strLayer += "BoardOutline";			break;
+			case GFILE::DRL: strLayer += "Drill_PTH";				break;
+			case GFILE::GBL: strLayer += "BottomLayer";				break;
+			case GFILE::GBS: strLayer += "BottomSolderMaskLayer";	break;
+			case GFILE::GTL: strLayer += "TopLayer";				break;
+			case GFILE::GTS: strLayer += "TopSolderMaskLayer";		break;
+		}
 		Comment(strLayer.c_str());
 		Comment(strProgram.c_str());
-		Comment("Gerber Generator version 0.1");
-		Comment("Scale: 100 percent, Rotated: No, Reflected: No");
-		Comment("Dimensions in inches");
-		Comment("Leading zeros omitted, Absolute positions, 2 integer and 4 decimal");
-		(*this) << "%FSLAX24Y24*%"	<< std::endl;
-		(*this) << "%MOIN*%"		<< std::endl;	// MOIN/MOCM ==> Inches/cm
-		(*this) << "G90";			EndLine();		// G90/G91   ==> Absolute/relative coords
-		(*this) << "G70D02";		EndLine();		// G70/G71   ==> in/mm
+		Comment(strUTC.c_str());
+		Comment(strGen.c_str());
+
+		if ( m_eType == GFILE::DRL )
+		{
+			const int hole		= m_pBoard->GetHOLE_PERCENT();
+
+			(*this) << "M48";				EndLine();	// M48 is start of header
+			(*this) << "INCH,LZ,00.0000";	EndLine();	// Inches.  Leading zeros INCLUDED.  2 integer and 4 decimal
+
+			// Comment about hole size:		";Holesize 1 = 0.032 INCH"
+			(*this) << ";Holesize 1 = 0.";
+			if ( hole < 100 ) (*this) << "0";
+			if ( hole < 10  ) (*this) << "0";
+			(*this) << hole << " INCH";	EndLine();
+
+			// Define Tool 1:				"T01C0.032" ==> 0.032 inch diameter
+			(*this) << "T01C0.";
+			if ( hole < 100 ) (*this) << "0";
+			if ( hole < 10  ) (*this) << "0";
+			(*this) << hole;	EndLine();
+
+		//	(*this) << "M95";	EndLine();	// M95 End of the header
+			(*this) << "%";		EndLine();	// Rewind Stop.  Often used instead of M95.
+			(*this) << "G05";	EndLine();	// Turn on drill mode (Format 2 command)
+			(*this) << "G81";	EndLine();	// Turn on drill mode (Format 1 command)
+			(*this) << "G90";	EndLine();	// Absolute mode
+			(*this) << "T01";	EndLine();	// Select Tool 1
+		}
+		else
+		{
+			Comment("Scale: 100 percent, Rotated: No, Reflected: No");
+			Comment("Dimensions in inches");
+			Comment("Leading zeros omitted, Absolute positions, 2 integer and 4 decimal");
+			(*this) << "%FSLAX24Y24*%"	<< std::endl;
+			(*this) << "%MOIN*%"		<< std::endl;	// MOIN/MOCM ==> Inches/cm
+			(*this) << "G90";		EndLine();			// G90/G91   ==> Absolute/relative coords
+			(*this) << "G70D02";	EndLine();			// G70/G71   ==> in/mm
+		}
 	}
 	void MakeApertures()	// Make "pens" for current stream
 	{
+		if ( m_eType == GFILE::DRL ) return;
 		const int pad		= m_pBoard->GetPAD_PERCENT();
 		const int track		= m_pBoard->GetTRACK_PERCENT();
 		const int hole		= m_pBoard->GetHOLE_PERCENT();
@@ -151,9 +177,10 @@ struct GStream : public std::ofstream
 		if ( relief < 10  ) (*this) << "0";
 		(*this) << relief << "*%" << std::endl;
 	}
-	void SetPolarity(const GPOLARITY& eType)
+	void SetPolarity(const GPOLARITY& ePolarity)
 	{
-		switch( eType )
+		if ( m_eType == GFILE::DRL ) return;
+		switch( ePolarity )
 		{
 			case GPOLARITY::DARK:	(*this) << "%LPD*%" << std::endl;	return;
 			case GPOLARITY::CLEAR:	(*this) << "%LPC*%" << std::endl;	return;
@@ -161,6 +188,7 @@ struct GStream : public std::ofstream
 	}
 	void SetPen(const GPEN& ePen)
 	{
+		if ( m_eType == GFILE::DRL ) return;
 		//(*this) << "G54";	// G54 (tool select) can be omitted
 		if ( m_ePen == ePen ) return;
 		m_ePen = ePen;
@@ -177,14 +205,38 @@ struct GStream : public std::ofstream
 			case GPEN::RELIEF:		(*this) << "D17"; EndLine(); return;
 		}
 	}
+	void Drill(const QPointF& p)
+	{
+		if ( m_eType != GFILE::DRL ) return;
+		const int ix = (int) p.x();
+		const int iy = m_pBoard->GetGRIDPIXELS() * m_pBoard->GetRows() - (int) p.y();	// Gerber y-axis goes up screen
+		(*this) << "X";  WriteDrillValue(ix);
+		(*this) << "Y";  WriteDrillValue(iy);
+		(*this) << std::endl;
+	}
+	void WriteDrillValue(const int& iMil)
+	{
+		if ( m_eType != GFILE::DRL ) return;
+		const int	iAbs	= abs(iMil);
+		assert(iMil > 0);	// All veroRoute grid points are >= 0
+		(*this) << ( iMil >= 0 ? "+" : "-" );
+		if ( iAbs < 100000 ) (*this) << "0";
+		if ( iAbs <  10000 ) (*this) << "0";
+		if ( iAbs <   1000 ) (*this) << "0";
+		if ( iAbs <    100 ) (*this) << "0";
+		if ( iAbs <     10 ) (*this) << "0";
+		(*this) << iAbs;
+	}
 	void Flash(const QPointF& p)
 	{
+		if ( m_eType == GFILE::DRL ) return;
 		WriteXY(p, FULL_LINE);
 		(*this) << "D03";		// Always specify D03 code
 		EndLine();
 	}
 	void Move(const QPointF& p)
 	{
+		if ( m_eType == GFILE::DRL ) return;
 		const int ix = (int) p.x();
 		const int iy = m_pBoard->GetGRIDPIXELS() * m_pBoard->GetRows() - (int) p.y();	// Gerber y-axis goes up screen
 		if ( m_iLastX == ix && m_iLastY == iy ) return;
@@ -194,6 +246,7 @@ struct GStream : public std::ofstream
 	}
 	void Draw(const QPointF& p)
 	{
+		if ( m_eType == GFILE::DRL ) return;
 		WriteXY(p, FULL_LINE);
 		 (*this) << "D01";		// Always specify D01 code
 		EndLine();
@@ -262,9 +315,27 @@ private:
 		if ( bFullLine || m_iLastY != iy ) (*this) << "Y" << iy;
 		m_iLastY = iy;
 	}
-	void LinearInterpolation()		{ (*this) << "G01"; }
-	void Comment(const char* sz)	{ (*this) << "G04 " << sz << " ";	EndLine(); }
-	void EndLine()					{ (*this) << "*" << std::endl;	}
+	void LinearInterpolation()
+	{
+		if ( m_eType == GFILE::DRL ) return;
+		(*this) << "G01";
+		EndLine();
+	}
+	void Comment(const char* sz)
+	{
+		if ( m_eType == GFILE::DRL )
+			(*this) << ";" << sz;
+		else
+			(*this) << "G04 " << sz << " ";
+		EndLine();
+	}
+	void EndLine()
+	{
+		if ( m_eType == GFILE::DRL )
+			(*this) << std::endl;
+		else
+			(*this) << "*" << std::endl;
+	}
 	// Data
 	GFILE			m_eType		= GFILE::GBL;	// GKO, GBL, GBS, GTL, GTS
 	GPEN			m_ePen		= GPEN::UNKNOWN;
@@ -272,6 +343,8 @@ private:
 	int				m_iLastX	= INT_MAX;		// Last X used
 	int				m_iLastY	= INT_MAX;		// Last Y used
 };
+
+#include <QTimeZone>
 
 // Wrapper for handling a set of Gerber files
 class GWriter
@@ -281,17 +354,28 @@ public:
 	~GWriter()	{ Close(); }
 	bool Open(const char* fileName, const Board& board)
 	{
+
+		QDateTime	local(QDateTime::currentDateTime());
+		QString		UTC = local.toTimeSpec(Qt::UTC).toString(Qt::ISODate);
+
 		// Open all Gerber files for writing
 		bool bOK(fileName != nullptr);
 		for (int i = 0; i < NUM_STREAMS && bOK; i++)
 		{
 			std::string str(fileName);
-			AppendFileSuffix(GFILE(i), str);
-
+			switch( GFILE(i) )
+			{
+				case GFILE::GKO: str += ".GKO";	break;
+				case GFILE::DRL: str += ".DRL";	break;
+				case GFILE::GBL: str += ".GBL";	break;
+				case GFILE::GBS: str += ".GBS";	break;
+				case GFILE::GTL: str += ".GTL";	break;
+				case GFILE::GTS: str += ".GTS";	break;
+			}
 			m_os[i].open(str.c_str(), std::ios::out);
 			bOK = m_os[i].is_open();
 			if ( bOK )
-				m_os[i].Initialise(GFILE(i), board);
+				m_os[i].Initialise(GFILE(i), board, UTC);
 		}
 		if ( !bOK )
 			for (int i = 0; i < NUM_STREAMS; i++)

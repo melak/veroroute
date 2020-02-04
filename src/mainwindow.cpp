@@ -646,6 +646,7 @@ void MainWindow::WriteGerber()
 		QDesktopServices::openUrl(m_gerberFileName + ".GKO");
 		QDesktopServices::openUrl(m_gerberFileName + ".GBL");
 		QDesktopServices::openUrl(m_gerberFileName + ".GBS");
+		QDesktopServices::openUrl(m_gerberFileName + ".DRL");
 	}
 }
 
