@@ -177,21 +177,49 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 	for (int i = 0; i < 8; i++)
 		if ( bUsed[i] ) { N++; if ( iFirst == -1 ) iFirst = i; }
 
+	bool bStraight(false), bBent(false);	// Flags to help describe track sections
+	// bStraight	==> Track goes straight across the centre point
+	// bBent		==> Track bends <= 90%
+
 	if ( N == 0 )
 		polygon << pC;
 	else if ( N == 1 )
+	{
 		polygon << p[iFirst] << pC;
+		bStraight = true;
+	}
 	else
 	{
-		int nCount(0);	// Perimeter points
-		int iL(iFirst), iR(iFirst);	// Indexes of consecutive used perimeter points
-		for (int ii = 1; ii <= 8 && nCount < N; ii++)	// We want a full clockwise loop around the perimeter back to the start
+		bool bOpenLine(false);	// true ==> don't draw a closed polygon
+		if ( N == 2 )
 		{
+			int  nCount(0);					// Perimeter point counter
+			int  iL(iFirst), iR(iFirst);	// Indexes of consecutive used perimeter points
+			for (int ii = 1; ii <= 8 && nCount < N; ii++)	// A full clockwise loop around the perimeter back to the start
+			{
+				const int jj = ( ii + iFirst ) % 8;
+				if ( !bUsed[jj] ) continue;
+				iL = iR;	iR = jj;	// Update iL and iR
+				const int iDiff = ( 8 + iR - iL ) % 8;
+				bStraight	= ( iDiff == 4 );
+				bBent		= ( iDiff == 2 || iDiff == 3 || iDiff == 5 || iDiff == 6 );
+				nCount++;
+			}
+			bOpenLine = ( bBent || bStraight );
+		}
+		int  nCount(0);					// Perimeter point counter
+		int  iL(iFirst), iR(iFirst);	// Indexes of consecutive used perimeter points
+		for (int ii = 1; ii <= 8 && nCount < N; ii++)	// A full clockwise loop around the perimeter back to the start
+		{
+			if ( bOpenLine && ii == 8 ) break;	// bOpenLine ==> don't close the polygon
 			const int jj = ( ii + iFirst ) % 8;
 			if ( !bUsed[jj] ) continue;
 			iL = iR;	iR = jj;	// Update iL and iR
 			const int iDiff = ( 8 + iR - iL ) % 8;
-			if ( iDiff == 2 || iDiff == 3 || iDiff == 5 || iDiff == 6 )	// If the path L-C-R is bent ...
+			bStraight	= ( iDiff == 4 );
+			bBent		= ( iDiff == 2 || iDiff == 3 || iDiff == 5 || iDiff == 6 );
+			nCount++;
+			if ( bBent )
 			{
 				if ( bCurvedTracks )
 				{
@@ -210,15 +238,14 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 					polygon << p[iL] << pC << p[iR];
 				}
 			}
-			else	// L-C-R is not bent
+			else
 			{
 				if ( iL == iFirst )	polygon << p[iL];	// Add "L" to the polygon is it's the first point
 				if ( iR != iFirst )	polygon << p[iR];	// Add "R" to the polygon if it isn't the first point
 			}
-			nCount++;
 		}
-		if ( polygon.size() == 2 && ( 8 + iR - iL ) % 4 != 0)	// If points are not opposite the centre ...
-			polygon << pC;										// ... add centre point
+		if ( polygon.size() == 2 && !bStraight )	// If points are not directly opposite the centre ...
+			polygon << pC;							// ... add centre point
 	}
 
 	// Pens for drawing (not Gerber)
@@ -230,7 +257,7 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 	brush.setColor(color);
 
 	// Draw
-	if ( polygon.size() == 1 )	// Isolated node drawn as a pad
+	if ( N == 0 )	// Isolated node drawn as a pad
 	{
 		if ( m_bWriteGerber )
 		{
@@ -245,20 +272,32 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 			painter.drawPoint(pC);
 		}
 	}
-	else if ( polygon.size() == 2 )	// Draw line segment
+	else if ( N <= 2 && ( bBent || bStraight ) )	// Draw open line segment
 	{
 		if ( m_bWriteGerber )
 		{
 			auto& os = m_gWriter.GetStream(GFILE::GBL);	// Bottom copper layer
 			os.SetPen(bGap ? GPEN::TRACK_GAP : GPEN::TRACK);
-			os.Line(polygon.first(), polygon.last());
+			auto iter = polygon.begin();
+			os.Move(*iter); ++iter;
+			while( iter != polygon.end() )
+			{
+				os.Draw(*iter);
+				++iter;
+			}
 		}
 		else
 		{
 			pen.setWidth(trackWidth);
 			painter.setPen(pen);
 			painter.setBrush(brush);
-			painter.drawLine(polygon.first(), polygon.last());
+			auto iterA = polygon.begin();
+			auto iterB = iterA; iterB++;
+			while( iterB != polygon.end() )
+			{
+				painter.drawLine(*iterA, *iterB);
+				++iterA; ++iterB;
+			}
 		}
 	}
 	else	// Draw closed polygon
