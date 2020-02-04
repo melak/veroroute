@@ -184,7 +184,7 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 	else
 	{
 		int nCount(0);	// Perimeter points
-		int iL, iR(iFirst);	// Indexes of consecutive used perimeter points
+		int iL(iFirst), iR(iFirst);	// Indexes of consecutive used perimeter points
 		for (int ii = 1; ii <= 8 && nCount < N; ii++)	// We want a full clockwise loop around the perimeter back to the start
 		{
 			const int jj = ( ii + iFirst ) % 8;

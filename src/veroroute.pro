@@ -29,14 +29,15 @@ SOURCES += main.cpp\
     pindialog.cpp \
     textdialog.cpp \
     wiredialog.cpp \
-    FootPrint.cpp \
     CompDefiner.cpp \
     compdialog.cpp \
     Component.cpp \
     Board_routing.cpp \
     Board_components.cpp \
     Board_import.cpp \
-    Board.cpp
+    Board.cpp \
+    FootPrint.cpp \    
+    GWriter.cpp
 
 
 HEADERS  += mainwindow.h \
