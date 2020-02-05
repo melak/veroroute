@@ -98,13 +98,13 @@ void MainWindow::PaintPad(const GuiControl& guiCtrl, QPainter& painter, const QC
 	if ( m_bWriteGerber )
 	{
 		auto& os = m_gWriter.GetStream(GFILE::GBL);	// Bottom copper layer
-		os.SetPen(bRelief ? GPEN::RELIEF : bGap ? GPEN::PAD_GAP : GPEN::PAD);
-		os.Flash(pC);
+		const GPEN ePen = bRelief ? GPEN::RELIEF : bGap ? GPEN::PAD_GAP : GPEN::PAD;
+		os.AddPad(ePen, pC);
+
 		if ( !bGap )
 		{
 			auto& os = m_gWriter.GetStream(GFILE::GBS);	// Bottom solder mask layer
-			os.SetPen(GPEN::PAD_MASK);
-			os.Flash(pC);
+			os.AddPad(GPEN::PAD_MASK, pC);
 
 			auto& osDrill = m_gWriter.GetStream(GFILE::DRL);	// Drill hole layer
 			osDrill.Drill(pC);
@@ -241,7 +241,13 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 			else
 			{
 				if ( iL == iFirst )	polygon << p[iL];	// Add "L" to the polygon is it's the first point
-				if ( iR != iFirst )	polygon << p[iR];	// Add "R" to the polygon if it isn't the first point
+				//TODO
+				// Not sure ( iR!- iFirst )
+				// is correct for straight tracks with diags and perimeter code 145
+				// Test show it is needed for curved tracks with max diags mode though
+				//if ( bCurvedTracks && bMaxDiags ) // <== This is no good either !!!
+				if ( iR != iFirst )
+					polygon << p[iR];	// Add "R" to the polygon if it isn't the first point
 			}
 		}
 		if ( polygon.size() == 2 && !bStraight )	// If points are not directly opposite the centre ...
@@ -262,8 +268,9 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 		if ( m_bWriteGerber )
 		{
 			auto& os = m_gWriter.GetStream(GFILE::GBL);	// Bottom copper layer
-			os.SetPen(bGap ? GPEN::PAD_GAP : GPEN::PAD);
-			os.Flash(pC);
+			const GPEN ePen = bGap ? GPEN::PAD_GAP : GPEN::PAD;
+			assert(polygon.size() == 1);
+			os.AddTrack(ePen, polygon);	// Polygon has a single point
 		}
 		else
 		{
@@ -277,14 +284,13 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 		if ( m_bWriteGerber )
 		{
 			auto& os = m_gWriter.GetStream(GFILE::GBL);	// Bottom copper layer
-			os.SetPen(bGap ? GPEN::TRACK_GAP : GPEN::TRACK);
-			auto iter = polygon.begin();
-			os.Move(*iter); ++iter;
-			while( iter != polygon.end() )
-			{
-				os.Draw(*iter);
-				++iter;
-			}
+			const GPEN ePen		= bGap ? GPEN::TRACK_GAP : GPEN::TRACK;
+			const GPEN ePenHV	= bGap ? GPEN::PAD_GAP   : GPEN::PAD;
+
+			if ( !bCurvedTracks && padWidth > trackWidth )
+				os.AddVariTrack(ePenHV, ePen, polygon);
+			else
+				os.AddTrack(ePen, polygon);
 		}
 		else
 		{
@@ -305,11 +311,11 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 		if ( m_bWriteGerber )
 		{
 			auto& os = m_gWriter.GetStream(GFILE::GBL);	// Bottom copper layer
-			os.SetPen(bGap ? GPEN::TRACK_GAP : GPEN::TRACK);
-			if ( bGap )
-				os.DrawOutLine(polygon);	// "Gap" polygon doesn't need to be filled.
-			else
-				os.DrawPolygon(polygon);
+			const GPEN ePen		= bGap ? GPEN::TRACK_GAP : GPEN::TRACK;
+			os.AddLoop(ePen, polygon);	// Closed polygon outline
+
+			if ( !bGap )
+				os.AddRegion(polygon);	// Only non-Gap  polygon needs filling
 		}
 		else
 		{
@@ -325,9 +331,28 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 		if ( m_bWriteGerber )
 		{
 			auto& os = m_gWriter.GetStream(GFILE::GBL);	// Bottom copper layer
-			os.SetPen(bGap ? GPEN::PAD_GAP : GPEN::PAD);
+			const GPEN ePen = bGap ? GPEN::PAD_GAP : GPEN::PAD;
 			for (int iNbr = 0; iNbr < 8; iNbr += 2)	// Loop non-diagonal perimeter points
-				if ( bUsed[iNbr] ) os.Line(pC, p[iNbr]);	// Draw track from centre to perimeter point
+			{
+				if ( !bUsed[iNbr] ) continue;
+
+				int iNbrOpp = (iNbr + 12 ) % 8;
+				if ( bUsed[iNbrOpp] )	// If can go straight across, do so
+				{
+					if ( iNbr <= 2 )	// No overlay
+					{
+						polygon.clear();
+						polygon << p[iNbr] << p[iNbrOpp];
+						os.AddTrack(ePen, polygon);	// Draw track across
+					}
+				}
+				else
+				{
+					polygon.clear();
+					polygon << pC << p[iNbr];
+					os.AddTrack(ePen, polygon);	// Draw track from centre to perimeter point
+				}
+			}
 		}
 		else
 		{
@@ -619,7 +644,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		if ( bGroundFill )
 		{
 			auto& os = m_gWriter.GetStream(GFILE::GBL);	// Bottom copper layer
-			os.DrawRegion(border);
+			os.ClearBuffers();
+			os.AddRegion(border);
+			os.DrawBuffers();
 		}
 	}
 	else
@@ -636,8 +663,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	if ( m_bWriteGerber )
 	{
 		auto& os = m_gWriter.GetStream(GFILE::GKO);	// Board outline
-		os.SetPen(GPEN::MIL10);
-		os.DrawOutLine(border);
+		os.ClearBuffers();
+		os.AddLoop(GPEN::MIL10, border);	// Closed polygon outline
+		os.DrawBuffers();
 	}
 	else
 	{
@@ -683,6 +711,11 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					os.SetPolarity(GPOLARITY::CLEAR);	// For the gaps and thermal relief holes
 				else
 					os.SetPolarity(GPOLARITY::DARK);
+
+				os.ClearBuffers();
+
+				auto& os2 = m_gWriter.GetStream(GFILE::GBS);	// Bottom solder mask layer
+				os2.ClearBuffers();
 			}
 
 			for (int j = minRow; j <= maxRow; j++)
@@ -820,6 +853,13 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 							PaintPad(board, painter, backgroundColor, pCentre - QPointF(C,C), true, true);	// Add thermal relief hole at cluster centre
 					}
 				}
+			}
+			if ( m_bWriteGerber )
+			{
+				auto& os = m_gWriter.GetStream(GFILE::GBL);	// Bottom copper layer
+				os.DrawBuffers();
+				auto& os2 = m_gWriter.GetStream(GFILE::GBS);	// Bottom solder mask layer
+				os2.DrawBuffers();
 			}
 		}	// Next iLoop
 		if ( !m_bWriteGerber )	//TODO Make this less of a hack

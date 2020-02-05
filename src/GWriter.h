@@ -19,8 +19,12 @@
 
 #pragma once
 
+class QPoint;
+class QPointF;
+class QPolygon;
 class QPolygonF;
 class CBoard;
+class GStream;
 
 enum class	GPEN		{UNKNOWN = 0, MIL10, PAD, TRACK, PAD_GAP, TRACK_GAP, PAD_MASK, RELIEF};
 enum class	GPOLARITY	{DARK = 0, CLEAR};
@@ -28,33 +32,68 @@ enum class	GFILE		{GKO = 0, DRL, GBL, GBS, GTL, GTS};	//TODO Add silk screens
 
 const int	NUM_STREAMS	= 1 + (int)(GFILE::GTS);
 
-// Wrapper for a stream to a Gerber file
-struct GStream : public std::ofstream
+class Curve : public std::list<QPoint>	// A curve drawn in a fixed size pen
 {
-	GStream()  {}
-	~GStream() {}
+public:
+	Curve()		{}
+	Curve(const GPEN& pen, const QPoint& p);
+	Curve(const GPEN& pen, const QPolygon& polygon);
+	~Curve()	{ clear(); }
+	const GPEN& GetPen() const { return m_pen; }
+	void Compress();		// Removes redundant points
+	bool Splice(Curve* pB);	// Tries to splice curve B to this
+	struct HasSmallerPen	// Predicate for sorting
+	{
+		bool operator() (const Curve* p1, const Curve* p2) const
+		{
+			return (int)(p1->m_pen) < (int)(p2->m_pen);
+		}
+	};
+	GPEN m_pen = GPEN::UNKNOWN;
+};
+
+class CurveList : public std::list<Curve*>
+{
+public:
+	CurveList()		{}
+	~CurveList()	{ Clear(); }
+	void Clear()	{ for (auto& p : *this) p->clear(); clear(); }
+	void SpliceAll();
+};
+
+
+// Wrapper for a stream to a Gerber file
+class GStream : public std::ofstream
+{
+public:
+	GStream() {}
+	~GStream();
 	void Close();
 	void Initialise(const GFILE& eType, const Board& board, const QString& UTC);
 	void WriteHeader(const QString& UTC);
 	void MakeApertures();
-	void SetPolarity(const GPOLARITY& ePolarity);
-	void SetPen(const GPEN& ePen);
-	void Drill(const QPointF& p);
+	void Drill(const QPointF& pF);
 	void WriteDrillValue(const int& iMil);
-	void Flash(const QPointF& p);
-	void Move(const QPointF& p);
-	void Draw(const QPointF& p);
-	void Line(const QPointF& pA, const QPointF& pB);
-	void Rect(const QPointF& pA, const QPointF& delta);
-	void RoundedRect(const QPointF& pA, const QPointF& delta, double d1);
-	void Ellipse(const QPointF& pA, const QPointF& delta);
-	void Arc(const QPointF& pA, const QPointF& delta, double d1, double d2);
-	void Chord(const QPointF& pA, const QPointF& delta, double d1, double d2);
-	void DrawRegion(const QPolygonF& polygon);	// A filled polygon (with zero width pen)
-	void DrawPolygon(const QPolygonF& polygon);	// Filled polygon (with non-zero width pen)
-	void DrawOutLine(const QPolygonF& polygon);	// Outline of a closed shape
+	void SetPolarity(const GPOLARITY& ePolarity);
+	void AddPad(const GPEN& ePen, const QPointF& pF);		// Add to m_pads    buffer
+	void AddTrack(const GPEN& ePen, const QPolygonF& pF);	// Add to m_tracks  buffer
+	void AddVariTrack(const GPEN& ePenHV, const GPEN& ePen, const QPolygonF& pF);			// Add to m_tracks  buffer
+	void AddLoop(const GPEN& ePen, const QPolygonF& pF);	// Add to m_loops buffer
+	void AddRegion(const QPolygonF& pF);					// Add to m_regions buffer
+	void ClearBuffers();
+	void DrawBuffers();
 private:
-	void WriteXY(const QPointF& p, const bool& bFullLine);
+	void SetPen(const GPEN& ePen);
+	void Flash(const QPoint& p);
+	void Move(const QPoint& p);
+	void Draw(const QPoint& p);
+	void Line(const QPoint& pA, const QPoint& pB);
+	void DrawRegion(const Curve& curve)	;				// A filled curve (with zero width pen)
+	void DrawPolygon(const Curve& curve);				// Filled polygon (with non-zero width pen)
+	void DrawOutLine(const Curve& curve, bool bClose);	// Outline of a curve (can be closed)
+	void WriteXY(const QPoint& p,   const bool& bFullLine);
+	void GetQPoint(const QPointF& in, QPoint& out) const;		// Convert float polygon to integer
+	void GetQPolygon(const QPolygonF& in, QPolygon& out) const;	// Convert float polygon to integer
 	void LinearInterpolation();
 	void Comment(const char* sz);
 	void EndLine();
@@ -64,6 +103,11 @@ private:
 	const Board*	m_pBoard	= nullptr;		// The board, so we can get dimensions and track sizes
 	int				m_iLastX	= INT_MAX;		// Last X used
 	int				m_iLastY	= INT_MAX;		// Last Y used
+	// Buffers for optimising data before writing to file
+	CurveList m_pads;		// The pads and nothing else.
+	CurveList m_tracks;		// Tracks (drawn with non-zero width pen).
+	CurveList m_loops;		// Loops (drawn with non-zero width pen).
+	CurveList m_regions;	// Drawn with zero width pen. For filling gaps between tracks.
 };
 
 // Wrapper for handling a set of Gerber files

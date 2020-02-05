@@ -627,7 +627,7 @@ void MainWindow::WritePDF()
 
 void MainWindow::WriteGerber()
 {
-	m_gerberFileName = GetSaveFileName(tr("Choose a Gerber File"), tr("All Files (*)"), QString(""));	//TODO Was QString("GBL") on end
+	m_gerberFileName = GetSaveFileName(tr("Choose a Gerber File"), tr("All Files (*)"), QString(""));
 	if ( !m_gerberFileName.isEmpty() )
 	{
 		ui->statusBar->showMessage( tr("Exporting to Gerber..."), 500 );
@@ -643,10 +643,10 @@ void MainWindow::WriteGerber()
 		m_board.SetGRIDPIXELS(oldGridPixels);	// Restore number of pixels per grid square
 
 		// Ask the system to open the Gerber files	//TODO Add more
-		QDesktopServices::openUrl(m_gerberFileName + ".GKO");
-		QDesktopServices::openUrl(m_gerberFileName + ".GBL");
-		QDesktopServices::openUrl(m_gerberFileName + ".GBS");
-		QDesktopServices::openUrl(m_gerberFileName + ".DRL");
+		//TODO	QDesktopServices::openUrl(m_gerberFileName + ".GKO");
+		//TODO	QDesktopServices::openUrl(m_gerberFileName + ".GBL");
+		//TODO	QDesktopServices::openUrl(m_gerberFileName + ".GBS");
+		//TODO	QDesktopServices::openUrl(m_gerberFileName + ".DRL");
 	}
 }
 

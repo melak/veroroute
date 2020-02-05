@@ -25,7 +25,89 @@
 
 const bool	FULL_LINE	= false;	// Set to true to force each Gerber line to be written in long format
 
+// Helper class for compressing tracks for Gerber
+Curve::Curve(const GPEN& pen, const QPoint& p) : m_pen(pen)
+{
+	push_back(p);
+}
+Curve::Curve(const GPEN& pen, const QPolygon& polygon) : m_pen(pen)
+{
+	for (auto& p : polygon) push_back(p);
+	// DO NOT COMPRESS BY DEFAULT.  That's only ok for open line segments
+}
+void Curve::Compress()	// Removes redundant points
+{
+	unique();
+	bool bDone = size() < 3;
+	while ( !bDone )
+	{
+		bDone = true;
+
+		auto A = begin();
+		auto B = A; ++B;
+		auto C = B; ++C;
+		for(; C != end(); ++A, ++B, ++C )
+		{
+			if ( A->x() == B->x() && B->x() == C->x() )		// Vertical
+			{
+				if ( ( B->y() >= A->y() && B->y() <= C->y() ) ||
+					 ( B->y() >= C->y() && B->y() <= A->y() ) )
+				{
+					(*B) = (*A);	// .. make B == A so we can remove it as not unique
+					bDone = false;
+				}
+			}
+			else if ( A->y() == B->y() && B->y() == C->y() )	// Horizontal
+			{
+				if ( ( B->x() >= A->x() && B->x() <= C->x() ) ||
+					 ( B->x() >= C->x() && B->x() <= A->x() ) )
+				{
+					(*B) = (*A);	// .. make B == A so we can remove it as not unique
+					bDone = false;
+				}
+			}
+		}
+		if ( !bDone )
+		{
+			unique();
+			bDone = size() < 3;
+		}
+	}
+}
+bool Curve::Splice(Curve* pB)	// Tries to splice curve B to this
+{
+	if	( m_pen != pB->m_pen ) return false;		// Pens must match
+	if	( empty() || pB->empty() ) return false;	// Curves must have points
+	// Try to get back of 'this' matching front of 'pB', then splice 'pB' to 'this'
+	if		( front() == pB->back()  ) { reverse(); pB->reverse(); }
+	else if	( front() == pB->front() ) { reverse(); }
+	else if	( back()  == pB->back()  ) { pB->reverse(); }
+	if		( back()  == pB->front() ) { splice(end(), *pB); Compress(); return true; }
+	return false;
+}
+
+void CurveList::SpliceAll()
+{
+	sort(Curve::HasSmallerPen());	// Sort list of curves by increasing pen width
+
+	bool bDone(false);	// Keep splicing curves together till no more splices are possible.
+	while ( !bDone )
+	{
+		bDone = true;
+		for (auto iterA = begin(); iterA != end(); ++iterA)
+		{
+			auto iterB = iterA; ++iterB;
+			for ( ; iterB != end(); ++iterB )
+				if ( (*iterA)->Splice(*iterB) ) bDone = false;
+		}
+	}
+}
+
 // Wrapper for a stream to a Gerber file
+GStream::~GStream()
+{
+	ClearBuffers();
+}
 void GStream::Close()
 {
 	if ( !is_open() ) return;
@@ -51,6 +133,8 @@ void GStream::Initialise(const GFILE& eType, const Board& board, const QString& 
 	m_pBoard = &board;
 	m_iLastX = INT_MAX;
 	m_iLastY = INT_MAX;
+	ClearBuffers();
+
 	WriteHeader(UTC);
 	MakeApertures();
 	LinearInterpolation();
@@ -161,6 +245,32 @@ void GStream::MakeApertures()	// Make "pens" for current stream
 	if ( relief < 10  ) (*this) << "0";
 	(*this) << relief << "*%" << std::endl;
 }
+void GStream::Drill(const QPointF& pF)
+{
+	if ( m_eType != GFILE::DRL ) return;
+
+	QPoint p;
+	GetQPoint(pF, p);
+
+	const int& ix = p.x();
+	const int& iy = p.y();
+	(*this) << "X";  WriteDrillValue(ix);
+	(*this) << "Y";  WriteDrillValue(iy);
+	(*this) << std::endl;
+}
+void GStream::WriteDrillValue(const int& iMil)
+{
+	if ( m_eType != GFILE::DRL ) return;
+	const int	iAbs	= abs(iMil);
+	assert(iMil > 0);	// All veroRoute grid points are >= 0
+	(*this) << ( iMil >= 0 ? "+" : "-" );
+	if ( iAbs < 100000 ) (*this) << "0";
+	if ( iAbs <  10000 ) (*this) << "0";
+	if ( iAbs <   1000 ) (*this) << "0";
+	if ( iAbs <    100 ) (*this) << "0";
+	if ( iAbs <     10 ) (*this) << "0";
+	(*this) << iAbs;
+}
 void GStream::SetPolarity(const GPOLARITY& ePolarity)
 {
 	if ( m_eType == GFILE::DRL ) return;
@@ -169,6 +279,88 @@ void GStream::SetPolarity(const GPOLARITY& ePolarity)
 		case GPOLARITY::DARK:	(*this) << "%LPD*%" << std::endl;	return;
 		case GPOLARITY::CLEAR:	(*this) << "%LPC*%" << std::endl;	return;
 	}
+}
+void GStream::AddPad(const GPEN& ePen, const QPointF& pF)		// Adds to m_pads buffer for later writing to file
+{
+	QPoint p;
+	GetQPoint(pF, p);
+	m_pads.push_back( new Curve(ePen, p) );
+}
+void GStream::AddTrack(const GPEN& ePen, const QPolygonF& pF)	// Adds to m_tracks buffer for later writing to file
+{
+	QPolygon p;
+	GetQPolygon(pF, p);
+	m_tracks.push_back( new Curve(ePen, p) );
+}
+void GStream::AddVariTrack(const GPEN& ePenHV, const GPEN& ePen, const QPolygonF& pF)	// Adds to m_tracks buffer for later writing to file
+{
+	QPolygon p;
+	GetQPolygon(pF, p);
+
+	QPolygon temp;
+	auto A = p.begin();
+	auto B = A; ++B;
+	for (; B != p.end(); A++, B++)
+	{
+		temp.clear();
+		temp << *A << *B;
+		const bool bHV = ( A->x() == B->x() || A->y() == B->y() );
+		m_tracks.push_back( new Curve(bHV ? ePenHV : ePen, temp) );
+	}
+}
+void GStream::AddLoop(const GPEN& ePen, const QPolygonF& pF)	// Adds to m_loops buffer for later writing to file
+{
+	assert(pF.size() >= 3);
+	if ( pF.size() < 3 ) return;	// Loop must have at least 3 points
+	QPolygon p;
+	GetQPolygon(pF, p);
+	m_loops.push_back( new Curve(ePen, p) );
+}
+void GStream::AddRegion(const QPolygonF& pF)	// Adds to m_regions buffer for later writing to file
+{
+	assert(pF.size() >= 3);
+	if ( pF.size() < 3 ) return;	// Region must have at least 3 points
+	QPolygon p;
+	GetQPolygon(pF, p);
+	m_regions.push_back( new Curve(GPEN::UNKNOWN, p) );
+}
+void GStream::ClearBuffers()
+{
+	m_regions.clear();
+	m_loops.clear();
+	m_tracks.clear();
+	m_pads.clear();
+}
+void GStream::DrawBuffers()
+{
+	m_tracks.SpliceAll();	// Only tracks (not loops) are spliced
+
+	for (auto& o : m_regions ) DrawRegion(*o);
+	for (auto& o : m_loops   ) DrawOutLine(*o, true);	// true  ==> closed
+	for (auto& o : m_tracks  ) DrawOutLine(*o, false);	// false ==> not closed
+	for (auto& o : m_pads    ) DrawOutLine(*o, false);	// false ==> not closed
+}
+void GStream::DrawRegion(const Curve& curve)	// A filled closed curve (with zero width pen)
+{
+	assert(curve.m_pen == GPEN::UNKNOWN);
+	if ( curve.size() < 3 ) return;	// Region must have >= 3 points
+	(*this) << "G36";	EndLine();	// "Begin region"
+	DrawOutLine(curve, true);		// true ==> force close
+	(*this) << "G37";	EndLine();	// "End region"
+}
+void GStream::DrawOutLine(const Curve& curve, bool bForceClose)	// Outline of a curve
+{
+	if ( curve.empty() ) return;
+	SetPen(curve.m_pen);
+	const int N = curve.size();
+	if	( N == 1 ) return Flash( curve.front() );
+	if	( N == 2 ) return Line( curve.front(), curve.back() );
+	auto& front = curve.front();
+	Move(front);	// Move pen to start of curve
+	auto iter = curve.begin(); ++iter;
+	for (; iter != curve.end(); ++iter)
+		Draw(*iter);	// Draw line to next point in curve
+	if ( bForceClose && front != curve.back() ) Draw( front );
 }
 void GStream::SetPen(const GPEN& ePen)
 {
@@ -188,114 +380,54 @@ void GStream::SetPen(const GPEN& ePen)
 		case GPEN::RELIEF:		(*this) << "D16"; EndLine(); return;
 	}
 }
-void GStream::Drill(const QPointF& p)
-{
-	if ( m_eType != GFILE::DRL ) return;
-	const int ix = (int) p.x();
-	const int iy = m_pBoard->GetGRIDPIXELS() * m_pBoard->GetRows() - (int) p.y();	// Gerber y-axis goes up screen
-	(*this) << "X";  WriteDrillValue(ix);
-	(*this) << "Y";  WriteDrillValue(iy);
-	(*this) << std::endl;
-}
-void GStream::WriteDrillValue(const int& iMil)
-{
-	if ( m_eType != GFILE::DRL ) return;
-	const int	iAbs	= abs(iMil);
-	assert(iMil > 0);	// All veroRoute grid points are >= 0
-	(*this) << ( iMil >= 0 ? "+" : "-" );
-	if ( iAbs < 100000 ) (*this) << "0";
-	if ( iAbs <  10000 ) (*this) << "0";
-	if ( iAbs <   1000 ) (*this) << "0";
-	if ( iAbs <    100 ) (*this) << "0";
-	if ( iAbs <     10 ) (*this) << "0";
-	(*this) << iAbs;
-}
-void GStream::Flash(const QPointF& p)
+void GStream::Flash(const QPoint& p)
 {
 	if ( m_eType == GFILE::DRL ) return;
 	WriteXY(p, FULL_LINE);
 	(*this) << "D03";		// Always specify D03 code
 	EndLine();
 }
-void GStream::Move(const QPointF& p)
+void GStream::Move(const QPoint& p)
 {
 	if ( m_eType == GFILE::DRL ) return;
-	const int ix = (int) p.x();
-	const int iy = m_pBoard->GetGRIDPIXELS() * m_pBoard->GetRows() - (int) p.y();	// Gerber y-axis goes up screen
+	const int& ix = p.x();
+	const int& iy = p.y();
 	if ( m_iLastX == ix && m_iLastY == iy ) return;
 	WriteXY(p, FULL_LINE);
 	(*this) << "D02";		// Always specify D02 code
 	EndLine();
 }
-void GStream::Draw(const QPointF& p)
+void GStream::Draw(const QPoint& p)
 {
 	if ( m_eType == GFILE::DRL ) return;
 	WriteXY(p, FULL_LINE);
-	 (*this) << "D01";		// Always specify D01 code
+	(*this) << "D01";		// Always specify D01 code
 	EndLine();
 }
-void GStream::Line(const QPointF& pA, const QPointF& pB)
+void GStream::Line(const QPoint& pA, const QPoint& pB)
 {
 	Move(pA);
 	Draw(pB);
 }
-void GStream::Rect(const QPointF& pA, const QPointF& delta)
+void GStream::WriteXY(const QPoint& p,  const bool& bFullLine)
 {
-	Move(pA);
-	Draw(pA + QPointF(delta.x(), 0));
-	Draw(pA + QPointF(delta.x(), delta.y()));
-	Draw(pA + QPointF(0,         delta.y()));
-	Draw(pA);
-}
-void GStream::RoundedRect(const QPointF& pA, const QPointF& delta, double d1)	//TODO
-{
-	if ( d1 == 0 || d1 != 0 )
-		Rect(pA, delta);
-}
-void GStream::Ellipse(const QPointF& pA, const QPointF& delta)	//TODO
-{
-	Rect(pA, delta);
-}
-void GStream::Arc(const QPointF& pA, const QPointF& delta, double d1, double d2)	//TODO
-{
-	if ( d1 == 0 || d1 != 0 || d2 == 0 )
-	Rect(pA, delta);
-}
-void GStream::Chord(const QPointF& pA, const QPointF& delta, double d1, double d2)	//TODO
-{
-	if ( d1 == 0 || d1 != 0 || d2 == 0 )
-	Rect(pA, delta);
-}
-void GStream::DrawRegion(const QPolygonF& polygon)	// A filled polygon (with zero width pen)
-{
-	if ( polygon.size() < 3 ) return;	// Region must have >= 3 points
-	(*this) << "G36";	EndLine();		// "Begin region"
-	DrawOutLine(polygon);
-	(*this) << "G37";	EndLine();		// "End region"
-}
-void GStream::DrawPolygon(const QPolygonF& polygon)	// Filled polygon (with non-zero width pen)
-{
-	DrawOutLine(polygon);	// Draw polygon outline (in the current pen)
-	DrawRegion(polygon);	// Fill the polygon (using a zero width pen)
-}
-void GStream::DrawOutLine(const QPolygonF& polygon)	// Outline of a closed shape
-{
-	const int N = polygon.size();
-	if ( N == 1 ) return Flash( polygon[0] );
-	if ( N == 2 ) return Line(polygon[0], polygon[1]);
-	Move( polygon[0] );
-	for (int i = 1; i < N; i++)
-		if ( polygon[i] != polygon[i-1] ) Draw( polygon[i] );
-	if ( polygon[0] != polygon[N-1] ) Draw( polygon[0] );	// Force closed polygon
-}
-void GStream::WriteXY(const QPointF& p, const bool& bFullLine)
-{
-	const int ix = (int) p.x();
-	const int iy = m_pBoard->GetGRIDPIXELS() * m_pBoard->GetRows() - (int) p.y();	// Gerber y-axis goes up screen
+	const int& ix = p.x();
+	const int& iy = p.y();
 	if ( bFullLine || m_iLastX != ix ) (*this) << "X" << ix;
 	m_iLastX = ix;
 	if ( bFullLine || m_iLastY != iy ) (*this) << "Y" << iy;
 	m_iLastY = iy;
+}
+void GStream::GetQPoint(const QPointF& in, QPoint& out) const
+{
+	out.setX( (int) in.x() );
+	out.setY( m_pBoard->GetGRIDPIXELS() * m_pBoard->GetRows() - (int) in.y() ); // Gerber y-axis goes up screen
+}
+void GStream::GetQPolygon(const QPolygonF& in, QPolygon& out) const
+{
+	out.clear();
+	out.resize( in.size() );
+	for (auto i = 0; i < in.size(); i++) GetQPoint(in[i], out[i]);
 }
 void GStream::LinearInterpolation()
 {
