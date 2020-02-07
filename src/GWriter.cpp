@@ -25,84 +25,6 @@
 
 const bool	FULL_LINE	= false;	// Set to true to force each Gerber line to be written in long format
 
-// Helper class for compressing tracks for Gerber
-Curve::Curve(const GPEN& pen, const QPoint& p) : m_pen(pen)
-{
-	push_back(p);
-}
-Curve::Curve(const GPEN& pen, const QPolygon& polygon) : m_pen(pen)
-{
-	for (auto& p : polygon) push_back(p);
-	// DO NOT COMPRESS BY DEFAULT.  That's only ok for open line segments
-}
-void Curve::Compress()	// Removes redundant points
-{
-	unique();
-	bool bDone = size() < 3;
-	while ( !bDone )
-	{
-		bDone = true;
-
-		auto A = begin();
-		auto B = A; ++B;
-		auto C = B; ++C;
-		for(; C != end(); ++A, ++B, ++C )
-		{
-			if ( A->x() == B->x() && B->x() == C->x() )		// Vertical
-			{
-				if ( ( B->y() >= A->y() && B->y() <= C->y() ) ||
-					 ( B->y() >= C->y() && B->y() <= A->y() ) )
-				{
-					(*B) = (*A);	// .. make B == A so we can remove it as not unique
-					bDone = false;
-				}
-			}
-			else if ( A->y() == B->y() && B->y() == C->y() )	// Horizontal
-			{
-				if ( ( B->x() >= A->x() && B->x() <= C->x() ) ||
-					 ( B->x() >= C->x() && B->x() <= A->x() ) )
-				{
-					(*B) = (*A);	// .. make B == A so we can remove it as not unique
-					bDone = false;
-				}
-			}
-		}
-		if ( !bDone )
-		{
-			unique();
-			bDone = size() < 3;
-		}
-	}
-}
-bool Curve::Splice(Curve* pB)	// Tries to splice curve B to this
-{
-	if	( m_pen != pB->m_pen ) return false;		// Pens must match
-	if	( empty() || pB->empty() ) return false;	// Curves must have points
-	// Try to get back of 'this' matching front of 'pB', then splice 'pB' to 'this'
-	if		( front() == pB->back()  ) { reverse(); pB->reverse(); }
-	else if	( front() == pB->front() ) { reverse(); }
-	else if	( back()  == pB->back()  ) { pB->reverse(); }
-	if		( back()  == pB->front() ) { splice(end(), *pB); Compress(); return true; }
-	return false;
-}
-
-void CurveList::SpliceAll()
-{
-	sort(Curve::HasSmallerPen());	// Sort list of curves by increasing pen width
-
-	bool bDone(false);	// Keep splicing curves together till no more splices are possible.
-	while ( !bDone )
-	{
-		bDone = true;
-		for (auto iterA = begin(); iterA != end(); ++iterA)
-		{
-			auto iterB = iterA; ++iterB;
-			for ( ; iterB != end(); ++iterB )
-				if ( (*iterA)->Splice(*iterB) ) bDone = false;
-		}
-	}
-}
-
 // Wrapper for a stream to a Gerber file
 GStream::~GStream()
 {
@@ -153,11 +75,12 @@ void GStream::WriteHeader(const QString& UTC)	// Write header for current stream
 	switch(m_eType)
 	{
 		case GFILE::GKO: strLayer += "BoardOutline";			break;
-		case GFILE::DRL: strLayer += "Drill_PTH";				break;
 		case GFILE::GBL: strLayer += "BottomLayer";				break;
 		case GFILE::GBS: strLayer += "BottomSolderMaskLayer";	break;
 		case GFILE::GTL: strLayer += "TopLayer";				break;
 		case GFILE::GTS: strLayer += "TopSolderMaskLayer";		break;
+		case GFILE::GTO: strLayer += "TopSilkLayer";			break;
+		case GFILE::DRL: strLayer += "Drill_PTH";				break;
 	}
 	Comment(strLayer.c_str());
 	Comment(strProgram.c_str());
@@ -335,20 +258,20 @@ void GStream::DrawBuffers()
 {
 	m_tracks.SpliceAll();	// Only tracks (not loops) are spliced
 
-	for (auto& o : m_regions ) DrawRegion(*o);
-	for (auto& o : m_loops   ) DrawOutLine(*o, true);	// true  ==> closed
-	for (auto& o : m_tracks  ) DrawOutLine(*o, false);	// false ==> not closed
-	for (auto& o : m_pads    ) DrawOutLine(*o, false);	// false ==> not closed
+	for (auto& o : m_regions ) Region(*o);
+	for (auto& o : m_loops   ) OutLine(*o, true);	// true  ==> closed
+	for (auto& o : m_tracks  ) OutLine(*o, false);	// false ==> not closed
+	for (auto& o : m_pads    ) OutLine(*o, false);	// false ==> not closed
 }
-void GStream::DrawRegion(const Curve& curve)	// A filled closed curve (with zero width pen)
+void GStream::Region(const Curve& curve)	// A filled closed curve (with zero width pen)
 {
 	assert(curve.m_pen == GPEN::UNKNOWN);
 	if ( curve.size() < 3 ) return;	// Region must have >= 3 points
 	(*this) << "G36";	EndLine();	// "Begin region"
-	DrawOutLine(curve, true);		// true ==> force close
+	OutLine(curve, true);			// true ==> force close
 	(*this) << "G37";	EndLine();	// "End region"
 }
-void GStream::DrawOutLine(const Curve& curve, bool bForceClose)	// Outline of a curve
+void GStream::OutLine(const Curve& curve, bool bForceClose)	// Outline of a curve
 {
 	if ( curve.empty() ) return;
 	SetPen(curve.m_pen);
@@ -470,6 +393,7 @@ bool GWriter::Open(const char* fileName, const Board& board)
 			case GFILE::GBS: str += ".GBS";	break;
 			case GFILE::GTL: str += ".GTL";	break;
 			case GFILE::GTS: str += ".GTS";	break;
+			case GFILE::GTO: str += ".GTO";	break;
 		}
 		m_os[i].open(str.c_str(), std::ios::out);
 		bOK = m_os[i].is_open();

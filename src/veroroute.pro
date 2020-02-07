@@ -29,13 +29,14 @@ SOURCES += main.cpp\
     pindialog.cpp \
     textdialog.cpp \
     wiredialog.cpp \
-    CompDefiner.cpp \
     compdialog.cpp \
-    Component.cpp \
     Board_routing.cpp \
     Board_components.cpp \
     Board_import.cpp \
     Board.cpp \
+    Component.cpp \
+    CompDefiner.cpp \
+    CurveList.cpp \
     FootPrint.cpp \    
     GWriter.cpp
 
@@ -58,6 +59,7 @@ HEADERS  += mainwindow.h \
     CompTypes.h \
     CompDefiner.h \
     Component.h \
+    CurveList.h \
     Pin.h \
     TrackElement.h \
     CompElement.h \
@@ -69,6 +71,7 @@ HEADERS  += mainwindow.h \
     ColorManager.h \
     CompManager.h \
     GroupManager.h \
+    GPainter.h \
     GWriter.h \
     HistoryManager.h \
     MyRGB.h \
@@ -83,6 +86,7 @@ HEADERS  += mainwindow.h \
     StringHelper.h \
     TextRect.h \
     TextManager.h \
+    Transform.h \
     Version.h \
     VrtVersion.h
 
@@ -105,3 +109,29 @@ RESOURCES     = veroroute.qrc
 DESTDIR = ..
 
 DISTFILES +=
+
+#linux {
+#    target.path = $${PREFIX}/usr/bin/
+#    target.files = ../veroroute
+#
+#    desktopentry.path = $${PREFIX}/usr/share/applications
+#    desktopentry.files = ../veroroute.desktop
+#
+#    pixmapA.path = $${PREFIX}/usr/share/pixmaps
+#    pixmapA.files = ../veroroute.png
+#
+#    pixmapB.path = $${PREFIX}/usr/share/veroroute
+#    pixmapB.files = ../veroroute.png
+#
+#    tutorials.path = $${PREFIX}/usr/share/veroroute/tutorials
+#    tutorials.files = ../tutorials/*
+#
+#    gedasymbols.path = $${PREFIX}/usr/share/gEDA/sym
+#    gedasymbols.files = ../libraries/gEDA/veroroute_*
+#
+#    gedalib.path = $${PREFIX}/usr/share/gEDA/gafrc.d
+#    gedalib.files = ../libraries/gEDA/veroroute-clib.scm
+#
+#    INSTALLS += target desktopentry pixmapA pixmapB tutorials gedasymbols gedalib
+#}
+

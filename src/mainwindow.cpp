@@ -642,11 +642,14 @@ void MainWindow::WriteGerber()
 
 		m_board.SetGRIDPIXELS(oldGridPixels);	// Restore number of pixels per grid square
 
-		// Ask the system to open the Gerber files	//TODO Add more
-		//TODO	QDesktopServices::openUrl(m_gerberFileName + ".GKO");
-		//TODO	QDesktopServices::openUrl(m_gerberFileName + ".GBL");
-		//TODO	QDesktopServices::openUrl(m_gerberFileName + ".GBS");
-		//TODO	QDesktopServices::openUrl(m_gerberFileName + ".DRL");
+		// Ask the system to open the Gerber files
+		QDesktopServices::openUrl(m_gerberFileName + ".GKO");
+		QDesktopServices::openUrl(m_gerberFileName + ".GBL");
+		QDesktopServices::openUrl(m_gerberFileName + ".GBS");
+//		QDesktopServices::openUrl(m_gerberFileName + ".GTL");
+//		QDesktopServices::openUrl(m_gerberFileName + ".GTS");
+		QDesktopServices::openUrl(m_gerberFileName + ".GTO");
+		QDesktopServices::openUrl(m_gerberFileName + ".DRL");
 	}
 }
 
