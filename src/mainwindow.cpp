@@ -1516,6 +1516,7 @@ void MainWindow::UpdateControls()
 	const bool		bStraight		= !m_board.GetVeroTracks() && !m_board.GetCurvedTracks();
 	const bool		bCurved			= !m_board.GetVeroTracks() &&  m_board.GetCurvedTracks();
 
+	ui->actionWrite_Gerber->setEnabled(bMono && !m_board.GetMirrored() && !m_board.GetVeroTracks());
 	ui->actionMerge->setEnabled(!bCompEdit);
 	ui->actionWrite_PDF->setEnabled(!bCompEdit);
 	ui->menuAdd->setEnabled( !bCompEdit && m_board.GetCompMode() != COMPSMODE::OFF && !m_board.GetMirrored() );

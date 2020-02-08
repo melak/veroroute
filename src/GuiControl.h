@@ -380,7 +380,7 @@ public:
 		const double dGap		= ( GetGroundFill() ) ? GetGAP_PERCENT() : 100;
 		const double dPadPad	= 100 - GetPAD_PERCENT();
 		const double dPadTrack	= ( GetDiagsMode() == DIAGSMODE::OFF ) ? 100 : ( 50 * sqrt(2.0) - 0.5 * ( GetPAD_PERCENT() + GetTRACK_PERCENT() ) );
-		return floor( std::min(dGap, std::min(dPadPad, dPadTrack)) );
+		return (int) floor(std::max(0.0, std::min(dGap, std::min(dPadPad, dPadTrack))));
 	}
 	//const int H = std::min(GetHalfPadWidth(), (int) ( GetGRIDPIXELS() * (sqrt(2.0)-1) * 0.5));	// Biggest OK half track width in pixels
 private:
