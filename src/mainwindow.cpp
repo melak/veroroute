@@ -646,8 +646,8 @@ void MainWindow::WriteGerber()
 		QDesktopServices::openUrl(m_gerberFileName + ".GKO");
 		QDesktopServices::openUrl(m_gerberFileName + ".GBL");
 		QDesktopServices::openUrl(m_gerberFileName + ".GBS");
-//		QDesktopServices::openUrl(m_gerberFileName + ".GTL");
-//		QDesktopServices::openUrl(m_gerberFileName + ".GTS");
+		QDesktopServices::openUrl(m_gerberFileName + ".GTL");
+		QDesktopServices::openUrl(m_gerberFileName + ".GTS");
 		QDesktopServices::openUrl(m_gerberFileName + ".GTO");
 		QDesktopServices::openUrl(m_gerberFileName + ".DRL");
 	}
@@ -1275,10 +1275,10 @@ void MainWindow::SetDiagonalsMax(bool b)
 	const bool bListNodes = ( m_board.GetDiagsMode() == DIAGSMODE::OFF );	// Only ListNodes() again if necessary
 	if ( b && m_board.SetDiagsMode(DIAGSMODE::MAX) )	{ UpdateHistory("Diagonals max"); UpdateControls(); DestroyPixmapCache(); RepaintWithRouting(); if ( bListNodes ) ListNodes(); }
 }
-void MainWindow::SetPadWidth(int i)			{ if ( m_board.SetPAD_PERCENT(i)   ) { UpdateHistory("Pad width change");	DestroyPixmapCache();	RepaintSkipRouting(); } }
-void MainWindow::SetTrackWidth(int i)		{ if ( m_board.SetTRACK_PERCENT(i) ) { UpdateHistory("Track width change");	DestroyPixmapCache();	RepaintSkipRouting(); } }
-void MainWindow::SetHoleWidth(int i)		{ if ( m_board.SetHOLE_PERCENT(i)  ) { UpdateHistory("Hole width change");	RepaintSkipRouting(); } }
-void MainWindow::SetGapWidth(int i)			{ if ( m_board.SetGAP_PERCENT(i)   ) { UpdateHistory("Gap width change");	RepaintSkipRouting(); } }
+void MainWindow::SetPadWidth(int i)			{ if ( m_board.SetPAD_PERCENT(i)   ) { UpdateHistory("Pad width change");	UpdateControls();	DestroyPixmapCache();	RepaintSkipRouting(); } }
+void MainWindow::SetTrackWidth(int i)		{ if ( m_board.SetTRACK_PERCENT(i) ) { UpdateHistory("Track width change");	UpdateControls();	DestroyPixmapCache();	RepaintSkipRouting(); } }
+void MainWindow::SetHoleWidth(int i)		{ if ( m_board.SetHOLE_PERCENT(i)  ) { UpdateHistory("Hole width change");	UpdateControls();	RepaintSkipRouting(); } }
+void MainWindow::SetGapWidth(int i)			{ if ( m_board.SetGAP_PERCENT(i)   ) { UpdateHistory("Gap width change");	UpdateControls();	RepaintSkipRouting(); } }
 
 // Rendering dialog
 void MainWindow::SetTextSizeComp(int i)		{ if ( m_board.SetTextSizeComp(i) )		  { UpdateHistory("Text size change (component)");	RepaintSkipRouting(); } }

@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include "SimplexFont.h"
 #include "Transform.h"
 #include "GWriter.h"
 #include <QPainter>
@@ -40,6 +41,57 @@ struct GPainter : public QPainter, public std::list<Transform>
 	virtual void drawText(int x, int y, int w, int h, int flags, const QString& str)
 	{
 		if ( !m_pStream ) return QPainter::drawText(x, y, w, h, flags, str);
+
+		double X(x), Y(y);
+
+		std::string stdStr = str.toStdString();
+		const char* sz = stdStr.c_str();
+		auto length = strlen(sz);
+
+		const double dLetterSep(6);
+		double dStrWidth(0), dLetterWidth(0);
+		int ixMin, ixMax;
+		for (size_t i = 0; i < length; i++)
+		{
+			const int simplexIndex = Simplex::GetLetterIndex( sz[i] );
+			if ( simplexIndex == -1 ) continue;	// Unsupported character
+
+			Simplex::GetLetterLimits(simplexIndex, ixMin, ixMax);
+			dStrWidth += dLetterSep + ixMax - ixMin;
+		}
+
+		dStrWidth -= dLetterSep;
+		if ( flags & Qt::AlignCenter )
+			X -= dStrWidth * 0.5;
+		else
+			assert(0);
+
+		const double dScale(0.5);
+		for (size_t i = 0; i < length; i++)
+		{
+			const int simplexIndex = Simplex::GetLetterIndex( sz[i] );
+			if ( simplexIndex == -1 ) continue;	// Unsupported character
+
+			Simplex::GetLetterLimits(simplexIndex, ixMin, ixMax);
+			dLetterWidth = ixMax - ixMin;
+			QPointF L, R;	// Ends of a line segment
+			bool bPenUp(true);
+			for (int j = 2; j < 112; j += 2)
+			{
+				const int	ix	= Simplex::GetLetterData(simplexIndex, j);
+				const int	iy	= Simplex::GetLetterData(simplexIndex, j+1);
+				const bool	bOK	= !( ix == -1 && iy == -1 );	// (-1,-1) ==> not OK
+				if ( bOK )
+				{
+					R.setX(dScale*(X + ix - ixMin)); R.setY(dScale*(10 + Y - iy));
+					if ( !bPenUp )
+						drawLine(L.x(), L.y(), R.x(), R.y());	// Draw L to R
+					L = R;
+				}
+				bPenUp = !bOK;
+			}
+			X += dLetterWidth + dLetterSep;
+		}
 	}
 	virtual void scale(qreal sx, qreal sy)
 	{
@@ -140,13 +192,13 @@ private:
 	{
 		for (auto& o : m_polygon )	// Loop polygon points
 			for (auto& t : GetTransforms()) t.Do(o);	// Apply set of transforms to each
-		if ( m_pStream ) m_pStream->AddTrack(GPEN::MIL10, m_polygon);	//TODO allow other pens
+		if ( m_pStream ) m_pStream->AddTrack(GPEN::SILK, m_polygon);	//TODO allow other pens
 	}
 	void AddPad()
 	{
 		for (auto& o : m_polygon )	// Loop polygon points
 			for (auto& t : GetTransforms()) t.Do(o);	// Apply set of transforms to each
-		if ( m_pStream ) m_pStream->AddPad(GPEN::MIL10, m_polygon.first());	//TODO allow other pens
+		if ( m_pStream ) m_pStream->AddPad(GPEN::SILK, m_polygon.first());	//TODO allow other pens
 	}
 	GStream*	m_pStream	= nullptr;
 	QPolygonF	m_polygon;	// Helper to avoid passing things around

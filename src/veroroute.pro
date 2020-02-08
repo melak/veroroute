@@ -83,6 +83,7 @@ HEADERS  += mainwindow.h \
     Rect.h \
     RectManager.h \
     Shape.h \
+    SimplexFont.h \
     StringHelper.h \
     TextRect.h \
     TextManager.h \

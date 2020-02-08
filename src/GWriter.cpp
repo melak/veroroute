@@ -131,6 +131,7 @@ void GStream::MakeApertures()	// Make "pens" for current stream
 	const int track		= m_pBoard->GetTRACK_PERCENT();
 	const int gap		= m_pBoard->GetGAP_PERCENT();
 	const int mask		= m_pBoard->GetMASK_PERCENT();
+	const int silk		= m_pBoard->GetSILK_PERCENT();
 	const int relief	= m_pBoard->GetRELIEF_PERCENT();
 	const int padgap	= pad   + 2 * gap;	// Gap  is the radius increase
 	const int trackgap	= track + 2 * gap;	// Gap  is the radius increase
@@ -167,6 +168,11 @@ void GStream::MakeApertures()	// Make "pens" for current stream
 	if ( relief < 100 ) (*this) << "0";
 	if ( relief < 10  ) (*this) << "0";
 	(*this) << relief << "*%" << std::endl;
+
+	(*this) << "%ADD17C,0.";					// D17 is a circle with diameter of the silk screen pen
+	if ( silk < 100 ) (*this) << "0";
+	if ( silk < 10  ) (*this) << "0";
+	(*this) << silk << "*%" << std::endl;
 }
 void GStream::Drill(const QPointF& pF)
 {
@@ -301,6 +307,7 @@ void GStream::SetPen(const GPEN& ePen)
 		case GPEN::TRACK_GAP:	(*this) << "D14"; EndLine(); return;
 		case GPEN::PAD_MASK:	(*this) << "D15"; EndLine(); return;
 		case GPEN::RELIEF:		(*this) << "D16"; EndLine(); return;
+		case GPEN::SILK:		(*this) << "D17"; EndLine(); return;
 	}
 }
 void GStream::Flash(const QPoint& p)
@@ -385,15 +392,32 @@ bool GWriter::Open(const char* fileName, const Board& board)
 	for (int i = 0; i < NUM_STREAMS && bOK; i++)
 	{
 		std::string str(fileName);
-		switch( GFILE(i) )
+		const bool bAISLER(false);
+		if ( bAISLER )
 		{
-			case GFILE::GKO: str += ".GKO";	break;
-			case GFILE::DRL: str += ".DRL";	break;
-			case GFILE::GBL: str += ".GBL";	break;
-			case GFILE::GBS: str += ".GBS";	break;
-			case GFILE::GTL: str += ".GTL";	break;
-			case GFILE::GTS: str += ".GTS";	break;
-			case GFILE::GTO: str += ".GTO";	break;
+			switch( GFILE(i) )
+			{
+				case GFILE::GKO: str += ".boardoutline.ger";		break;
+				case GFILE::GBL: str += ".bottomlayer.ger";			break;
+				case GFILE::GBS: str += ".bottomsoldermask.ger";	break;
+				case GFILE::GTL: str += ".toplayer.ger";			break;
+				case GFILE::GTS: str += ".topsoldermask.ger";		break;
+				case GFILE::GTO: str += ".topsilkscreen.ger";		break;
+				case GFILE::DRL: str += ".drills_pth.xln";			break;
+			}
+		}
+		else
+		{
+			switch( GFILE(i) )
+			{
+				case GFILE::GKO: str += ".GKO";	break;
+				case GFILE::GBL: str += ".GBL";	break;
+				case GFILE::GBS: str += ".GBS";	break;
+				case GFILE::GTL: str += ".GTL";	break;
+				case GFILE::GTS: str += ".GTS";	break;
+				case GFILE::GTO: str += ".GTO";	break;
+				case GFILE::DRL: str += ".DRL";	break;
+			}
 		}
 		m_os[i].open(str.c_str(), std::ios::out);
 		bOK = m_os[i].is_open();

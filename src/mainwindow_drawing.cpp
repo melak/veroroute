@@ -98,14 +98,18 @@ void MainWindow::PaintPad(const GuiControl& guiCtrl, QPainter& painter, const QC
 {
 	if ( m_bWriteGerber )
 	{
-		auto& os = m_gWriter.GetStream(GFILE::GBL);	// Bottom copper layer
+		auto& osT = m_gWriter.GetStream(GFILE::GTL);	// Top    copper layer
+		auto& osB = m_gWriter.GetStream(GFILE::GBL);	// Bottom copper layer
 		const GPEN ePen = bRelief ? GPEN::RELIEF : bGap ? GPEN::PAD_GAP : GPEN::PAD;
-		os.AddPad(ePen, pC);
+		osT.AddPad(ePen, pC);
+		osB.AddPad(ePen, pC);
 
 		if ( !bGap )
 		{
-			auto& os = m_gWriter.GetStream(GFILE::GBS);	// Bottom solder mask layer
-			os.AddPad(GPEN::PAD_MASK, pC);
+			auto& osT = m_gWriter.GetStream(GFILE::GTS);	// Top    solder mask layer
+			auto& osB = m_gWriter.GetStream(GFILE::GBS);	// Bottom solder mask layer
+			osT.AddPad(GPEN::PAD_MASK, pC);
+			osB.AddPad(GPEN::PAD_MASK, pC);
 
 			auto& osDrill = m_gWriter.GetStream(GFILE::DRL);	// Drill hole layer
 			osDrill.Drill(pC);
@@ -268,10 +272,12 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 	{
 		if ( m_bWriteGerber )
 		{
-			auto& os = m_gWriter.GetStream(GFILE::GBL);	// Bottom copper layer
+			auto& osT = m_gWriter.GetStream(GFILE::GTL);	// Top    copper layer
+			auto& osB = m_gWriter.GetStream(GFILE::GBL);	// Bottom copper layer
 			const GPEN ePen = bGap ? GPEN::PAD_GAP : GPEN::PAD;
 			assert(polygon.size() == 1);
-			os.AddTrack(ePen, polygon);	// Polygon has a single point
+			osT.AddTrack(ePen, polygon);	// Polygon has a single point
+			osB.AddTrack(ePen, polygon);	// Polygon has a single point
 		}
 		else
 		{
@@ -284,14 +290,21 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 	{
 		if ( m_bWriteGerber )
 		{
-			auto& os = m_gWriter.GetStream(GFILE::GBL);	// Bottom copper layer
+			auto& osT = m_gWriter.GetStream(GFILE::GTL);	// Top    copper layer
+			auto& osB = m_gWriter.GetStream(GFILE::GBL);	// Bottom copper layer
 			const GPEN ePen		= bGap ? GPEN::TRACK_GAP : GPEN::TRACK;
 			const GPEN ePenHV	= bGap ? GPEN::PAD_GAP   : GPEN::PAD;
 
 			if ( !bCurvedTracks && padWidth > trackWidth )
-				os.AddVariTrack(ePenHV, ePen, polygon);
+			{
+				osT.AddVariTrack(ePenHV, ePen, polygon);
+				osB.AddVariTrack(ePenHV, ePen, polygon);
+			}
 			else
-				os.AddTrack(ePen, polygon);
+			{
+				osT.AddTrack(ePen, polygon);
+				osB.AddTrack(ePen, polygon);
+			}
 		}
 		else
 		{
@@ -311,10 +324,13 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 	{
 		if ( m_bWriteGerber )
 		{
-			auto& os = m_gWriter.GetStream(GFILE::GBL);	// Bottom copper layer
+			auto& osT = m_gWriter.GetStream(GFILE::GTL);	// Top    copper layer
+			auto& osB = m_gWriter.GetStream(GFILE::GBL);	// Bottom copper layer
 			const GPEN ePen		= bGap ? GPEN::TRACK_GAP : GPEN::TRACK;
-			os.AddLoop(ePen, polygon);			// Closed polygon outline
-			if ( !bGap ) os.AddRegion(polygon);	// Only non-Gap polygon needs filling
+			osT.AddLoop(ePen, polygon);				// Closed polygon outline
+			osB.AddLoop(ePen, polygon);				// Closed polygon outline
+			if ( !bGap ) osT.AddRegion(polygon);	// Only non-Gap polygon needs filling
+			if ( !bGap ) osB.AddRegion(polygon);	// Only non-Gap polygon needs filling
 		}
 		else
 		{
@@ -329,7 +345,8 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 	{
 		if ( m_bWriteGerber )
 		{
-			auto& os = m_gWriter.GetStream(GFILE::GBL);	// Bottom copper layer
+			auto& osT = m_gWriter.GetStream(GFILE::GTL);	// Top    copper layer
+			auto& osB = m_gWriter.GetStream(GFILE::GBL);	// Bottom copper layer
 			const GPEN ePen = bGap ? GPEN::PAD_GAP : GPEN::PAD;
 			for (int iNbr = 0; iNbr < 8; iNbr += 2)	// Loop non-diagonal perimeter points
 			{
@@ -342,14 +359,16 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 					{
 						polygon.clear();
 						polygon << p[iNbr] << p[iNbrOpp];
-						os.AddTrack(ePen, polygon);	// Draw track across
+						osT.AddTrack(ePen, polygon);	// Draw track across
+						osB.AddTrack(ePen, polygon);	// Draw track across
 					}
 				}
 				else
 				{
 					polygon.clear();
 					polygon << pC << p[iNbr];
-					os.AddTrack(ePen, polygon);	// Draw track from centre to perimeter point
+					osT.AddTrack(ePen, polygon);	// Draw track from centre to perimeter point
+					osB.AddTrack(ePen, polygon);	// Draw track from centre to perimeter point
 				}
 			}
 		}
@@ -647,7 +666,10 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		border << QPointF(W * board.GetCols(), W * board.GetRows());
 		border << QPointF(0, W * board.GetRows());
 		if ( bGroundFill )
+		{
+			m_gWriter.GetStream(GFILE::GTL).DrawRegion(border);	// Top    copper layer
 			m_gWriter.GetStream(GFILE::GBL).DrawRegion(border);	// Bottom copper layer
+		}
 	}
 	else
 		painter.fillRect(m_XGRIDOFFSET, m_YGRIDOFFSET, W * board.GetCols(), W * board.GetRows(), bGroundFill ? Qt::black : backgroundColor);
@@ -662,7 +684,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 	if ( m_bWriteGerber )
 	{
-		m_gWriter.GetStream(GFILE::GKO).DrawLoop(GPEN::MIL10, border);	// Board outline
+		m_gWriter.GetStream(GFILE::GKO).DrawLoop(GPEN::MIL10, border);	// Board outline layer
 	}
 	else
 	{
@@ -703,6 +725,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			if ( m_bWriteGerber )
 			{
 				const bool bClear = ( bGroundFill && iLoop == 0 ) || bLastPass;	// For the gaps and thermal relief holes
+				m_gWriter.GetStream(GFILE::GTS).ClearBuffers();	// Top solder mask layer
+				m_gWriter.GetStream(GFILE::GTL).ClearBuffers();	// Top copper layer
+				m_gWriter.GetStream(GFILE::GTL).SetPolarity(bClear ? GPOLARITY::CLEAR : GPOLARITY::DARK);
 				m_gWriter.GetStream(GFILE::GBS).ClearBuffers();	// Bottom solder mask layer
 				m_gWriter.GetStream(GFILE::GBL).ClearBuffers();	// Bottom copper layer
 				m_gWriter.GetStream(GFILE::GBL).SetPolarity(bClear ? GPOLARITY::CLEAR : GPOLARITY::DARK);
@@ -846,6 +871,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			}
 			if ( m_bWriteGerber )
 			{
+				m_gWriter.GetStream(GFILE::GTS).DrawBuffers();	// Bottom solder mask layer
+				m_gWriter.GetStream(GFILE::GTL).DrawBuffers();	// Bottom copper layer
 				m_gWriter.GetStream(GFILE::GBS).DrawBuffers();	// Bottom solder mask layer
 				m_gWriter.GetStream(GFILE::GBL).DrawBuffers();	// Bottom copper layer
 			}
@@ -942,7 +969,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	QPen  fillBlackPen = m_blackPen;	// Used for lines in the component pixmap
 	fillBlackPen.setWidth(2);
 
-	if ( m_bWriteGerber || compMode != COMPSMODE::OFF || trackMode == TRACKMODE::MONO )	// Mono (i.e. "PCB") mode still needs pin holes drawn
+	if ( compMode != COMPSMODE::OFF || trackMode == TRACKMODE::MONO )	// Mono (i.e. "PCB") mode still needs pin holes drawn
 	{
 		compMgr.CalculateWireShifts();
 
@@ -963,7 +990,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			const int		 iComp			= comp.GetCol();
 
 			// Begin draw component fill + outline -----------------------------------------------
-			if ( ( m_bWriteGerber || compMode != COMPSMODE::OFF ) && !comp.GetShapes().empty() )
+			if ( compMode != COMPSMODE::OFF && !comp.GetShapes().empty() )
 			{
 				// Set pen width.  Selected component shown thicker than normal components
 				if ( comp.GetIsPlaced() )
@@ -1202,11 +1229,14 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	}
 
 	// Draw Component Text =======================================================================
-	if ( !m_bWriteGerber && compMode != COMPSMODE::OFF )
+	if ( compMode != COMPSMODE::OFF )
 	{
-		QFont compFont = painter.font();	// Copy of current font
-		compFont.setPointSize( m_board.GetTextSizeComp() );
-		painter.setFont(compFont);
+		if ( !m_bWriteGerber )
+		{
+			QFont compFont = painter.font();	// Copy of current font
+			compFont.setPointSize( m_board.GetTextSizeComp() );
+			painter.setFont(compFont);
+		}
 
 		m_redPen.setWidth(0);	// Use red text for floating components
 		penPlaced.setWidth(0);	// Use this for placed components

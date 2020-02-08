@@ -85,6 +85,10 @@ void RenderingDialog::UpdateControls()
 	ui->trackWidth->setValue( board.GetTRACK_PERCENT() );
 	ui->holeWidth->setValue( board.GetHOLE_PERCENT() );
 	ui->gapWidth->setValue( board.GetGAP_PERCENT() );
+
+	const int minTrackSep = board.GetMINSEP_PERCENT();
+	const std::string str = "Guaranteed minimum track separation = " + std::to_string(minTrackSep) + " mil";
+	ui->label_info->setText( QString::fromStdString(str) );
 }
 
 void RenderingDialog::keyPressEvent(QKeyEvent* event)

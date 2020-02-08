@@ -1132,7 +1132,7 @@
   </action>
   <action name="actionWrite_Gerber">
    <property name="text">
-    <string>Export as Gerber Files</string>
+    <string>Export as Gerber (Beta)</string>
    </property>
   </action>
  </widget>
