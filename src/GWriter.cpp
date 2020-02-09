@@ -281,7 +281,7 @@ void GStream::OutLine(const Curve& curve, bool bForceClose)	// Outline of a curv
 {
 	if ( curve.empty() ) return;
 	SetPen(curve.m_pen);
-	const int N = curve.size();
+	const size_t N = curve.size();
 	if	( N == 1 ) return Flash( curve.front() );
 	if	( N == 2 ) return Line( curve.front(), curve.back() );
 	auto& front = curve.front();
