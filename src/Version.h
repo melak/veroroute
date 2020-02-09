@@ -164,8 +164,10 @@ static const char* szVEROROUTE_VERSION =
 //"1.72";	// Bug fix: Flood fill not preserving status of grid under wires.
 //"1.73";	// New feature: Make pin label alignment (Left,Centre,Right) editable in pin labels dialog.
 //"1.74";	// Better treatment of part labels under part rotation.  Offset labels for Pads/Connectors by default.
-  "1.75";	// Partial bug fix: Rendering components to PDF would always show them filled (even if "Fill" slider was off).
+//"1.75";	// Partial bug fix: Rendering components to PDF would always show them filled (even if "Fill" slider was off).
 			// Fixed to show only outline if "Fill" slider is off.
 			// New feature: Added info to rendering dialog showing the minimum guaranteed track separation
 			// based on the current (pad, track, gap, diagonal mode, ground fill) settings.
 			// New feature:  Allow Gerber export when in Mono mode (Beta).
+  "1.76";	// Improvement: In Mono mode, all text boxes are now automatically mirrored for toner-transfer.
+			// Improvement: In Mono mode, all component outlines and component text are rendered to match Gerber output.

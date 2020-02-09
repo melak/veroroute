@@ -172,3 +172,5 @@ V1.75  Partial bug fix: Rendering components to PDF would always show them fille
        New feature: Added info to rendering dialog showing the minimum guaranteed track separation
        based on the current (pad, track, gap, diagonal mode, ground fill) settings.
        New feature:  Allow Gerber export when in Mono mode (Beta).
+V1.76  Improvement: In Mono mode, all text boxes are now automatically mirrored for toner-transfer.
+       Improvement: In Mono mode, all component outlines and component text are rendered to match Gerber output.
