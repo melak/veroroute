@@ -155,7 +155,18 @@ struct GPainter : public QPainter, public std::list<Transform>
 	virtual void drawRoundedRect(int x, int y, int w, int h, qreal xRadius, qreal yRadius)
 	{
 		if ( !m_pStream ) return QPainter::drawRoundedRect(x, y, w, h, xRadius, yRadius);
-		drawRect(x, y, w, h);	//TODO Implement rounded rect
+		xRadius = std::min(xRadius, 0.5 * w);
+		yRadius = std::min(yRadius, 0.5 * h);
+		const auto xDiameter = xRadius + xRadius;
+		const auto yDiameter = yRadius + yRadius;
+		drawArc( x+w-xDiameter, y, xDiameter, yDiameter, 0,1440);
+		drawLine(x+w-xRadius, y, x+xRadius, y);
+		drawArc(x, y, xDiameter, yDiameter, 1440, 1440);
+		drawLine(x, y+yRadius,x, y+h-yRadius);
+		drawArc(x, y+h-yDiameter, xDiameter, yDiameter, 2880,1440);
+		drawLine(x+xRadius, y+h, x+w-xRadius, y+h);
+		drawArc(x+w-xDiameter, y+h-yDiameter, xDiameter, yDiameter, 4320,1440);
+		drawLine(x+w, y+h-yRadius, x+w, y+yRadius);
 	}
 	virtual void drawArc(int x, int y, int w, int h, int a, int alen, bool bClose = false)
 	{
