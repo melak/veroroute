@@ -111,28 +111,31 @@ DESTDIR = ..
 
 DISTFILES +=
 
-#linux {
-#    target.path = $${PREFIX}/usr/bin/
-#    target.files = ../veroroute
-#
-#    desktopentry.path = $${PREFIX}/usr/share/applications
-#    desktopentry.files = ../veroroute.desktop
-#
-#    pixmapA.path = $${PREFIX}/usr/share/pixmaps
-#    pixmapA.files = ../veroroute.png
-#
-#    pixmapB.path = $${PREFIX}/usr/share/veroroute
-#    pixmapB.files = ../veroroute.png
-#
-#    tutorials.path = $${PREFIX}/usr/share/veroroute/tutorials
-#    tutorials.files = ../tutorials/*
-#
-#    gedasymbols.path = $${PREFIX}/usr/share/gEDA/sym
-#    gedasymbols.files = ../libraries/gEDA/veroroute_*
-#
-#    gedalib.path = $${PREFIX}/usr/share/gEDA/gafrc.d
-#    gedalib.files = ../libraries/gEDA/veroroute-clib.scm
-#
-#    INSTALLS += target desktopentry pixmapA pixmapB tutorials gedasymbols gedalib
-#}
+QMAKE_INSTALL_FILE    = install -m 644
+QMAKE_INSTALL_PROGRAM = install -m 755
+
+unix {
+    target.path = $${PREFIX}/usr/bin/
+    target.files = ../veroroute
+
+    desktopentry.path = $${PREFIX}/usr/share/applications
+    desktopentry.files = ../veroroute.desktop
+
+    pixmapA.path = $${PREFIX}/usr/share/pixmaps
+    pixmapA.files = ../veroroute.png
+
+    pixmapB.path = $${PREFIX}/usr/share/veroroute
+    pixmapB.files = ../veroroute.png
+
+    tutorials.path = $${PREFIX}/usr/share/veroroute/tutorials
+    tutorials.files = ../tutorials/*
+
+    gedasymbols.path = $${PREFIX}/usr/share/gEDA/sym
+    gedasymbols.files = ../libraries/gEDA/veroroute_*
+
+    gedalib.path = $${PREFIX}/usr/share/gEDA/gafrc.d
+    gedalib.files = ../libraries/gEDA/veroroute-clib.scm
+
+    INSTALLS += target desktopentry pixmapA pixmapB tutorials gedasymbols gedalib
+}
 

@@ -38,15 +38,15 @@ struct GPainter : public QPainter, public std::list<Transform>
 	virtual void setFont(const QFont& o)	{ if ( !m_pStream ) return QPainter::setFont(o); }
 	virtual void setPen(const QPen& o)		{ if ( !m_pStream ) return QPainter::setPen(o); }
 	virtual void setBrush(const QBrush& o)	{ if ( !m_pStream ) return QPainter::setBrush(o); }
-	virtual void drawText(int x, int y, int w, int h, int flags, const QString& str)
+	virtual void drawText(int x, int y, int w, int h, int flags, const QString& str, bool bMono = false)
 	{
-		if ( !m_pStream ) return QPainter::drawText(x, y, w, h, flags, str);
+		if ( !bMono ) return QPainter::drawText(x, y, w, h, flags, str);
 
 		double X(x), Y(y);
 
 		std::string stdStr = str.toStdString();
 		const char* sz = stdStr.c_str();
-		auto length = strlen(sz);
+		const auto length = strlen(sz);
 
 		const double dLetterSep(6);
 		double dStrWidth(0), dLetterWidth(0);

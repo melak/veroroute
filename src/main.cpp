@@ -59,15 +59,22 @@ int main(int argc, char *argv[])
 	// Fallback "tutorials" path should be in same folder as the exe (until distribution method for Windows changes)
 	QString tutorialsPathStr = pathStr;
 
-	// Search for system wide "tutorials" path
-	for (auto dataLocationPath : QStandardPaths::standardLocations(QStandardPaths::AppDataLocation))
+	// Search for relative "tutorials" path assuming the binary is installed in usr/bin
+	QString relativeTutorialsPathStr = ("../share/veroroute");
+	QDir tutorialsDir(relativeTutorialsPathStr + QString("/tutorials"));
+	if ( tutorialsDir.exists() )
+		tutorialsPathStr = relativeTutorialsPathStr;
+	else	// Search for system wide "tutorials" path
 	{
-		QDir tutorialsDir(dataLocationPath + QString("/tutorials"));
-		// Take first hit
-		if ( tutorialsDir.exists() )
+		for (auto dataLocationPath : QStandardPaths::standardLocations(QStandardPaths::AppDataLocation))
 		{
-			tutorialsPathStr = dataLocationPath;
-			break;
+			QDir tutorialsDir(dataLocationPath + QString("/tutorials"));
+			// Take first hit
+			if ( tutorialsDir.exists() )
+			{
+				tutorialsPathStr = dataLocationPath;
+				break;
+			}
 		}
 	}
 

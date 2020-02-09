@@ -366,12 +366,13 @@ public:
 	bool GetMirrored() const			{ return GetFlipH() || GetFlipV(); }
 	bool SetTrackSliderValue(int i)		{ const bool bChanged = ( GetTrackSliderValue() != i ); SetTrackMode( static_cast<TRACKMODE>(i) ); return bChanged; }
 	bool SetCompSliderValue(int i)		{ const bool bChanged = ( GetCompSliderValue()  != i ); SetCompMode(  static_cast<COMPSMODE>(i) ); return bChanged; }
-	int  GetTrackSliderValue() const	{ return static_cast<int>(GetTrackMode()); }
-	int  GetCompSliderValue() const		{ return static_cast<int>(GetCompMode());  }
-	int  GetHalfPadWidth() const		{ return std::max(1, static_cast<int> (GetGRIDPIXELS() * GetPAD_PERCENT()	 * 0.005 )); }	// Half pad width in pixels
-	int  GetHalfTrackWidth() const		{ return std::max(1, static_cast<int> (GetGRIDPIXELS() * GetTRACK_PERCENT()	 * 0.005 )); }	// Half track width in pixels
-	int  GetGapWidth() const			{ return std::max(1, static_cast<int> (GetGRIDPIXELS() * GetGAP_PERCENT()	 * 0.010 )); }	// Gap width in pixels
-	int  GetReliefWidth() const			{ return std::max(1, static_cast<int> (GetGRIDPIXELS() * GetRELIEF_PERCENT() * 0.010 )); }	// Thermal relief hole width
+	int		GetTrackSliderValue() const	{ return static_cast<int>(GetTrackMode()); }
+	int		GetCompSliderValue() const	{ return static_cast<int>(GetCompMode());  }
+	int		GetHalfPadWidth() const		{ return std::max(1, static_cast<int> (GetGRIDPIXELS() * GetPAD_PERCENT()		* 0.005 )); }	// Half pad width in pixels
+	int		GetHalfTrackWidth() const	{ return std::max(1, static_cast<int> (GetGRIDPIXELS() * GetTRACK_PERCENT()		* 0.005 )); }	// Half track width in pixels
+	int		GetGapWidth() const			{ return std::max(1, static_cast<int> (GetGRIDPIXELS() * GetGAP_PERCENT()		* 0.010 )); }	// Gap width in pixels
+	int		GetReliefWidth() const		{ return std::max(1, static_cast<int> (GetGRIDPIXELS() * GetRELIEF_PERCENT()	* 0.010 )); }	// Thermal relief hole width
+	double	GetSilkWidth() const		{ return std::max(1.0,				   GetGRIDPIXELS() * GetSILK_PERCENT()		* 0.010 );  }	// Silk-screen pen width
 	int  GetMINSEP_PERCENT() const	// Minimum guaranteed track separation in mil
 	{
 		// To keep track/pads at least N mil apart:

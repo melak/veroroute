@@ -120,10 +120,8 @@ void MainWindow::PaintPad(const GuiControl& guiCtrl, QPainter& painter, const QC
 		const int gapWidth = ( bGap ) ? guiCtrl.GetGapWidth() : 0;
 		const int padWidth = ( bRelief ) ? guiCtrl.GetReliefWidth()
 										 : ( ( guiCtrl.GetHalfPadWidth() + gapWidth ) << 1 );
-		static QPen	pen(Qt::black, 2, Qt::SolidLine);
+		static QPen	pen(Qt::black, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 		pen.setColor(color);
-		pen.setJoinStyle(Qt::RoundJoin);
-		pen.setCapStyle(Qt::RoundCap);
 		pen.setWidth(padWidth);
 		painter.setPen(pen);
 		painter.setBrush(Qt::NoBrush);
@@ -135,10 +133,8 @@ void MainWindow::PaintDiag(const GuiControl& guiCtrl, QPainter& painter, const Q
 {
 	const int	trackWidth	= guiCtrl.GetHalfTrackWidth() << 1;	// Track width in pixels
 
-	static QPen	pen(Qt::black, 2, Qt::SolidLine);
+	static QPen	pen(Qt::black, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 	pen.setColor(color);
-	pen.setJoinStyle(Qt::RoundJoin);
-	pen.setCapStyle(Qt::RoundCap);
 	pen.setWidth(trackWidth);
 	painter.setPen(pen);
 	painter.setBrush(Qt::NoBrush);
@@ -260,10 +256,8 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 	}
 
 	// Pens for drawing (not Gerber)
-	static QPen		pen(Qt::black, 2, Qt::SolidLine);
+	static QPen		pen(Qt::black, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 	static QBrush	brush(Qt::black,  Qt::SolidPattern);
-	pen.setJoinStyle(Qt::RoundJoin);
-	pen.setCapStyle(Qt::RoundCap);
 	pen.setColor(color);
 	brush.setColor(color);
 
@@ -578,7 +572,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	const bool&		 bVero			= board.GetVeroTracks();
 	const bool		 bDiagsOK		= ( board.GetDiagsMode() != DIAGSMODE::OFF );
 	const bool		 bMinDiags		= ( board.GetDiagsMode() == DIAGSMODE::MIN );
-	const bool		 bGroundFill	= !bVero && ( trackMode == TRACKMODE::MONO ) && board.GetGroundFill();
+	const bool		 bMono			= trackMode == TRACKMODE::MONO;
+	const bool		 bGroundFill	= !bVero && bMono && board.GetGroundFill();
 	const bool		 bPixmapCache	= !bVero && !bGroundFill && !m_bWritePDF && !m_bWriteGerber;
 	const bool		 bDirect		= !bVero && !bPixmapCache && !bGroundFill;
 	const int&		 W				= board.GetGRIDPIXELS();		// Square width in pixels
@@ -589,9 +584,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	const int		 iGap			= iHalfGap + iHalfGap;			// For vero only
 	const int		 iWirePenWidth	= D / 4;						// For wires with no NodeID
 	const int		 iWireBoxWidth	= 3 * iWirePenWidth;			// For wires with no NodeID
-	const double	 dTextScale		= ( m_bWritePDF ) ? (48.0 / W) : (W / 24.0);	// For scaling text when zooming
-	//TODO Need to think about gerber text scaling at some point
-
+	const double	 dTextScalePCB	= W / 24.0;
+	const double	 dTextScale		= ( m_bWritePDF ) ? (48.0 / W) : dTextScalePCB;	// For scaling text when zooming
 	if ( bVero && trackMode != TRACKMODE::OFF ) board.CalcSolder();	// Calculate positions of solder blobs for stripboard builds
 
 	board.CalculateColors();	// Work out best way to color things
@@ -994,7 +988,14 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			{
 				// Set pen width.  Selected component shown thicker than normal components
 				if ( comp.GetIsPlaced() )
-					penPlaced.setWidth( bHighlightComp ? 3 : bVia ? 1 : 2 );
+				{
+					if ( bMono )	// Use floating point pen width to better match Gerber output
+						penPlaced.setWidthF( bHighlightComp ? ( board.GetSilkWidth() * 1.5 )
+															: ( bVia ? ( board.GetSilkWidth() * 0.5 )
+																	 :   board.GetSilkWidth() ) );
+					else
+						penPlaced.setWidth( bHighlightComp ? 3 : bVia ? 1 : 2 );
+				}
 				else
 					m_redPen.setWidth(4);	// Make floating components stand out in red
 
@@ -1013,7 +1014,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						X += compMgr.GetWireShift( &comp ) * 0.1 * W;
 				}
 
-				const bool bFill = !m_bWriteGerber && board.GetFillSaturation() > 0;
+				const bool bFill = !bMono && board.GetFillSaturation() > 0;	// No fill in Mono mode
 
 				double SL,ST,SR,SB;
 				comp.GetSafeBounds(SL,SR,ST,SB);
@@ -1045,7 +1046,6 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 					if ( bFill && iLoop == 1 )	// Draw the pixmap created on the previous pass
 					{
-						assert(!m_bWriteGerber);
 						painter.setOpacity( /*bWire ? 1.0 :*/ board.GetFillSaturation() * 0.01);
 						painter.drawPixmap(-dReqW*0.5, -dReqH*0.5, tmpPixmap);
 						painter.setOpacity(1.0);
@@ -1066,7 +1066,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 						if ( iLoop == 0 && !s.GetDrawFill() ) continue;
 						if ( iLoop == 1 && (s.GetDrawFill() || !s.GetDrawLine()) ) continue;
-						if ( iLoop == 0 )	// Definitely drawing fill now
+						if ( iLoop == 0 )	// Drawing fill
 						{
 							const MyRGB& rgb	= s.GetFillColor();
 							m_varBrush.setColor( QColor(rgb.GetR(), rgb.GetG(), rgb.GetB()) );
@@ -1231,15 +1231,18 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	// Draw Component Text =======================================================================
 	if ( compMode != COMPSMODE::OFF )
 	{
-		if ( !m_bWriteGerber )
+		if ( !bMono )
 		{
 			QFont compFont = painter.font();	// Copy of current font
 			compFont.setPointSize( m_board.GetTextSizeComp() );
 			painter.setFont(compFont);
 		}
 
-		m_redPen.setWidth(0);	// Use red text for floating components
-		penPlaced.setWidth(0);	// Use this for placed components
+		// Use floating point pen width to better match Gerber output.
+		// Scale the pen width down to compensate for painter.scale() scaling things up in the loop below.
+		const double dPenWidth = ( bMono ) ? board.GetSilkWidth() / dTextScalePCB : 0;
+		m_redPen.setWidthF(dPenWidth);	// Use red text for floating components
+		penPlaced.setWidthF(dPenWidth);	// Use this for placed components
 
 		for (const auto& mapObj : compMgr.GetMapIdToComp())	// Iterate components
 		{
@@ -1263,9 +1266,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 			const std::string& myStr = ( compMode == COMPSMODE::NAME )  ? comp.GetNameStr() :
 									   ( compMode == COMPSMODE::VALUE ) ? comp.GetValueStr() : "";
-			painter.scale(dTextScale, dTextScale);
+			painter.scale(dTextScalePCB, dTextScalePCB);
 			painter.setPen( comp.GetIsPlaced() ? penPlaced : m_redPen );
-			painter.drawText(0,0,0,0, Qt::AlignCenter | Qt::TextDontClip, myStr.c_str());
+			painter.drawText(0,0,0,0, Qt::AlignCenter | Qt::TextDontClip, myStr.c_str(), bMono);
 			painter.restore();
 		}
 	}
@@ -1327,8 +1330,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			painter.setPen(m_varPen);
 			painter.setBrush(Qt::NoBrush);
 			painter.save();
-			painter.translate(L, T);
-			painter.scale(dTextScale, dTextScale);
+			painter.translate(bMono ? R : L, T);							// Mirror all text boxes in Mono mode
+			painter.scale(bMono ? -dTextScale : dTextScale, dTextScale);	// Mirror all text boxes in Mono mode
 			painter.drawText(0,0,(R-L)/dTextScale,(B-T)/dTextScale, Qt::TextWordWrap | rect.GetFlags(), QString::fromStdString(rect.GetStr()));
 			painter.restore();
 

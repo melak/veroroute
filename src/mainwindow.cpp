@@ -98,7 +98,7 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	m_lightBluePen		= QPen(QColor(128, 128, 255, 255), 0,	Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 	m_varPen			= QPen(Qt::black, 0,					Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 	m_dotPen			= QPen(QColor(96,96,96,255), 0,			Qt::DotLine,   Qt::RoundCap, Qt::RoundJoin);
-	m_dashPen			= QPen(QColor(96,96,96,255), 0,			Qt::DashLine,   Qt::RoundCap, Qt::RoundJoin);
+	m_dashPen			= QPen(QColor(96,96,96,255), 0,			Qt::DashLine,  Qt::RoundCap, Qt::RoundJoin);
 	m_backgroundBrush	= QBrush(Qt::white,						Qt::SolidPattern);
 	m_darkBrush			= QBrush(QColor(0, 0, 0, 150),			Qt::SolidPattern);	// using alpha
 	m_varBrush			= QBrush(QColor(255,255,255,0),			Qt::SolidPattern);
