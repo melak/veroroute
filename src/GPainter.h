@@ -85,7 +85,7 @@ struct GPainter : public QPainter, public std::list<Transform>
 				{
 					R.setX(dScale*(X + ix - ixMin)); R.setY(dScale*(10 + Y - iy));
 					if ( !bPenUp )
-						drawLine(L.x(), L.y(), R.x(), R.y());	// Draw L to R
+						drawLine(L, R);	// Draw L to R
 					L = R;
 				}
 				bPenUp = !bOK;
@@ -142,6 +142,13 @@ struct GPainter : public QPainter, public std::list<Transform>
 		if ( !m_pStream ) return QPainter::drawLine(x1, y1, x2, y2);
 		m_polygon.clear();
 		m_polygon << QPointF(x1,y1) << QPointF(x2,y2);
+		AddTrack();
+	}
+	virtual inline void drawLine(const QPointF& p1, const QPointF& p2)
+	{
+		if ( !m_pStream ) return QPainter::drawLine(p1, p2);
+		m_polygon.clear();
+		m_polygon << p1 << p2;
 		AddTrack();
 	}
 	virtual void drawRect(int x, int y, int w, int h)
