@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "limits.h"
+#include "Common.h"
 
 // Simplex vector font.  Covers ASCII characters 32 to 126 inclusive
 // See http://paulbourke.net/dataformats/hershey/
@@ -597,6 +597,8 @@ int g_simplex[95][112] = {
    -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
 };
 
+static std::vector<std::pair<int,int>> g_xLimits;	// A cache of the min/max X values for each simplex letter
+
 namespace Simplex
 {
 	static int GetLetterIndex(const char& c)
@@ -608,24 +610,27 @@ namespace Simplex
 	{
 		return ( i < 95 && j < 112 ) ? g_simplex[i][j] : -1;
 	}
-	static void GetLetterLimits(size_t i, int& ixMin, int& ixMax)
+	static void CalcXlimits(const size_t& i, std::pair<int,int>& o)
 	{
-		if ( i == 0 )	// ' ' character
+		if ( i == 0 ) { o.first = 0; o.second = 5; return; }	// ' ' character
+		o.first	 = INT_MAX;	o.second = INT_MIN;
+		const int jEnd = 2 + 2 * GetLetterData(i, 0);
+		for (int j = 2; j < jEnd; j += 2)	// Loop x,y pairs
 		{
-			ixMin = 0; ixMax = 5;
-			return;
-		}
-		ixMin = INT_MAX;
-		ixMax = INT_MIN;
-		int ix, iy;
-		for (int j = 2; j < 112; j += 2)	// Loop x values
-		{
-			ix = GetLetterData(i, j);
-			iy = GetLetterData(i, j+1);
+			const int ix = GetLetterData(i, j);		// Read x
+			const int iy = GetLetterData(i, j+1);	// Read y
 			if ( ix == -1 && iy == -1 ) continue;
-			ixMin = std::min(ixMin, ix);
-			ixMax = std::max(ixMax, ix);
+			o.first	 = std::min(o.first, ix);
+			o.second = std::max(o.second, ix);
 		}
-		assert(ixMin <= ixMax);
+	}
+	static const std::pair<int,int>& GetXlimits(const size_t& i)
+	{
+		if ( g_xLimits.empty() )	// Empty cache ...
+		{
+			g_xLimits.resize(95);	// .. so build it
+			for (size_t ii = 0; ii < 95; ii++) CalcXlimits(ii, g_xLimits[ii]);
+		}
+		return g_xLimits[i];	// Read cache
 	}
 }

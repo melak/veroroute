@@ -38,57 +38,58 @@ struct GPainter : public QPainter, public std::list<Transform>
 	virtual void setFont(const QFont& o)	{ if ( !m_pStream ) return QPainter::setFont(o); }
 	virtual void setPen(const QPen& o)		{ if ( !m_pStream ) return QPainter::setPen(o); }
 	virtual void setBrush(const QBrush& o)	{ if ( !m_pStream ) return QPainter::setBrush(o); }
-	virtual void drawText(int x, int y, int w, int h, int flags, const QString& str, bool bMono = false)
+	virtual void drawText(int x, int y, int w, int h, int flags, const QString& str, bool bPCB = false)
 	{
-		if ( !bMono ) return QPainter::drawText(x, y, w, h, flags, str);
+		if ( !bPCB ) return QPainter::drawText(x, y, w, h, flags, str);
 
 		double X(x), Y(y);
 
-		std::string stdStr = str.toStdString();
-		const char* sz = stdStr.c_str();
-		const auto length = strlen(sz);
+		std::string	stdStr	= str.toStdString();
+		const char*	sz		= stdStr.c_str();
+		const auto	length	= strlen(sz);
 
-		const double dLetterSep(6);
+		const double dLetterSep(6);	// Letter separation (hard-coded)
+
 		double dStrWidth(0), dLetterWidth(0);
-		int ixMin, ixMax;
 		for (size_t i = 0; i < length; i++)
 		{
 			const int simplexIndex = Simplex::GetLetterIndex( sz[i] );
 			if ( simplexIndex == -1 ) continue;	// Unsupported character
 
-			Simplex::GetLetterLimits(simplexIndex, ixMin, ixMax);
-			dStrWidth += dLetterSep + ixMax - ixMin;
+			const auto& limits = Simplex::GetXlimits(simplexIndex);
+			dLetterWidth = limits.second - limits.first;	// xMax - xMin
+			dStrWidth	+= dLetterSep + dLetterWidth;
 		}
+		dStrWidth -= dLetterSep;	// End correction
 
-		dStrWidth -= dLetterSep;
 		if ( flags & Qt::AlignCenter )
 			X -= dStrWidth * 0.5;
 		else
 			assert(0);
 
-		const double dScale(0.5);
+		QPointF L, R;	// Ends of a line segment
+		const double dScale(0.5);	// Hard-coded scale
 		for (size_t i = 0; i < length; i++)
 		{
 			const int simplexIndex = Simplex::GetLetterIndex( sz[i] );
 			if ( simplexIndex == -1 ) continue;	// Unsupported character
 
-			Simplex::GetLetterLimits(simplexIndex, ixMin, ixMax);
-			dLetterWidth = ixMax - ixMin;
-			QPointF L, R;	// Ends of a line segment
+			const auto& limits = Simplex::GetXlimits(simplexIndex);
+			dLetterWidth = limits.second - limits.first;	// xMax - xMin
 			bool bPenUp(true);
-			for (int j = 2; j < 112; j += 2)
+			const int jEnd = 2 + 2 * Simplex::GetLetterData(simplexIndex, 0);
+			for (int j = 2; j < jEnd; j += 2)
 			{
 				const int	ix	= Simplex::GetLetterData(simplexIndex, j);
 				const int	iy	= Simplex::GetLetterData(simplexIndex, j+1);
-				const bool	bOK	= !( ix == -1 && iy == -1 );	// (-1,-1) ==> not OK
+				const bool	bOK	= !( ix == -1 && iy == -1 );	// (-1,-1) ==> A pen up command
 				if ( bOK )
 				{
-					R.setX(dScale*(X + ix - ixMin)); R.setY(dScale*(10 + Y - iy));
-					if ( !bPenUp )
-						drawLine(L, R);	// Draw L to R
+					R.setX(dScale*(X + ix - limits.first)); R.setY(dScale*(10 + Y - iy));
+					if ( !bPenUp ) drawLine(L, R);	// Draw L to R
 					L = R;
 				}
-				bPenUp = !bOK;
+				bPenUp = !bOK;	// Update bPenUp
 			}
 			X += dLetterWidth + dLetterSep;
 		}
