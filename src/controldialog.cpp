@@ -206,7 +206,7 @@ void ControlDialog::UpdateControls()	// Non-component controls
 	ui->margin->setValue( board.GetCropMargin() );
 
 	ui->label_saturation->setEnabled( !bCompEdit && bColor );
-	ui->label_fill->setEnabled( !bCompEdit && bComps );
+	ui->label_fill->setEnabled( !bCompEdit && bComps && bColor );
 
 	ui->autoRoute->setChecked( board.GetRoutingEnabled() );
 	ui->autoRoute->setDisabled( bCompEdit );
@@ -218,7 +218,7 @@ void ControlDialog::UpdateControls()	// Non-component controls
 	ui->trackSlider->setEnabled( !bCompEdit );
 	ui->saturationSlider->setEnabled( !bCompEdit && bColor );
 	ui->compSlider->setEnabled( !bCompEdit );
-	ui->fillSlider->setEnabled( !bCompEdit && bComps );
+	ui->fillSlider->setEnabled( !bCompEdit && bComps && bColor );
 	ui->trackSlider->setValue( board.GetTrackSliderValue() );
 	ui->saturationSlider->setValue( board.GetSaturation() );
 	ui->compSlider->setValue( board.GetCompSliderValue() );

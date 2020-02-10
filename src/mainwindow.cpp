@@ -979,7 +979,7 @@ void MainWindow::HandleNetworkReply(QNetworkReply* pReply)
 }
 
 // View controls (Update history BEFORE calling UpdateControls() since that triggers more history writes)
-void MainWindow::TrackSliderChanged(int i)		{ if ( m_board.SetTrackSliderValue(i) )	{ UpdateHistory("Track slider change");		UpdateControls(); RepaintSkipRouting(); } }
+void MainWindow::TrackSliderChanged(int i)		{ if ( m_board.SetTrackSliderValue(i) )	{ UpdateHistory("Track slider change");		UpdateControls(); DestroyPixmapCache(); RepaintSkipRouting(); } }
 void MainWindow::SaturationSliderChanged(int i) { if ( m_board.SetSaturation(i) )		{ UpdateHistory("Saturation change");		UpdateControls(); DestroyPixmapCache(); RepaintSkipRouting();  } }
 void MainWindow::CompSliderChanged(int i)		{ if ( m_board.SetCompSliderValue(i) )	{ UpdateHistory("Part slider change");		UpdateControls(); RepaintSkipRouting();  } }
 void MainWindow::FillSliderChanged(int i)		{ if ( m_board.SetFillSaturation(i) )	{ UpdateHistory("Fill opacity change");		UpdateControls(); DestroyPixmapCache();	RepaintSkipRouting();  } }
@@ -1275,10 +1275,12 @@ void MainWindow::SetDiagonalsMax(bool b)
 	const bool bListNodes = ( m_board.GetDiagsMode() == DIAGSMODE::OFF );	// Only ListNodes() again if necessary
 	if ( b && m_board.SetDiagsMode(DIAGSMODE::MAX) )	{ UpdateHistory("Diagonals max"); UpdateControls(); DestroyPixmapCache(); RepaintWithRouting(); if ( bListNodes ) ListNodes(); }
 }
-void MainWindow::SetPadWidth(int i)			{ if ( m_board.SetPAD_PERCENT(i)   ) { UpdateHistory("Pad width change");	UpdateControls();	DestroyPixmapCache();	RepaintSkipRouting(); } }
-void MainWindow::SetTrackWidth(int i)		{ if ( m_board.SetTRACK_PERCENT(i) ) { UpdateHistory("Track width change");	UpdateControls();	DestroyPixmapCache();	RepaintSkipRouting(); } }
-void MainWindow::SetHoleWidth(int i)		{ if ( m_board.SetHOLE_PERCENT(i)  ) { UpdateHistory("Hole width change");	UpdateControls();	RepaintSkipRouting(); } }
-void MainWindow::SetGapWidth(int i)			{ if ( m_board.SetGAP_PERCENT(i)   ) { UpdateHistory("Gap width change");	UpdateControls();	RepaintSkipRouting(); } }
+void MainWindow::SetPadWidth(int i)			{ if ( m_board.SetPAD_PERCENT(i)   ) { UpdateHistory("Pad width change");				UpdateControls();	DestroyPixmapCache();	RepaintSkipRouting(); } }
+void MainWindow::SetTrackWidth(int i)		{ if ( m_board.SetTRACK_PERCENT(i) ) { UpdateHistory("Track width change");				UpdateControls();	DestroyPixmapCache();	RepaintSkipRouting(); } }
+void MainWindow::SetHoleWidth(int i)		{ if ( m_board.SetHOLE_PERCENT(i)  ) { UpdateHistory("Hole width change");				UpdateControls();	RepaintSkipRouting(); } }
+void MainWindow::SetGapWidth(int i)			{ if ( m_board.SetGAP_PERCENT(i)   ) { UpdateHistory("Gap width change");				UpdateControls();	RepaintSkipRouting(); } }
+void MainWindow::SetMaskWidth(int i)		{ if ( m_board.SetMASK_PERCENT(i)  ) { UpdateHistory("Solder mask change");				UpdateControls();	RepaintSkipRouting(); } }
+void MainWindow::SetSilkWidth(int i)		{ if ( m_board.SetSILK_PERCENT(i)  ) { UpdateHistory("Silkscreen line width change");	UpdateControls();	RepaintSkipRouting(); } }
 
 // Rendering dialog
 void MainWindow::SetTextSizeComp(int i)		{ if ( m_board.SetTextSizeComp(i) )		  { UpdateHistory("Text size change (component)");	RepaintSkipRouting(); } }
@@ -1289,6 +1291,8 @@ void MainWindow::SetShowTarget(bool b)		{ if ( m_board.SetShowTarget(b) )		  { U
 void MainWindow::SetAntialiasOff(bool b)	{ if ( b && m_board.SetRenderQuality(0) ) { UpdateHistory("Anti-alias off");  DestroyPixmapCache(); RepaintSkipRouting(); } }
 void MainWindow::SetAntialiasOn(bool b)		{ if ( b && m_board.SetRenderQuality(1) ) { UpdateHistory("Anti-alias on");   DestroyPixmapCache(); RepaintSkipRouting(); } }
 void MainWindow::SetAntialiasHigh(bool b)	{ if ( b && m_board.SetRenderQuality(2) ) { UpdateHistory("Anti-alias high"); DestroyPixmapCache(); RepaintSkipRouting(); } }
+void MainWindow::SetPTH(bool b)				{ if ( b && m_board.SetHoleType(HOLETYPE::PTH)  ) { UpdateHistory("Plated Through Holes"); } }
+void MainWindow::SetNPTH(bool b)			{ if ( b && m_board.SetHoleType(HOLETYPE::NPTH) ) { UpdateHistory("Non-Plated Through Holes"); } }
 
 // Wire dialog
 void MainWindow::SetWireShare(bool b)		{ if ( m_board.SetWireShare(b) )		  { UpdateHistory("Wire hole-sharing on/off");	RepaintSkipRouting(); } }
@@ -1510,15 +1514,16 @@ void MainWindow::UpdateControls()
 	const bool		bTextOK			=  bTextActionsOK && GetCurrentTextId() != BAD_TEXTID;
 	const bool		bCompOK			=  bCompActionsOK && groupMgr.GetNumUserComps();
 	const bool		bMono			= !bCompEdit && m_board.GetTrackMode() == TRACKMODE::MONO;
+	const bool		bPCB			= !bCompEdit && m_board.GetTrackMode() == TRACKMODE::PCB;
 	const bool		bTracks			= !bCompEdit && m_board.GetTrackMode() != TRACKMODE::OFF;
 	const bool		bVeroV			=  m_board.GetVeroTracks() &&  m_board.GetVerticalStrips();
 	const bool		bVeroH			=  m_board.GetVeroTracks() && !m_board.GetVerticalStrips();
 	const bool		bStraight		= !m_board.GetVeroTracks() && !m_board.GetCurvedTracks();
 	const bool		bCurved			= !m_board.GetVeroTracks() &&  m_board.GetCurvedTracks();
 
-	ui->actionWrite_Gerber->setEnabled(bMono && !m_board.GetMirrored() && !m_board.GetVeroTracks());
-	ui->actionMerge->setEnabled(!bCompEdit);
-	ui->actionWrite_PDF->setEnabled(!bCompEdit);
+	ui->actionWrite_Gerber->setEnabled(bPCB && !m_board.GetMirrored() && !m_board.GetVeroTracks());
+	ui->actionMerge->setEnabled(!bPCB && !bCompEdit);
+	ui->actionWrite_PDF->setEnabled(!bPCB && !bCompEdit);
 	ui->menuAdd->setEnabled( !bCompEdit && m_board.GetCompMode() != COMPSMODE::OFF && !m_board.GetMirrored() );
 
 	ui->actionCopy->setEnabled( bTextOK || bCompOK );
@@ -1546,8 +1551,10 @@ void MainWindow::UpdateControls()
 	ui->actionToggleText->setEnabled(  !bCompEdit );
 	ui->actionToggleFlipH->setEnabled( !bCompEdit );
 	ui->actionToggleFlipV->setEnabled( !bCompEdit );
-	ui->actionTogglePinLabels->setEnabled( !bCompEdit && m_board.GetCompMode() != COMPSMODE::OFF && m_board.GetTrackMode() != TRACKMODE::MONO );
-
+	ui->actionTogglePinLabels->setEnabled( !bCompEdit
+											&& m_board.GetCompMode()  != COMPSMODE::OFF
+											&& m_board.GetTrackMode() != TRACKMODE::MONO
+											&& m_board.GetTrackMode() != TRACKMODE::PCB	);
 	ui->actionToggleGrid->setChecked( m_board.GetShowGrid() );
 	ui->actionToggleText->setChecked( m_board.GetShowText() );
 	ui->actionToggleFlipH->setChecked( m_board.GetFlipH() );
@@ -1563,7 +1570,7 @@ void MainWindow::UpdateControls()
 	ui->actionCurved->setEnabled(		bTracks );
 	ui->actionDiagsMin->setEnabled(		bTracks && !bVeroV && ! bVeroH );
 	ui->actionDiagsMax->setEnabled(		bTracks && !bVeroV && ! bVeroH );
-	ui->actionFill->setEnabled(			bMono && !m_board.GetVeroTracks() );
+	ui->actionFill->setEnabled(			( bMono || bPCB ) && !m_board.GetVeroTracks() );
 	ui->actionSelectArea->setEnabled(	!bCompEdit );
 
 	ui->actionVeroV->setChecked( bVeroV );
@@ -1682,4 +1689,9 @@ QString MainWindow::GetSaveFileName(const QString& caption, const QString& nameF
 		if ( !fileNames.isEmpty() ) fileName = fileNames.at(0);
 	}
 	return fileName;
+}
+
+QColor MainWindow::GetBackgroundColor() const
+{
+	return ( m_board.GetTrackMode() == TRACKMODE::PCB ) ? Qt::black : Qt::white;	// For screen only.  PDF is always white.
 }

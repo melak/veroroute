@@ -1010,7 +1010,7 @@
     <string>Fill</string>
    </property>
    <property name="toolTip">
-    <string>Fill using selected NodeId</string>
+    <string>Ground Fill using selected NodeId</string>
    </property>
   </action>
   <action name="actionSelectArea">

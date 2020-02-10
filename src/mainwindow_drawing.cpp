@@ -573,8 +573,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	const bool		 bDiagsOK		= ( board.GetDiagsMode() != DIAGSMODE::OFF );
 	const bool		 bMinDiags		= ( board.GetDiagsMode() == DIAGSMODE::MIN );
 	const bool		 bMono			= trackMode == TRACKMODE::MONO;
-	const bool		 bGroundFill	= !bVero && bMono && board.GetGroundFill();
-	const bool		 bPixmapCache	= !bVero && !bGroundFill && !m_bWritePDF && !m_bWriteGerber;
+	const bool		 bPCB			= trackMode == TRACKMODE::PCB;
+	const bool		 bGroundFill	= !bVero && ( bMono || bPCB ) && board.GetGroundFill();
+	const bool		 bPixmapCache	= !bVero && !bPCB && !bGroundFill && !m_bWritePDF;
 	const bool		 bDirect		= !bVero && !bPixmapCache && !bGroundFill;
 	const int&		 W				= board.GetGRIDPIXELS();		// Square width in pixels
 	const int		 C				= W / 2;						// Half square width in pixels
@@ -608,6 +609,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	}
 	else if ( m_bWriteGerber )
 	{
+		assert( bPCB );
 		if ( board.GetFlipH() || board.GetFlipV() ) return;		// No mirrored Gerber
 
 		const bool bOK = m_gWriter.Open(m_gerberFileName.toStdString().c_str(), m_board);
@@ -630,7 +632,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		painter.begin(&m_mainPixmap);	// Paint to main pixmap
 	}
 
-	if ( !m_bWriteGerber )	//TODO Make this less of a hack
+	if ( !bPCB )
 	{
 		SetQuality(painter);
 
@@ -646,9 +648,11 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		}
 	}
 
-	const QColor backgroundColor = ( m_bWritePDF || m_bWriteGerber ) ? Qt::white : GetBackgroundColor();
+	const QColor backgroundColor = ( m_bWritePDF ) ? Qt::white : GetBackgroundColor();
 	m_backgroundPen.setColor(backgroundColor);
 	m_backgroundBrush.setColor(backgroundColor);
+
+	int X(0), Y(0), L(0), R(0), T(0), B(0), cR(0), cG(0), cB(0);
 
 	// Draw board background
 	QPolygonF border;
@@ -666,10 +670,13 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		}
 	}
 	else
-		painter.fillRect(m_XGRIDOFFSET, m_YGRIDOFFSET, W * board.GetCols(), W * board.GetRows(), bGroundFill ? Qt::black : backgroundColor);
+	{
+		const int iGroundFillColor = ( bPCB ) ? MY_DARK_GREEN : MY_BLACK;
+		colorMgr.GetPixmapRGB(iGroundFillColor, cR, cG, cB);
+		const QColor groundFillColor(cR, cG, cB, 255);
+		painter.fillRect(m_XGRIDOFFSET, m_YGRIDOFFSET, W * board.GetCols(), W * board.GetRows(), bGroundFill ? groundFillColor : backgroundColor);
+	}
 
-
-	int X(0), Y(0), L(0), R(0), T(0), B(0), cR(0), cG(0), cB(0);
 
 	// Draw rect around whole board area =========================================================
 	int dummy;
@@ -684,13 +691,13 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	{
 		m_blackPen.setWidth(0);
 		m_whitePen.setWidth(0);
-		painter.setPen(m_blackPen);
+		painter.setPen(GetBackgroundColor() == Qt::black ? m_whitePen : m_blackPen);
 		painter.setBrush(Qt::NoBrush);
-		painter.drawRect(L, T, R-L, B-T);
+		painter.drawRect(L, T, R-L, B-T);	//TODO Use same pen width as Gerber in PCB mode
 	}
 
 	// Draw grid points ==========================================================================
-	if ( !m_bWriteGerber && board.GetShowGrid() )	//TODO Make this less of a hack
+	if ( !bPCB && board.GetShowGrid() )
 	{
 		for (int j = 0; j < board.GetRows(); j++)	for (int i = 0; i < board.GetCols(); i++)
 		{
@@ -704,12 +711,13 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	}
 
 	// Draw tracks ===============================================================================
-	if ( m_bWriteGerber || trackMode != TRACKMODE::OFF )	// Force tracks for Gerber
+	if ( bPCB || trackMode != TRACKMODE::OFF )	// Force tracks in PCB mode
 	{
 		painter.save();
 
 		int numLoops = ( bPixmapCache || bGroundFill ) ? 2 : 1;
-		if ( m_bWriteGerber ) numLoops++;	// Thermal reliefs need own pass for Gerber
+		if ( m_bWriteGerber ) numLoops++;			// Thermal reliefs need own pass for Gerber
+		if ( bPCB && !m_bWriteGerber ) numLoops++;	// PCB pins in different color need extra pass
 		// bGroundFill		==> 1st pass draws fat tracks in white, 2nd pass draws tracks
 		// bPixmapCache 	==> 1st pass draws the pixmaps,			2nd pass fixes up diagonals
 		// If not vero, last pass draws thermal reliefs
@@ -740,9 +748,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 				// Use GetPixmapRGB for pixmaps.  It can handle MY_GREY, MY_BLACK as special cases
 				const bool		bInvalidColor	=  colorId == BAD_COLORID ||
-												  ( trackMode == TRACKMODE::MONO && nodeId != GetCurrentNodeId() );
-				const int		iEffColorId		= ( bInvalidColor ) ? MY_BLACK :
-												  ( nodeId == GetCurrentNodeId() ) ? MY_GREY : ( colorId % MYNUMCOLORS );
+												  ( ( bMono || bPCB ) && nodeId != GetCurrentNodeId() );
+				const int		iEffColorId		= ( bInvalidColor )	? ( bPCB ? MY_DARK_GREEN : MY_BLACK )
+												: ( nodeId == GetCurrentNodeId() ) ? MY_GREY : ( colorId % MYNUMCOLORS );
 
 				colorMgr.GetPixmapRGB(iEffColorId, cR, cG, cB);
 				const QColor color(cR, cG, cB, 255);
@@ -754,7 +762,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				// Common special case: Draw blank wire-ends as squares (so we can easily see them)
 				if (  bLastPass && colorId == BAD_COLORID && pC->GetHasWire() )
 				{
-					QPen& wirePen = ( bGroundFill ) ? m_whitePen : m_blackPen;
+					QPen& wirePen = ( bGroundFill ) ? m_whitePen : m_blackPen;	//TODO
 					wirePen.setWidth(iWirePenWidth);
 					painter.setPen(wirePen);
 					painter.setBrush(Qt::NoBrush);
@@ -767,9 +775,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 				if ( bVero ) // Vero shows squares and strips with holes
 				{
-					assert(iLoop == 0);
-
-					if ( m_bWriteGerber ) continue;	//TODO Make this less of a hack
+					if ( bPCB ) continue;	// Vero mode not compatible with PCB mode
 
 					const bool bVertical = board.GetVerticalStrips();
 					if ( bVertical )
@@ -806,7 +812,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				}
 				if ( bPixmapCache )	// Draw track "blobs" and pads using pre-calculated pixmaps for speed
 				{
-					assert( !m_bWriteGerber );
+					assert( !bPCB );
 					if ( iLoop == 0 )
 					{
 						// Draw background square first in relevant color
@@ -840,7 +846,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					else if ( iLoop == 1 )	// Draw track "blobs" and pads directly
 					{
 						PaintBlob(board, painter, color, pCentre, iPerimeterCode);	// Draw track blob
-						if ( bPin ) PaintPad(board, painter, color, pCentre, false, false);	// Draw pad
+						if ( bPin && ( !bPCB || m_bWriteGerber ) )
+							PaintPad(board, painter, color, pCentre, false, false);	// Draw pad (unless PCB mode in which case we do it on last pass)
 					}
 				}
 				if ( bDirect )	// Draw track "blobs" and pads directly
@@ -848,11 +855,13 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					if ( iLoop == 0 )
 					{
 						PaintBlob(board, painter, color, pCentre, iPerimeterCode);	// Draw track blob
-						if ( bPin ) PaintPad(board, painter, color, pCentre, false, false);	// Draw pad
+						if ( bPin && ( !bPCB || m_bWriteGerber ) ) PaintPad(board, painter, color, pCentre, false, false);	// Draw pad (unless PCB mode in which case we do it on last pass)
 					}
 				}
-				if ( !bVero && bLastPass )	// Add thermal relief for 4-square clusters
+				if ( !bVero && bLastPass )	// Add thermal relief for 4-square clusters, and do PCB pad in light grey
 				{
+					if ( bPin && bPCB && !m_bWriteGerber ) PaintPad(board, painter, QColor(200,200,200,255), pCentre, false, false);	// Draw light grey pad
+
 					const Element* pLT = pC->GetNbr(NBR_LT);
 					const bool bCluster = pC->GetUsed(NBR_L)  && pC->GetUsed(NBR_T) &&
 										  pLT->GetUsed(NBR_R) && pLT->GetUsed(NBR_B);
@@ -875,7 +884,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	}
 
 	// Draw target board area ====================================================================
-	if ( !m_bWriteGerber && m_board.GetShowTarget() && trackMode != TRACKMODE::MONO )
+	if ( m_board.GetShowTarget() && !bMono && !bPCB )
 	{
 		const int targetT = ( board.GetRows() - m_board.GetTargetRows() ) / 2;
 		const int targetB = targetT + m_board.GetTargetRows() - 1;
@@ -907,6 +916,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		if ( board.GetRoutingEnabled() || GetCurrentNodeId() != BAD_NODEID )
 		{
 			painter.save();
+			m_redPen.setWidth(W / 8);	// Use red pen in PCB mode (easier to see)
 			m_yellowPen.setWidth(W / 8);
 			m_backgroundPen.setWidth(0);
 			painter.setBrush(Qt::NoBrush);
@@ -929,7 +939,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				}
 				if ( pC->GetNodeId() == GetCurrentNodeId() && pC->GetMH() == BAD_MH )
 				{
-					painter.setPen(m_yellowPen);
+					painter.setPen(bPCB ? m_redPen : m_yellowPen);
 					painter.drawLine(L, B, R, T);		// Draw "/" (hatched) line
 				}
 			}
@@ -959,11 +969,11 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	}
 
 	// Draw Component outlines and pins ==========================================================
-	QPen& penPlaced	= ( trackMode == TRACKMODE::MONO ) ? m_lightBluePen : m_blackPen;	// For placed (non-floating) components
+	QPen& penPlaced	= ( bMono ) ? m_lightBluePen : ( bPCB ) ? m_whitePen : m_blackPen;	// For placed (non-floating) components
 	QPen  fillBlackPen = m_blackPen;	// Used for lines in the component pixmap
 	fillBlackPen.setWidth(2);
 
-	if ( compMode != COMPSMODE::OFF || trackMode == TRACKMODE::MONO )	// Mono (i.e. "PCB") mode still needs pin holes drawn
+	if ( compMode != COMPSMODE::OFF || bMono || bPCB )	// Mono/PCB modes still need pin holes drawn
 	{
 		compMgr.CalculateWireShifts();
 
@@ -989,7 +999,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				// Set pen width.  Selected component shown thicker than normal components
 				if ( comp.GetIsPlaced() )
 				{
-					if ( bMono )	// Use floating point pen width to better match Gerber output
+					if ( bPCB )	// Use floating point pen width to better match Gerber output
 						penPlaced.setWidthF( bHighlightComp ? ( board.GetSilkWidth() * 1.5 )
 															: ( bVia ? ( board.GetSilkWidth() * 0.5 )
 																	 :   board.GetSilkWidth() ) );
@@ -1014,7 +1024,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						X += compMgr.GetWireShift( &comp ) * 0.1 * W;
 				}
 
-				const bool bFill = !bMono && board.GetFillSaturation() > 0;	// No fill in Mono mode
+				const bool bFill = !bMono && !bPCB && board.GetFillSaturation() > 0;	// No component fill in Mono/PCB mode
 
 				double SL,ST,SR,SB;
 				comp.GetSafeBounds(SL,SR,ST,SB);
@@ -1115,7 +1125,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				painter.setFont(pinsFont);
 
 				painter.save();
-				if ( trackMode == TRACKMODE::MONO )
+				if ( bMono || bPCB )
 				{
 					m_backgroundPen.setWidth(0);
 					painter.setPen(m_backgroundPen);
@@ -1132,7 +1142,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 				if ( bVia )	// Vias are a special case since they don't actually have a pin !!!
 				{
-					if ( trackMode == TRACKMODE::MONO )  // Only draw vias as pins in MONO (i.e. PCB) mode
+					if ( bMono )  // Only draw vias as pins in MONO mode
 					{
 						GetLRTB(board, board.GetHOLE_PERCENT(), jComp, iComp, L, R, T, B);
 						painter.drawEllipse(L, T, R-L, B-T);	// A pin is drawn with a circle
@@ -1149,7 +1159,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						const size_t iPinIndex = comp.GetCompElement(jj,ii)->GetPinIndex();
 						if ( iPinIndex == BAD_PININDEX ) continue;
 
-						if ( !comp.GetIsPlaced() )	// Color pins of floating components
+						if ( !comp.GetIsPlaced() )	// Color pins of floating components (if in Color mode)
 						{
 							const int&	nodeId	= comp.GetNodeId(iPinIndex);
 							int			colorId	= colorMgr.GetColorId(nodeId);
@@ -1162,16 +1172,17 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 							const QColor color(cR, cG, cB, 255);
 							m_varBrush.setColor(color);
-							painter.setBrush(m_varBrush);
+							painter.setBrush( (bMono || bPCB) ? Qt::NoBrush : m_varBrush);	// No pin color fill in Mono/PCB mode
 						}
-						const int iPinSize = ( trackMode == TRACKMODE::MONO || comp.GetIsPlaced() ) ? board.GetHOLE_PERCENT() :
-															  std::min(3*board.GetHOLE_PERCENT()/2, board.GetPAD_PERCENT());
+						const int iPinSize  = ( bMono || bPCB || comp.GetIsPlaced() )
+											? board.GetHOLE_PERCENT()
+											: std::min(3*board.GetHOLE_PERCENT()/2, board.GetPAD_PERCENT());
 						GetLRTB(board, iPinSize, j, i, L, R, T, B);
 						// Stop pins vanishing if zoomed too far out
 						if ( L == R ) { L--, R++; }
 						if ( T == B ) { T--, B++; }
 
-						if ( bPinLabels && trackMode != TRACKMODE::MONO && board.GetShowPinLabels() )
+						if ( bPinLabels && !bMono && !bPCB && board.GetShowPinLabels() )	// No pin labels in Mono/PCB mode
 						{
 							// Write pin labels
 							painter.save();
@@ -1206,7 +1217,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 							painter.drawText(0,0,0,0, iFlag, comp.GetPinLabel(iPinIndex).c_str());
 							painter.restore();
 						}
-						else if ( bRectPins && trackMode != TRACKMODE::MONO )	// Draw switch pins as rectangles
+						else if ( bRectPins && !bMono && !bPCB )	// Draw switch pins as rectangles
 						{
 							const int d = std::max(1, static_cast<int>(iPinSize * W * 0.005));
 							switch( compDirection )
@@ -1231,16 +1242,21 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	// Draw Component Text =======================================================================
 	if ( compMode != COMPSMODE::OFF )
 	{
-		if ( !bMono )
+		double dCompTextScale = dTextScalePCB;
+		if ( !bPCB )
 		{
 			QFont compFont = painter.font();	// Copy of current font
 			compFont.setPointSize( m_board.GetTextSizeComp() );
 			painter.setFont(compFont);
 		}
+		else
+		{
+			dCompTextScale *= m_board.GetTextSizeComp() * (20.0 / 243 );	// Scale to make the Gerber font size similar to regular component font size
+		}
 
 		// Use floating point pen width to better match Gerber output.
 		// Scale the pen width down to compensate for painter.scale() scaling things up in the loop below.
-		const double dPenWidth = ( bMono ) ? board.GetSilkWidth() / dTextScalePCB : 0;
+		const double dPenWidth = ( bPCB ) ? board.GetSilkWidth() / dCompTextScale : 0;
 		m_redPen.setWidthF(dPenWidth);	// Use red text for floating components
 		penPlaced.setWidthF(dPenWidth);	// Use this for placed components
 
@@ -1266,9 +1282,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 			const std::string& myStr = ( compMode == COMPSMODE::NAME )  ? comp.GetNameStr() :
 									   ( compMode == COMPSMODE::VALUE ) ? comp.GetValueStr() : "";
-			painter.scale(dTextScalePCB, dTextScalePCB);
+			painter.scale(dCompTextScale, dCompTextScale);
 			painter.setPen( comp.GetIsPlaced() ? penPlaced : m_redPen );
-			painter.drawText(0,0,0,0, Qt::AlignCenter | Qt::TextDontClip, myStr.c_str(), bMono);
+			painter.drawText(0,0,0,0, Qt::AlignCenter | Qt::TextDontClip, myStr.c_str(), bPCB);
 			painter.restore();
 		}
 	}
@@ -1307,7 +1323,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	}
 
 	// Draw User-defined labels ==================================================================
-	if ( !m_bWriteGerber && board.GetShowText() )
+	if ( !bPCB && board.GetShowText() )
 	{
 		QFont font = painter.font();	// Copy of current font
 		TextManager& textMgr = m_board.GetTextMgr();

@@ -274,6 +274,9 @@ public slots:
 	void SetHoleWidth(int i);
 	void SetPadWidth(int i);
 	void SetGapWidth(int i);
+	void SetMaskWidth(int i);
+	void SetSilkWidth(int i);
+
 	// Rendering
 	void SetTextSizeComp(int i);
 	void SetTextSizePins(int i);
@@ -283,6 +286,9 @@ public slots:
 	void SetAntialiasOff(bool b);
 	void SetAntialiasOn(bool b);
 	void SetAntialiasHigh(bool b);
+	void SetPTH(bool b);
+	void SetNPTH(bool b);
+
 	// Wire Options
 	void SetWireShare(bool b);
 	void SetWireCross(bool b);
@@ -414,8 +420,9 @@ private:
 	// Helper to auto-append suffix when writing a file
 	QString GetSaveFileName(const QString& caption, const QString& nameFilter, const QString& defaultSuffix);
 
+	QColor	GetBackgroundColor() const;	// For screen only.  PDF is always white.
+
 	// Pens
-	static QColor	GetBackgroundColor() { return Qt::white; } // For screen only.  PDF is always white.
 	QPen	m_yellowPen;
 	QPen	m_backgroundPen;
 	QPen	m_darkGreyPen;

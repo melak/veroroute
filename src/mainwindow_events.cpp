@@ -142,7 +142,7 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 	if ( !GetCtrlKeyDown() )	// If not grabbing the board ...
 	{
 		// Text box selection
-		if ( m_board.GetShowText() )
+		if ( m_board.GetShowText() && m_board.GetTrackMode() != TRACKMODE::PCB )
 		{
 			const int textId = m_board.GetTextId(m_gridRow, m_gridCol);
 			if ( GetCurrentTextId() != textId )	// If we're changing textId

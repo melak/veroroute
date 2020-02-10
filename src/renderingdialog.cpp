@@ -29,6 +29,7 @@ RenderingDialog::RenderingDialog(MainWindow* parent)
 	ui->setupUi(this);
 
 	ui->antiAliasOn->setChecked(true);
+	ui->holePTH->setChecked(true);
 	QObject::connect(ui->antiAliasOff,	SIGNAL(toggled(bool)),		m_pMainWindow, SLOT(SetAntialiasOff(bool)));
 	QObject::connect(ui->antiAliasOn,	SIGNAL(toggled(bool)),		m_pMainWindow, SLOT(SetAntialiasOn(bool)));
 	QObject::connect(ui->antiAliasHigh,	SIGNAL(toggled(bool)),		m_pMainWindow, SLOT(SetAntialiasHigh(bool)));
@@ -41,6 +42,10 @@ RenderingDialog::RenderingDialog(MainWindow* parent)
 	QObject::connect(ui->trackWidth,	SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetTrackWidth(int)));
 	QObject::connect(ui->holeWidth,		SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetHoleWidth(int)));
 	QObject::connect(ui->gapWidth,		SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetGapWidth(int)));
+	QObject::connect(ui->maskWidth,		SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetMaskWidth(int)));
+	QObject::connect(ui->silkWidth,		SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetSilkWidth(int)));
+	QObject::connect(ui->holePTH,		SIGNAL(toggled(bool)),		m_pMainWindow, SLOT(SetPTH(bool)));
+	QObject::connect(ui->holeNPTH,		SIGNAL(toggled(bool)),		m_pMainWindow, SLOT(SetNPTH(bool)));
 }
 
 RenderingDialog::~RenderingDialog()
@@ -66,26 +71,41 @@ void RenderingDialog::UpdateControls()
 	}
 
 	const bool bCompEdit		= board.GetCompEdit();
-	const bool bMono			= board.GetTrackMode() == TRACKMODE::MONO;
+	const bool bPCB				= board.GetTrackMode() == TRACKMODE::PCB;
+	const bool bMonoPCB			= board.GetTrackMode() == TRACKMODE::MONO || bPCB;
 	const bool bNoTrackOptions	= board.GetTrackMode() == TRACKMODE::OFF;
 	const bool bGndFill			= board.GetGroundFill();
 	const bool bVero			= board.GetVeroTracks();
 
-	ui->padWidth->setDisabled(   bCompEdit || bNoTrackOptions || bVero );
-	ui->trackWidth->setDisabled( bCompEdit || bNoTrackOptions || bVero );
-	ui->holeWidth->setDisabled(  bCompEdit || bNoTrackOptions || bVero );
-	ui->gapWidth->setDisabled(   bCompEdit || bVero || !bMono || !bGndFill );
+	ui->padWidth->setDisabled(		bCompEdit || bNoTrackOptions || bVero );
+	ui->trackWidth->setDisabled(	bCompEdit || bNoTrackOptions || bVero );
+	ui->holeWidth->setDisabled(		bCompEdit || bNoTrackOptions || bVero );
+	ui->gapWidth->setDisabled(		bCompEdit || bVero || !bMonoPCB || !bGndFill );
+	ui->maskWidth->setDisabled(		bCompEdit || bVero || !bPCB );
+	ui->silkWidth->setDisabled(		bCompEdit || bVero || !bPCB );
+	ui->holePTH->setDisabled(		bCompEdit || bVero || !bPCB );
+	ui->holeNPTH->setDisabled(		bCompEdit || bVero || !bPCB );
 	// ... and corresponding labels
-	ui->label_pad->setDisabled(   bCompEdit || bNoTrackOptions || bVero );
-	ui->label_track->setDisabled( bCompEdit || bNoTrackOptions || bVero );
-	ui->label_hole->setDisabled(  bCompEdit || bNoTrackOptions || bVero );
-	ui->label_gap->setDisabled(   bCompEdit || bVero || !bMono || !bGndFill );
+	ui->label_pad->setDisabled(		bCompEdit || bNoTrackOptions || bVero );
+	ui->label_track->setDisabled(	bCompEdit || bNoTrackOptions || bVero );
+	ui->label_hole->setDisabled(	bCompEdit || bNoTrackOptions || bVero );
+	ui->label_gap->setDisabled(		bCompEdit || bVero || !bMonoPCB || !bGndFill );
+	ui->label_mask->setDisabled(	bCompEdit || bVero || !bPCB );
+	ui->label_silk->setDisabled(	bCompEdit || bVero || !bPCB );
+	ui->label_holetype->setDisabled(bCompEdit || bVero || !bPCB );
 
-	ui->padWidth->setValue( board.GetPAD_PERCENT() );
-	ui->trackWidth->setValue( board.GetTRACK_PERCENT() );
+	ui->padWidth->setValue(  board.GetPAD_PERCENT() );
+	ui->trackWidth->setValue(board.GetTRACK_PERCENT() );
 	ui->holeWidth->setValue( board.GetHOLE_PERCENT() );
-	ui->gapWidth->setValue( board.GetGAP_PERCENT() );
-
+	ui->gapWidth->setValue(  board.GetGAP_PERCENT() );
+	ui->maskWidth->setValue( board.GetMASK_PERCENT() );
+	ui->silkWidth->setValue( board.GetSILK_PERCENT() );
+	switch( board.GetHoleType() )
+	{
+		case HOLETYPE::PTH:		ui->holePTH->setChecked(true);		break;
+		case HOLETYPE::NPTH:	ui->holeNPTH->setChecked(true);		break;
+		default:				ui->holePTH->setChecked(true);		break;
+	}
 	const int minTrackSep = board.GetMINSEP_PERCENT();
 	const std::string str = "Guaranteed minimum track separation = " + std::to_string(minTrackSep) + " mil";
 	ui->label_info->setText( QString::fromStdString(str) );

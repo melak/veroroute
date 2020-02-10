@@ -22,8 +22,9 @@
 #include "CompElement.h"	// For BAD_COMPID, BAD_NODEID, TRAX_COMPID
 
 enum class DIAGSMODE { OFF = 0, MIN, MAX };
-enum class TRACKMODE { OFF = 0, MONO, COLOR };
+enum class TRACKMODE { OFF = 0, MONO, COLOR, PCB };
 enum class COMPSMODE { OFF = 0, OUTLINE, NAME, VALUE };
+enum class HOLETYPE  { PTH = 0, NPTH };
 
 // A class to hold the variables set via the GUI
 
@@ -44,6 +45,7 @@ public:
 		m_diagsMode			= o.m_diagsMode;
 		m_iTrackMode		= o.m_iTrackMode;
 		m_iCompMode			= o.m_iCompMode;
+		m_iHoleType			= o.m_iHoleType;
 		m_GRIDPIXELS		= o.m_GRIDPIXELS;
 		m_PAD_PERCENT		= o.m_PAD_PERCENT;
 		m_TRACK_PERCENT		= o.m_TRACK_PERCENT;
@@ -85,6 +87,7 @@ public:
 			&&	m_diagsMode			== o.m_diagsMode
 			&&	m_iTrackMode		== o.m_iTrackMode
 			&&	m_iCompMode			== o.m_iCompMode
+			&&	m_iHoleType			== o.m_iHoleType
 			&&	m_GRIDPIXELS		== o.m_GRIDPIXELS
 			&&	m_PAD_PERCENT		== o.m_PAD_PERCENT
 			&&	m_TRACK_PERCENT		== o.m_TRACK_PERCENT
@@ -166,13 +169,16 @@ public:
 		m_currentTextId = BAD_TEXTID;
 		if ( inStream.GetVersion() >= VRT_VERSION_14 )
 			inStream.Load(m_currentTextId);		// Added in VRT_VERSION_14
-		int diagMode(0), trackMode(0), compMode(0);
+		int diagMode(0), trackMode(0), compMode(0), holeType(0);
 		inStream.Load(diagMode);
 		inStream.Load(trackMode);
 		inStream.Load(compMode);
+		if ( inStream.GetVersion() >= VRT_VERSION_33 )
+			inStream.Load(holeType);			// Added in VRT_VERSION_33
 		m_diagsMode		= static_cast<DIAGSMODE>	(diagMode);
 		m_iTrackMode	= static_cast<TRACKMODE>	(trackMode);
 		m_iCompMode		= static_cast<COMPSMODE>	(compMode);
+		m_iHoleType		= static_cast<HOLETYPE>		(holeType);
 		inStream.Load(m_GRIDPIXELS);
 		inStream.Load(m_PAD_PERCENT);
 		inStream.Load(m_TRACK_PERCENT);
@@ -256,6 +262,7 @@ public:
 		outStream.Save((int) m_diagsMode);
 		outStream.Save((int) m_iTrackMode);
 		outStream.Save((int) m_iCompMode);
+		outStream.Save((int) m_iHoleType);	// Added in VRT_VERSION_33
 		outStream.Save(m_GRIDPIXELS);
 		outStream.Save(m_PAD_PERCENT);
 		outStream.Save(m_TRACK_PERCENT);
@@ -294,6 +301,7 @@ public:
 	bool SetDiagsMode(const DIAGSMODE& e)	{ const bool bChanged = ( m_diagsMode		!= e );	m_diagsMode		  = e; return bChanged; }
 	bool SetTrackMode(const TRACKMODE& e)	{ const bool bChanged =	( m_iTrackMode		!= e );	m_iTrackMode	  = e; return bChanged; }
 	bool SetCompMode(const COMPSMODE& e)	{ const bool bChanged =	( m_iCompMode		!= e );	m_iCompMode		  = e; return bChanged; }
+	bool SetHoleType(const HOLETYPE& e)		{ const bool bChanged =	( m_iHoleType		!= e );	m_iHoleType		  = e; return bChanged; }
 	bool SetGRIDPIXELS(const int& i)		{ const bool bChanged = ( m_GRIDPIXELS		!= i ); m_GRIDPIXELS	  = i; return bChanged; }
 	bool SetPAD_PERCENT(const int& i)		{ const bool bChanged = ( m_PAD_PERCENT		!= i ); m_PAD_PERCENT	  = i; return bChanged; }
 	bool SetTRACK_PERCENT(const int& i)		{ const bool bChanged = ( m_TRACK_PERCENT	!= i ); m_TRACK_PERCENT	  = i; return bChanged; }
@@ -331,6 +339,7 @@ public:
 	const DIAGSMODE&	GetDiagsMode() const		{ return m_diagsMode; }
 	const TRACKMODE&	GetTrackMode() const		{ return m_iTrackMode; }
 	const COMPSMODE&	GetCompMode() const			{ return m_iCompMode; }
+	const HOLETYPE&		GetHoleType() const			{ return m_iHoleType; }
 	const int&			GetGRIDPIXELS() const		{ return m_GRIDPIXELS; }
 	const int&			GetPAD_PERCENT() const		{ return m_PAD_PERCENT; }
 	const int&			GetTRACK_PERCENT() const	{ return m_TRACK_PERCENT; }
@@ -363,9 +372,9 @@ public:
 	const bool&			GetVerticalStrips() const	{ return m_bVerticalStrips; }
 	const bool&			GetCompEdit() const			{ return m_bCompEdit; }
 	// Helpers
-	bool GetMirrored() const			{ return GetFlipH() || GetFlipV(); }
-	bool SetTrackSliderValue(int i)		{ const bool bChanged = ( GetTrackSliderValue() != i ); SetTrackMode( static_cast<TRACKMODE>(i) ); return bChanged; }
-	bool SetCompSliderValue(int i)		{ const bool bChanged = ( GetCompSliderValue()  != i ); SetCompMode(  static_cast<COMPSMODE>(i) ); return bChanged; }
+	bool	GetMirrored() const			{ return GetFlipH() || GetFlipV(); }
+	bool	SetTrackSliderValue(int i)	{ const bool bChanged = ( GetTrackSliderValue() != i ); SetTrackMode( static_cast<TRACKMODE>(i) ); return bChanged; }
+	bool	SetCompSliderValue(int i)	{ const bool bChanged = ( GetCompSliderValue()  != i ); SetCompMode(  static_cast<COMPSMODE>(i) ); return bChanged; }
 	int		GetTrackSliderValue() const	{ return static_cast<int>(GetTrackMode()); }
 	int		GetCompSliderValue() const	{ return static_cast<int>(GetCompMode());  }
 	int		GetHalfPadWidth() const		{ return std::max(1, static_cast<int> (GetGRIDPIXELS() * GetPAD_PERCENT()		* 0.005 )); }	// Half pad width in pixels
@@ -390,8 +399,9 @@ private:
 	int			m_groundNodeId		= BAD_NODEID;		// The node ID representing ground for ground-fill
 	int			m_currentTextId		= BAD_TEXTID;		// Currently selected text box
 	DIAGSMODE	m_diagsMode			= DIAGSMODE::MIN;	// OFF, MIN, MAX
-	TRACKMODE	m_iTrackMode		= TRACKMODE::COLOR;	// OFF, MONO, COLOR
+	TRACKMODE	m_iTrackMode		= TRACKMODE::COLOR;	// OFF, MONO, COLOR, PCB
 	COMPSMODE	m_iCompMode			= COMPSMODE::NAME;	// OFF, OUTLINE, NAME, VALUE
+	HOLETYPE	m_iHoleType			= HOLETYPE::PTH;	// PTH, NPTH (Plated Through Hole, Non-Plated Through Hole)
 	int			m_GRIDPIXELS		= 24;				// Default 24 pixels per grid square (i.e. per 100 mil)
 	int			m_PAD_PERCENT		= 90;				// Range 50 to 98 of a grid square   (i.e. 1 PERCENT = 1 mil)
 	int			m_TRACK_PERCENT		= 46;				// Range 30 to 50 of a grid square   (i.e. 1 PERCENT = 1 mil)

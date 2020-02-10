@@ -32,4 +32,5 @@ const int VRT_VERSION_29 = 29;	// Added color to component definition
 const int VRT_VERSION_30 = 30;	// Added pin label alignment
 const int VRT_VERSION_31 = 31;	// New treatment of labels under part rotation and centering.
 const int VRT_VERSION_32 = 32;	// Added size of solder mask and silk screen pen
-const int VRT_VERSION_CURRENT = VRT_VERSION_32;
+const int VRT_VERSION_33 = 33;	// Added PCB track mode and PTH/NPTH selection
+const int VRT_VERSION_CURRENT = VRT_VERSION_33;

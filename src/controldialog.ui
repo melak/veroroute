@@ -533,7 +533,7 @@
     <rect>
      <x>10</x>
      <y>20</y>
-     <width>121</width>
+     <width>141</width>
      <height>20</height>
     </rect>
    </property>
@@ -547,7 +547,7 @@
     <string>Controls how tracks are displayed</string>
    </property>
    <property name="maximum">
-    <number>2</number>
+    <number>3</number>
    </property>
    <property name="pageStep">
     <number>0</number>
@@ -807,7 +807,7 @@
   <widget class="QLabel" name="label_18">
    <property name="geometry">
     <rect>
-     <x>40</x>
+     <x>30</x>
      <y>42</y>
      <width>51</width>
      <height>20</height>
@@ -823,7 +823,7 @@
   <widget class="QLabel" name="label_19">
    <property name="geometry">
     <rect>
-     <x>90</x>
+     <x>70</x>
      <y>42</y>
      <width>61</width>
      <height>20</height>
@@ -1059,9 +1059,9 @@
   <widget class="QSlider" name="saturationSlider">
    <property name="geometry">
     <rect>
-     <x>150</x>
+     <x>160</x>
      <y>20</y>
-     <width>91</width>
+     <width>81</width>
      <height>20</height>
     </rect>
    </property>
@@ -1105,9 +1105,9 @@
   <widget class="QLabel" name="label_saturation">
    <property name="geometry">
     <rect>
-     <x>150</x>
+     <x>160</x>
      <y>42</y>
-     <width>91</width>
+     <width>81</width>
      <height>20</height>
     </rect>
    </property>
@@ -1235,6 +1235,22 @@
    </property>
    <property name="text">
     <string>Fill</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_16">
+   <property name="geometry">
+    <rect>
+     <x>120</x>
+     <y>42</y>
+     <width>41</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>PCB</string>
    </property>
    <property name="alignment">
     <set>Qt::AlignCenter</set>

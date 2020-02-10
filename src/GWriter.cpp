@@ -80,7 +80,7 @@ void GStream::WriteHeader(const QString& UTC)	// Write header for current stream
 		case GFILE::GTL: strLayer += "TopLayer";				break;
 		case GFILE::GTS: strLayer += "TopSolderMaskLayer";		break;
 		case GFILE::GTO: strLayer += "TopSilkLayer";			break;
-		case GFILE::DRL: strLayer += "Drill_PTH";				break;
+		case GFILE::DRL: strLayer += ( m_pBoard->GetHoleType() == HOLETYPE::PTH ) ? "Drill_PTH" : "Drill_NPTH";	break;
 	}
 	Comment(strLayer.c_str());
 	Comment(strProgram.c_str());
@@ -137,42 +137,51 @@ void GStream::MakeApertures()	// Make "pens" for current stream
 	const int trackgap	= track + 2 * gap;	// Gap  is the radius increase
 	const int padmask	= pad   + 2 * mask;	// Mask is the radius increase
 
-	(*this) << "%ADD10C,0.010*%" << std::endl;	// D10 is a circle with diameter of 10 mil
+	if ( m_eType == GFILE::GKO )
+	{
+		(*this) << "%ADD10C,0.010*%" << std::endl;	// D10 is a circle with diameter of 10 mil
+	}
+	if ( m_eType == GFILE::GBL || m_eType == GFILE::GTL )
+	{
+		(*this) << "%ADD11C,0.";					// D11 is a circle with diameter of a pad
+		if ( pad < 100 ) (*this) << "0";
+		if ( pad < 10  ) (*this) << "0";
+		(*this) << pad << "*%" << std::endl;
 
-	(*this) << "%ADD11C,0.";					// D11 is a circle with diameter of a pad
-	if ( pad < 100 ) (*this) << "0";
-	if ( pad < 10  ) (*this) << "0";
-	(*this) << pad << "*%" << std::endl;
+		(*this) << "%ADD12C,0.";					// D12 is a circle with diameter of a track
+		if ( track < 100 ) (*this) << "0";
+		if ( track < 10  ) (*this) << "0";
+		(*this) << track << "*%" << std::endl;
 
-	(*this) << "%ADD12C,0.";					// D12 is a circle with diameter of a track
-	if ( track < 100 ) (*this) << "0";
-	if ( track < 10  ) (*this) << "0";
-	(*this) << track << "*%" << std::endl;
+		(*this) << "%ADD13C,0.";					// D13 is a circle with diameter of a (pad + gap)
+		if ( padgap < 100 ) (*this) << "0";
+		if ( padgap < 10  ) (*this) << "0";
+		(*this) << padgap << "*%" << std::endl;
 
-	(*this) << "%ADD13C,0.";					// D13 is a circle with diameter of a (pad + gap)
-	if ( padgap < 100 ) (*this) << "0";
-	if ( padgap < 10  ) (*this) << "0";
-	(*this) << padgap << "*%" << std::endl;
+		(*this) << "%ADD14C,0.";					// D14 is a circle with diameter of a (track + gap)
+		if ( trackgap < 100 ) (*this) << "0";
+		if ( trackgap < 10  ) (*this) << "0";
+		(*this) << trackgap << "*%" << std::endl;
 
-	(*this) << "%ADD14C,0.";					// D14 is a circle with diameter of a (track + gap)
-	if ( trackgap < 100 ) (*this) << "0";
-	if ( trackgap < 10  ) (*this) << "0";
-	(*this) << trackgap << "*%" << std::endl;
-
-	(*this) << "%ADD15C,0.";					// D15 is a circle with diameter of a (track + mask)
-	if ( padmask < 100 ) (*this) << "0";
-	if ( padmask < 10  ) (*this) << "0";
-	(*this) << padmask << "*%" << std::endl;
-
-	(*this) << "%ADD16C,0.";					// D16 is a circle with diameter of a thermal relief hole
-	if ( relief < 100 ) (*this) << "0";
-	if ( relief < 10  ) (*this) << "0";
-	(*this) << relief << "*%" << std::endl;
-
-	(*this) << "%ADD17C,0.";					// D17 is a circle with diameter of the silk screen pen
-	if ( silk < 100 ) (*this) << "0";
-	if ( silk < 10  ) (*this) << "0";
-	(*this) << silk << "*%" << std::endl;
+		(*this) << "%ADD15C,0.";					// D15 is a circle with diameter of a thermal relief hole
+		if ( relief < 100 ) (*this) << "0";
+		if ( relief < 10  ) (*this) << "0";
+		(*this) << relief << "*%" << std::endl;
+	}
+	if ( m_eType == GFILE::GBS || m_eType == GFILE::GTS )
+	{
+		(*this) << "%ADD16C,0.";					// D16 is a circle with diameter of a (pad + mask)
+		if ( padmask < 100 ) (*this) << "0";
+		if ( padmask < 10  ) (*this) << "0";
+		(*this) << padmask << "*%" << std::endl;
+	}
+	if ( m_eType == GFILE::GTO )	//TODO Add GBO in future
+	{
+		(*this) << "%ADD17C,0.";					// D17 is a circle with diameter of the silk screen pen
+		if ( silk < 100 ) (*this) << "0";
+		if ( silk < 10  ) (*this) << "0";
+		(*this) << silk << "*%" << std::endl;
+	}
 }
 void GStream::Drill(const QPointF& pF)
 {
@@ -305,8 +314,8 @@ void GStream::SetPen(const GPEN& ePen)
 		case GPEN::TRACK:		(*this) << "D12"; EndLine(); return;
 		case GPEN::PAD_GAP:		(*this) << "D13"; EndLine(); return;
 		case GPEN::TRACK_GAP:	(*this) << "D14"; EndLine(); return;
-		case GPEN::PAD_MASK:	(*this) << "D15"; EndLine(); return;
-		case GPEN::RELIEF:		(*this) << "D16"; EndLine(); return;
+		case GPEN::RELIEF:		(*this) << "D15"; EndLine(); return;
+		case GPEN::PAD_MASK:	(*this) << "D16"; EndLine(); return;
 		case GPEN::SILK:		(*this) << "D17"; EndLine(); return;
 	}
 }
@@ -403,7 +412,7 @@ bool GWriter::Open(const char* fileName, const Board& board)
 				case GFILE::GTL: str += ".toplayer.ger";			break;
 				case GFILE::GTS: str += ".topsoldermask.ger";		break;
 				case GFILE::GTO: str += ".topsilkscreen.ger";		break;
-				case GFILE::DRL: str += ".drills_pth.xln";			break;
+				case GFILE::DRL: str += board.GetHoleType() == HOLETYPE::PTH ? ".drills_pth.xln" : ".drills_npth.xln";			break;
 			}
 		}
 		else
