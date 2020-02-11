@@ -169,5 +169,9 @@ static const char* szVEROROUTE_VERSION =
 			// New feature: Added info to rendering dialog showing the minimum guaranteed track separation
 			// based on the current (pad, track, gap, diagonal mode, ground fill) settings.
 			// New feature:  Allow Gerber export when in Mono mode (Beta).
-  "1.76";	// Improvement: In Mono mode, all text boxes are now automatically mirrored for toner-transfer.
+//"1.76";	// Improvement: In Mono mode, all text boxes are now automatically mirrored for toner-transfer.
 			// Improvement: In Mono mode, all component outlines and component text are rendered to match Gerber output.
+  "1.77";	// Bug fix: Text rendering to PDF was broken by changes for PCB text.
+			// Improvement: Text size setting in Renderer Dialog affects PCB text size also.
+			// Improvement: Added more PCB parameters (for Gerber) to Rendering Dialog.
+			// Moved all Gerber related viewing from Mono mode to new PCB mode on the Track slider.

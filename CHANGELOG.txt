@@ -174,3 +174,7 @@ V1.75  Partial bug fix: Rendering components to PDF would always show them fille
        New feature:  Allow Gerber export when in Mono mode (Beta).
 V1.76  Improvement: In Mono mode, all text boxes are now automatically mirrored for toner-transfer.
        Improvement: In Mono mode, all component outlines and component text are rendered to match Gerber output.
+V1.77  Bug fix: Text rendering to PDF was broken by changes for PCB text.
+       Improvement: Text size setting in Renderer Dialog affects PCB text size also.
+       Improvement: Added more PCB parameters (for Gerber) to Rendering Dialog.
+       Moved all Gerber related viewing from Mono mode to new PCB mode on the Track slider.
