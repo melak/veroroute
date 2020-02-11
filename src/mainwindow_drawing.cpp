@@ -585,8 +585,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	const int		 iGap			= iHalfGap + iHalfGap;			// For vero only
 	const int		 iWirePenWidth	= D / 4;						// For wires with no NodeID
 	const int		 iWireBoxWidth	= 3 * iWirePenWidth;			// For wires with no NodeID
-	const double	 dTextScalePCB	= W / 24.0;
-	const double	 dTextScale		= ( m_bWritePDF ) ? (48.0 / W) : dTextScalePCB;	// For scaling text when zooming
+	const double	 dTextScale		= ( m_bWritePDF ) ? (48.0 / W) : (W / 24.0);	// For scaling text when zooming
 	if ( bVero && trackMode != TRACKMODE::OFF ) board.CalcSolder();	// Calculate positions of solder blobs for stripboard builds
 
 	board.CalculateColors();	// Work out best way to color things
@@ -1242,21 +1241,21 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	// Draw Component Text =======================================================================
 	if ( compMode != COMPSMODE::OFF )
 	{
-		double dCompTextScale = dTextScalePCB;
-		if ( !bPCB )
+		double dCopyTextScale = dTextScale;
+		if ( bPCB )
+		{
+			dCopyTextScale *= m_board.GetTextSizeComp() * (20.0 / 243 );	// Scale to make the Gerber font size similar to regular component font size
+		}
+		else
 		{
 			QFont compFont = painter.font();	// Copy of current font
 			compFont.setPointSize( m_board.GetTextSizeComp() );
 			painter.setFont(compFont);
 		}
-		else
-		{
-			dCompTextScale *= m_board.GetTextSizeComp() * (20.0 / 243 );	// Scale to make the Gerber font size similar to regular component font size
-		}
 
 		// Use floating point pen width to better match Gerber output.
 		// Scale the pen width down to compensate for painter.scale() scaling things up in the loop below.
-		const double dPenWidth = ( bPCB ) ? board.GetSilkWidth() / dCompTextScale : 0;
+		const double dPenWidth = ( bPCB ) ? board.GetSilkWidth() / dCopyTextScale : 0;
 		m_redPen.setWidthF(dPenWidth);	// Use red text for floating components
 		penPlaced.setWidthF(dPenWidth);	// Use this for placed components
 
@@ -1282,7 +1281,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 			const std::string& myStr = ( compMode == COMPSMODE::NAME )  ? comp.GetNameStr() :
 									   ( compMode == COMPSMODE::VALUE ) ? comp.GetValueStr() : "";
-			painter.scale(dCompTextScale, dCompTextScale);
+
+			painter.scale(dCopyTextScale, dCopyTextScale);
 			painter.setPen( comp.GetIsPlaced() ? penPlaced : m_redPen );
 			painter.drawText(0,0,0,0, Qt::AlignCenter | Qt::TextDontClip, myStr.c_str(), bPCB);
 			painter.restore();
