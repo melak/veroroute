@@ -89,7 +89,7 @@ class GWriter
 public:
 	GWriter()	{}
 	~GWriter()	{ Close(); }
-	bool		Open(const char* fileName, const Board& board);
+	bool		Open(const char* fileName, const Board& board, const bool& bLongGerber);
 	void		Close();
 	GStream&	GetStream(const GFILE& eType);
 private:

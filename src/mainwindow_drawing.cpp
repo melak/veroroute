@@ -611,7 +611,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		assert( bPCB );
 		if ( board.GetFlipH() || board.GetFlipV() ) return;		// No mirrored Gerber
 
-		const bool bOK = m_gWriter.Open(m_gerberFileName.toStdString().c_str(), m_board);
+		const bool bOK = m_gWriter.Open(m_gerberFileName.toStdString().c_str(), m_board, m_bLongGerber);
 		if ( !bOK ) return;
 
 		auto& os = m_gWriter.GetStream(GFILE::GTO);	// Top silk layer

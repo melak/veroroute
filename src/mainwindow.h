@@ -123,7 +123,8 @@ public slots:
 	void ImportOrcad();
 	void WritePDF();
 	void WritePNG();
-	void WriteGerber();
+	void WriteGerber(bool bLongGerber = false);
+	void WriteGerberLong();
 	void Quit();
 	// View menu items
 	void ZoomIn();
@@ -486,6 +487,7 @@ private:
 	bool		m_bResizingText;	// true ==> user is resizing a text rectangle
 	bool		m_bWritePDF;		// true ==> draw to PDF file instead of screen
 	bool		m_bWriteGerber;		// true ==> draw to Gerber file instead of screen
+	bool		m_bLongGerber;		// true ==> use long Gerber filenames (as required by AISLER)
 	bool		m_bHistoryDir;		// true ==> have "history" folder
 	bool		m_bTemplatesDir;	// true ==> have "templates" folder
 	int			m_XGRIDOFFSET;		// So we can centre when writing to PDF

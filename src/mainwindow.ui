@@ -62,6 +62,13 @@
      <addaction name="actionImportTango"/>
      <addaction name="actionImportOrcad"/>
     </widget>
+    <widget class="QMenu" name="menuExportGerber">
+     <property name="title">
+      <string>Export as Gerber (Beta)</string>
+     </property>
+     <addaction name="actionWrite_Gerber"/>
+     <addaction name="actionWrite_GerberLong"/>
+    </widget>
     <addaction name="actionNew"/>
     <addaction name="actionOpen"/>
     <addaction name="actionMerge"/>
@@ -73,7 +80,7 @@
     <addaction name="separator"/>
     <addaction name="actionWrite_PDF"/>
     <addaction name="actionWrite_PNG"/>
-    <addaction name="actionWrite_Gerber"/>
+    <addaction name="menuExportGerber"/>
     <addaction name="separator"/>
     <addaction name="actionQuit"/>
    </widget>
@@ -1132,7 +1139,12 @@
   </action>
   <action name="actionWrite_Gerber">
    <property name="text">
-    <string>Export as Gerber (Beta)</string>
+    <string>Short Filenames (*.GBR etc)</string>
+   </property>
+  </action>
+  <action name="actionWrite_GerberLong">
+   <property name="text">
+    <string>Long Filenames (*.gbr, *.xln)</string>
    </property>
   </action>
  </widget>

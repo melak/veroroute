@@ -391,7 +391,7 @@ void GStream::EndLine()
 }
 
 // Wrapper for handling a set of Gerber files
-bool GWriter::Open(const char* fileName, const Board& board)
+bool GWriter::Open(const char* fileName, const Board& board, const bool& bLongGerber)
 {
 	QDateTime	local(QDateTime::currentDateTime());
 	QString		UTC = local.toTimeSpec(Qt::UTC).toString(Qt::ISODate);
@@ -401,8 +401,7 @@ bool GWriter::Open(const char* fileName, const Board& board)
 	for (int i = 0; i < NUM_STREAMS && bOK; i++)
 	{
 		std::string str(fileName);
-		const bool bAISLER(false);
-		if ( bAISLER )
+		if ( bLongGerber )
 		{
 			switch( GFILE(i) )
 			{
@@ -412,7 +411,9 @@ bool GWriter::Open(const char* fileName, const Board& board)
 				case GFILE::GTL: str += ".toplayer.ger";			break;
 				case GFILE::GTS: str += ".topsoldermask.ger";		break;
 				case GFILE::GTO: str += ".topsilkscreen.ger";		break;
-				case GFILE::DRL: str += board.GetHoleType() == HOLETYPE::PTH ? ".drills_pth.xln" : ".drills_npth.xln";			break;
+				case GFILE::DRL: str += ( board.GetHoleType() == HOLETYPE::PTH )
+									  ? ".drills_pth.xln"
+									  : ".drills_npth.xln";			break;
 			}
 		}
 		else

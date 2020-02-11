@@ -113,6 +113,7 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	QObject::connect(ui->actionWrite_PDF,				SIGNAL(triggered()), this, SLOT(WritePDF()));
 	QObject::connect(ui->actionWrite_PNG,				SIGNAL(triggered()), this, SLOT(WritePNG()));
 	QObject::connect(ui->actionWrite_Gerber,			SIGNAL(triggered()), this, SLOT(WriteGerber()));
+	QObject::connect(ui->actionWrite_GerberLong,		SIGNAL(triggered()), this, SLOT(WriteGerberLong()));
 	QObject::connect(ui->actionQuit,					SIGNAL(triggered()), this, SLOT(Quit()));
 	QObject::connect(ui->actionZoom_In,					SIGNAL(triggered()), this, SLOT(ZoomIn()));
 	QObject::connect(ui->actionZoom_Out,				SIGNAL(triggered()), this, SLOT(ZoomOut()));
@@ -625,8 +626,9 @@ void MainWindow::WritePDF()
 	}
 }
 
-void MainWindow::WriteGerber()
+void MainWindow::WriteGerber(bool bLongGerber)
 {
+	m_bLongGerber = bLongGerber;
 	m_gerberFileName = GetSaveFileName(tr("Choose a Gerber File"), tr("All Files (*)"), QString(""));
 	if ( !m_gerberFileName.isEmpty() )
 	{
@@ -651,6 +653,11 @@ void MainWindow::WriteGerber()
 		QDesktopServices::openUrl(m_gerberFileName + ".GTO");
 		QDesktopServices::openUrl(m_gerberFileName + ".DRL");
 	}
+}
+
+void MainWindow::WriteGerberLong()
+{
+	WriteGerber(true);
 }
 
 void MainWindow::WritePNG()
@@ -1521,7 +1528,7 @@ void MainWindow::UpdateControls()
 	const bool		bStraight		= !m_board.GetVeroTracks() && !m_board.GetCurvedTracks();
 	const bool		bCurved			= !m_board.GetVeroTracks() &&  m_board.GetCurvedTracks();
 
-	ui->actionWrite_Gerber->setEnabled(bPCB && !m_board.GetMirrored() && !m_board.GetVeroTracks());
+	ui->menuExportGerber->setEnabled(bPCB && !m_board.GetMirrored() && !m_board.GetVeroTracks());
 	ui->actionMerge->setEnabled(!bPCB && !bCompEdit);
 	ui->actionWrite_PDF->setEnabled(!bPCB && !bCompEdit);
 	ui->menuAdd->setEnabled( !bCompEdit && m_board.GetCompMode() != COMPSMODE::OFF && !m_board.GetMirrored() );
