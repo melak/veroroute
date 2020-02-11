@@ -429,6 +429,7 @@ bool GWriter::Open(const char* fileName, const Board& board, const bool& bLongGe
 				case GFILE::DRL: str += ".DRL";	break;
 			}
 		}
+		if ( GFILE(i) == GFILE::GTL || GFILE(i) == GFILE::GTS ) continue;	// Don't write top layers yet
 		m_os[i].open(str.c_str(), std::ios::out);
 		bOK = m_os[i].is_open();
 		if ( bOK )
@@ -441,7 +442,7 @@ bool GWriter::Open(const char* fileName, const Board& board, const bool& bLongGe
 }
 void GWriter::Close()	// Close all file streams
 {
-	for (int i = 0; i < NUM_STREAMS; i++) m_os[i].Close();
+	for (int i = 0; i < NUM_STREAMS; i++) if ( m_os[i].is_open() ) m_os[i].Close();
 }
 GStream& GWriter::GetStream(const GFILE& eType)
 {

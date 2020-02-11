@@ -124,7 +124,6 @@ public slots:
 	void WritePDF();
 	void WritePNG();
 	void WriteGerber(bool bLongGerber = false);
-	void WriteGerberLong();
 	void Quit();
 	// View menu items
 	void ZoomIn();
@@ -277,6 +276,7 @@ public slots:
 	void SetGapWidth(int i);
 	void SetMaskWidth(int i);
 	void SetSilkWidth(int i);
+	void SetEdgeWidth(int i);
 
 	// Rendering
 	void SetTextSizeComp(int i);

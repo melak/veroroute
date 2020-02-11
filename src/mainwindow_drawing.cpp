@@ -98,17 +98,17 @@ void MainWindow::PaintPad(const GuiControl& guiCtrl, QPainter& painter, const QC
 {
 	if ( m_bWriteGerber )
 	{
-		auto& osT = m_gWriter.GetStream(GFILE::GTL);	// Top    copper layer
+		//auto& osT = m_gWriter.GetStream(GFILE::GTL);	// Top    copper layer
 		auto& osB = m_gWriter.GetStream(GFILE::GBL);	// Bottom copper layer
 		const GPEN ePen = bRelief ? GPEN::RELIEF : bGap ? GPEN::PAD_GAP : GPEN::PAD;
-		osT.AddPad(ePen, pC);
+		//osT.AddPad(ePen, pC);
 		osB.AddPad(ePen, pC);
 
 		if ( !bGap )
 		{
-			auto& osT = m_gWriter.GetStream(GFILE::GTS);	// Top    solder mask layer
+			//auto& osT = m_gWriter.GetStream(GFILE::GTS);	// Top    solder mask layer
 			auto& osB = m_gWriter.GetStream(GFILE::GBS);	// Bottom solder mask layer
-			osT.AddPad(GPEN::PAD_MASK, pC);
+			//osT.AddPad(GPEN::PAD_MASK, pC);
 			osB.AddPad(GPEN::PAD_MASK, pC);
 
 			auto& osDrill = m_gWriter.GetStream(GFILE::DRL);	// Drill hole layer
@@ -266,11 +266,11 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 	{
 		if ( m_bWriteGerber )
 		{
-			auto& osT = m_gWriter.GetStream(GFILE::GTL);	// Top    copper layer
+			//auto& osT = m_gWriter.GetStream(GFILE::GTL);	// Top    copper layer
 			auto& osB = m_gWriter.GetStream(GFILE::GBL);	// Bottom copper layer
 			const GPEN ePen = bGap ? GPEN::PAD_GAP : GPEN::PAD;
 			assert(polygon.size() == 1);
-			osT.AddTrack(ePen, polygon);	// Polygon has a single point
+			//osT.AddTrack(ePen, polygon);	// Polygon has a single point
 			osB.AddTrack(ePen, polygon);	// Polygon has a single point
 		}
 		else
@@ -284,19 +284,19 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 	{
 		if ( m_bWriteGerber )
 		{
-			auto& osT = m_gWriter.GetStream(GFILE::GTL);	// Top    copper layer
+			//auto& osT = m_gWriter.GetStream(GFILE::GTL);	// Top    copper layer
 			auto& osB = m_gWriter.GetStream(GFILE::GBL);	// Bottom copper layer
 			const GPEN ePen		= bGap ? GPEN::TRACK_GAP : GPEN::TRACK;
 			const GPEN ePenHV	= bGap ? GPEN::PAD_GAP   : GPEN::PAD;
 
 			if ( !bCurvedTracks && padWidth > trackWidth )
 			{
-				osT.AddVariTrack(ePenHV, ePen, polygon);
+				//osT.AddVariTrack(ePenHV, ePen, polygon);
 				osB.AddVariTrack(ePenHV, ePen, polygon);
 			}
 			else
 			{
-				osT.AddTrack(ePen, polygon);
+				//osT.AddTrack(ePen, polygon);
 				osB.AddTrack(ePen, polygon);
 			}
 		}
@@ -318,12 +318,12 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 	{
 		if ( m_bWriteGerber )
 		{
-			auto& osT = m_gWriter.GetStream(GFILE::GTL);	// Top    copper layer
+			//auto& osT = m_gWriter.GetStream(GFILE::GTL);	// Top    copper layer
 			auto& osB = m_gWriter.GetStream(GFILE::GBL);	// Bottom copper layer
 			const GPEN ePen		= bGap ? GPEN::TRACK_GAP : GPEN::TRACK;
-			osT.AddLoop(ePen, polygon);				// Closed polygon outline
+			//osT.AddLoop(ePen, polygon);				// Closed polygon outline
 			osB.AddLoop(ePen, polygon);				// Closed polygon outline
-			if ( !bGap ) osT.AddRegion(polygon);	// Only non-Gap polygon needs filling
+			//if ( !bGap ) osT.AddRegion(polygon);	// Only non-Gap polygon needs filling
 			if ( !bGap ) osB.AddRegion(polygon);	// Only non-Gap polygon needs filling
 		}
 		else
@@ -339,7 +339,7 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 	{
 		if ( m_bWriteGerber )
 		{
-			auto& osT = m_gWriter.GetStream(GFILE::GTL);	// Top    copper layer
+			//auto& osT = m_gWriter.GetStream(GFILE::GTL);	// Top    copper layer
 			auto& osB = m_gWriter.GetStream(GFILE::GBL);	// Bottom copper layer
 			const GPEN ePen = bGap ? GPEN::PAD_GAP : GPEN::PAD;
 			for (int iNbr = 0; iNbr < 8; iNbr += 2)	// Loop non-diagonal perimeter points
@@ -353,7 +353,7 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 					{
 						polygon.clear();
 						polygon << p[iNbr] << p[iNbrOpp];
-						osT.AddTrack(ePen, polygon);	// Draw track across
+						//osT.AddTrack(ePen, polygon);	// Draw track across
 						osB.AddTrack(ePen, polygon);	// Draw track across
 					}
 				}
@@ -361,7 +361,7 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 				{
 					polygon.clear();
 					polygon << pC << p[iNbr];
-					osT.AddTrack(ePen, polygon);	// Draw track from centre to perimeter point
+					//osT.AddTrack(ePen, polygon);	// Draw track from centre to perimeter point
 					osB.AddTrack(ePen, polygon);	// Draw track from centre to perimeter point
 				}
 			}
@@ -654,18 +654,22 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	int X(0), Y(0), L(0), R(0), T(0), B(0), cR(0), cG(0), cB(0);
 
 	// Draw board background
-	QPolygonF border;
+	QPolygonF edge;		edge.clear();		// The board outline in Gerber
+	QPolygonF gndPoly;	gndPoly.clear();	// The rectangle for ground fill
 	if ( m_bWriteGerber )
 	{
-		border.clear();
-		border << QPointF(0,0);
-		border << QPointF(W * board.GetCols(), 0);
-		border << QPointF(W * board.GetCols(), W * board.GetRows());
-		border << QPointF(0, W * board.GetRows());
+		// Grow board outline to guarantee separation from tracks and ground
+		const double d = W * board.GetEDGE_PERCENT() * 0.01;	// Margin
+		const double R(W * board.GetCols()), B(W * board.GetRows());
+
+		gndPoly << QPointF(0, 0); edge << QPointF( -d,  -d);
+		gndPoly << QPointF(R, 0); edge << QPointF(R+d,  -d);
+		gndPoly << QPointF(R, B); edge << QPointF(R+d, B+d);
+		gndPoly << QPointF(0, B); edge << QPointF( -d, B+d);
 		if ( bGroundFill )
 		{
-			m_gWriter.GetStream(GFILE::GTL).DrawRegion(border);	// Top    copper layer
-			m_gWriter.GetStream(GFILE::GBL).DrawRegion(border);	// Bottom copper layer
+			//m_gWriter.GetStream(GFILE::GTL).DrawRegion(gndPoly);	// Top    copper layer
+			m_gWriter.GetStream(GFILE::GBL).DrawRegion(gndPoly);	// Bottom copper layer
 		}
 	}
 	else
@@ -684,7 +688,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 	if ( m_bWriteGerber )
 	{
-		m_gWriter.GetStream(GFILE::GKO).DrawLoop(GPEN::MIL10, border);	// Board outline layer
+		m_gWriter.GetStream(GFILE::GKO).DrawLoop(GPEN::MIL10, edge);	// Board outline layer
 	}
 	else
 	{
@@ -726,9 +730,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			if ( m_bWriteGerber )
 			{
 				const bool bClear = ( bGroundFill && iLoop == 0 ) || bLastPass;	// For the gaps and thermal relief holes
-				m_gWriter.GetStream(GFILE::GTS).ClearBuffers();	// Top solder mask layer
-				m_gWriter.GetStream(GFILE::GTL).ClearBuffers();	// Top copper layer
-				m_gWriter.GetStream(GFILE::GTL).SetPolarity(bClear ? GPOLARITY::CLEAR : GPOLARITY::DARK);
+				//m_gWriter.GetStream(GFILE::GTS).ClearBuffers();	// Top solder mask layer
+				//m_gWriter.GetStream(GFILE::GTL).ClearBuffers();	// Top copper layer
+				//m_gWriter.GetStream(GFILE::GTL).SetPolarity(bClear ? GPOLARITY::CLEAR : GPOLARITY::DARK);
 				m_gWriter.GetStream(GFILE::GBS).ClearBuffers();	// Bottom solder mask layer
 				m_gWriter.GetStream(GFILE::GBL).ClearBuffers();	// Bottom copper layer
 				m_gWriter.GetStream(GFILE::GBL).SetPolarity(bClear ? GPOLARITY::CLEAR : GPOLARITY::DARK);
@@ -873,8 +877,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			}
 			if ( m_bWriteGerber )
 			{
-				m_gWriter.GetStream(GFILE::GTS).DrawBuffers();	// Bottom solder mask layer
-				m_gWriter.GetStream(GFILE::GTL).DrawBuffers();	// Bottom copper layer
+				//m_gWriter.GetStream(GFILE::GTS).DrawBuffers();	// Bottom solder mask layer
+				//m_gWriter.GetStream(GFILE::GTL).DrawBuffers();	// Bottom copper layer
 				m_gWriter.GetStream(GFILE::GBS).DrawBuffers();	// Bottom solder mask layer
 				m_gWriter.GetStream(GFILE::GBL).DrawBuffers();	// Bottom copper layer
 			}

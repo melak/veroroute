@@ -24,7 +24,7 @@
 enum class DIAGSMODE { OFF = 0, MIN, MAX };
 enum class TRACKMODE { OFF = 0, MONO, COLOR, PCB };
 enum class COMPSMODE { OFF = 0, OUTLINE, NAME, VALUE };
-enum class HOLETYPE  { PTH = 0, NPTH };
+enum class HOLETYPE  { NPTH = 0, PTH };
 
 // A class to hold the variables set via the GUI
 
@@ -53,6 +53,7 @@ public:
 		m_GAP_PERCENT		= o.m_GAP_PERCENT;
 		m_MASK_PERCENT		= o.m_MASK_PERCENT;
 		m_SILK_PERCENT		= o.m_SILK_PERCENT;
+		m_EDGE_PERCENT		= o.m_EDGE_PERCENT;
 		m_iRenderQuality	= o.m_iRenderQuality;
 		m_iSaturation		= o.m_iSaturation;
 		m_iFillSaturation	= o.m_iFillSaturation;
@@ -95,6 +96,7 @@ public:
 			&&	m_GAP_PERCENT		== o.m_GAP_PERCENT
 			&&	m_MASK_PERCENT		== o.m_MASK_PERCENT
 			&&	m_SILK_PERCENT		== o.m_SILK_PERCENT
+			&&	m_EDGE_PERCENT		== o.m_EDGE_PERCENT
 			&&	m_iRenderQuality	== o.m_iRenderQuality
 			&&	m_iSaturation		== o.m_iSaturation
 			&&	m_iFillSaturation	== o.m_iFillSaturation
@@ -193,6 +195,9 @@ public:
 			inStream.Load(m_MASK_PERCENT);		// Added in VRT_VERSION_32
 			inStream.Load(m_SILK_PERCENT);		// Added in VRT_VERSION_32
 		}
+		m_EDGE_PERCENT = 20;
+		if ( inStream.GetVersion() >= VRT_VERSION_33 )
+			inStream.Load(m_EDGE_PERCENT);		// Added in VRT_VERSION_33
 		inStream.Load(m_iRenderQuality);
 		m_iSaturation = 100;
 		if ( inStream.GetVersion() >= VRT_VERSION_6 )
@@ -270,6 +275,7 @@ public:
 		outStream.Save(m_GAP_PERCENT);		// Added in VRT_VERSION_3
 		outStream.Save(m_MASK_PERCENT);		// Added in VRT_VERSION_32
 		outStream.Save(m_SILK_PERCENT);		// Added in VRT_VERSION_32
+		outStream.Save(m_EDGE_PERCENT);		// Added in VRT_VERSION_33
 		outStream.Save(m_iRenderQuality);
 		outStream.Save(m_iSaturation);		// Added in VRT_VERSION_6
 		outStream.Save(m_iFillSaturation);	// Added in VRT_VERSION_29
@@ -309,6 +315,7 @@ public:
 	bool SetGAP_PERCENT(const int& i)		{ const bool bChanged = ( m_GAP_PERCENT		!= i ); m_GAP_PERCENT	  = i; return bChanged; }
 	bool SetMASK_PERCENT(const int& i)		{ const bool bChanged = ( m_MASK_PERCENT	!= i ); m_MASK_PERCENT	  = i; return bChanged; }
 	bool SetSILK_PERCENT(const int& i)		{ const bool bChanged = ( m_SILK_PERCENT	!= i ); m_SILK_PERCENT	  = i; return bChanged; }
+	bool SetEDGE_PERCENT(const int& i)		{ const bool bChanged = ( m_EDGE_PERCENT	!= i ); m_EDGE_PERCENT	  = i; return bChanged; }
 	bool SetRenderQuality(const int& i)		{ const bool bChanged = ( m_iRenderQuality	!= i ); m_iRenderQuality  = i; return bChanged; }
 	bool SetSaturation(const int& i)		{ const bool bChanged = ( m_iSaturation		!= i ); m_iSaturation	  = i; return bChanged; }
 	bool SetFillSaturation(const int& i)	{ const bool bChanged = ( m_iFillSaturation	!= i ); m_iFillSaturation = i; return bChanged; }
@@ -347,6 +354,7 @@ public:
 	const int&			GetGAP_PERCENT() const		{ return m_GAP_PERCENT; }
 	const int&			GetMASK_PERCENT() const		{ return m_MASK_PERCENT; }
 	const int&			GetSILK_PERCENT() const		{ return m_SILK_PERCENT; }
+	const int&			GetEDGE_PERCENT() const		{ return m_EDGE_PERCENT; }
 	int					GetRELIEF_PERCENT() const	{ return 30; }
 	const int&			GetRenderQuality() const	{ return m_iRenderQuality; }
 	const int&			GetSaturation() const		{ return m_iSaturation; }
@@ -382,7 +390,7 @@ public:
 	int		GetGapWidth() const			{ return std::max(1, static_cast<int> (GetGRIDPIXELS() * GetGAP_PERCENT()		* 0.010 )); }	// Gap width in pixels
 	int		GetReliefWidth() const		{ return std::max(1, static_cast<int> (GetGRIDPIXELS() * GetRELIEF_PERCENT()	* 0.010 )); }	// Thermal relief hole width
 	double	GetSilkWidth() const		{ return std::max(1.0,				   GetGRIDPIXELS() * GetSILK_PERCENT()		* 0.010 );  }	// Silk-screen pen width
-	int  GetMINSEP_PERCENT() const	// Minimum guaranteed track separation in mil
+	int		GetMIN_TRACK_SEPARATION_PERCENT() const	// Minimum guaranteed track separation in mil
 	{
 		// To keep track/pads at least N mil apart:
 		// In diags mode keep     (Pad + Track) / 2 <= ( 70.71 - N).  Keep Gap >= N if used.
@@ -401,14 +409,15 @@ private:
 	DIAGSMODE	m_diagsMode			= DIAGSMODE::MIN;	// OFF, MIN, MAX
 	TRACKMODE	m_iTrackMode		= TRACKMODE::COLOR;	// OFF, MONO, COLOR, PCB
 	COMPSMODE	m_iCompMode			= COMPSMODE::NAME;	// OFF, OUTLINE, NAME, VALUE
-	HOLETYPE	m_iHoleType			= HOLETYPE::PTH;	// PTH, NPTH (Plated Through Hole, Non-Plated Through Hole)
+	HOLETYPE	m_iHoleType			= HOLETYPE::NPTH;	// NPTH, PTH (Non-Plated Through Hole, Plated Through Hole)
 	int			m_GRIDPIXELS		= 24;				// Default 24 pixels per grid square (i.e. per 100 mil)
 	int			m_PAD_PERCENT		= 90;				// Range 50 to 98 of a grid square   (i.e. 1 PERCENT = 1 mil)
 	int			m_TRACK_PERCENT		= 46;				// Range 30 to 50 of a grid square   (i.e. 1 PERCENT = 1 mil)
 	int			m_HOLE_PERCENT		= 26;				// Range 20 to 40 of a grid square   (i.e. 1 PERCENT = 1 mil)
 	int			m_GAP_PERCENT		= 10;				// Range  5 to 30 of a grid square   (i.e. 1 PERCENT = 1 mil)
-	int			m_MASK_PERCENT		= 4;				// Range  0 to 20 of a grid square   (i.e. 1 PERCENT = 1 mil)
-	int			m_SILK_PERCENT		= 7;				// Range  4 to 20 of a grid square   (i.e. 1 PERCENT = 1 mil)
+	int			m_MASK_PERCENT		= 4;				// Range  0 to 10 of a grid square   (i.e. 1 PERCENT = 1 mil)
+	int			m_SILK_PERCENT		= 7;				// Range  1 to 10 of a grid square   (i.e. 1 PERCENT = 1 mil)
+	int			m_EDGE_PERCENT		= 20;				// Range  0 to 50 of a grid square   (i.e. 1 PERCENT = 1 mil)
 	int			m_iRenderQuality	= 1;				// 0 (Low) to 2 (High)
 	int			m_iSaturation		= 60;				// Track color saturation (20 to 100 percent)
 	int			m_iFillSaturation	= 0;				// Component fill saturation (0 to 100 percent)

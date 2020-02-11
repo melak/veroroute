@@ -44,8 +44,9 @@ RenderingDialog::RenderingDialog(MainWindow* parent)
 	QObject::connect(ui->gapWidth,		SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetGapWidth(int)));
 	QObject::connect(ui->maskWidth,		SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetMaskWidth(int)));
 	QObject::connect(ui->silkWidth,		SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetSilkWidth(int)));
-	QObject::connect(ui->holePTH,		SIGNAL(toggled(bool)),		m_pMainWindow, SLOT(SetPTH(bool)));
+	QObject::connect(ui->edgeWidth,		SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetEdgeWidth(int)));
 	QObject::connect(ui->holeNPTH,		SIGNAL(toggled(bool)),		m_pMainWindow, SLOT(SetNPTH(bool)));
+	QObject::connect(ui->holePTH,		SIGNAL(toggled(bool)),		m_pMainWindow, SLOT(SetPTH(bool)));
 }
 
 RenderingDialog::~RenderingDialog()
@@ -83,8 +84,10 @@ void RenderingDialog::UpdateControls()
 	ui->gapWidth->setDisabled(		bCompEdit || bVero || !bMonoPCB || !bGndFill );
 	ui->maskWidth->setDisabled(		bCompEdit || bVero || !bPCB );
 	ui->silkWidth->setDisabled(		bCompEdit || bVero || !bPCB );
-	ui->holePTH->setDisabled(		bCompEdit || bVero || !bPCB );
-	ui->holeNPTH->setDisabled(		bCompEdit || bVero || !bPCB );
+	ui->edgeWidth->setDisabled(		bCompEdit || bVero || !bPCB );
+	ui->holeNPTH->setDisabled(		true);//bCompEdit || bVero || !bPCB );	//TODO Enable once 2 layer Gerber supported
+	ui->holePTH->setDisabled(		true);//bCompEdit || bVero || !bPCB );	//TODO Enable once 2 layer Gerber supported
+
 	// ... and corresponding labels
 	ui->label_pad->setDisabled(		bCompEdit || bNoTrackOptions || bVero );
 	ui->label_track->setDisabled(	bCompEdit || bNoTrackOptions || bVero );
@@ -92,21 +95,23 @@ void RenderingDialog::UpdateControls()
 	ui->label_gap->setDisabled(		bCompEdit || bVero || !bMonoPCB || !bGndFill );
 	ui->label_mask->setDisabled(	bCompEdit || bVero || !bPCB );
 	ui->label_silk->setDisabled(	bCompEdit || bVero || !bPCB );
-	ui->label_holetype->setDisabled(bCompEdit || bVero || !bPCB );
+	ui->label_edge->setDisabled(	bCompEdit || bVero || !bPCB );
+	ui->label_holetype->setDisabled(true);//bCompEdit || bVero || !bPCB );	//TODO Enable once 2 layer Gerber supported
 
-	ui->padWidth->setValue(  board.GetPAD_PERCENT() );
-	ui->trackWidth->setValue(board.GetTRACK_PERCENT() );
-	ui->holeWidth->setValue( board.GetHOLE_PERCENT() );
-	ui->gapWidth->setValue(  board.GetGAP_PERCENT() );
-	ui->maskWidth->setValue( board.GetMASK_PERCENT() );
-	ui->silkWidth->setValue( board.GetSILK_PERCENT() );
+	ui->padWidth->setValue(		board.GetPAD_PERCENT()		);
+	ui->trackWidth->setValue(	board.GetTRACK_PERCENT()	);
+	ui->holeWidth->setValue(	board.GetHOLE_PERCENT()		);
+	ui->gapWidth->setValue(		board.GetGAP_PERCENT()		);
+	ui->maskWidth->setValue(	board.GetMASK_PERCENT()		);
+	ui->silkWidth->setValue(	board.GetSILK_PERCENT()		);
+	ui->edgeWidth->setValue(	board.GetEDGE_PERCENT()		);
 	switch( board.GetHoleType() )
 	{
-		case HOLETYPE::PTH:		ui->holePTH->setChecked(true);		break;
 		case HOLETYPE::NPTH:	ui->holeNPTH->setChecked(true);		break;
-		default:				ui->holePTH->setChecked(true);		break;
+		case HOLETYPE::PTH:		ui->holePTH->setChecked(true);		break;
+		default:				ui->holeNPTH->setChecked(true);		break;
 	}
-	const int minTrackSep = board.GetMINSEP_PERCENT();
+	const int minTrackSep = board.GetMIN_TRACK_SEPARATION_PERCENT();
 	const std::string str = "Guaranteed minimum track separation = " + std::to_string(minTrackSep) + " mil";
 	ui->label_info->setText( QString::fromStdString(str) );
 }

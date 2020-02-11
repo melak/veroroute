@@ -113,7 +113,6 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	QObject::connect(ui->actionWrite_PDF,				SIGNAL(triggered()), this, SLOT(WritePDF()));
 	QObject::connect(ui->actionWrite_PNG,				SIGNAL(triggered()), this, SLOT(WritePNG()));
 	QObject::connect(ui->actionWrite_Gerber,			SIGNAL(triggered()), this, SLOT(WriteGerber()));
-	QObject::connect(ui->actionWrite_GerberLong,		SIGNAL(triggered()), this, SLOT(WriteGerberLong()));
 	QObject::connect(ui->actionQuit,					SIGNAL(triggered()), this, SLOT(Quit()));
 	QObject::connect(ui->actionZoom_In,					SIGNAL(triggered()), this, SLOT(ZoomIn()));
 	QObject::connect(ui->actionZoom_Out,				SIGNAL(triggered()), this, SLOT(ZoomOut()));
@@ -648,16 +647,11 @@ void MainWindow::WriteGerber(bool bLongGerber)
 		QDesktopServices::openUrl(m_gerberFileName + ".GKO");
 		QDesktopServices::openUrl(m_gerberFileName + ".GBL");
 		QDesktopServices::openUrl(m_gerberFileName + ".GBS");
-		QDesktopServices::openUrl(m_gerberFileName + ".GTL");
-		QDesktopServices::openUrl(m_gerberFileName + ".GTS");
+		//QDesktopServices::openUrl(m_gerberFileName + ".GTL");
+		//QDesktopServices::openUrl(m_gerberFileName + ".GTS");
 		QDesktopServices::openUrl(m_gerberFileName + ".GTO");
 		QDesktopServices::openUrl(m_gerberFileName + ".DRL");
 	}
-}
-
-void MainWindow::WriteGerberLong()
-{
-	WriteGerber(true);
 }
 
 void MainWindow::WritePNG()
@@ -1286,8 +1280,9 @@ void MainWindow::SetPadWidth(int i)			{ if ( m_board.SetPAD_PERCENT(i)   ) { Upd
 void MainWindow::SetTrackWidth(int i)		{ if ( m_board.SetTRACK_PERCENT(i) ) { UpdateHistory("Track width change");				UpdateControls();	DestroyPixmapCache();	RepaintSkipRouting(); } }
 void MainWindow::SetHoleWidth(int i)		{ if ( m_board.SetHOLE_PERCENT(i)  ) { UpdateHistory("Hole width change");				UpdateControls();	RepaintSkipRouting(); } }
 void MainWindow::SetGapWidth(int i)			{ if ( m_board.SetGAP_PERCENT(i)   ) { UpdateHistory("Gap width change");				UpdateControls();	RepaintSkipRouting(); } }
-void MainWindow::SetMaskWidth(int i)		{ if ( m_board.SetMASK_PERCENT(i)  ) { UpdateHistory("Solder mask change");				UpdateControls();	RepaintSkipRouting(); } }
+void MainWindow::SetMaskWidth(int i)		{ if ( m_board.SetMASK_PERCENT(i)  ) { UpdateHistory("Solder mask margin change");		UpdateControls();	RepaintSkipRouting(); } }
 void MainWindow::SetSilkWidth(int i)		{ if ( m_board.SetSILK_PERCENT(i)  ) { UpdateHistory("Silkscreen line width change");	UpdateControls();	RepaintSkipRouting(); } }
+void MainWindow::SetEdgeWidth(int i)		{ if ( m_board.SetEDGE_PERCENT(i)  ) { UpdateHistory("Board edge margin change");		UpdateControls();	RepaintSkipRouting(); } }
 
 // Rendering dialog
 void MainWindow::SetTextSizeComp(int i)		{ if ( m_board.SetTextSizeComp(i) )		  { UpdateHistory("Text size change (component)");	RepaintSkipRouting(); } }
@@ -1298,8 +1293,8 @@ void MainWindow::SetShowTarget(bool b)		{ if ( m_board.SetShowTarget(b) )		  { U
 void MainWindow::SetAntialiasOff(bool b)	{ if ( b && m_board.SetRenderQuality(0) ) { UpdateHistory("Anti-alias off");  DestroyPixmapCache(); RepaintSkipRouting(); } }
 void MainWindow::SetAntialiasOn(bool b)		{ if ( b && m_board.SetRenderQuality(1) ) { UpdateHistory("Anti-alias on");   DestroyPixmapCache(); RepaintSkipRouting(); } }
 void MainWindow::SetAntialiasHigh(bool b)	{ if ( b && m_board.SetRenderQuality(2) ) { UpdateHistory("Anti-alias high"); DestroyPixmapCache(); RepaintSkipRouting(); } }
-void MainWindow::SetPTH(bool b)				{ if ( b && m_board.SetHoleType(HOLETYPE::PTH)  ) { UpdateHistory("Plated Through Holes"); } }
 void MainWindow::SetNPTH(bool b)			{ if ( b && m_board.SetHoleType(HOLETYPE::NPTH) ) { UpdateHistory("Non-Plated Through Holes"); } }
+void MainWindow::SetPTH(bool b)				{ if ( b && m_board.SetHoleType(HOLETYPE::PTH)  ) { UpdateHistory("Plated Through Holes"); } }
 
 // Wire dialog
 void MainWindow::SetWireShare(bool b)		{ if ( m_board.SetWireShare(b) )		  { UpdateHistory("Wire hole-sharing on/off");	RepaintSkipRouting(); } }
@@ -1528,7 +1523,7 @@ void MainWindow::UpdateControls()
 	const bool		bStraight		= !m_board.GetVeroTracks() && !m_board.GetCurvedTracks();
 	const bool		bCurved			= !m_board.GetVeroTracks() &&  m_board.GetCurvedTracks();
 
-	ui->menuExportGerber->setEnabled(bPCB && !m_board.GetMirrored() && !m_board.GetVeroTracks());
+	ui->actionWrite_Gerber->setEnabled(bPCB && !m_board.GetMirrored() && !m_board.GetVeroTracks());
 	ui->actionMerge->setEnabled(!bPCB && !bCompEdit);
 	ui->actionWrite_PDF->setEnabled(!bPCB && !bCompEdit);
 	ui->menuAdd->setEnabled( !bCompEdit && m_board.GetCompMode() != COMPSMODE::OFF && !m_board.GetMirrored() );
