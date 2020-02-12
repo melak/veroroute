@@ -30,9 +30,9 @@
 
 struct GPainter : public QPainter, public std::list<Transform>
 {
-	GPainter() : QPainter()			{}
-	~GPainter()						{ clear(); }
-	void SetGStream(GStream* p)		{ m_pStream = p; }
+	GPainter() : QPainter()					{}
+	~GPainter()								{ clear(); }
+	void SetGStream(GStream* p)				{ m_pStream = p; }
 	virtual bool begin(QPaintDevice* p)		{ if ( !m_pStream ) return QPainter::begin(p);	return true; }
 	virtual bool end()						{ if ( !m_pStream ) return QPainter::end();		return true; }
 	virtual void setFont(const QFont& o)	{ if ( !m_pStream ) return QPainter::setFont(o); }
@@ -106,8 +106,8 @@ struct GPainter : public QPainter, public std::list<Transform>
 	}
 	virtual void rotate(qreal a)
 	{
-		if ( !m_pStream ) QPainter::rotate(a);
-		push_front( Transform(TRANSFORM::ROTATE, a)	);
+		if ( !m_pStream ) return QPainter::rotate(a);
+		push_front( Transform(TRANSFORM::ROTATE, a) );
 	}
 	virtual void save()
 	{
@@ -156,8 +156,7 @@ struct GPainter : public QPainter, public std::list<Transform>
 	{
 		if ( !m_pStream ) return QPainter::drawRect(x, y, w, h);
 		m_polygon.clear();
-		m_polygon << QPointF(x,y) << QPointF(x+w,y)
-				  << QPointF(x+w,y+h) << QPointF(x,y+h) << QPointF(x,y);
+		m_polygon << QPointF(x,y) << QPointF(x+w,y) << QPointF(x+w,y+h) << QPointF(x,y+h) << QPointF(x,y);
 		AddTrack();
 	}
 	virtual void drawRoundedRect(int x, int y, int w, int h, qreal xRadius, qreal yRadius)

@@ -43,7 +43,7 @@ void MainWindow::CreatePixmapCache(const GuiControl& guiCtrl, ColorManager& colo
 	// The pixmap cache provides a way of quickly mapping the "perimeter code" to a "blob" pixmap.
 
 	const int&	W	= guiCtrl.GetGRIDPIXELS();		// Square width size in pixels
-	const int	C	= W / 2;						// Half square width in pixels
+	const int	C	= W >> 1;						// Half square width in pixels
 	const int	D	= guiCtrl.GetHalfPadWidth();	// Half pad width in pixels
 	const int	H	= (int) ceil(1.414 * guiCtrl.GetHalfTrackWidth());
 	m_ppPixmapPad	= new QPixmap*[NUM_PIXMAP_COLORS];
@@ -61,7 +61,7 @@ void MainWindow::CreatePixmapCache(const GuiControl& guiCtrl, ColorManager& colo
 		m_ppPixmapPad[i]->fill(Qt::transparent);
 
 		painter.begin(m_ppPixmapPad[i]);
-		PaintPad(guiCtrl, painter, color, QPointF(D,D), false, false);
+		PaintPad(guiCtrl, painter, color, QPointF(D,D));
 		painter.end();
 
 		for (int jDiagCode = 0; jDiagCode < 2; jDiagCode++)	// 0 ==> LT, 1 ==> RT
@@ -94,13 +94,13 @@ void MainWindow::CreatePixmapCache(const GuiControl& guiCtrl, ColorManager& colo
 	releaseMouse();
 }
 
-void MainWindow::PaintPad(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, const bool& bGap, const bool& bRelief)
+void MainWindow::PaintPad(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, const bool& bGap)
 {
 	if ( m_bWriteGerber )
 	{
 		//auto& osT = m_gWriter.GetStream(GFILE::GTL);	// Top    copper layer
 		auto& osB = m_gWriter.GetStream(GFILE::GBL);	// Bottom copper layer
-		const GPEN ePen = bRelief ? GPEN::RELIEF : bGap ? GPEN::PAD_GAP : GPEN::PAD;
+		const GPEN ePen = bGap ? GPEN::PAD_GAP : GPEN::PAD;
 		//osT.AddPad(ePen, pC);
 		osB.AddPad(ePen, pC);
 
@@ -118,8 +118,7 @@ void MainWindow::PaintPad(const GuiControl& guiCtrl, QPainter& painter, const QC
 	else
 	{
 		const int gapWidth = ( bGap ) ? guiCtrl.GetGapWidth() : 0;
-		const int padWidth = ( bRelief ) ? guiCtrl.GetReliefWidth()
-										 : ( ( guiCtrl.GetHalfPadWidth() + gapWidth ) << 1 );
+		const int padWidth = ( guiCtrl.GetHalfPadWidth() + gapWidth ) << 1;
 		static QPen	pen(Qt::black, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 		pen.setColor(color);
 		pen.setWidth(padWidth);
@@ -148,7 +147,7 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 {
 	const bool		bMaxDiags		= ( guiCtrl.GetDiagsMode() == DIAGSMODE::MAX );
 	const int&		W				= guiCtrl.GetGRIDPIXELS();	// Square width in pixels
-	const int		C				= W / 2;					// Half square width in pixels
+	const int		C				= W >> 1;					// Half square width in pixels
 	const int		gapWidth		= ( bGap ) ? guiCtrl.GetGapWidth() : 0;
 	const int		padWidth		= ( guiCtrl.GetHalfPadWidth()   + gapWidth ) << 1;	// Pad width in pixels
 	const int		trackWidth		= ( guiCtrl.GetHalfTrackWidth() + gapWidth ) << 1;	// Track width in pixels
@@ -402,7 +401,7 @@ void MainWindow::PaintCompDefiner()	// The paint method in "component editor mod
 	const PinGrid&	grid		= def.GetGrid();
 
 	const int&		 W			= board.GetGRIDPIXELS();	// Square width in pixels
-	const int		 C			= W / 2;					// Half square width in pixels
+	const int		 C			= W >> 1;					// Half square width in pixels
 	const double	 dTextScale	= W / 24.0;					// For scaling text when zooming
 
 	// Shift comp to near grid centre
@@ -578,7 +577,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	const bool		 bPixmapCache	= !bVero && !bPCB && !bGroundFill && !m_bWritePDF;
 	const bool		 bDirect		= !bVero && !bPixmapCache && !bGroundFill;
 	const int&		 W				= board.GetGRIDPIXELS();		// Square width in pixels
-	const int		 C				= W / 2;						// Half square width in pixels
+	const int		 C				= W >> 1;						// Half square width in pixels
 	const int		 D				= board.GetHalfPadWidth();		// Half pad width in pixels
 	const int		 H				= (int) ceil(1.414 * board.GetHalfTrackWidth());
 	const int		 iHalfGap		= std::max(1, W / 12);			// For vero only
@@ -659,13 +658,13 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	if ( m_bWriteGerber )
 	{
 		// Grow board outline to guarantee separation from tracks and ground
-		const double d = W * board.GetEDGE_PERCENT() * 0.01;	// Margin
+		const double dEdge = board.GetEdgeWidth();
 		const double R(W * board.GetCols()), B(W * board.GetRows());
-
-		gndPoly << QPointF(0, 0); edge << QPointF( -d,  -d);
-		gndPoly << QPointF(R, 0); edge << QPointF(R+d,  -d);
-		gndPoly << QPointF(R, B); edge << QPointF(R+d, B+d);
-		gndPoly << QPointF(0, B); edge << QPointF( -d, B+d);
+		const int& X = m_XGRIDOFFSET; const int& Y = m_YGRIDOFFSET;
+		gndPoly << QPointF(X,     Y);		edge << QPointF(X	  - dEdge, Y	 - dEdge);
+		gndPoly << QPointF(X + R, Y);		edge << QPointF(X + R + dEdge, Y	 - dEdge);
+		gndPoly << QPointF(X + R, Y + B);	edge << QPointF(X + R + dEdge, Y + B + dEdge);
+		gndPoly << QPointF(X,     Y + B);	edge << QPointF(X	  - dEdge, Y + B + dEdge);
 		if ( bGroundFill )
 		{
 			//m_gWriter.GetStream(GFILE::GTL).DrawRegion(gndPoly);	// Top    copper layer
@@ -679,7 +678,6 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		const QColor groundFillColor(cR, cG, cB, 255);
 		painter.fillRect(m_XGRIDOFFSET, m_YGRIDOFFSET, W * board.GetCols(), W * board.GetRows(), bGroundFill ? groundFillColor : backgroundColor);
 	}
-
 
 	// Draw rect around whole board area =========================================================
 	int dummy;
@@ -719,17 +717,16 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		painter.save();
 
 		int numLoops = ( bPixmapCache || bGroundFill ) ? 2 : 1;
-		if ( m_bWriteGerber ) numLoops++;			// Thermal reliefs need own pass for Gerber
-		if ( bPCB && !m_bWriteGerber ) numLoops++;	// PCB pins in different color need extra pass
+		const bool		bGreyPads = bPCB && !m_bWriteGerber ;
+		const QColor	padGrey(200,200,200,255);
 		// bGroundFill		==> 1st pass draws fat tracks in white, 2nd pass draws tracks
 		// bPixmapCache 	==> 1st pass draws the pixmaps,			2nd pass fixes up diagonals
-		// If not vero, last pass draws thermal reliefs
 		for (int iLoop = 0; iLoop < numLoops; iLoop++)
 		{
 			const bool bLastPass = ( iLoop == numLoops - 1 );
 			if ( m_bWriteGerber )
 			{
-				const bool bClear = ( bGroundFill && iLoop == 0 ) || bLastPass;	// For the gaps and thermal relief holes
+				const bool bClear = ( bGroundFill && iLoop == 0 );	// For the gaps
 				//m_gWriter.GetStream(GFILE::GTS).ClearBuffers();	// Top solder mask layer
 				//m_gWriter.GetStream(GFILE::GTL).ClearBuffers();	// Top copper layer
 				//m_gWriter.GetStream(GFILE::GTL).SetPolarity(bClear ? GPOLARITY::CLEAR : GPOLARITY::DARK);
@@ -844,34 +841,20 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					{
 						if ( nodeId != board.GetGroundNodeId() )	// Only the non-ground tracks have a "white" surround
 							PaintBlob(board, painter, backgroundColor, pCentre, iPerimeterCode, true);	// Draw fat "white" track blob
-						if ( bPin ) PaintPad(board, painter, backgroundColor, pCentre, true, false);	// Draw fat "white" pad
+						if ( bPin ) PaintPad(board, painter, backgroundColor, pCentre, true);			// Draw fat "white" pad
 					}
 					else if ( iLoop == 1 )	// Draw track "blobs" and pads directly
 					{
-						PaintBlob(board, painter, color, pCentre, iPerimeterCode);	// Draw track blob
-						if ( bPin && ( !bPCB || m_bWriteGerber ) )
-							PaintPad(board, painter, color, pCentre, false, false);	// Draw pad (unless PCB mode in which case we do it on last pass)
+						PaintBlob(board, painter, color, pCentre, iPerimeterCode);					// Draw track blob
+						if ( bPin ) PaintPad(board, painter, bGreyPads ? padGrey : color, pCentre);	// Draw pad
 					}
 				}
-				if ( bDirect )	// Draw track "blobs" and pads directly
+				if ( bDirect )	// Draw track "blobs" and pads directly (PDF/Gerber)
 				{
 					if ( iLoop == 0 )
 					{
-						PaintBlob(board, painter, color, pCentre, iPerimeterCode);	// Draw track blob
-						if ( bPin && ( !bPCB || m_bWriteGerber ) ) PaintPad(board, painter, color, pCentre, false, false);	// Draw pad (unless PCB mode in which case we do it on last pass)
-					}
-				}
-				if ( !bVero && bLastPass )	// Add thermal relief for 4-square clusters, and do PCB pad in light grey
-				{
-					if ( bPin && bPCB && !m_bWriteGerber ) PaintPad(board, painter, QColor(200,200,200,255), pCentre, false, false);	// Draw light grey pad
-
-					const Element* pLT = pC->GetNbr(NBR_LT);
-					const bool bCluster = pC->GetUsed(NBR_L)  && pC->GetUsed(NBR_T) &&
-										  pLT->GetUsed(NBR_R) && pLT->GetUsed(NBR_B);
-					if ( bCluster )		// Check if any of the squares has a pin
-					{
-						if ( bPin || pLT->GetHasPin() || pC->GetNbr(NBR_L)->GetHasPin() || pC->GetNbr(NBR_T)->GetHasPin() )
-							PaintPad(board, painter, backgroundColor, pCentre - QPointF(C,C), true, true);	// Add thermal relief hole at cluster centre
+						PaintBlob(board, painter, color, pCentre, iPerimeterCode);					// Draw track blob
+						if ( bPin ) PaintPad(board, painter, bGreyPads ? padGrey : color, pCentre);	// Draw pad
 					}
 				}
 			}
@@ -1380,7 +1363,7 @@ void MainWindow::GetXY(const GuiControl& guiCtrl, double row, double col, int& X
 	// For rendering.
 	// Takes a point in the Board and returns coordinates in the drawn image.
 	const int& W = guiCtrl.GetGRIDPIXELS();	// Square width in pixels
-	const int  C = W / 2;					// Half square width in pixels
+	const int  C = W >> 1;					// Half square width in pixels
 	X = m_XGRIDOFFSET + C + col * W;
 	Y = m_YGRIDOFFSET + C + row * W;
 }
@@ -1402,8 +1385,8 @@ void MainWindow::GetLRTB(const GuiControl& guiCtrl, const Component& comp, int& 
 {
 	// For rendering.
 	// Takes a component in the Board and returns bounding box coordinates in the drawn image.
-	GetXY(guiCtrl, comp.GetRow(), comp.GetCol(), L, T);
-	GetXY(guiCtrl, comp.GetLastRow(), comp.GetLastCol(), R, B);
+	GetXY(guiCtrl, comp.GetRow(),		comp.GetCol(),		L, T);
+	GetXY(guiCtrl, comp.GetLastRow(),	comp.GetLastCol(),	R, B);
 }
 
 void MainWindow::GetLRTB(const GuiControl& guiCtrl, const Rect& rect, int& L, int& R, int& T, int& B) const

@@ -132,7 +132,6 @@ void GStream::MakeApertures()	// Make "pens" for current stream
 	const int gap		= m_pBoard->GetGAP_PERCENT();
 	const int mask		= m_pBoard->GetMASK_PERCENT();
 	const int silk		= m_pBoard->GetSILK_PERCENT();
-	const int relief	= m_pBoard->GetRELIEF_PERCENT();
 	const int padgap	= pad   + 2 * gap;	// Gap  is the radius increase
 	const int trackgap	= track + 2 * gap;	// Gap  is the radius increase
 	const int padmask	= pad   + 2 * mask;	// Mask is the radius increase
@@ -162,22 +161,17 @@ void GStream::MakeApertures()	// Make "pens" for current stream
 		if ( trackgap < 100 ) (*this) << "0";
 		if ( trackgap < 10  ) (*this) << "0";
 		(*this) << trackgap << "*%" << std::endl;
-
-		(*this) << "%ADD15C,0.";					// D15 is a circle with diameter of a thermal relief hole
-		if ( relief < 100 ) (*this) << "0";
-		if ( relief < 10  ) (*this) << "0";
-		(*this) << relief << "*%" << std::endl;
 	}
 	if ( m_eType == GFILE::GBS || m_eType == GFILE::GTS )
 	{
-		(*this) << "%ADD16C,0.";					// D16 is a circle with diameter of a (pad + mask)
+		(*this) << "%ADD15C,0.";					// D15 is a circle with diameter of a (pad + mask)
 		if ( padmask < 100 ) (*this) << "0";
 		if ( padmask < 10  ) (*this) << "0";
 		(*this) << padmask << "*%" << std::endl;
 	}
 	if ( m_eType == GFILE::GTO )	//TODO Add GBO in future
 	{
-		(*this) << "%ADD17C,0.";					// D17 is a circle with diameter of the silk screen pen
+		(*this) << "%ADD16C,0.";					// D16 is a circle with diameter of the silk screen pen
 		if ( silk < 100 ) (*this) << "0";
 		if ( silk < 10  ) (*this) << "0";
 		(*this) << silk << "*%" << std::endl;
@@ -314,9 +308,8 @@ void GStream::SetPen(const GPEN& ePen)
 		case GPEN::TRACK:		(*this) << "D12"; EndLine(); return;
 		case GPEN::PAD_GAP:		(*this) << "D13"; EndLine(); return;
 		case GPEN::TRACK_GAP:	(*this) << "D14"; EndLine(); return;
-		case GPEN::RELIEF:		(*this) << "D15"; EndLine(); return;
-		case GPEN::PAD_MASK:	(*this) << "D16"; EndLine(); return;
-		case GPEN::SILK:		(*this) << "D17"; EndLine(); return;
+		case GPEN::PAD_MASK:	(*this) << "D15"; EndLine(); return;
+		case GPEN::SILK:		(*this) << "D16"; EndLine(); return;
 	}
 }
 void GStream::Flash(const QPoint& p)

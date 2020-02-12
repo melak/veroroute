@@ -601,16 +601,16 @@ static std::vector<std::pair<int,int>> g_xLimits;	// A cache of the min/max X va
 
 namespace Simplex
 {
-	static int GetLetterIndex(const char& c)
+	inline static int GetLetterIndex(const char& c)
 	{
 		const int index = ( c - ' ' );
 		return ( index >= 0 && index < 95 ) ? index : -1;	// -1 ==> unsupported character
 	}
-	static int GetLetterData(size_t i, size_t j)
+	inline static int GetLetterData(size_t i, size_t j)
 	{
 		return ( i < 95 && j < 112 ) ? g_simplex[i][j] : -1;
 	}
-	static void CalcXlimits(const size_t& i, std::pair<int,int>& o)
+	inline static void CalcXlimits(const size_t& i, std::pair<int,int>& o)
 	{
 		if ( i == 0 ) { o.first = 0; o.second = 5; return; }	// ' ' character
 		o.first	 = INT_MAX;	o.second = INT_MIN;
@@ -624,7 +624,7 @@ namespace Simplex
 			o.second = std::max(o.second, ix);
 		}
 	}
-	static const std::pair<int,int>& GetXlimits(const size_t& i)
+	inline static const std::pair<int,int>& GetXlimits(const size_t& i)
 	{
 		if ( g_xLimits.empty() )	// Empty cache ...
 		{

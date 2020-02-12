@@ -20,8 +20,6 @@
 #include "CurveList.h"
 #include <QPolygon>
 
-const bool	FULL_LINE	= false;	// Set to true to force each Gerber line to be written in long format
-
 Curve::Curve(const GPEN& pen, const QPoint& p) : m_pen(pen)
 {
 	push_back(p);
@@ -46,7 +44,7 @@ void Curve::Compress()	// Removes redundant points
 		auto C = B; ++C;
 		for(; C != end(); ++A, ++B, ++C )
 		{
-			if ( A->x() == B->x() && B->x() == C->x() )		// Vertical
+			if ( A->x() == B->x() && B->x() == C->x() )	// Vertical
 			{
 				if ( ( B->y() >= A->y() && B->y() <= C->y() ) ||
 					 ( B->y() >= C->y() && B->y() <= A->y() ) )

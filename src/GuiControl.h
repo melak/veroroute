@@ -355,7 +355,6 @@ public:
 	const int&			GetMASK_PERCENT() const		{ return m_MASK_PERCENT; }
 	const int&			GetSILK_PERCENT() const		{ return m_SILK_PERCENT; }
 	const int&			GetEDGE_PERCENT() const		{ return m_EDGE_PERCENT; }
-	int					GetRELIEF_PERCENT() const	{ return 30; }
 	const int&			GetRenderQuality() const	{ return m_iRenderQuality; }
 	const int&			GetSaturation() const		{ return m_iSaturation; }
 	const int&			GetFillSaturation() const	{ return m_iFillSaturation; }
@@ -388,8 +387,8 @@ public:
 	int		GetHalfPadWidth() const		{ return std::max(1, static_cast<int> (GetGRIDPIXELS() * GetPAD_PERCENT()		* 0.005 )); }	// Half pad width in pixels
 	int		GetHalfTrackWidth() const	{ return std::max(1, static_cast<int> (GetGRIDPIXELS() * GetTRACK_PERCENT()		* 0.005 )); }	// Half track width in pixels
 	int		GetGapWidth() const			{ return std::max(1, static_cast<int> (GetGRIDPIXELS() * GetGAP_PERCENT()		* 0.010 )); }	// Gap width in pixels
-	int		GetReliefWidth() const		{ return std::max(1, static_cast<int> (GetGRIDPIXELS() * GetRELIEF_PERCENT()	* 0.010 )); }	// Thermal relief hole width
-	double	GetSilkWidth() const		{ return std::max(1.0,				   GetGRIDPIXELS() * GetSILK_PERCENT()		* 0.010 );  }	// Silk-screen pen width
+	double	GetSilkWidth() const		{ return std::max(1.0,				   GetGRIDPIXELS() * GetSILK_PERCENT()		* 0.010 );  }	// Silk-screen pen width in pixels
+	double	GetEdgeWidth() const		{ return std::max(1.0,				   GetGRIDPIXELS() * GetEDGE_PERCENT()		* 0.010 );  }	// Board edge margin in pixels
 	int		GetMIN_TRACK_SEPARATION_PERCENT() const	// Minimum guaranteed track separation in mil
 	{
 		// To keep track/pads at least N mil apart:
