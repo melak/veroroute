@@ -716,14 +716,16 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	{
 		painter.save();
 
-		int numLoops = ( bPixmapCache || bGroundFill ) ? 2 : 1;
-		const bool		bGreyPads = bPCB && !m_bWriteGerber ;
+		const bool	bGreyPads	= bPCB && !m_bWriteGerber;
+		const int	numLoops	= ( ( bPixmapCache || bGroundFill ) ? 2 : 1 ) + ( bGreyPads ? 1 : 0);
 		const QColor	padGrey(200,200,200,255);
 		// bGroundFill		==> 1st pass draws fat tracks in white, 2nd pass draws tracks
-		// bPixmapCache 	==> 1st pass draws the pixmaps,			2nd pass fixes up diagonals
+		// bPixmapCache		==> 1st pass draws the pixmaps,			2nd pass fixes up diagonals
+		// bGreyPads		==> A final pass will draw the pads in grey
 		for (int iLoop = 0; iLoop < numLoops; iLoop++)
 		{
 			const bool bLastPass = ( iLoop == numLoops - 1 );
+			const bool bDrawGrey = ( bGreyPads && bLastPass );
 			if ( m_bWriteGerber )
 			{
 				const bool bClear = ( bGroundFill && iLoop == 0 );	// For the gaps
@@ -845,17 +847,19 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					}
 					else if ( iLoop == 1 )	// Draw track "blobs" and pads directly
 					{
-						PaintBlob(board, painter, color, pCentre, iPerimeterCode);					// Draw track blob
-						if ( bPin ) PaintPad(board, painter, bGreyPads ? padGrey : color, pCentre);	// Draw pad
+						PaintBlob(board, painter, color, pCentre, iPerimeterCode);				// Draw track blob
+						if ( bPin && !bGreyPads ) PaintPad(board, painter, color, pCentre);		// Draw pad same color as track
 					}
+					else if ( bPin && bDrawGrey ) PaintPad(board, painter, padGrey, pCentre);	// Draw grey pad
 				}
 				if ( bDirect )	// Draw track "blobs" and pads directly (PDF/Gerber)
 				{
 					if ( iLoop == 0 )
 					{
-						PaintBlob(board, painter, color, pCentre, iPerimeterCode);					// Draw track blob
-						if ( bPin ) PaintPad(board, painter, bGreyPads ? padGrey : color, pCentre);	// Draw pad
+						PaintBlob(board, painter, color, pCentre, iPerimeterCode);				// Draw track blob
+						if ( bPin && !bGreyPads ) PaintPad(board, painter, color, pCentre);		// Draw pad same color as track
 					}
+					else if ( bPin && bDrawGrey ) PaintPad(board, painter, padGrey, pCentre);	// Draw grey pad
 				}
 			}
 			if ( m_bWriteGerber )
