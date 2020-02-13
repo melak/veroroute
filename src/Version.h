@@ -171,7 +171,10 @@ static const char* szVEROROUTE_VERSION =
 			// New feature:  Allow Gerber export when in Mono mode (Beta).
 //"1.76";	// Improvement: In Mono mode, all text boxes are now automatically mirrored for toner-transfer.
 			// Improvement: In Mono mode, all component outlines and component text are rendered to match Gerber output.
-  "1.77";	// Bug fix: Text rendering to PDF was broken by changes for PCB text.
+//"1.77";	// Bug fix: Text rendering to PDF was broken by changes for PCB text.
 			// Improvement: Text size setting in Renderer Dialog affects PCB text size also.
 			// Improvement: Added more PCB parameters (for Gerber) to Rendering Dialog.
 			// Moved all Gerber related viewing from Mono mode to new PCB mode on the Track slider.
+  "1.78";	// Bug fix:  Unpainted wire ends were being drawn as painted.
+			// Improvement: Added default label offsets to small Electrolytic Caps so they don't lie over pin holes.
+			// Stop offsetting pad labels by default (it was too confusing manipulating them like that).
