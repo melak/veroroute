@@ -761,7 +761,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				const QPointF pCentre(X,Y);
 
 				// Common special case: Draw blank wire-ends as squares (so we can easily see them)
-				if (  bLastPass && colorId == BAD_COLORID && pC->GetHasWire() )
+				if ( colorId == BAD_COLORID && pC->GetHasWire() )
 				{
 					QPen& wirePen = ( bGroundFill ) ? m_whitePen : m_blackPen;	//TODO
 					wirePen.setWidth(iWirePenWidth);
