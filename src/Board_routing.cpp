@@ -567,8 +567,7 @@ void Board::CheckAllComplete()
 		BuildTargetPins(nodeId);
 
 		bool bComplete(true);
-		auto iterEnd = m_targetPins.end();
-		for (auto iterI = m_targetPins.begin(); iterI != iterEnd && bComplete; ++iterI)
+		for (auto iterI = m_targetPins.begin(), iterEnd = m_targetPins.end(); iterI != iterEnd && bComplete; ++iterI)
 		{
 			Manhatten(*iterI);
 

@@ -50,8 +50,7 @@ public:
 	GroupManager& operator=(const GroupManager& o)
 	{
 		m_list.clear();
-		for (auto iter = o.m_list.begin(); iter != o.m_list.end(); ++iter)
-			m_list.push_back( std::pair<int,int>(iter->first, iter->second) );
+		for (auto& oo : o.m_list) m_list.push_back( std::pair<int,int>(oo.first, oo.second) );
 		return *this;
 	}
 	bool operator==(const GroupManager& o) const	// Compare persisted info
@@ -122,7 +121,7 @@ public:
 		while(true)	// Keep going till we've erased all relevant entries
 		{
 			bool bErased(false);
-			for (auto iter = m_list.begin(); iter != m_list.end() && !bErased; ++iter)
+			for (auto iter = m_list.begin(), iterEnd = m_list.end(); iter != iterEnd && !bErased; ++iter)
 				if ( iter->second == compId ) { m_list.erase(iter); bErased = true; }
 			if ( !bErased ) return;
 		}
@@ -146,29 +145,28 @@ public:
 	virtual void UpdateMergeOffsets(MergeOffsets& o) override
 	{
 		o.deltaGroupId = GetNewGroupId();	// This compacts the current groupIds
-		for (auto iter = m_list.begin(); iter != m_list.end(); ++iter)
-			o.deltaCompId = std::max(o.deltaCompId, iter->second + 1);
+		for (auto& oo : m_list)
+			o.deltaCompId = std::max(o.deltaCompId, oo.second + 1);
 	}
 	virtual void ApplyMergeOffsets(const MergeOffsets& o) override
 	{
 		Compact();	// Compact BEFORE applying the offsets
-		for (auto iter = m_list.begin(); iter != m_list.end(); ++iter)
+		for (auto& oo : m_list)
 		{
-			if ( iter->first != USER_GROUPID )
-				iter->first += o.deltaGroupId;	// Don't apply merge offsets to the user group
-			iter->second += o.deltaCompId;
+			if ( oo.first != USER_GROUPID ) oo.first += o.deltaGroupId;	// Don't apply merge offsets to the user group
+			oo.second += o.deltaCompId;
 		}
 	}
 	void Merge(const GroupManager& o)
 	{
 		RemoveGroup(USER_GROUPID);	// Wipe existing user group.  It will be replaced by the one in 'o'
-		for (auto iter = o.m_list.begin(); iter != o.m_list.end(); ++iter)
+		for (auto& oo : o.m_list)
 		{
-			if ( !GetEntryIsOK(iter) ) continue;	// The merge offsets must have blown the compId or groupId limits
-			if ( iter->first == USER_GROUPID )
-				m_list.push_front( std::pair<int,int>(iter->first, iter->second) );
+			if ( !GetEntryIsOK(oo) ) continue;	// The merge offsets must have blown the compId or groupId limits
+			if ( oo.first == USER_GROUPID )
+				m_list.push_front( std::pair<int,int>(oo.first, oo.second) );
 			else
-				m_list.push_back( std::pair<int,int>(iter->first, iter->second) );
+				m_list.push_back( std::pair<int,int>(oo.first, oo.second) );
 		}
 	}
 	// Persist interface functions
@@ -190,10 +188,10 @@ public:
 	{
 		const unsigned int iSize = static_cast<unsigned int>( GetSize() );
 		outStream.Save(iSize);
-		for (auto iter = m_list.begin(); iter != m_list.end(); ++iter)
+		for (auto& o : m_list)
 		{
-			outStream.Save(iter->first);
-			outStream.Save(iter->second);
+			outStream.Save(o.first);
+			outStream.Save(o.second);
 		}
 	}
 	void GetGroupCompIds(const int& groupId, std::list<int>& compIds) const	// Get a copy of the component IDs for a group
@@ -258,17 +256,17 @@ private:
 		for (auto iter = m_list.begin(); iter != m_list.end() && iter->first <= iSiblingGroupId; ++iter)
 			if ( iter->first == iSiblingGroupId ) Remove(USER_GROUPID, iter->second);
 	}
-	bool GetEntryIsOK(std::list<std::pair<int,int>>::const_iterator iter) const
+	bool GetEntryIsOK(const std::pair<int,int>& o) const
 	{
-		return iter->first  >= USER_GROUPID && iter->first  <  INT_MAX
-			&& iter->second != BAD_COMPID   && iter->second != TRAX_COMPID;
+		return o.first  >= USER_GROUPID && o.first  <  INT_MAX
+			&& o.second != BAD_COMPID   && o.second != TRAX_COMPID;
 	}
 	void Compact()	// Make groupId's increment by 1
 	{
 		int newGroupId(0);	// Start at lowest groupId
-		for (auto iter = m_list.begin(); iter != m_list.end(); ++iter)
+		for (auto& o : m_list)
 		{
-			const int groupId = iter->first;
+			const int groupId = o.first;
 			if ( groupId == newGroupId + 1 )
 				newGroupId++;
 			else if ( groupId > newGroupId + 1 )	// Remap groupId if it has increased by more than 1

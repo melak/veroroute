@@ -77,6 +77,7 @@ void GStream::WriteHeader(const QString& UTC)	// Write header for current stream
 		case GFILE::GKO: strLayer += "BoardOutline";			break;
 		case GFILE::GBL: strLayer += "BottomLayer";				break;
 		case GFILE::GBS: strLayer += "BottomSolderMaskLayer";	break;
+		case GFILE::GBO: strLayer += "BottomSilkLayer";			break;
 		case GFILE::GTL: strLayer += "TopLayer";				break;
 		case GFILE::GTS: strLayer += "TopSolderMaskLayer";		break;
 		case GFILE::GTO: strLayer += "TopSilkLayer";			break;
@@ -95,16 +96,10 @@ void GStream::WriteHeader(const QString& UTC)	// Write header for current stream
 		(*this) << "INCH,LZ,00.0000";	EndLine();	// Inches.  Leading zeros INCLUDED.  2 integer and 4 decimal
 
 		// Comment about hole size:		";Holesize 1 = 0.032 INCH"
-		(*this) << ";Holesize 1 = 0.";
-		if ( hole < 100 ) (*this) << "0";
-		if ( hole < 10  ) (*this) << "0";
-		(*this) << hole << " INCH";	EndLine();
+		(*this) << ";Holesize 1 = " << MilToInch(hole) << " INCH";	EndLine();
 
 		// Define Tool 1:				"T01C0.032" ==> 0.032 inch diameter
-		(*this) << "T01C0.";
-		if ( hole < 100 ) (*this) << "0";
-		if ( hole < 10  ) (*this) << "0";
-		(*this) << hole;	EndLine();
+		(*this) << "T01C" << MilToInch(hole);	EndLine();
 
 	//	(*this) << "M95";	EndLine();	// M95 End of the header
 		(*this) << "%";		EndLine();	// Rewind Stop.  Often used instead of M95.
@@ -136,45 +131,29 @@ void GStream::MakeApertures()	// Make "pens" for current stream
 	const int trackgap	= track + 2 * gap;	// Gap  is the radius increase
 	const int padmask	= pad   + 2 * mask;	// Mask is the radius increase
 
-	if ( m_eType == GFILE::GKO )
+	switch( m_eType )
 	{
-		(*this) << "%ADD10C,0.010*%" << std::endl;	// D10 is a circle with diameter of 10 mil
-	}
-	if ( m_eType == GFILE::GBL || m_eType == GFILE::GTL )
-	{
-		(*this) << "%ADD11C,0.";					// D11 is a circle with diameter of a pad
-		if ( pad < 100 ) (*this) << "0";
-		if ( pad < 10  ) (*this) << "0";
-		(*this) << pad << "*%" << std::endl;
-
-		(*this) << "%ADD12C,0.";					// D12 is a circle with diameter of a track
-		if ( track < 100 ) (*this) << "0";
-		if ( track < 10  ) (*this) << "0";
-		(*this) << track << "*%" << std::endl;
-
-		(*this) << "%ADD13C,0.";					// D13 is a circle with diameter of a (pad + gap)
-		if ( padgap < 100 ) (*this) << "0";
-		if ( padgap < 10  ) (*this) << "0";
-		(*this) << padgap << "*%" << std::endl;
-
-		(*this) << "%ADD14C,0.";					// D14 is a circle with diameter of a (track + gap)
-		if ( trackgap < 100 ) (*this) << "0";
-		if ( trackgap < 10  ) (*this) << "0";
-		(*this) << trackgap << "*%" << std::endl;
-	}
-	if ( m_eType == GFILE::GBS || m_eType == GFILE::GTS )
-	{
-		(*this) << "%ADD15C,0.";					// D15 is a circle with diameter of a (pad + mask)
-		if ( padmask < 100 ) (*this) << "0";
-		if ( padmask < 10  ) (*this) << "0";
-		(*this) << padmask << "*%" << std::endl;
-	}
-	if ( m_eType == GFILE::GTO )	//TODO Add GBO in future
-	{
-		(*this) << "%ADD16C,0.";					// D16 is a circle with diameter of the silk screen pen
-		if ( silk < 100 ) (*this) << "0";
-		if ( silk < 10  ) (*this) << "0";
-		(*this) << silk << "*%" << std::endl;
+		case GFILE::GKO:
+			(*this) << "%ADD10C," << MilToInch(10)		 << "*%" << std::endl;	// D10 is a circle with diameter of 10 mil
+			break;
+		case GFILE::GBL:
+		case GFILE::GTL:
+			(*this) << "%ADD11C," << MilToInch(pad)		 << "*%" << std::endl;	// D11 is a circle with diameter of a pad
+			(*this) << "%ADD12C," << MilToInch(track)	 << "*%" << std::endl;	// D12 is a circle with diameter of a track
+			(*this) << "%ADD13C," << MilToInch(padgap)	 << "*%" << std::endl;	// D13 is a circle with diameter of a (pad + gap)
+			(*this) << "%ADD14C," << MilToInch(trackgap) << "*%" << std::endl;	// D14 is a circle with diameter of a (track + gap)
+//			(*this) << "%ADD15C," << MilToInch(via)		 << "*%" << std::endl;	// D15 is a circle with diameter of a via-pad
+			break;
+		case GFILE::GBS:
+		case GFILE::GTS:
+			(*this) << "%ADD16C," << MilToInch(padmask)	 << "*%" << std::endl;	// D16 is a circle with diameter of a (pad + mask)
+			break;
+		case GFILE::GTO:
+		case GFILE::GBO:
+			(*this) << "%ADD17C," << MilToInch(silk)	 << "*%" << std::endl;	// D17 is a circle with diameter of the silk screen pen
+			break;
+		case GFILE::DRL:
+			break;
 	}
 }
 void GStream::Drill(const QPointF& pF)
@@ -290,7 +269,7 @@ void GStream::OutLine(const Curve& curve, bool bForceClose)	// Outline of a curv
 	auto& front = curve.front();
 	Move(front);	// Move pen to start of curve
 	auto iter = curve.begin(); ++iter;
-	for (; iter != curve.end(); ++iter)
+	for (auto iterEnd = curve.end(); iter != iterEnd; ++iter)
 		Draw(*iter);	// Draw line to next point in curve
 	if ( bForceClose && front != curve.back() ) Draw( front );
 }
@@ -308,8 +287,9 @@ void GStream::SetPen(const GPEN& ePen)
 		case GPEN::TRACK:		(*this) << "D12"; EndLine(); return;
 		case GPEN::PAD_GAP:		(*this) << "D13"; EndLine(); return;
 		case GPEN::TRACK_GAP:	(*this) << "D14"; EndLine(); return;
-		case GPEN::PAD_MASK:	(*this) << "D15"; EndLine(); return;
-		case GPEN::SILK:		(*this) << "D16"; EndLine(); return;
+		case GPEN::VIA_PAD:		(*this) << "D15"; EndLine(); return;
+		case GPEN::PAD_MASK:	(*this) << "D16"; EndLine(); return;
+		case GPEN::SILK:		(*this) << "D17"; EndLine(); return;
 	}
 }
 void GStream::Flash(const QPoint& p)
@@ -382,6 +362,15 @@ void GStream::EndLine()
 	else
 		(*this) << "*" << std::endl;
 }
+std::string GStream::MilToInch(const int& iMil) const	// Just for pen sizes
+{
+	assert(iMil >= 0 && iMil < 1000);	//TODO Generalise this
+	std::string str("0.");
+	if ( iMil < 100 ) str += "0";
+	if ( iMil < 10  ) str += "0";
+	str += std::to_string(iMil);
+	return str;
+}
 
 // Wrapper for handling a set of Gerber files
 bool GWriter::Open(const char* fileName, const Board& board, const bool& bLongGerber)
@@ -401,6 +390,7 @@ bool GWriter::Open(const char* fileName, const Board& board, const bool& bLongGe
 				case GFILE::GKO: str += ".boardoutline.ger";		break;
 				case GFILE::GBL: str += ".bottomlayer.ger";			break;
 				case GFILE::GBS: str += ".bottomsoldermask.ger";	break;
+				case GFILE::GBO: str += ".bottomsilkscreen.ger";	break;
 				case GFILE::GTL: str += ".toplayer.ger";			break;
 				case GFILE::GTS: str += ".topsoldermask.ger";		break;
 				case GFILE::GTO: str += ".topsilkscreen.ger";		break;
@@ -416,13 +406,14 @@ bool GWriter::Open(const char* fileName, const Board& board, const bool& bLongGe
 				case GFILE::GKO: str += ".GKO";	break;
 				case GFILE::GBL: str += ".GBL";	break;
 				case GFILE::GBS: str += ".GBS";	break;
+				case GFILE::GBO: str += ".GBO";	break;
 				case GFILE::GTL: str += ".GTL";	break;
 				case GFILE::GTS: str += ".GTS";	break;
 				case GFILE::GTO: str += ".GTO";	break;
 				case GFILE::DRL: str += ".DRL";	break;
 			}
 		}
-		if ( GFILE(i) == GFILE::GTL || GFILE(i) == GFILE::GTS ) continue;	// Don't write top layers yet
+		if ( GFILE(i) == GFILE::GTL || GFILE(i) == GFILE::GTS || GFILE(i) == GFILE::GBO ) continue;	// Don't write these layers yet
 		m_os[i].open(str.c_str(), std::ios::out);
 		bOK = m_os[i].is_open();
 		if ( bOK )

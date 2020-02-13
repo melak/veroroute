@@ -179,7 +179,7 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 
 	bool bStraight(false), bBent(false);	// Flags to help describe track sections
 	// bStraight	==> Track goes straight across the centre point
-	// bBent		==> Track bends <= 90%
+	// bBent		==> Track bends <= 90 degrees
 
 	if ( N == 0 )
 		polygon << pC;
@@ -242,9 +242,8 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 			{
 				if ( iL == iFirst )	polygon << p[iL];	// Add "L" to the polygon is it's the first point
 				//TODO
-				// Not sure ( iR!- iFirst )
-				// is correct for straight tracks with diags and perimeter code 145
-				// Test show it is needed for curved tracks with max diags mode though
+				// Not sure ( iR != iFirst ) is correct for straight tracks with diags and perimeter code 145
+				// Test shows it is needed for curved tracks with max diags mode though
 				//if ( bCurvedTracks && bMaxDiags ) // <== This is no good either !!!
 				if ( iR != iFirst )
 					polygon << p[iR];	// Add "R" to the polygon if it isn't the first point

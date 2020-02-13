@@ -27,8 +27,8 @@ class CBoard;
 class GStream;
 
 enum class	GPOLARITY	{DARK = 0, CLEAR};
-enum class	GFILE		{GKO = 0, GBL, GBS, GTL, GTS, GTO, DRL};
-const int	NUM_STREAMS	= 7;
+enum class	GFILE		{GKO = 0, GBL, GBS, GBO, GTL, GTS, GTO, DRL};
+const int	NUM_STREAMS	= 8;
 
 // Wrapper for a stream to a Gerber file
 class GStream : public std::ofstream
@@ -70,6 +70,7 @@ private:
 	void LinearInterpolation();
 	void Comment(const char* sz);
 	void EndLine();
+	std::string MilToInch(const int& iMil) const;
 	// Data
 	GFILE			m_eType		= GFILE::GBL;	// GKO, GBL, GBS, GTL, GTS, GTO
 	GPEN			m_ePen		= GPEN::UNKNOWN;

@@ -628,7 +628,7 @@ void MainWindow::WritePDF()
 void MainWindow::WriteGerber(bool bLongGerber)
 {
 	m_bLongGerber = bLongGerber;
-	m_gerberFileName = GetSaveFileName(tr("Choose a Gerber File"), tr("All Files (*)"), QString(""));
+	m_gerberFileName = GetSaveFileName(tr("Choose a Gerber File Prefix"), tr("All Files (*)"), QString(""));
 	if ( !m_gerberFileName.isEmpty() )
 	{
 		ui->statusBar->showMessage( tr("Exporting to Gerber..."), 500 );
@@ -647,6 +647,7 @@ void MainWindow::WriteGerber(bool bLongGerber)
 		QDesktopServices::openUrl(m_gerberFileName + ".GKO");
 		QDesktopServices::openUrl(m_gerberFileName + ".GBL");
 		QDesktopServices::openUrl(m_gerberFileName + ".GBS");
+		//QDesktopServices::openUrl(m_gerberFileName + ".GBO");
 		//QDesktopServices::openUrl(m_gerberFileName + ".GTL");
 		//QDesktopServices::openUrl(m_gerberFileName + ".GTS");
 		QDesktopServices::openUrl(m_gerberFileName + ".GTO");

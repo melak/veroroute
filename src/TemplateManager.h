@@ -59,13 +59,7 @@ public:
 	bool GetFromImportStr(const std::string& importStr, Component& out) const
 	{
 		for (auto& o : m_listUser)
-		{
-			if ( o.GetType() == COMP::CUSTOM && o.GetImportStr() == importStr )
-			{
-				out = o;
-				return true;
-			}
-		}
+			if ( o.GetType() == COMP::CUSTOM && o.GetImportStr() == importStr ) { out = o; return true; }
 		return false;
 	}
 	void AddDefaults()
@@ -131,8 +125,7 @@ public:
 	bool Remove(const Component& comp)
 	{
 		Template entry;
-		if ( !entry.MakeTemplate(comp) )
-			return false;
+		if ( !entry.MakeTemplate(comp) ) return false;
 
 		const auto iter = std::find(m_listUser.begin(), m_listUser.end(), entry);
 		const bool bOK = ( iter != m_listUser.end() );
@@ -156,11 +149,7 @@ public:
 	{
 		const unsigned int iSize = static_cast<unsigned int>( m_listUser.size() );
 		outStream.Save(iSize);
-		for (auto iter = m_listUser.begin(); iter != m_listUser.end(); ++iter)
-		{
-			Template& entry = *iter;
-			entry.Save(outStream);
-		}
+		for (auto& o : m_listUser) o.Save(outStream);
 	}
 private:
 	std::string			m_pathStr;		// Path to the "templates" folder

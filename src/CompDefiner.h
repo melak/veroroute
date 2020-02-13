@@ -102,8 +102,7 @@ public:
 				&& m_grid				== o.m_grid
 				&& m_mapShapes.size()	== o.m_mapShapes.size();
 		if ( !bOK ) return false;
-		auto iterB = o.m_mapShapes.begin();
-		for (auto iterA = m_mapShapes.begin(); iterA != m_mapShapes.end() && iterB != o.m_mapShapes.end(); ++iterA, ++iterB)
+		for (auto iterA = m_mapShapes.begin(), iterB = o.m_mapShapes.begin(); iterA != m_mapShapes.end() && iterB != o.m_mapShapes.end(); ++iterA, ++iterB)
 			if ( (*iterA) != (*iterB) ) return false;
 		return true;
 	}

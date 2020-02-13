@@ -42,7 +42,7 @@ void Curve::Compress()	// Removes redundant points
 		auto A = begin();
 		auto B = A; ++B;
 		auto C = B; ++C;
-		for(; C != end(); ++A, ++B, ++C )
+		for (; C != end(); ++A, ++B, ++C)
 		{
 			if ( A->x() == B->x() && B->x() == C->x() )	// Vertical
 			{
@@ -94,7 +94,7 @@ void CurveList::SpliceAll()
 		for (auto iterA = begin(); iterA != end(); ++iterA)
 		{
 			auto iterB = iterA; ++iterB;
-			for ( ; iterB != end(); ++iterB )
+			for (; iterB != end(); ++iterB)
 				if ( (*iterA)->Splice(*iterB) ) bDone = false;
 		}
 	}
