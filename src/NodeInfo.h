@@ -82,7 +82,7 @@ public:
 	int	 GetLength() const	{ return std::max(GetWidth(), GetHeight()); }
 	bool GetHasFloatingComp(CompManager& compMgr) const
 	{
-		for (size_t i = 0; i < GetNumComps(); i++)
+		for (size_t i = 0, iSize = GetNumComps(); i < iSize; i++)
 		{
 			const Component& comp = compMgr.GetComponentById( GetCompId(i) );
 			assert( comp.GetIsTrueComp() );
@@ -95,14 +95,14 @@ public:
 		m_minRow = m_minCol = INT_MAX;
 		m_maxRow = m_maxCol = 0;
 		bool bHavePins(false);	// Remains false if no component pins have the nodeId
-		for (size_t i = 0; i < GetNumComps(); i++)	// Loop all comps with the nodeId
+		for (size_t i = 0, iSize = GetNumComps(); i < iSize; i++)	// Loop all comps with the nodeId
 		{
 			Component& comp = compMgr.GetComponentById( GetCompId(i) );
 			if ( bIgnoreFloating && !comp.GetIsPlaced() ) continue;	// Skip floating components if needed
 
 			// Loop footprint and find the relevant pin locations
-			for (int iRow = 0; iRow < comp.GetCompRows(); iRow++)
-			for (int iCol = 0; iCol < comp.GetCompCols(); iCol++)
+			for (int iRow = 0, rows = comp.GetCompRows(); iRow < rows; iRow++)
+			for (int iCol = 0, cols = comp.GetCompCols(); iCol < cols; iCol++)
 			{
 				const size_t pinIndex = comp.GetCompElement(iRow, iCol)->GetPinIndex();
 				if ( pinIndex == BAD_PININDEX ) continue;

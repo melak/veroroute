@@ -65,8 +65,7 @@ public:
 		}
 		std::list<int> cnList[MYNUMCOLORS];	// Lists of nodeIds used by colours
 		int iStartColorId(0);
-		const size_t iSize = adjManager.GetSize();
-		for (size_t i = 0; i < iSize; i++)	// Loop nodeIds in adjManager
+		for (size_t i = 0, iSize = adjManager.GetSize(); i < iSize; i++)	// Loop nodeIds in adjManager
 		{
 			AdjInfo*	pI		= adjManager.GetAt(i);
 			const int&	nodeIdI	= pI->GetNodeId();

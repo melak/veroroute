@@ -39,7 +39,7 @@ public:
 	void AddComp(const Component& comp)	// Call this after creating a comp, or calling comp.SetNodeId()
 	{
 		if ( !comp.GetIsTrueComp() ) return;
-		for (size_t n = 0; n < comp.GetNumPins(); n++)	// Loop pins on the component
+		for (size_t n = 0, N = comp.GetNumPins(); n < N; n++)	// Loop pins on the component
 		{
 			const int& nodeId = comp.GetNodeId(n);
 			// Find the relevant list object for the nodeId, or create a new one if it doesn't exist
@@ -53,7 +53,7 @@ public:
 	void RemoveComp(const Component& comp)	// Call this before destroying a comp, or calling comp.SetNodeId()
 	{
 		if ( !comp.GetIsTrueComp() ) return;
-		for (size_t n = 0; n < comp.GetNumPins(); n++)	// Loop pins on the component
+		for (size_t n = 0, N = comp.GetNumPins(); n < N; n++)	// Loop pins on the component
 		{
 			const int& nodeId = comp.GetNodeId(n);
 			// Find the relevant list member for the nodeId and remove the comp from it

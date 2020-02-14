@@ -35,16 +35,14 @@ public:
 	Grid& operator=(const Grid& o)
 	{
 		Allocate(o.m_rows, o.m_cols);
-		const int iSize = GetSize();
-		for (int i = 0; i < iSize; i++) m_pData[i] = o.m_pData[i];
+		for (int i = 0, iSize = GetSize(); i < iSize; i++) m_pData[i] = o.m_pData[i];
 		return *this;
 	}
 	bool operator==(const Grid& o) const	// Compare persisted info
 	{
 		bool bOK = m_rows == o.m_rows
 				&& m_cols == o.m_cols;
-		const int iSize = GetSize();
-		for (int i = 0; i < iSize && bOK; i++) bOK = ( m_pData[i] == o.m_pData[i] );
+		for (int i = 0, iSize = GetSize(); i < iSize && bOK; i++) bOK = ( m_pData[i] == o.m_pData[i] );
 		return bOK;
 	}
 	bool operator!=(const Grid& o) const
@@ -53,8 +51,7 @@ public:
 	}
 	void Clear(const T& val)
 	{
-		const int iSize = GetSize();
-		for (int i = 0; i < iSize; i++) m_pData[i] = val;
+		for (int i = 0, iSize = GetSize(); i < iSize; i++) m_pData[i] = val;
 	}
 	void Allocate(int rows, int cols)
 	{
@@ -102,13 +99,11 @@ public:
 	{
 		o.deltaRow = std::max(o.deltaRow, GetRows() + 1);
 		//o.deltaCol = std::max(o.deltaCol, GetCols() + 1);
-		const int iSize = GetSize();
-		for (int i = 0; i < iSize; i++) m_pData[i].UpdateMergeOffsets(o);
+		for (int i = 0, iSize = GetSize(); i < iSize; i++) m_pData[i].UpdateMergeOffsets(o);
 	}
 	virtual void ApplyMergeOffsets(const MergeOffsets& o) override
 	{
-		const int iSize = GetSize();
-		for (int i = 0; i < iSize; i++) m_pData[i].ApplyMergeOffsets(o);
+		for (int i = 0, iSize = GetSize(); i < iSize; i++) m_pData[i].ApplyMergeOffsets(o);
 	}
 	void Merge(const Grid& src, const MergeOffsets& o)
 	{
@@ -123,15 +118,13 @@ public:
 		inStream.Load(m_rows);
 		inStream.Load(m_cols);
 		Allocate(m_rows, m_cols);
-		const int iSize = GetSize();
-		for (int i = 0; i < iSize; i++) m_pData[i].Load(inStream);
+		for (int i = 0, iSize = GetSize(); i < iSize; i++) m_pData[i].Load(inStream);
 	}
 	virtual void Save(DataStream& outStream) override
 	{
 		outStream.Save(m_rows);
 		outStream.Save(m_cols);
-		const int iSize = GetSize();
-		for (int i = 0; i < iSize; i++) m_pData[i].Save(outStream);
+		for (int i = 0, iSize = GetSize(); i < iSize; i++) m_pData[i].Save(outStream);
 	}
 private:
 	int	m_rows;
@@ -190,8 +183,7 @@ public:
 	void SetupWire()
 	{
 		assert( GetRows() == 1 && GetCols() > 1 );
-		const int iSize = GetSize();
-		for (int i = 0; i < iSize; i++) GetAt(i)->SetWireOccupancies();
+		for (int i = 0, iSize = GetSize(); i < iSize; i++) GetAt(i)->SetWireOccupancies();
 	}
 	void StretchSimple(bool bGrow, const CompElement& initVal)	// For simple 2-pin components like resistors, wires, diodes, caps
 	{
@@ -289,15 +281,14 @@ public:
 
 		ElementGrid tmp(*this);	// Make a temporary copy of this grid
 
-		for (int iRow = 0; iRow < GetRows(); iRow++)
-		for (int iCol = 0; iCol < GetCols(); iCol++)
+		for (int iRow = 0, rows = GetRows(); iRow < rows; iRow++)
+		for (int iCol = 0, cols = GetCols(); iCol < cols; iCol++)
 			Set(iRow, iCol, *(tmp.Get(iRow - iDown, iCol - iRight)));	// ElementGrid::Get() accounts for toroidal behaviour
 	}
 	bool CopyFrom(const TrackElementGrid& o)
 	{
 		if ( o.GetRows() != GetRows() || o.GetCols() != GetCols() ) return false;
-		const int iSize = GetSize();
-		for (int i = 0; i < iSize; i++)
+		for (int i = 0, iSize = GetSize(); i < iSize; i++)
 			GetAt(i)->TrackElement::operator=(*o.GetAtConst(i));
 		return true;
 	}
@@ -305,8 +296,7 @@ public:
 	{
 		if ( o.GetRows() != GetRows() || o.GetCols() != GetCols() )
 			o.Allocate(GetRows(), GetCols());
-		const int iSize = GetSize();
-		for (int i = 0; i < iSize; i++)
+		for (int i = 0, iSize = GetSize(); i < iSize; i++)
 			o.GetAt(i)->operator=(*GetAtConst(i));
 	}
 };

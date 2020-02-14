@@ -564,8 +564,7 @@ bool Board::GetPinRowCol(const int& compId, const size_t& iPinIndex, int& row, i
 {
 	if ( compId == BAD_COMPID || iPinIndex == BAD_PININDEX ) return false;
 
-	const int iSize = GetSize();
-	for (int i = 0; i < iSize; i++)
+	for (int i = 0, iSize = GetSize(); i < iSize; i++)
 	{
 		Element* p = GetAtConst(i);
 		if ( !p->GetHasWire() && p->GetCompId() == compId && p->GetPinIndex() == iPinIndex )

@@ -140,10 +140,10 @@ public:
 
 	void GlueNbrs()	// Set pointers between neighbouring grid elements
 	{
-		for (int iRow = 0; iRow < GetRows(); iRow++)
+		for (int iRow = 0, iRows = GetRows(); iRow < iRows; iRow++)
 		{
 			const int iT(iRow-1), iB(iRow+1);
-			for (int iCol = 0; iCol < GetCols(); iCol++)
+			for (int iCol = 0, iCols = GetCols(); iCol < iCols; iCol++)
 			{
 				const int iL(iCol-1), iR(iCol+1);
 
@@ -359,8 +359,7 @@ public:
 	void RebuildAdjacencies()
 	{
 		m_adjInfoMgr.DeAllocate();
-		const int iSize = GetSize();
-		for (int i = 0; i < iSize; i++) m_adjInfoMgr.InitCounts( GetAt(i) );
+		for (int i = 0, iSize = GetSize(); i < iSize; i++) m_adjInfoMgr.InitCounts( GetAt(i) );
 	}
 
 	Component& GetUserComponent()	// The currently selected component
@@ -537,11 +536,8 @@ public:
 		m_compMgr.Load(inStream);			// Call Load() on component manager
 
 		for (const auto& mapObj : m_compMgr.GetMapIdToComp())
-		{
-			const Component& comp = mapObj.second;
-			m_nodeInfoMgr.AddComp(comp);
-		}
-
+			m_nodeInfoMgr.AddComp(mapObj.second);
+		
 		GlueWires();	// Set pointers between wired grid elements
 
 		if ( inStream.GetVersion() < VRT_VERSION_26 )
@@ -583,10 +579,10 @@ private:
 			if ( comp.GetType() == COMP::WIRE && comp.GetIsPlaced() )
 			{
 				int jRow( comp.GetRow() );
-				for (int j = 0; j < comp.GetCompRows(); j++, jRow++)
+				for (int j = 0, jRows = comp.GetCompRows(); j < jRows; j++, jRow++)
 				{
 					int iCol( comp.GetCol() );
-					for (int i = 0; i < comp.GetCompCols(); i++, iCol++)
+					for (int i = 0, iCols = comp.GetCompCols(); i < iCols; i++, iCol++)
 					{
 						Element* p = Get(jRow, iCol);
 						// Want GetIsPin() methods to be private so commented out following assert

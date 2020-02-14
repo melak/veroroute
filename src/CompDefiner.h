@@ -159,7 +159,7 @@ public:
 	size_t	GetNumTruePins() const
 	{
 		int count(0);
-		for (int i = 0; i < m_grid.GetSize(); i++)
+		for (int i = 0, iSize = m_grid.GetSize(); i < iSize; i++)
 			if ( m_grid.GetAtConst(i)->GetIsPin() ) count++;
 		return count;
 	}
@@ -283,12 +283,12 @@ public:
 			if ( iter->first == GetCurrentShapeId() ) { std::swap(*iter, *iterPrior); return true; }
 		return false;
 	}
-	int  AddLine()				{ return AddDefaultShape(SHAPE::LINE); }
-	int  AddRect()				{ return AddDefaultShape(SHAPE::RECT); }
-	int  AddRoundedRect()		{ return AddDefaultShape(SHAPE::ROUNDED_RECT); }
-	int  AddEllipse()			{ return AddDefaultShape(SHAPE::ELLIPSE); }
-	int  AddArc()				{ return AddDefaultShape(SHAPE::ARC); }
-	int  AddChord()				{ return AddDefaultShape(SHAPE::CHORD); }
+	int  AddLine()			{ return AddDefaultShape(SHAPE::LINE); }
+	int  AddRect()			{ return AddDefaultShape(SHAPE::RECT); }
+	int  AddRoundedRect()	{ return AddDefaultShape(SHAPE::ROUNDED_RECT); }
+	int  AddEllipse()		{ return AddDefaultShape(SHAPE::ELLIPSE); }
+	int  AddArc()			{ return AddDefaultShape(SHAPE::ARC); }
+	int  AddChord()			{ return AddDefaultShape(SHAPE::CHORD); }
 	int  AddDefaultShape(SHAPE eType)
 	{
 		const double dX = 0.5 * GetGridCols();

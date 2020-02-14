@@ -36,8 +36,7 @@ void Board::WipeAutoSetPoints(int nodeId)
 	WIRELIST wireList;	// Helper for chains of wires
 
 	const bool bWipeAll = ( nodeId == BAD_NODEID );
-	const int iSize = GetSize();
-	for (int i = 0; i < iSize; i++)
+	for (int i = 0, iSize = GetSize(); i < iSize; i++)
 	{
 		Element* p = GetAt(i);
 		if ( !bWipeAll && p->GetNodeId() != nodeId ) continue;	// Skip points with wrong nodeId
@@ -76,8 +75,7 @@ void Board::BuildTargetPins(const int& nodeId)
 
 	assert( nodeId != BAD_NODEID );
 	m_targetPins.clear();
-	const int iSize = GetSize();
-	for (int i = 0; i < iSize; i++)
+	for (int i = 0, iSize = GetSize(); i < iSize; i++)
 	{
 		Element* p = GetAt(i);
 		if ( p->GetHasPin() && p->GetNodeId() == nodeId && !p->GetHasWire() )
@@ -235,8 +233,8 @@ void Board::Flood_Helper(const int& iFloodNodeId, bool** ppConn, unsigned int& c
 	std::list<CONNECTION> list;		// Helper for updating the connection matrix
 	WIRELIST wireList;				// Helper for chains of wires
 
-	const bool bDiagsOK = ( GetDiagsMode() != DIAGSMODE::OFF );
-	const unsigned int iMaxDeltaMH = ( bDiagsOK ) ? MH_DIAG : MH_LRTB;	// The max MH increment depends on if diagonals are allowed
+	const bool			bDiagsOK 	= ( GetDiagsMode() != DIAGSMODE::OFF );
+	const unsigned int	iMaxDeltaMH	= ( bDiagsOK ) ? MH_DIAG : MH_LRTB;	// The max MH increment depends on if diagonals are allowed
 
 	size_t jjStart(0);
 
@@ -267,8 +265,7 @@ void Board::Flood_Helper(const int& iFloodNodeId, bool** ppConn, unsigned int& c
 
 			const bool bOK = pJ->GetNodeId() == iFloodNodeId;	// true ==> pJ already painted with correct NodeId
 
-			const int iDiagMax = ( bDiagsOK ) ? 2 : 1;		// Diags allowed ==> 2 passes
-			for (int iDiag = 0; iDiag < iDiagMax && !bDone; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
+			for (int iDiag = 0, iDiagMax = ( bDiagsOK ) ? 2 : 1; iDiag < iDiagMax && !bDone; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
 			{
 				const int iDeltaMH = ( iDiag ) ? MH_DIAG : MH_LRTB;
 				if ( pJ->GetMH() + iDeltaMH != iMH ) continue;	// pJ has wrong MH for (Non-diagonal/Diagonal) connection
@@ -416,8 +413,7 @@ void Board::Backtrace(Element* pEnd, const int& nodeId)
 
 		for (int iLoop = 0; iLoop < 2 && !bOK; iLoop++)	// First pass to give preference to nbrs that are not wire ends
 		{
-			const int iDiagMax = ( bDiagsOK ) ? 2 : 1;		// Diags allowed ==> 2 passes
-			for (int iDiag = 0; iDiag < iDiagMax && !bOK; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
+			for (int iDiag = 0, iDiagMax = ( bDiagsOK ) ? 2 : 1; iDiag < iDiagMax && !bOK; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
 			{
 				const int iDeltaMH = ( iDiag ) ? MH_DIAG : MH_LRTB;
 				for (int iNbr = iDiag; iNbr < 8 && !bOK; iNbr += 2)	// Even/Odd iNbr ==> Non-diagonal/Diagonal
@@ -456,8 +452,8 @@ void Board::Manhatten(Element* p)
 	m_tmpVec.resize(iSize, nullptr);	// Clear the set of visited points
 	m_tmpVecSize = 0;
 
-	const bool bDiagsOK = ( GetDiagsMode() != DIAGSMODE::OFF );
-	const unsigned int iMaxDeltaMH = ( bDiagsOK ) ? MH_DIAG : MH_LRTB;	// The max MH increment depends on if diagonals are allowed
+	const bool			bDiagsOK	= ( GetDiagsMode() != DIAGSMODE::OFF );
+	const unsigned int	iMaxDeltaMH	= ( bDiagsOK ) ? MH_DIAG : MH_LRTB;	// The max MH increment depends on if diagonals are allowed
 
 	size_t jjStart(0);
 	const unsigned int RID(0);
@@ -503,8 +499,7 @@ void Board::Manhatten(Element* p)
 				continue;
 			}
 
-			const int iDiagMax = ( bDiagsOK ) ? 2 : 1;		// Diags allowed ==> 2 passes
-			for (int iDiag = 0; iDiag < iDiagMax; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
+			for (int iDiag = 0, iDiagMax = ( bDiagsOK ) ? 2 : 1; iDiag < iDiagMax; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
 			{
 				const int iDeltaMH = ( iDiag ) ? MH_DIAG : MH_LRTB;
 				if ( pJ->GetMH() + iDeltaMH != iMH ) continue;	// pJ has wrong MH for connection
@@ -556,7 +551,7 @@ void Board::CheckAllComplete()
 	*/
 
 	// Old algorithm.  In most cases this is faster than the new algorithm, but worst-case performance is worse
-	for (size_t n = 0; n < m_nodeInfoMgr.GetSize(); n++)
+	for (size_t n = 0, nSize = m_nodeInfoMgr.GetSize(); n < nSize; n++)
 	{
 		NodeInfo* pNodeInfo = m_nodeInfoMgr.GetAt(n);
 		pNodeInfo->SetComplete(false);
@@ -592,8 +587,7 @@ void Board::PasteTracks(bool bTidy)
 	size_t	iPinIndex;
 	int		tmpCompId;
 
-	const int iSize = GetSize();
-	for (int i = 0; i < iSize; i++)
+	for (int i = 0, iSize = GetSize(); i < iSize; i++)
 	{
 		Element* p = GetAt(i);
 
@@ -661,7 +655,7 @@ void Board::WipeTracks()
 	}
 	else	// ... otherwise wipe all the points on the board. The floating trax component won't get wiped
 	{
-		for (int j = 0; j < GetRows(); j++)	for (int i = 0; i <= GetCols(); i++)
+		for (int j = 0, jMax = GetRows(); j < jMax; j++)	for (int i = 0, iMax = GetCols(); i <= iMax; i++)	//TODOALEX Bug on <= ???
 		{
 			Element* p = Get(j, i);
 			assert( !p->GetHasPin() && !p->GetIsHole() && !p->GetHasComp() );	// Sanity check

@@ -36,7 +36,7 @@ void CompDefiner::Populate(const Component& o)
 
 	// Copy footprint to PinInfo map
 	m_grid.Allocate(o.GetRows(), o.GetCols());
-	for (int i = 0; i < o.GetSize(); i++)
+	for (int i = 0, iSize = o.GetSize(); i < iSize; i++)
 	{
 		*m_grid.GetAt(i) = *o.GetAtConst(i);
 
@@ -79,7 +79,7 @@ void CompDefiner::Build(Component& comp) const
 
 	comp.SetType(COMP::CUSTOM);
 	comp.Allocate(m_grid.GetRows(), m_grid.GetCols());
-	for (int i = 0; i < m_grid.GetSize(); i++)
+	for (int i = 0, iSize = m_grid.GetSize(); i < iSize; i++)
 		comp.GetAt(i)->Pin::operator=( *m_grid.GetAtConst(i) );
 
 	// Copy shapes
@@ -263,11 +263,10 @@ bool CompDefiner::GetIsValid() const
 	if ( !bOK ) return false;	// Must have a shape with line and no fill (so  it can't be faded out)
 	// Pin indexes must be consecutive at start at 0
 	std::list<size_t> pinIndexes;
-	for (int i = 0; i < m_grid.GetSize(); i++)
-	{
+	for (int i = 0, iSize = m_grid.GetSize(); i < iSize; i++)
 		if ( m_grid.GetAtConst(i)->GetIsPin() )
 			pinIndexes.push_back( m_grid.GetAtConst(i)->GetPinIndex() );
-	}
+
 	pinIndexes.sort();
 	size_t iTest(0);
 	for ( auto& pinIndex : pinIndexes )

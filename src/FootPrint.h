@@ -105,8 +105,8 @@ public:
 			case COMP::CAP_FILM:		return StretchSimple(bGrow, initVal);
 			case COMP::CAP_FILM_WIDE:
 				StretchComplex(m_type, bGrow);
-				for (int iRow = 0; iRow < GetRows(); iRow++)
-				for (int iCol = 0; iCol < GetCols(); iCol++)
+				for (int iRow = 0, rows = GetRows(); iRow < rows; iRow++)
+				for (int iCol = 0, cols = GetCols(); iCol < cols; iCol++)
 				{
 					CompElement* p = Get(iRow,iCol);
 					p->SetPinIndex( ( iRow == 1 && iCol == 0 ) ? 0 :
@@ -127,8 +127,8 @@ public:
 				return;
 			case COMP::DIP:
 				StretchComplex(m_type, bGrow);
-				for (int iRow = 0; iRow < GetRows(); iRow++)
-				for (int iCol = 0; iCol < GetCols(); iCol++)
+				for (int iRow = 0, rows = GetRows(); iRow < rows; iRow++)
+				for (int iCol = 0, cols = GetCols(); iCol < cols; iCol++)
 				{
 					CompElement* p = Get(iRow,iCol);
 					p->SetPinIndex( ( iRow == 0 ) ? 2*GetCols()-1-iCol :
@@ -139,7 +139,7 @@ public:
 				return;
 			case COMP::STRIP_100:
 				StretchComplex(m_type, bGrow);
-				for (int i = 0; i < GetSize(); i++)
+				for (int i = 0, iSize = GetSize(); i < iSize; i++)
 				{
 					CompElement* p = GetAt(i);
 					p->SetPinIndex( i );
@@ -149,8 +149,8 @@ public:
 				return;
 			case COMP::BLOCK_100:
 				StretchComplex(m_type, bGrow);
-				for (int iRow = 0; iRow < GetRows(); iRow++)
-				for (int iCol = 0; iCol < GetCols(); iCol++)
+				for (int iRow = 0, rows = GetRows(); iRow < rows; iRow++)
+				for (int iCol = 0, cols = GetCols(); iCol < cols; iCol++)
 				{
 					CompElement* p = Get(iRow,iCol);
 					p->SetPinIndex( ( iRow == 1 ) ? iCol : BAD_PININDEX );
@@ -160,8 +160,8 @@ public:
 				return;
 			case COMP::BLOCK_200:
 				StretchComplex(m_type, bGrow);
-				for (int iRow = 0; iRow < GetRows(); iRow++)
-				for (int iCol = 0; iCol < GetCols(); iCol++)
+				for (int iRow = 0, rows = GetRows(); iRow < rows; iRow++)
+				for (int iCol = 0, cols = GetCols(); iCol < cols; iCol++)
 				{
 					CompElement* p = Get(iRow,iCol);
 					p->SetPinIndex( ( iRow == 1 && iCol % 2 == 1 ) ? ( iCol - 1 ) / 2 : BAD_PININDEX );
@@ -172,8 +172,8 @@ public:
 			case COMP::SWITCH_ST:
 			case COMP::SWITCH_DT:
 				StretchComplex(m_type, bGrow);
-				for (int iRow = 0; iRow < GetRows(); iRow++)
-				for (int iCol = 0; iCol < GetCols(); iCol++)
+				for (int iRow = 0, rows = GetRows(); iRow < rows; iRow++)
+				for (int iCol = 0, cols = GetCols(); iCol < cols; iCol++)
 				{
 					CompElement* p = Get(iRow,iCol);
 					p->SetPinIndex( ( iCol % 2 == 0 && iRow % 2 == 0 ) ? (iCol/2 + (iRow/2)*((1 + GetCols())/2)) : BAD_PININDEX );
@@ -184,8 +184,8 @@ public:
 			case COMP::SWITCH_ST_DIP:
 				assert( GetRows() == 4 );	// DIPs should have 4 rows on construction
 				StretchComplex(m_type, bGrow);
-				for (int iRow = 0; iRow < GetRows(); iRow++)
-				for (int iCol = 0; iCol < GetCols(); iCol++)
+				for (int iRow = 0, rows = GetRows(); iRow < rows; iRow++)
+				for (int iCol = 0, cols = GetCols(); iCol < cols; iCol++)
 				{
 					CompElement* p = Get(iRow,iCol);
 					p->SetPinIndex( ( iRow == 0 ) ? iCol :
@@ -202,8 +202,8 @@ public:
 		assert( CanStretchWidth(bGrow) );	// Sanity check.  We should have already checked that we can stretch the width
 
 		StretchWidthIC(bGrow);
-		for (int iRow = 0; iRow < GetRows(); iRow++)
-		for (int iCol = 0; iCol < GetCols(); iCol++)
+		for (int iRow = 0, rows = GetRows(); iRow < rows; iRow++)
+		for (int iCol = 0, cols = GetCols(); iCol < cols; iCol++)
 		{
 			CompElement* p = Get(iRow,iCol);
 			p->SetPinIndex( ( iRow == 0 ) ? 2*GetCols()-1-iCol :

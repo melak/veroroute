@@ -39,11 +39,7 @@ public:
 	CompManager& operator=(const CompManager& o)
 	{
 		Clear();
-		for (const auto& mapObj : o.m_mapIdToComp)
-		{
-			const Component& comp = mapObj.second;
-			m_mapIdToComp[ comp.GetId() ] = comp;
-		}
+		for (const auto& mapObj : o.m_mapIdToComp) m_mapIdToComp[ mapObj.second.GetId() ] = mapObj.second;
 		m_trax = o.m_trax;
 		// Don't copy m_mapWireToShift (it's just a helper)
 		return *this;
@@ -117,13 +113,8 @@ public:
 	Rect GetBounding() const
 	{
 		Rect bounding;
-		for (const auto& mapObj : m_mapIdToComp)
-		{
-			const Component& comp = mapObj.second;
-			bounding |= comp.GetFootprintRect();
-		}
-		if ( m_trax.GetSize() > 0 )	// If have a trax pattern
-			bounding |= m_trax.GetFootprintRect();
+		for (const auto& mapObj : m_mapIdToComp) bounding |= mapObj.second.GetFootprintRect();
+		if ( m_trax.GetSize() > 0 ) bounding |= m_trax.GetFootprintRect();	// If have a trax pattern
 		return bounding;
 	}
 	void CalculateWireShifts()
@@ -283,11 +274,7 @@ public:
 	{
 		const unsigned int numComps = static_cast<unsigned int>( m_mapIdToComp.size() );
 		outStream.Save(numComps);
-		for (auto& mapObj : m_mapIdToComp)
-		{
-			Component& comp = mapObj.second;
-			comp.Save(outStream);
-		}
+		for (auto& mapObj : m_mapIdToComp) mapObj.second.Save(outStream);
 		m_trax.Save(outStream);	// Added in VRT_VERSION_11
 	}
 	Component&	GetTrax()	{ return m_trax; }

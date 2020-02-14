@@ -77,8 +77,7 @@ public:
 	}
 	void MoveRect(const int& iTextId, const int& deltaRow, const int& deltaCol)
 	{
-		auto& rect = GetTextRectById(iTextId);
-		rect.Move(deltaRow, deltaCol);
+		GetTextRectById(iTextId).Move(deltaRow, deltaCol);
 	}
 	void UpdateRect(const int& iTextId, const int& row, const int& col)
 	{
@@ -88,11 +87,7 @@ public:
 	}
 	void MoveAll(int iDown, int iRight)
 	{
-		for (auto& mapObj : m_mapIdtoText)
-		{
-			TextRect& rect = mapObj.second;
-			rect.Move(iDown, iRight);
-		}
+		for (auto& mapObj : m_mapIdtoText) mapObj.second.Move(iDown, iRight);
 	}
 	TextRect& GetTextRectById(const int& textId)
 	{
@@ -111,29 +106,17 @@ public:
 	Rect GetBounding() const
 	{
 		Rect bounding;
-		for (const auto& mapObj : m_mapIdtoText)
-		{
-			const TextRect& rect = mapObj.second;
-			bounding |= rect;
-		}
+		for (const auto& mapObj : m_mapIdtoText) bounding |= mapObj.second;
 		return bounding;
 	}
 	// Merge interface functions
 	virtual void UpdateMergeOffsets(MergeOffsets& o) override
 	{
-		for (auto& mapObj : m_mapIdtoText)
-		{
-			TextRect& rect = mapObj.second;
-			rect.UpdateMergeOffsets(o);
-		}
+		for (auto& mapObj : m_mapIdtoText) mapObj.second.UpdateMergeOffsets(o);
 	}
 	virtual void ApplyMergeOffsets(const MergeOffsets& o) override
 	{
-		for (auto& mapObj : m_mapIdtoText)
-		{
-			TextRect& rect = mapObj.second;
-			rect.ApplyMergeOffsets(o);
-		}
+		for (auto& mapObj : m_mapIdtoText) mapObj.second.ApplyMergeOffsets(o);
 	}
 	void Merge(const TextManager& o)
 	{
@@ -142,9 +125,8 @@ public:
 			iMaxId = std::max(iMaxId, (int) mapObj.first);
 		for (const auto& mapObj : o.m_mapIdtoText)
 		{
-			const TextRect& rect = mapObj.second;
 			iMaxId++;
-			m_mapIdtoText[ iMaxId ] = rect;
+			m_mapIdtoText[ iMaxId ] = mapObj.second;
 		}
 	}
 	// Persist interface functions

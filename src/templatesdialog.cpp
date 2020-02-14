@@ -69,7 +69,7 @@ void TemplatesDialog::Update()
 		pTableWidget->clear();
 		pTableWidget->setRowCount(numRows);
 		pTableWidget->setColumnCount(tableHeader.size());
-		for (int i = 0; i < tableHeader.size(); i++)
+		for (int i = 0, iSize = tableHeader.size(); i < iSize; i++)
 		{
 			int iWidth(0);
 			switch( i )
@@ -230,8 +230,7 @@ void TemplatesDialog::SaveToUserVrt()
 
 			const bool bGeneric = false;
 			TemplateManager& mgr = m_pMainWindow->GetTemplateManager();
-			const size_t iSize = mgr.GetSize(bGeneric);
-			for (size_t i = 0; i < iSize; i++)
+			for (size_t i = 0, iSize = mgr.GetSize(bGeneric); i < iSize; i++)
 			{
 				const Component& comp = mgr.GetNth(bGeneric,i);
 				tmp.AddComponent(nullptr, comp, false);

@@ -201,8 +201,7 @@ bool Board::SetNodeIdByUser(const int& row, const int& col, const int& nodeId, c
 			const size_t	pinIndex	= p->GetPinIndex();
 			const int&		compId		= p->GetCompId();
 			Component&		comp		= m_compMgr.GetComponentById(compId);
-			assert( comp.GetType() != COMP::WIRE );	// Sanity check
-			assert( bPaintPins );	// Sanity check
+			assert( bPaintPins && comp.GetType() != COMP::WIRE );	// Sanity check
 
 			// Need to do (RemoveComp/ SetNodeId/ AddComp) to ensure m_nodeInfoMgr is updated OK
 			m_nodeInfoMgr.RemoveComp(comp);
@@ -217,8 +216,8 @@ bool Board::SetNodeIdByUser(const int& row, const int& col, const int& nodeId, c
 
 void Board::FloodNodeId(const int& nodeId)
 {
-	for (int row = 0; row < GetRows(); row++)
-	for (int col = 0; col < GetCols(); col++)
+	for (int row = 0, rows = GetRows(); row < rows; row++)
+	for (int col = 0, cols = GetCols(); col < cols; col++)
 	{
 		Element* p = Get(row, col);
 		if ( p->GetMH() == BAD_MH) continue;
@@ -314,14 +313,13 @@ void Board::AutoFillVero()
 
 void Board::CalcSolder()	// Work out locations of solder blobs to join veroboard tracks together
 {
-	const int iSize = GetSize();
-	for (int i = 0; i < iSize; i++)
+	for (int i = 0, iSize = GetSize(); i < iSize; i++)
 	{
 		Element* p = GetAt(i);
 		p->SetSolderR(false);	// Clear solder
 	}
 	const bool& bVertical = GetVerticalStrips();	// Strip direction
-	for (size_t n = 0; n < m_adjInfoMgr.GetSize(); n++)
+	for (size_t n = 0, N = m_adjInfoMgr.GetSize(); n < N; n++)
 	{
 		const int& nodeId = m_adjInfoMgr.GetAt(n)->GetNodeId();
 		if ( nodeId == BAD_NODEID ) continue;	// Want valid nodeIds
