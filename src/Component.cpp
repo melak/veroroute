@@ -327,6 +327,8 @@ void Component::SetDefaultLabelOffsets()
 	switch( GetType() )
 	{
 //		case COMP::PAD:					m_iLabelOffsetRow = 14;	return;
+		case COMP::LED:					m_iLabelOffsetRow = 8;	return;
+		case COMP::CRYSTAL:
 		case COMP::CAP_ELECTRO_200:
 		case COMP::CAP_ELECTRO_200_NP:	m_iLabelOffsetRow = 10;	return;
 		case COMP::CAP_ELECTRO_250:

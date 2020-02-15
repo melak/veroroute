@@ -355,6 +355,8 @@ public:
 	const int&			GetMASK_PERCENT() const		{ return m_MASK_PERCENT; }
 	const int&			GetSILK_PERCENT() const		{ return m_SILK_PERCENT; }
 	const int&			GetEDGE_PERCENT() const		{ return m_EDGE_PERCENT; }
+	int					GetVIAPAD_PERCENT() const	{ return 50; }
+	int					GetVIAHOLE_PERCENT() const	{ return 25; }
 	const int&			GetRenderQuality() const	{ return m_iRenderQuality; }
 	const int&			GetSaturation() const		{ return m_iSaturation; }
 	const int&			GetFillSaturation() const	{ return m_iFillSaturation; }

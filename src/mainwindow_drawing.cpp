@@ -98,21 +98,12 @@ void MainWindow::PaintPad(const GuiControl& guiCtrl, QPainter& painter, const QC
 {
 	if ( m_bWriteGerber )
 	{
-		//auto& osT = m_gWriter.GetStream(GFILE::GTL);	// Top    copper layer
-		auto& osB = m_gWriter.GetStream(GFILE::GBL);	// Bottom copper layer
-		const GPEN ePen = bGap ? GPEN::PAD_GAP : GPEN::PAD;
-		//osT.AddPad(ePen, pC);
-		osB.AddPad(ePen, pC);
-
+		m_gWriter.GetStream(GFILE::GTL).AddPad(bGap ? GPEN::PAD_GAP : GPEN::PAD, pC); // Top    copper layer
+		m_gWriter.GetStream(GFILE::GBL).AddPad(bGap ? GPEN::PAD_GAP : GPEN::PAD, pC); // Bottom copper layer
 		if ( !bGap )
 		{
-			//auto& osT = m_gWriter.GetStream(GFILE::GTS);	// Top    solder mask layer
-			auto& osB = m_gWriter.GetStream(GFILE::GBS);	// Bottom solder mask layer
-			//osT.AddPad(GPEN::PAD_MASK, pC);
-			osB.AddPad(GPEN::PAD_MASK, pC);
-
-			auto& osDrill = m_gWriter.GetStream(GFILE::DRL);	// Drill hole layer
-			osDrill.Drill(pC);
+			m_gWriter.GetStream(GFILE::GBS).AddPad(GPEN::PAD_MASK, pC);	// Bottom solder mask layer
+			m_gWriter.GetStream(GFILE::DRL).AddPadHole(GPEN::PAD_HOLE, pC);	// Drill file	//TODOALEX Do VIA_HOLE for wires in new mode
 		}
 	}
 	else
@@ -264,12 +255,9 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 	{
 		if ( m_bWriteGerber )
 		{
-			//auto& osT = m_gWriter.GetStream(GFILE::GTL);	// Top    copper layer
-			auto& osB = m_gWriter.GetStream(GFILE::GBL);	// Bottom copper layer
-			const GPEN ePen = bGap ? GPEN::PAD_GAP : GPEN::PAD;
 			assert(polygon.size() == 1);
-			//osT.AddTrack(ePen, polygon);	// Polygon has a single point
-			osB.AddTrack(ePen, polygon);	// Polygon has a single point
+			m_gWriter.GetStream(GFILE::GTL).AddTrack(bGap ? GPEN::PAD_GAP : GPEN::PAD, polygon);	// Top    copper layer
+			m_gWriter.GetStream(GFILE::GBL).AddTrack(bGap ? GPEN::PAD_GAP : GPEN::PAD, polygon);	// Bottom copper layer
 		}
 		else
 		{
@@ -282,21 +270,14 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 	{
 		if ( m_bWriteGerber )
 		{
-			//auto& osT = m_gWriter.GetStream(GFILE::GTL);	// Top    copper layer
 			auto& osB = m_gWriter.GetStream(GFILE::GBL);	// Bottom copper layer
 			const GPEN ePen		= bGap ? GPEN::TRACK_GAP : GPEN::TRACK;
 			const GPEN ePenHV	= bGap ? GPEN::PAD_GAP   : GPEN::PAD;
 
 			if ( !bCurvedTracks && padWidth > trackWidth )
-			{
-				//osT.AddVariTrack(ePenHV, ePen, polygon);
 				osB.AddVariTrack(ePenHV, ePen, polygon);
-			}
 			else
-			{
-				//osT.AddTrack(ePen, polygon);
 				osB.AddTrack(ePen, polygon);
-			}
 		}
 		else
 		{
@@ -316,12 +297,8 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 	{
 		if ( m_bWriteGerber )
 		{
-			//auto& osT = m_gWriter.GetStream(GFILE::GTL);	// Top    copper layer
 			auto& osB = m_gWriter.GetStream(GFILE::GBL);	// Bottom copper layer
-			const GPEN ePen		= bGap ? GPEN::TRACK_GAP : GPEN::TRACK;
-			//osT.AddLoop(ePen, polygon);				// Closed polygon outline
-			osB.AddLoop(ePen, polygon);				// Closed polygon outline
-			//if ( !bGap ) osT.AddRegion(polygon);	// Only non-Gap polygon needs filling
+			osB.AddLoop(bGap ? GPEN::TRACK_GAP : GPEN::TRACK, polygon);		// Closed polygon outline
 			if ( !bGap ) osB.AddRegion(polygon);	// Only non-Gap polygon needs filling
 		}
 		else
@@ -337,7 +314,6 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 	{
 		if ( m_bWriteGerber )
 		{
-			//auto& osT = m_gWriter.GetStream(GFILE::GTL);	// Top    copper layer
 			auto& osB = m_gWriter.GetStream(GFILE::GBL);	// Bottom copper layer
 			const GPEN ePen = bGap ? GPEN::PAD_GAP : GPEN::PAD;
 			for (int iNbr = 0; iNbr < 8; iNbr += 2)	// Loop non-diagonal perimeter points
@@ -351,7 +327,6 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 					{
 						polygon.clear();
 						polygon << p[iNbr] << p[iNbrOpp];
-						//osT.AddTrack(ePen, polygon);	// Draw track across
 						osB.AddTrack(ePen, polygon);	// Draw track across
 					}
 				}
@@ -359,7 +334,6 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 				{
 					polygon.clear();
 					polygon << pC << p[iNbr];
-					//osT.AddTrack(ePen, polygon);	// Draw track from centre to perimeter point
 					osB.AddTrack(ePen, polygon);	// Draw track from centre to perimeter point
 				}
 			}
@@ -609,7 +583,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		assert( bPCB );
 		if ( board.GetFlipH() || board.GetFlipV() ) return;		// No mirrored Gerber
 
-		const bool bOK = m_gWriter.Open(m_gerberFileName.toStdString().c_str(), m_board, m_bLongGerber);
+		const bool bOK = m_gWriter.Open(m_gerberFileName.toStdString().c_str(), m_board, m_bTwoLayers);
 		if ( !bOK ) return;
 
 		auto& os = m_gWriter.GetStream(GFILE::GTO);	// Top silk layer
@@ -666,7 +640,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		gndPoly << QPointF(X,     Y + B);	edge << QPointF(X	  - dEdge, Y + B + dEdge);
 		if ( bGroundFill )
 		{
-			//m_gWriter.GetStream(GFILE::GTL).DrawRegion(gndPoly);	// Top    copper layer
+			m_gWriter.GetStream(GFILE::GTL).DrawRegion(gndPoly);	// Top    copper layer
 			m_gWriter.GetStream(GFILE::GBL).DrawRegion(gndPoly);	// Bottom copper layer
 		}
 	}
@@ -728,12 +702,13 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			if ( m_bWriteGerber )
 			{
 				const bool bClear = ( bGroundFill && iLoop == 0 );	// For the gaps
-				//m_gWriter.GetStream(GFILE::GTS).ClearBuffers();	// Top solder mask layer
-				//m_gWriter.GetStream(GFILE::GTL).ClearBuffers();	// Top copper layer
-				//m_gWriter.GetStream(GFILE::GTL).SetPolarity(bClear ? GPOLARITY::CLEAR : GPOLARITY::DARK);
+				m_gWriter.GetStream(GFILE::GTS).ClearBuffers();	// Top solder mask layer
+				m_gWriter.GetStream(GFILE::GTL).ClearBuffers();	// Top copper layer
+				m_gWriter.GetStream(GFILE::GTL).SetPolarity(bClear ? GPOLARITY::CLEAR : GPOLARITY::DARK);
 				m_gWriter.GetStream(GFILE::GBS).ClearBuffers();	// Bottom solder mask layer
 				m_gWriter.GetStream(GFILE::GBL).ClearBuffers();	// Bottom copper layer
 				m_gWriter.GetStream(GFILE::GBL).SetPolarity(bClear ? GPOLARITY::CLEAR : GPOLARITY::DARK);
+				m_gWriter.GetStream(GFILE::DRL).ClearBuffers();	// Drill file
 			}
 
 			for (int j = minRow; j <= maxRow; j++)
@@ -861,12 +836,34 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					else if ( bPin && bDrawGrey ) PaintPad(board, painter, padGrey, pCentre);	// Draw grey pad
 				}
 			}
+			if ( m_bWriteGerber && m_bTwoLayers )
+			{
+				compMgr.CalculateWireShifts();	//TODO Stacked wires can't be mapped to top layer tracks and have to be left alone
+
+				std::vector<const Component*> sortedComps;
+				compMgr.GetSortedComps(sortedComps);	// Sorted so "plug" components get rendered last
+				for (const auto& pComp : sortedComps)	// Iterate sorted components
+				{
+					const Component& comp = *pComp;
+					if ( comp.GetType() != COMP::WIRE || !comp.GetIsPlaced() ) continue;	// Only want placed wires
+					if ( compMgr.GetWireShift( &comp ) != 0 ) continue;	//TODO Probably not a good enough check
+
+					QPolygonF polygonF; polygonF.clear();
+					GetXY(board, comp.GetRow(), comp.GetCol(), X, Y);
+					polygonF << QPointF(X, Y);
+					GetXY(board, comp.GetRow() + comp.GetCompRows() - 1, comp.GetCol() + comp.GetCompCols() - 1, X, Y);
+					polygonF << QPointF(X, Y);
+
+					m_gWriter.GetStream(GFILE::GTL).AddTrack(iLoop == 0 ? GPEN::TRACK_GAP : GPEN::TRACK, polygonF);
+				}
+			}
 			if ( m_bWriteGerber )
 			{
-				//m_gWriter.GetStream(GFILE::GTS).DrawBuffers();	// Bottom solder mask layer
-				//m_gWriter.GetStream(GFILE::GTL).DrawBuffers();	// Bottom copper layer
+				m_gWriter.GetStream(GFILE::GTS).DrawBuffers();	// Top solder mask layer
+				m_gWriter.GetStream(GFILE::GTL).DrawBuffers();	// Top copper layer
 				m_gWriter.GetStream(GFILE::GBS).DrawBuffers();	// Bottom solder mask layer
 				m_gWriter.GetStream(GFILE::GBL).DrawBuffers();	// Bottom copper layer
+				m_gWriter.GetStream(GFILE::DRL).DrawBuffers();	// Drill file
 			}
 		}	// Next iLoop
 		painter.restore();
@@ -976,6 +973,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			const bool		 bVia			= compType == COMP::VIA;
 			const bool		 bWire			= compType == COMP::WIRE;
 			if ( m_bWriteGerber && ( bVia || !comp.GetIsPlaced() ) ) continue;	//TODO Don't show floating components or vias on silkscreen
+			if ( m_bWriteGerber && m_bTwoLayers && bWire && compMgr.GetWireShift(&comp) == 0 ) continue;	//TODO Probably not a good enough check
 			const bool		 bPinLabels		= (comp.GetPinFlags() & PIN_LABELS) > 0;
 			const bool		 bRectPins		= (comp.GetPinFlags() & PIN_RECT)   > 0;
 			const bool		 bHighlightComp	= board.GetGroupMgr().GetIsUserComp( comp.GetId() );

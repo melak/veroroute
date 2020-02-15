@@ -85,8 +85,8 @@ void RenderingDialog::UpdateControls()
 	ui->maskWidth->setDisabled(		bCompEdit || bVero || !bPCB );
 	ui->silkWidth->setDisabled(		bCompEdit || bVero || !bPCB );
 	ui->edgeWidth->setDisabled(		bCompEdit || bVero || !bPCB );
-	ui->holeNPTH->setDisabled(		true);//bCompEdit || bVero || !bPCB );	//TODO Enable once 2 layer Gerber supported
-	ui->holePTH->setDisabled(		true);//bCompEdit || bVero || !bPCB );	//TODO Enable once 2 layer Gerber supported
+	ui->holeNPTH->setDisabled(		bCompEdit || bVero || !bPCB );	//TODO Enable once 2 layer Gerber supported
+	ui->holePTH->setDisabled(		bCompEdit || bVero || !bPCB );	//TODO Enable once 2 layer Gerber supported
 
 	// ... and corresponding labels
 	ui->label_pad->setDisabled(		bCompEdit || bNoTrackOptions || bVero );
@@ -96,7 +96,7 @@ void RenderingDialog::UpdateControls()
 	ui->label_mask->setDisabled(	bCompEdit || bVero || !bPCB );
 	ui->label_silk->setDisabled(	bCompEdit || bVero || !bPCB );
 	ui->label_edge->setDisabled(	bCompEdit || bVero || !bPCB );
-	ui->label_holetype->setDisabled(true);//bCompEdit || bVero || !bPCB );	//TODO Enable once 2 layer Gerber supported
+	ui->label_holetype->setDisabled(bCompEdit || bVero || !bPCB );	//TODO Enable once 2 layer Gerber supported
 
 	ui->padWidth->setValue(		board.GetPAD_PERCENT()		);
 	ui->trackWidth->setValue(	board.GetTRACK_PERCENT()	);

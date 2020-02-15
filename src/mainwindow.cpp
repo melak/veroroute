@@ -113,6 +113,7 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	QObject::connect(ui->actionWrite_PDF,				SIGNAL(triggered()), this, SLOT(WritePDF()));
 	QObject::connect(ui->actionWrite_PNG,				SIGNAL(triggered()), this, SLOT(WritePNG()));
 	QObject::connect(ui->actionWrite_Gerber,			SIGNAL(triggered()), this, SLOT(WriteGerber()));
+	QObject::connect(ui->actionWrite_Gerber2,			SIGNAL(triggered()), this, SLOT(WriteGerber2()));
 	QObject::connect(ui->actionQuit,					SIGNAL(triggered()), this, SLOT(Quit()));
 	QObject::connect(ui->actionZoom_In,					SIGNAL(triggered()), this, SLOT(ZoomIn()));
 	QObject::connect(ui->actionZoom_Out,				SIGNAL(triggered()), this, SLOT(ZoomOut()));
@@ -300,7 +301,7 @@ void MainWindow::CheckFolders()
 void MainWindow::ResetView(bool bTutorial)
 {
 	m_bMouseClick	= m_bLeftClick	= m_bRightClick = m_bCtrlKeyDown  = m_bShiftKeyDown	=false;
-	m_bPaintPins	= m_bPaintBoard	= m_bPaintFlood = m_bDefiningRect = m_bResizingText	= m_bWritePDF = m_bWriteGerber = false;
+	m_bPaintPins	= m_bPaintBoard	= m_bPaintFlood = m_bDefiningRect = m_bResizingText	= m_bWritePDF = m_bWriteGerber = m_bTwoLayers = false;
 	m_XGRIDOFFSET	= m_YGRIDOFFSET	= 0;
 
 	// Try to set m_gridRow, m_gridCol to match the current NodeId in the board
@@ -625,9 +626,9 @@ void MainWindow::WritePDF()
 	}
 }
 
-void MainWindow::WriteGerber(bool bLongGerber)
+void MainWindow::WriteGerber(const bool& bTwoLayers)
 {
-	m_bLongGerber = bLongGerber;
+	m_bTwoLayers = bTwoLayers;
 	m_gerberFileName = GetSaveFileName(tr("Choose a Gerber File Prefix"), tr("All Files (*)"), QString(""));
 	if ( !m_gerberFileName.isEmpty() )
 	{
@@ -647,9 +648,12 @@ void MainWindow::WriteGerber(bool bLongGerber)
 		QDesktopServices::openUrl(m_gerberFileName + ".GKO");
 		QDesktopServices::openUrl(m_gerberFileName + ".GBL");
 		QDesktopServices::openUrl(m_gerberFileName + ".GBS");
-		//QDesktopServices::openUrl(m_gerberFileName + ".GBO");
-		//QDesktopServices::openUrl(m_gerberFileName + ".GTL");
-		//QDesktopServices::openUrl(m_gerberFileName + ".GTS");
+//		QDesktopServices::openUrl(m_gerberFileName + ".GBO");
+		if ( m_bTwoLayers )
+		{
+			QDesktopServices::openUrl(m_gerberFileName + ".GTL");
+			QDesktopServices::openUrl(m_gerberFileName + ".GTS");
+		}
 		QDesktopServices::openUrl(m_gerberFileName + ".GTO");
 		QDesktopServices::openUrl(m_gerberFileName + ".DRL");
 	}
@@ -1525,6 +1529,7 @@ void MainWindow::UpdateControls()
 	const bool		bCurved			= !m_board.GetVeroTracks() &&  m_board.GetCurvedTracks();
 
 	ui->actionWrite_Gerber->setEnabled(bPCB && !m_board.GetMirrored() && !m_board.GetVeroTracks());
+	ui->actionWrite_Gerber2->setEnabled(bPCB && !m_board.GetMirrored() && !m_board.GetVeroTracks());
 	ui->actionMerge->setEnabled(!bPCB && !bCompEdit);
 	ui->actionWrite_PDF->setEnabled(!bPCB && !bCompEdit);
 	ui->menuAdd->setEnabled( !bCompEdit && m_board.GetCompMode() != COMPSMODE::OFF && !m_board.GetMirrored() );

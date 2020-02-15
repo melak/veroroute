@@ -74,6 +74,7 @@
     <addaction name="actionWrite_PDF"/>
     <addaction name="actionWrite_PNG"/>
     <addaction name="actionWrite_Gerber"/>
+    <addaction name="actionWrite_Gerber2"/>
     <addaction name="separator"/>
     <addaction name="actionQuit"/>
    </widget>
@@ -1132,12 +1133,17 @@
   </action>
   <action name="actionWrite_Gerber">
    <property name="text">
-    <string>Export as Gerber (Beta)</string>
+    <string>Export as Gerber (1-layer)</string>
    </property>
   </action>
   <action name="actionWrite_GerberLong">
    <property name="text">
     <string>Long Filenames (*.gbr, *.xln)</string>
+   </property>
+  </action>
+  <action name="actionWrite_Gerber2">
+   <property name="text">
+    <string>Export as Gerber (2-Layer)</string>
    </property>
   </action>
  </widget>

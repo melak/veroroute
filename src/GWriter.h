@@ -40,14 +40,17 @@ public:
 	void Initialise(const GFILE& eType, const Board& board, const QString& UTC);
 	void WriteHeader(const QString& UTC);
 	void MakeApertures();
-	void Drill(const QPointF& pF);
+	void Drill(const QPoint& pF);
 	void WriteDrillValue(const int& iMil);
 	void SetPolarity(const GPOLARITY& ePolarity);
 	void AddPad(const GPEN& ePen, const QPointF& pF);		// Add to m_pads buffer
+	void AddViaPad(const GPEN& ePen, const QPointF& pF);	// Add to m_viapads buffer
 	void AddTrack(const GPEN& ePen, const QPolygonF& pF);	// Add to m_tracks buffer
 	void AddVariTrack(const GPEN& ePenHV, const GPEN& ePen, const QPolygonF& pF);	// Add to m_tracks buffer
 	void AddLoop(const GPEN& ePen, const QPolygonF& pF);	// Add to m_loops buffer
 	void AddRegion(const QPolygonF& pF);					// Add to m_regions buffer
+	void AddPadHole(const GPEN& ePen, const QPointF& pF);	// Add to m_padholes buffer
+	void AddViaHole(const GPEN& ePen, const QPointF& pF);	// Add to m_viaholes buffer
 	void ClearBuffers();
 	void DrawBuffers();
 	// Methods to draw things immediately
@@ -78,10 +81,13 @@ private:
 	int				m_iLastX	= INT_MAX;		// Last X used
 	int				m_iLastY	= INT_MAX;		// Last Y used
 	// Buffers for optimising data before writing to file
-	CurveList		m_pads;		// The pads and nothing else.
+	CurveList		m_pads;		// Pads
+	CurveList		m_viapads;	// Via pads
 	CurveList		m_tracks;	// Tracks (drawn with non-zero width pen).
 	CurveList		m_loops;	// Loops (drawn with non-zero width pen).
 	CurveList		m_regions;	// Drawn with zero width pen. For filling gaps between tracks.
+	CurveList		m_padholes;	// Pad holes
+	CurveList		m_viaholes;	// Via holes
 };
 
 // Wrapper for handling a set of Gerber files
@@ -90,7 +96,7 @@ class GWriter
 public:
 	GWriter()	{}
 	~GWriter()	{ Close(); }
-	bool		Open(const char* fileName, const Board& board, const bool& bLongGerber);
+	bool		Open(const char* fileName, const Board& board, const bool& bTwoLayers);
 	void		Close();
 	GStream&	GetStream(const GFILE& eType);
 private:

@@ -24,7 +24,7 @@
 class QPoint;
 class QPolygon;
 
-enum class GPEN {UNKNOWN = 0, MIL10, PAD, TRACK, PAD_GAP, TRACK_GAP, VIA_PAD, PAD_MASK, SILK};
+enum class GPEN {UNKNOWN = 0, MIL10, PAD, TRACK, PAD_GAP, TRACK_GAP, VIA_PAD, PAD_MASK, SILK, PAD_HOLE, VIA_HOLE};
 
 // A class describing a curve as a set of points, with functionality for combining curves.
 // Used for processing data before writing to Gerber file.
