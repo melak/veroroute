@@ -29,7 +29,6 @@ RenderingDialog::RenderingDialog(MainWindow* parent)
 	ui->setupUi(this);
 
 	ui->antiAliasOn->setChecked(true);
-	ui->holePTH->setChecked(true);
 	QObject::connect(ui->antiAliasOff,	SIGNAL(toggled(bool)),		m_pMainWindow, SLOT(SetAntialiasOff(bool)));
 	QObject::connect(ui->antiAliasOn,	SIGNAL(toggled(bool)),		m_pMainWindow, SLOT(SetAntialiasOn(bool)));
 	QObject::connect(ui->antiAliasHigh,	SIGNAL(toggled(bool)),		m_pMainWindow, SLOT(SetAntialiasHigh(bool)));
@@ -45,8 +44,6 @@ RenderingDialog::RenderingDialog(MainWindow* parent)
 	QObject::connect(ui->maskWidth,		SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetMaskWidth(int)));
 	QObject::connect(ui->silkWidth,		SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetSilkWidth(int)));
 	QObject::connect(ui->edgeWidth,		SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetEdgeWidth(int)));
-	QObject::connect(ui->holeNPTH,		SIGNAL(toggled(bool)),		m_pMainWindow, SLOT(SetNPTH(bool)));
-	QObject::connect(ui->holePTH,		SIGNAL(toggled(bool)),		m_pMainWindow, SLOT(SetPTH(bool)));
 }
 
 RenderingDialog::~RenderingDialog()
@@ -85,8 +82,6 @@ void RenderingDialog::UpdateControls()
 	ui->maskWidth->setDisabled(		bCompEdit || bVero || !bPCB );
 	ui->silkWidth->setDisabled(		bCompEdit || bVero || !bPCB );
 	ui->edgeWidth->setDisabled(		bCompEdit || bVero || !bPCB );
-	ui->holeNPTH->setDisabled(		bCompEdit || bVero || !bPCB );	//TODO Enable once 2 layer Gerber supported
-	ui->holePTH->setDisabled(		bCompEdit || bVero || !bPCB );	//TODO Enable once 2 layer Gerber supported
 
 	// ... and corresponding labels
 	ui->label_pad->setDisabled(		bCompEdit || bNoTrackOptions || bVero );
@@ -96,7 +91,6 @@ void RenderingDialog::UpdateControls()
 	ui->label_mask->setDisabled(	bCompEdit || bVero || !bPCB );
 	ui->label_silk->setDisabled(	bCompEdit || bVero || !bPCB );
 	ui->label_edge->setDisabled(	bCompEdit || bVero || !bPCB );
-	ui->label_holetype->setDisabled(bCompEdit || bVero || !bPCB );	//TODO Enable once 2 layer Gerber supported
 
 	ui->padWidth->setValue(		board.GetPAD_PERCENT()		);
 	ui->trackWidth->setValue(	board.GetTRACK_PERCENT()	);
@@ -105,12 +99,7 @@ void RenderingDialog::UpdateControls()
 	ui->maskWidth->setValue(	board.GetMASK_PERCENT()		);
 	ui->silkWidth->setValue(	board.GetSILK_PERCENT()		);
 	ui->edgeWidth->setValue(	board.GetEDGE_PERCENT()		);
-	switch( board.GetHoleType() )
-	{
-		case HOLETYPE::NPTH:	ui->holeNPTH->setChecked(true);		break;
-		case HOLETYPE::PTH:		ui->holePTH->setChecked(true);		break;
-		default:				ui->holeNPTH->setChecked(true);		break;
-	}
+
 	const int minTrackSep = board.GetMIN_TRACK_SEPARATION_PERCENT();
 	const std::string str = "Guaranteed minimum track separation = " + std::to_string(minTrackSep) + " mil";
 	ui->label_info->setText( QString::fromStdString(str) );

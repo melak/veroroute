@@ -288,8 +288,6 @@ public slots:
 	void SetAntialiasOff(bool b);
 	void SetAntialiasOn(bool b);
 	void SetAntialiasHigh(bool b);
-	void SetPTH(bool b);
-	void SetNPTH(bool b);
 
 	// Wire Options
 	void SetWireShare(bool b);

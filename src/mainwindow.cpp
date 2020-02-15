@@ -629,6 +629,8 @@ void MainWindow::WritePDF()
 void MainWindow::WriteGerber(const bool& bTwoLayers)
 {
 	m_bTwoLayers = bTwoLayers;
+	m_board.SetHoleType(m_bTwoLayers ? HOLETYPE::PTH : HOLETYPE::NPTH);
+
 	m_gerberFileName = GetSaveFileName(tr("Choose a Gerber File Prefix"), tr("All Files (*)"), QString(""));
 	if ( !m_gerberFileName.isEmpty() )
 	{
@@ -1298,8 +1300,6 @@ void MainWindow::SetShowTarget(bool b)		{ if ( m_board.SetShowTarget(b) )		  { U
 void MainWindow::SetAntialiasOff(bool b)	{ if ( b && m_board.SetRenderQuality(0) ) { UpdateHistory("Anti-alias off");  DestroyPixmapCache(); RepaintSkipRouting(); } }
 void MainWindow::SetAntialiasOn(bool b)		{ if ( b && m_board.SetRenderQuality(1) ) { UpdateHistory("Anti-alias on");   DestroyPixmapCache(); RepaintSkipRouting(); } }
 void MainWindow::SetAntialiasHigh(bool b)	{ if ( b && m_board.SetRenderQuality(2) ) { UpdateHistory("Anti-alias high"); DestroyPixmapCache(); RepaintSkipRouting(); } }
-void MainWindow::SetNPTH(bool b)			{ if ( b && m_board.SetHoleType(HOLETYPE::NPTH) ) { UpdateHistory("Non-Plated Through Holes"); } }
-void MainWindow::SetPTH(bool b)				{ if ( b && m_board.SetHoleType(HOLETYPE::PTH)  ) { UpdateHistory("Plated Through Holes"); } }
 
 // Wire dialog
 void MainWindow::SetWireShare(bool b)		{ if ( m_board.SetWireShare(b) )		  { UpdateHistory("Wire hole-sharing on/off");	RepaintSkipRouting(); } }
