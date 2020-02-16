@@ -26,7 +26,7 @@ class QPolygonF;
 class CBoard;
 class GStream;
 
-enum class	GPOLARITY	{DARK = 0, CLEAR};
+enum class	GPOLARITY	{UNKNOWN = 0, DARK, CLEAR};
 enum class	GFILE		{GKO = 0, GBL, GBS, GBO, GTL, GTS, GTO, DRL};
 const int	NUM_STREAMS	= 8;
 
@@ -77,6 +77,7 @@ private:
 	// Data
 	GFILE			m_eType		= GFILE::GBL;	// GKO, GBL, GBS, GTL, GTS, GTO
 	GPEN			m_ePen		= GPEN::UNKNOWN;
+	GPOLARITY		m_ePolarity	= GPOLARITY::UNKNOWN;
 	const Board*	m_pBoard	= nullptr;		// The board, so we can get dimensions and track sizes
 	int				m_iLastX	= INT_MAX;		// Last X used
 	int				m_iLastY	= INT_MAX;		// Last Y used

@@ -36,10 +36,9 @@ void GStream::Close()
 	if ( !is_open() ) return;
 	switch( m_eType )
 	{
-		case GFILE::DRL:	(*this) << "M30";		EndLine();	return close();	// End of program
-		case GFILE::GKO:	(*this) << "%LPD*%";	EndLine();	//TODO Not sure if this is really needed at the end
-		default:			(*this) << "M00";		EndLine();					// Program stop
-							(*this) << "M02";		EndLine();	return close();	// End of file
+		case GFILE::DRL:	(*this) << "M30";	EndLine();	return close();	// End of program
+		default:			(*this) << "M00";	EndLine();					// Program stop
+							(*this) << "M02";	EndLine();	return close();	// End of file
 	}
 }
 void GStream::Initialise(const GFILE& eType, const Board& board, const QString& UTC)
@@ -53,10 +52,7 @@ void GStream::Initialise(const GFILE& eType, const Board& board, const QString& 
 	WriteHeader(UTC);
 	MakeApertures();
 	LinearInterpolation();
-	if ( is_open() && m_eType != GFILE::DRL && m_eType != GFILE::GKO )	//TODO Not sure if this is really needed at the start
-	{
-		(*this) << "%LPD*%";	EndLine();
-	}
+	SetPolarity(GPOLARITY::DARK);
 }
 void GStream::WriteHeader(const QString& UTC)	// Write header for current stream
 {
@@ -120,38 +116,74 @@ void GStream::MakeApertures()	// Make "pens" for current stream
 {
 	if ( !is_open() ) return;
 	const int pad		= m_pBoard->GetPAD_PERCENT();
+	const int via		= m_pBoard->GetVIAPAD_PERCENT();
 	const int track		= m_pBoard->GetTRACK_PERCENT();
 	const int gap		= m_pBoard->GetGAP_PERCENT();
 	const int mask		= m_pBoard->GetMASK_PERCENT();
 	const int silk		= m_pBoard->GetSILK_PERCENT();
-	const int viapad	= m_pBoard->GetVIAPAD_PERCENT();
-	const int padgap	= pad   + 2 * gap;	// Gap  is the radius increase
-	const int trackgap	= track + 2 * gap;	// Gap  is the radius increase
-	const int padmask	= pad   + 2 * mask;	// Mask is the radius increase
+	const int padgap	= pad	+ 2 * gap;	// Gap  is the radius increase
+	const int viagap	= via	+ 2 * gap;	// Gap  is the radius increase
+	const int trackgap	= track	+ 2 * gap;	// Gap  is the radius increase
+	const int padmask	= pad	+ 2 * mask;	// Mask is the radius increase
+	const int viamask	= via	+ 2 * mask;	// Mask is the radius increase
 
 	switch( m_eType )
 	{
 		case GFILE::GKO:
-			(*this) << "%ADD10C," << MilToInch(10)		 << "*%" << std::endl;	// D10 is a circle with diameter of 10 mil
+			(*this) << "%ADD10C," << MilToInch(10)		 << "*%" << std::endl;	// D10 ==> GPEN::MIL10
 			break;
 		case GFILE::GBL:
 		case GFILE::GTL:
-			(*this) << "%ADD11C," << MilToInch(pad)		 << "*%" << std::endl;	// D11 is a circle with diameter of a pad
-			(*this) << "%ADD12C," << MilToInch(track)	 << "*%" << std::endl;	// D12 is a circle with diameter of a track
-			(*this) << "%ADD13C," << MilToInch(padgap)	 << "*%" << std::endl;	// D13 is a circle with diameter of a (pad + gap)
-			(*this) << "%ADD14C," << MilToInch(trackgap) << "*%" << std::endl;	// D14 is a circle with diameter of a (track + gap)
-			(*this) << "%ADD15C," << MilToInch(viapad)	 << "*%" << std::endl;	// D15 is a circle with diameter of a via-pad
+			(*this) << "%ADD11C," << MilToInch(pad)		 << "*%" << std::endl;	// D11 ==> GPEN::PAD
+			(*this) << "%ADD12C," << MilToInch(via)		 << "*%" << std::endl;	// D12 ==> GPEN::VIA
+			(*this) << "%ADD13C," << MilToInch(track)	 << "*%" << std::endl;	// D13 ==> GPEN::TRACK
+			(*this) << "%ADD14C," << MilToInch(padgap)	 << "*%" << std::endl;	// D14 ==> GPEN::PAD_GAP
+			(*this) << "%ADD15C," << MilToInch(viagap)	 << "*%" << std::endl;	// D15 ==> GPEN::VIA_GAP
+			(*this) << "%ADD16C," << MilToInch(trackgap) << "*%" << std::endl;	// D16 ==> GPEN::TRACK_GAP
 			break;
 		case GFILE::GBS:
 		case GFILE::GTS:
-			(*this) << "%ADD16C," << MilToInch(padmask)	 << "*%" << std::endl;	// D16 is a circle with diameter of a (pad + mask)
+			(*this) << "%ADD17C," << MilToInch(padmask)	 << "*%" << std::endl;	// D17 ==> GPEN::PAD_MASK
+			(*this) << "%ADD18C," << MilToInch(viamask)	 << "*%" << std::endl;	// D18 ==> GPEN::VIA_MASK
 			break;
 		case GFILE::GTO:
 		case GFILE::GBO:
-			(*this) << "%ADD17C," << MilToInch(silk)	 << "*%" << std::endl;	// D17 is a circle with diameter of the silk screen pen
+			(*this) << "%ADD19C," << MilToInch(silk)	 << "*%" << std::endl;	// D19 ==> GPEN::SILK
 			break;
 		case GFILE::DRL:
 			break;
+	}
+}
+void GStream::SetPen(const GPEN& ePen)
+{
+	if ( !is_open() || m_ePen == ePen || m_eType == GFILE::DRL ) return;
+	m_ePen = ePen;
+	switch( m_ePen )
+	{
+		case GPEN::UNKNOWN:		return;
+		case GPEN::MIL10:		(*this) << "D10"; EndLine(); return;
+		case GPEN::PAD:			(*this) << "D11"; EndLine(); return;
+		case GPEN::VIA:			(*this) << "D12"; EndLine(); return;
+		case GPEN::TRACK:		(*this) << "D13"; EndLine(); return;
+		case GPEN::PAD_GAP:		(*this) << "D14"; EndLine(); return;
+		case GPEN::VIA_GAP:		(*this) << "D15"; EndLine(); return;
+		case GPEN::TRACK_GAP:	(*this) << "D16"; EndLine(); return;
+		case GPEN::PAD_MASK:	(*this) << "D17"; EndLine(); return;
+		case GPEN::VIA_MASK:	(*this) << "D18"; EndLine(); return;
+		case GPEN::SILK:		(*this) << "D19"; EndLine(); return;
+		case GPEN::PAD_HOLE:	(*this) << "T01"; EndLine(); return;
+		case GPEN::VIA_HOLE:	(*this) << "T02"; EndLine(); return;
+	}
+}
+void GStream::SetPolarity(const GPOLARITY& ePolarity)
+{
+	if ( !is_open() || m_ePolarity == ePolarity || m_eType == GFILE::DRL ) return;
+	m_ePolarity = ePolarity;
+	switch( m_ePolarity )
+	{
+		case GPOLARITY::UNKNOWN:	return;
+		case GPOLARITY::DARK:		(*this) << "%LPD*%" << std::endl;	return;
+		case GPOLARITY::CLEAR:		(*this) << "%LPC*%" << std::endl;	return;
 	}
 }
 void GStream::Drill(const QPoint& p)
@@ -173,15 +205,6 @@ void GStream::WriteDrillValue(const int& iMil)
 	if ( iAbs <    100 ) (*this) << "0";
 	if ( iAbs <     10 ) (*this) << "0";
 	(*this) << iAbs;
-}
-void GStream::SetPolarity(const GPOLARITY& ePolarity)
-{
-	if ( !is_open() || m_eType == GFILE::DRL ) return;
-	switch( ePolarity )
-	{
-		case GPOLARITY::DARK:	(*this) << "%LPD*%" << std::endl;	return;
-		case GPOLARITY::CLEAR:	(*this) << "%LPC*%" << std::endl;	return;
-	}
 }
 void GStream::AddPad(const GPEN& ePen, const QPointF& pF)		// Add to m_pads buffer for later writing to file
 {
@@ -258,13 +281,13 @@ void GStream::ClearBuffers()
 void GStream::DrawBuffers()
 {
 	m_tracks.SpliceAll();	// Only tracks (not loops) are spliced
-	for (auto& o : m_regions  ) Region(*o);
-	for (auto& o : m_loops    ) OutLine(*o, true);	// true  ==> closed
-	for (auto& o : m_tracks   ) OutLine(*o, false);	// false ==> not closed
-	for (auto& o : m_pads     ) OutLine(*o, false);	// false ==> not closed
-	for (auto& o : m_viapads  ) OutLine(*o, false);	// false ==> not closed
-	for (auto& o : m_padholes ) OutLine(*o, false);	// false ==> not closed
-	for (auto& o : m_viaholes ) OutLine(*o, false);	// false ==> not closed
+	for (auto& o : m_regions)	Region(*o);
+	for (auto& o : m_loops)		OutLine(*o, true);	// true  ==> closed
+	for (auto& o : m_tracks)	OutLine(*o, false);	// false ==> not closed
+	for (auto& o : m_pads)		OutLine(*o, false);	// false ==> not closed
+	for (auto& o : m_viapads)	OutLine(*o, false);	// false ==> not closed
+	for (auto& o : m_padholes)	OutLine(*o, false);	// false ==> not closed
+	for (auto& o : m_viaholes)	OutLine(*o, false);	// false ==> not closed
 }
 void GStream::Region(const Curve& curve)	// A filled closed curve (with zero width pen)
 {
@@ -288,25 +311,6 @@ void GStream::OutLine(const Curve& curve, bool bForceClose)	// Outline of a curv
 	for (auto iterEnd = curve.end(); iter != iterEnd; ++iter)
 		Draw(*iter);	// Draw line to next point in curve
 	if ( bForceClose && front != curve.back() ) Draw( front );
-}
-void GStream::SetPen(const GPEN& ePen)
-{
-	if ( !is_open() || m_ePen == ePen ) return;
-	m_ePen = ePen;
-	switch( m_ePen )
-	{
-		case GPEN::UNKNOWN:		return;
-		case GPEN::MIL10:		(*this) << "D10"; EndLine(); return;
-		case GPEN::PAD:			(*this) << "D11"; EndLine(); return;
-		case GPEN::TRACK:		(*this) << "D12"; EndLine(); return;
-		case GPEN::PAD_GAP:		(*this) << "D13"; EndLine(); return;
-		case GPEN::TRACK_GAP:	(*this) << "D14"; EndLine(); return;
-		case GPEN::VIA_PAD:		(*this) << "D15"; EndLine(); return;
-		case GPEN::PAD_MASK:	(*this) << "D16"; EndLine(); return;
-		case GPEN::SILK:		(*this) << "D17"; EndLine(); return;
-		case GPEN::PAD_HOLE:	(*this) << "T01"; EndLine(); return;
-		case GPEN::VIA_HOLE:	(*this) << "T02"; EndLine(); return;
-	}
 }
 void GStream::Flash(const QPoint& p)
 {

@@ -655,7 +655,7 @@ void Board::WipeTracks()
 	}
 	else	// ... otherwise wipe all the points on the board. The floating trax component won't get wiped
 	{
-		for (int j = 0, jMax = GetRows(); j < jMax; j++)	for (int i = 0, iMax = GetCols(); i <= iMax; i++)	//TODOALEX Bug on <= ???
+		for (int j = 0, jMax = GetRows(); j < jMax; j++)	for (int i = 0, iMax = GetCols(); i < iMax; i++)
 		{
 			Element* p = Get(j, i);
 			assert( !p->GetHasPin() && !p->GetIsHole() && !p->GetHasComp() );	// Sanity check

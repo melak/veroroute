@@ -35,7 +35,7 @@ public:
 		m_current	= o.m_current;
 		m_bounding	= o.m_bounding;
 		m_list.clear();
-		for (auto& oo : o.m_list ) m_list.push_back( oo );
+		for (auto& oo : o.m_list) m_list.push_back( oo );
 		return *this;
 	}
 	bool operator==(const RectManager& o) const	// Compare persisted info

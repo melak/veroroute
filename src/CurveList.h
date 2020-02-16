@@ -24,7 +24,7 @@
 class QPoint;
 class QPolygon;
 
-enum class GPEN {UNKNOWN = 0, MIL10, PAD, TRACK, PAD_GAP, TRACK_GAP, VIA_PAD, PAD_MASK, SILK, PAD_HOLE, VIA_HOLE};
+enum class GPEN {UNKNOWN = 0, MIL10, PAD, VIA, TRACK, PAD_GAP, VIA_GAP, TRACK_GAP, PAD_MASK, VIA_MASK, SILK, PAD_HOLE, VIA_HOLE};
 
 // A class describing a curve as a set of points, with functionality for combining curves.
 // Used for processing data before writing to Gerber file.
@@ -36,7 +36,6 @@ public:
 	Curve(const GPEN& pen, const QPoint& p);
 	Curve(const GPEN& pen, const QPolygon& polygon);
 	~Curve()					{ clear(); }
-	const GPEN& GetPen() const	{ return m_pen; }
 	void Compress();		// Removes redundant points
 	bool Splice(Curve* pB);	// Tries to splice curve B to this
 	struct HasSmallerPen	// Predicate for sorting

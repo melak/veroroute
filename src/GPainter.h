@@ -208,13 +208,13 @@ private:
 	std::list<Transform>& GetTransforms() { return *this; }
 	void AddTrack()
 	{
-		for (auto& o : m_polygon )	// Loop polygon points
+		for (auto& o : m_polygon)	// Loop polygon points
 			for (auto& t : GetTransforms()) t.Do(o);	// Apply set of transforms to each
 		if ( m_pStream ) m_pStream->AddTrack(GPEN::SILK, m_polygon);	//TODO allow other pens
 	}
 	void AddPad()
 	{
-		for (auto& o : m_polygon )	// Loop polygon points
+		for (auto& o : m_polygon)	// Loop polygon points
 			for (auto& t : GetTransforms()) t.Do(o);	// Apply set of transforms to each
 		if ( m_pStream ) m_pStream->AddPad(GPEN::SILK, m_polygon.first());	//TODO allow other pens
 	}

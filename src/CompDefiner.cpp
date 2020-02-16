@@ -269,7 +269,7 @@ bool CompDefiner::GetIsValid() const
 
 	pinIndexes.sort();
 	size_t iTest(0);
-	for ( auto& pinIndex : pinIndexes )
+	for (auto& pinIndex : pinIndexes)
 	{
 		if ( pinIndex != iTest ) return false;
 		iTest++;

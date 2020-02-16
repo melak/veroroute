@@ -94,6 +94,32 @@ void MainWindow::CreatePixmapCache(const GuiControl& guiCtrl, ColorManager& colo
 	releaseMouse();
 }
 
+void MainWindow::PaintViaPad(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, const bool& bGap)
+{
+	if ( m_bWriteGerber )
+	{
+		m_gWriter.GetStream(GFILE::GTL).AddViaPad(bGap ? GPEN::VIA_GAP : GPEN::VIA, pC);	// Top    copper layer
+		m_gWriter.GetStream(GFILE::GBL).AddViaPad(bGap ? GPEN::VIA_GAP : GPEN::VIA, pC);	// Bottom copper layer
+		if ( !bGap )
+		{
+			m_gWriter.GetStream(GFILE::GTS).AddPad(GPEN::VIA_MASK, pC);		// Top    solder mask layer
+			m_gWriter.GetStream(GFILE::GBS).AddPad(GPEN::VIA_MASK, pC);		// Bottom solder mask layer
+			m_gWriter.GetStream(GFILE::DRL).AddViaHole(GPEN::VIA_HOLE, pC);	// Drill file
+		}
+	}
+	else
+	{
+		const int gapWidth = ( bGap ) ? guiCtrl.GetGapWidth() : 0;
+		const int padWidth = ( guiCtrl.GetHalfViaPadWidth() + gapWidth ) << 1;
+		static QPen	pen(Qt::black, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+		pen.setColor(color);
+		pen.setWidth(padWidth);
+		painter.setPen(pen);
+		painter.setBrush(Qt::NoBrush);
+		painter.drawPoint(pC);
+	}
+}
+
 void MainWindow::PaintPad(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, const bool& bGap)
 {
 	if ( m_bWriteGerber )
@@ -102,8 +128,8 @@ void MainWindow::PaintPad(const GuiControl& guiCtrl, QPainter& painter, const QC
 		m_gWriter.GetStream(GFILE::GBL).AddPad(bGap ? GPEN::PAD_GAP : GPEN::PAD, pC); // Bottom copper layer
 		if ( !bGap )
 		{
-			m_gWriter.GetStream(GFILE::GBS).AddPad(GPEN::PAD_MASK, pC);	// Bottom solder mask layer
-			m_gWriter.GetStream(GFILE::DRL).AddPadHole(GPEN::PAD_HOLE, pC);	// Drill file	//TODOALEX Do VIA_HOLE for wires in new mode
+			m_gWriter.GetStream(GFILE::GBS).AddPad(GPEN::PAD_MASK, pC);		// Bottom solder mask layer
+			m_gWriter.GetStream(GFILE::DRL).AddPadHole(GPEN::PAD_HOLE, pC);	// Drill file
 		}
 	}
 	else
@@ -560,6 +586,14 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	const double	 dTextScale		= ( m_bWritePDF ) ? (48.0 / W) : (W / 24.0);	// For scaling text when zooming
 	if ( bVero && trackMode != TRACKMODE::OFF ) board.CalcSolder();	// Calculate positions of solder blobs for stripboard builds
 
+	// Pre-process component list for rendering
+	std::vector<const Component*> sortedComps;
+	if ( compMode != COMPSMODE::OFF || bMono || bPCB )
+	{
+		compMgr.CalculateWireShifts();			// Work out shifts for overlaid wires
+		compMgr.GetSortedComps(sortedComps);	// Sorted so "plug" components get rendered last
+	}
+
 	board.CalculateColors();	// Work out best way to color things
 
 	// Get bounds to minimise looping
@@ -663,11 +697,12 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	}
 	else
 	{
-		m_blackPen.setWidth(0);
-		m_whitePen.setWidth(0);
+		const int iPenWidth = ( bPCB ) ? W * 0.100 : 0;	// Like GPEN::MIL10 used for Gerber
+		m_blackPen.setWidth(iPenWidth);
+		m_whitePen.setWidth(iPenWidth);
 		painter.setPen(GetBackgroundColor() == Qt::black ? m_whitePen : m_blackPen);
 		painter.setBrush(Qt::NoBrush);
-		painter.drawRect(L, T, R-L, B-T);	//TODO Use same pen width as Gerber in PCB mode
+		painter.drawRect(L, T, R-L, B-T);
 	}
 
 	// Draw grid points ==========================================================================
@@ -698,16 +733,16 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		for (int iLoop = 0; iLoop < numLoops; iLoop++)
 		{
 			const bool bLastPass = ( iLoop == numLoops - 1 );
+			const bool bGap		 = bGroundFill && iLoop == 0;
 			const bool bDrawGrey = ( bGreyPads && bLastPass );
 			if ( m_bWriteGerber )
 			{
-				const bool bClear = ( bGroundFill && iLoop == 0 );	// For the gaps
 				m_gWriter.GetStream(GFILE::GTS).ClearBuffers();	// Top solder mask layer
 				m_gWriter.GetStream(GFILE::GTL).ClearBuffers();	// Top copper layer
-				m_gWriter.GetStream(GFILE::GTL).SetPolarity(bClear ? GPOLARITY::CLEAR : GPOLARITY::DARK);
+				m_gWriter.GetStream(GFILE::GTL).SetPolarity(bGap ? GPOLARITY::CLEAR : GPOLARITY::DARK);
 				m_gWriter.GetStream(GFILE::GBS).ClearBuffers();	// Bottom solder mask layer
 				m_gWriter.GetStream(GFILE::GBL).ClearBuffers();	// Bottom copper layer
-				m_gWriter.GetStream(GFILE::GBL).SetPolarity(bClear ? GPOLARITY::CLEAR : GPOLARITY::DARK);
+				m_gWriter.GetStream(GFILE::GBL).SetPolarity(bGap ? GPOLARITY::CLEAR : GPOLARITY::DARK);
 				m_gWriter.GetStream(GFILE::DRL).ClearBuffers();	// Drill file
 			}
 
@@ -718,9 +753,11 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				const int&		nodeId			= pC->GetNodeId();
 				const int		colorId			= colorMgr.GetColorId(nodeId);
 				const bool		bPin			= pC->GetHasPin();	// true ==> real pin
+				const bool		bWire			= pC->GetHasWire();
+				const bool		bWireAsVia		= bWire && m_bWriteGerber && m_bTwoLayers;	// true ==> draw small via pad
 				const int		iPerimeterCode	= pC->GetPerimeterCode(bDiagsOK, bMinDiags);	// 0 to 255
 
-				if ( colorId == BAD_COLORID && !pC->GetHasWire() ) continue;	// Usually don't color places with no NodeID assigned unless they are wire ends
+				if ( colorId == BAD_COLORID && !bWire ) continue;	// Usually don't color places with no NodeID assigned unless they are wire ends
 
 				// Use GetPixmapRGB for pixmaps.  It can handle MY_GREY, MY_BLACK as special cases
 				const bool		bInvalidColor	=  colorId == BAD_COLORID ||
@@ -736,9 +773,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				const QPointF pCentre(X,Y);
 
 				// Common special case: Draw blank wire-ends as squares (so we can easily see them)
-				if ( colorId == BAD_COLORID && pC->GetHasWire() )
+				if ( colorId == BAD_COLORID && bWire )
 				{
-					QPen& wirePen = ( bGroundFill ) ? m_whitePen : m_blackPen;	//TODO
+					QPen& wirePen = ( bGroundFill ) ? m_whitePen : m_blackPen;
 					wirePen.setWidth(iWirePenWidth);
 					painter.setPen(wirePen);
 					painter.setBrush(Qt::NoBrush);
@@ -817,44 +854,55 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					{
 						if ( nodeId != board.GetGroundNodeId() )	// Only the non-ground tracks have a "white" surround
 							PaintBlob(board, painter, backgroundColor, pCentre, iPerimeterCode, true);	// Draw fat "white" track blob
-						if ( bPin ) PaintPad(board, painter, backgroundColor, pCentre, true);			// Draw fat "white" pad
+						if ( bWireAsVia )
+							PaintViaPad(board, painter, backgroundColor, pCentre, true);				// Draw fat "white" via-pad
+						else if ( bPin )
+							PaintPad(board, painter, backgroundColor, pCentre, true);					// Draw fat "white" pad
 					}
 					else if ( iLoop == 1 )	// Draw track "blobs" and pads directly
 					{
-						PaintBlob(board, painter, color, pCentre, iPerimeterCode);				// Draw track blob
-						if ( bPin && !bGreyPads ) PaintPad(board, painter, color, pCentre);		// Draw pad same color as track
+						PaintBlob(board, painter, color, pCentre, iPerimeterCode);	// Draw track blob
+						if ( !bGreyPads )
+						{
+							if ( bWireAsVia )
+								PaintViaPad(board, painter, color, pCentre);		// Draw via-pad same color as track
+							else if ( bPin )
+								PaintPad(board, painter, color, pCentre);			// Draw pad same color as track
+						}
 					}
-					else if ( bPin && bDrawGrey ) PaintPad(board, painter, padGrey, pCentre);	// Draw grey pad
+					else if ( bDrawGrey && bPin )
+						PaintPad(board, painter, padGrey, pCentre);	// Draw grey pad
 				}
 				if ( bDirect )	// Draw track "blobs" and pads directly (PDF/Gerber)
 				{
 					if ( iLoop == 0 )
 					{
 						PaintBlob(board, painter, color, pCentre, iPerimeterCode);				// Draw track blob
-						if ( bPin && !bGreyPads ) PaintPad(board, painter, color, pCentre);		// Draw pad same color as track
+						if ( !bGreyPads )
+						{
+							if ( bWireAsVia )
+								PaintViaPad(board, painter, color, pCentre);	// Draw via-pad same color as track
+							else if ( bPin )
+								PaintPad(board, painter, color, pCentre);		// Draw pad same color as track
+						}
 					}
 					else if ( bPin && bDrawGrey ) PaintPad(board, painter, padGrey, pCentre);	// Draw grey pad
 				}
 			}
 			if ( m_bWriteGerber && m_bTwoLayers )
 			{
-				compMgr.CalculateWireShifts();	//TODO Stacked wires can't be mapped to top layer tracks and have to be left alone
-
-				std::vector<const Component*> sortedComps;
-				compMgr.GetSortedComps(sortedComps);	// Sorted so "plug" components get rendered last
 				for (const auto& pComp : sortedComps)	// Iterate sorted components
 				{
 					const Component& comp = *pComp;
 					if ( comp.GetType() != COMP::WIRE || !comp.GetIsPlaced() ) continue;	// Only want placed wires
-					if ( compMgr.GetWireShift( &comp ) != 0 ) continue;	//TODO Probably not a good enough check
+					if ( compMgr.GetWireShift( &comp ) != 0 ) continue;	//TODO Probably not a good enough check since wires may cross yet have no shift
 
 					QPolygonF polygonF; polygonF.clear();
 					GetXY(board, comp.GetRow(), comp.GetCol(), X, Y);
 					polygonF << QPointF(X, Y);
 					GetXY(board, comp.GetRow() + comp.GetCompRows() - 1, comp.GetCol() + comp.GetCompCols() - 1, X, Y);
 					polygonF << QPointF(X, Y);
-
-					m_gWriter.GetStream(GFILE::GTL).AddTrack(iLoop == 0 ? GPEN::TRACK_GAP : GPEN::TRACK, polygonF);
+					m_gWriter.GetStream(GFILE::GTL).AddTrack(bGap? GPEN::TRACK_GAP : GPEN::TRACK, polygonF);
 				}
 			}
 			if ( m_bWriteGerber )
@@ -902,7 +950,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		if ( board.GetRoutingEnabled() || GetCurrentNodeId() != BAD_NODEID )
 		{
 			painter.save();
-			m_redPen.setWidth(W / 8);	// Use red pen in PCB mode (easier to see)
+			m_redPen.setWidth(W / 8);	// Use red pen in PCB/Mono mode (easier to see)
 			m_yellowPen.setWidth(W / 8);
 			m_backgroundPen.setWidth(0);
 			painter.setBrush(Qt::NoBrush);
@@ -925,7 +973,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				}
 				if ( pC->GetNodeId() == GetCurrentNodeId() && pC->GetMH() == BAD_MH )
 				{
-					painter.setPen(bPCB ? m_redPen : m_yellowPen);
+					painter.setPen(bPCB || bMono ? m_redPen : m_yellowPen);
 					painter.drawLine(L, B, R, T);		// Draw "/" (hatched) line
 				}
 			}
@@ -934,7 +982,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	}
 
 	// Draw solder ===============================================================================
-	if ( !m_bWriteGerber &&  bVero && trackMode != TRACKMODE::OFF )	//TODO Make this less of a hack
+	if ( !bPCB && bVero && trackMode != TRACKMODE::OFF )
 	{
 		const bool bVertical = board.GetVerticalStrips();
 		painter.save();
@@ -961,10 +1009,6 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 	if ( compMode != COMPSMODE::OFF || bMono || bPCB )	// Mono/PCB modes still need pin holes drawn
 	{
-		compMgr.CalculateWireShifts();
-
-		std::vector<const Component*> sortedComps;
-		compMgr.GetSortedComps(sortedComps);	// Sorted so "plug" components get rendered last
 		for (const auto& pComp : sortedComps)	// Iterate sorted components
 		{
 			const Component& comp			= *pComp;
@@ -972,8 +1016,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			const char&		 compDirection	= comp.GetDirection();
 			const bool		 bVia			= compType == COMP::VIA;
 			const bool		 bWire			= compType == COMP::WIRE;
-			if ( m_bWriteGerber && ( bVia || !comp.GetIsPlaced() ) ) continue;	//TODO Don't show floating components or vias on silkscreen
-			if ( m_bWriteGerber && m_bTwoLayers && bWire && compMgr.GetWireShift(&comp) == 0 ) continue;	//TODO Probably not a good enough check
+			if ( m_bWriteGerber && ( bVia || !comp.GetIsPlaced() ) ) continue;	// Don't show floating components or vias on silkscreen
+			if ( m_bWriteGerber && m_bTwoLayers && bWire && compMgr.GetWireShift(&comp) == 0 ) continue;	//TODO Probably not a good enough check since wires may cross yet have no shift
 			const bool		 bPinLabels		= (comp.GetPinFlags() & PIN_LABELS) > 0;
 			const bool		 bRectPins		= (comp.GetPinFlags() & PIN_RECT)   > 0;
 			const bool		 bHighlightComp	= board.GetGroupMgr().GetIsUserComp( comp.GetId() );

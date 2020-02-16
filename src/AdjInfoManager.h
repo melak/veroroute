@@ -37,7 +37,7 @@ public:
 	AdjInfo* GetAt(size_t i) const	{ return m_list[i]; }
 	bool	 GetNodeIdExists(const int& nodeId) const	// true ==> the nodeId exists on the board
 	{
-		for (const auto& pAdjInfo : m_list ) if ( pAdjInfo->GetNodeId() == nodeId ) return true;
+		for (const auto& pAdjInfo : m_list) if ( pAdjInfo->GetNodeId() == nodeId ) return true;
 		return false;
 	}
 	void InitCounts(Element* p)	// Pretend we're assigning "p" for the first time
@@ -47,7 +47,7 @@ public:
 
 		// Search m_list for adjacency info on newNodeId
 		AdjInfo* pNew(nullptr);
-		for (const auto& pAdjInfo : m_list ) if ( pAdjInfo->GetNodeId() == newNodeId ) { pNew = pAdjInfo; break; }
+		for (const auto& pAdjInfo : m_list) if ( pAdjInfo->GetNodeId() == newNodeId ) { pNew = pAdjInfo; break; }
 		if ( !pNew )									// If no info on newNodeId in m_list ...
 		{
 			m_list.push_back(new AdjInfo(newNodeId));	// ... add it

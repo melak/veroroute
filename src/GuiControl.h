@@ -388,6 +388,7 @@ public:
 	int		GetCompSliderValue() const	{ return static_cast<int>(GetCompMode());  }
 	int		GetHalfPadWidth() const		{ return std::max(1, static_cast<int> (GetGRIDPIXELS() * GetPAD_PERCENT()		* 0.005 )); }	// Half pad width in pixels
 	int		GetHalfTrackWidth() const	{ return std::max(1, static_cast<int> (GetGRIDPIXELS() * GetTRACK_PERCENT()		* 0.005 )); }	// Half track width in pixels
+	int		GetHalfViaPadWidth() const	{ return std::max(1, static_cast<int> (GetGRIDPIXELS() * GetVIAPAD_PERCENT()	* 0.005 )); }	// Half via-pad width in pixels
 	int		GetGapWidth() const			{ return std::max(1, static_cast<int> (GetGRIDPIXELS() * GetGAP_PERCENT()		* 0.010 )); }	// Gap width in pixels
 	double	GetSilkWidth() const		{ return std::max(1.0,				   GetGRIDPIXELS() * GetSILK_PERCENT()		* 0.010 );  }	// Silk-screen pen width in pixels
 	double	GetEdgeWidth() const		{ return std::max(1.0,				   GetGRIDPIXELS() * GetEDGE_PERCENT()		* 0.010 );  }	// Board edge margin in pixels
