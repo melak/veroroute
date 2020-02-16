@@ -114,6 +114,7 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	QObject::connect(ui->actionWrite_PNG,				SIGNAL(triggered()), this, SLOT(WritePNG()));
 	QObject::connect(ui->actionWrite_Gerber,			SIGNAL(triggered()), this, SLOT(WriteGerber()));
 	QObject::connect(ui->actionWrite_Gerber2,			SIGNAL(triggered()), this, SLOT(WriteGerber2()));
+	QObject::connect(ui->actionClearRecent,				SIGNAL(triggered()), this, SLOT(ClearRecentFiles()));
 	QObject::connect(ui->actionQuit,					SIGNAL(triggered()), this, SLOT(Quit()));
 	QObject::connect(ui->actionZoom_In,					SIGNAL(triggered()), this, SLOT(ZoomIn()));
 	QObject::connect(ui->actionZoom_Out,				SIGNAL(triggered()), this, SLOT(ZoomOut()));
@@ -661,6 +662,16 @@ void MainWindow::WriteGerber(const bool& bTwoLayers)
 	}
 }
 
+void MainWindow::ClearRecentFiles()
+{
+	QSettings	settings("veroroute","veroroute");	// Organisation = "veroroute", Application = "veroroute"
+	settings.setValue("recentFiles", QStringList());
+	for (int i = 0; i < MAX_RECENT_FILES; i++)
+		m_recentFileAction[i]->setVisible(false);
+	ui->actionClearRecent->setEnabled(false);
+	m_separator->setVisible(false);
+}
+
 void MainWindow::WritePNG()
 {
 	const QString fileName = GetSaveFileName(tr("Choose a PNG File"), tr("PNG (*.png);;All Files (*)"), QString("png"));
@@ -894,11 +905,7 @@ void MainWindow::ShowAbout()
 }
 void MainWindow::ShowSupport()
 {
-	std::string str = std::string("For bug reports, feature requests, or any other questions related\n")
-					+ std::string("to this product, use the forum page at\n\n")
-					+ std::string("https://sourceforge.net/p/veroroute/discussion/general/\n\n")
-					+ std::string("or email:  dralx@users.sourceforge.net");
-	QMessageBox::information(this, tr("Support"), tr(str.c_str()));
+	QDesktopServices::openUrl(QString("https://sourceforge.net/p/veroroute/discussion/"));
 }
 void MainWindow::LoadFirstTutorial()
 {
@@ -1496,6 +1503,7 @@ void MainWindow::UpdateRecentFiles(const QString* pFileName, bool bAdd)
 	for (int i = numFiles; i < MAX_RECENT_FILES; i++)
 		m_recentFileAction[i]->setVisible(false);
 
+	ui->actionClearRecent->setEnabled(numFiles > 0);
 	m_separator->setVisible(numFiles > 0);
 }
 

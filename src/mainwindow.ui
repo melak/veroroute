@@ -76,6 +76,8 @@
     <addaction name="actionWrite_Gerber"/>
     <addaction name="actionWrite_Gerber2"/>
     <addaction name="separator"/>
+    <addaction name="actionClearRecent"/>
+    <addaction name="separator"/>
     <addaction name="actionQuit"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
@@ -203,10 +205,10 @@
     </property>
     <addaction name="actionAbout"/>
     <addaction name="separator"/>
+    <addaction name="actionSupport"/>
+    <addaction name="separator"/>
     <addaction name="actionHotkeysDlg"/>
     <addaction name="actionTutorial"/>
-    <addaction name="separator"/>
-    <addaction name="actionSupport"/>
     <addaction name="separator"/>
     <addaction name="actionUpdateCheck"/>
    </widget>
@@ -829,7 +831,7 @@
   </action>
   <action name="actionSupport">
    <property name="text">
-    <string>Support</string>
+    <string>Support (link to forum)</string>
    </property>
   </action>
   <action name="actionUpdateCheck">
@@ -1136,14 +1138,14 @@
     <string>Export as Gerber (1-layer)</string>
    </property>
   </action>
-  <action name="actionWrite_GerberLong">
-   <property name="text">
-    <string>Long Filenames (*.gbr, *.xln)</string>
-   </property>
-  </action>
   <action name="actionWrite_Gerber2">
    <property name="text">
     <string>Export as Gerber (2-Layer)</string>
+   </property>
+  </action>
+  <action name="actionClearRecent">
+   <property name="text">
+    <string>Clear recent files list</string>
    </property>
   </action>
  </widget>

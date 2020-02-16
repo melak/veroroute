@@ -125,6 +125,7 @@ public slots:
 	void WritePNG();
 	void WriteGerber(const bool& bTwoLayers = false);
 	void WriteGerber2() { WriteGerber(true); }
+	void ClearRecentFiles();
 	void Quit();
 	// View menu items
 	void ZoomIn();
