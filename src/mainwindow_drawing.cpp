@@ -1016,7 +1016,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			const char&		 compDirection	= comp.GetDirection();
 			const bool		 bVia			= compType == COMP::VIA;
 			const bool		 bWire			= compType == COMP::WIRE;
-			if ( m_bWriteGerber && ( bVia || !comp.GetIsPlaced() ) ) continue;	// Don't show floating components or vias on silkscreen
+			if ( bPCB && bVia )	continue;	// Don't show vias in PCB mode
+			if ( m_bWriteGerber && !comp.GetIsPlaced() ) continue;	// Don't write floating components to Gerber
 			if ( m_bWriteGerber && m_bTwoLayers && bWire && compMgr.GetWireShift(&comp) == 0 ) continue;	//TODO Probably not a good enough check since wires may cross yet have no shift
 			const bool		 bPinLabels		= (comp.GetPinFlags() & PIN_LABELS) > 0;
 			const bool		 bRectPins		= (comp.GetPinFlags() & PIN_RECT)   > 0;
