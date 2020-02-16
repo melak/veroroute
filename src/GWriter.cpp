@@ -156,7 +156,7 @@ void GStream::MakeApertures()	// Make "pens" for current stream
 }
 void GStream::SetPen(const GPEN& ePen)
 {
-	if ( !is_open() || m_ePen == ePen || m_eType == GFILE::DRL ) return;
+	if ( !is_open() || m_ePen == ePen ) return;
 	m_ePen = ePen;
 	switch( m_ePen )
 	{
