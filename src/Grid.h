@@ -23,24 +23,25 @@
 #include "Element.h"
 #include "CompTypes.h"	// For component length limits
 
-// Grid is a templatized 2-dimensional array, with data that can be indexed by row and column
+// Grid is a templatized 3-dimensional array, with data that can be indexed by layer, row and column
 
 template<class T> 
 class Grid : public Persist, public Merge
 {
 public:
-	Grid(int rows = 0, int cols = 0) : m_rows(rows), m_cols(cols), m_pData(nullptr), m_ppData(nullptr) { Allocate(rows, cols); }
-	Grid(const Grid& o) : m_rows(0), m_cols(0), m_pData(nullptr), m_ppData(nullptr) { *this = o; }
+	Grid() { Allocate(0, 0, 0); }
+	Grid(const Grid& o) { *this = o; }
 	virtual ~Grid() { DeAllocate(); }
 	Grid& operator=(const Grid& o)
 	{
-		Allocate(o.m_rows, o.m_cols);
+		Allocate(o.m_lyrs, o.m_rows, o.m_cols);
 		for (int i = 0, iSize = GetSize(); i < iSize; i++) m_pData[i] = o.m_pData[i];
 		return *this;
 	}
 	bool operator==(const Grid& o) const	// Compare persisted info
 	{
-		bool bOK = m_rows == o.m_rows
+		bool bOK = m_lyrs == o.m_lyrs
+				&& m_rows == o.m_rows
 				&& m_cols == o.m_cols;
 		for (int i = 0, iSize = GetSize(); i < iSize && bOK; i++) bOK = ( m_pData[i] == o.m_pData[i] );
 		return bOK;
@@ -53,52 +54,62 @@ public:
 	{
 		for (int i = 0, iSize = GetSize(); i < iSize; i++) m_pData[i] = val;
 	}
-	void Allocate(int rows, int cols)
+	void Allocate(int lyrs, int rows, int cols)
 	{
+		assert( (lyrs == 0 && rows == 0 && cols == 0) || (lyrs > 0  && rows > 0  && cols > 0) );
 		DeAllocate();
+		m_lyrs		= lyrs;
 		m_rows		= rows;
 		m_cols		= cols;
-		m_pData		= new T[m_rows * m_cols];
-		m_ppData	= new T*[m_rows];
-		for (int i = 0; i < m_rows; i++) m_ppData[i] = m_pData + i * m_cols;
+		m_pData		= new T[m_lyrs * m_rows * m_cols];
+		m_ppData	= new T*[m_lyrs * m_rows];
+		m_pppData	= new T**[m_lyrs];
+		for (int i = 0, iSize = m_lyrs * m_rows; i < iSize; i++) m_ppData[i]  = m_pData	 + i * m_cols;
+		for (int i = 0, iSize = m_lyrs; 		 i < iSize; i++) m_pppData[i] = m_ppData + i * m_rows;
 	}
 	void DeAllocate()
 	{
-		if ( m_ppData )	{ delete[] m_ppData;	m_ppData = nullptr; }
-		if ( m_pData ) 	{ delete[] m_pData;		m_pData  = nullptr; }
-		m_rows = m_cols = 0;
+		if ( m_pppData ) delete[] m_pppData;	m_pppData = nullptr;
+		if ( m_ppData  ) delete[] m_ppData;		m_ppData  = nullptr;
+		if ( m_pData   ) delete[] m_pData;		m_pData   = nullptr;
+		m_lyrs = m_rows = m_cols = 0;
 	}
-	const int& GetCols() const					{ return m_cols; }
-	const int& GetRows() const					{ return m_rows; }
-	int	 GetSize() const						{ return m_rows * m_cols; }
+	const int& GetLyrs() const	{ return m_lyrs; }
+	const int& GetRows() const	{ return m_rows; }
+	const int& GetCols() const	{ return m_cols; }
+	int		   GetSize() const	{ return m_lyrs * m_rows * m_cols; }
 	void GetRowCol(T* p, int& row, int& col) const
 	{
-		const size_t i = ( p - m_pData );
-		assert( i < static_cast<size_t> ( GetSize() ) );
-		row = static_cast<int> (i) / m_cols;
-		col = static_cast<int> (i) % m_cols;
+		const size_t ii		= ( p - m_pData );	assert( ii < static_cast<size_t> ( GetSize() ) );
+		const int i			= static_cast<int> (ii);
+		const int rowLyr 	= i / m_cols;
+		col					= i % m_cols;
+//		lyr	 				= rowLyr / m_rows;
+		row 	 			= rowLyr % m_rows;
 	}
-	T*	 GetAt(int i)							{ return m_pData + i; }
-	T*	 GetAtConst(int i) const				{ return m_pData + i; }
-	T*	 Get(int row, int col) const			{ return m_ppData[row] + col; }
-	void SetAt(int i, const T& val)				{ m_pData[i] = val; }
-	void Set(int row, int col, const T& val)	{ m_ppData[row][col] = val; }
-	void Grow(int incRows, int incCols)	// Grow/shrink the current array
+	T*	 GetAt(int i)								{ return m_pData + i; }
+	T*	 GetAtConst(int i) const					{ return m_pData + i; }
+	T*	 Get(int lyr, int row, int col) const		{ return m_pppData[lyr][row] + col;}
+	void SetAt(int i, const T& val)					{ m_pData[i] = val; }
+	void Set(int lyr, int row, int col, const T& o)	{ m_pppData[lyr][row][col] = o; }
+	void Grow(int incLyrs, int incRows, int incCols)	// Grow/shrink the current array
 	{
-		if ( incRows == 0 && incCols == 0 ) return;
+		if ( incLyrs == 0 && incRows == 0 && incCols == 0 ) return;
 		Grid<T> tmp(*this);	// Make a temporary copy of this grid
-		Allocate(m_rows + incRows, m_cols + incCols);	// Re-allocate this grid to make it larger/smaller
+		Allocate(m_lyrs + incLyrs, m_rows + incRows, m_cols + incCols);	// Re-allocate this grid to make it larger/smaller
 
 		// Now copy the tmp data into the new grid
-		for (int iRow = 0; iRow < std::min(GetRows(), tmp.GetRows()); iRow++)
-		for (int iCol = 0; iCol < std::min(GetCols(), tmp.GetCols()); iCol++)
-			m_ppData[iRow][iCol] = tmp.m_ppData[iRow][iCol];
+		for (int lyr = 0, lyrs = std::min(GetLyrs(), tmp.GetLyrs()); lyr < lyrs; lyr++)
+		for (int row = 0, rows = std::min(GetRows(), tmp.GetRows()); row < rows; row++)
+		for (int col = 0, cols = std::min(GetCols(), tmp.GetCols()); col < cols; col++)
+			m_pppData[lyr][row][col] = tmp.m_pppData[lyr][row][col];
 	}
 	// Merge interface functions
 	virtual void UpdateMergeOffsets(MergeOffsets& o) override
 	{
-		o.deltaRow = std::max(o.deltaRow, GetRows() + 1);
-		//o.deltaCol = std::max(o.deltaCol, GetCols() + 1);
+//		o.deltaLyr	= std::max(o.deltaLyr,	GetLyrs() + 1);
+		o.deltaRow	= std::max(o.deltaRow, 	GetRows() + 1);
+//		o.deltaCol	= std::max(o.deltaCol, 	GetCols() + 1);
 		for (int i = 0, iSize = GetSize(); i < iSize; i++) m_pData[i].UpdateMergeOffsets(o);
 	}
 	virtual void ApplyMergeOffsets(const MergeOffsets& o) override
@@ -107,30 +118,38 @@ public:
 	}
 	void Merge(const Grid& src, const MergeOffsets& o)
 	{
-		const int rows = src.GetRows();
-		const int cols = src.GetCols();
-		for (int j = 0; j < rows; j++) for (int i = 0; i < cols; i++)
-			Get(j + o.deltaRow, i + o.deltaCol)->Merge(*src.Get(j, i));
+		for (int lyr = 0, lyrs = src.GetLyrs(); lyr < lyrs; lyr++)
+		for (int row = 0, rows = src.GetRows(); row < rows; row++)
+		for (int col = 0, cols = src.GetCols(); col < cols; col++)
+			Get(lyr + o.deltaLyr, row + o.deltaRow, col + o.deltaCol)->Merge(*src.Get(lyr, row, col));
 	}
 	// Persist interface functions
 	virtual void Load(DataStream& inStream) override
 	{
-		inStream.Load(m_rows);
-		inStream.Load(m_cols);
-		Allocate(m_rows, m_cols);
+		int lyrs(0), rows(0), cols(0);
+		inStream.Load(rows);
+		inStream.Load(cols);
+		if ( false )	//TODO Added in VRT_VERSION
+			inStream.Load(lyrs);
+		else
+			lyrs = ( rows > 0 && cols > 0 ) ? 1 : 0;
+		Allocate(lyrs, rows, cols);
 		for (int i = 0, iSize = GetSize(); i < iSize; i++) m_pData[i].Load(inStream);
 	}
 	virtual void Save(DataStream& outStream) override
 	{
 		outStream.Save(m_rows);
 		outStream.Save(m_cols);
+//		outStream.Save(m_lyrs);	//TODO Added in VRT_VERSION
 		for (int i = 0, iSize = GetSize(); i < iSize; i++) m_pData[i].Save(outStream);
 	}
 private:
-	int	m_rows;
-	int	m_cols;
-	T*	m_pData;
-	T**	m_ppData;	// So we can access data using [][]
+	int 	m_lyrs		= 0;
+	int		m_rows		= 0;
+	int		m_cols		= 0;
+	T*		m_pData		= nullptr;
+	T**		m_ppData	= nullptr;
+	T***	m_pppData	= nullptr;	// So we can access data using [][][]
 };
 
 // The PinGrid class is used by the component editor class (CompDefiner)
@@ -151,7 +170,7 @@ typedef Grid<TrackElement> TrackElementGrid;
 class CompElementGrid : public Grid<CompElement>
 {
 public:
-	CompElementGrid(int rows = 0, int cols = 0) : Grid<CompElement>(rows, cols) {}
+	CompElementGrid() : Grid<CompElement>() {}
 	CompElementGrid(const CompElementGrid& o) : Grid<CompElement>(o) { *this = o; }
 	virtual ~CompElementGrid() {}
 	CompElementGrid& operator=(const CompElementGrid& o) { Grid<CompElement>::operator=(o); return *this; }
@@ -177,36 +196,40 @@ public:
 	}
 	CompElement* Get(int row, int col, char direction = 'W') const
 	{
+		assert( GetLyrs() == 1 );
 		Transform(row, col, direction);	// Handle direction transformation
-		return Grid<CompElement>::Get(row, col);
+		return Grid<CompElement>::Get(0, row, col);
 	}
 	void SetupWire()
 	{
-		assert( GetRows() == 1 && GetCols() > 1 );
+		assert( GetLyrs() == 1 && GetRows() == 1 && GetCols() > 1 );
 		for (int i = 0, iSize = GetSize(); i < iSize; i++) GetAt(i)->SetWireOccupancies();
 	}
 	void StretchSimple(bool bGrow, const CompElement& initVal)	// For simple 2-pin components like resistors, wires, diodes, caps
 	{
+		assert( GetLyrs() == 1 );	
 		// Pins are assumed to be first and last element on the row
 		if ( GetRows() == 1 && ( bGrow || GetCols() > 2 ) )
 		{
 			CompElement a(*GetAt(0)), b(*GetAt(GetCols()-1));	// Read ends
-			Allocate(GetRows(), bGrow ? GetCols() + 1 : GetCols() - 1);	// Resize
+			Allocate(GetLyrs(), GetRows(), bGrow ? GetCols() + 1 : GetCols() - 1);	// Resize
 			Clear(initVal);
 			*GetAt(0) = a; *GetAt(GetCols()-1) = b;	// Set ends
 		}
 	}
 	void StretchComplex(const COMP& eType, bool bGrow)	// For ICs and switches
 	{
+		assert( GetLyrs() == 1 );	
 		if ( !bGrow && GetCols() == GetMinLength(eType) ) return; 	// Don't shrink to less than min allowed length
 		if (  bGrow && GetCols() == GetMaxLength(eType) ) return; 	// Don't expand to more than max allowed length
 		const int iDelta = GetStretchIncrement(eType);
-		return Allocate(GetRows(), bGrow ? GetCols() + iDelta : GetCols() - iDelta);	// Resize
+		return Allocate(GetLyrs(), GetRows(), bGrow ? GetCols() + iDelta : GetCols() - iDelta);	// Resize
 	}
 	void StretchWidthIC(bool bGrow)	// For DIPs only
 	{
+		assert( GetLyrs() == 1 );	
 		if ( !bGrow && GetRows() == 2 ) return;	// Don't shrink DIP width to less than 2 rows
-		return Allocate(bGrow ? GetRows() + 1 : GetRows() - 1, GetCols());	// Resize
+		return Allocate(GetLyrs(), bGrow ? GetRows() + 1 : GetRows() - 1, GetCols());	// Resize
 	}
 	virtual void Load(DataStream& inStream) override
 	{
@@ -217,7 +240,8 @@ public:
 		int rows(0), cols(0);
 		inStream.Load(rows);
 		inStream.Load(cols);
-		Allocate(rows, cols);
+		const int lyrs = ( rows > 0 && cols > 0 ) ? 1 : 0;
+		Allocate(lyrs, rows, cols);
 		CompElement tmp;
 		const int iSize = GetSize();
 		for (int i = 0; i < iSize; i++)
@@ -229,6 +253,7 @@ public:
 private:
 	void Transform(int& row, int& col, char direction) const
 	{
+		assert( GetLyrs() == 1 );	
 		// On input:  (row,col) are the "footprint" co-ordinates (as seen on screen).
 		// On output: (row,col) have been set to the corresponding internal values.
 		const int rTmp(row), cTmp(col);
@@ -251,29 +276,32 @@ private:
 // Similarly for top and bottom.
 // It's a lazy way of avoiding bounds checking during development.
 // More importantly, it makes the neighbouring element concept simpler
-// since every element will always have 8 non-null neighbour pointers.
+// since every element will always have non-null neighbour pointers.
 
 class ElementGrid : public Grid<Element>
 {
 public:
-	ElementGrid(int rows = 0, int cols = 0) : Grid<Element>(rows, cols) {}
+	ElementGrid() : Grid<Element>() {}
 	ElementGrid(const ElementGrid& o) : Grid<Element>(o) { *this = o; }
 	virtual ~ElementGrid() {}
 	ElementGrid& operator=(const ElementGrid& o) { Grid<Element>::operator=(o); return *this; }
 	bool operator==(const ElementGrid& o) const { return Grid<Element>::operator==(o); }
 	bool operator!=(const ElementGrid& o) const	{ return Grid<Element>::operator!=(o); }
-	void MakeToroid(int& row, int& col) const
+	void MakeToroid(int& lyr, int& row, int& col) const
 	{
 		// Make co-ordinates wrap around at grid edges
+		assert( GetLyrs() > 0 && GetRows() > 0 && GetCols() > 0);
+		while ( lyr <  0 )			{ lyr += GetLyrs(); }
+		while ( lyr >= GetLyrs() )	{ lyr -= GetLyrs(); }
 		while ( row <  0 )			{ row += GetRows(); }
 		while ( row >= GetRows() )	{ row -= GetRows(); }
 		while ( col <  0 )			{ col += GetCols(); }
 		while ( col >= GetCols() )	{ col -= GetCols(); }
 	}
-	Element* Get(int row, int col) const
+	Element* Get(int lyr, int row, int col) const
 	{
-		MakeToroid(row, col);	// Make co-ordinates wrap around at grid edges
-		return Grid<Element>::Get(row, col);
+		MakeToroid(lyr, row, col);	// Make co-ordinates wrap around at grid edges
+		return Grid<Element>::Get(lyr, row, col);
 	}
 	void Pan(int iDown, int iRight)	// Input arguments can be +ve or -ve.
 	{
@@ -281,21 +309,22 @@ public:
 
 		ElementGrid tmp(*this);	// Make a temporary copy of this grid
 
+		for (int iLyr = 0, lyrs = GetLyrs(); iLyr < lyrs; iLyr++)
 		for (int iRow = 0, rows = GetRows(); iRow < rows; iRow++)
 		for (int iCol = 0, cols = GetCols(); iCol < cols; iCol++)
-			Set(iRow, iCol, *(tmp.Get(iRow - iDown, iCol - iRight)));	// ElementGrid::Get() accounts for toroidal behaviour
+			Set(iLyr, iRow, iCol, *(tmp.Get(iLyr, iRow - iDown, iCol - iRight)));	// ElementGrid::Get() accounts for toroidal behaviour
 	}
 	bool CopyFrom(const TrackElementGrid& o)
 	{
-		if ( o.GetRows() != GetRows() || o.GetCols() != GetCols() ) return false;
+		if ( o.GetLyrs() != GetLyrs() || o.GetRows() != GetRows() || o.GetCols() != GetCols() ) return false;
 		for (int i = 0, iSize = GetSize(); i < iSize; i++)
 			GetAt(i)->TrackElement::operator=(*o.GetAtConst(i));
 		return true;
 	}
 	void CopyTo(TrackElementGrid& o) const
 	{
-		if ( o.GetRows() != GetRows() || o.GetCols() != GetCols() )
-			o.Allocate(GetRows(), GetCols());
+		if ( o.GetLyrs() != GetLyrs() || o.GetRows() != GetRows() || o.GetCols() != GetCols() )
+			o.Allocate(GetLyrs(), GetRows(), GetCols());
 		for (int i = 0, iSize = GetSize(); i < iSize; i++)
 			o.GetAt(i)->operator=(*GetAtConst(i));
 	}

@@ -71,7 +71,7 @@ public:
 		m_currentPinId = m_currentShapeId = BAD_ID;
 		m_iPinFlags = 0;
 		m_valueStr = m_prefixStr = m_typeStr = m_importStr = "";
-		m_grid.Allocate(4,4);
+		m_grid.Allocate(1,4,4);
 		m_grid.Clear( Pin(BAD_PINCHAR, SURFACE_FULL, HOLE_FREE) );
 		m_mapShapes.clear();
 		AddRect();	// Provide a Rect by default

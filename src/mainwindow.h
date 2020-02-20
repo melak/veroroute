@@ -493,6 +493,7 @@ private:
 	bool		m_bTemplatesDir;	// true ==> have "templates" folder
 	int			m_XGRIDOFFSET;		// So we can centre when writing to PDF
 	int			m_YGRIDOFFSET;		// So we can centre when writing to PDF
+	int			m_gridLyr;			// Board lyr corresponding to mouse position
 	int			m_gridRow;			// Board row corresponding to mouse position
 	int			m_gridCol;			// Board col correspondong to mouse position
 	int			m_iTutorialNumber;	// Tutorial file number 0,1,2,... (or -1 if not in tutorial mode)

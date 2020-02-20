@@ -46,6 +46,7 @@ struct MergeOffsets
 	int deltaNodeId 	= 0;
 	int deltaCompId 	= 0;
 	int deltaGroupId	= 0;
+	int deltaLyr		= 0;
 	int deltaRow	 	= 0;
 	int deltaCol 		= 0;
 };

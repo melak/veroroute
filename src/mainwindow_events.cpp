@@ -223,7 +223,7 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 				assert( !m_board.GetRoutingEnabled() );	// Sanity check
 
 				const int tmp = GetCurrentNodeId();	// Need to temporarily change current nodeId for HandleRouting()
-				SetCurrentNodeId( m_board.Get(m_gridRow, m_gridCol)->GetNodeId() );
+				SetCurrentNodeId( m_board.Get(m_gridLyr, m_gridRow, m_gridCol)->GetNodeId() );
 				HandleRouting();		// Work out MH distances for the flood
 				SetCurrentNodeId(tmp);	// Restore current nodeId
 
@@ -232,14 +232,14 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 			}
 			else
 			{
-				const bool bChanged = m_board.SetNodeIdByUser(m_gridRow, m_gridCol, GetCurrentNodeId(), GetPaintPins());
+				const bool bChanged = m_board.SetNodeIdByUser(m_gridLyr, m_gridRow, m_gridCol, GetCurrentNodeId(), GetPaintPins());
 				if ( !bChanged ) return;
 				mouseActionString = "Paint";
 			}
 		}
 		if ( m_bRightClick )	// Unpaint (i.e. erase)
 		{
-			const bool bChanged = m_board.SetNodeIdByUser(m_gridRow, m_gridCol, BAD_NODEID, GetPaintPins());
+			const bool bChanged = m_board.SetNodeIdByUser(m_gridLyr,m_gridRow, m_gridCol, BAD_NODEID, GetPaintPins());
 			if ( !bChanged ) return;
 			mouseActionString = "Erase";
 		}
@@ -247,7 +247,7 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 	else	// Set/Unset current nodeId from board
 	{
 		if ( m_bLeftClick )
-			SetCurrentNodeId( m_board.Get(m_gridRow, m_gridCol)->GetNodeId() );
+			SetCurrentNodeId( m_board.Get(m_gridLyr,m_gridRow, m_gridCol)->GetNodeId() );
 		if ( m_bRightClick )
 			SetCurrentNodeId( BAD_NODEID );
 		if ( m_bLeftClick || m_bRightClick )
@@ -277,7 +277,7 @@ void MainWindow::mouseDoubleClickEvent(QMouseEvent* event)
 
 	const int dR = ( dRow > 0.5 ) ? 1 : 0;	// Correct row, col to account for crossing ...
 	const int dC = ( dCol > 0.5 ) ? 1 : 0;	// ... point being near corner of element
-	const bool bSwapped = m_board.Get(m_gridRow + dR, m_gridCol + dC)->SwapDiagLinks();
+	const bool bSwapped = m_board.Get(m_gridLyr, m_gridRow + dR, m_gridCol + dC)->SwapDiagLinks();
 	if ( bSwapped )
 	{
 		m_board.PlaceFloaters();	// See if we can now place floating components down
@@ -370,13 +370,13 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 		if ( trackMode == TRACKMODE::OFF ) return;
 		if ( m_bLeftClick )		// Paint
 		{
-			const bool bChanged = m_board.SetNodeIdByUser(m_gridRow, m_gridCol, GetCurrentNodeId(), GetPaintPins());	// Only allow paint board (not pins)
+			const bool bChanged = m_board.SetNodeIdByUser(m_gridLyr, m_gridRow, m_gridCol, GetCurrentNodeId(), GetPaintPins());	// Only allow paint board (not pins)
 			if ( !bChanged ) return;	// No change
 			mouseActionString = "Paint";
 		}
 		if ( m_bRightClick )	// Erase
 		{
-			const bool bChanged = m_board.SetNodeIdByUser(m_gridRow, m_gridCol, BAD_NODEID, GetPaintPins());		// Only allow paint board (not pins)
+			const bool bChanged = m_board.SetNodeIdByUser(m_gridLyr, m_gridRow, m_gridCol, BAD_NODEID, GetPaintPins());		// Only allow paint board (not pins)
 			if ( !bChanged ) return;	// No change
 			mouseActionString = "Erase";
 		}

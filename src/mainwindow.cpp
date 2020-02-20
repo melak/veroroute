@@ -306,13 +306,15 @@ void MainWindow::ResetView(bool bTutorial)
 	m_XGRIDOFFSET	= m_YGRIDOFFSET	= 0;
 
 	// Try to set m_gridRow, m_gridCol to match the current NodeId in the board
-	m_gridRow = m_gridCol = 0;
+	m_gridLyr = m_gridRow = m_gridCol = 0;
 	bool bOK(false);	// true ==> found
-	for (int j = 0; j < m_board.GetRows() &&!bOK; j++)	for (int i = 0; i < m_board.GetCols() && !bOK; i++)
+	for (int k = 0, kMax = m_board.GetLyrs(); k < kMax && !bOK; k++)
+	for (int j = 0, jMax = m_board.GetRows(); j < jMax && !bOK; j++)
+	for (int i = 0, iMax = m_board.GetCols(); i < iMax && !bOK; i++)
 	{
-		const Element* pC = m_board.Get(j,i);
+		const Element* pC = m_board.Get(k,j,i);
 		bOK = ( pC->GetNodeId() == m_board.GetCurrentNodeId() );
-		if ( bOK ) { m_gridRow = j;	m_gridCol = i; }
+		if ( bOK ) { m_gridLyr = k;	m_gridRow = j;	m_gridCol = i; }
 	}
 
 	m_infoDlg->Update();
@@ -362,7 +364,7 @@ void MainWindow::HandleRouting()
 	if ( GetCurrentNodeId() != BAD_NODEID )
 	{
 		grabMouse(Qt::WaitCursor);
-		Element* pC = m_board.Get(m_gridRow, m_gridCol);
+		Element* pC = m_board.Get(m_gridLyr, m_gridRow, m_gridCol);
 		bool bOK = ( pC->GetNodeId() == GetCurrentNodeId() );
 		// If current element has wrong NodeID, search the grid for the first element with the correct NodeID
 		const int iSize = m_board.GetSize();

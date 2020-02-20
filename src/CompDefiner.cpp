@@ -35,7 +35,7 @@ void CompDefiner::Populate(const Component& o)
 	SetImportStr( o.GetFullImportStr() );
 
 	// Copy footprint to PinInfo map
-	m_grid.Allocate(o.GetRows(), o.GetCols());
+	m_grid.Allocate(o.GetLyrs(), o.GetRows(), o.GetCols());
 	for (int i = 0, iSize = o.GetSize(); i < iSize; i++)
 	{
 		*m_grid.GetAt(i) = *o.GetAtConst(i);
@@ -78,7 +78,8 @@ void CompDefiner::Build(Component& comp) const
 	comp.SetImportStr( GetImportStr() );
 
 	comp.SetType(COMP::CUSTOM);
-	comp.Allocate(m_grid.GetRows(), m_grid.GetCols());
+	assert(m_grid.GetLyrs() == 1);
+	comp.Allocate(m_grid.GetLyrs(), m_grid.GetRows(), m_grid.GetCols());
 	for (int i = 0, iSize = m_grid.GetSize(); i < iSize; i++)
 		comp.GetAt(i)->Pin::operator=( *m_grid.GetAtConst(i) );
 
@@ -133,7 +134,7 @@ bool CompDefiner::SetWidth(const int& i)
 	{
 		SetCurrentPinId(BAD_ID);
 		SetCurrentShapeId(BAD_ID);
-		m_grid.Allocate(m_grid.GetRows(), i);
+		m_grid.Allocate(1, m_grid.GetRows(), i);
 		m_grid.Clear( Pin(BAD_PINCHAR, SURFACE_FULL, HOLE_FREE) );
 		m_mapShapes.clear();
 		AddRect();	// Provide a Rect by default
@@ -148,7 +149,7 @@ bool CompDefiner::SetHeight(const int& i)
 	{
 		SetCurrentPinId(BAD_ID);
 		SetCurrentShapeId(BAD_ID);
-		m_grid.Allocate(i, m_grid.GetCols());
+		m_grid.Allocate(1, i, m_grid.GetCols());
 		m_grid.Clear( Pin(BAD_PINCHAR, SURFACE_FULL, HOLE_FREE) );
 		m_mapShapes.clear();
 		AddRect();	// Provide a Rect by default

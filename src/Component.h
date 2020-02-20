@@ -236,6 +236,7 @@ public:
 	const int&			GetPinAlign(const size_t& iPinIndex) const	{ return m_pinAligns[iPinIndex]; }
 	size_t				GetNumShapes() const						{ return m_shapes.size(); }
 	const Shape&		GetShape(const size_t& iShapeIndex) const	{ return m_shapes[iShapeIndex]; }
+	int					GetLyr() const								{ return 0; }	//TODO Need variable to handle other layer trax
 	const int&			GetRow() const								{ return m_row; }
 	const int&			GetCol() const								{ return m_col; }
 //	const int&			GetLabelOffsetRow() const					{ return m_iLabelOffsetRow; }
@@ -411,8 +412,9 @@ public:
 		FootPrint::UpdateMergeOffsets(o);	// Call UpdateMergeOffsets in base class
 
 		if ( m_id != BAD_COMPID && m_id != TRAX_COMPID ) o.deltaCompId  = std::max(o.deltaCompId, m_id + 1);
+//		o.deltaLyr = std::max(o.deltaLyr, m_lyr + GetCompLyrs() + 1);
 		o.deltaRow = std::max(o.deltaRow, m_row + GetCompRows() + 1);
-		//o.deltaCol = std::max(o.deltaCol, m_col + GetCompCols() + 1);
+//		o.deltaCol = std::max(o.deltaCol, m_col + GetCompCols() + 1);
 		for (size_t i = 0; i < GetNumPins(); i++)
 		{
 			if ( m_nodeIdPins[i] != BAD_NODEID ) o.deltaNodeId = std::max(o.deltaNodeId, m_nodeIdPins[i] + 1);

@@ -526,9 +526,10 @@ void MainWindow::PaintCompDefiner()	// The paint method in "component editor mod
 	m_varBrush.setColor(QColor(192,192,255,128));	// Light blue
 
 	int iPinId(0);
-	for (int j = 0; j < grid.GetRows(); j++) for(int i = 0; i < grid.GetCols(); i++, iPinId++)
+	for (int j = 0, jMax = grid.GetRows(); j < jMax; j++)
+	for (int i = 0, iMax = grid.GetCols(); i < iMax; i++, iPinId++)
 	{
-		auto p = grid.Get(j,i);
+		auto p = grid.Get(0,j,i);	// Always layer 0 for component editor
 		GetXY(board, def.GetGridRowMin() + j, def.GetGridColMin() + i, X, Y );
 
 		// Write pin labels
@@ -710,7 +711,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	{
 		for (int j = 0; j < board.GetRows(); j++)	for (int i = 0; i < board.GetCols(); i++)
 		{
-			const Element* pC = board.Get(j,i);
+			const Element* pC = board.Get(m_gridLyr, j,i);
 			if ( trackMode == TRACKMODE::OFF || ( !pC->GetHasPin() && pC->GetNodeId() == BAD_NODEID ) )
 			{
 				GetXY(board, j, i, X, Y);
@@ -749,7 +750,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			for (int j = minRow; j <= maxRow; j++)
 			for (int i = minCol; i <= maxCol; i++)
 			{
-				const Element*	pC				= board.Get(j,i);
+				const Element*	pC				= board.Get(m_gridLyr,j,i);
 				const int&		nodeId			= pC->GetNodeId();
 				const int		colorId			= colorMgr.GetColorId(nodeId);
 				const bool		bPin			= pC->GetHasPin();	// true ==> real pin
@@ -957,7 +958,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			for (int j = minRow; j <= maxRow; j++)
 			for (int i = minCol; i <= maxCol; i++)
 			{
-				const Element* pC = board.Get(j,i);
+				const Element* pC = board.Get(m_gridLyr,j,i);
 				if ( pC->GetNodeId() == BAD_NODEID ) continue;
 				GetLRTB(board, 100, j, i, L, R, T, B);	// 100% size square
 
@@ -991,7 +992,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		for (int j = minRow; j <= maxRow; j++)
 		for (int i = minCol; i <= maxCol; i++)
 		{
-			const Element* pC = board.Get(j,i);
+			const Element* pC = board.Get(m_gridLyr,j,i);
 			if ( !pC->GetSolderR() ) continue;
 			GetLRTB(board, 100, j, i, L, R, T, B);	// 100% size square
 			if ( bVertical )

@@ -168,12 +168,13 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 	const bool	bDiagsOK		= GetDiagsMode() != DIAGSMODE::OFF;
 	const bool	bAllowWireCross	= GetWireCross();
 	const bool	bAllowHoleShare	= GetWireShare();
+	const int	lyr				= 0;	//TODO
 
 	if ( bAllowHoleShare && bWire )
 	{
 		// pA and pB are the opposite ends of the wire
-		Element* pA = Get(rowTL, colTL);						assert(pA);
-		Element* pB = Get(rowTL+compRows-1, colTL+compCols-1);	assert(pB);
+		Element* pA = Get(lyr, rowTL, colTL);						assert(pA);
+		Element* pB = Get(lyr, rowTL+compRows-1, colTL+compCols-1);	assert(pB);
 		assert( !pA->GetCompExists(comp.GetId()) && !pB->GetCompExists(comp.GetId()) );
 		if ( pA->GetWireExists(pB) || pB->GetWireExists(pA) ) return false;	// No duplicates !!!
 	}
@@ -189,7 +190,7 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 		for (int i = 0; i < compCols && bOK; i++, iCol++)
 		{
 			const CompElement*	pComp = comp.GetCompElement(j, i);
-			const Element*		pGrid = Get(jRow, iCol);
+			const Element*		pGrid = Get(lyr, jRow, iCol);
 			if ( bTrax )
 			{
 				const int traxNodeId = pComp->GetNodeId();
@@ -285,8 +286,9 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 	}
 	if ( bOK && bWire )	// Check for short-circuit
 	{
-		Element* pW0 = Get(rowTL, colTL);						assert(pW0);
-		Element* pW1 = Get(rowTL+compRows-1, colTL+compCols-1);	assert(pW1);
+		const int lyr(0);	//TODO
+		Element* pW0 = Get(lyr, rowTL, colTL);							assert(pW0);
+		Element* pW1 = Get(lyr, rowTL+compRows-1, colTL+compCols-1);	assert(pW1);
 		bOK = pW0->GetNodeId() == BAD_NODEID ||
 			  pW1->GetNodeId() == BAD_NODEID ||
 			  pW0->GetNodeId() == pW1->GetNodeId();
@@ -323,6 +325,7 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 	std::set<int> blankWireIds;	// CompIds of unpainted wires in the area covered by trax
 	if ( bTrax )
 	{
+		const int lyr(0);	//TODO Use trax lyr ???
 		int jRow(rowTL);
 		for (int j = 0; j < compRows; j++, jRow++)
 		{
@@ -330,7 +333,7 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 			for (int i = 0; i < compCols; i++, iCol++)
 			{
 				const CompElement*	pComp = comp.GetCompElement(j, i);
-				Element*			pGrid = Get(jRow, iCol);
+				Element*			pGrid = Get(lyr, jRow, iCol);
 				if ( !pComp->ReadFlagBits(RECTSET) ) continue;		// Skip non-rect points
 				if ( pGrid->GetNodeId() != BAD_NODEID ) continue;	// Skip painted points
 				// If have wire(s) ...
@@ -340,6 +343,7 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 		}
 	}
 
+	int lyr(0);	//TODO ???
 	int jRow(rowTL);
 	for (int j = 0; j < compRows; j++, jRow++)
 	{
@@ -347,7 +351,7 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 		for (int i = 0; i < compCols; i++, iCol++)
 		{
 			const CompElement*	pComp = comp.GetCompElement(j, i);
-			Element*			pGrid = Get(jRow, iCol);
+			Element*			pGrid = Get(lyr, jRow, iCol);
 			if ( bTrax )
 			{
 				const int traxNodeId = pComp->GetNodeId();
@@ -359,7 +363,7 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 											  blankWireIds.find( pGrid->GetCompId2() ) != blankWireIds.end() );
 				const bool bExistingNodeId	= !bBlankWire && ( pGrid->GetNodeId() == traxNodeId );
 
-				SetNodeIdByUser(jRow, iCol, traxNodeId, false);	// false ==> don't paint pins
+				SetNodeIdByUser(lyr, jRow, iCol, traxNodeId, false);	// false ==> don't paint pins
 
 				if ( bExistingNodeId )				// If the board already had the NodeId ...
 					pGrid->SetFlagBits(RECTSET);	// ... set RECTSET on the board, so TakeOff() doesn't wipe the point
@@ -421,8 +425,8 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 	if ( bWire )	// Handle wires setting the wire ends on the board to same value
 	{
 		// pA and pB are the opposite ends of the wire
-		Element*	pA		= Get(rowTL, colTL);						assert(pA);
-		Element*	pB		= Get(rowTL+compRows-1, colTL+compCols-1);	assert(pB);
+		Element*	pA		= Get(lyr, rowTL, colTL);						assert(pA);
+		Element*	pB		= Get(lyr, rowTL+compRows-1, colTL+compCols-1);	assert(pB);
 		const int	iSlotA	= pA->GetSlotFromCompId(compId);
 		const int	iSlotB	= pB->GetSlotFromCompId(compId);
 		const int	nodeIdA	= pA->GetNodeId();
@@ -458,7 +462,7 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 	comp.SetRow(rowTL);
 	comp.SetCol(colTL);
 	comp.SetIsPlaced(true);
-	if ( comp.GetType() == COMP::VIA ) Get(rowTL, colTL)->SetIsVia(true);	// Set via flag
+	if ( comp.GetType() == COMP::VIA ) Get(lyr, rowTL, colTL)->SetIsVia(true);	// Set via flag
 
 	m_colorMgr.ReAssignColors();	// Forces colors to be worked out again
 	return true;
@@ -475,11 +479,12 @@ bool Board::TakeOff(Component& comp)
 	const int&	compRows	= comp.GetCompRows();
 	const int&	rowTL		= comp.GetRow();
 	const int&	colTL		= comp.GetCol();
+	const int	lyr			= 0;	//TODO
 
 	// If we have a wire, then pA and pB are the opposite ends of the wire.
 	// Find out which wire slots are used before we take off the wire.
-	Element*	pA			= ( bWire ) ? Get(rowTL, colTL) : nullptr;
-	Element*	pB			= ( bWire ) ? Get(rowTL+compRows-1, colTL+compCols-1) : nullptr;
+	Element*	pA			= ( bWire ) ? Get(lyr, rowTL, colTL) : nullptr;
+	Element*	pB			= ( bWire ) ? Get(lyr, rowTL+compRows-1, colTL+compCols-1) : nullptr;
 	int		iSlotA(-1), iSlotB(-1), iOrigIdA(BAD_NODEID), iOrigIdB(BAD_NODEID), tmpCompId;
 	size_t	iPinIndex;
 	if ( pA )
@@ -502,13 +507,13 @@ bool Board::TakeOff(Component& comp)
 		for (int i = 0; i < compCols; i++, iCol++)
 		{
 			const CompElement*	pComp = comp.GetCompElement(j, i);
-			Element*			pGrid = Get(jRow, iCol);
+			Element*			pGrid = Get(lyr, jRow, iCol);
 			if ( bTrax )
 			{
 				if ( !pComp->ReadFlagBits(RECTSET) ) continue;		// Skip non-rect points
 				if ( pComp->GetNodeId() == BAD_NODEID ) continue;	// Skip blank areas of the trax comp
 				if ( !pGrid->ReadFlagBits(RECTSET) && ( !pGrid->GetHasPin() || pGrid->GetHasWire() ) )
-					SetNodeIdByUser(jRow, iCol, BAD_NODEID, false);	// false ==> don't paint pins
+					SetNodeIdByUser(lyr, jRow, iCol, BAD_NODEID, false);	// false ==> don't paint pins
 				pGrid->ClearFlagBits(RECTSET);
 			}
 			else
@@ -612,7 +617,7 @@ bool Board::TakeOff(Component& comp)
 		}
 	}
 	comp.SetIsPlaced(false);
-	if ( comp.GetType() == COMP::VIA ) Get(rowTL, colTL)->SetIsVia(false);	// Clear via flag
+	if ( comp.GetType() == COMP::VIA ) Get(lyr, rowTL, colTL)->SetIsVia(false);	// Clear via flag
 	return true;
 }
 
@@ -875,6 +880,8 @@ bool Board::MoveTextBox(const int& deltaRow, const int& deltaCol)	// Move text b
 
 bool Board::MoveComps(const std::list<int>& compIds, const int& deltaRow, const int& deltaCol)	// Move components and return true if the grid was panned
 {
+	//TODO Check all lines using lyr
+
 	assert( deltaRow != 0 || deltaCol != 0 );
 	assert( !GetDisableMove() );
 
@@ -903,9 +910,10 @@ bool Board::MoveComps(const std::list<int>& compIds, const int& deltaRow, const 
 	for (auto& compId : compIds)
 	{
 		Component& comp = m_compMgr.GetComponentById( compId );
+		int newLyr = comp.GetLyr();	//TODO
 		int newRow = comp.GetRow() + deltaRow;
 		int newCol = comp.GetCol() + deltaCol;
-		MakeToroid(newRow, newCol);	// Make co-ordinates wrap around at grid edges
+		MakeToroid(newLyr, newRow, newCol);	// Make co-ordinates wrap around at grid edges
 		TakeOff(comp);
 		comp.SetRow(newRow);
 		comp.SetCol(newCol);
@@ -914,9 +922,10 @@ bool Board::MoveComps(const std::list<int>& compIds, const int& deltaRow, const 
 	Component& trax = m_compMgr.GetTrax();
 	if ( trax.GetSize() > 0 )
 	{
+		int newLyr = trax.GetLyr();	//TODO
 		int newRow = trax.GetRow() + deltaRow;
 		int newCol = trax.GetCol() + deltaCol;
-		MakeToroid(newRow, newCol);	// Make co-ordinates wrap around at grid edges
+		MakeToroid(newLyr, newRow, newCol);	// Make co-ordinates wrap around at grid edges
 		TakeOff(trax);
 		trax.SetRow(newRow);
 		trax.SetCol(newCol);
@@ -936,6 +945,8 @@ bool Board::MoveComps(const std::list<int>& compIds, const int& deltaRow, const 
 
 void Board::RotateComps(const std::list<int>& compIds, const bool& bCW)	// Rotate components
 {
+	//TODO Check all lines using lyr
+
 	// Treat the components as a single large footprint with LT at (minRow, minCol)
 	Rect rect = GetFootprintBounds(compIds);
 	if ( !rect.GetIsValid() ) return;
@@ -978,7 +989,7 @@ void Board::RotateComps(const std::list<int>& compIds, const bool& bCW)	// Rotat
 		Component& comp	= m_compMgr.GetComponentById( compId );
 		TakeOff(comp);
 
-		int newRow(newCentreRow), newCol(newCentreCol);	// Start with the new group centre
+		int newLyr(0), newRow(newCentreRow), newCol(newCentreCol);	// Start with the new group centre
 
 		// Then correct for location of the comp's LT corner w.r.t. the group's LT corner
 		if ( bCW )	{ newRow += (comp.GetCol() - rect.m_colMin); newCol -= (comp.GetRow() - rect.m_rowMin); }
@@ -988,7 +999,7 @@ void Board::RotateComps(const std::list<int>& compIds, const bool& bCW)	// Rotat
 		if ( bCW )	newCol -= ( comp.GetCompRows() - 1 );
 		else		newRow -= ( comp.GetCompCols() - 1 );
 
-		MakeToroid(newRow, newCol);	// Make co-ordinates wrap around at grid edges
+		MakeToroid(newLyr, newRow, newCol);	// Make co-ordinates wrap around at grid edges
 		comp.SetRow(newRow);
 		comp.SetCol(newCol);
 		comp.Rotate(bCW);	// Rotate the component ...
@@ -999,7 +1010,7 @@ void Board::RotateComps(const std::list<int>& compIds, const bool& bCW)	// Rotat
 	{
 		TakeOff(trax);
 
-		int newRow(newCentreRow), newCol(newCentreCol);	// Start with the new group centre
+		int newLyr(0), newRow(newCentreRow), newCol(newCentreCol);	// Start with the new group centre
 
 		// Then correct for location of the trax's LT corner w.r.t. the group's LT corner
 		if ( bCW )	{ newRow += (trax.GetCol() - rect.m_colMin); newCol -= (trax.GetRow() - rect.m_rowMin); }
@@ -1009,7 +1020,7 @@ void Board::RotateComps(const std::list<int>& compIds, const bool& bCW)	// Rotat
 		if ( bCW )	newCol -= ( trax.GetCompRows() - 1 );
 		else		newRow -= ( trax.GetCompCols() - 1 );
 
-		MakeToroid(newRow, newCol);	// Make co-ordinates wrap around at grid edges
+		MakeToroid(newLyr, newRow, newCol);	// Make co-ordinates wrap around at grid edges
 		trax.SetRow(newRow);
 		trax.SetCol(newCol);
 		trax.Rotate(bCW);	// Rotate the component ...

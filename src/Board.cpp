@@ -24,7 +24,8 @@
 
 int Board::GetComponentId(int row, int col)	// Pick the most relevant component at the location
 {
-	MakeToroid(row, col);	// Make co-ordinates wrap around at grid edges
+	int iLyr(0);	//TODO
+	MakeToroid(iLyr, row, col);	// Make co-ordinates wrap around at grid edges
 
 	// Most to least prefered order is ...
 	// ... unplaced plugs, unplaced non-plugs, placed plugs, placed non-plugs
@@ -42,7 +43,7 @@ int Board::GetComponentId(int row, int col)	// Pick the most relevant component 
 			int rowTL = comp.GetRow();
 			int colTL = comp.GetCol();
 
-			MakeToroid(rowTL, colTL);	// Make co-ordinates wrap around at grid edges
+			MakeToroid(iLyr, rowTL, colTL);	// Make co-ordinates wrap around at grid edges
 
 			if ( row >= rowTL && row < rowTL + comp.GetCompRows() &&
 				 col >= colTL && col < colTL + comp.GetCompCols() )
@@ -58,7 +59,7 @@ int Board::GetComponentId(int row, int col)	// Pick the most relevant component 
 			int rowTL = trax.GetRow();
 			int colTL = trax.GetCol();
 
-			MakeToroid(rowTL, colTL);	// Make co-ordinates wrap around at grid edges
+			MakeToroid(iLyr, rowTL, colTL);	// Make co-ordinates wrap around at grid edges
 
 			if ( row >= rowTL && row < rowTL + trax.GetCompRows() &&
 				 col >= colTL && col < colTL + trax.GetCompCols() )
@@ -73,7 +74,8 @@ int Board::GetComponentId(int row, int col)	// Pick the most relevant component 
 
 int Board::GetTextId(int row, int col)	// Pick the most relevant text box at the location
 {
-	MakeToroid(row, col);	// Make co-ordinates wrap around at grid edges
+	int iLyr(0);	//TODO
+	MakeToroid(iLyr, row, col);	// Make co-ordinates wrap around at grid edges
 
 	TextRect bestRect;
 	int bestId(BAD_TEXTID);
@@ -99,11 +101,11 @@ void Board::SetNodeId(Element* p, const int& nodeId)	// Helper to make sure we d
 	p->SetNodeId(nodeId);					// Write node value
 }
 
-bool Board::SetNodeIdByUser(const int& row, const int& col, const int& nodeId, const bool& bPaintPins)
+bool Board::SetNodeIdByUser(const int& lyr, const int& row, const int& col, const int& nodeId, const bool& bPaintPins)
 {
 	// returns false if nothing changed
 
-	Element*		p			= Get(row, col);
+	Element*		p			= Get(lyr, row, col);
 	const bool		bHole		= p->GetIsHole();
 	if ( bHole ) return false;	// No change
 	const bool		bWire		= p->GetHasWire();
@@ -216,10 +218,11 @@ bool Board::SetNodeIdByUser(const int& row, const int& col, const int& nodeId, c
 
 void Board::FloodNodeId(const int& nodeId)
 {
+	for (int lyr = 0, lyrs = GetLyrs(); lyr < lyrs; lyr++)
 	for (int row = 0, rows = GetRows(); row < rows; row++)
 	for (int col = 0, cols = GetCols(); col < cols; col++)
 	{
-		Element* p = Get(row, col);
+		Element* p = Get(lyr, row, col);
 		if ( p->GetMH() == BAD_MH) continue;
 		if ( p->GetHasWire() )
 		{
@@ -233,7 +236,7 @@ void Board::FloodNodeId(const int& nodeId)
 
 			if ( origId != p->GetNodeId() || !p->ReadFlagBits(USERSET) ) continue; // Don't paint directly if it wasn't painted directly in the first place
 		}
-		SetNodeIdByUser(row, col, nodeId, true);	// true ==> paint pins
+		SetNodeIdByUser(lyr, row, col, nodeId, true);	// true ==> paint pins
 	}
 }
 
@@ -246,6 +249,7 @@ void Board::AutoFillVero()
 
 	// Note: The terms "top" and "bot" in the following code should be
 	//		 taken to mean "left" and "right" if making horizontal strips.
+	const int k(0);
 	const int jMin	= ( bVertical ) ? minCol : minRow;
 	const int jMax	= ( bVertical ) ? maxCol : maxRow;
 	const int iMin	= ( bVertical ) ? minRow : minCol;
@@ -255,7 +259,7 @@ void Board::AutoFillVero()
 		int nodeIdTop(BAD_NODEID), lenTop(INT_MAX);
 		for (int i = iMin; i <= iMax; i++)
 		{
-			Element*	pC		= ( bVertical ) ? Get(i,j) : Get(j,i);
+			Element*	pC		= ( bVertical ) ? Get(k,i,j) : Get(k,j,i);
 			const int&	nodeId	= pC->GetNodeId();
 			if ( nodeId != BAD_NODEID )
 			{
@@ -276,7 +280,7 @@ void Board::AutoFillVero()
 			int nodeIdBot(BAD_NODEID), lenBot(INT_MAX);
 			for (int ii = i+1; ii <= iMax; ii++)
 			{
-				const Element*	pB		= ( bVertical ) ? Get(ii,j) : Get(j,ii);
+				const Element*	pB		= ( bVertical ) ? Get(k,ii,j) : Get(k,j,ii);
 				const int&		nodeId	= pB->GetNodeId();
 
 				if ( nodeId == BAD_NODEID )
@@ -337,11 +341,12 @@ void Board::SetSolder(const int& nodeId, const int& col, const bool& bVertical)
 
 	assert( nodeId != BAD_NODEID );
 	int bestRow(-1), bestRowPins(-INT_MAX), bestRowPads(INT_MAX);
+	const int lyr(0);
 	const int rowMax = ( bVertical ) ? GetRows() : GetCols();
 	for (int row = 0; row < rowMax; row++)
 	{
-		const Element*	pC			= bVertical ? Get(row, col)		: Get(col,   row);
-		const Element*	pR			= bVertical ? Get(row, col+1)	: Get(col+1, row);
+		const Element*	pC			= bVertical ? Get(lyr, row, col)	: Get(lyr, col,   row);
+		const Element*	pR			= bVertical ? Get(lyr, row, col+1)	: Get(lyr, col+1, row);
 		const bool		bMatch		= pC->GetNodeId() == nodeId && pR->GetNodeId() == nodeId;
 		const bool		bLastRow	= row == rowMax-1;
 		if ( bMatch )
@@ -377,9 +382,9 @@ void Board::SetSolder(const int& nodeId, const int& col, const bool& bVertical)
 			if ( bestRow != -1 )
 			{
 				if ( bVertical )
-					Get(bestRow, col)->SetSolderR(true);
+					Get(lyr, bestRow, col)->SetSolderR(true);
 				else
-					Get(col, bestRow)->SetSolderR(true);
+					Get(lyr, col, bestRow)->SetSolderR(true);
 			}
 			bestRow		= -1;		// Reset
 			bestRowPins	= -INT_MAX;	// Reset

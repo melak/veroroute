@@ -29,7 +29,7 @@ class RectManager;
 class FootPrint : public CompElementGrid
 {
 public:
-	FootPrint() : CompElementGrid(0,0), m_type(COMP::INVALID) {}
+	FootPrint() : CompElementGrid(), m_type(COMP::INVALID) {}
 	FootPrint(const FootPrint& o) : CompElementGrid(o), m_type(o.m_type) {}
 	FootPrint& operator=(const FootPrint& o)
 	{

@@ -628,6 +628,7 @@ void Board::WipeTracks()
 	Component& trax = m_compMgr.GetTrax();
 	if ( trax.GetSize() > 0 && trax.GetIsPlaced() )
 	{
+		const int	lyrTL		= trax.GetLyr();
 		const int	rowTL		= trax.GetRow();
 		const int	colTL		= trax.GetCol();
 		const int&	compCols	= trax.GetCompCols();
@@ -640,7 +641,7 @@ void Board::WipeTracks()
 			for (int i = 0; i < compCols; i++, iCol++)
 			{
 				if ( !trax.GetCompElement(j,i)->ReadFlagBits(RECTSET) ) continue;
-				Element* p = Get(jRow, iCol);
+				Element* p = Get(lyrTL, jRow, iCol);
 				assert( !p->GetHasPin() && !p->GetIsHole() && !p->GetHasComp() );	// Sanity check
 				SetNodeId(p, BAD_NODEID);
 				p->SetSurface(SURFACE_FREE);
@@ -653,9 +654,11 @@ void Board::WipeTracks()
 	}
 	else	// ... otherwise wipe all the points on the board. The floating trax component won't get wiped
 	{
-		for (int j = 0, jMax = GetRows(); j < jMax; j++)	for (int i = 0, iMax = GetCols(); i < iMax; i++)
+		for (int k = 0, kMax = GetLyrs(); k < kMax; k++)
+		for (int j = 0, jMax = GetRows(); j < jMax; j++)
+		for (int i = 0, iMax = GetCols(); i < iMax; i++)
 		{
-			Element* p = Get(j, i);
+			Element* p = Get(k, j, i);
 			assert( !p->GetHasPin() && !p->GetIsHole() && !p->GetHasComp() );	// Sanity check
 			SetNodeId(p, BAD_NODEID);
 			p->SetSurface(SURFACE_FREE);

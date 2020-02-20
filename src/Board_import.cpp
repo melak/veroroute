@@ -233,7 +233,7 @@ bool Board::ImportTango(const TemplateManager& templateMgr, const std::string& f
 						bOK = GetPinRowCol(compId, iPinIndex, row, col);
 						if ( !bOK )	errorStr = "Net section: " + netStr + "\nLine: " + str + "\nInternal error mapping the pin to a board location";
 						if ( bOK )
-							SetNodeIdByUser(row, col, iNodeId, true);	// true ==> paint pins
+							SetNodeIdByUser(0, row, col, iNodeId, true);	// true ==> paint pins
 					}
 				}
 			}
@@ -514,7 +514,7 @@ bool Board::ImportOrcad(const TemplateManager& templateMgr, const std::string& f
 				break;
 			}
 
-			SetNodeIdByUser(row, col, nodeId, true);	// true ==> paint pins
+			SetNodeIdByUser(0, row, col, nodeId, true);	// true ==> paint pins
 		}
 	}
 	if ( inStream.is_open() ) inStream.close();

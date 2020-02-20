@@ -35,13 +35,14 @@ class MyScrollArea;
 class Board : public ElementGrid, public GuiControl
 {
 public:
-	Board(int rows = 35, int cols = 35)
-	: ElementGrid(rows, cols)
+	Board(int lyrs = 1, int rows = 35, int cols = 35)
+	: ElementGrid()
 	, GuiControl()
 	, m_infoStr("Use this box to enter a circuit description or other info")
 	, m_tmpVecSize(0)
 	, m_bRouteMinimal(true)
 	{
+		Allocate(lyrs, rows, cols);
 		GlueNbrs();		// Set pointers between neighbouring grid elements
 	}
 
@@ -122,7 +123,7 @@ public:
 	}
 	void Clear()
 	{
-		Allocate(GetRows(), GetCols());
+		Allocate(GetLyrs(), GetRows(), GetCols());
 		GlueNbrs();	// Set pointers between neighbouring grid elements
 		SetInfoStr("Use this box to enter a circuit description or other info");
 		m_compMgr.Clear();
@@ -140,6 +141,7 @@ public:
 
 	void GlueNbrs()	// Set pointers between neighbouring grid elements
 	{
+		for (int iLyr = 0, iLyrs = GetLyrs(); iLyr < iLyrs; iLyr++)
 		for (int iRow = 0, iRows = GetRows(); iRow < iRows; iRow++)
 		{
 			const int iT(iRow-1), iB(iRow+1);
@@ -147,15 +149,15 @@ public:
 			{
 				const int iL(iCol-1), iR(iCol+1);
 
-				Element* p = Get(iRow, iCol);
-				p->SetNbr(NBR_L,	Get(iRow, iL));
-				p->SetNbr(NBR_LT,	Get(iT,   iL));
-				p->SetNbr(NBR_T,	Get(iT,   iCol));
-				p->SetNbr(NBR_RT,	Get(iT,   iR));
-				p->SetNbr(NBR_R,	Get(iRow, iR));
-				p->SetNbr(NBR_RB,	Get(iB,   iR));
-				p->SetNbr(NBR_B,	Get(iB,   iCol));
-				p->SetNbr(NBR_LB,	Get(iB,   iL));
+				Element* p = Get(iLyr, iRow, iCol);
+				p->SetNbr(NBR_L,	Get(iLyr, iRow, iL));
+				p->SetNbr(NBR_LT,	Get(iLyr, iT,   iL));
+				p->SetNbr(NBR_T,	Get(iLyr, iT,   iCol));
+				p->SetNbr(NBR_RT,	Get(iLyr, iT,   iR));
+				p->SetNbr(NBR_R,	Get(iLyr, iRow, iR));
+				p->SetNbr(NBR_RB,	Get(iLyr, iB,   iR));
+				p->SetNbr(NBR_B,	Get(iLyr, iB,   iCol));
+				p->SetNbr(NBR_LB,	Get(iLyr, iB,   iL));
 				p->ClearWires();	// Wires must be set by GlueWires()
 
 				// Prevent toroidal routing at board edges
@@ -182,18 +184,20 @@ public:
 				const int  rowB = comp.GetLastRow();
 				const int  colB = comp.GetLastCol();
 
-				Element* pA = Get(rowA, colA);	assert(pA->GetNumWires() < 2);
-				Element* pB = Get(rowB, colB);	assert(pB->GetNumWires() < 2);
+				int iLyr = 0;	//TODO	for (int iLyr = 0, iLyrs = GetLyrs(); iLyr < iLyrs; iLyr++)
+				{
+					Element* pA = Get(iLyr, rowA, colA);	assert(pA->GetNumWires() < 2);
+					Element* pB = Get(iLyr, rowB, colB);	assert(pB->GetNumWires() < 2);
 
-				assert(pA->GetNumCompIds() > 0 && pA->GetNumCompIds() < 3);
-				assert(pB->GetNumCompIds() > 0 && pB->GetNumCompIds() < 3);
+					assert(pA->GetNumCompIds() > 0 && pA->GetNumCompIds() < 3);
+					assert(pB->GetNumCompIds() > 0 && pB->GetNumCompIds() < 3);
+					assert(pB->GetNodeId() == pA->GetNodeId());	// Wire ends must have same NodeId
 
-				assert(pB->GetNodeId() == pA->GetNodeId());	// Wire ends must have same NodeId
-
-				const int iSlotA = pA->GetSlotFromCompId(compId);
-				const int iSlotB = pB->GetSlotFromCompId(compId);
-				pA->SetW( iSlotA, pB );	// Give pA a pointer to pB
-				pB->SetW( iSlotB, pA );	// Give pB a pointer to pA
+					const int iSlotA = pA->GetSlotFromCompId(compId);
+					const int iSlotB = pB->GetSlotFromCompId(compId);
+					pA->SetW( iSlotA, pB );	// Give pA a pointer to pB
+					pB->SetW( iSlotB, pA );	// Give pB a pointer to pA
+				}
 			}
 		}
 	}
@@ -287,19 +291,21 @@ public:
 
 	void GrowThenPan(const int& incRows, const int& incCols, const int& iDown, const int& iRight)
 	{
-		ElementGrid::Grow(incRows, incCols);	// Grow the base class
-		ElementGrid::Pan(iDown, iRight);		// Pan the base class
+		const int incLyrs(0);
+		ElementGrid::Grow(incLyrs, incRows, incCols);	// Grow the base class
+		ElementGrid::Pan(iDown, iRight);				// Pan the base class
 
 		GlueNbrs();		// Set pointers between neighbouring grid elements
 
 		// Need all component locations before calling GlueWires()
 		for (auto& mapObj : m_compMgr.m_mapIdToComp)
 		{
-			Component& comp = mapObj.second;
+			Component& comp	= mapObj.second;
+			int newLyr = comp.GetLyr();
 			int newRow = comp.GetRow() + iDown;
 			int newCol = comp.GetCol() + iRight;
 
-			MakeToroid(newRow, newCol);	// Make co-ordinates wrap around at grid edges
+			MakeToroid(newLyr, newRow, newCol);	// Make co-ordinates wrap around at grid edges
 
 			comp.SetRow(newRow);
 			comp.SetCol(newCol);
@@ -307,10 +313,11 @@ public:
 		Component& trax = m_compMgr.GetTrax();
 		if ( trax.GetSize() > 0 )	// If have a trax pattern
 		{
+			int newLyr = trax.GetLyr();
 			int newRow = trax.GetRow() + iDown;
 			int newCol = trax.GetCol() + iRight;
 
-			MakeToroid(newRow, newCol);	// Make co-ordinates wrap around at grid edges
+			MakeToroid(newLyr, newRow, newCol);	// Make co-ordinates wrap around at grid edges
 
 			trax.SetRow(newRow);
 			trax.SetCol(newCol);
@@ -327,14 +334,19 @@ public:
 
 	bool GetBounds(int& minRow, int& minCol, int& maxRow, int& maxCol) const
 	{
+		int minLyr, maxLyr;	//TODO May have to pass these in depending on how this method is called
 		bool bOK(false);
 		// First consider all painted nodeIds on the board
-		const int numRows( GetRows() ), numCols( GetCols() );
+		const int numLyrs( GetLyrs() ), numRows( GetRows() ), numCols( GetCols() );
+		minLyr = numLyrs - 1;	maxLyr = 0;	// Start with min and max at the wrong ends
 		minRow = numRows - 1;	maxRow = 0;	// Start with min and max at the wrong ends
 		minCol = numCols - 1;	maxCol = 0;	// Start with min and max at the wrong ends
-		for (int j = 0; j < numRows; j++)	for (int i = 0; i < numCols; i++)
+		for (int k = 0; k < numLyrs; k++)
+		for (int j = 0; j < numRows; j++)
+		for (int i = 0; i < numCols; i++)
 		{
-			if ( Get(j,i)->GetNodeId() == BAD_NODEID ) continue;
+			if ( Get(k,j,i)->GetNodeId() == BAD_NODEID ) continue;
+			minLyr = std::min(minLyr, k);	maxLyr = std::max(maxLyr, k);
 			minRow = std::min(minRow, j);	maxRow = std::max(maxRow, j);
 			minCol = std::min(minCol, i);	maxCol = std::max(maxCol, i);
 			bOK = true;
@@ -374,7 +386,7 @@ public:
 
 	// Methods to paint/unpaint nodeIds
 	void SetNodeId(Element* p, const int& nodeId);	// Helper to make sure we do UpdateCounts() before painting an element
-	bool SetNodeIdByUser(const int& row, const int& col, const int& nodeId, const bool& bPaintPins);
+	bool SetNodeIdByUser(const int& lyr, const int& row, const int& col, const int& nodeId, const bool& bPaintPins);
 	void FloodNodeId(const int& nodeId);
 	void AutoFillVero();
 	void CalcSolder();	// Work out locations of solder blobs to join veroboard tracks together
@@ -483,7 +495,9 @@ public:
 		UpdateMergeOffsets(o);
 
 		// Grow this board to make room for the merge
-		Grow(src.GetRows()+1, std::max(0, src.GetCols() - GetCols()));
+		Grow(std::max(0, src.GetLyrs() - GetLyrs()),
+			 src.GetRows()+1,
+			 std::max(0, src.GetCols() - GetCols()));
 		GlueNbrs();	// Set pointers between neighbouring grid elements
 
 		// Apply offsets to the source board, so we can merge it with no conflicts
@@ -584,13 +598,16 @@ private:
 					int iCol( comp.GetCol() );
 					for (int i = 0, iCols = comp.GetCompCols(); i < iCols; i++, iCol++)
 					{
-						Element* p = Get(jRow, iCol);
-						// Want GetIsPin() methods to be private so commented out following assert
-						// assert( comp.GetCompElement(j, i)->GetIsPin() == p->GetIsPin() );
-						assert( p->GetSurface() == SURFACE_PLUG || p->GetSurface() == SURFACE_FULL );
-						const bool bGap = ( p->GetSurface() & SURFACE_GAP ) > 0;
-						p->SetWireOccupancies();
-						if ( bGap ) p->SetSurface( p->GetSurface() + SURFACE_GAP );
+						for (int kLyr = 0, kLyrs = GetLyrs(); kLyr < kLyrs; kLyr++)	//TODO ???
+						{
+							Element* p = Get(kLyr, jRow, iCol);
+							// Want GetIsPin() methods to be private so commented out following assert
+							// assert( comp.GetCompElement(j, i)->GetIsPin() == p->GetIsPin() );
+							assert( p->GetSurface() == SURFACE_PLUG || p->GetSurface() == SURFACE_FULL );
+							const bool bGap = ( p->GetSurface() & SURFACE_GAP ) > 0;
+							p->SetWireOccupancies();
+							if ( bGap ) p->SetSurface( p->GetSurface() + SURFACE_GAP );
+						}
 					}
 				}
 			}

@@ -32,7 +32,7 @@ void FootPrint::BuildDefault(const COMP& type)
 	const bool bOK = ( (int)pinStr.size() == numRows * numCols );	assert( bOK );	// Check string length OK
 	if ( !bOK ) return;
 
-	Allocate(numRows, numCols);
+	Allocate(1, numRows, numCols);
 
 	const bool	bPlug	= IsPlug(m_type);	// A "plug" component can plug the gap between rows of IC pins.
 	const char*	szpins	= pinStr.c_str();
@@ -61,11 +61,12 @@ void FootPrint::BuildTracks(CompManager* pCompMgr, const RectManager& rectMgr, c
 	const int numRows = 1 + nRowMax - nRowMin;
 	const int numCols = 1 + nColMax - nColMin;
 
-	Allocate(numRows, numCols);
+	Allocate(1, numRows, numCols);
 
 	size_t	pinIndex;
 	int		compId;
 
+	int kLyr(0);	//TODO
 	int jRow(nRowMin);
 	for (int j = 0; j < numRows; j++, jRow++)
 	{
@@ -74,8 +75,8 @@ void FootPrint::BuildTracks(CompManager* pCompMgr, const RectManager& rectMgr, c
 		{
 			if ( !rectMgr.ContainsPoint(jRow,iCol) ) continue;
 
-			CompElement*	pTarget = Get(j,i);
-			Element*		pSource = o.Get(jRow, iCol);	assert(pSource);
+			CompElement*	pTarget = Get(kLyr,j,i);
+			Element*		pSource = o.Get(kLyr, jRow, iCol);	assert(pSource);
 
 			int iNodeId = pSource->GetNodeId();
 
