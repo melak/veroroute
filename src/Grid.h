@@ -299,4 +299,15 @@ public:
 		for (int i = 0, iSize = GetSize(); i < iSize; i++)
 			o.GetAt(i)->operator=(*GetAtConst(i));
 	}
+	size_t GetNumNodeIds() const
+	{
+		std::set<int> nodeIds;
+		for (int i = 0, iSize = GetSize(); i < iSize; i++)
+		{
+			const int& iNodeId = GetAtConst(i)->GetNodeId();
+			if ( iNodeId != BAD_NODEID )
+				nodeIds.insert(iNodeId);
+		}
+		return nodeIds.size();
+	}
 };

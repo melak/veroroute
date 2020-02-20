@@ -59,7 +59,7 @@ public:
 		adjManager.SortByLowestNodeId();
 		if ( m_bReAssign )
 		{
-			if ( adjManager.GetNumNodeIdsOnBoard(pBoard) > MYNUMCOLORS )
+			if ( pBoard->GetNumNodeIds() > MYNUMCOLORS )
 				m_mapNodeIdToColorId.clear();	// Only wipe if we require more colors
 			m_bReAssign = false;
 		}

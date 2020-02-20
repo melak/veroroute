@@ -31,6 +31,8 @@
 // then setting the code appropriately at each point will allow
 // a single diagonal connection to exist, either (A-A) or (B-B).
 
+const int NUM_NBRS = 8;	// NBR_L to NBR_LB
+
 // Indexes for the eight neighbour elements, starting on the left and going clockwise
 const int	NBR_L(0), NBR_LT(1), NBR_T(2), NBR_RT(3),		// Left,  Left-Top,     Top,    Right-Top,
 			NBR_R(4), NBR_RB(5), NBR_B(6), NBR_LB(7);		// Right, Right-Bottom, Bottom, Left-Bottom
@@ -81,7 +83,7 @@ public:
 	}
 	void SetNodeId(const int& i)	{ m_nodeId	= i; }
 	void SetCode(const int& i)		{ m_iCode	= i; }
-	void SetFlag(const char& i)		{ m_flag		= i; }
+	void SetFlag(const char& i)		{ m_flag	= i; }
 
 	const int&	GetNodeId() const	{ return m_nodeId; }
 	const int&	GetCode() const		{ return m_iCode; }

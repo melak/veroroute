@@ -59,31 +59,31 @@ typedef std::list<ElementInt> WIRELIST;	// Helper for chains of wires
 class Element : public Pin, public TrackElement
 {
 public:
-	Element() : Pin(), TrackElement()
-	{
-		memset(m_pNbr, 0, 8 * sizeof(Element*));
-		memset(m_pW,   0, 2 * sizeof(Element*));
-	}
+	Element() : Pin(), TrackElement() { ZeroConnectionPointers(); }
 	Element(const Element& o) : Pin(o), TrackElement(o)	{ assert(0); *this = o; }	// The assert just shows this is never used
 	~Element() {}
+	void ZeroConnectionPointers()
+	{
+		memset(m_pNbr,	0, NUM_NBRS * sizeof(Element*));
+		memset(m_pW,	0, 2 * sizeof(Element*));
+	}
 	Element& operator=(const Element& o)
 	{
 		Pin::operator=(o);			// Call operator= in base class
 		TrackElement::operator=(o);	// Call operator= in base class
-		m_bIsVia		= o.m_bIsVia;
-		m_compId		= o.m_compId;
-		m_compId2		= o.m_compId2;
-		m_pinChar2		= o.m_pinChar2;
-		m_bSolderR		= o.m_bSolderR;
-		m_MH			= o.m_MH;
-		m_maxMH			= o.m_maxMH;
-		m_routeId		= o.m_routeId;
-		//m_iRoutable	= o.m_iRoutable;	// This should only be set by the Board::Glue() method
+		m_bIsVia	= o.m_bIsVia;
+		m_compId	= o.m_compId;
+		m_compId2	= o.m_compId2;
+		m_pinChar2	= o.m_pinChar2;
+		m_bSolderR	= o.m_bSolderR;
+//		m_iRoutable	= o.m_iRoutable;	// This should only be set by the Board::Glue() method
+		m_MH		= o.m_MH;
+		m_maxMH		= o.m_maxMH;
+		m_routeId	= o.m_routeId;
 		// Zero the connection pointers m_pNbr[] and m_pW[].
 		// These should only be set by Board::GlueNbrs() and Board::GlueWires().
 		// m_pW can also be modified by the methods Board::PutDown() and Board::TakeOff().
-		memset(m_pNbr, 0, 8 * sizeof(Element*));
-		memset(m_pW,   0, 2 * sizeof(Element*));
+		ZeroConnectionPointers();
 		return *this;
 	}
 	bool operator==(const Element& o) const	// Compare persisted info only
@@ -104,7 +104,7 @@ public:
 		TrackElement::SetNodeId(i);
 
 		// Update usage flags for connections emanating from "this" element.
-		for (int iNbr = 0; iNbr < 8; iNbr++) UpdateUsed(iNbr);
+		for (int iNbr = 0; iNbr < NUM_NBRS; iNbr++) UpdateUsed(iNbr);
 
 		// Update usage flags for diagonals that cut across the LT,RT,LB,RB diagonals.
 		// Call these LTX,RTX,LBX,RBX respectively.
@@ -118,6 +118,7 @@ public:
 	void SetCompId2(const int& i)		{ m_compId2 = i; }
 	void SetPinIndex2(const size_t& i)	{ m_pinChar2= ( i >= BAD_PINCHAR ) ? BAD_PINCHAR : static_cast<uchar> (i); }
 	void SetSolderR(const bool& b)		{ m_bSolderR	= b; }
+	void SetRoutable(const int& i)		{ m_iRoutable	= i; }
 	void ResetMH()
 	{
 		m_routeId	= BAD_ROUTEID;	// Wipe RouteId
@@ -127,14 +128,11 @@ public:
 	void UpdateMH(const unsigned int& routeID, const unsigned int& iMH, unsigned int& iMaxMH)
 	{
 		assert( m_MH == BAD_MH );	// Should only ever write the MH once
-
 		iMaxMH		= std::max(iMaxMH, iMH);	// Update iMaxMH for output before storing it
 		m_routeId	= routeID;
 		m_MH		= iMH;
 		m_maxMH		= iMaxMH;
 	}
-	void SetRouteId(const unsigned int& i)		{ m_routeId		= i; }
-	void SetRoutable(const int& i)				{ m_iRoutable	= i; }
 	void SetNbr(const int& iNbr, Element* p)	{ m_pNbr[iNbr]	= p; }
 	void ClearWires()							{ m_pW[0] = m_pW[1] = nullptr; }
 	bool GetHasWire() const						{ return m_pW[0] != nullptr || m_pW[1] != nullptr; }
@@ -203,15 +201,15 @@ public:
 	bool				GetHasPin() const				{ return GetIsPin() || m_pinChar2 != BAD_PINCHAR; }
 	size_t				GetPinIndex2() const			{ return ( m_pinChar2 == BAD_PINCHAR ) ? BAD_PININDEX : m_pinChar2; }
 	const bool&			GetSolderR() const				{ return m_bSolderR; }
-	const unsigned int&	GetMH() const					{ return m_MH; }
-	const unsigned int& GetMaxMH() const				{ return m_maxMH; }
-	const unsigned int&	GetRouteId() const				{ return m_routeId; }
 	const int&			GetRoutable() const				{ return m_iRoutable; }
+	const unsigned int&	GetRouteId() const				{ return m_routeId; }
+	const unsigned int&	GetMH() const					{ return m_MH; }
+	const unsigned int&	GetMaxMH() const				{ return m_maxMH; }
 	Element*			GetNbr(const int& iNbr) const	{ return m_pNbr[iNbr]; }
 	Element*			GetW(const int& i) const		{ return m_pW[i]; }
 
 	// Helpers
-	bool HaveNonBlankPins(const int& iNbr) const
+	bool HaveNoBlankPins(const int& iNbr) const
 	{
 		Element* pNbr = GetNbr(iNbr);
 		return	( !this->GetHasPin() || this->GetNodeId() != BAD_NODEID || this->GetHasWire() ) &&	// Only allow routing FROM blank pins if they are on wires
@@ -229,7 +227,7 @@ public:
 						&& GetNodeId() == GetNbr(iNbr)->GetNodeId()
 						&& !IsBlocked(iNbr, GetNodeId());
 		SetUsed(iNbr, bUsed);
-		m_pNbr[iNbr]->SetUsed(Opposite(iNbr), bUsed);			// Keep consistent with nbr
+		m_pNbr[iNbr]->SetUsed(Opposite(iNbr), bUsed);	// Keep consistent with nbr
 	}
 	void ToggleUsed(const int& iNbr)
 	{
@@ -263,7 +261,7 @@ public:
 	bool IsNbr(const Element* p) const
 	{
 		assert(p != nullptr);	// Sanity check
-		for (int iNbr = 0; iNbr < 8; iNbr++)
+		for (int iNbr = 0; iNbr < NUM_NBRS; iNbr++)
 			if ( GetNbr(iNbr) == p ) return true;
 		return false;
 	}			
@@ -278,7 +276,7 @@ public:
 			// If these ends both neighbour a common element with the specified nodeId,
 			// then it is wasteful to paint the wire with that nodeId too, since the
 			// common element already provides a connection.
-			for (int iNbr = 0; iNbr < 8; iNbr++)
+			for (int iNbr = 0; iNbr < NUM_NBRS; iNbr++)
 			{
 				const Element* p = pWA->GetNbr(iNbr);
 				if ( p->GetNodeId() != nodeId ) continue;
@@ -396,11 +394,11 @@ private:
 
 	// Working variables.	Don't persist.
 	bool			m_bSolderR	= false;		// true ==> have blob of solder to right (for joining vero tracks)
+	int				m_iRoutable	= 0;			// Set by Board::GlueNbrs().  Code bits used to enable/disable connections to neighbours
+	unsigned int	m_routeId	= BAD_ROUTEID;	// For the routing algorithm.
 	unsigned int	m_MH		= BAD_MH;		// Manhatten distance to another element.  For the routing/connectivity algorithm.
 	unsigned int	m_maxMH		= 0;			// For the routing algorithm.
-	unsigned int	m_routeId	= BAD_ROUTEID;	// For the routing algorithm.
-	int				m_iRoutable	= 0;			// Set by Board::GlueNbrs().  An 8-bit code used to enable/disable connections to the 8 neighbours
 	// Connection pointers. Set by Board::GlueNbrs() and Board::GlueWires().	Don't persist.
-	Element*		m_pNbr[8];					// 0 to 7 <==> NBR_L to NBR_LB
+	Element*		m_pNbr[(size_t)NUM_NBRS];	// 0 to 7 <==> NBR_L to NBR_LB
 	Element*		m_pW[2];					// Up to 2 wires per element. These point to the other end of the wire(s).
 };

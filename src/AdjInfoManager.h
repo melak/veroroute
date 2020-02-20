@@ -55,7 +55,9 @@ public:
 		}
 		// Modify adjacency info for newNodeId
 		assert(pNew->GetNodeId() == newNodeId);	// Sanity check.
-		for (int iNbr = 0; iNbr < 8; iNbr++) ModifyCount(nullptr, pNew, p->GetNbr(iNbr));
+		for (int iNbr = 0; iNbr < NUM_NBRS; iNbr++)
+//			if ( ReadCodeBit(iNbr, p->GetRoutable()) )	//TODO
+				ModifyCount(nullptr, pNew, p->GetNbr(iNbr)->GetNodeId());
 		// Don't do p->GetW() !! That will be handled by painting the other wire end
 	}
 	void UpdateCounts(Element* p, int newNodeId)	// Only called by Board::SetNodeId()
@@ -79,29 +81,18 @@ public:
 		}
 		// Modify adjacency info for oldNodeId and newNodeId
 		assert(pNew == nullptr || pNew->GetNodeId() == newNodeId);	// Sanity check.
-		for (int iNbr = 0; iNbr < 8; iNbr++) ModifyCount(pOld, pNew, p->GetNbr(iNbr));
+		for (int iNbr = 0; iNbr < NUM_NBRS; iNbr++)
+//			if ( ReadCodeBit(iNbr, p->GetRoutable()) )	//TODO
+				ModifyCount(pOld, pNew, p->GetNbr(iNbr)->GetNodeId());
 		// Don't do p->GetW() !! That will be handled on painting the other wire end
 	}
 	void SortByLowestNodeId()
 	{
 		std::stable_sort(m_list.begin(), m_list.end(), HasLowerNodeId());
 	}
-	size_t GetNumNodeIdsOnBoard(ElementGrid* pBoard)
-	{
-		std::unordered_map<int, int> nodeIds;
-		const int iSize = pBoard->GetSize();
-		for (int i = 0; i < iSize; i++)
-		{
-			const int& iNodeId = pBoard->GetAt(i)->GetNodeId() ;
-			if ( iNodeId != BAD_NODEID )
-				nodeIds[iNodeId] = 1;
-		}
-		return nodeIds.size();
-	}
 private:
-	void ModifyCount(AdjInfo* pOld, AdjInfo* pNew, const Element* q)
+	void ModifyCount(AdjInfo* pOld, AdjInfo* pNew, const int& nbrNodeId)
 	{
-		const int& nbrNodeId = q->GetNodeId();	// nodeId of neighbouring element "q"
 		if ( nbrNodeId == BAD_NODEID ) return;
 		if ( pOld && pNew && pOld->GetNodeId() == pNew->GetNodeId() ) return;	// No change in nodeId
 

@@ -209,11 +209,10 @@ unsigned int Board::Flood(const int& iFloodNodeId)
 
 void Board::Flood_Helper(const int& iFloodNodeId, bool** ppConn, unsigned int& cost, const bool bBuildTracks)
 {
-	const int iSize = GetSize();
-	for (int i = 0; i < iSize; i++)	// Loop all grid points
+	for (int i = 0, iSize = GetSize(); i < iSize; i++)	// Loop all grid points
 		GetAt(i)->ResetMH();	// Wipe RouteId. Set "infinite" MH distance.  Zero max MH parameter.
 
-	m_tmpVec.resize(iSize, nullptr);	// Clear the set of visited points
+	m_tmpVec.resize(GetSize(), nullptr);	// Clear the set of visited points
 	m_tmpVecSize = 0;
 
 	unsigned int iMH(0), iMaxMH(0);
@@ -277,7 +276,7 @@ void Board::Flood_Helper(const int& iFloodNodeId, bool** ppConn, unsigned int& c
 					const unsigned int& k = pK->GetRouteId();
 
 					const bool bDirOK = ( bOK && pJ->GetUsed(iNbr) ) ||	// i.e. if already painted with correct nodeId
-										( bBuildTracks && pJ->HaveNonBlankPins(iNbr) && !pJ->IsBlocked(iNbr, iFloodNodeId) && !pJ->IsUselessWire(iNbr, iFloodNodeId) );
+										( bBuildTracks && pJ->HaveNoBlankPins(iNbr) && !pJ->IsBlocked(iNbr, iFloodNodeId) && !pJ->IsUselessWire(iNbr, iFloodNodeId) );
 					if ( !bDirOK ) continue;
 
 					if ( pK->GetMH() == BAD_MH ) // Grow route with RID j (from pJ to pK)
@@ -445,11 +444,10 @@ void Board::Manhatten(Element* p)
 
 	WIRELIST wireList;	// Helper for chains of wires
 
-	const int iSize = GetSize();
-	for (int i = 0; i < iSize; i++)	// Loop all grid points
+	for (int i = 0, iSize = GetSize(); i < iSize; i++)	// Loop all grid points
 		GetAt(i)->ResetMH();	// Wipe RouteId. Set "infinite" MH distance.  Zero max MH parameter.
 
-	m_tmpVec.resize(iSize, nullptr);	// Clear the set of visited points
+	m_tmpVec.resize(GetSize(), nullptr);	// Clear the set of visited points
 	m_tmpVecSize = 0;
 
 	const bool			bDiagsOK	= ( GetDiagsMode() != DIAGSMODE::OFF );

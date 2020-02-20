@@ -300,45 +300,45 @@ public:
 		outStream.Save(m_bVerticalStrips);	// Added in VRT_VERSION_12
 		outStream.Save(m_bCompEdit);		// Added in VRT_VERSION_19
 	}
-	bool SetCurrentNodeId(const int& i)		{ const bool bChanged = ( m_currentNodeId	!= i );	m_currentNodeId	  = i; return bChanged; }
-	bool SetCurrentCompId(const int& i)		{ const bool bChanged = ( m_currentCompId	!= i );	m_currentCompId	  = i; return bChanged; }
-	bool SetGroundNodeId(const int& i)		{ const bool bChanged = ( m_groundNodeId	!= i );	m_groundNodeId	  = i; return bChanged; }
-	bool SetCurrentTextId(const int& i)		{ const bool bChanged = ( m_currentTextId	!= i );	m_currentTextId	  = i; return bChanged; }
-	bool SetDiagsMode(const DIAGSMODE& e)	{ const bool bChanged = ( m_diagsMode		!= e );	m_diagsMode		  = e; return bChanged; }
-	bool SetTrackMode(const TRACKMODE& e)	{ const bool bChanged =	( m_iTrackMode		!= e );	m_iTrackMode	  = e; return bChanged; }
-	bool SetCompMode(const COMPSMODE& e)	{ const bool bChanged =	( m_iCompMode		!= e );	m_iCompMode		  = e; return bChanged; }
-	bool SetHoleType(const HOLETYPE& e)		{ const bool bChanged =	( m_iHoleType		!= e );	m_iHoleType		  = e; return bChanged; }
-	bool SetGRIDPIXELS(const int& i)		{ const bool bChanged = ( m_GRIDPIXELS		!= i ); m_GRIDPIXELS	  = i; return bChanged; }
-	bool SetPAD_PERCENT(const int& i)		{ const bool bChanged = ( m_PAD_PERCENT		!= i ); m_PAD_PERCENT	  = i; return bChanged; }
-	bool SetTRACK_PERCENT(const int& i)		{ const bool bChanged = ( m_TRACK_PERCENT	!= i ); m_TRACK_PERCENT	  = i; return bChanged; }
-	bool SetHOLE_PERCENT(const int& i)		{ const bool bChanged = ( m_HOLE_PERCENT	!= i ); m_HOLE_PERCENT	  = i; return bChanged; }
-	bool SetGAP_PERCENT(const int& i)		{ const bool bChanged = ( m_GAP_PERCENT		!= i ); m_GAP_PERCENT	  = i; return bChanged; }
-	bool SetMASK_PERCENT(const int& i)		{ const bool bChanged = ( m_MASK_PERCENT	!= i ); m_MASK_PERCENT	  = i; return bChanged; }
-	bool SetSILK_PERCENT(const int& i)		{ const bool bChanged = ( m_SILK_PERCENT	!= i ); m_SILK_PERCENT	  = i; return bChanged; }
-	bool SetEDGE_PERCENT(const int& i)		{ const bool bChanged = ( m_EDGE_PERCENT	!= i ); m_EDGE_PERCENT	  = i; return bChanged; }
-	bool SetRenderQuality(const int& i)		{ const bool bChanged = ( m_iRenderQuality	!= i ); m_iRenderQuality  = i; return bChanged; }
-	bool SetSaturation(const int& i)		{ const bool bChanged = ( m_iSaturation		!= i ); m_iSaturation	  = i; return bChanged; }
-	bool SetFillSaturation(const int& i)	{ const bool bChanged = ( m_iFillSaturation	!= i ); m_iFillSaturation = i; return bChanged; }
-	bool SetCropMargin(const int& i)		{ const bool bChanged = ( m_iCropMargin		!= i ); m_iCropMargin	  = i; return bChanged; }
-	bool SetTargetRows(const int& i)		{ const bool bChanged = ( m_iTargetRows		!= i ); m_iTargetRows	  = i; return bChanged; }
-	bool SetTargetCols(const int& i)		{ const bool bChanged = ( m_iTargetCols		!= i ); m_iTargetCols	  = i; return bChanged; }
-	bool SetTextSizeComp(const int& i)		{ const bool bChanged = ( m_iTextSizeComp	!= i ); m_iTextSizeComp	  = i; return bChanged; }
-	bool SetTextSizePins(const int& i)		{ const bool bChanged = ( m_iTextSizePins	!= i ); m_iTextSizePins	  = i; return bChanged; }
-	bool SetRoutingMethod(const int& i)		{ const bool bChanged = ( m_iRoutingMethod	!= i ); m_iRoutingMethod  = i; return bChanged; }
-	bool SetShowTarget(const bool& b)		{ const bool bChanged = ( m_bShowTarget		!= b ); m_bShowTarget	  = b; return bChanged; }
-	bool SetWireShare(const bool& b)		{ const bool bChanged = ( m_bWireShare		!= b ); m_bWireShare	  = b; return bChanged; }
-	bool SetWireCross(const bool& b)		{ const bool bChanged = ( m_bWireCross		!= b ); m_bWireCross	  = b; return bChanged; }
-	bool SetVeroTracks(const bool& b)		{ const bool bChanged = ( m_bVeroTracks		!= b ); m_bVeroTracks	  = b; return bChanged; }
-	bool SetCurvedTracks(const bool& b)		{ const bool bChanged = ( m_bCurvedTracks	!= b ); m_bCurvedTracks	  = b; return bChanged; }
-	bool SetRoutingEnabled(const bool& b)	{ const bool bChanged = ( m_bRoutingEnabled	!= b ); m_bRoutingEnabled = b; return bChanged; }
-	bool SetShowGrid(const bool& b)			{ const bool bChanged = ( m_bShowGrid		!= b ); m_bShowGrid		  = b; return bChanged; }
-	bool SetShowText(const bool& b)			{ const bool bChanged = ( m_bShowText		!= b ); m_bShowText		  = b; return bChanged; }
-	bool SetFlipH(const bool& b)			{ const bool bChanged = ( m_bFlipH			!= b ); m_bFlipH		  = b; return bChanged; }
-	bool SetFlipV(const bool& b)			{ const bool bChanged = ( m_bFlipV			!= b ); m_bFlipV		  = b; return bChanged; }
-	bool SetShowPinLabels(const bool& b)	{ const bool bChanged = ( m_bPinLabels		!= b ); m_bPinLabels	  = b; return bChanged; }
-	bool SetGroundFill(const bool& b)		{ const bool bChanged = ( m_bGroundFill		!= b ); m_bGroundFill	  = b; return bChanged; }
-	bool SetVerticalStrips(const bool& b)	{ const bool bChanged = ( m_bVerticalStrips	!= b ); m_bVerticalStrips = b; return bChanged; }
-	bool SetCompEdit(const bool& b)			{ const bool bChanged = ( m_bCompEdit		!= b ); m_bCompEdit		  = b; return bChanged; }
+	bool SetCurrentNodeId(const int& i)		{ const bool bChanged = m_currentNodeId		!= i; m_currentNodeId	= i; return bChanged; }
+	bool SetCurrentCompId(const int& i)		{ const bool bChanged = m_currentCompId		!= i; m_currentCompId	= i; return bChanged; }
+	bool SetGroundNodeId(const int& i)		{ const bool bChanged = m_groundNodeId		!= i; m_groundNodeId	= i; return bChanged; }
+	bool SetCurrentTextId(const int& i)		{ const bool bChanged = m_currentTextId		!= i; m_currentTextId	= i; return bChanged; }
+	bool SetDiagsMode(const DIAGSMODE& e)	{ const bool bChanged = m_diagsMode			!= e; m_diagsMode		= e; return bChanged; }
+	bool SetTrackMode(const TRACKMODE& e)	{ const bool bChanged = m_iTrackMode		!= e; m_iTrackMode		= e; return bChanged; }
+	bool SetCompMode(const COMPSMODE& e)	{ const bool bChanged = m_iCompMode			!= e; m_iCompMode		= e; return bChanged; }
+	bool SetHoleType(const HOLETYPE& e)		{ const bool bChanged = m_iHoleType			!= e; m_iHoleType		= e; return bChanged; }
+	bool SetGRIDPIXELS(const int& i)		{ const bool bChanged = m_GRIDPIXELS		!= i; m_GRIDPIXELS		= i; return bChanged; }
+	bool SetPAD_PERCENT(const int& i)		{ const bool bChanged = m_PAD_PERCENT		!= i; m_PAD_PERCENT		= i; return bChanged; }
+	bool SetTRACK_PERCENT(const int& i)		{ const bool bChanged = m_TRACK_PERCENT		!= i; m_TRACK_PERCENT	= i; return bChanged; }
+	bool SetHOLE_PERCENT(const int& i)		{ const bool bChanged = m_HOLE_PERCENT		!= i; m_HOLE_PERCENT	= i; return bChanged; }
+	bool SetGAP_PERCENT(const int& i)		{ const bool bChanged = m_GAP_PERCENT		!= i; m_GAP_PERCENT		= i; return bChanged; }
+	bool SetMASK_PERCENT(const int& i)		{ const bool bChanged = m_MASK_PERCENT		!= i; m_MASK_PERCENT	= i; return bChanged; }
+	bool SetSILK_PERCENT(const int& i)		{ const bool bChanged = m_SILK_PERCENT		!= i; m_SILK_PERCENT	= i; return bChanged; }
+	bool SetEDGE_PERCENT(const int& i)		{ const bool bChanged = m_EDGE_PERCENT		!= i; m_EDGE_PERCENT	= i; return bChanged; }
+	bool SetRenderQuality(const int& i)		{ const bool bChanged = m_iRenderQuality	!= i; m_iRenderQuality	= i; return bChanged; }
+	bool SetSaturation(const int& i)		{ const bool bChanged = m_iSaturation		!= i; m_iSaturation		= i; return bChanged; }
+	bool SetFillSaturation(const int& i)	{ const bool bChanged = m_iFillSaturation	!= i; m_iFillSaturation	= i; return bChanged; }
+	bool SetCropMargin(const int& i)		{ const bool bChanged = m_iCropMargin		!= i; m_iCropMargin		= i; return bChanged; }
+	bool SetTargetRows(const int& i)		{ const bool bChanged = m_iTargetRows		!= i; m_iTargetRows		= i; return bChanged; }
+	bool SetTargetCols(const int& i)		{ const bool bChanged = m_iTargetCols		!= i; m_iTargetCols		= i; return bChanged; }
+	bool SetTextSizeComp(const int& i)		{ const bool bChanged = m_iTextSizeComp		!= i; m_iTextSizeComp	= i; return bChanged; }
+	bool SetTextSizePins(const int& i)		{ const bool bChanged = m_iTextSizePins		!= i; m_iTextSizePins	= i; return bChanged; }
+	bool SetRoutingMethod(const int& i)		{ const bool bChanged = m_iRoutingMethod	!= i; m_iRoutingMethod	= i; return bChanged; }
+	bool SetShowTarget(const bool& b)		{ const bool bChanged = m_bShowTarget		!= b; m_bShowTarget		= b; return bChanged; }
+	bool SetWireShare(const bool& b)		{ const bool bChanged = m_bWireShare		!= b; m_bWireShare		= b; return bChanged; }
+	bool SetWireCross(const bool& b)		{ const bool bChanged = m_bWireCross		!= b; m_bWireCross		= b; return bChanged; }
+	bool SetVeroTracks(const bool& b)		{ const bool bChanged = m_bVeroTracks		!= b; m_bVeroTracks		= b; return bChanged; }
+	bool SetCurvedTracks(const bool& b)		{ const bool bChanged = m_bCurvedTracks		!= b; m_bCurvedTracks	= b; return bChanged; }
+	bool SetRoutingEnabled(const bool& b)	{ const bool bChanged = m_bRoutingEnabled	!= b; m_bRoutingEnabled	= b; return bChanged; }
+	bool SetShowGrid(const bool& b)			{ const bool bChanged = m_bShowGrid			!= b; m_bShowGrid		= b; return bChanged; }
+	bool SetShowText(const bool& b)			{ const bool bChanged = m_bShowText			!= b; m_bShowText		= b; return bChanged; }
+	bool SetFlipH(const bool& b)			{ const bool bChanged = m_bFlipH			!= b; m_bFlipH			= b; return bChanged; }
+	bool SetFlipV(const bool& b)			{ const bool bChanged = m_bFlipV			!= b; m_bFlipV			= b; return bChanged; }
+	bool SetShowPinLabels(const bool& b)	{ const bool bChanged = m_bPinLabels		!= b; m_bPinLabels		= b; return bChanged; }
+	bool SetGroundFill(const bool& b)		{ const bool bChanged = m_bGroundFill		!= b; m_bGroundFill		= b; return bChanged; }
+	bool SetVerticalStrips(const bool& b)	{ const bool bChanged = m_bVerticalStrips	!= b; m_bVerticalStrips	= b; return bChanged; }
+	bool SetCompEdit(const bool& b)			{ const bool bChanged = m_bCompEdit			!= b; m_bCompEdit		= b; return bChanged; }
 	const int&			GetCurrentNodeId() const	{ return m_currentNodeId; }
 	const int&			GetCurrentCompId() const	{ return m_currentCompId; }
 	const int&			GetGroundNodeId() const		{ return m_groundNodeId; }
