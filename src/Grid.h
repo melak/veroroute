@@ -289,16 +289,20 @@ public:
 	ElementGrid& operator=(const ElementGrid& o) { Grid<Element>::operator=(o); return *this; }
 	bool operator==(const ElementGrid& o) const { return Grid<Element>::operator==(o); }
 	bool operator!=(const ElementGrid& o) const	{ return Grid<Element>::operator!=(o); }
-	void MakeToroid(int& lyr, int& row, int& col) const
+	void MakeToroid(int& row, int& col) const	// Make co-ordinates wrap around at grid edges
 	{
-		// Make co-ordinates wrap around at grid edges
-		assert( GetLyrs() > 0 && GetRows() > 0 && GetCols() > 0);
-		while ( lyr <  0 )			{ lyr += GetLyrs(); }
-		while ( lyr >= GetLyrs() )	{ lyr -= GetLyrs(); }
+		assert( GetRows() > 0 && GetCols() > 0);
 		while ( row <  0 )			{ row += GetRows(); }
 		while ( row >= GetRows() )	{ row -= GetRows(); }
 		while ( col <  0 )			{ col += GetCols(); }
 		while ( col >= GetCols() )	{ col -= GetCols(); }
+	}
+	void MakeToroid(int& lyr, int& row, int& col) const	// Make co-ordinates wrap around at grid edges
+	{
+		assert( GetLyrs() > 0 );
+		while ( lyr <  0 )			{ lyr += GetLyrs(); }
+		while ( lyr >= GetLyrs() )	{ lyr -= GetLyrs(); }
+		MakeToroid(row, col);
 	}
 	Element* Get(int lyr, int row, int col) const
 	{

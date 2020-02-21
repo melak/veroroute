@@ -38,7 +38,7 @@ public:
 		FootPrint::DeAllocate();
 		m_id		= 0;
 		m_nameStr	= m_valueStr = m_prefixStr = m_typeStr = m_importStr = "";
-		m_row		= m_col = m_iLabelOffsetRow = m_iLabelOffsetCol = 0;
+		m_lyr = m_row = m_col = m_iLabelOffsetRow = m_iLabelOffsetCol = 0;
 		m_direction	= 'W';
 		m_bIsPlaced	= false;
 		m_iPinFlags = 0;
@@ -62,6 +62,7 @@ public:
 
 		SetDefaultStrings();
 
+		m_lyr = nLyr;
 		m_row = nRowMin;
 		m_col = nColMin;
 		m_bIsPlaced = false;	// Trax are always created from the board
@@ -112,6 +113,7 @@ public:
 		m_prefixStr			= o.m_prefixStr;
 		m_typeStr			= o.m_typeStr;
 		m_importStr			= o.m_importStr;
+		m_lyr				= o.m_lyr;
 		m_row				= o.m_row;
 		m_col				= o.m_col;
 		m_iLabelOffsetRow	= o.m_iLabelOffsetRow;
@@ -141,6 +143,7 @@ public:
 				&& m_prefixStr			== o.m_prefixStr
 				&& m_typeStr			== o.m_typeStr
 				&& m_importStr			== o.m_importStr
+				&& m_lyr				== o.m_lyr
 				&& m_row				== o.m_row
 				&& m_col				== o.m_col
 				&& m_iLabelOffsetRow	== o.m_iLabelOffsetRow
@@ -208,6 +211,7 @@ public:
 	{
 		m_shapes.clear();	m_shapes.resize(numShapes, Shape());
 	}
+	void SetLyr(const int& i)										{ m_lyr = i; }
 	void SetRow(const int& i)										{ m_row = i; }
 	void SetCol(const int& i)										{ m_col = i; }
 //	void SetLabelOffsetRow(const int& i)							{ m_iLabelOffsetRow = i; }
@@ -236,7 +240,7 @@ public:
 	const int&			GetPinAlign(const size_t& iPinIndex) const	{ return m_pinAligns[iPinIndex]; }
 	size_t				GetNumShapes() const						{ return m_shapes.size(); }
 	const Shape&		GetShape(const size_t& iShapeIndex) const	{ return m_shapes[iShapeIndex]; }
-	int					GetLyr() const								{ return 0; }	//TODO Need variable to handle other layer trax
+	const int&			GetLyr() const								{ return m_lyr; }
 	const int&			GetRow() const								{ return m_row; }
 	const int&			GetCol() const								{ return m_col; }
 //	const int&			GetLabelOffsetRow() const					{ return m_iLabelOffsetRow; }
@@ -252,6 +256,7 @@ public:
 	void MoveLabelOffsets(const int& deltaRow, const int& deltaCol);	// w.r.t. screen, not comp rotation
 	void HandleLegacyLabelOffsets();	// For old VRT files
 
+	bool GetUsesLayer(const int& iLyr) const	{ return m_lyr == iLyr || m_lyr == -1; }
 	void GetSafeBounds(double& L, double& R, double& T, double& B) const
 	{
 		L = T =  DBL_MAX;
@@ -426,6 +431,7 @@ public:
 		FootPrint::ApplyMergeOffsets(o);	// Call ApplyMergeOffsets in base class
 
 		if ( m_id != BAD_COMPID && m_id != TRAX_COMPID) m_id += o.deltaCompId;
+		m_lyr += o.deltaLyr;
 		m_row += o.deltaRow;
 		m_col += o.deltaCol;
 		for (size_t i = 0; i < GetNumPins(); i++)
@@ -461,6 +467,9 @@ public:
 			inStream.Load(m_typeStr);				// Added in VRT_VERSION_18
 			inStream.Load(m_importStr);				// Added in VRT_VERSION_18
 		}
+		m_lyr = 0;
+		if ( inStream.GetVersion() >= VRT_VERSION_34 )
+			inStream.Load(m_lyr);					// Added in VRT_VERSION_34
 		inStream.Load(m_row);
 		inStream.Load(m_col);
 		inStream.Load(m_iLabelOffsetRow);
@@ -510,6 +519,7 @@ public:
 		outStream.Save(m_prefixStr);			// Added in VRT_VERSION_19
 		outStream.Save(m_typeStr);				// Added in VRT_VERSION_18
 		outStream.Save(m_importStr);			// Added in VRT_VERSION_18
+		outStream.Save(m_lyr);					// Added in VRT_VERSION_34
 		outStream.Save(m_row);
 		outStream.Save(m_col);
 		outStream.Save(m_iLabelOffsetRow);
@@ -545,6 +555,7 @@ private:
 	std::vector<Shape>			m_shapes;			// For rendering components. Coordinates are RELATIVE to footprint centre.
 	uchar						m_iPinFlags;		// 1 ==> PIN_RECT, 2 ==> PIN_LABELS
 	// Current placement in board
+	int							m_lyr;				// Board layer.	-1 ==> affects all layers
 	int							m_row;				// Board row for top-left element of footprint
 	int							m_col;				// Board col for top-left element of footprint
 	int							m_iLabelOffsetRow;	// Label offset in units of 1/16 of a grid square

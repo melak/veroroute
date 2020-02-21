@@ -56,7 +56,7 @@ public:
 		// Modify adjacency info for newNodeId
 		assert(pNew->GetNodeId() == newNodeId);	// Sanity check.
 		for (int iNbr = 0; iNbr < NUM_NBRS; iNbr++)
-//			if ( ReadCodeBit(iNbr, p->GetRoutable()) )	//TODO
+//			if ( ReadCodeBit(iNbr, p->GetRoutable()) )	//TODO_NEW
 				ModifyCount(nullptr, pNew, p->GetNbr(iNbr)->GetNodeId());
 		// Don't do p->GetW() !! That will be handled by painting the other wire end
 	}
@@ -82,7 +82,7 @@ public:
 		// Modify adjacency info for oldNodeId and newNodeId
 		assert(pNew == nullptr || pNew->GetNodeId() == newNodeId);	// Sanity check.
 		for (int iNbr = 0; iNbr < NUM_NBRS; iNbr++)
-//			if ( ReadCodeBit(iNbr, p->GetRoutable()) )	//TODO
+//			if ( ReadCodeBit(iNbr, p->GetRoutable()) )	//TODO_NEW
 				ModifyCount(pOld, pNew, p->GetNbr(iNbr)->GetNodeId());
 		// Don't do p->GetW() !! That will be handled on painting the other wire end
 	}

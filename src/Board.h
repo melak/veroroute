@@ -184,8 +184,10 @@ public:
 				const int  rowB = comp.GetLastRow();
 				const int  colB = comp.GetLastCol();
 
-				int iLyr = 0;	//TODO	for (int iLyr = 0, iLyrs = GetLyrs(); iLyr < iLyrs; iLyr++)
+				for (int iLyr = 0, iLyrs = GetLyrs(); iLyr < iLyrs; iLyr++)	//TODO_NEW_CHECK
 				{
+					if ( !comp.GetUsesLayer(iLyr) ) continue;
+
 					Element* pA = Get(iLyr, rowA, colA);	assert(pA->GetNumWires() < 2);
 					Element* pB = Get(iLyr, rowB, colB);	assert(pB->GetNumWires() < 2);
 
@@ -300,11 +302,10 @@ public:
 		for (auto& mapObj : m_compMgr.m_mapIdToComp)
 		{
 			Component& comp	= mapObj.second;
-			int newLyr = comp.GetLyr();
 			int newRow = comp.GetRow() + iDown;
 			int newCol = comp.GetCol() + iRight;
 
-			MakeToroid(newLyr, newRow, newCol);	// Make co-ordinates wrap around at grid edges
+			MakeToroid(newRow, newCol);	// Make co-ordinates wrap around at grid edges
 
 			comp.SetRow(newRow);
 			comp.SetCol(newCol);
@@ -312,11 +313,10 @@ public:
 		Component& trax = m_compMgr.GetTrax();
 		if ( trax.GetSize() > 0 )	// If have a trax pattern
 		{
-			int newLyr = trax.GetLyr();
 			int newRow = trax.GetRow() + iDown;
 			int newCol = trax.GetCol() + iRight;
 
-			MakeToroid(newLyr, newRow, newCol);	// Make co-ordinates wrap around at grid edges
+			MakeToroid(newRow, newCol);	// Make co-ordinates wrap around at grid edges
 
 			trax.SetRow(newRow);
 			trax.SetCol(newCol);
@@ -410,8 +410,12 @@ public:
 
 	// Methods for component placement/removal
 	bool CanPutDown(Component& comp);	// Checks if its possible to place the (floating) component on the board
+	bool CanPutDown(Component& comp, const int& iLyr);
 	bool PutDown(Component& comp);		// Tries to place the (floating) component on the board
+	void PutDown(Component& comp, const int& iLyr);
 	bool TakeOff(Component& comp);
+	void TakeOff(Component& comp, const int& iLyr);
+
 	void FloatAllComps();				// Float all components (i.e. take them off the board)
 	void PlaceFloaters();				// Try to place down all the floating components
 
@@ -596,9 +600,10 @@ private:
 					int iCol( comp.GetCol() );
 					for (int i = 0, iCols = comp.GetCompCols(); i < iCols; i++, iCol++)
 					{
-						for (int kLyr = 0, kLyrs = GetLyrs(); kLyr < kLyrs; kLyr++)	//TODO ???
+						for (int lyr = 0, lyrs = GetLyrs(); lyr < lyrs; lyr++)	//TODO_NEW_CHECK
 						{
-							Element* p = Get(kLyr, jRow, iCol);
+							if ( !comp.GetUsesLayer(lyr) ) continue;
+							Element* p = Get(lyr, jRow, iCol);
 							// Want GetIsPin() methods to be private so commented out following assert
 							// assert( comp.GetCompElement(j, i)->GetIsPin() == p->GetIsPin() );
 							assert( p->GetSurface() == SURFACE_PLUG || p->GetSurface() == SURFACE_FULL );

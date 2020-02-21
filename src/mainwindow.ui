@@ -923,7 +923,7 @@
     <string>VeroV</string>
    </property>
    <property name="toolTip">
-    <string>Vero (vertical strips)</string>
+    <string>Vero track style (vertical strips)</string>
    </property>
   </action>
   <action name="actionVeroH">
@@ -938,7 +938,7 @@
     <string>VeroH</string>
    </property>
    <property name="toolTip">
-    <string>Vero (horizontal strips)</string>
+    <string>Vero track style (horizontal strips)</string>
    </property>
   </action>
   <action name="actionStraight">
@@ -953,7 +953,7 @@
     <string>Straight</string>
    </property>
    <property name="toolTip">
-    <string>Straight tracks</string>
+    <string>Straight track style</string>
    </property>
   </action>
   <action name="actionCurved">
@@ -968,7 +968,7 @@
     <string>Curved</string>
    </property>
    <property name="toolTip">
-    <string>Curved tracks</string>
+    <string>Curved track style</string>
    </property>
   </action>
   <action name="actionDiagsMin">

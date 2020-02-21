@@ -85,7 +85,7 @@ bool Curve::Splice(Curve* pB)	// Tries to splice curve B to this
 
 void CurveList::SpliceAll()
 {
-	sort(Curve::HasSmallerPen());	// Sort list of curves by increasing pen width
+	sort(Curve::HasSmallerPen());	// Sort list of curves by pen type
 
 	bool bDone(false);	// Keep splicing curves together till no more splices are possible.
 	while ( !bDone )
