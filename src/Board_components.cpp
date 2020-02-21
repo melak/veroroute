@@ -94,9 +94,9 @@ int Board::AddComponent(MyScrollArea* pScrollArea, const Component& tmp, bool bD
 		int iCol = 1 + pScrollArea->horizontalScrollBar()->value() / W;	// The first fully visible col
 		iRow = std::max(0, std::min(GetRows()-1, iRow));
 		iCol = std::max(0, std::min(GetCols()-1, iCol));
-		if ( iRow + comp.GetRows() > GetRows() ||
-			 iCol + comp.GetCols() > GetCols() )
-			GrowThenPan(iRow + comp.GetRows() - GetRows(), iCol + comp.GetCols() - GetCols(), 0, 0);
+		const int incRows(iRow + comp.GetRows() - GetRows()), incCols(iCol + comp.GetCols() - GetCols());
+		if ( incRows > 0 || incCols > 0 )
+			GrowThenPan(0, incRows, incCols, 0, 0);
 
 		comp.SetRow(iRow);
 		comp.SetCol(iCol);
@@ -144,9 +144,9 @@ void Board::AddTextBox(MyScrollArea* pScrollArea)
 		rect.Move(iRow - rect.m_rowMin, iCol - rect.m_colMin); // Move it to the top left of the view
 	}
 
-	if ( iRow + rect.GetRows() > GetRows() ||
-		 iCol + rect.GetCols() > GetCols() )
-		GrowThenPan(iRow + rect.GetRows() - GetRows(), iCol + rect.GetCols() - GetCols(), 0, 0);
+	const int incRows(iRow + rect.GetRows() - GetRows()), incCols(iCol + rect.GetCols() - GetCols());
+	if ( incRows > 0 || incCols > 0 )
+		GrowThenPan(0, incRows, incCols, 0, 0);
 }
 
 
@@ -968,7 +968,7 @@ void Board::RotateComps(const std::list<int>& compIds, const bool& bCW)	// Rotat
 		const int deltaL = std::max(0, -rect.m_colMin - dx);
 		const int deltaR = std::max(0,  rect.m_colMin + dx + DY - GetCols());
 
-		GrowThenPan(deltaT + deltaB, deltaL + deltaR, deltaT, deltaL);
+		GrowThenPan(0, deltaT + deltaB, deltaL + deltaR, deltaT, deltaL);
 
 		// GrowThenPan modifies rows and cols so we must recalculate the bounds
 		rect = GetFootprintBounds(compIds);

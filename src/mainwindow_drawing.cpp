@@ -576,6 +576,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	const bool		 bGroundFill	= !bVero && ( bMono || bPCB ) && board.GetGroundFill();
 	const bool		 bPixmapCache	= !bVero && !bPCB && !bGroundFill && !m_bWritePDF;
 	const bool		 bDirect		= !bVero && !bPixmapCache && !bGroundFill;
+	const int&		 layer			= board.GetCurrentLayer();
 	const int&		 W				= board.GetGRIDPIXELS();		// Square width in pixels
 	const int		 C				= W >> 1;						// Half square width in pixels
 	const int		 D				= board.GetHalfPadWidth();		// Half pad width in pixels
@@ -598,8 +599,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	board.CalculateColors();	// Work out best way to color things
 
 	// Get bounds to minimise looping
-	int minRow, minCol, maxRow,  maxCol;
-	board.GetBounds(minRow, minCol, maxRow, maxCol);
+	int minLyr, maxLyr, minRow, minCol, maxRow,  maxCol;
+	board.GetBounds(minLyr, maxLyr, minRow, minCol, maxRow, maxCol);
 
 	GPainter painter;	// Works like QPainter unless you give it a GStream for Gerber
 
@@ -711,7 +712,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	{
 		for (int j = 0; j < board.GetRows(); j++)	for (int i = 0; i < board.GetCols(); i++)
 		{
-			const Element* pC = board.Get(m_gridLyr, j,i);
+			const Element* pC = board.Get(layer, j, i);
 			if ( trackMode == TRACKMODE::OFF || ( !pC->GetHasPin() && pC->GetNodeId() == BAD_NODEID ) )
 			{
 				GetXY(board, j, i, X, Y);
@@ -750,7 +751,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			for (int j = minRow; j <= maxRow; j++)
 			for (int i = minCol; i <= maxCol; i++)
 			{
-				const Element*	pC				= board.Get(m_gridLyr,j,i);
+				const Element*	pC				= board.Get(layer, j, i);
 				const int&		nodeId			= pC->GetNodeId();
 				const int		colorId			= colorMgr.GetColorId(nodeId);
 				const bool		bPin			= pC->GetHasPin();	// true ==> real pin
@@ -958,7 +959,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			for (int j = minRow; j <= maxRow; j++)
 			for (int i = minCol; i <= maxCol; i++)
 			{
-				const Element* pC = board.Get(m_gridLyr,j,i);
+				const Element* pC = board.Get(layer, j, i);
 				if ( pC->GetNodeId() == BAD_NODEID ) continue;
 				GetLRTB(board, 100, j, i, L, R, T, B);	// 100% size square
 
@@ -992,7 +993,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		for (int j = minRow; j <= maxRow; j++)
 		for (int i = minCol; i <= maxCol; i++)
 		{
-			const Element* pC = board.Get(m_gridLyr,j,i);
+			const Element* pC = board.Get(layer, j, i);
 			if ( !pC->GetSolderR() ) continue;
 			GetLRTB(board, 100, j, i, L, R, T, B);	// 100% size square
 			if ( bVertical )

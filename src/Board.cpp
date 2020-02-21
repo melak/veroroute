@@ -242,8 +242,8 @@ void Board::FloodNodeId(const int& nodeId)
 
 void Board::AutoFillVero()
 {
-	int minRow, minCol, maxRow, maxCol;
-	GetBounds(minRow, minCol, maxRow, maxCol);
+	int minLyr, maxLyr, minRow, minCol, maxRow, maxCol;
+	GetBounds(minLyr, maxLyr, minRow, minCol, maxRow, maxCol);
 
 	const bool& bVertical = GetVerticalStrips();
 

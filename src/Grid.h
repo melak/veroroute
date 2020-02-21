@@ -56,7 +56,6 @@ public:
 	}
 	void Allocate(int lyrs, int rows, int cols)
 	{
-		assert( (lyrs == 0 && rows == 0 && cols == 0) || (lyrs > 0  && rows > 0  && cols > 0) );
 		DeAllocate();
 		m_lyrs		= lyrs;
 		m_rows		= rows;
@@ -126,13 +125,11 @@ public:
 	// Persist interface functions
 	virtual void Load(DataStream& inStream) override
 	{
-		int lyrs(0), rows(0), cols(0);
+		int lyrs(1), rows(1), cols(1);
 		inStream.Load(rows);
 		inStream.Load(cols);
-		if ( false )	//TODO Added in VRT_VERSION
-			inStream.Load(lyrs);
-		else
-			lyrs = ( rows > 0 && cols > 0 ) ? 1 : 0;
+		if ( inStream.GetVersion() >= VRT_VERSION_34 )
+			inStream.Load(lyrs);	// Added in VRT_VERSION_34
 		Allocate(lyrs, rows, cols);
 		for (int i = 0, iSize = GetSize(); i < iSize; i++) m_pData[i].Load(inStream);
 	}
@@ -140,7 +137,7 @@ public:
 	{
 		outStream.Save(m_rows);
 		outStream.Save(m_cols);
-//		outStream.Save(m_lyrs);	//TODO Added in VRT_VERSION
+		outStream.Save(m_lyrs);		// Added in VRT_VERSION_34
 		for (int i = 0, iSize = GetSize(); i < iSize; i++) m_pData[i].Save(outStream);
 	}
 private:

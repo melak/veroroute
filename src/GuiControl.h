@@ -38,6 +38,7 @@ public:
 	GuiControl(const GuiControl& o) { *this = o; }
 	GuiControl& operator=(const GuiControl& o)
 	{
+		m_currentLayer		= o.m_currentLayer;
 		m_currentCompId		= o.m_currentCompId;
 		m_currentNodeId		= o.m_currentNodeId;
 		m_groundNodeId		= o.m_groundNodeId;
@@ -81,7 +82,8 @@ public:
 	}
 	bool operator==(const GuiControl& o) const	// Compare persisted info
 	{
-		return	m_currentCompId		== o.m_currentCompId
+		return	m_currentLayer		== o.m_currentLayer
+			&&	m_currentCompId		== o.m_currentCompId
 			&&	m_currentNodeId		== o.m_currentNodeId
 			&&	m_groundNodeId		== o.m_groundNodeId
 			&&	m_currentTextId		== o.m_currentTextId
@@ -163,6 +165,9 @@ public:
 	// Persist functions
 	virtual void Load(DataStream& inStream) override
 	{
+		m_currentLayer = 0;
+		if ( inStream.GetVersion() >= VRT_VERSION_34 )
+			inStream.Load(m_currentLayer);		// Added in VRT_VERSION_34
 		inStream.Load(m_currentCompId);
 		inStream.Load(m_currentNodeId);
 		m_groundNodeId = BAD_NODEID;
@@ -260,6 +265,7 @@ public:
 	}
 	virtual void Save(DataStream& outStream) override
 	{
+		outStream.Save(m_currentLayer);		// Added in VRT_VERSION_34
 		outStream.Save(m_currentCompId);
 		outStream.Save(m_currentNodeId);
 		outStream.Save(m_groundNodeId);		// Added in VRT_VERSION_3
@@ -300,6 +306,7 @@ public:
 		outStream.Save(m_bVerticalStrips);	// Added in VRT_VERSION_12
 		outStream.Save(m_bCompEdit);		// Added in VRT_VERSION_19
 	}
+	bool SetCurrentLayer(const int& i)		{ const bool bChanged = m_currentLayer		!= i; m_currentLayer	= i; return bChanged; }
 	bool SetCurrentNodeId(const int& i)		{ const bool bChanged = m_currentNodeId		!= i; m_currentNodeId	= i; return bChanged; }
 	bool SetCurrentCompId(const int& i)		{ const bool bChanged = m_currentCompId		!= i; m_currentCompId	= i; return bChanged; }
 	bool SetGroundNodeId(const int& i)		{ const bool bChanged = m_groundNodeId		!= i; m_groundNodeId	= i; return bChanged; }
@@ -339,6 +346,7 @@ public:
 	bool SetGroundFill(const bool& b)		{ const bool bChanged = m_bGroundFill		!= b; m_bGroundFill		= b; return bChanged; }
 	bool SetVerticalStrips(const bool& b)	{ const bool bChanged = m_bVerticalStrips	!= b; m_bVerticalStrips	= b; return bChanged; }
 	bool SetCompEdit(const bool& b)			{ const bool bChanged = m_bCompEdit			!= b; m_bCompEdit		= b; return bChanged; }
+	const int&			GetCurrentLayer() const		{ return m_currentLayer; }
 	const int&			GetCurrentNodeId() const	{ return m_currentNodeId; }
 	const int&			GetCurrentCompId() const	{ return m_currentCompId; }
 	const int&			GetGroundNodeId() const		{ return m_groundNodeId; }
@@ -404,6 +412,7 @@ public:
 	}
 	//const int H = std::min(GetHalfPadWidth(), (int) ( GetGRIDPIXELS() * (sqrt(2.0)-1) * 0.5));	// Biggest OK half track width in pixels
 private:
+	int			m_currentLayer		= 0;				// Currently selected layer for display
 	int			m_currentCompId		= BAD_COMPID;		// Currently selected component ID
 	int			m_currentNodeId		= BAD_NODEID;		// Currently selected node ID
 	int			m_groundNodeId		= BAD_NODEID;		// The node ID representing ground for ground-fill

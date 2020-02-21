@@ -145,6 +145,7 @@ public slots:
 	void ToggleDiagsMax();
 	void ToggleFill();
 	void ToggleSelectArea();
+	void ToggleLayer();
 	// Edit menu items
 	void Undo();
 	void Redo();
@@ -356,6 +357,7 @@ private:
 	void RepaintWithRouting(bool bNow = false);
 	void RepaintSkipRouting(bool bNow = false);
 	void ShowCurrentRectSize();	// Show current rect size in status bar
+	int	 GetCurrentLayer() const			{ return m_board.GetCurrentLayer(); }
 	int	 GetCurrentNodeId() const			{ return m_board.GetCurrentNodeId(); }
 	int  GetCurrentCompId() const			{ return m_board.GetCurrentCompId(); }
 	int  GetCurrentTextId() const			{ return m_board.GetCurrentTextId(); }
@@ -493,7 +495,6 @@ private:
 	bool		m_bTemplatesDir;	// true ==> have "templates" folder
 	int			m_XGRIDOFFSET;		// So we can centre when writing to PDF
 	int			m_YGRIDOFFSET;		// So we can centre when writing to PDF
-	int			m_gridLyr;			// Board lyr corresponding to mouse position
 	int			m_gridRow;			// Board row corresponding to mouse position
 	int			m_gridCol;			// Board col correspondong to mouse position
 	int			m_iTutorialNumber;	// Tutorial file number 0,1,2,... (or -1 if not in tutorial mode)

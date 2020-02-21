@@ -82,6 +82,7 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 	const TRACKMODE&	trackMode	= m_board.GetTrackMode();
 	const COMPSMODE&	compMode	= m_board.GetCompMode();
 	CompDefiner&		compDefiner	= m_board.GetCompDefiner();
+	const int&			layer		= m_board.GetCurrentLayer();
 
 	m_bMouseClick	= true;			// Set the flag meaning "click begin"
 	m_bLeftClick	= ( event->button() & Qt::LeftButton );
@@ -223,7 +224,7 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 				assert( !m_board.GetRoutingEnabled() );	// Sanity check
 
 				const int tmp = GetCurrentNodeId();	// Need to temporarily change current nodeId for HandleRouting()
-				SetCurrentNodeId( m_board.Get(m_gridLyr, m_gridRow, m_gridCol)->GetNodeId() );
+				SetCurrentNodeId( m_board.Get(layer, m_gridRow, m_gridCol)->GetNodeId() );
 				HandleRouting();		// Work out MH distances for the flood
 				SetCurrentNodeId(tmp);	// Restore current nodeId
 
@@ -232,14 +233,14 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 			}
 			else
 			{
-				const bool bChanged = m_board.SetNodeIdByUser(m_gridLyr, m_gridRow, m_gridCol, GetCurrentNodeId(), GetPaintPins());
+				const bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, GetCurrentNodeId(), GetPaintPins());
 				if ( !bChanged ) return;
 				mouseActionString = "Paint";
 			}
 		}
 		if ( m_bRightClick )	// Unpaint (i.e. erase)
 		{
-			const bool bChanged = m_board.SetNodeIdByUser(m_gridLyr,m_gridRow, m_gridCol, BAD_NODEID, GetPaintPins());
+			const bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, BAD_NODEID, GetPaintPins());
 			if ( !bChanged ) return;
 			mouseActionString = "Erase";
 		}
@@ -247,7 +248,7 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 	else	// Set/Unset current nodeId from board
 	{
 		if ( m_bLeftClick )
-			SetCurrentNodeId( m_board.Get(m_gridLyr,m_gridRow, m_gridCol)->GetNodeId() );
+			SetCurrentNodeId( m_board.Get(layer, m_gridRow, m_gridCol)->GetNodeId() );
 		if ( m_bRightClick )
 			SetCurrentNodeId( BAD_NODEID );
 		if ( m_bLeftClick || m_bRightClick )
@@ -275,9 +276,10 @@ void MainWindow::mouseDoubleClickEvent(QMouseEvent* event)
 	// Cursor modification
 	centralWidget()->setCursor(Qt::CrossCursor);
 
-	const int dR = ( dRow > 0.5 ) ? 1 : 0;	// Correct row, col to account for crossing ...
-	const int dC = ( dCol > 0.5 ) ? 1 : 0;	// ... point being near corner of element
-	const bool bSwapped = m_board.Get(m_gridLyr, m_gridRow + dR, m_gridCol + dC)->SwapDiagLinks();
+	const int	dR = ( dRow > 0.5 ) ? 1 : 0;	// Correct row, col to account for crossing ...
+	const int	dC = ( dCol > 0.5 ) ? 1 : 0;	// ... point being near corner of element
+	const int&	layer	 = m_board.GetCurrentLayer();
+	const bool	bSwapped = m_board.Get(layer, m_gridRow + dR, m_gridCol + dC)->SwapDiagLinks();
 	if ( bSwapped )
 	{
 		m_board.PlaceFloaters();	// See if we can now place floating components down
@@ -295,6 +297,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 	const COMPSMODE&	compMode	= m_board.GetCompMode();
 	CompDefiner&		compDefiner	= m_board.GetCompDefiner();
 	const int&			W			= m_board.GetGRIDPIXELS();
+	const int&			layer		= m_board.GetCurrentLayer();
 
 	if ( GetPaintPins() || GetPaintFlood() ) return;// Ignore mouse move while painting pins or flooding
 	if ( GetShiftKeyDown() ) return;				// Ignore mouse move while trying to group components
@@ -370,13 +373,13 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 		if ( trackMode == TRACKMODE::OFF ) return;
 		if ( m_bLeftClick )		// Paint
 		{
-			const bool bChanged = m_board.SetNodeIdByUser(m_gridLyr, m_gridRow, m_gridCol, GetCurrentNodeId(), GetPaintPins());	// Only allow paint board (not pins)
+			const bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, GetCurrentNodeId(), GetPaintPins());	// Only allow paint board (not pins)
 			if ( !bChanged ) return;	// No change
 			mouseActionString = "Paint";
 		}
 		if ( m_bRightClick )	// Erase
 		{
-			const bool bChanged = m_board.SetNodeIdByUser(m_gridLyr, m_gridRow, m_gridCol, BAD_NODEID, GetPaintPins());		// Only allow paint board (not pins)
+			const bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, BAD_NODEID, GetPaintPins());		// Only allow paint board (not pins)
 			if ( !bChanged ) return;	// No change
 			mouseActionString = "Erase";
 		}
@@ -542,6 +545,15 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
 		switch( event->key() )
 		{
 			case Qt::Key_R:	SetDefiningRect(true);	centralWidget()->setCursor(Qt::SizeFDiagCursor); bUpdateControls = true; break;
+		}
+	}
+
+	// Toggle layers
+	if ( !bIsAutoRepeat )
+	{
+		switch( event->key() )
+		{
+			case Qt::Key_L:		ToggleLayer();	break;
 		}
 	}
 

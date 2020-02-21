@@ -208,8 +208,8 @@ public:
 
 		int incRows(0), incCols(0);	// What we need to grow the grid by if we move too far
 
-		int minRow, minCol, maxRow, maxCol;
-		const bool bOK = GetBounds(minRow, minCol, maxRow, maxCol);	// Get the circuit bounds
+		int minLyr, maxLyr, minRow, minCol, maxRow, maxCol;
+		const bool bOK = GetBounds(minLyr, maxLyr, minRow, minCol, maxRow, maxCol);	// Get the circuit bounds
 		if ( !bOK )	return false;	// Can't move an empty circuit
 
 		if ( minRow + iDown  < 0 )						// Too far up ...
@@ -228,7 +228,7 @@ public:
 		else if ( maxCol + iRight >= GetCols() )		// Too far right ...
 			incCols = 1 + maxCol + iRight - GetCols();	// ... so grow grid from right
 
-		GrowThenPan(incRows, incCols, iDown, iRight);
+		GrowThenPan(0, incRows, incCols, iDown, iRight);
 		return true;
 	}
 
@@ -238,8 +238,8 @@ public:
 
 		int incRows(0), incCols(0);	// What we need to grow the grid by if we pan too far
 
-		int minRow, minCol, maxRow, maxCol;
-		const bool bOK = GetBounds(minRow, minCol, maxRow, maxCol);	// Get the circuit bounds
+		int minLyr, maxLyr, minRow, minCol, maxRow, maxCol;
+		const bool bOK = GetBounds(minLyr, maxLyr, minRow, minCol, maxRow, maxCol);	// Get the circuit bounds
 
 		if ( !bOK )	// Have empty board, so there is nothing to pan. Just grow or shrink instead.
 		{
@@ -248,7 +248,7 @@ public:
 			if ( iRight < 0 && GetCols() > 1 )	incCols--;
 			if ( iRight > 0 )					incCols++;
 
-			return GrowThenPan(incRows, incCols, 0, 0);
+			return GrowThenPan(0, incRows, incCols, 0, 0);
 		}
 
 		if ( minRow + iDown  < 0 )							// Too far up ...
@@ -267,16 +267,16 @@ public:
 		else if ( maxCol + iRight >= GetCols() )			// Too far right ...
 			incCols	= 1 + maxCol + iRight - GetCols();		// ... so grow grid from right
 
-		GrowThenPan(incRows, incCols, iDown, iRight);
+		GrowThenPan(0, incRows, incCols, iDown, iRight);
 	}
 
 	bool Crop(int iRowMargin = -1, int iColMargin = -1)	// Moves whole circuit to the top-left, then crops the grid from the bottom-right, then adds margin
 	{
-		int minRow, minCol, maxRow, maxCol;
-		const bool bOK = GetBounds(minRow, minCol, maxRow, maxCol);	// Get the circuit bounds
+		int minLyr, maxLyr, minRow, minCol, maxRow, maxCol;
+		const bool bOK = GetBounds(minLyr, maxLyr, minRow, minCol, maxRow, maxCol);	// Get the circuit bounds
 		if ( !bOK ) return false;
 		Pan(-minRow, -minCol);	// First pan to top-left corner of grid
-		GrowThenPan(maxRow - minRow + 1 - GetRows(), maxCol - minCol + 1 - GetCols(), 0, 0); // Then shrink grid from bottom-right
+		GrowThenPan(maxLyr - minLyr + 1 - GetLyrs(), maxRow - minRow + 1 - GetRows(), maxCol - minCol + 1 - GetCols(), 0, 0); // Then shrink grid from bottom-right
 
 		if ( iRowMargin == -1 ) iRowMargin = GetCropMargin();	// -1 ==> use default
 		if ( iColMargin == -1 ) iColMargin = GetCropMargin();	// -1 ==> use defaul
@@ -284,14 +284,13 @@ public:
 		{
 			const int incRows = 2 * iRowMargin;
 			const int incCols = 2 * iColMargin;
-			GrowThenPan(incRows, incCols, iRowMargin, iColMargin);
+			GrowThenPan(0, incRows, incCols, iRowMargin, iColMargin);
 		}
 		return true;
 	}
 
-	void GrowThenPan(const int& incRows, const int& incCols, const int& iDown, const int& iRight)
+	void GrowThenPan(const int& incLyrs, const int& incRows, const int& incCols, const int& iDown, const int& iRight)
 	{
-		const int incLyrs(0);
 		ElementGrid::Grow(incLyrs, incRows, incCols);	// Grow the base class
 		ElementGrid::Pan(iDown, iRight);				// Pan the base class
 
@@ -332,9 +331,8 @@ public:
 		GetTextMgr().MoveAll(iDown, iRight);
 	}
 
-	bool GetBounds(int& minRow, int& minCol, int& maxRow, int& maxCol) const
+	bool GetBounds(int& minLyr, int& maxLyr, int& minRow, int& minCol, int& maxRow, int& maxCol) const
 	{
-		int minLyr, maxLyr;	//TODO May have to pass these in depending on how this method is called
 		bool bOK(false);
 		// First consider all painted nodeIds on the board
 		const int numLyrs( GetLyrs() ), numRows( GetRows() ), numCols( GetCols() );
