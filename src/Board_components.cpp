@@ -653,7 +653,7 @@ void Board::SelectAllComps(bool bRestrictToRects)
 	{
 		// Build the trax object
 		Rect bounding = rectMgr.GetBounding() | rectMgr.GetCurrent();
-		m_compMgr.BuildTrax(rectMgr, *this, bounding.m_rowMin, bounding.m_rowMax, bounding.m_colMin, bounding.m_colMax);
+		m_compMgr.BuildTrax(rectMgr, *this, GetCurrentLayer(), bounding.m_rowMin, bounding.m_rowMax, bounding.m_colMin, bounding.m_colMax);
 		assert( m_compMgr.GetTrax().GetIsPlaced() );
 	}
 	for (const auto& mapObj : m_compMgr.GetMapIdToComp())

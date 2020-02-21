@@ -628,7 +628,7 @@ void Board::WipeTracks()
 	Component& trax = m_compMgr.GetTrax();
 	if ( trax.GetSize() > 0 && trax.GetIsPlaced() )
 	{
-		const int	lyrTL		= trax.GetLyr();
+		const int	lyrTL		= trax.GetLyr();	//TODO
 		const int	rowTL		= trax.GetRow();
 		const int	colTL		= trax.GetCol();
 		const int&	compCols	= trax.GetCompCols();

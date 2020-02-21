@@ -54,11 +54,11 @@ public:
 
 		definer.Build(*this);		// Use component definer to make the footprint and shapes
 	}
-	Component(CompManager* pCompMgr, const RectManager& rectMgr, const ElementGrid& grid, const int& nRowMin, const int& nRowMax, const int& nColMin, const int& nColMax)
+	Component(CompManager* pCompMgr, const RectManager& rectMgr, const ElementGrid& grid, const int& nLyr, const int& nRowMin, const int& nRowMax, const int& nColMin, const int& nColMax)
 	{
 		Clear();
 
-		BuildTracks(pCompMgr, rectMgr, grid, nRowMin, nRowMax, nColMin, nColMax);	// Build method for "tracks" component
+		BuildTrax(pCompMgr, rectMgr, grid, nLyr, nRowMin, nRowMax, nColMin, nColMax);	// Build method for "tracks" component
 
 		SetDefaultStrings();
 
@@ -295,7 +295,7 @@ public:
 	int					GetLastCol() const	{ return GetCol() + GetCompCols() - 1; }
 	const CompElement*	GetCompElement(const int& compRow, const int& compCol) const
 	{
-		return FootPrint::Get(compRow, compCol, GetDirection());
+		return FootPrint::Get(0, compRow, compCol, (char)GetDirection());
 	}
 	bool GetHasNodeId(int nodeId) const
 	{

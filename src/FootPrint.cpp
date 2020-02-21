@@ -53,7 +53,7 @@ void FootPrint::BuildDefault(const COMP& type)
 	if ( m_type == COMP::WIRE ) SetupWire();
 }
 
-void FootPrint::BuildTracks(CompManager* pCompMgr, const RectManager& rectMgr, const ElementGrid& o, const int& nRowMin, const int& nRowMax, const int& nColMin, const int& nColMax)
+void FootPrint::BuildTrax(CompManager* pCompMgr, const RectManager& rectMgr, const ElementGrid& o, const int& nLyr, const int& nRowMin, const int& nRowMax, const int& nColMin, const int& nColMax)
 {
 	// This method is for building a "tracks" component
 	SetType(COMP::TRACKS);
@@ -66,7 +66,6 @@ void FootPrint::BuildTracks(CompManager* pCompMgr, const RectManager& rectMgr, c
 	size_t	pinIndex;
 	int		compId;
 
-	int kLyr(0);	//TODO
 	int jRow(nRowMin);
 	for (int j = 0; j < numRows; j++, jRow++)
 	{
@@ -75,8 +74,8 @@ void FootPrint::BuildTracks(CompManager* pCompMgr, const RectManager& rectMgr, c
 		{
 			if ( !rectMgr.ContainsPoint(jRow,iCol) ) continue;
 
-			CompElement*	pTarget = Get(kLyr,j,i);
-			Element*		pSource = o.Get(kLyr, jRow, iCol);	assert(pSource);
+			CompElement*	pTarget = Grid<CompElement>::Get(0, j, i);
+			Element*		pSource = o.Get(nLyr, jRow, iCol);	assert(pSource);
 
 			int iNodeId = pSource->GetNodeId();
 

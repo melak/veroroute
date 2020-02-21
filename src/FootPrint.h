@@ -50,8 +50,8 @@ public:
 	void SetType(const COMP& type)	{ m_type = type; }
 	const COMP& GetType() const		{ return m_type; }
 	void BuildDefault(const COMP& type);
-	void BuildTracks(CompManager* pCompMgr, const RectManager& rectMgr, const ElementGrid& o,
-					 const int& nRowMin, const int& nRowMax, const int& nColMin, const int& nColMax);
+	void BuildTrax(CompManager* pCompMgr, const RectManager& rectMgr, const ElementGrid& o,
+				   const int& nLyr, const int& nRowMin, const int& nRowMax, const int& nColMin, const int& nColMax);
 	bool CanStretch(const bool& bGrow) const
 	{
 		switch( m_type )

@@ -191,11 +191,16 @@ public:
 			default:	return Grid<CompElement>::GetRows();
 		}
 	}
-	CompElement* Get(int row, int col, char direction = 'W') const
+	CompElement* Get(int row, int col) const
 	{
 		assert( GetLyrs() == 1 );
-		Transform(row, col, direction);	// Handle direction transformation
 		return Grid<CompElement>::Get(0, row, col);
+	}
+	CompElement* Get(int lyr, int row, int col, char direction = 'W') const
+	{
+		assert( lyr == 0 && GetLyrs() == 1 );
+		Transform(row, col, direction);	// Handle direction transformation
+		return Grid<CompElement>::Get(lyr, row, col);
 	}
 	void SetupWire()
 	{
@@ -250,7 +255,7 @@ public:
 private:
 	void Transform(int& row, int& col, char direction) const
 	{
-		assert( GetLyrs() == 1 );	
+		assert( GetLyrs() == 1 );
 		// On input:  (row,col) are the "footprint" co-ordinates (as seen on screen).
 		// On output: (row,col) have been set to the corresponding internal values.
 		const int rTmp(row), cTmp(col);

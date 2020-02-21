@@ -1527,7 +1527,7 @@ void MainWindow::UpdateWindowTitle()
 	if ( !bCompEdit )
 	{
 		char buffer[256] = {'\0'};
-		sprintf(buffer, "    (%d x %d)     (%gmm x %gmm)", m_board.GetRows(), m_board.GetCols(), m_board.GetRows()*2.54, m_board.GetCols()*2.54);
+		sprintf(buffer, "    (%d x %d)     (%gmm x %gmm)     Layer %d", m_board.GetRows(), m_board.GetCols(), m_board.GetRows()*2.54, m_board.GetCols()*2.54, m_board.GetCurrentLayer() + 1);
 		title += buffer;
 	}
 	setWindowTitle(title);
