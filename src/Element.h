@@ -59,7 +59,7 @@ typedef std::list<ElementInt> WIRELIST;	// Helper for chains of wires
 class Element : public Pin, public TrackElement
 {
 public:
-	//TODO_NEW See if we need the folloein overrides
+	//TODO_NEW See if we need the following overrides
 	// OVERRIDES BEGIN
 	//  Pin::operator=
 	//  Pin::operator==

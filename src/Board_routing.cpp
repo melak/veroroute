@@ -24,12 +24,13 @@
 // MH_WIRE = Manhatten "distance" for wires, regardless of their length.
 
 // Routing algorithm assumes:  MH_DIAG > MH_LRTB > MH_WIRE > 0
-
+// MH_LYRP is distance when jumping layers at a location with a  pin
+// MH_LYRX is distance when jumping layers at a location with no pin
+#define MH_WIRE 1
 #define MH_LRTB 2
 #define MH_DIAG 3
-#define MH_WIRE 1
-//TODO_NEW Hacked MH_LAYR
-#define MH_LAYR 1
+#define MH_LYRP 1
+#define MH_LYRX 4
 
 // Routing methods
 
@@ -212,6 +213,8 @@ unsigned int Board::Flood(const int& iFloodNodeId)
 
 void Board::Flood_Helper(const int& iFloodNodeId, bool** ppConn, unsigned int& cost, const bool bBuildTracks)
 {
+	const bool bMultiLayer = GetLyrs() > 1;
+
 	for (int i = 0, iSize = GetSize(); i < iSize; i++)	// Loop all grid points
 		GetAt(i)->ResetMH();	// Wipe RouteId. Set "infinite" MH distance.  Zero max MH parameter.
 
@@ -229,18 +232,14 @@ void Board::Flood_Helper(const int& iFloodNodeId, bool** ppConn, unsigned int& c
 		p->UpdateMH(RID, iMH, iMaxMH);
 	}
 
-	const unsigned int numRIDs = RID + 1;	assert( m_targetPins.size() == (size_t) numRIDs );
-
-	typedef std::pair<unsigned int, unsigned int> CONNECTION;
-	std::list<CONNECTION> list;		// Helper for updating the connection matrix
-	WIRELIST wireList;				// Helper for chains of wires
-
+	const unsigned int 	numRIDs 	= RID + 1;	assert( m_targetPins.size() == (size_t) numRIDs );
 	const bool			bDiagsOK 	= ( GetDiagsMode() != DIAGSMODE::OFF );
-	const unsigned int	iMaxDeltaMH	= ( bDiagsOK ) ? MH_DIAG : MH_LRTB;	// The max MH increment depends on if diagonals are allowed
+	const unsigned int	iMaxDeltaMH	= ( bMultiLayer ) ? MH_LYRX : bDiagsOK ? MH_DIAG : MH_LRTB;	// The max MH increment in single-layer mode depends on if diagonals are allowed
 
 	size_t jjStart(0);
 
-	//TODO_NEW HACKOUT iMH = MH_LRTB - 1;	// Set iMH so it's incremented to MH_LRTB on loop entry
+	if ( !bMultiLayer ) iMH = MH_LRTB - 1;	// Set iMH so it's incremented to MH_LRTB on loop entry
+
 	bool bDone(false);
 	while( !bDone )
 	{
@@ -257,7 +256,6 @@ void Board::Flood_Helper(const int& iFloodNodeId, bool** ppConn, unsigned int& c
 		for (size_t jj = jjStart; jj < jjSize && !bDone; jj++)	// Loop through visited points
 		{
 			Element* pJ = m_tmpVec[jj];
-			const unsigned int& j = pJ->GetRouteId();
 
 			if ( pJ->GetMaxMH() + iMaxDeltaMH < iMH )	// If pJ (and all previous points) are too far from the flood boundary
 			{
@@ -265,169 +263,121 @@ void Board::Flood_Helper(const int& iFloodNodeId, bool** ppConn, unsigned int& c
 				continue;
 			}
 
-			const bool bOK = pJ->GetNodeId() == iFloodNodeId;	// true ==> pJ already painted with correct NodeId
-
-			for (int iDiag = -1, iDiagMax = ( bDiagsOK ) ? 2 : 1; iDiag < iDiagMax && !bDone; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
+			const int iTypeMin(bMultiLayer ? 0 : 1), iTypeMax(bMultiLayer ? 2 : 1);
+			for (int iType = iTypeMin; iType <= iTypeMax; iType++)
 			{
-				const int iDeltaMH = ( iDiag == -1 ) ? MH_LAYR : ( iDiag ) ? MH_DIAG : MH_LRTB;
-				if ( pJ->GetMH() + iDeltaMH != iMH ) continue;	// pJ has wrong MH for (Non-diagonal/Diagonal) connection
-
-				if ( iDiag == -1 )
+				if ( iType == 0 && pJ->GetHasPin() )	// Type 0 ==> Change layer at a pin
 				{
-					const int	iNbr	= NBR_X;
-					Element*	pK		= pJ->GetNbr(iNbr);
-					if ( pK == pJ ) continue;	//TODO_NEW Hack
-					const unsigned int& k = pK->GetRouteId();
+					const int iDeltaMH = MH_LYRP;
+					if ( pJ->GetMH() + iDeltaMH != iMH ) continue;		// pJ has wrong MH for connection
 
-					const bool bDirOK = ( bOK && pJ->GetUsed(iNbr) ) ||	// i.e. if already painted with correct nodeId
-										( bBuildTracks && pJ->HaveNoBlankPins(iNbr) && !pJ->IsBlocked(iNbr, iFloodNodeId) && !pJ->IsUselessWire(iNbr, iFloodNodeId) );
-					if ( !bDirOK ) continue;
-
-					if ( pK->GetMH() == BAD_MH ) // Grow route with RID j (from pJ to pK)
+					Flood_Grow(numRIDs, iFloodNodeId, ppConn, cost, pJ, NBR_X, bBuildTracks, iMH, iMaxMH, bDone);
+					continue;
+				}
+				if ( iType == 1 )						// Type 1 ==> Move within layer
+				{
+					for (int iDiag = 0, iDiagMax = ( bDiagsOK ) ? 2 : 1; iDiag < iDiagMax && !bDone; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
 					{
-						const int& nodeId = pK->GetNodeId();
-						if ( nodeId == iFloodNodeId || nodeId == BAD_NODEID )
-						{
-							m_tmpVec[m_tmpVecSize++] = pK;	// Add pK to set of visited points
-							pK->UpdateMH(j, iMH, iMaxMH);
-							if ( pK->GetHasWire() )
-							{
-								pK->GetWireList(wireList);	// Get list of pK and its wired points
-								for (auto& o : wireList)	// Ideally want these in order of increasing MH
-								{
-									Element* pW = const_cast<Element*> (o.first);
-									if ( pW == pK ) continue;	// Skip pK
-									assert( pK->GetNodeId() == pW->GetNodeId() );			// Sanity check
-									if ( pW->GetMH() != BAD_MH ) continue;					// Don't overwrite visited points (even if MH is improved)
-									const unsigned int iOtherMH = iMH + MH_WIRE * o.second;	// Each wire increases MH by MH_WIRE
-									m_tmpVec[m_tmpVecSize++] = pW;							// Add pW to set of visited points
-									pW->UpdateMH(j, iOtherMH, iMaxMH);
-								}
-							}
-						}
-					}
-					else if ( j != k )	// Routes with RIDs j and k have met ...
-					{
-						if ( !ppConn[j][k] )	// If no j-k connection yet ...
-						{
-							if ( bBuildTracks )	// If building tracks ...
-							{
-								Backtrace(pJ, iFloodNodeId);	// ... trace pJ back to its source, painting iFloodNodeId along the way
-								Backtrace(pK, iFloodNodeId);	// ... trace pK back to its source, painting iFloodNodeId along the way
-							}
+						const int iDeltaMH = ( iDiag ) ? MH_DIAG : MH_LRTB;
+						if ( pJ->GetMH() + iDeltaMH != iMH ) continue;	// pJ has wrong MH for connection
 
-							// Make j-k connection and enforce transitivity
-							assert( list.empty() );
-							list.push_back( CONNECTION(j,k) );
-							while ( !list.empty() )
-							{
-								auto iter = list.begin();	// Read info from first list entry ...
-								const auto a = iter->first;
-								const auto b = iter->second;
-								list.erase( iter );			// ... then remove the list entry
-
-								if ( !ppConn[a][b] )	// If no a-b connection ...
-								{
-									ppConn[a][b] = ppConn[b][a] = true;	// Make a-b connection ...
-									cost -= 2;							// Update cost
-									for (unsigned int c = 0; c < numRIDs; c++)	// Update 1st-order transitive relations
-									{
-										if ( ppConn[a][c] )
-										{
-											if ( !ppConn[b][c] ) list.push_back( CONNECTION(b,c) );	// a-c connection ==> b-c connection
-										}
-										else
-										{
-											if (  ppConn[b][c] ) list.push_back( CONNECTION(a,c) );	// b-c connection ==> a-c connection
-										}
-									}
-								}
-							}
-							bDone = ( cost == 0 );	// Zero cost ==> done
-						}
+						for (int iNbr = iDiag; iNbr < 8 && !bDone; iNbr += 2)	// Even/Odd iNbr ==> Non-diagonal/Diagonal
+							Flood_Grow(numRIDs, iFloodNodeId, ppConn, cost, pJ, iNbr, bBuildTracks, iMH, iMaxMH, bDone);
 					}
 					continue;
 				}
-				else
+				if ( iType == 2 && !pJ->GetHasPin() )	// Type 2 ==> Change layer at a non-pin (i.e. a via)
 				{
-					// Visit pJ's neighbours
-					for (int iNbr = iDiag; iNbr < 8 && !bDone; iNbr += 2)	// Even/Odd iNbr ==> Non-diagonal/Diagonal
-					{
-						Element* pK = pJ->GetNbr(iNbr);
-						const unsigned int& k = pK->GetRouteId();
-
-						const bool bDirOK = ( bOK && pJ->GetUsed(iNbr) ) ||	// i.e. if already painted with correct nodeId
-											( bBuildTracks && pJ->HaveNoBlankPins(iNbr) && !pJ->IsBlocked(iNbr, iFloodNodeId) && !pJ->IsUselessWire(iNbr, iFloodNodeId) );
-						if ( !bDirOK ) continue;
-
-						if ( pK->GetMH() == BAD_MH ) // Grow route with RID j (from pJ to pK)
-						{
-							const int& nodeId = pK->GetNodeId();
-							if ( nodeId == iFloodNodeId || nodeId == BAD_NODEID )
-							{
-								m_tmpVec[m_tmpVecSize++] = pK;	// Add pK to set of visited points
-								pK->UpdateMH(j, iMH, iMaxMH);
-								if ( pK->GetHasWire() )
-								{
-									pK->GetWireList(wireList);	// Get list of pK and its wired points
-									for (auto& o : wireList)	// Ideally want these in order of increasing MH
-									{
-										Element* pW = const_cast<Element*> (o.first);
-										if ( pW == pK ) continue;	// Skip pK
-										assert( pK->GetNodeId() == pW->GetNodeId() );			// Sanity check
-										if ( pW->GetMH() != BAD_MH ) continue;					// Don't overwrite visited points (even if MH is improved)
-										const unsigned int iOtherMH = iMH + MH_WIRE * o.second;	// Each wire increases MH by MH_WIRE
-										m_tmpVec[m_tmpVecSize++] = pW;							// Add pW to set of visited points
-										pW->UpdateMH(j, iOtherMH, iMaxMH);
-									}
-								}
-							}
-						}
-						else if ( j != k )	// Routes with RIDs j and k have met ...
-						{
-							if ( !ppConn[j][k] )	// If no j-k connection yet ...
-							{
-								if ( bBuildTracks )	// If building tracks ...
-								{
-									Backtrace(pJ, iFloodNodeId);	// ... trace pJ back to its source, painting iFloodNodeId along the way
-									Backtrace(pK, iFloodNodeId);	// ... trace pK back to its source, painting iFloodNodeId along the way
-								}
-
-								// Make j-k connection and enforce transitivity
-								assert( list.empty() );
-								list.push_back( CONNECTION(j,k) );
-								while ( !list.empty() )
-								{
-									auto iter = list.begin();	// Read info from first list entry ...
-									const auto a = iter->first;
-									const auto b = iter->second;
-									list.erase( iter );			// ... then remove the list entry
-
-									if ( !ppConn[a][b] )	// If no a-b connection ...
-									{
-										ppConn[a][b] = ppConn[b][a] = true;	// Make a-b connection ...
-										cost -= 2;							// Update cost
-										for (unsigned int c = 0; c < numRIDs; c++)	// Update 1st-order transitive relations
-										{
-											if ( ppConn[a][c] )
-											{
-												if ( !ppConn[b][c] ) list.push_back( CONNECTION(b,c) );	// a-c connection ==> b-c connection
-											}
-											else
-											{
-												if (  ppConn[b][c] ) list.push_back( CONNECTION(a,c) );	// b-c connection ==> a-c connection
-											}
-										}
-									}
-								}
-								bDone = ( cost == 0 );	// Zero cost ==> done
-							}
-						}
-					}
+					const int iDeltaMH = MH_LYRX;
+					if ( pJ->GetMH() + iDeltaMH != iMH ) continue;		// pJ has wrong MH for connection
+					
+					Flood_Grow(numRIDs, iFloodNodeId, ppConn, cost, pJ, NBR_X, bBuildTracks, iMH, iMaxMH, bDone);
+					continue;
 				}
 			}
 		}
 	}
+}
+
+void Board::Flood_Grow(const unsigned int& numRIDs, const int& iFloodNodeId, bool** ppConn, unsigned int& cost, Element* pJ, const int& iNbr, const bool& bBuildTracks, unsigned int& iMH, unsigned int& iMaxMH, bool& bDone)
+{
+	WIRELIST wireList;	// Helper for chains of wires
+
+	Element* pK = pJ->GetNbr(iNbr);
+	assert( pK != pJ );
+	if ( pK == pJ ) return;
+
+	const bool 			bOK	= pJ->GetNodeId() == iFloodNodeId;	// true ==> pJ already painted with correct NodeId
+	const unsigned int& j 	= pJ->GetRouteId();
+	const unsigned int& k 	= pK->GetRouteId();
+
+	const bool bDirOK = ( bOK && pJ->GetUsed(iNbr) ) ||	// i.e. if already painted with correct nodeId
+						( bBuildTracks && pJ->HaveNoBlankPins(iNbr) && !pJ->IsBlocked(iNbr, iFloodNodeId) && !pJ->IsUselessWire(iNbr, iFloodNodeId) );
+	if ( !bDirOK ) return;
+
+	if ( pK->GetMH() == BAD_MH ) // Grow route with RID j (from pJ to pK)
+	{
+		const int& nodeId = pK->GetNodeId();
+		if ( nodeId == iFloodNodeId || nodeId == BAD_NODEID )
+		{
+			m_tmpVec[m_tmpVecSize++] = pK;	// Add pK to set of visited points
+			pK->UpdateMH(j, iMH, iMaxMH);
+			if ( pK->GetHasWire() )
+			{
+				pK->GetWireList(wireList);	// Get list of pK and its wired points
+				for (auto& o : wireList)	// Ideally want these in order of increasing MH
+				{
+					Element* pW = const_cast<Element*> (o.first);
+					if ( pW == pK ) continue;	// Skip pK
+					assert( pK->GetNodeId() == pW->GetNodeId() );			// Sanity check
+					if ( pW->GetMH() != BAD_MH ) continue;					// Don't overwrite visited points (even if MH is improved)
+					const unsigned int iOtherMH = iMH + MH_WIRE * o.second;	// Each wire increases MH by MH_WIRE
+					m_tmpVec[m_tmpVecSize++] = pW;							// Add pW to set of visited points
+					pW->UpdateMH(j, iOtherMH, iMaxMH);
+				}
+			}
+		}
+		return;
+	}
+	if ( j == k || ppConn[j][k] ) return;
+
+	// Routes with RIDs j and k have met and don't have a connection yet ...
+	
+	if ( bBuildTracks )	// If building tracks ...
+	{
+		Backtrace(pJ, iFloodNodeId);	// ... trace pJ back to its source, painting iFloodNodeId along the way
+		Backtrace(pK, iFloodNodeId);	// ... trace pK back to its source, painting iFloodNodeId along the way
+	}
+
+	// Make j-k connection and enforce transitivity
+	typedef std::pair<unsigned int, unsigned int> CONNECTION;
+	std::list<CONNECTION> list;		// Helper for updating the connection matrix
+	list.push_back( CONNECTION(j,k) );
+	while ( !list.empty() )
+	{
+		auto iter = list.begin();	// Read info from first list entry ...
+		const auto a = iter->first;
+		const auto b = iter->second;
+		list.erase( iter );			// ... then remove the list entry
+
+		if ( !ppConn[a][b] )	// If no a-b connection ...
+		{
+			ppConn[a][b] = ppConn[b][a] = true;	// Make a-b connection ...
+			cost -= 2;							// Update cost
+			for (unsigned int c = 0; c < numRIDs; c++)	// Update 1st-order transitive relations
+			{
+				if ( ppConn[a][c] )
+				{
+					if ( !ppConn[b][c] ) list.push_back( CONNECTION(b,c) );	// a-c connection ==> b-c connection
+				}
+				else
+				{
+					if (  ppConn[b][c] ) list.push_back( CONNECTION(a,c) );	// b-c connection ==> a-c connection
+				}
+			}
+		}
+	}
+	bDone = ( cost == 0 );	// Zero cost ==> done
 }
 
 void Board::Backtrace(Element* pEnd, const int& nodeId)
@@ -439,7 +389,8 @@ void Board::Backtrace(Element* pEnd, const int& nodeId)
 
 	WIRELIST wireList;	// Helper for chains of wires
 
-	const bool bDiagsOK = ( GetDiagsMode() != DIAGSMODE::OFF );
+	const bool bMultiLayer	= GetLyrs() > 1;
+	const bool bDiagsOK		= ( GetDiagsMode() != DIAGSMODE::OFF );
 
 	unsigned int MH = p->GetMH();
 	while ( true )	// Backtrace
@@ -496,44 +447,47 @@ void Board::Backtrace(Element* pEnd, const int& nodeId)
 
 		for (int iLoop = 0; iLoop < 2 && !bOK; iLoop++)	// First pass to give preference to nbrs that are not wire ends
 		{
-			for (int iDiag = -1, iDiagMax = ( bDiagsOK ) ? 2 : 1; iDiag < iDiagMax && !bOK; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
+			const int iTypeMin(bMultiLayer ? 0 : 1), iTypeMax(bMultiLayer ? 2 : 1);
+			for (int iType = iTypeMin; iType <= iTypeMax; iType++)
 			{
-				if ( iDiag == -1 )
+				if ( iType == 0 && p->GetHasPin() )		// Type 0 ==> Change layer at a pin
 				{
-					const int iDeltaMH	= MH_LAYR;
-					const int iNbr		= NBR_X;
-					Element*  pNbr		= p->GetNbr(iNbr);
-					if ( pNbr == p ) continue;	//TODO_NEW Hack
-					if ( pNbr->GetRouteId() != p->GetRouteId() ) continue;	// Skip if nbr has wrong routeId
-					if ( iLoop == 0 &&  pNbr->GetHasWire() ) continue;		// Skip if nbr is a wire
-					if ( iLoop == 1 && !pNbr->GetHasWire() ) continue;		// Skip if nbr is a non-wire
-					if ( !p->IsBlocked(iNbr, nodeId) && pNbr->GetMH() == MH - iDeltaMH )
-					{
-						p = pNbr;	MH -= iDeltaMH;	bOK = true;
-					}
+					BacktraceHelper(p, nodeId, MH_LYRP, NBR_X, iLoop, MH, bOK);
+					continue;
 				}
-				else
+				if ( iType == 1 )						// Type 1 ==> Move within layer
 				{
-					const int iDeltaMH = ( iDiag ) ? MH_DIAG : MH_LRTB;
-					for (int iNbr = iDiag; iNbr < 8 && !bOK; iNbr += 2)	// Even/Odd iNbr ==> Non-diagonal/Diagonal
+					for (int iDiag = 0, iDiagMax = ( bDiagsOK ) ? 2 : 1; iDiag < iDiagMax && !bOK; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
 					{
-						Element* pNbr = p->GetNbr(iNbr);
-						if ( pNbr->GetRouteId() != p->GetRouteId() ) continue;	// Skip if nbr has wrong routeId
-						if ( iLoop == 0 &&  pNbr->GetHasWire() ) continue;		// Skip if nbr is a wire
-						if ( iLoop == 1 && !pNbr->GetHasWire() ) continue;		// Skip if nbr is a non-wire
-						if ( !p->IsBlocked(iNbr, nodeId) && pNbr->GetMH() == MH - iDeltaMH )
-						{
-							p = pNbr;	MH -= iDeltaMH;	bOK = true;
-						}
+						const int iDeltaMH = ( iDiag ) ? MH_DIAG : MH_LRTB;
+						for (int iNbr = iDiag; iNbr < 8 && !bOK; iNbr += 2)	// Even/Odd iNbr ==> Non-diagonal/Diagonal
+							BacktraceHelper(p, nodeId, iDeltaMH, iNbr, iLoop, MH, bOK);
 					}
+					continue;
+				}
+				if ( iType == 2 && !p->GetHasPin() )	// Type 2 ==> Change layer at a non-pin (i.e. a via)
+				{
+					BacktraceHelper(p, nodeId, MH_LYRX, NBR_X, iLoop, MH, bOK);
+					continue;
 				}
 			}
 		}
 		if ( bOK ) continue;
 
-		assert(0);	// Oh dear. Something went badly wrong !!!
+		assert(0);	// Oh dear. Something went badly wrong !!!	//TODO_NEW Maybe changed number of layers while routing ?
 		break;
 	}
+}
+
+void Board::BacktraceHelper(Element*& p, const int& nodeId, const int& iDeltaMH, const int& iNbr, const int& iLoop, unsigned int& MH, bool & bOK)
+{
+	Element* pNbr = p->GetNbr(iNbr);
+	if ( pNbr->GetRouteId() != p->GetRouteId() ) return;	// Skip if nbr has wrong routeId
+	if ( iLoop == 0 &&  pNbr->GetHasWire() ) return;		// Skip if nbr is a wire
+	if ( iLoop == 1 && !pNbr->GetHasWire() ) return;		// Skip if nbr is a non-wire
+	if ( p->IsBlocked(iNbr, nodeId) ) return;				// Skip if blocked
+	if ( pNbr->GetMH() != MH - iDeltaMH ) return;			// Skip if wrong MH change
+	p = pNbr;	MH -= iDeltaMH;		bOK = true;
 }
 
 void Board::Manhatten(Element* p)
@@ -545,6 +499,8 @@ void Board::Manhatten(Element* p)
 
 	WIRELIST wireList;	// Helper for chains of wires
 
+	const bool bMultiLayer = GetLyrs() > 1;
+
 	for (int i = 0, iSize = GetSize(); i < iSize; i++)	// Loop all grid points
 		GetAt(i)->ResetMH();	// Wipe RouteId. Set "infinite" MH distance.  Zero max MH parameter.
 
@@ -552,7 +508,7 @@ void Board::Manhatten(Element* p)
 	m_tmpVecSize = 0;
 
 	const bool			bDiagsOK	= ( GetDiagsMode() != DIAGSMODE::OFF );
-	const unsigned int	iMaxDeltaMH	= ( bDiagsOK ) ? MH_DIAG : MH_LRTB;	// The max MH increment depends on if diagonals are allowed
+	const unsigned int	iMaxDeltaMH	= ( bMultiLayer ) ? MH_LYRX : bDiagsOK ? MH_DIAG : MH_LRTB;	// The max MH increment in single-layer mode depends on if diagonals are allowed
 
 	size_t jjStart(0);
 	const unsigned int RID(0);
@@ -598,65 +554,68 @@ void Board::Manhatten(Element* p)
 				continue;
 			}
 
-			for (int iDiag = -1, iDiagMax = ( bDiagsOK ) ? 2 : 1; iDiag < iDiagMax; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
+			const int iTypeMin(bMultiLayer ? 0 : 1), iTypeMax(bMultiLayer ? 2 : 1);
+			for (int iType = iTypeMin; iType <= iTypeMax; iType++)
 			{
-				const int iDeltaMH = ( iDiag == -1 ) ? MH_LAYR : ( iDiag ) ? MH_DIAG : MH_LRTB;
-				if ( pJ->GetMH() + iDeltaMH != iMH ) continue;	// pJ has wrong MH for connection
+				if ( iType == 0 && p->GetHasPin() )		// Type 0 ==> Change layer at a pin
+				{
+					const int iDeltaMH	= MH_LYRP;
+					if ( pJ->GetMH() + iDeltaMH != iMH ) continue;		// pJ has wrong MH for connection
 
-				if ( iDiag == -1 )
-				{
-					const int	iNbr	= NBR_X;
-					if ( !ReadCodeBit(iNbr, pJ->GetRoutable()) ) continue;	// Skip non-routable nbrs
-					Element*	pK		= pJ->GetNbr(iNbr);
-					if ( pK == pJ ) continue;	//HACK
-					if ( pJ->GetUsed(iNbr) && pK->GetMH() == BAD_MH )
-					{
-						m_tmpVec[m_tmpVecSize++] = pK;	// Add pK to set of visited points
-						pK->UpdateMH(RID, iMH, iMaxMH);
-						if ( pK->GetHasWire() )
-						{
-							pK->GetWireList(wireList);	// Get list of pK and its wired points
-							for (auto& o : wireList)	// Ideally want these in order of increasing MH
-							{
-								Element* pW = const_cast<Element*> (o.first);
-								if ( pW == pK ) continue;	// Skip pK
-								assert( pK->GetNodeId() == pW->GetNodeId() );			// Sanity check
-								if ( pW->GetMH() != BAD_MH ) continue;					// Don't overwrite visited points (even if MH is improved)
-								const unsigned int iOtherMH = iMH + MH_WIRE * o.second;	// Each wire increases MH by MH_WIRE
-								m_tmpVec[m_tmpVecSize++] = pW;							// Add pW to set of visited points
-								pW->UpdateMH(RID, iOtherMH, iMaxMH);
-							}
-						}
-					}
+					MHhelper(pJ, NBR_X, RID, iMH, iMaxMH);
+					continue;
 				}
-				else
+				if ( iType == 1 )						// Type 1 ==> Move within layer
 				{
-					// Visit pJ's neighbours
-					for (int iNbr = iDiag; iNbr < 8; iNbr += 2)	// Even/Odd iNbr ==> Non-diagonal/Diagonal
+					for (int iDiag = 0, iDiagMax = ( bDiagsOK ) ? 2 : 1; iDiag < iDiagMax; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
 					{
-						if ( !ReadCodeBit(iNbr, pJ->GetRoutable()) ) continue;	// Skip non-routable nbrs
-						Element* pK = pJ->GetNbr(iNbr);
-						if ( pJ->GetUsed(iNbr) && pK->GetMH() == BAD_MH )
-						{
-							m_tmpVec[m_tmpVecSize++] = pK;	// Add pK to set of visited points
-							pK->UpdateMH(RID, iMH, iMaxMH);
-							if ( pK->GetHasWire() )
-							{
-								pK->GetWireList(wireList);	// Get list of pK and its wired points
-								for (auto& o : wireList)	// Ideally want these in order of increasing MH
-								{
-									Element* pW = const_cast<Element*> (o.first);
-									if ( pW == pK ) continue;	// Skip pK
-									assert( pK->GetNodeId() == pW->GetNodeId() );			// Sanity check
-									if ( pW->GetMH() != BAD_MH ) continue;					// Don't overwrite visited points (even if MH is improved)
-									const unsigned int iOtherMH = iMH + MH_WIRE * o.second;	// Each wire increases MH by MH_WIRE
-									m_tmpVec[m_tmpVecSize++] = pW;							// Add pW to set of visited points
-									pW->UpdateMH(RID, iOtherMH, iMaxMH);
-								}
-							}
-						}
+						const int iDeltaMH = ( iDiag ) ? MH_DIAG : MH_LRTB;
+						if ( pJ->GetMH() + iDeltaMH != iMH ) continue;	// pJ has wrong MH for connection
+
+						for (int iNbr = iDiag; iNbr < 8; iNbr += 2)	// Even/Odd iNbr ==> Non-diagonal/Diagonal
+							MHhelper(pJ, iNbr, RID, iMH, iMaxMH);
 					}
+					continue;
 				}
+				if ( iType == 2 && !p->GetHasPin() )	// Type 2 ==> Change layer at a non-pin (i.e. a via)
+				{
+					const int iDeltaMH	= MH_LYRX;
+					if ( pJ->GetMH() + iDeltaMH != iMH ) continue;		// pJ has wrong MH for connection
+
+					MHhelper(pJ, NBR_X, RID, iMH, iMaxMH);
+					continue;
+				}
+			}
+		}
+	}
+}
+
+void Board::MHhelper(const Element* p, const int& iNbr, const int& RID, unsigned int& iMH, unsigned int& iMaxMH)
+{
+	if ( !ReadCodeBit(iNbr, p->GetRoutable()) ) return;	// Skip non-routable nbrs
+
+	Element* pK	 = p->GetNbr(iNbr);
+	assert( pK != p );
+	if ( pK == p ) return;
+
+	WIRELIST wireList;	// Helper for chains of wires
+	
+	if ( p->GetUsed(iNbr) && pK->GetMH() == BAD_MH )
+	{
+		m_tmpVec[m_tmpVecSize++] = pK;	// Add pK to set of visited points
+		pK->UpdateMH(RID, iMH, iMaxMH);
+		if ( pK->GetHasWire() )
+		{
+			pK->GetWireList(wireList);	// Get list of pK and its wired points
+			for (auto& o : wireList)	// Ideally want these in order of increasing MH
+			{
+				Element* pW = const_cast<Element*> (o.first);
+				if ( pW == pK ) continue;	// Skip pK
+				assert( pK->GetNodeId() == pW->GetNodeId() );			// Sanity check
+				if ( pW->GetMH() != BAD_MH ) continue;					// Don't overwrite visited points (even if MH is improved)
+				const unsigned int iOtherMH = iMH + MH_WIRE * o.second;	// Each wire increases MH by MH_WIRE
+				m_tmpVec[m_tmpVecSize++] = pW;							// Add pW to set of visited points
+				pW->UpdateMH(RID, iOtherMH, iMaxMH);
 			}
 		}
 	}

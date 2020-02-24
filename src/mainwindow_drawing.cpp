@@ -758,6 +758,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				const bool		bWire			= pC->GetHasWire();
 				const bool		bWireAsVia		= bWire && m_bWriteGerber && m_bTwoLayers;	// true ==> draw small via pad
 				const int		iPerimeterCode	= pC->GetPerimeterCode(bDiagsOK, bMinDiags);	// 0 to 255
+				const Element*	pLyr			= pC->GetNbr(NBR_X);	// Point on layer above/below
+				const bool		bTunnel			= !bPin && nodeId != BAD_NODEID && pLyr != pC && pLyr->GetNodeId() == nodeId;	// true ==> a true via between layers
 
 				if ( colorId == BAD_COLORID && !bWire ) continue;	// Usually don't color places with no NodeID assigned unless they are wire ends
 
@@ -839,7 +841,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						painter.drawPixmap(L, T,*(m_ppPixmapBlob[iPerimeterCode]));
 
 						// Draw pad
-						if ( bPin ) painter.drawPixmap(L+C-D, T+C-D,*(m_ppPixmapPad[iEffColorId]));
+						if ( bPin || bTunnel ) painter.drawPixmap(L+C-D, T+C-D,*(m_ppPixmapPad[iEffColorId]));
 					}
 					else if ( iLoop == 1 )
 					{
@@ -856,7 +858,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					{
 						if ( nodeId != board.GetGroundNodeId() )	// Only the non-ground tracks have a "white" surround
 							PaintBlob(board, painter, backgroundColor, pCentre, iPerimeterCode, true);	// Draw fat "white" track blob
-						if ( bWireAsVia )
+						if ( bWireAsVia || bTunnel )
 							PaintViaPad(board, painter, backgroundColor, pCentre, true);				// Draw fat "white" via-pad
 						else if ( bPin )
 							PaintPad(board, painter, backgroundColor, pCentre, true);					// Draw fat "white" pad
@@ -866,14 +868,19 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						PaintBlob(board, painter, color, pCentre, iPerimeterCode);	// Draw track blob
 						if ( !bGreyPads )
 						{
-							if ( bWireAsVia )
+							if ( bWireAsVia || bTunnel )
 								PaintViaPad(board, painter, color, pCentre);		// Draw via-pad same color as track
 							else if ( bPin )
 								PaintPad(board, painter, color, pCentre);			// Draw pad same color as track
 						}
 					}
-					else if ( bDrawGrey && bPin )
-						PaintPad(board, painter, padGrey, pCentre);	// Draw grey pad
+					else if ( bDrawGrey )
+					{
+						if ( bPin )
+							PaintPad(board, painter, padGrey, pCentre);		// Draw grey pad
+						else if ( bTunnel )
+							PaintViaPad(board, painter, padGrey, pCentre);	// Draw grey via-pad
+					}
 				}
 				if ( bDirect )	// Draw track "blobs" and pads directly (PDF/Gerber)
 				{
@@ -882,13 +889,19 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						PaintBlob(board, painter, color, pCentre, iPerimeterCode);				// Draw track blob
 						if ( !bGreyPads )
 						{
-							if ( bWireAsVia )
+							if ( bWireAsVia || bTunnel )
 								PaintViaPad(board, painter, color, pCentre);	// Draw via-pad same color as track
 							else if ( bPin )
 								PaintPad(board, painter, color, pCentre);		// Draw pad same color as track
 						}
 					}
-					else if ( bPin && bDrawGrey ) PaintPad(board, painter, padGrey, pCentre);	// Draw grey pad
+					else if ( bDrawGrey )
+					{
+						if ( bPin )
+							PaintPad(board, painter, padGrey, pCentre);		// Draw grey pad
+						else if ( bTunnel )
+							PaintViaPad(board, painter, padGrey, pCentre);	// Draw grey via-pad
+					}
 				}
 			}
 			if ( m_bWriteGerber && m_bTwoLayers )
@@ -904,7 +917,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					polygonF << QPointF(X, Y);
 					GetXY(board, comp.GetRow() + comp.GetCompRows() - 1, comp.GetCol() + comp.GetCompCols() - 1, X, Y);
 					polygonF << QPointF(X, Y);
-					m_gWriter.GetStream(GFILE::GTL).AddTrack(bGap? GPEN::TRACK_GAP : GPEN::TRACK, polygonF);
+					m_gWriter.GetStream(GFILE::GTL).AddTrack(bGap ? GPEN::TRACK_GAP : GPEN::TRACK, polygonF);
 				}
 			}
 			if ( m_bWriteGerber )
@@ -1000,6 +1013,30 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				painter.drawEllipse(R-(W/3), (T+B)/2 - (W/6), (2*W)/3, W/3);
 			else
 				painter.drawEllipse((L+R)/2 - (W/6), B-(W/3), W/3, (2*W)/3);
+		}
+		painter.restore();
+	}
+
+	// Draw via tunnels ==========================================================================
+	if ( !m_bWriteGerber && !bVero && ( bPCB || trackMode != TRACKMODE::OFF ) )	// Force in PCB mode
+	{
+		painter.save();
+		m_backgroundPen.setWidth(0);
+		painter.setPen(m_backgroundPen);
+		painter.setBrush(m_backgroundBrush);
+		for (int j = minRow; j <= maxRow; j++)
+		for (int i = minCol; i <= maxCol; i++)
+		{
+			const Element*	pC		= board.Get(layer, j, i);
+			const int&		nodeId	= pC->GetNodeId();
+			const bool		bPin	= pC->GetHasPin();		// true ==> real pin
+			const Element*	pLyr	= pC->GetNbr(NBR_X);	// Point on layer above/below
+			const bool		bTunnel	= !bPin && nodeId != BAD_NODEID && pLyr != pC && pLyr->GetNodeId() == nodeId;	// true ==> a "true" via
+			if ( bTunnel )
+			{
+				GetLRTB(board, board.GetVIAHOLE_PERCENT(), j, i, L, R, T, B);						
+				painter.drawEllipse(L, T, R-L, B-T);	// A pin is drawn with a circle
+			}
 		}
 		painter.restore();
 	}

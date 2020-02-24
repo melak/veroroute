@@ -409,8 +409,13 @@ public:
 	void Route(bool bMinimal);
 	unsigned int Flood(const int& nodeId);
 	void Flood_Helper(const int& nodeId, bool** ppConn, unsigned int& cost, const bool bBuildTracks);
+	void Flood_Grow(const unsigned int& numRIDs, const int& iFloodNodeId, bool** ppConn, unsigned int& cost, Element* pJ, const int& iNbr, const bool& bBuildTracks, unsigned int& iMH, unsigned int& iMaxMH, bool& bDone);
+
 	void Backtrace(Element* pEnd, const int& nodeId);
+	void BacktraceHelper(Element*& p, const int& nodeId, const int& iDeltaMH, const int& iNbr, const int& iLoop, unsigned int& MH, bool& bOK);
+
 	void Manhatten(Element* p);
+	void MHhelper(const Element* p, const int& iNbr, const int& RID, unsigned int& iMH, unsigned int& iMaxMH);
 	void CheckAllComplete();
 	void PasteTracks(bool bTidy);
 	void WipeTracks();
