@@ -87,7 +87,7 @@ void FootPrint::BuildTrax(CompManager* pCompMgr, const RectManager& rectMgr, con
 					if ( pinIndex == BAD_PININDEX ) continue;
 					assert(compId != BAD_COMPID);
 					const Component& comp = pCompMgr->GetComponentById( compId );
-					iNodeId = comp.GetOrigId( pinIndex );
+					iNodeId = comp.GetOrigId(nLyr, pinIndex);
 					break;
 				}
 			}

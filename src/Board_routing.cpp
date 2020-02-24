@@ -28,6 +28,8 @@
 #define MH_LRTB 2
 #define MH_DIAG 3
 #define MH_WIRE 1
+//TODO_NEW Hacked MH_LAYR
+#define MH_LAYR 1
 
 // Routing methods
 
@@ -40,6 +42,7 @@ void Board::WipeAutoSetPoints(int nodeId)
 	{
 		Element* p = GetAt(i);
 		if ( !bWipeAll && p->GetNodeId() != nodeId ) continue;	// Skip points with wrong nodeId
+		const bool bAllLyrs = p->GetHasPin();
 		bool bWipe = p->ReadFlagBits(AUTOSET) && !p->ReadFlagBits(USERSET);
 		if ( p->GetHasWire() )
 		{
@@ -54,16 +57,16 @@ void Board::WipeAutoSetPoints(int nodeId)
 			for (auto& o : wireList)
 			{
 				Element* pW = const_cast<Element*> (o.first);
-				if ( bWipe ) SetNodeId(pW, BAD_NODEID);
-				pW->ClearFlagBits(AUTOSET);
-				pW->SetFlagBits(USERSET);
+				if ( bWipe ) SetNodeId(pW, BAD_NODEID, bAllLyrs);
+				ClearFlagBits(pW, AUTOSET, bAllLyrs);
+				SetFlagBits(pW, USERSET, bAllLyrs);
 			}
 		}
 		else
 		{
-			if ( bWipe ) SetNodeId(p, BAD_NODEID);
-			p->ClearFlagBits(AUTOSET);
-			p->SetFlagBits(USERSET);
+			if ( bWipe ) SetNodeId(p, BAD_NODEID, bAllLyrs);
+			ClearFlagBits(p, AUTOSET, bAllLyrs);
+			SetFlagBits(p, USERSET, bAllLyrs);
 		}
 	}
 }
@@ -78,7 +81,7 @@ void Board::BuildTargetPins(const int& nodeId)
 	for (int i = 0, iSize = GetSize(); i < iSize; i++)
 	{
 		Element* p = GetAt(i);
-		if ( p->GetHasPin() && p->GetNodeId() == nodeId && !p->GetHasWire() )
+		if ( p->IsLayer0() && p->GetHasPin() && p->GetNodeId() == nodeId && !p->GetHasWire() )
 			m_targetPins.push_back(p);
 	}
 }
@@ -237,7 +240,7 @@ void Board::Flood_Helper(const int& iFloodNodeId, bool** ppConn, unsigned int& c
 
 	size_t jjStart(0);
 
-	iMH = MH_LRTB - 1;	// Set iMH so it's incremented to MH_LRTB on loop entry
+	//TODO_NEW HACKOUT iMH = MH_LRTB - 1;	// Set iMH so it's incremented to MH_LRTB on loop entry
 	bool bDone(false);
 	while( !bDone )
 	{
@@ -264,15 +267,16 @@ void Board::Flood_Helper(const int& iFloodNodeId, bool** ppConn, unsigned int& c
 
 			const bool bOK = pJ->GetNodeId() == iFloodNodeId;	// true ==> pJ already painted with correct NodeId
 
-			for (int iDiag = 0, iDiagMax = ( bDiagsOK ) ? 2 : 1; iDiag < iDiagMax && !bDone; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
+			for (int iDiag = -1, iDiagMax = ( bDiagsOK ) ? 2 : 1; iDiag < iDiagMax && !bDone; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
 			{
-				const int iDeltaMH = ( iDiag ) ? MH_DIAG : MH_LRTB;
+				const int iDeltaMH = ( iDiag == -1 ) ? MH_LAYR : ( iDiag ) ? MH_DIAG : MH_LRTB;
 				if ( pJ->GetMH() + iDeltaMH != iMH ) continue;	// pJ has wrong MH for (Non-diagonal/Diagonal) connection
 
-				// Visit pJ's neighbours
-				for (int iNbr = iDiag; iNbr < 8 && !bDone; iNbr += 2)	// Even/Odd iNbr ==> Non-diagonal/Diagonal
+				if ( iDiag == -1 )
 				{
-					Element* pK = pJ->GetNbr(iNbr);
+					const int	iNbr	= NBR_X;
+					Element*	pK		= pJ->GetNbr(iNbr);
+					if ( pK == pJ ) continue;	//TODO_NEW Hack
 					const unsigned int& k = pK->GetRouteId();
 
 					const bool bDirOK = ( bOK && pJ->GetUsed(iNbr) ) ||	// i.e. if already painted with correct nodeId
@@ -342,6 +346,84 @@ void Board::Flood_Helper(const int& iFloodNodeId, bool** ppConn, unsigned int& c
 							bDone = ( cost == 0 );	// Zero cost ==> done
 						}
 					}
+					continue;
+				}
+				else
+				{
+					// Visit pJ's neighbours
+					for (int iNbr = iDiag; iNbr < 8 && !bDone; iNbr += 2)	// Even/Odd iNbr ==> Non-diagonal/Diagonal
+					{
+						Element* pK = pJ->GetNbr(iNbr);
+						const unsigned int& k = pK->GetRouteId();
+
+						const bool bDirOK = ( bOK && pJ->GetUsed(iNbr) ) ||	// i.e. if already painted with correct nodeId
+											( bBuildTracks && pJ->HaveNoBlankPins(iNbr) && !pJ->IsBlocked(iNbr, iFloodNodeId) && !pJ->IsUselessWire(iNbr, iFloodNodeId) );
+						if ( !bDirOK ) continue;
+
+						if ( pK->GetMH() == BAD_MH ) // Grow route with RID j (from pJ to pK)
+						{
+							const int& nodeId = pK->GetNodeId();
+							if ( nodeId == iFloodNodeId || nodeId == BAD_NODEID )
+							{
+								m_tmpVec[m_tmpVecSize++] = pK;	// Add pK to set of visited points
+								pK->UpdateMH(j, iMH, iMaxMH);
+								if ( pK->GetHasWire() )
+								{
+									pK->GetWireList(wireList);	// Get list of pK and its wired points
+									for (auto& o : wireList)	// Ideally want these in order of increasing MH
+									{
+										Element* pW = const_cast<Element*> (o.first);
+										if ( pW == pK ) continue;	// Skip pK
+										assert( pK->GetNodeId() == pW->GetNodeId() );			// Sanity check
+										if ( pW->GetMH() != BAD_MH ) continue;					// Don't overwrite visited points (even if MH is improved)
+										const unsigned int iOtherMH = iMH + MH_WIRE * o.second;	// Each wire increases MH by MH_WIRE
+										m_tmpVec[m_tmpVecSize++] = pW;							// Add pW to set of visited points
+										pW->UpdateMH(j, iOtherMH, iMaxMH);
+									}
+								}
+							}
+						}
+						else if ( j != k )	// Routes with RIDs j and k have met ...
+						{
+							if ( !ppConn[j][k] )	// If no j-k connection yet ...
+							{
+								if ( bBuildTracks )	// If building tracks ...
+								{
+									Backtrace(pJ, iFloodNodeId);	// ... trace pJ back to its source, painting iFloodNodeId along the way
+									Backtrace(pK, iFloodNodeId);	// ... trace pK back to its source, painting iFloodNodeId along the way
+								}
+
+								// Make j-k connection and enforce transitivity
+								assert( list.empty() );
+								list.push_back( CONNECTION(j,k) );
+								while ( !list.empty() )
+								{
+									auto iter = list.begin();	// Read info from first list entry ...
+									const auto a = iter->first;
+									const auto b = iter->second;
+									list.erase( iter );			// ... then remove the list entry
+
+									if ( !ppConn[a][b] )	// If no a-b connection ...
+									{
+										ppConn[a][b] = ppConn[b][a] = true;	// Make a-b connection ...
+										cost -= 2;							// Update cost
+										for (unsigned int c = 0; c < numRIDs; c++)	// Update 1st-order transitive relations
+										{
+											if ( ppConn[a][c] )
+											{
+												if ( !ppConn[b][c] ) list.push_back( CONNECTION(b,c) );	// a-c connection ==> b-c connection
+											}
+											else
+											{
+												if (  ppConn[b][c] ) list.push_back( CONNECTION(a,c) );	// b-c connection ==> a-c connection
+											}
+										}
+									}
+								}
+								bDone = ( cost == 0 );	// Zero cost ==> done
+							}
+						}
+					}
 				}
 			}
 		}
@@ -364,13 +446,15 @@ void Board::Backtrace(Element* pEnd, const int& nodeId)
 	{
 		assert( !p->GetIsHole() );
 
+		const bool bAllLyrs = p->GetHasPin();
+
 		Element* pW0 = p->GetW(0);
 		Element* pW1 = p->GetW(1);
 		if ( !p->GetHasPin() || p->GetHasWire() ) // For non-pins and wires
 		{
 			if ( p->GetNodeId() == BAD_NODEID )	// Set NodeId if not set yet.
 			{
-				SetNodeId(p, nodeId);	p->ClearFlagBits(USERSET); p->SetFlagBits(AUTOSET);
+				SetNodeId(p, nodeId, bAllLyrs); ClearFlagBits(p, USERSET, bAllLyrs); SetFlagBits(p, AUTOSET, bAllLyrs);
 				if ( p->GetHasWire() )
 				{
 					p->GetWireList(wireList);	// Get list of p and its wired points
@@ -378,14 +462,14 @@ void Board::Backtrace(Element* pEnd, const int& nodeId)
 					{
 						Element* pW = const_cast<Element*> (o.first);
 						if ( pW == p ) continue;	// Skip p
-						SetNodeId(pW, nodeId); pW->ClearFlagBits(USERSET); pW->SetFlagBits(AUTOSET);
+						SetNodeId(pW, nodeId, bAllLyrs); ClearFlagBits(pW, USERSET, bAllLyrs); SetFlagBits(pW, AUTOSET, bAllLyrs);
 					}
 				}
 			}
 			else if ( p->ReadFlagBits(USERSET) )
 			{
 				assert(p->GetNodeId() == nodeId);
-				p->SetFlagBits(AUTOSET);
+				SetFlagBits(p, AUTOSET, bAllLyrs);
 				if ( p->GetHasWire() )
 				{
 					p->GetWireList(wireList);	// Get list of p and its wired points
@@ -393,7 +477,7 @@ void Board::Backtrace(Element* pEnd, const int& nodeId)
 					{
 						Element* pW = const_cast<Element*> (o.first);
 						if ( pW == p ) continue;	// Skip p
-						pW->SetFlagBits(AUTOSET);
+						SetFlagBits(pW, AUTOSET, bAllLyrs);
 					}
 				}
 			}
@@ -412,18 +496,35 @@ void Board::Backtrace(Element* pEnd, const int& nodeId)
 
 		for (int iLoop = 0; iLoop < 2 && !bOK; iLoop++)	// First pass to give preference to nbrs that are not wire ends
 		{
-			for (int iDiag = 0, iDiagMax = ( bDiagsOK ) ? 2 : 1; iDiag < iDiagMax && !bOK; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
+			for (int iDiag = -1, iDiagMax = ( bDiagsOK ) ? 2 : 1; iDiag < iDiagMax && !bOK; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
 			{
-				const int iDeltaMH = ( iDiag ) ? MH_DIAG : MH_LRTB;
-				for (int iNbr = iDiag; iNbr < 8 && !bOK; iNbr += 2)	// Even/Odd iNbr ==> Non-diagonal/Diagonal
+				if ( iDiag == -1 )
 				{
-					Element* pNbr = p->GetNbr(iNbr);
+					const int iDeltaMH	= MH_LAYR;
+					const int iNbr		= NBR_X;
+					Element*  pNbr		= p->GetNbr(iNbr);
+					if ( pNbr == p ) continue;	//TODO_NEW Hack
 					if ( pNbr->GetRouteId() != p->GetRouteId() ) continue;	// Skip if nbr has wrong routeId
 					if ( iLoop == 0 &&  pNbr->GetHasWire() ) continue;		// Skip if nbr is a wire
 					if ( iLoop == 1 && !pNbr->GetHasWire() ) continue;		// Skip if nbr is a non-wire
 					if ( !p->IsBlocked(iNbr, nodeId) && pNbr->GetMH() == MH - iDeltaMH )
 					{
 						p = pNbr;	MH -= iDeltaMH;	bOK = true;
+					}
+				}
+				else
+				{
+					const int iDeltaMH = ( iDiag ) ? MH_DIAG : MH_LRTB;
+					for (int iNbr = iDiag; iNbr < 8 && !bOK; iNbr += 2)	// Even/Odd iNbr ==> Non-diagonal/Diagonal
+					{
+						Element* pNbr = p->GetNbr(iNbr);
+						if ( pNbr->GetRouteId() != p->GetRouteId() ) continue;	// Skip if nbr has wrong routeId
+						if ( iLoop == 0 &&  pNbr->GetHasWire() ) continue;		// Skip if nbr is a wire
+						if ( iLoop == 1 && !pNbr->GetHasWire() ) continue;		// Skip if nbr is a non-wire
+						if ( !p->IsBlocked(iNbr, nodeId) && pNbr->GetMH() == MH - iDeltaMH )
+						{
+							p = pNbr;	MH -= iDeltaMH;	bOK = true;
+						}
 					}
 				}
 			}
@@ -497,15 +598,17 @@ void Board::Manhatten(Element* p)
 				continue;
 			}
 
-			for (int iDiag = 0, iDiagMax = ( bDiagsOK ) ? 2 : 1; iDiag < iDiagMax; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
+			for (int iDiag = -1, iDiagMax = ( bDiagsOK ) ? 2 : 1; iDiag < iDiagMax; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
 			{
-				const int iDeltaMH = ( iDiag ) ? MH_DIAG : MH_LRTB;
+				const int iDeltaMH = ( iDiag == -1 ) ? MH_LAYR : ( iDiag ) ? MH_DIAG : MH_LRTB;
 				if ( pJ->GetMH() + iDeltaMH != iMH ) continue;	// pJ has wrong MH for connection
 
-				// Visit pJ's neighbours
-				for (int iNbr = iDiag; iNbr < 8; iNbr += 2)	// Even/Odd iNbr ==> Non-diagonal/Diagonal
+				if ( iDiag == -1 )
 				{
-					Element* pK = pJ->GetNbr(iNbr);
+					const int	iNbr	= NBR_X;
+					if ( !ReadCodeBit(iNbr, pJ->GetRoutable()) ) continue;	// Skip non-routable nbrs
+					Element*	pK		= pJ->GetNbr(iNbr);
+					if ( pK == pJ ) continue;	//HACK
 					if ( pJ->GetUsed(iNbr) && pK->GetMH() == BAD_MH )
 					{
 						m_tmpVec[m_tmpVecSize++] = pK;	// Add pK to set of visited points
@@ -526,6 +629,34 @@ void Board::Manhatten(Element* p)
 						}
 					}
 				}
+				else
+				{
+					// Visit pJ's neighbours
+					for (int iNbr = iDiag; iNbr < 8; iNbr += 2)	// Even/Odd iNbr ==> Non-diagonal/Diagonal
+					{
+						if ( !ReadCodeBit(iNbr, pJ->GetRoutable()) ) continue;	// Skip non-routable nbrs
+						Element* pK = pJ->GetNbr(iNbr);
+						if ( pJ->GetUsed(iNbr) && pK->GetMH() == BAD_MH )
+						{
+							m_tmpVec[m_tmpVecSize++] = pK;	// Add pK to set of visited points
+							pK->UpdateMH(RID, iMH, iMaxMH);
+							if ( pK->GetHasWire() )
+							{
+								pK->GetWireList(wireList);	// Get list of pK and its wired points
+								for (auto& o : wireList)	// Ideally want these in order of increasing MH
+								{
+									Element* pW = const_cast<Element*> (o.first);
+									if ( pW == pK ) continue;	// Skip pK
+									assert( pK->GetNodeId() == pW->GetNodeId() );			// Sanity check
+									if ( pW->GetMH() != BAD_MH ) continue;					// Don't overwrite visited points (even if MH is improved)
+									const unsigned int iOtherMH = iMH + MH_WIRE * o.second;	// Each wire increases MH by MH_WIRE
+									m_tmpVec[m_tmpVecSize++] = pW;							// Add pW to set of visited points
+									pW->UpdateMH(RID, iOtherMH, iMaxMH);
+								}
+							}
+						}
+					}
+				}
 			}
 		}
 	}
@@ -537,14 +668,15 @@ void Board::CheckAllComplete()
 
 	// New algorithm.
 	/*
-	// Calling Route() when routing is not enabled sets the "RoutedOK" flags without building new tracks.
-	// So we can do that and then copy the flags over to the "Complete" flags
-	Route();
+	// Calling Route() when routing is not enabled sets the cost info without building new tracks.
+	// So we can use that to set the "Complete" flags
+	Route(true);
 	for (size_t n = 0; n < m_nodeInfoMgr.GetSize(); n++)
 	{
 		NodeInfo* pNodeInfo = m_nodeInfoMgr.GetAt(n);
-		pNodeInfo->SetComplete( pNodeInfo->GetRoutedOK() );
+		pNodeInfo->SetComplete( pNodeInfo->GetCost() == 0 );
 	}
+	m_nodeInfoMgr.SortByLowestDifficulty(m_compMgr);
 	return;
 	*/
 
@@ -589,18 +721,20 @@ void Board::PasteTracks(bool bTidy)
 	{
 		Element* p = GetAt(i);
 
+		const bool bAllLyrs = p->GetHasPin();
+
 		// Tidy clears all non-pins and wires that are USER_SET ...
 		if ( bTidy && ( !p->GetHasPin() || p->GetHasWire() ) && p->ReadFlagBits(USERSET) && !p->ReadFlagBits(AUTOSET|VEROSET) )
 		{
-			SetNodeId(p, BAD_NODEID);
+			SetNodeId(p, BAD_NODEID, bAllLyrs);
 			for (int iSlot = 0; iSlot < 2; iSlot++)
 			{
 				Element* pW = p->GetW(iSlot);
-				if ( pW ) SetNodeId(pW, BAD_NODEID);
+				if ( pW ) SetNodeId(pW, BAD_NODEID, bAllLyrs);
 			}
 		}
 
-		p->ClearFlagBits(AUTOSET|VEROSET); p->SetFlagBits(USERSET);	// Don't do this on pW, or the tidy option will wipe wires !!!
+		ClearFlagBits(p, AUTOSET|VEROSET, bAllLyrs); SetFlagBits(p, USERSET, bAllLyrs);	// Don't do this on pW, or the tidy option will wipe wires !!!
 
 		// For wires, the "Paste" operation either paints the board at the wire-ends or wipes it.
 		// Fix-up the nodeId info on any wire components ...
@@ -612,8 +746,11 @@ void Board::PasteTracks(bool bTidy)
 			{
 				p->GetSlotInfo(iSlot, iPinIndex, tmpCompId);
 				Component& comp = m_compMgr.GetComponentById( tmpCompId );
-				comp.SetNodeId(0, nodeId);	comp.SetNodeId(1, nodeId);
-				comp.SetOrigId(0, nodeId);	comp.SetOrigId(1, nodeId);
+				for (size_t i = 0; i < comp.GetNumPins(); i++)
+				{
+					comp.SetNodeId(i, nodeId);
+					for (int lyr = 0; lyr < 2; lyr++) comp.SetOrigId(lyr, i, nodeId);
+				}
 			}
 		}
 	}
@@ -628,9 +765,11 @@ void Board::WipeTracks()
 	Component& trax = m_compMgr.GetTrax();
 	if ( trax.GetSize() > 0 && trax.GetIsPlaced() )
 	{
-		const int	lyrTL		= trax.GetLyr();
-		const int	rowTL		= trax.GetRow();
-		const int	colTL		= trax.GetCol();
+		const bool bAllLyrs(false);
+
+		const int&	lyrTL		= trax.GetLyr();
+		const int&	rowTL		= trax.GetRow();
+		const int&	colTL		= trax.GetCol();
 		const int&	compCols	= trax.GetCompCols();
 		const int&	compRows	= trax.GetCompRows();
 
@@ -643,10 +782,11 @@ void Board::WipeTracks()
 				if ( !trax.GetCompElement(j,i)->ReadFlagBits(RECTSET) ) continue;
 				Element* p = Get(lyrTL, jRow, iCol);
 				assert( !p->GetHasPin() && !p->GetIsHole() && !p->GetHasComp() );	// Sanity check
-				SetNodeId(p, BAD_NODEID);
+
+				SetNodeId(p, BAD_NODEID, bAllLyrs);
 				p->SetSurface(SURFACE_FREE);
-				p->ClearFlagBits(AUTOSET|VEROSET|RECTSET);
-				p->SetFlagBits(USERSET);
+				ClearFlagBits(p, AUTOSET|VEROSET|RECTSET, bAllLyrs);
+				SetFlagBits(p, USERSET, bAllLyrs);
 			}
 		}
 		m_compMgr.ClearTrax();
@@ -654,16 +794,18 @@ void Board::WipeTracks()
 	}
 	else	// ... otherwise wipe all the points on the board. The floating trax component won't get wiped
 	{
+		const bool bAllLyrs(true);
+
 		for (int k = 0, kMax = GetLyrs(); k < kMax; k++)
 		for (int j = 0, jMax = GetRows(); j < jMax; j++)
 		for (int i = 0, iMax = GetCols(); i < iMax; i++)
 		{
 			Element* p = Get(k, j, i);
 			assert( !p->GetHasPin() && !p->GetIsHole() && !p->GetHasComp() );	// Sanity check
-			SetNodeId(p, BAD_NODEID);
+			SetNodeId(p, BAD_NODEID, bAllLyrs);
 			p->SetSurface(SURFACE_FREE);
-			p->ClearFlagBits(AUTOSET|VEROSET);
-			p->SetFlagBits(USERSET);
+			ClearFlagBits(p, AUTOSET|VEROSET, bAllLyrs);
+			SetFlagBits(p, USERSET, bAllLyrs);
 		}
 	}
 	PlaceFloaters();	// Unfloat components

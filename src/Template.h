@@ -49,7 +49,11 @@ public:
 				SetId(BAD_COMPID);	// This bad ID indicates the component is actually a template
 				// Wipe irrelevant data
 				SetNameStr("");
-				for (size_t i = 0; i < GetNumPins(); i++) { SetNodeId(i, BAD_NODEID); SetOrigId(i, BAD_NODEID); }
+				for (size_t i = 0; i < GetNumPins(); i++)
+				{
+					SetNodeId(i, BAD_NODEID);
+					for (int lyr = 0; lyr < 2; lyr++) SetOrigId(lyr, i, BAD_NODEID);
+				}
 				SetRow(0); SetCol(0);
 				SetDirection('W');
 				SetIsPlaced(false);

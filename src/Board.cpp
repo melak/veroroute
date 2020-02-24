@@ -93,129 +93,144 @@ int Board::GetTextId(int row, int col)	// Pick the most relevant text box at the
 
 // Methods to paint/unpaint nodeIds
 
-void Board::SetNodeId(Element* p, const int& nodeId)	// Helper to make sure we do UpdateCounts() before painting an element
+void Board::SetNodeId(Element* p, const int& nodeId, const bool bAllLyrs)	// Helper to make sure we do UpdateCounts() before painting an element
 {
 	m_adjInfoMgr.UpdateCounts(p, nodeId);	// Do this BEFORE we call SetNodeId() on the element
 	p->SetNodeId(nodeId);					// Write node value
+	if ( !bAllLyrs ) return;
+	Element* q = p->GetNbr(NBR_X);
+	if ( q == p ) return;
+	m_adjInfoMgr.UpdateCounts(q, nodeId);	// Do this BEFORE we call SetNodeId() on the element
+	q->SetNodeId(nodeId);					// Write node value
+}
+
+void Board::ClearFlagBits(Element* p, const char& i, const bool bAllLyrs)
+{
+	p->ClearFlagBits(i);
+	if ( !bAllLyrs ) return;
+	Element* q = p->GetNbr(NBR_X);
+	if ( q != p ) q->ClearFlagBits(i);
+}
+
+void Board::SetFlagBits(Element* p, const char& i, const bool bAllLyrs)
+{
+	p->SetFlagBits(i);
+	if ( !bAllLyrs ) return;
+	Element* q = p->GetNbr(NBR_X);
+	if ( q != p ) q->SetFlagBits(i);
 }
 
 bool Board::SetNodeIdByUser(const int& lyr, const int& row, const int& col, const int& nodeId, const bool& bPaintPins)
 {
-	//TODO_NEW Check loop below.  It is long and could have errors
+	Element*		p			= Get(lyr, row, col);
+	const bool		bHole		= p->GetIsHole();
+	if ( bHole ) return false;	// No change
+	const bool		bWire		= p->GetHasWire();
+	const bool		bPin		= p->GetHasPin();
+	assert( !bPin || p->GetHasComp() );	// Sanity check
+	assert( !bWire || bPin );			// Wires must have pins
 
-	// returns false if nothing changed
-	const bool bAllLyrs = Get(lyr, row, col)->GetHasPin();
-	const int kLyrStart = ( bAllLyrs ) ? 0 : lyr;
-	const int kLyrEnd	= ( bAllLyrs ) ? GetLyrs() : ( lyr + 1 );
-	for (int k = kLyrStart; k < kLyrEnd; k++)
+	WIRELIST wireList;	// Helper for chains of wires
+
+	// Handle special case first.
+	if ( bPin && !bWire && !bPaintPins )
 	{
-		Element*		p			= Get(k, row, col);
-		const bool		bHole		= p->GetIsHole();
-		if ( bHole ) return false;	// No change
-		const bool		bWire		= p->GetHasWire();
-		const bool		bPin		= p->GetHasPin();
-		assert( !bPin || p->GetHasComp() );	// Sanity check
-		assert( !bWire || bPin );			// Wires must have pins
+		// If trying to paint the board under a non-wire pin ...
+		// ... we can modify the "origId" for the pin, but are only allowed
+		// ... to wipe it or make it match the nodeId of the pin. Then quit.
 
-		WIRELIST wireList;	// Helper for chains of wires
+		const size_t	pinIndex	= p->GetPinIndex();
+		const int&		compId		= p->GetCompId();
+		Component&		comp		= m_compMgr.GetComponentById(compId);
+		assert( comp.GetType() != COMP::WIRE );	// Sanity check
 
-		// Handle special case first.
-		if ( bPin && !bWire && !bPaintPins )
+		if ( nodeId != BAD_NODEID && nodeId != comp.GetNodeId(pinIndex) ) return false;	// Can't set a bad origId
+
+		if ( comp.GetOrigId(lyr, pinIndex) == nodeId ) return false;	// origId is already as required
+
+		// Need to do (RemoveComp/ SetNodeId/ AddComp) to ensure m_nodeInfoMgr is updated OK
+		m_nodeInfoMgr.RemoveComp(comp);
+		comp.SetOrigId(lyr, pinIndex, nodeId);
+		m_nodeInfoMgr.AddComp(comp);
+		return true;
+	}
+
+	// Now do regular cases:  Paint the board as needed...
+	if ( bWire )
+	{
+		// Just need to get origId.  Any used slot will do
+		size_t	pinIndex;
+		int		compId;
+		p->GetSlotInfo(p->GetUsedSlot(), pinIndex, compId);
+
+		Component& comp = m_compMgr.GetComponentById(compId);	assert( comp.GetType() == COMP::WIRE );
+		const int origId = comp.GetOrigId(lyr, pinIndex);
+
+		if ( nodeId == p->GetNodeId() && origId == nodeId && p->ReadFlagBits(USERSET) )
+			return false;	// No change
+	}
+	else if ( nodeId == p->GetNodeId() && p->ReadFlagBits(USERSET) )
+		return false;		// No change
+
+	// Set the NodeId on the element and all connected wire points
+	p->GetWireList(wireList);	// Get list containing p and its wired points
+	for (auto& o : wireList)
+	{
+		Element* pW = const_cast<Element*> (o.first);
+		const bool bAllLyrs = pW->GetHasPin();
+		SetNodeId(pW, nodeId, bAllLyrs);
+		ClearFlagBits(pW, AUTOSET|VEROSET, bAllLyrs);
+		SetFlagBits(pW, USERSET, bAllLyrs);
+	}
+
+	// Set the nodeId at the component pin
+	if ( bPin )
+	{
+		if ( bWire )	// Wire
 		{
-			// If trying to paint the board under a non-wire pin ...
-			// ... we can modify the "origId" for the pin, but are only allowed
-			// ... to wipe it or make it match the nodeId of the pin. Then quit.
+			size_t	pinIndex;
+			int		compId;
+			for (auto& o : wireList)
+			{
+				Element* pL = const_cast<Element*> (o.first);
+				for (int iSlot = 0; iSlot < 2; iSlot++)
+				{
+					Element* pW = pL->GetW(iSlot);
 
+					pL->GetSlotInfo(iSlot, pinIndex, compId);
+					assert( (pW == nullptr && compId == BAD_COMPID && pinIndex == BAD_PININDEX) ||
+							(pW != nullptr && compId != BAD_COMPID && pinIndex != BAD_PININDEX) );
+
+					if ( pW == nullptr ) continue;
+
+					Component& comp = m_compMgr.GetComponentById(compId);
+					assert( comp.GetType() == COMP::WIRE );	// Sanity check
+					const size_t otherPinIndex = ( pinIndex == 0 ) ? 1 : 0;
+					if ( pL == p )	// If it's the point that was clicked on, then set both the nodeId and origId
+					{
+						comp.SetNodeId(pinIndex, nodeId);
+						for (int iLyr = 0; iLyr < 2; iLyr++)
+							comp.SetOrigId(iLyr, pinIndex, nodeId);
+					}
+					comp.SetNodeId(otherPinIndex, nodeId);
+					for (int iLyr = 0; iLyr < 2; iLyr++)
+						comp.SetOrigId(iLyr, otherPinIndex, ( comp.GetOrigId(iLyr, otherPinIndex) != BAD_NODEID ) ? nodeId : BAD_NODEID);
+				}
+			}
+		}
+		else			// Regular component
+		{
 			const size_t	pinIndex	= p->GetPinIndex();
 			const int&		compId		= p->GetCompId();
 			Component&		comp		= m_compMgr.GetComponentById(compId);
-			assert( comp.GetType() != COMP::WIRE );	// Sanity check
-
-			if ( nodeId != BAD_NODEID && nodeId != comp.GetNodeId(pinIndex) ) return false;	// Can't set a bad origId
-
-			if ( comp.GetOrigId(pinIndex) == nodeId ) return false;	// origId is already as required
+			assert( bPaintPins && comp.GetType() != COMP::WIRE );	// Sanity check
 
 			// Need to do (RemoveComp/ SetNodeId/ AddComp) to ensure m_nodeInfoMgr is updated OK
 			m_nodeInfoMgr.RemoveComp(comp);
-			comp.SetOrigId(pinIndex, nodeId);
+			comp.SetNodeId(pinIndex, nodeId);
+			if ( comp.GetOrigId(lyr, pinIndex) != nodeId )	// Modifying a pin on a previously painted track ...
+				comp.SetOrigId(lyr, pinIndex, BAD_NODEID);	// ... should wipe the track under the pin
 			m_nodeInfoMgr.AddComp(comp);
-			return true;
-		}
-
-		// Now do regular cases:  Paint the board as needed...
-		if ( bWire )
-		{
-			// Just need to get origId.  Any used slot will do
-			size_t	pinIndex;
-			int		compId;
-			p->GetSlotInfo(p->GetUsedSlot(), pinIndex, compId);
-
-			Component& comp = m_compMgr.GetComponentById(compId);	assert( comp.GetType() == COMP::WIRE );
-			const int origId = comp.GetOrigId(pinIndex);
-
-			if ( nodeId == p->GetNodeId() && origId == nodeId && p->ReadFlagBits(USERSET) )
-				return false;	// No change
-		}
-		else if ( nodeId == p->GetNodeId() && p->ReadFlagBits(USERSET) )
-			return false;		// No change
-
-		// Set the NodeId on the element and all connected wire points
-		p->GetWireList(wireList);	// Get list containing p and its wired points
-		for (auto& o : wireList)
-		{
-			Element* pW = const_cast<Element*> (o.first);
-			SetNodeId(pW, nodeId);
-			pW->ClearFlagBits(AUTOSET|VEROSET);
-			pW->SetFlagBits(USERSET);
-		}
-
-		// Set the nodeId at the component pin
-		if ( bPin )
-		{
-			if ( bWire )	// Wire
-			{
-				size_t	pinIndex;
-				int		compId;
-				for (auto& o : wireList)
-				{
-					Element* pL = const_cast<Element*> (o.first);
-					for (int iSlot = 0; iSlot < 2; iSlot++)
-					{
-						Element* pW = pL->GetW(iSlot);
-
-						pL->GetSlotInfo(iSlot, pinIndex, compId);
-						assert( (pW == nullptr && compId == BAD_COMPID && pinIndex == BAD_PININDEX) ||
-								(pW != nullptr && compId != BAD_COMPID && pinIndex != BAD_PININDEX) );
-
-						if ( pW == nullptr ) continue;
-
-						Component& comp = m_compMgr.GetComponentById(compId);
-						assert( comp.GetType() == COMP::WIRE );	// Sanity check
-						const size_t otherPinIndex = ( pinIndex == 0 ) ? 1 : 0;
-						if ( pL == p )	// If it's the point that was clicked on, then set both the nodeId and origId
-						{
-							comp.SetNodeId(pinIndex, nodeId);
-							comp.SetOrigId(pinIndex, nodeId);
-						}
-						comp.SetNodeId(otherPinIndex, nodeId);
-						comp.SetOrigId(otherPinIndex, ( comp.GetOrigId(otherPinIndex) != BAD_NODEID ) ? nodeId : BAD_NODEID);
-					}
-				}
-			}
-			else			// Regular component
-			{
-				const size_t	pinIndex	= p->GetPinIndex();
-				const int&		compId		= p->GetCompId();
-				Component&		comp		= m_compMgr.GetComponentById(compId);
-				assert( bPaintPins && comp.GetType() != COMP::WIRE );	// Sanity check
-
-				// Need to do (RemoveComp/ SetNodeId/ AddComp) to ensure m_nodeInfoMgr is updated OK
-				m_nodeInfoMgr.RemoveComp(comp);
-				comp.SetNodeId(pinIndex, nodeId);
-				if ( comp.GetOrigId(pinIndex) != nodeId )	// Modifying a pin on a previously painted track ...
-					comp.SetOrigId(pinIndex, BAD_NODEID);	// ... should wipe the track under the pin
-				m_nodeInfoMgr.AddComp(comp);
-			}
 		}
 	}
 	return true;
@@ -237,7 +252,7 @@ void Board::FloodNodeId(const int& nodeId)
 			p->GetSlotInfo(p->GetUsedSlot(), pinIndex, compId);
 
 			Component& comp = m_compMgr.GetComponentById(compId); assert( comp.GetType() == COMP::WIRE );
-			const int origId = comp.GetOrigId(pinIndex);
+			const int origId = comp.GetOrigId(lyr, pinIndex);
 
 			if ( origId != p->GetNodeId() || !p->ReadFlagBits(USERSET) ) continue; // Don't paint directly if it wasn't painted directly in the first place
 		}
@@ -305,14 +320,15 @@ void Board::AutoFillVero()
 					break;							// End bottom count
 			}
 
+			const bool bAllLyrs(false);
 			if ( lenTop == INT_MAX && lenBot == INT_MAX )
-				SetNodeId(pC, GetNewNodeId());	// Unused strip, so make a new nodeId
+				SetNodeId(pC, GetNewNodeId(), bAllLyrs);	// Unused strip, so make a new nodeId
 			else if ( lenTop < lenBot )
-				SetNodeId(pC, nodeIdTop);
+				SetNodeId(pC, nodeIdTop, bAllLyrs);
 			else
-				SetNodeId(pC, nodeIdBot);
-			pC->ClearFlagBits(USERSET|AUTOSET);
-			pC->SetFlagBits(VEROSET);
+				SetNodeId(pC, nodeIdBot, bAllLyrs);
+			ClearFlagBits(pC, USERSET|AUTOSET, bAllLyrs);
+			SetFlagBits(pC, VEROSET, bAllLyrs);
 
 			nodeIdTop = pC->GetNodeId(); lenTop = 1;	// Start top count
 		}

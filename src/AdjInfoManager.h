@@ -56,8 +56,11 @@ public:
 		// Modify adjacency info for newNodeId
 		assert(pNew->GetNodeId() == newNodeId);	// Sanity check.
 		for (int iNbr = 0; iNbr < NUM_NBRS; iNbr++)
-//			if ( ReadCodeBit(iNbr, p->GetRoutable()) )	//TODO_NEW
+		{
+			if ( p->GetNbr(iNbr) == p ) continue; //TODO_NEW	Hack
+			if ( ReadCodeBit(iNbr, p->GetRoutable()) )
 				ModifyCount(nullptr, pNew, p->GetNbr(iNbr)->GetNodeId());
+		}
 		// Don't do p->GetW() !! That will be handled by painting the other wire end
 	}
 	void UpdateCounts(Element* p, int newNodeId)	// Only called by Board::SetNodeId()
@@ -82,8 +85,11 @@ public:
 		// Modify adjacency info for oldNodeId and newNodeId
 		assert(pNew == nullptr || pNew->GetNodeId() == newNodeId);	// Sanity check.
 		for (int iNbr = 0; iNbr < NUM_NBRS; iNbr++)
-//			if ( ReadCodeBit(iNbr, p->GetRoutable()) )	//TODO_NEW
+		{
+			if ( p->GetNbr(iNbr) == p ) continue; //TODO_NEW	Hack
+			if ( ReadCodeBit(iNbr, p->GetRoutable()) )
 				ModifyCount(pOld, pNew, p->GetNbr(iNbr)->GetNodeId());
+		}
 		// Don't do p->GetW() !! That will be handled on painting the other wire end
 	}
 	void SortByLowestNodeId()

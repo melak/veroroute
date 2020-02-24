@@ -31,18 +31,25 @@
 // then setting the code appropriately at each point will allow
 // a single diagonal connection to exist, either (A-A) or (B-B).
 
-const int NUM_NBRS = 8;	// NBR_L to NBR_LB
+const int NUM_NBRS = 9;	// (NBR_L to NBR_LB) + NBR_X
 
-// Indexes for the eight neighbour elements, starting on the left and going clockwise
-const int	NBR_L(0), NBR_LT(1), NBR_T(2), NBR_RT(3),		// Left,  Left-Top,     Top,    Right-Top,
-			NBR_R(4), NBR_RB(5), NBR_B(6), NBR_LB(7);		// Right, Right-Bottom, Bottom, Left-Bottom
-static int	Opposite(int NBR) { return ( NBR + 4 ) % 8; }	// Helper to get opposite neighbour index
+// Indexes for the 8 neighbour elements in the same layer, starting on the left and going clockwise
+const int	NBR_L(0), NBR_LT(1), NBR_T(2), NBR_RT(3),	// Left,  Left-Top,     Top, Right-Top,
+			NBR_R(4), NBR_RB(5), NBR_B(6), NBR_LB(7);	// Right, Right-Bottom, Bottom, Left-Bottom
+const int	NBR_X(8);	// Index for the neighbour element in the layer above/below
+
+static int	Opposite(int NBR)	// Helper to get opposite neighbour index
+{
+	return ( NBR == NBR_X ) ? NBR_X : (  ( NBR + 4 ) % 8 );
+}
 
 // Functions for mapping NBR indices to "code bits" and manipulating them
 static bool ReadCodeBit(const int& NBR, const int& iCode)	{ return ( iCode & (1<<NBR) ) != 0; }
 static void SetCodeBit(const int& NBR, int& iCode)			{ iCode |=  (1<<NBR); }
 static void ClearCodeBit(const int& NBR, int& iCode)		{ iCode &= ~(1<<NBR); }
 static void ToggleCodeBit(const int& NBR, int& iCode)		{ iCode ^=  (1<<NBR); }
+const int CODEBITS_LYR = 0xFF;
+const int CODEBITS_ALL = 0x1FF;
 
 // Flag is a bitfield describing the status of the nodeId at point.
 // USERSET points will not have their nodeId modified during the auto-routing.
@@ -104,7 +111,7 @@ public:
 	}
 	int GetPerimeterCode(const bool& bDiagsOK, const bool& bMinDiags)	const // Helper for the GUI "blobs"
 	{
-		int iCode = GetCode();	// Take a copy of the connection code
+		int iCode = GetCode() & CODEBITS_LYR;	// Take a copy of the connection code, and restrict to same-layer neighbours
 
 		// Enforce any restrictions on diagonal connections acccording to the GUI options on diagonals
 		const bool	bL( ReadCodeBit(NBR_L, iCode) ),	bT( ReadCodeBit(NBR_T, iCode) ),

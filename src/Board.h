@@ -158,10 +158,12 @@ public:
 				p->SetNbr(NBR_RB,	Get(iLyr, iB,   iR));
 				p->SetNbr(NBR_B,	Get(iLyr, iB,   iCol));
 				p->SetNbr(NBR_LB,	Get(iLyr, iB,   iL));
+				p->SetNbr(NBR_X, ( iLyrs == 1 ) ? p : Get((iLyr + 1 ) % 2, iRow, iCol) );
+
 				p->ClearWires();	// Wires must be set by GlueWires()
 
 				// Prevent toroidal routing at board edges
-				int okDirs = 0xFF;	// All 8 directions OK by default
+				int okDirs = CODEBITS_ALL;	// All neighbour directions OK by default
 				if ( iRow == 0 )			{ ClearCodeBit(NBR_LT, okDirs); ClearCodeBit(NBR_T, okDirs); ClearCodeBit(NBR_RT, okDirs); }
 				if ( iRow == GetRows()-1 )	{ ClearCodeBit(NBR_LB, okDirs); ClearCodeBit(NBR_B, okDirs); ClearCodeBit(NBR_RB, okDirs); }
 				if ( iCol == 0 )			{ ClearCodeBit(NBR_LT, okDirs); ClearCodeBit(NBR_L, okDirs); ClearCodeBit(NBR_LB, okDirs); }
@@ -179,27 +181,23 @@ public:
 			const Component&	comp	= mapObj.second;
 			if ( comp.GetType() == COMP::WIRE && comp.GetIsPlaced() )
 			{
+				const int& lyr  = comp.GetLyr();	assert(lyr == 0);
 				const int& rowA = comp.GetRow();
 				const int& colA = comp.GetCol();
 				const int  rowB = comp.GetLastRow();
 				const int  colB = comp.GetLastCol();
 
-				for (int iLyr = 0, iLyrs = GetLyrs(); iLyr < iLyrs; iLyr++)	//TODO_NEW_CHECK
-				{
-					if ( !comp.GetUsesLayer(iLyr) ) continue;
+				Element* pA = Get(lyr, rowA, colA);	assert(pA->GetNumWires() < 2);
+				Element* pB = Get(lyr, rowB, colB);	assert(pB->GetNumWires() < 2);
 
-					Element* pA = Get(iLyr, rowA, colA);	assert(pA->GetNumWires() < 2);
-					Element* pB = Get(iLyr, rowB, colB);	assert(pB->GetNumWires() < 2);
+				assert(pA->GetNumCompIds() > 0 && pA->GetNumCompIds() < 3);
+				assert(pB->GetNumCompIds() > 0 && pB->GetNumCompIds() < 3);
+				assert(pB->GetNodeId() == pA->GetNodeId());	// Wire ends must have same NodeId
 
-					assert(pA->GetNumCompIds() > 0 && pA->GetNumCompIds() < 3);
-					assert(pB->GetNumCompIds() > 0 && pB->GetNumCompIds() < 3);
-					assert(pB->GetNodeId() == pA->GetNodeId());	// Wire ends must have same NodeId
-
-					const int iSlotA = pA->GetSlotFromCompId(compId);
-					const int iSlotB = pB->GetSlotFromCompId(compId);
-					pA->SetW( iSlotA, pB );	// Give pA a pointer to pB
-					pB->SetW( iSlotB, pA );	// Give pB a pointer to pA
-				}
+				const int iSlotA = pA->GetSlotFromCompId(compId);
+				const int iSlotB = pB->GetSlotFromCompId(compId);
+				pA->SetW( iSlotA, pB );	// Give pA a pointer to pB
+				pB->SetW( iSlotB, pA );	// Give pB a pointer to pA				
 			}
 		}
 	}
@@ -329,6 +327,19 @@ public:
 
 		// Move all user-defined text
 		GetTextMgr().MoveAll(iDown, iRight);
+
+		if ( incLyrs > 0 )	// If we added a layer ...
+		{
+			// ... do TakeOff() and PutDown() for all placed parts
+			// ... so new layer is set correctly
+			for (auto& mapObj : m_compMgr.m_mapIdToComp)
+			{
+				Component& comp	= mapObj.second;
+				if ( !comp.GetIsPlaced() ) continue;
+				const bool bOK1 = TakeOff(comp); assert(bOK1);
+				const bool bOK2 = PutDown(comp); assert(bOK2);
+			}
+		}
 	}
 
 	bool GetBounds(int& minLyr, int& maxLyr, int& minRow, int& minCol, int& maxRow, int& maxCol) const
@@ -383,7 +394,9 @@ public:
 	int  GetTextId(int row, int col);		// Pick the most relevant text box at the location
 
 	// Methods to paint/unpaint nodeIds
-	void SetNodeId(Element* p, const int& nodeId);	// Helper to make sure we do UpdateCounts() before painting an element
+	void SetNodeId(Element* p, const int& nodeId, const bool bAllLyrs);	// Helper to make sure we do UpdateCounts() before painting an element
+	void ClearFlagBits(Element* p, const char& i, const bool bAllLyrs);
+	void SetFlagBits(Element* p, const char& i, const bool bAllLyrs);
 	bool SetNodeIdByUser(const int& lyr, const int& row, const int& col, const int& nodeId, const bool& bPaintPins);
 	void FloodNodeId(const int& nodeId);
 	void AutoFillVero();
@@ -410,12 +423,8 @@ public:
 
 	// Methods for component placement/removal
 	bool CanPutDown(Component& comp);	// Checks if its possible to place the (floating) component on the board
-	bool CanPutDown(Component& comp, const int& iLyr);
 	bool PutDown(Component& comp);		// Tries to place the (floating) component on the board
-	void PutDown(Component& comp, const int& iLyr);
 	bool TakeOff(Component& comp);
-	void TakeOff(Component& comp, const int& iLyr);
-
 	void FloatAllComps();				// Float all components (i.e. take them off the board)
 	void PlaceFloaters();				// Try to place down all the floating components
 
@@ -594,23 +603,20 @@ private:
 			const Component& comp = mapObj.second;
 			if ( comp.GetType() == COMP::WIRE && comp.GetIsPlaced() )
 			{
+				const int& lyr = comp.GetLyr();	assert(lyr == 0);
 				int jRow( comp.GetRow() );
 				for (int j = 0, jRows = comp.GetCompRows(); j < jRows; j++, jRow++)
 				{
 					int iCol( comp.GetCol() );
 					for (int i = 0, iCols = comp.GetCompCols(); i < iCols; i++, iCol++)
 					{
-						for (int lyr = 0, lyrs = GetLyrs(); lyr < lyrs; lyr++)	//TODO_NEW_CHECK
-						{
-							if ( !comp.GetUsesLayer(lyr) ) continue;
-							Element* p = Get(lyr, jRow, iCol);
-							// Want GetIsPin() methods to be private so commented out following assert
-							// assert( comp.GetCompElement(j, i)->GetIsPin() == p->GetIsPin() );
-							assert( p->GetSurface() == SURFACE_PLUG || p->GetSurface() == SURFACE_FULL );
-							const bool bGap = ( p->GetSurface() & SURFACE_GAP ) > 0;
-							p->SetWireOccupancies();
-							if ( bGap ) p->SetSurface( p->GetSurface() + SURFACE_GAP );
-						}
+						Element* p = Get(lyr, jRow, iCol);
+						// Want GetIsPin() methods to be private so commented out following assert
+						// assert( comp.GetCompElement(j, i)->GetIsPin() == p->GetIsPin() );
+						assert( p->GetSurface() == SURFACE_PLUG || p->GetSurface() == SURFACE_FULL );
+						const bool bGap = ( p->GetSurface() & SURFACE_GAP ) > 0;
+						p->SetWireOccupancies();
+						if ( bGap ) p->SetSurface( p->GetSurface() + SURFACE_GAP );
 					}
 				}
 			}

@@ -59,6 +59,51 @@ typedef std::list<ElementInt> WIRELIST;	// Helper for chains of wires
 class Element : public Pin, public TrackElement
 {
 public:
+	//TODO_NEW See if we need the folloein overrides
+	// OVERRIDES BEGIN
+	//  Pin::operator=
+	//  Pin::operator==
+	//	Pin::UpdateMergeOffsets()
+	//	Pin::ApplyMergeOffsets()
+	//	Pin::Merge()
+	//  Pin::Load()
+	// 	Pin::Save()
+	// OVERRIDES END
+	bool				 IsLayer0() const				{ assert(GetNbr(NBR_X)); return GetNbr(NBR_X) >= this; }	//TODO_NEW Nasty null hack
+	Element*			 GetBase()						{ Element* p = GetNbr(NBR_X); return ( p < this ) ? p : this; }
+	const Element*		 GetBaseConst() const			{ Element* p = GetNbr(NBR_X); return ( p < this ) ? p : this; }
+	virtual void		 SetPinIndex(const size_t& i)	{ return IsLayer0() ? Pin::SetPinIndex(i)		: GetBase()->SetPinIndex(i); }
+	virtual void		 SetSurface(const uchar& c)		{ return IsLayer0() ? Pin::SetSurface(c)		: GetBase()->SetSurface(c); }
+	virtual void		 SetHoleUse(const uchar& c)		{ return IsLayer0() ? Pin::SetHoleUse(c)		: GetBase()->SetHoleUse(c); }
+	virtual void		 SetWireOccupancies()			{ return IsLayer0() ? Pin::SetWireOccupancies()	: GetBase()->SetWireOccupancies(); }
+	virtual size_t		 GetPinIndex() const			{ return IsLayer0() ? Pin::GetPinIndex()		: GetBaseConst()->GetPinIndex(); }
+	virtual const uchar& GetSurface() const				{ return IsLayer0() ? Pin::GetSurface()			: GetBaseConst()->GetSurface(); }
+	virtual const uchar& GetHoleUse() const				{ return IsLayer0() ? Pin::GetHoleUse()			: GetBaseConst()->GetHoleUse(); }
+	virtual bool		 GetIsPin() const				{ return IsLayer0() ? Pin::GetIsPin()			: GetBaseConst()->GetIsPin(); }
+	virtual bool		 GetIsHole() const				{ return IsLayer0() ? Pin::GetIsHole()			: GetBaseConst()->GetIsHole(); }
+	virtual const int&	 GetNodeId() const
+	{
+		return ( !IsLayer0() && GetHasPin() ) ? GetBaseConst()->GetNodeId() : TrackElement::GetNodeId();
+	}
+	virtual void		 SetNodeId(const int& i)	// Only called via the parent board method Board::SetNodeId()
+	{
+		TrackElement::SetNodeId(i);
+
+		// Update usage flags for connections emanating from "this" element.
+		for (int iNbr = 0; iNbr < NUM_NBRS; iNbr++)
+			if ( GetNbr(iNbr) != this )	//TODO_NEW Hacked in this extra "if" line to handle NBR_X
+				UpdateUsed(iNbr);
+
+		// Update usage flags for diagonals that cut across the LT,RT,LB,RB diagonals.
+		// Call these LTX,RTX,LBX,RBX respectively.
+		// The point of doing this is that if "this" element has a diagonal connection that
+		// we've just cleared, then previously blocked diagonals may now be usable.
+		GetNbr(NBR_L)->UpdateUsed(NBR_RT);	GetNbr(NBR_R)->UpdateUsed(NBR_LT);	// LTX, RTX
+		GetNbr(NBR_L)->UpdateUsed(NBR_RB);	GetNbr(NBR_R)->UpdateUsed(NBR_LB);	// LBX, RBX
+
+		if ( !IsLayer0() && GetHasPin() ) return GetBase()->SetNodeId(i);
+	}
+
 	Element() : Pin(), TrackElement() { ZeroConnectionPointers(); }
 	Element(const Element& o) : Pin(o), TrackElement(o)	{ assert(0); *this = o; }	// The assert just shows this is never used
 	~Element() {}
@@ -99,25 +144,17 @@ public:
 	{
 		return !(*this == o);
 	}
-	void SetNodeId(const int& i)	// Only called via the parent board method Board::SetNodeId()
+	void SetIsVia(const bool& b)		{ if ( IsLayer0() ) m_bIsVia = b;		else GetBase()->SetIsVia(b); }
+	void SetCompId(const int& i)		{ if ( IsLayer0() ) m_compId = i;		else GetBase()->SetCompId(i); }
+	void SetCompId2(const int& i)		{ if ( IsLayer0() ) m_compId2 = i;		else GetBase()->SetCompId2(i); }
+	void SetPinIndex2(const size_t& i)
 	{
-		TrackElement::SetNodeId(i);
-
-		// Update usage flags for connections emanating from "this" element.
-		for (int iNbr = 0; iNbr < NUM_NBRS; iNbr++) UpdateUsed(iNbr);
-
-		// Update usage flags for diagonals that cut across the LT,RT,LB,RB diagonals.
-		// Call these LTX,RTX,LBX,RBX respectively.
-		// The point of doing this is that if "this" element has a diagonal connection that
-		// we've just cleared, then previously blocked diagonals may now be usable.
-		GetNbr(NBR_L)->UpdateUsed(NBR_RT);	GetNbr(NBR_R)->UpdateUsed(NBR_LT);	// LTX, RTX
-		GetNbr(NBR_L)->UpdateUsed(NBR_RB);	GetNbr(NBR_R)->UpdateUsed(NBR_LB);	// LBX, RBX
+		if ( IsLayer0() )
+			m_pinChar2 = ( i >= BAD_PINCHAR ) ? BAD_PINCHAR : static_cast<uchar> (i);
+		else
+			GetBase()->SetPinIndex2(i);
 	}
-	void SetIsVia(const bool& b)		{ m_bIsVia = b; }
-	void SetCompId(const int& i)		{ m_compId = i; }
-	void SetCompId2(const int& i)		{ m_compId2 = i; }
-	void SetPinIndex2(const size_t& i)	{ m_pinChar2= ( i >= BAD_PINCHAR ) ? BAD_PINCHAR : static_cast<uchar> (i); }
-	void SetSolderR(const bool& b)		{ m_bSolderR	= b; }
+	void SetSolderR(const bool& b)		{ if ( IsLayer0() ) m_bSolderR	= b;	else GetBase()->SetSolderR(b); }
 	void SetRoutable(const int& i)		{ m_iRoutable	= i; }
 	void ResetMH()
 	{
@@ -134,13 +171,13 @@ public:
 		m_maxMH		= iMaxMH;
 	}
 	void SetNbr(const int& iNbr, Element* p)	{ m_pNbr[iNbr]	= p; }
-	void ClearWires()							{ m_pW[0] = m_pW[1] = nullptr; }
-	bool GetHasWire() const						{ return m_pW[0] != nullptr || m_pW[1] != nullptr; }
+	void ClearWires()			{ SetW(0, nullptr);	SetW(1, nullptr); }
+	bool GetHasWire() const		{ return GetW(0) != nullptr || GetW(1) != nullptr; }
 	int  GetNumWires() const
 	{
 		int i(0);
-		if ( m_pW[0] != nullptr ) i++;
-		if ( m_pW[1] != nullptr ) i++;
+		if ( GetW(0) != nullptr ) i++;
+		if ( GetW(1) != nullptr ) i++;
 		return i;
 	}
 	int  GetUsedSlot() const
@@ -181,38 +218,43 @@ public:
 	}
 	bool GetWireExists(Element* p) const
 	{
-		return p != nullptr && ( m_pW[0] == p || m_pW[1] == p );
+		return p != nullptr && ( GetW(0) == p || GetW(1) == p );
 	}
 	bool GetCompExists(const int& compId) const
 	{
-		return compId != BAD_COMPID && ( m_compId == compId || m_compId2 == compId );
+		return compId != BAD_COMPID && ( GetCompId() == compId || GetCompId2() == compId );
 	}
 	void SetW(const int& iSlot, Element* p)
 	{
 		assert( !GetWireExists(p) );	// No duplicates allowed
 		assert(iSlot == 0 || iSlot == 1);
-		m_pW[iSlot] = p;
+		if ( IsLayer0() )
+			m_pW[iSlot] = p;
+		else
+			GetBase()->SetW(iSlot, p);
 	}
-	const bool&			GetIsVia() const				{ return m_bIsVia; }
-	const int&			GetCompId() const				{ return m_compId; }
-	const int&			GetCompId2() const				{ return m_compId2; }
-	int					GetNumCompIds() const			{ int i(0); if ( m_compId != BAD_COMPID ) i++; if ( m_compId2 != BAD_COMPID ) i++; return i; }
+	const bool&			GetIsVia() const				{ return IsLayer0() ? m_bIsVia		: GetBaseConst()->GetIsVia(); }
+	const int&			GetCompId() const				{ return IsLayer0() ? m_compId		: GetBaseConst()->GetCompId(); }
+	const int&			GetCompId2() const				{ return IsLayer0() ? m_compId2		: GetBaseConst()->GetCompId2(); }
+	const uchar&		GetPinChar2() const				{ return IsLayer0() ? m_pinChar2	: GetBaseConst()->GetPinChar2(); }
+	int					GetNumCompIds() const			{ int i(0); if ( GetCompId() != BAD_COMPID ) i++; if ( GetCompId2() != BAD_COMPID ) i++; return i; }
 	bool				GetHasComp() const				{ return GetCompId() != BAD_COMPID || GetCompId2() != BAD_COMPID; }
-	bool				GetHasPin() const				{ return GetIsPin() || m_pinChar2 != BAD_PINCHAR; }
-	size_t				GetPinIndex2() const			{ return ( m_pinChar2 == BAD_PINCHAR ) ? BAD_PININDEX : m_pinChar2; }
-	const bool&			GetSolderR() const				{ return m_bSolderR; }
+	bool				GetHasPin() const				{ return GetIsPin() || GetPinChar2() != BAD_PINCHAR; }
+	size_t				GetPinIndex2() const			{ return ( GetPinChar2() == BAD_PINCHAR ) ? BAD_PININDEX : GetPinChar2(); }
+	const bool&			GetSolderR() const				{ return IsLayer0() ? m_bSolderR	: GetBaseConst()->GetSolderR(); }
 	const int&			GetRoutable() const				{ return m_iRoutable; }
 	const unsigned int&	GetRouteId() const				{ return m_routeId; }
 	const unsigned int&	GetMH() const					{ return m_MH; }
 	const unsigned int&	GetMaxMH() const				{ return m_maxMH; }
 	Element*			GetNbr(const int& iNbr) const	{ return m_pNbr[iNbr]; }
-	Element*			GetW(const int& i) const		{ return m_pW[i]; }
+	Element*			GetW(const int& i) const		{ return IsLayer0() ? m_pW[i]		: GetBaseConst()->GetW(i); }
 
 	// Helpers
 	bool HaveNoBlankPins(const int& iNbr) const
 	{
-		Element* pNbr = GetNbr(iNbr);
-		return	( !this->GetHasPin() || this->GetNodeId() != BAD_NODEID || this->GetHasWire() ) &&	// Only allow routing FROM blank pins if they are on wires
+		const Element* pLyr	= GetBaseConst();	// Use layer 0 for checking pins
+		const Element* pNbr = pLyr->GetNbr(iNbr);
+		return	( !pLyr->GetHasPin() || pLyr->GetNodeId() != BAD_NODEID || pLyr->GetHasWire() ) &&	// Only allow routing FROM blank pins if they are on wires
 				( !pNbr->GetHasPin() || pNbr->GetNodeId() != BAD_NODEID || pNbr->GetHasWire() );	// Only allow routing  TO  blank pins if they are on wires
 	}
 	void GetWireList(WIRELIST& wireList) const
@@ -262,7 +304,8 @@ public:
 	{
 		assert(p != nullptr);	// Sanity check
 		for (int iNbr = 0; iNbr < NUM_NBRS; iNbr++)
-			if ( GetNbr(iNbr) == p ) return true;
+			if ( GetNbr(iNbr) != this )	//TODO_NEW Hacked in this extra "if" line to handle NBR_X
+				if ( GetNbr(iNbr) == p ) return true;
 		return false;
 	}			
 	bool IsUselessWire(const int& iNbr, const int& nodeId) const	// Helper: true ==> painting nbr with nodeId is wasteful
@@ -279,6 +322,7 @@ public:
 			for (int iNbr = 0; iNbr < NUM_NBRS; iNbr++)
 			{
 				const Element* p = pWA->GetNbr(iNbr);
+				if ( p == pWA ) continue;	//TODO_NEW Hacked in this extra "if" line to handle NBR_X
 				if ( p->GetNodeId() != nodeId ) continue;
 				if ( pWB0 != nullptr && pWB0->IsNbr(p) ) return true;
 				if ( pWB1 != nullptr && pWB1->IsNbr(p) ) return true;
@@ -379,11 +423,11 @@ private:
 	void UpdateWireList(WIRELIST& wireList, unsigned int iStep) const
 	{
 		WireListHelper(wireList, this, iStep);
-		bool bOK_0	= m_pW[0] != nullptr && WireListHelper(wireList, m_pW[0], iStep + 1);
-		bool bOK_1	= m_pW[1] != nullptr && WireListHelper(wireList, m_pW[1], iStep + 1);
+		bool bOK_0	= GetW(0) != nullptr && WireListHelper(wireList, GetW(0), iStep + 1);
+		bool bOK_1	= GetW(1) != nullptr && WireListHelper(wireList, GetW(1), iStep + 1);
 
-		if ( bOK_0 ) m_pW[0]->UpdateWireList(wireList, iStep + 1);
-		if ( bOK_1 ) m_pW[1]->UpdateWireList(wireList, iStep + 1);
+		if ( bOK_0 ) GetW(0)->UpdateWireList(wireList, iStep + 1);
+		if ( bOK_1 ) GetW(1)->UpdateWireList(wireList, iStep + 1);
 	}
 private:
 	// Persist info
@@ -399,6 +443,6 @@ private:
 	unsigned int	m_MH		= BAD_MH;		// Manhatten distance to another element.  For the routing/connectivity algorithm.
 	unsigned int	m_maxMH		= 0;			// For the routing algorithm.
 	// Connection pointers. Set by Board::GlueNbrs() and Board::GlueWires().	Don't persist.
-	Element*		m_pNbr[(size_t)NUM_NBRS];	// 0 to 7 <==> NBR_L to NBR_LB
+	Element*		m_pNbr[(size_t)NUM_NBRS];	// 0 to 7 <==> NBR_L to NBR_LB,	  8 ==> NBR_X
 	Element*		m_pW[2];					// Up to 2 wires per element. These point to the other end of the wire(s).
 };

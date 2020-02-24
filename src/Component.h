@@ -43,7 +43,8 @@ public:
 		m_bIsPlaced	= false;
 		m_iPinFlags = 0;
 		m_nodeIdPins.clear();
-		m_origIdPins.clear();
+		m_origIdPins1.clear();
+		m_origIdPins2.clear();
 		m_pinLabels.clear();
 		m_pinAligns.clear();
 		m_shapes.clear();
@@ -123,7 +124,8 @@ public:
 		m_iPinFlags			= o.m_iPinFlags;
 		AllocatePins( o.GetNumPins() );
 		std::copy(o.m_nodeIdPins.begin(),	o.m_nodeIdPins.end(),	m_nodeIdPins.begin());
-		std::copy(o.m_origIdPins.begin(),	o.m_origIdPins.end(),	m_origIdPins.begin());
+		std::copy(o.m_origIdPins1.begin(),	o.m_origIdPins1.end(),	m_origIdPins1.begin());
+		std::copy(o.m_origIdPins2.begin(),	o.m_origIdPins2.end(),	m_origIdPins2.begin());
 		std::copy(o.m_pinLabels.begin(),	o.m_pinLabels.end(),	m_pinLabels.begin());
 		std::copy(o.m_pinAligns.begin(),	o.m_pinAligns.end(),	m_pinAligns.begin());
 		CopyShapes( o );
@@ -131,8 +133,9 @@ public:
 	}
 	void ClearNodeIds()
 	{
-		for (auto& o : m_nodeIdPins) o = BAD_NODEID;
-		for (auto& o : m_origIdPins) o = BAD_NODEID;
+		for (auto& o : m_nodeIdPins)  o = BAD_NODEID;
+		for (auto& o : m_origIdPins1) o = BAD_NODEID;
+		for (auto& o : m_origIdPins2) o = BAD_NODEID;
 	}
 	bool IsEqual(const Component& o) const	// Compare persisted info
 	{
@@ -156,7 +159,8 @@ public:
 		for (size_t i = 0; i < GetNumPins() && bOK; i++)
 		{
 			bOK =  m_nodeIdPins[i]	== o.m_nodeIdPins[i]
-				&& m_origIdPins[i]	== o.m_origIdPins[i]
+				&& m_origIdPins1[i]	== o.m_origIdPins1[i]
+				&& m_origIdPins2[i] == o.m_origIdPins2[i]
 				&& m_pinLabels[i]	== o.m_pinLabels[i]
 				&& m_pinAligns[i]	== o.m_pinAligns[i];
 		}
@@ -171,7 +175,8 @@ public:
 	~Component()
 	{
 		m_nodeIdPins.clear();
-		m_origIdPins.clear();
+		m_origIdPins1.clear();
+		m_origIdPins2.clear();
 		m_pinLabels.clear();
 		m_pinAligns.clear();
 		m_shapes.clear();
@@ -183,7 +188,11 @@ public:
 	void SetTypeStr(const std::string& s)							{ m_typeStr = s; }
 	void SetImportStr(const std::string& s)							{ m_importStr = s; }
 	void SetNodeId(const size_t& iPinIndex, const int& i)			{ m_nodeIdPins[iPinIndex] = i; }
-	void SetOrigId(const size_t& iPinIndex, const int& i)			{ m_origIdPins[iPinIndex] = i; }
+	void SetOrigId(const int& lyr, const size_t& iPinIndex, const int& i)
+	{
+		assert(lyr == 0 || lyr == 1);
+		if ( lyr == 0 ) m_origIdPins1[iPinIndex] = i; else m_origIdPins2[iPinIndex] = i;
+	}
 	void SetPinLabel(const size_t& iPinIndex, const std::string& s)	{ m_pinLabels[iPinIndex] = s; }
 	void SetPinAlign(const size_t& iPinIndex, const int& i)			{ m_pinAligns[iPinIndex] = i; }
 	void SetShape(const size_t& iShapeIndex, const Shape& o)		{ m_shapes[iShapeIndex] = o; }
@@ -202,7 +211,8 @@ public:
 	void AllocatePins(const size_t numPins)
 	{
 		m_nodeIdPins.clear();	m_nodeIdPins.resize(numPins, BAD_NODEID);
-		m_origIdPins.clear();	m_origIdPins.resize(numPins, BAD_NODEID);
+		m_origIdPins1.clear();	m_origIdPins1.resize(numPins, BAD_NODEID);
+		m_origIdPins2.clear();	m_origIdPins2.resize(numPins, BAD_NODEID);
 		m_pinLabels.clear();	m_pinLabels.resize(numPins, "");
 		m_pinAligns.clear();	m_pinAligns.resize(numPins, Qt::AlignHCenter);
 		SetDefaultPinLabels();
@@ -235,7 +245,10 @@ public:
 	const std::string&	GetImportStr() const						{ return m_importStr; }
 	size_t				GetNumPins() const							{ return m_nodeIdPins.size(); }
 	const int&			GetNodeId(const size_t& iPinIndex) const	{ return m_nodeIdPins[iPinIndex]; }
-	const int&			GetOrigId(const size_t& iPinIndex) const	{ return m_origIdPins[iPinIndex]; }
+	const int&			GetOrigId(const int& lyr, const size_t& iPinIndex) const
+	{
+		return ( lyr == 0 ) ? m_origIdPins1[iPinIndex] : m_origIdPins2[iPinIndex];
+	}
 	const std::string&	GetPinLabel(const size_t& iPinIndex) const	{ return m_pinLabels[iPinIndex]; }
 	const int&			GetPinAlign(const size_t& iPinIndex) const	{ return m_pinAligns[iPinIndex]; }
 	size_t				GetNumShapes() const						{ return m_shapes.size(); }
@@ -256,7 +269,6 @@ public:
 	void MoveLabelOffsets(const int& deltaRow, const int& deltaCol);	// w.r.t. screen, not comp rotation
 	void HandleLegacyLabelOffsets();	// For old VRT files
 
-	bool GetUsesLayer(const int& iLyr) const	{ return m_lyr == iLyr || m_lyr == -1; }
 	void GetSafeBounds(double& L, double& R, double& T, double& B) const
 	{
 		L = T =  DBL_MAX;
@@ -422,8 +434,9 @@ public:
 //		o.deltaCol = std::max(o.deltaCol, m_col + GetCompCols() + 1);
 		for (size_t i = 0; i < GetNumPins(); i++)
 		{
-			if ( m_nodeIdPins[i] != BAD_NODEID ) o.deltaNodeId = std::max(o.deltaNodeId, m_nodeIdPins[i] + 1);
-			if ( m_origIdPins[i] != BAD_NODEID ) o.deltaNodeId = std::max(o.deltaNodeId, m_origIdPins[i] + 1);
+			if ( m_nodeIdPins[i]  != BAD_NODEID ) o.deltaNodeId = std::max(o.deltaNodeId, m_nodeIdPins[i]  + 1);
+			if ( m_origIdPins1[i] != BAD_NODEID ) o.deltaNodeId = std::max(o.deltaNodeId, m_origIdPins1[i] + 1);
+			if ( m_origIdPins2[i] != BAD_NODEID ) o.deltaNodeId = std::max(o.deltaNodeId, m_origIdPins2[i] + 1);
 		}
 	}
 	virtual void ApplyMergeOffsets(const MergeOffsets& o) override
@@ -436,8 +449,9 @@ public:
 		m_col += o.deltaCol;
 		for (size_t i = 0; i < GetNumPins(); i++)
 		{
-			if ( m_nodeIdPins[i] != BAD_NODEID ) m_nodeIdPins[i] += o.deltaNodeId;
-			if ( m_origIdPins[i] != BAD_NODEID ) m_origIdPins[i] += o.deltaNodeId;
+			if ( m_nodeIdPins[i]  != BAD_NODEID ) m_nodeIdPins[i]  += o.deltaNodeId;
+			if ( m_origIdPins1[i] != BAD_NODEID ) m_origIdPins1[i] += o.deltaNodeId;
+			if ( m_origIdPins2[i] != BAD_NODEID ) m_origIdPins2[i] += o.deltaNodeId;
 		}
 	}
 	void SetDefaultPinFlags();
@@ -489,7 +503,9 @@ public:
 		for (unsigned int i = 0; i < numPins; i++)
 		{
 			inStream.Load(m_nodeIdPins[i]);
-			inStream.Load(m_origIdPins[i]);
+			inStream.Load(m_origIdPins1[i]);
+			if ( inStream.GetVersion() >= VRT_VERSION_34 )
+				inStream.Load(m_origIdPins2[i]);	// Added in VRT_VERSION_34
 			if ( inStream.GetVersion() >= VRT_VERSION_7 )
 				inStream.Load(m_pinLabels[i]);		// Added in VRT_VERSION_7
 			if ( inStream.GetVersion() >= VRT_VERSION_30 )
@@ -532,7 +548,8 @@ public:
 		for (unsigned int i = 0; i < numPins; i++)
 		{
 			outStream.Save(m_nodeIdPins[i]);
-			outStream.Save(m_origIdPins[i]);
+			outStream.Save(m_origIdPins1[i]);
+			outStream.Save(m_origIdPins2[i]);	// Added in VRT_VERSION_34
 			outStream.Save(m_pinLabels[i]);		// Added in VRT_VERSION_7
 			outStream.Save(m_pinAligns[i]);		// Added in VRT_VERSION_30
 		}
@@ -549,13 +566,14 @@ private:
 	std::string					m_typeStr;			// The footprint type (overridden for CUSTOM components).
 	std::string					m_importStr;		// Protel/Tango/OrCAD2 footprint name. Only for CUSTOM components !!!
 	std::vector<int>			m_nodeIdPins;		// NodeIds of the pins
-	std::vector<int>			m_origIdPins;		// NodeIds under the pins BEFORE placement
+	std::vector<int>			m_origIdPins1;		// NodeIds under the pins BEFORE placement (1st layer)
+	std::vector<int>			m_origIdPins2;		// NodeIds under the pins BEFORE placement (2nd Layer)
 	std::vector<std::string>	m_pinLabels;		// Pin labels
 	std::vector<int>			m_pinAligns;		// Pin label alignments (Qt::AlignLeft,Qt::AlignRight,Qt::AlignHCenter)
 	std::vector<Shape>			m_shapes;			// For rendering components. Coordinates are RELATIVE to footprint centre.
 	uchar						m_iPinFlags;		// 1 ==> PIN_RECT, 2 ==> PIN_LABELS
 	// Current placement in board
-	int							m_lyr;				// Board layer.	-1 ==> affects all layers
+	int							m_lyr;				// Board layer for component
 	int							m_row;				// Board row for top-left element of footprint
 	int							m_col;				// Board col for top-left element of footprint
 	int							m_iLabelOffsetRow;	// Label offset in units of 1/16 of a grid square

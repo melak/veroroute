@@ -116,21 +116,19 @@ public:
 	{
 		return !(*this == o);
 	}
-	void		 Clear()						{ SetSurface(SURFACE_FREE); SetPinIndex(BAD_PININDEX); }
 	void		 SetPinIndex(const size_t& i)	{ m_pinChar = ( i >= BAD_PINCHAR ) ? BAD_PINCHAR : static_cast<uchar> (i); }
 	void		 SetSurface(const uchar& c)		{ m_surface = c; }
 	void		 SetHoleUse(const uchar& c)		{ m_holeUse = c; }
+	void		 SetWireOccupancies()	// Helper to handle wires
+	{
+		SetSurface( GetIsPin() ? SURFACE_WIRE_END	: SURFACE_WIRE );	// Set surface occupancy for pins/non-pins
+		SetHoleUse( GetIsPin() ? HOLE_WIRE			: HOLE_FREE );		// Set hole occupancy for pins/non-pins
+	}
 	size_t		 GetPinIndex() const			{ return ( m_pinChar == BAD_PINCHAR ) ? BAD_PININDEX : m_pinChar; }
 	const uchar& GetSurface() const				{ return m_surface; }
 	const uchar& GetHoleUse() const				{ return m_holeUse; }
 	bool		 GetIsPin() const				{ return m_pinChar != BAD_PINCHAR; }
 	bool		 GetIsHole() const				{ return m_surface == SURFACE_HOLE; }
-
-	void SetWireOccupancies()	// Helper to handle wires
-	{
-		SetSurface( GetIsPin() ? SURFACE_WIRE_END	: SURFACE_WIRE );	// Set surface occupancy for pins/non-pins
-		SetHoleUse( GetIsPin() ? HOLE_WIRE			: HOLE_FREE );		// Set hole occupancy for pins/non-pins
-	}
 
 	// Merge interface functions
 	virtual void UpdateMergeOffsets(MergeOffsets&) override
