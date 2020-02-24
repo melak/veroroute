@@ -57,8 +57,7 @@ public:
 		assert(pNew->GetNodeId() == newNodeId);	// Sanity check.
 		for (int iNbr = 0; iNbr < NUM_NBRS; iNbr++)
 		{
-			if ( p->GetNbr(iNbr) == p ) continue; //TODO_NEW	Hack
-			if ( ReadCodeBit(iNbr, p->GetRoutable()) )
+			if ( p->GetNbr(iNbr) && ReadCodeBit(iNbr, p->GetRoutable()) )
 				ModifyCount(nullptr, pNew, p->GetNbr(iNbr)->GetNodeId());
 		}
 		// Don't do p->GetW() !! That will be handled by painting the other wire end
@@ -86,8 +85,7 @@ public:
 		assert(pNew == nullptr || pNew->GetNodeId() == newNodeId);	// Sanity check.
 		for (int iNbr = 0; iNbr < NUM_NBRS; iNbr++)
 		{
-			if ( p->GetNbr(iNbr) == p ) continue; //TODO_NEW	Hack
-			if ( ReadCodeBit(iNbr, p->GetRoutable()) )
+			if ( p->GetNbr(iNbr) && ReadCodeBit(iNbr, p->GetRoutable()) )
 				ModifyCount(pOld, pNew, p->GetNbr(iNbr)->GetNodeId());
 		}
 		// Don't do p->GetW() !! That will be handled on painting the other wire end

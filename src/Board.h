@@ -158,7 +158,7 @@ public:
 				p->SetNbr(NBR_RB,	Get(iLyr, iB,   iR));
 				p->SetNbr(NBR_B,	Get(iLyr, iB,   iCol));
 				p->SetNbr(NBR_LB,	Get(iLyr, iB,   iL));
-				p->SetNbr(NBR_X, ( iLyrs == 1 ) ? p : Get((iLyr + 1 ) % 2, iRow, iCol) );
+				p->SetNbr(NBR_X, iLyrs == 1 ? nullptr : Get((iLyr + 1 ) % 2, iRow, iCol) );
 
 				p->ClearWires();	// Wires must be set by GlueWires()
 

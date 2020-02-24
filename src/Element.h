@@ -69,9 +69,9 @@ public:
 	//  Pin::Load()
 	// 	Pin::Save()
 	// OVERRIDES END
-	bool				 IsLayer0() const				{ assert(GetNbr(NBR_X)); return GetNbr(NBR_X) >= this; }	//TODO_NEW Nasty null hack
-	Element*			 GetBase()						{ Element* p = GetNbr(NBR_X); return ( p < this ) ? p : this; }
-	const Element*		 GetBaseConst() const			{ Element* p = GetNbr(NBR_X); return ( p < this ) ? p : this; }
+	bool				 IsLayer0() const				{ Element* p = GetNbr(NBR_X); return p == nullptr || p > this; }
+	Element*			 GetBase()						{ Element* p = GetNbr(NBR_X); return p == nullptr || p > this ? this : p; }
+	const Element*		 GetBaseConst() const			{ Element* p = GetNbr(NBR_X); return p == nullptr || p > this ? this : p; }
 	virtual void		 SetPinIndex(const size_t& i)	{ return IsLayer0() ? Pin::SetPinIndex(i)		: GetBase()->SetPinIndex(i); }
 	virtual void		 SetSurface(const uchar& c)		{ return IsLayer0() ? Pin::SetSurface(c)		: GetBase()->SetSurface(c); }
 	virtual void		 SetHoleUse(const uchar& c)		{ return IsLayer0() ? Pin::SetHoleUse(c)		: GetBase()->SetHoleUse(c); }
@@ -91,8 +91,7 @@ public:
 
 		// Update usage flags for connections emanating from "this" element.
 		for (int iNbr = 0; iNbr < NUM_NBRS; iNbr++)
-			if ( GetNbr(iNbr) != this )	//TODO_NEW Hacked in this extra "if" line to handle NBR_X
-				UpdateUsed(iNbr);
+			if ( GetNbr(iNbr) ) UpdateUsed(iNbr);
 
 		// Update usage flags for diagonals that cut across the LT,RT,LB,RB diagonals.
 		// Call these LTX,RTX,LBX,RBX respectively.
@@ -304,8 +303,7 @@ public:
 	{
 		assert(p != nullptr);	// Sanity check
 		for (int iNbr = 0; iNbr < NUM_NBRS; iNbr++)
-			if ( GetNbr(iNbr) != this )	//TODO_NEW Hacked in this extra "if" line to handle NBR_X
-				if ( GetNbr(iNbr) == p ) return true;
+			if ( GetNbr(iNbr) == p ) return true;
 		return false;
 	}			
 	bool IsUselessWire(const int& iNbr, const int& nodeId) const	// Helper: true ==> painting nbr with nodeId is wasteful
@@ -322,7 +320,7 @@ public:
 			for (int iNbr = 0; iNbr < NUM_NBRS; iNbr++)
 			{
 				const Element* p = pWA->GetNbr(iNbr);
-				if ( p == pWA ) continue;	//TODO_NEW Hacked in this extra "if" line to handle NBR_X
+				if ( p == nullptr ) continue;
 				if ( p->GetNodeId() != nodeId ) continue;
 				if ( pWB0 != nullptr && pWB0->IsNbr(p) ) return true;
 				if ( pWB1 != nullptr && pWB1->IsNbr(p) ) return true;

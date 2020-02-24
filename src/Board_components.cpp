@@ -286,7 +286,7 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 						{
 							// Check for short-circuit between layers
 							Element* q = pGrid->GetNbr(NBR_X);
-							if ( q != pGrid )
+							if ( q != nullptr && q != pGrid )
 							{
 								const int& nodeId = q->GetNodeId();	// Read nodeId on other board layer
 								bOK = ( nodeId == BAD_NODEID || nodeId == iCompNodeId );	// Need no node ID or matching ID
@@ -311,7 +311,7 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 			// Look at other layer
 			Element* qW0 = pW0->GetNbr(NBR_X);
 			Element* qW1 = pW1->GetNbr(NBR_X);
-			if ( qW0 != pW0 && qW1 != pW1 )	// If have other layer ...
+			if ( qW0 != nullptr && qW1 != nullptr )	// If have other layer ...
 			{
 				// Check for short-circuit in other layer
 				bOK = qW0->GetNodeId() == BAD_NODEID ||
@@ -456,8 +456,8 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 					for (int lyr = 0; lyr < 2; lyr++)
 					{
 						Element* p = ( lyr == 0 ) ? pGrid : pGrid->GetNbr(NBR_X);
-						if ( bWire ) wireNodeId = std::max(wireNodeId, p->GetNodeId());
-						const int origId = ( p->ReadFlagBits(USERSET) ) ? p->GetNodeId() : BAD_NODEID;
+						if ( bWire && p ) wireNodeId = std::max(wireNodeId, p->GetNodeId());
+						const int origId = ( p && p->ReadFlagBits(USERSET) ) ? p->GetNodeId() : BAD_NODEID;
 						comp.SetOrigId(lyr, pinIndex, origId);
 					}
 				}
@@ -603,6 +603,7 @@ bool Board::TakeOff(Component& comp)
 					for (int lyr = 0; lyr < GetLyrs(); lyr++)	//TODO_NEW Use 2 instead of GetLyrs() ???
 					{
 						Element* p = ( lyr == 0 ) ? pGrid : pGrid->GetNbr(NBR_X);
+						if ( p == nullptr ) continue;
 						const bool bAllLyrs = false;
 						SetNodeId(p, origId[lyr], bAllLyrs);	// Restore grid element to original nodeId
 						ClearFlagBits(p, AUTOSET|VEROSET, bAllLyrs);
@@ -674,6 +675,7 @@ bool Board::TakeOff(Component& comp)
 			for (int lyr = 0; lyr < GetLyrs(); lyr++)	//TODO_NEW Use 2 instead of GetLyrs() ???
 			{
 				Element* p = ( lyr == 0 ) ? pA : pA->GetNbr(NBR_X);
+				if ( p == nullptr ) continue;
 				SetNodeId(p, iOrigIdA[lyr], bAllLyrs);	// Restore grid element to original nodeId
 				ClearFlagBits(p, AUTOSET|VEROSET, bAllLyrs);
 				SetFlagBits(p, USERSET, bAllLyrs);
@@ -685,6 +687,7 @@ bool Board::TakeOff(Component& comp)
 			for (int lyr = 0; lyr < GetLyrs(); lyr++)	//TODO_NEW Use 2 instead of GetLyrs() ???
 			{
 				Element* p = ( lyr == 0 ) ? pB : pB->GetNbr(NBR_X);
+				if ( p == nullptr ) continue;
 				SetNodeId(p, iOrigIdB[lyr], bAllLyrs);	// Restore grid element to original nodeId
 				ClearFlagBits(p, AUTOSET|VEROSET, bAllLyrs);
 				SetFlagBits(p, USERSET, bAllLyrs);

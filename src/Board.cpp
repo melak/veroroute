@@ -99,7 +99,7 @@ void Board::SetNodeId(Element* p, const int& nodeId, const bool bAllLyrs)	// Hel
 	p->SetNodeId(nodeId);					// Write node value
 	if ( !bAllLyrs ) return;
 	Element* q = p->GetNbr(NBR_X);
-	if ( q == p ) return;
+	if ( q == nullptr ) return;
 	m_adjInfoMgr.UpdateCounts(q, nodeId);	// Do this BEFORE we call SetNodeId() on the element
 	q->SetNodeId(nodeId);					// Write node value
 }
@@ -109,7 +109,7 @@ void Board::ClearFlagBits(Element* p, const char& i, const bool bAllLyrs)
 	p->ClearFlagBits(i);
 	if ( !bAllLyrs ) return;
 	Element* q = p->GetNbr(NBR_X);
-	if ( q != p ) q->ClearFlagBits(i);
+	if ( q ) q->ClearFlagBits(i);
 }
 
 void Board::SetFlagBits(Element* p, const char& i, const bool bAllLyrs)
@@ -117,7 +117,7 @@ void Board::SetFlagBits(Element* p, const char& i, const bool bAllLyrs)
 	p->SetFlagBits(i);
 	if ( !bAllLyrs ) return;
 	Element* q = p->GetNbr(NBR_X);
-	if ( q != p ) q->SetFlagBits(i);
+	if ( q ) q->SetFlagBits(i);
 }
 
 bool Board::SetNodeIdByUser(const int& lyr, const int& row, const int& col, const int& nodeId, const bool& bPaintPins)

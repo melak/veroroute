@@ -303,9 +303,8 @@ void Board::Flood_Grow(const unsigned int& numRIDs, const int& iFloodNodeId, boo
 {
 	WIRELIST wireList;	// Helper for chains of wires
 
-	Element* pK = pJ->GetNbr(iNbr);
-	assert( pK != pJ );
-	if ( pK == pJ ) return;
+	Element* pK = pJ->GetNbr(iNbr);	assert( pK );
+	if ( pK == nullptr ) return;
 
 	const bool 			bOK	= pJ->GetNodeId() == iFloodNodeId;	// true ==> pJ already painted with correct NodeId
 	const unsigned int& j 	= pJ->GetRouteId();
@@ -594,9 +593,8 @@ void Board::MHhelper(const Element* p, const int& iNbr, const int& RID, unsigned
 {
 	if ( !ReadCodeBit(iNbr, p->GetRoutable()) ) return;	// Skip non-routable nbrs
 
-	Element* pK	 = p->GetNbr(iNbr);
-	assert( pK != p );
-	if ( pK == p ) return;
+	Element* pK	 = p->GetNbr(iNbr);	assert( pK );
+	if ( pK == nullptr ) return;
 
 	WIRELIST wireList;	// Helper for chains of wires
 	

@@ -759,7 +759,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				const bool		bWireAsVia		= bWire && m_bWriteGerber && m_bTwoLayers;	// true ==> draw small via pad
 				const int		iPerimeterCode	= pC->GetPerimeterCode(bDiagsOK, bMinDiags);	// 0 to 255
 				const Element*	pLyr			= pC->GetNbr(NBR_X);	// Point on layer above/below
-				const bool		bTunnel			= !bPin && nodeId != BAD_NODEID && pLyr != pC && pLyr->GetNodeId() == nodeId;	// true ==> a true via between layers
+				const bool		bTunnel			= !bPin && nodeId != BAD_NODEID && pLyr && pLyr->GetNodeId() == nodeId;	// true ==> a true via between layers
 
 				if ( colorId == BAD_COLORID && !bWire ) continue;	// Usually don't color places with no NodeID assigned unless they are wire ends
 
@@ -1031,7 +1031,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			const int&		nodeId	= pC->GetNodeId();
 			const bool		bPin	= pC->GetHasPin();		// true ==> real pin
 			const Element*	pLyr	= pC->GetNbr(NBR_X);	// Point on layer above/below
-			const bool		bTunnel	= !bPin && nodeId != BAD_NODEID && pLyr != pC && pLyr->GetNodeId() == nodeId;	// true ==> a "true" via
+			const bool		bTunnel	= !bPin && nodeId != BAD_NODEID && pLyr && pLyr->GetNodeId() == nodeId;	// true ==> a "true" via
 			if ( bTunnel )
 			{
 				GetLRTB(board, board.GetVIAHOLE_PERCENT(), j, i, L, R, T, B);						
