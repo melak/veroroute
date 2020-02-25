@@ -321,7 +321,8 @@ void Board::Flood_Grow(const unsigned int& numRIDs, const int& iFloodNodeId, boo
 		{
 			m_tmpVec[m_tmpVecSize++] = pK;	// Add pK to set of visited points
 			pK->UpdateMH(j, iMH, iMaxMH);
-			if ( pK->GetHasWire() )
+			const bool bWire = pK->IsLayer0() && pK->GetHasWire();	// Constrain wire-routing to layer 0
+			if ( bWire )
 			{
 				pK->GetWireList(wireList);	// Get list of pK and its wired points
 				for (auto& o : wireList)	// Ideally want these in order of increasing MH
@@ -400,12 +401,13 @@ void Board::Backtrace(Element* pEnd, const int& nodeId)
 
 		Element* pW0 = p->GetW(0);
 		Element* pW1 = p->GetW(1);
-		if ( !p->GetHasPin() || p->GetHasWire() ) // For non-pins and wires
+		const bool bWire = p->IsLayer0() && p->GetHasWire();	// Constrain wire-routing to layer 0
+		if ( !p->GetHasPin() || bWire ) // For non-pins and wires
 		{
 			if ( p->GetNodeId() == BAD_NODEID )	// Set NodeId if not set yet.
 			{
 				SetNodeId(p, nodeId, bAllLyrs); ClearFlagBits(p, USERSET, bAllLyrs); SetFlagBits(p, AUTOSET, bAllLyrs);
-				if ( p->GetHasWire() )
+				if ( bWire )
 				{
 					p->GetWireList(wireList);	// Get list of p and its wired points
 					for (auto& o : wireList)
@@ -420,7 +422,7 @@ void Board::Backtrace(Element* pEnd, const int& nodeId)
 			{
 				assert(p->GetNodeId() == nodeId);
 				SetFlagBits(p, AUTOSET, bAllLyrs);
-				if ( p->GetHasWire() )
+				if ( bWire )
 				{
 					p->GetWireList(wireList);	// Get list of p and its wired points
 					for (auto& o : wireList)
@@ -481,11 +483,12 @@ void Board::Backtrace(Element* pEnd, const int& nodeId)
 void Board::BacktraceHelper(Element*& p, const int& nodeId, const int& iDeltaMH, const int& iNbr, const int& iLoop, unsigned int& MH, bool & bOK)
 {
 	Element* pNbr = p->GetNbr(iNbr);
-	if ( pNbr->GetRouteId() != p->GetRouteId() ) return;	// Skip if nbr has wrong routeId
-	if ( iLoop == 0 &&  pNbr->GetHasWire() ) return;		// Skip if nbr is a wire
-	if ( iLoop == 1 && !pNbr->GetHasWire() ) return;		// Skip if nbr is a non-wire
-	if ( p->IsBlocked(iNbr, nodeId) ) return;				// Skip if blocked
-	if ( pNbr->GetMH() != MH - iDeltaMH ) return;			// Skip if wrong MH change
+	if ( pNbr->GetRouteId() != p->GetRouteId() ) return;		// Skip if nbr has wrong routeId
+	const bool bWire = pNbr->IsLayer0() && pNbr->GetHasWire();	// Constrain wire-routing to layer 0
+	if ( iLoop == 0 &&  bWire ) return;							// Skip if nbr is a wire
+	if ( iLoop == 1 && !bWire ) return;							// Skip if nbr is a non-wire
+	if ( p->IsBlocked(iNbr, nodeId) ) return;					// Skip if blocked
+	if ( pNbr->GetMH() != MH - iDeltaMH ) return;				// Skip if wrong MH change
 	p = pNbr;	MH -= iDeltaMH;		bOK = true;
 }
 
@@ -516,7 +519,8 @@ void Board::Manhatten(Element* p)
 	// Add p to set of visited points, with MH value of zero
 	m_tmpVec[m_tmpVecSize++] = p;
 	p->UpdateMH(RID, iMH, iMaxMH);
-	if ( p->GetHasWire() )
+	const bool bWire = p->IsLayer0() && p->GetHasWire();	// Constrain wire-routing to layer 0
+	if ( bWire )
 	{
 		p->GetWireList(wireList);	// Get list of p and its wired points
 		for (auto& o : wireList)	// Ideally want these in order of increasing MH
@@ -602,7 +606,8 @@ void Board::MHhelper(const Element* p, const int& iNbr, const int& RID, unsigned
 	{
 		m_tmpVec[m_tmpVecSize++] = pK;	// Add pK to set of visited points
 		pK->UpdateMH(RID, iMH, iMaxMH);
-		if ( pK->GetHasWire() )
+		const bool bWire = pK->IsLayer0() && pK->GetHasWire();	// Constrain wire-routing to layer 0
+		if ( bWire )
 		{
 			pK->GetWireList(wireList);	// Get list of pK and its wired points
 			for (auto& o : wireList)	// Ideally want these in order of increasing MH
