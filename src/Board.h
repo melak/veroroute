@@ -278,6 +278,7 @@ public:
 		Pan(-minRow, -minCol);	// First pan to top-left corner of grid
 		GrowThenPan(maxLyr - minLyr + 1 - GetLyrs(), maxRow - minRow + 1 - GetRows(), maxCol - minCol + 1 - GetCols(), 0, 0); // Then shrink grid from bottom-right
 
+		if ( GetLyrs() == 1 ) SetCurrentLayer(0);
 		if ( iRowMargin == -1 ) iRowMargin = GetCropMargin();	// -1 ==> use default
 		if ( iColMargin == -1 ) iColMargin = GetCropMargin();	// -1 ==> use defaul
 		if ( iRowMargin > 0 || iColMargin > 0 )
@@ -354,6 +355,7 @@ public:
 		for (int j = 0; j < numRows; j++)
 		for (int i = 0; i < numCols; i++)
 		{
+			if ( Get(k,j,i)->GetHasPin() && k > 0 ) continue;	// Only consider pins in layer 0
 			if ( Get(k,j,i)->GetNodeId() == BAD_NODEID ) continue;
 			minLyr = std::min(minLyr, k);	maxLyr = std::max(maxLyr, k);
 			minRow = std::min(minRow, j);	maxRow = std::max(maxRow, j);
