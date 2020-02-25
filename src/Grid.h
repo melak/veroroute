@@ -79,11 +79,16 @@ public:
 	int		   GetSize() const	{ return m_lyrs * m_rows * m_cols; }
 	void GetRowCol(T* p, int& row, int& col) const
 	{
+		int lyr;	// dummy
+		GetLyrRowCol(p, lyr, row, col);
+	}
+	void GetLyrRowCol(T* p, int& lyr, int& row, int& col) const
+	{
 		const size_t ii		= ( p - m_pData );	assert( ii < static_cast<size_t> ( GetSize() ) );
 		const int i			= static_cast<int> (ii);
 		const int rowLyr 	= i / m_cols;
 		col					= i % m_cols;
-//		lyr	 				= rowLyr / m_rows;
+		lyr	 				= rowLyr / m_rows;
 		row 	 			= rowLyr % m_rows;
 	}
 	T*	 GetAt(int i)								{ return m_pData + i; }

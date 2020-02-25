@@ -22,15 +22,16 @@
 // MH_LRTB = Manhatten "distance" for horizontally/vertically adjacent grid points.
 // MH_DIAG = Manhatten "distance" for diagonally adjacent grid points.
 // MH_WIRE = Manhatten "distance" for wires, regardless of their length.
+// MH_LPIN = Manhatten "distance" for changing layers at a pin (of a component or wire)
+// MH_LVIA = Manhatten "distance" for changing layers at a via (i.e. place with no pin)
 
-// Routing algorithm assumes:  MH_DIAG > MH_LRTB > MH_WIRE > 0
-// MH_LYRP is distance when jumping layers at a location with a  pin
-// MH_LYRX is distance when jumping layers at a location with no pin
+// Routing algorithm assumes:  MH_LVIA > MH_DIAG > MH_LRTB > MH_WIRE >= MH_LPIN
+
+#define MH_LPIN 1
 #define MH_WIRE 1
 #define MH_LRTB 2
 #define MH_DIAG 3
-#define MH_LYRP 1
-#define MH_LYRX 4
+#define MH_LVIA 4
 
 // Routing methods
 
@@ -234,7 +235,7 @@ void Board::Flood_Helper(const int& iFloodNodeId, bool** ppConn, unsigned int& c
 
 	const unsigned int 	numRIDs 	= RID + 1;	assert( m_targetPins.size() == (size_t) numRIDs );
 	const bool			bDiagsOK 	= ( GetDiagsMode() != DIAGSMODE::OFF );
-	const unsigned int	iMaxDeltaMH	= ( bMultiLayer ) ? MH_LYRX : bDiagsOK ? MH_DIAG : MH_LRTB;	// The max MH increment in single-layer mode depends on if diagonals are allowed
+	const unsigned int	iMaxDeltaMH	= ( bMultiLayer ) ? MH_LVIA : bDiagsOK ? MH_DIAG : MH_LRTB;	// The max MH increment in single-layer mode depends on if diagonals are allowed
 
 	size_t jjStart(0);
 
@@ -264,35 +265,28 @@ void Board::Flood_Helper(const int& iFloodNodeId, bool** ppConn, unsigned int& c
 			}
 
 			const int iTypeMin(bMultiLayer ? 0 : 1), iTypeMax(bMultiLayer ? 2 : 1);
-			for (int iType = iTypeMin; iType <= iTypeMax; iType++)
+			for (int iType = iTypeMin; iType <= iTypeMax && !bDone; iType++)
 			{
-				if ( iType == 0 && pJ->GetHasPin() )	// Type 0 ==> Change layer at a pin
+				switch( iType )
 				{
-					const int iDeltaMH = MH_LYRP;
-					if ( pJ->GetMH() + iDeltaMH != iMH ) continue;		// pJ has wrong MH for connection
+					case 0:	// Type 0 ==> Change layer at a pin
+						if ( pJ->GetHasPin() && pJ->GetMH() + MH_LPIN == iMH )
+							Flood_Grow(numRIDs, iFloodNodeId, ppConn, cost, pJ, NBR_X, bBuildTracks, iMH, iMaxMH, bDone);
+						break;
+					case 1:	// Type 1 ==> Move within layer
+						for (int iDiag = 0, iDiagMax = ( bDiagsOK ) ? 2 : 1; iDiag < iDiagMax && !bDone; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
+						{
+							const int iDeltaMH = ( iDiag ) ? MH_DIAG : MH_LRTB;
+							if ( pJ->GetMH() + iDeltaMH != iMH ) continue;	// pJ has wrong MH for connection
 
-					Flood_Grow(numRIDs, iFloodNodeId, ppConn, cost, pJ, NBR_X, bBuildTracks, iMH, iMaxMH, bDone);
-					continue;
-				}
-				if ( iType == 1 )						// Type 1 ==> Move within layer
-				{
-					for (int iDiag = 0, iDiagMax = ( bDiagsOK ) ? 2 : 1; iDiag < iDiagMax && !bDone; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
-					{
-						const int iDeltaMH = ( iDiag ) ? MH_DIAG : MH_LRTB;
-						if ( pJ->GetMH() + iDeltaMH != iMH ) continue;	// pJ has wrong MH for connection
-
-						for (int iNbr = iDiag; iNbr < 8 && !bDone; iNbr += 2)	// Even/Odd iNbr ==> Non-diagonal/Diagonal
-							Flood_Grow(numRIDs, iFloodNodeId, ppConn, cost, pJ, iNbr, bBuildTracks, iMH, iMaxMH, bDone);
-					}
-					continue;
-				}
-				if ( iType == 2 && !pJ->GetHasPin() )	// Type 2 ==> Change layer at a non-pin (i.e. a via)
-				{
-					const int iDeltaMH = MH_LYRX;
-					if ( pJ->GetMH() + iDeltaMH != iMH ) continue;		// pJ has wrong MH for connection
-					
-					Flood_Grow(numRIDs, iFloodNodeId, ppConn, cost, pJ, NBR_X, bBuildTracks, iMH, iMaxMH, bDone);
-					continue;
+							for (int iNbr = iDiag; iNbr < 8 && !bDone; iNbr += 2)	// Even/Odd iNbr ==> Non-diagonal/Diagonal
+								Flood_Grow(numRIDs, iFloodNodeId, ppConn, cost, pJ, iNbr, bBuildTracks, iMH, iMaxMH, bDone);
+						}
+						break;
+					case 2:	// Type 2 ==> Change layer at a non-pin (i.e. a via)
+						if ( !pJ->GetHasPin() && pJ->GetMH() + MH_LVIA == iMH )
+							Flood_Grow(numRIDs, iFloodNodeId, ppConn, cost, pJ, NBR_X, bBuildTracks, iMH, iMaxMH, bDone);
+						break;
 				}
 			}
 		}
@@ -342,7 +336,7 @@ void Board::Flood_Grow(const unsigned int& numRIDs, const int& iFloodNodeId, boo
 	if ( j == k || ppConn[j][k] ) return;
 
 	// Routes with RIDs j and k have met and don't have a connection yet ...
-	
+
 	if ( bBuildTracks )	// If building tracks ...
 	{
 		Backtrace(pJ, iFloodNodeId);	// ... trace pJ back to its source, painting iFloodNodeId along the way
@@ -449,33 +443,30 @@ void Board::Backtrace(Element* pEnd, const int& nodeId)
 		for (int iLoop = 0; iLoop < 2 && !bOK; iLoop++)	// First pass to give preference to nbrs that are not wire ends
 		{
 			const int iTypeMin(bMultiLayer ? 0 : 1), iTypeMax(bMultiLayer ? 2 : 1);
-			for (int iType = iTypeMin; iType <= iTypeMax; iType++)
+			for (int iType = iTypeMin; iType <= iTypeMax && !bOK; iType++)
 			{
-				if ( iType == 0 && p->GetHasPin() )		// Type 0 ==> Change layer at a pin
+				switch( iType )
 				{
-					BacktraceHelper(p, nodeId, MH_LYRP, NBR_X, iLoop, MH, bOK);
-					continue;
-				}
-				if ( iType == 1 )						// Type 1 ==> Move within layer
-				{
-					for (int iDiag = 0, iDiagMax = ( bDiagsOK ) ? 2 : 1; iDiag < iDiagMax && !bOK; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
-					{
-						const int iDeltaMH = ( iDiag ) ? MH_DIAG : MH_LRTB;
-						for (int iNbr = iDiag; iNbr < 8 && !bOK; iNbr += 2)	// Even/Odd iNbr ==> Non-diagonal/Diagonal
-							BacktraceHelper(p, nodeId, iDeltaMH, iNbr, iLoop, MH, bOK);
-					}
-					continue;
-				}
-				if ( iType == 2 && !p->GetHasPin() )	// Type 2 ==> Change layer at a non-pin (i.e. a via)
-				{
-					BacktraceHelper(p, nodeId, MH_LYRX, NBR_X, iLoop, MH, bOK);
-					continue;
+					case 0:	// Type 0 ==> Change layer at a pin
+						if ( p->GetHasPin() ) BacktraceHelper(p, nodeId, MH_LPIN, NBR_X, iLoop, MH, bOK);
+						break;
+					case 1:	// Type 1 ==> Move within layer
+						for (int iDiag = 0, iDiagMax = ( bDiagsOK ) ? 2 : 1; iDiag < iDiagMax && !bOK; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
+						{
+							const int iDeltaMH = ( iDiag ) ? MH_DIAG : MH_LRTB;
+							for (int iNbr = iDiag; iNbr < 8 && !bOK; iNbr += 2)	// Even/Odd iNbr ==> Non-diagonal/Diagonal
+								BacktraceHelper(p, nodeId, iDeltaMH, iNbr, iLoop, MH, bOK);
+						}
+						break;
+					case 2:	// Type 2 ==> Change layer at a non-pin (i.e. a via)
+						if ( !p->GetHasPin() ) BacktraceHelper(p, nodeId, MH_LVIA, NBR_X, iLoop, MH, bOK);
+						break;
 				}
 			}
 		}
 		if ( bOK ) continue;
 
-		assert(0);	// Oh dear. Something went badly wrong !!!	//TODO_NEW Maybe changed number of layers while routing ?
+		assert(0);	// Oh dear. Something went badly wrong !!!
 		break;
 	}
 }
@@ -510,7 +501,7 @@ void Board::Manhatten(Element* p)
 	m_tmpVecSize = 0;
 
 	const bool			bDiagsOK	= ( GetDiagsMode() != DIAGSMODE::OFF );
-	const unsigned int	iMaxDeltaMH	= ( bMultiLayer ) ? MH_LYRX : bDiagsOK ? MH_DIAG : MH_LRTB;	// The max MH increment in single-layer mode depends on if diagonals are allowed
+	const unsigned int	iMaxDeltaMH	= ( bMultiLayer ) ? MH_LVIA : bDiagsOK ? MH_DIAG : MH_LRTB;	// The max MH increment in single-layer mode depends on if diagonals are allowed
 
 	size_t jjStart(0);
 	const unsigned int RID(0);
@@ -560,40 +551,33 @@ void Board::Manhatten(Element* p)
 			const int iTypeMin(bMultiLayer ? 0 : 1), iTypeMax(bMultiLayer ? 2 : 1);
 			for (int iType = iTypeMin; iType <= iTypeMax; iType++)
 			{
-				if ( iType == 0 && p->GetHasPin() )		// Type 0 ==> Change layer at a pin
+				switch( iType )
 				{
-					const int iDeltaMH	= MH_LYRP;
-					if ( pJ->GetMH() + iDeltaMH != iMH ) continue;		// pJ has wrong MH for connection
+					case 0:	// Type 0 ==> Change layer at a pin
+						if ( pJ->GetHasPin() && pJ->GetMH() + MH_LPIN == iMH )
+							ManhattenHelper(pJ, NBR_X, RID, iMH, iMaxMH);
+						break;
+					case 1:	// Type 1 ==> Move within layer
+						for (int iDiag = 0, iDiagMax = ( bDiagsOK ) ? 2 : 1; iDiag < iDiagMax; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
+						{
+							const int iDeltaMH = ( iDiag ) ? MH_DIAG : MH_LRTB;
+							if ( pJ->GetMH() + iDeltaMH != iMH ) continue;	// pJ has wrong MH for connection
 
-					MHhelper(pJ, NBR_X, RID, iMH, iMaxMH);
-					continue;
-				}
-				if ( iType == 1 )						// Type 1 ==> Move within layer
-				{
-					for (int iDiag = 0, iDiagMax = ( bDiagsOK ) ? 2 : 1; iDiag < iDiagMax; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
-					{
-						const int iDeltaMH = ( iDiag ) ? MH_DIAG : MH_LRTB;
-						if ( pJ->GetMH() + iDeltaMH != iMH ) continue;	// pJ has wrong MH for connection
-
-						for (int iNbr = iDiag; iNbr < 8; iNbr += 2)	// Even/Odd iNbr ==> Non-diagonal/Diagonal
-							MHhelper(pJ, iNbr, RID, iMH, iMaxMH);
-					}
-					continue;
-				}
-				if ( iType == 2 && !p->GetHasPin() )	// Type 2 ==> Change layer at a non-pin (i.e. a via)
-				{
-					const int iDeltaMH	= MH_LYRX;
-					if ( pJ->GetMH() + iDeltaMH != iMH ) continue;		// pJ has wrong MH for connection
-
-					MHhelper(pJ, NBR_X, RID, iMH, iMaxMH);
-					continue;
+							for (int iNbr = iDiag; iNbr < 8; iNbr += 2)	// Even/Odd iNbr ==> Non-diagonal/Diagonal
+								ManhattenHelper(pJ, iNbr, RID, iMH, iMaxMH);
+						}
+						break;
+					case 2:	// Type 2 ==> Change layer at a non-pin (i.e. a via)
+						if ( !pJ->GetHasPin() && pJ->GetMH() + MH_LVIA == iMH )
+							ManhattenHelper(pJ, NBR_X, RID, iMH, iMaxMH);
+						break;
 				}
 			}
 		}
 	}
 }
 
-void Board::MHhelper(const Element* p, const int& iNbr, const int& RID, unsigned int& iMH, unsigned int& iMaxMH)
+void Board::ManhattenHelper(const Element* p, const int& iNbr, const int& RID, unsigned int& iMH, unsigned int& iMaxMH)
 {
 	if ( !ReadCodeBit(iNbr, p->GetRoutable()) ) return;	// Skip non-routable nbrs
 
@@ -601,7 +585,7 @@ void Board::MHhelper(const Element* p, const int& iNbr, const int& RID, unsigned
 	if ( pK == nullptr ) return;
 
 	WIRELIST wireList;	// Helper for chains of wires
-	
+
 	if ( p->GetUsed(iNbr) && pK->GetMH() == BAD_MH )
 	{
 		m_tmpVec[m_tmpVecSize++] = pK;	// Add pK to set of visited points

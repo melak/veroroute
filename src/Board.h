@@ -415,7 +415,7 @@ public:
 	void BacktraceHelper(Element*& p, const int& nodeId, const int& iDeltaMH, const int& iNbr, const int& iLoop, unsigned int& MH, bool& bOK);
 
 	void Manhatten(Element* p);
-	void MHhelper(const Element* p, const int& iNbr, const int& RID, unsigned int& iMH, unsigned int& iMaxMH);
+	void ManhattenHelper(const Element* p, const int& iNbr, const int& RID, unsigned int& iMH, unsigned int& iMaxMH);
 	void CheckAllComplete();
 	void PasteTracks(bool bTidy);
 	void WipeTracks();
