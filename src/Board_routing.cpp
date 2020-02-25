@@ -25,13 +25,16 @@
 // MH_LPIN = Manhatten "distance" for changing layers at a pin (of a component or wire)
 // MH_LVIA = Manhatten "distance" for changing layers at a via (i.e. place with no pin)
 
-// Routing algorithm assumes:  MH_LVIA > MH_DIAG > MH_LRTB > MH_WIRE >= MH_LPIN
+// Routing algorithm assumes:  MH_LVIA >= MH_DIAG > MH_LRTB > MH_WIRE >= MH_LPIN
+
+// Increasing MH_LVIA will try harder to avoid making vias but makes the algorithm much slower.
+// For maximum speed put MN_LVIA = 3.
 
 #define MH_LPIN 1
 #define MH_WIRE 1
 #define MH_LRTB 2
 #define MH_DIAG 3
-#define MH_LVIA 4
+#define MH_LVIA 6
 
 // Routing methods
 
