@@ -370,6 +370,7 @@ void MainWindow::HandleRouting()
 		m_board.Route(true);	// true ==> Use minimal routing
 		releaseMouse();
 	}
+	m_board.UpdateVias();
 	if ( GetCurrentNodeId() != BAD_NODEID )
 	{
 		grabMouse(Qt::WaitCursor);
@@ -1598,6 +1599,7 @@ void MainWindow::UpdateControls()
 	ui->actionRemoveLayer->setEnabled(	m_board.GetLyrs() != 1 );
 	ui->actionSwitchLayer->setEnabled(	m_board.GetLyrs() != 1 );
 	ui->actionSwitchLayer->setText(		m_board.GetCurrentLayer() == 0 ? QString("Switch to Top Layer") : QString("Switch to Bottom Layer") );
+	ui->actionSwitchLayer->setIcon(		m_board.GetCurrentLayer() == 0 ? QIcon(":/images/layertop.png") : QIcon(":/images/layerbot.png"));
 	m_labelStatus->setText(m_board.GetCurrentLayer() == 0 ? QString("   Layer = Bottom   ") : QString("   Layer = Top   "));
 
 	ui->actionCopy->setEnabled( bTextOK || bCompOK );

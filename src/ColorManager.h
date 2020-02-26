@@ -26,7 +26,8 @@
 #define MY_GREY				(MYNUMCOLORS)
 #define MY_BLACK			(MYNUMCOLORS+1)
 #define NUM_PIXMAP_COLORS	(MYNUMCOLORS+2)
-#define MY_DARK_GREEN		(MYNUMCOLORS+3)
+#define MY_LYR_BOT			(MYNUMCOLORS+3)
+#define MY_LYR_TOP			(MYNUMCOLORS+4)
 
 static MyRGB g_color[MYNUMCOLORS] = { MyRGB(0x3C18C8), MyRGB(0xC024F8), MyRGB(0xD26060), MyRGB(0xDCDC58)
 									, MyRGB(0x60C858), MyRGB(0x5896C8), MyRGB(0x6010FF), MyRGB(0xE142D2)
@@ -144,8 +145,9 @@ public:
 	void GetPixmapRGB(const int& iEffColorId, int& R, int& G, int& B) const
 	{
 		if ( iEffColorId < MYNUMCOLORS ) return GetRGB(iEffColorId, R, G, B);
-		if ( iEffColorId == MY_GREY )		{ R = G = B = 96;		return; }
-		if ( iEffColorId == MY_DARK_GREEN )	{ R = B = 0; G = 127;	return; }
+		if ( iEffColorId == MY_GREY )		{ R = G = B = 96;			return; }
+		if ( iEffColorId == MY_LYR_BOT )	{ R = B = 0; G = 128;		return; }
+		if ( iEffColorId == MY_LYR_TOP )	{ R = 0; G = 96; B = 192; 	return; }
 		R = G = B = 0;	assert( iEffColorId == MY_BLACK );
 	}
 private:

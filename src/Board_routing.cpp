@@ -93,7 +93,8 @@ void Board::BuildTargetPins(const int& nodeId)
 
 void Board::Route(bool bMinimal)
 {
-	m_bRouteMinimal = bMinimal;
+	m_bRouteMinimal	= bMinimal;
+	assert(m_bRouteVias);
 
 //	const auto start = std::chrono::steady_clock::now();
 
@@ -182,15 +183,43 @@ void Board::Route(bool bMinimal)
 //	std::cout << "Time : " << duration_ms << std::endl;
 }
 
+void Board::UpdateVias()	// Sets the via flag to true on all candidate vias
+{
+	// If the ends of a candidate via can be connected through a pin on the board then it is not a via.
+	const bool bRoutingEnabled = GetRoutingEnabled();	// Log routing state
+	SetRoutingEnabled(false);
+	m_bRouteMinimal	= true;
+	m_bRouteVias	= false;	// Disable routing through vias to perform test
+	for (int i = 0, iSize = ( GetLyrs() == 1 ) ? GetSize() : ( GetSize() / 2 ); i < iSize; i++)	// Loop layer 0 only
+	{
+		Element* p = GetAt(i);
+		Element* q = p->GetNbr(NBR_X);
+		bool bIsVia = false;
+		if ( q && !p->GetHasPin() && p->GetNodeId() == q->GetNodeId() && p->GetNodeId() != BAD_NODEID )	// If candidate via ...
+		{
+			m_targetPins.clear();
+			m_targetPins.push_back(p);
+			m_targetPins.push_back(q);
+			bIsVia = Flood() > 0;
+		}
+		p->SetIsVia(bIsVia);
+	}
+	m_bRouteVias = true;				// Restore routing through vias
+	SetRoutingEnabled(bRoutingEnabled);	// Restore routing state
+}
+
 unsigned int Board::Flood(const int& iFloodNodeId)
+{
+	BuildTargetPins(iFloodNodeId);	// Populate m_targetPins
+	return Flood();
+}
+
+unsigned int Board::Flood()
 {
 	// Flood the board with MH values, starting from the m_targetPins.
 	// The return value is a cost that shows how unconnected the pins are.
 	// Zero cost means the pins are all inter-connected.
 
-	assert(iFloodNodeId != BAD_NODEID);
-
-	BuildTargetPins(iFloodNodeId);	// Populate m_targetPins
 	if ( m_targetPins.size() < 2 ) return 0;	// Return cost of zero
 
 	// Allocate the connection matrix ppConn[][] to indicate which pairs of targetPins are connected
@@ -204,10 +233,10 @@ unsigned int Board::Flood(const int& iFloodNodeId)
 	unsigned int cost = (unsigned int)(N2 - N);	// Cost = number of false values in the connection matrix
 
 	if ( m_bRouteMinimal )	// For minimal routing, first do a preliminary flood to see which pins are connected
-		Flood_Helper(iFloodNodeId, ppConn, cost, false);	// false ==> don't build new tracks
+		Flood_Helper(ppConn, cost, false);	// false ==> don't build new tracks
 
 	if ( GetRoutingEnabled() )
-		Flood_Helper(iFloodNodeId, ppConn, cost, true);		// true ==> build new tracks
+		Flood_Helper(ppConn, cost, true);	// true ==> build new tracks
 
 	// Deallocate connection matrix
 	delete[] ppConn;
@@ -215,7 +244,7 @@ unsigned int Board::Flood(const int& iFloodNodeId)
 	return cost;
 }
 
-void Board::Flood_Helper(const int& iFloodNodeId, bool** ppConn, unsigned int& cost, const bool bBuildTracks)
+void Board::Flood_Helper(bool** ppConn, unsigned int& cost, const bool bBuildTracks)
 {
 	const bool bMultiLayer = GetLyrs() > 1;
 
@@ -236,9 +265,10 @@ void Board::Flood_Helper(const int& iFloodNodeId, bool** ppConn, unsigned int& c
 		p->UpdateMH(RID, iMH, iMaxMH);
 	}
 
-	const unsigned int 	numRIDs 	= RID + 1;	assert( m_targetPins.size() == (size_t) numRIDs );
-	const bool			bDiagsOK 	= ( GetDiagsMode() != DIAGSMODE::OFF );
-	const unsigned int	iMaxDeltaMH	= ( bMultiLayer ) ? MH_LVIA : bDiagsOK ? MH_DIAG : MH_LRTB;	// The max MH increment in single-layer mode depends on if diagonals are allowed
+	const int&			iFloodNodeId = m_targetPins[0]->GetNodeId();
+	const unsigned int	numRIDs		 = RID + 1;	assert( m_targetPins.size() == (size_t) numRIDs );
+	const bool			bDiagsOK	 = ( GetDiagsMode() != DIAGSMODE::OFF );
+	const unsigned int	iMaxDeltaMH	 = ( bMultiLayer && m_bRouteVias ) ? MH_LVIA : bDiagsOK ? MH_DIAG : MH_LRTB;	// The max MH increment in single-layer mode depends on if diagonals are allowed
 
 	size_t jjStart(0);
 
@@ -267,7 +297,7 @@ void Board::Flood_Helper(const int& iFloodNodeId, bool** ppConn, unsigned int& c
 				continue;
 			}
 
-			const int iTypeMin(bMultiLayer ? 0 : 1), iTypeMax(bMultiLayer ? 2 : 1);
+			const int iTypeMin(bMultiLayer ? 0 : 1), iTypeMax(bMultiLayer && m_bRouteVias ? 2 : 1);
 			for (int iType = iTypeMin; iType <= iTypeMax && !bDone; iType++)
 			{
 				switch( iType )
@@ -286,7 +316,7 @@ void Board::Flood_Helper(const int& iFloodNodeId, bool** ppConn, unsigned int& c
 								Flood_Grow(numRIDs, iFloodNodeId, ppConn, cost, pJ, iNbr, bBuildTracks, iMH, iMaxMH, bDone);
 						}
 						break;
-					case 2:	// Type 2 ==> Change layer at a non-pin (i.e. a via)
+					case 2:	// Type 2 ==> Change layer at a via
 						if ( !pJ->GetHasPin() && pJ->GetMH() + MH_LVIA == iMH )
 							Flood_Grow(numRIDs, iFloodNodeId, ppConn, cost, pJ, NBR_X, bBuildTracks, iMH, iMaxMH, bDone);
 						break;
@@ -444,7 +474,7 @@ void Board::Backtrace(Element* pEnd, const int& nodeId)
 
 		for (int iLoop = 0; iLoop < 2 && !bOK; iLoop++)	// First pass to give preference to nbrs that are not wire ends
 		{
-			const int iTypeMin(bMultiLayer ? 0 : 1), iTypeMax(bMultiLayer ? 2 : 1);
+			const int iTypeMin(bMultiLayer ? 0 : 1), iTypeMax(bMultiLayer && m_bRouteVias ? 2 : 1);
 			for (int iType = iTypeMin; iType <= iTypeMax && !bOK; iType++)
 			{
 				switch( iType )
@@ -460,7 +490,7 @@ void Board::Backtrace(Element* pEnd, const int& nodeId)
 								BacktraceHelper(p, nodeId, iDeltaMH, iNbr, iLoop, MH, bOK);
 						}
 						break;
-					case 2:	// Type 2 ==> Change layer at a non-pin (i.e. a via)
+					case 2:	// Type 2 ==> Change layer at a via
 						if ( !p->GetHasPin() ) BacktraceHelper(p, nodeId, MH_LVIA, NBR_X, iLoop, MH, bOK);
 						break;
 				}
@@ -527,6 +557,7 @@ void Board::Manhatten(Element* p)
 			pW->UpdateMH(RID, iOtherMH, iMaxMH);
 		}
 	}
+	assert(m_bRouteVias);
 	while ( true )
 	{
 		iMH++;	// Increase MH (think of this as distance from start point).
@@ -550,7 +581,7 @@ void Board::Manhatten(Element* p)
 				continue;
 			}
 
-			const int iTypeMin(bMultiLayer ? 0 : 1), iTypeMax(bMultiLayer ? 2 : 1);
+			const int iTypeMin(bMultiLayer ? 0 : 1), iTypeMax(bMultiLayer && m_bRouteVias ? 2 : 1);
 			for (int iType = iTypeMin; iType <= iTypeMax; iType++)
 			{
 				switch( iType )
@@ -569,7 +600,7 @@ void Board::Manhatten(Element* p)
 								ManhattenHelper(pJ, iNbr, RID, iMH, iMaxMH);
 						}
 						break;
-					case 2:	// Type 2 ==> Change layer at a non-pin (i.e. a via)
+					case 2:	// Type 2 ==> Change layer at a via
 						if ( !pJ->GetHasPin() && pJ->GetMH() + MH_LVIA == iMH )
 							ManhattenHelper(pJ, NBR_X, RID, iMH, iMaxMH);
 						break;

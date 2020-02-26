@@ -701,7 +701,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	}
 	else
 	{
-		const int iGroundFillColor = ( bPCB ) ? MY_DARK_GREEN : MY_BLACK;
+		const int iGroundFillColor = ( bPCB ) ? ( layer == 0 ? MY_LYR_BOT : MY_LYR_TOP ) : MY_BLACK;
 		colorMgr.GetPixmapRGB(iGroundFillColor, cR, cG, cB);
 		const QColor groundFillColor(cR, cG, cB, 255);
 		painter.fillRect(m_XGRIDOFFSET, m_YGRIDOFFSET, W * board.GetCols(), W * board.GetRows(), bGroundFill ? groundFillColor : backgroundColor);
@@ -777,15 +777,14 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				const bool		bWire			= pC->GetHasWire();
 				const bool		bWireAsVia		= bWire && bWiresAsTracks;	// true ==> draw small via pad
 				const int		iPerimeterCode	= pC->GetPerimeterCode(bDiagsOK, bMinDiags);	// 0 to 255
-				const Element*	pLyr			= pC->GetNbr(NBR_X);	// Point on layer above/below
-				const bool		bVia			= !bPin && nodeId != BAD_NODEID && pLyr && pLyr->GetNodeId() == nodeId;
+				const bool		bVia			= pC->GetIsVia();
 
 				if ( colorId == BAD_COLORID && !bWire ) continue;	// Usually don't color places with no NodeID assigned unless they are wire ends
 
 				// Use GetPixmapRGB for pixmaps.  It can handle MY_GREY, MY_BLACK as special cases
 				const bool		bInvalidColor	=  colorId == BAD_COLORID ||
 												  ( ( bMono || bPCB ) && nodeId != GetCurrentNodeId() );
-				const int		iEffColorId		= ( bInvalidColor )	? ( bPCB ? MY_DARK_GREEN : MY_BLACK )
+				const int		iEffColorId		= ( bInvalidColor )	? ( bPCB ? ( layer == 0 ? MY_LYR_BOT : MY_LYR_TOP ) : MY_BLACK )
 												: ( nodeId == GetCurrentNodeId() ) ? MY_GREY : ( colorId % MYNUMCOLORS );
 
 				colorMgr.GetPixmapRGB(iEffColorId, cR, cG, cB);
@@ -1047,10 +1046,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		for (int i = minCol; i <= maxCol; i++)
 		{
 			const Element*	pC		= board.Get(layer, j, i);
-			const int&		nodeId	= pC->GetNodeId();
-			const bool		bPin	= pC->GetHasPin();		// true ==> real pin
-			const Element*	pLyr	= pC->GetNbr(NBR_X);	// Point on layer above/below
-			const bool		bVia	= !bPin && nodeId != BAD_NODEID && pLyr && pLyr->GetNodeId() == nodeId;
+			const bool		bVia	= pC->GetIsVia();
 			if ( bVia )
 			{
 				GetLRTB(board, board.GetVIAHOLE_PERCENT(), j, i, L, R, T, B);						

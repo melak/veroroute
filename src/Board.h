@@ -41,6 +41,7 @@ public:
 	, m_infoStr("Use this box to enter a circuit description or other info")
 	, m_tmpVecSize(0)
 	, m_bRouteMinimal(true)
+	, m_bRouteVias(true)
 	{
 		Allocate(lyrs, rows, cols);
 		GlueNbrs();		// Set pointers between neighbouring grid elements
@@ -94,7 +95,7 @@ public:
 		m_targetPins.clear();
 		m_tmpVec.clear();
 		m_tmpVecSize	= 0;
-		m_bRouteMinimal	= true;
+		m_bRouteMinimal	= m_bRouteVias = true;
 
 		return *this;
 	}
@@ -406,13 +407,13 @@ public:
 	void WipeAutoSetPoints(const int nodeId = BAD_NODEID);
 	void BuildTargetPins(const int& nodeId);
 	void Route(bool bMinimal);
+	void UpdateVias();
 	unsigned int Flood(const int& nodeId);
-	void Flood_Helper(const int& nodeId, bool** ppConn, unsigned int& cost, const bool bBuildTracks);
+	unsigned int Flood();
+	void Flood_Helper(bool** ppConn, unsigned int& cost, const bool bBuildTracks);
 	void Flood_Grow(const unsigned int& numRIDs, const int& iFloodNodeId, bool** ppConn, unsigned int& cost, Element* pJ, const int& iNbr, const bool& bBuildTracks, unsigned int& iMH, unsigned int& iMaxMH, bool& bDone);
-
 	void Backtrace(Element* pEnd, const int& nodeId);
 	void BacktraceHelper(Element*& p, const int& nodeId, const int& iDeltaMH, const int& iNbr, const int& iLoop, unsigned int& MH, bool& bOK);
-
 	void Manhatten(Element* p);
 	void ManhattenHelper(const Element* p, const int& iNbr, const int& RID, unsigned int& iMH, unsigned int& iMaxMH);
 	void CheckAllComplete();
@@ -646,4 +647,5 @@ private:
 	std::vector<Element*>	m_tmpVec;		// The set of visited points.
 	size_t					m_tmpVecSize;	// The number of visited points.
 	bool					m_bRouteMinimal;// true ==> don't build tracks between pins that are already connected
+	bool					m_bRouteVias;	// true ==> allow routing to other layers through vias (in addition to pins)
 };

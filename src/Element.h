@@ -103,6 +103,7 @@ public:
 		m_compId2	= o.m_compId2;
 		m_pinChar2	= o.m_pinChar2;
 		m_bSolderR	= o.m_bSolderR;
+		m_bIsVia	= o.m_bIsVia;
 //		m_iRoutable	= o.m_iRoutable;	// This should only be set by the Board::Glue() method
 		m_MH		= o.m_MH;
 		m_maxMH		= o.m_maxMH;
@@ -138,6 +139,7 @@ public:
 			pBase->SetPinIndex2(i);
 	}
 	void SetSolderR(const bool& b)		{ auto pBase = GetBase(); if ( pBase == this ) m_bSolderR = b; else pBase->SetSolderR(b); }
+	void SetIsVia(const bool& b)		{ auto pBase = GetBase(); if ( pBase == this ) m_bIsVia	  = b; else pBase->SetIsVia(b); }
 	void SetRoutable(const int& i)		{ m_iRoutable	= i; }
 	void ResetMH()
 	{
@@ -222,6 +224,7 @@ public:
 	bool				GetHasPin() const				{ return GetIsPin() || GetPinChar2() != BAD_PINCHAR; }
 	size_t				GetPinIndex2() const			{ return ( GetPinChar2() == BAD_PINCHAR ) ? BAD_PININDEX : GetPinChar2(); }
 	const bool&			GetSolderR() const				{ auto pBase = GetBaseConst(); return pBase == this ? m_bSolderR	: pBase->GetSolderR(); }
+	const bool&			GetIsVia() const				{ auto pBase = GetBaseConst(); return pBase == this ? m_bIsVia		: pBase->GetIsVia(); }
 	const int&			GetRoutable() const				{ return m_iRoutable; }
 	const unsigned int&	GetRouteId() const				{ return m_routeId; }
 	const unsigned int&	GetMH() const					{ return m_MH; }
@@ -420,6 +423,7 @@ private:
 
 	// Working variables.	Don't persist.
 	bool			m_bSolderR	= false;		// true ==> have blob of solder to right (for joining vero tracks)
+	bool			m_bIsVia	= false;		// true ==> have a (candidate) via between layers
 	int				m_iRoutable	= 0;			// Set by Board::GlueNbrs().  Code bits used to enable/disable connections to neighbours
 	unsigned int	m_routeId	= BAD_ROUTEID;	// For the routing algorithm.
 	unsigned int	m_MH		= BAD_MH;		// Manhatten distance to another element.  For the routing/connectivity algorithm.
