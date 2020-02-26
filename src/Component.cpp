@@ -51,7 +51,7 @@ void Component::SetDefaultPinFlags()
 		case COMP::FUSE_HOLDER			: return SetPinFlags(PIN_RECT);
 		case COMP::RELAY_DIP_4PIN		:
 		case COMP::RELAY_DIP_8PIN		: return SetPinFlags(PIN_RECT | PIN_LABELS);
-		case COMP::VIA					:
+		case COMP::MARK					:
 		case COMP::PAD					:
 		case COMP::WIRE					:
 		case COMP::RESISTOR				:
@@ -100,7 +100,7 @@ void Component::AddDefaultShapes()
 	}
 	switch( GetType() )
 	{
-		case COMP::VIA:						AddOne( Shape(SHAPE::ELLIPSE,	true, false,	-0.30,  0.30, -0.30,  0.30) );
+		case COMP::MARK:					AddOne( Shape(SHAPE::ELLIPSE,	true, false,	-0.30,  0.30, -0.30,  0.30) );
 											AddOne( Shape(SHAPE::LINE,		true, false,	-0.21,  0.21, -0.21,  0.21) );
 											AddOne( Shape(SHAPE::LINE,		true, false,	-0.21,  0.21,  0.21, -0.21) );	break;
 		case COMP::PAD:						AddTwo( Shape(SHAPE::ELLIPSE,	true, true,		-0.45,  0.45, -0.45,  0.45) );	break;
@@ -255,7 +255,7 @@ void Component::SetDefaultColor()
 	{
 		case COMP::CUSTOM:
 		case COMP::TRACKS:
-		case COMP::VIA:						return;
+		case COMP::MARK:					return;
 		case COMP::PAD:						return SetFillColor(MyRGB(0xFFFFDF));
 		case COMP::LED:						return SetFillColor(MyRGB(0xFF6644));
 		case COMP::CAP_ELECTRO_200:

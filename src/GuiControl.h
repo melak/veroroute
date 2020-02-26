@@ -41,7 +41,8 @@ public:
 		m_currentLayer		= o.m_currentLayer;
 		m_currentCompId		= o.m_currentCompId;
 		m_currentNodeId		= o.m_currentNodeId;
-		m_groundNodeId		= o.m_groundNodeId;
+		m_groundNodeId0		= o.m_groundNodeId0;
+		m_groundNodeId1		= o.m_groundNodeId1;
 		m_currentTextId		= o.m_currentTextId;
 		m_diagsMode			= o.m_diagsMode;
 		m_iTrackMode		= o.m_iTrackMode;
@@ -85,7 +86,8 @@ public:
 		return	m_currentLayer		== o.m_currentLayer
 			&&	m_currentCompId		== o.m_currentCompId
 			&&	m_currentNodeId		== o.m_currentNodeId
-			&&	m_groundNodeId		== o.m_groundNodeId
+			&&	m_groundNodeId0		== o.m_groundNodeId0
+			&&	m_groundNodeId1		== o.m_groundNodeId1
 			&&	m_currentTextId		== o.m_currentTextId
 			&&	m_diagsMode			== o.m_diagsMode
 			&&	m_iTrackMode		== o.m_iTrackMode
@@ -131,7 +133,8 @@ public:
 	{
 		SetCurrentCompId(BAD_COMPID);
 		SetCurrentNodeId(BAD_NODEID);
-		SetGroundNodeId(BAD_NODEID);
+		SetGroundNodeId0(BAD_NODEID);
+		SetGroundNodeId1(BAD_NODEID);
 		SetCurrentTextId(BAD_TEXTID);
 		SetTrackMode(TRACKMODE::COLOR);
 		SetCompMode(COMPSMODE::NAME);
@@ -147,20 +150,23 @@ public:
 		if ( m_currentCompId != BAD_COMPID &&
 			 m_currentCompId != TRAX_COMPID )	o.deltaCompId = std::max(o.deltaCompId, m_currentCompId + 1);
 		if ( m_currentNodeId != BAD_NODEID )	o.deltaNodeId = std::max(o.deltaNodeId, m_currentNodeId + 1);
-		if ( m_groundNodeId  != BAD_NODEID )	o.deltaNodeId = std::max(o.deltaNodeId, m_groundNodeId  + 1);
+		if ( m_groundNodeId0 != BAD_NODEID )	o.deltaNodeId = std::max(o.deltaNodeId, m_groundNodeId0 + 1);
+		if ( m_groundNodeId1 != BAD_NODEID )	o.deltaNodeId = std::max(o.deltaNodeId, m_groundNodeId1 + 1);
 	}
 	virtual void ApplyMergeOffsets(const MergeOffsets& o) override
 	{
 		if ( m_currentCompId != BAD_COMPID &&
 			 m_currentCompId != TRAX_COMPID)	m_currentCompId += o.deltaCompId;
 		if ( m_currentNodeId != BAD_NODEID )	m_currentNodeId += o.deltaNodeId;
-		if ( m_groundNodeId  != BAD_NODEID )	m_groundNodeId  += o.deltaNodeId;
+		if ( m_groundNodeId0 != BAD_NODEID )	m_groundNodeId0 += o.deltaNodeId;
+		if ( m_groundNodeId1 != BAD_NODEID )	m_groundNodeId1 += o.deltaNodeId;
 	}
 	void Merge(const GuiControl& o)
 	{
 		m_currentCompId	= o.m_currentCompId;
 		m_currentNodeId	= o.m_currentNodeId;
-		m_groundNodeId	= o.m_groundNodeId;
+		m_groundNodeId0	= o.m_groundNodeId0;
+		m_groundNodeId1	= o.m_groundNodeId1;
 	}
 	// Persist functions
 	virtual void Load(DataStream& inStream) override
@@ -170,9 +176,12 @@ public:
 			inStream.Load(m_currentLayer);		// Added in VRT_VERSION_34
 		inStream.Load(m_currentCompId);
 		inStream.Load(m_currentNodeId);
-		m_groundNodeId = BAD_NODEID;
+		m_groundNodeId0 = BAD_NODEID;
 		if ( inStream.GetVersion() >= VRT_VERSION_3 )
-			inStream.Load(m_groundNodeId);		// Added in VRT_VERSION_3
+			inStream.Load(m_groundNodeId0);		// Added in VRT_VERSION_3
+		m_groundNodeId1 = BAD_NODEID;
+		if ( inStream.GetVersion() >= VRT_VERSION_34 )
+			inStream.Load(m_groundNodeId1);		// Added in VRT_VERSION_34
 		m_currentTextId = BAD_TEXTID;
 		if ( inStream.GetVersion() >= VRT_VERSION_14 )
 			inStream.Load(m_currentTextId);		// Added in VRT_VERSION_14
@@ -268,7 +277,8 @@ public:
 		outStream.Save(m_currentLayer);		// Added in VRT_VERSION_34
 		outStream.Save(m_currentCompId);
 		outStream.Save(m_currentNodeId);
-		outStream.Save(m_groundNodeId);		// Added in VRT_VERSION_3
+		outStream.Save(m_groundNodeId0);	// Added in VRT_VERSION_3
+		outStream.Save(m_groundNodeId1);	// Added in VRT_VERSION_34
 		outStream.Save(m_currentTextId);	// Added in VRT_VERSION_14
 		outStream.Save((int) m_diagsMode);
 		outStream.Save((int) m_iTrackMode);
@@ -309,7 +319,8 @@ public:
 	bool SetCurrentLayer(const int& i)		{ const bool bChanged = m_currentLayer		!= i; m_currentLayer	= i; return bChanged; }
 	bool SetCurrentNodeId(const int& i)		{ const bool bChanged = m_currentNodeId		!= i; m_currentNodeId	= i; return bChanged; }
 	bool SetCurrentCompId(const int& i)		{ const bool bChanged = m_currentCompId		!= i; m_currentCompId	= i; return bChanged; }
-	bool SetGroundNodeId(const int& i)		{ const bool bChanged = m_groundNodeId		!= i; m_groundNodeId	= i; return bChanged; }
+	bool SetGroundNodeId0(const int& i)		{ const bool bChanged = m_groundNodeId0		!= i; m_groundNodeId0	= i; return bChanged; }
+	bool SetGroundNodeId1(const int& i)		{ const bool bChanged = m_groundNodeId1		!= i; m_groundNodeId1	= i; return bChanged; }
 	bool SetCurrentTextId(const int& i)		{ const bool bChanged = m_currentTextId		!= i; m_currentTextId	= i; return bChanged; }
 	bool SetDiagsMode(const DIAGSMODE& e)	{ const bool bChanged = m_diagsMode			!= e; m_diagsMode		= e; return bChanged; }
 	bool SetTrackMode(const TRACKMODE& e)	{ const bool bChanged = m_iTrackMode		!= e; m_iTrackMode		= e; return bChanged; }
@@ -349,7 +360,8 @@ public:
 	const int&			GetCurrentLayer() const		{ return m_currentLayer; }
 	const int&			GetCurrentNodeId() const	{ return m_currentNodeId; }
 	const int&			GetCurrentCompId() const	{ return m_currentCompId; }
-	const int&			GetGroundNodeId() const		{ return m_groundNodeId; }
+	const int&			GetGroundNodeId0() const	{ return m_groundNodeId0; }
+	const int&			GetGroundNodeId1() const	{ return m_groundNodeId1; }
 	const int&			GetCurrentTextId() const	{ return m_currentTextId; }
 	const DIAGSMODE&	GetDiagsMode() const		{ return m_diagsMode; }
 	const TRACKMODE&	GetTrackMode() const		{ return m_iTrackMode; }
@@ -415,7 +427,8 @@ private:
 	int			m_currentLayer		= 0;				// Currently selected layer for display
 	int			m_currentCompId		= BAD_COMPID;		// Currently selected component ID
 	int			m_currentNodeId		= BAD_NODEID;		// Currently selected node ID
-	int			m_groundNodeId		= BAD_NODEID;		// The node ID representing ground for ground-fill
+	int			m_groundNodeId0		= BAD_NODEID;		// The node ID used for ground-fill on layer 0
+	int			m_groundNodeId1		= BAD_NODEID;		// The node ID used for ground-fill on layer 1
 	int			m_currentTextId		= BAD_TEXTID;		// Currently selected text box
 	DIAGSMODE	m_diagsMode			= DIAGSMODE::MIN;	// OFF, MIN, MAX
 	TRACKMODE	m_iTrackMode		= TRACKMODE::COLOR;	// OFF, MONO, COLOR, PCB

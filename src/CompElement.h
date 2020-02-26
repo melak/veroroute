@@ -67,11 +67,11 @@ public:
 		if ( inStream.GetVersion() < VRT_VERSION_25 )
 		{
 			int  compId;	// Dummy
-			bool bIsVia;	// Dummy
+			bool bIsMark;	// Dummy
 			Pin::Load(inStream);			// Load() base class
 			inStream.Load(compId);			assert(compId == -1);
 			TrackElement::Load(inStream);	// Load() base class
-			inStream.Load(bIsVia);			assert(bIsVia == false);
+			inStream.Load(bIsMark);			assert(bIsMark == false);
 		}
 		else
 		{

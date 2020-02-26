@@ -531,7 +531,7 @@ bool Board::ImportOrcad(const TemplateManager& templateMgr, const std::string& f
 bool Board::BreakComponentIntoPads(Component& comp)
 {
 	const COMP& eType = comp.GetType();
-	if ( eType == COMP::VIA || eType == COMP::PAD || eType == COMP::WIRE ) return false;	// Not real components
+	if ( eType == COMP::MARK || eType == COMP::PAD || eType == COMP::WIRE ) return false;	// Not real components
 	if ( !comp.GetIsPlaced() ) return false;	// Can't break a floating component
 
 	std::vector<int> nodeList;	// Re-used for each new pad

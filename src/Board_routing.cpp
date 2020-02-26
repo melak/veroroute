@@ -336,10 +336,9 @@ void Board::Flood_Grow(const unsigned int& numRIDs, const int& iFloodNodeId, boo
 		}
 		return;
 	}
-	if ( j == k || ppConn[j][k] ) return;
+	if ( ppConn[j][k] ) return;
 
 	// Routes with RIDs j and k have met and don't have a connection yet ...
-
 	if ( bBuildTracks )	// If building tracks ...
 	{
 		Backtrace(pJ, iFloodNodeId);	// ... trace pJ back to its source, painting iFloodNodeId along the way

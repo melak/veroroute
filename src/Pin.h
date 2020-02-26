@@ -36,7 +36,7 @@
 //		SURFACE_GAP			==> the gap between IC pins.
 //		SURFACE_WIRE_END	==> a wire (endpoint).
 //		SURFACE_WIRE		==> a wire (not endpoint).
-//		SURFACE_PLUG		==> e.g. resistor/diode/pad/via etc.  Can be placed in a "GAP".
+//		SURFACE_PLUG		==> e.g. resistor/diode/pad etc.  Can be placed in a "GAP".
 //		SURFACE_FULL		==> the board surface is fully occupied.  Nothing else can be placed there.
 //		SURFACE_NOPAINT		==> If this bit is set, then no paint can be applied.
 //		SURFACE_HOLE		==> SURFACE_FULL + SURFACE_NOPAINT

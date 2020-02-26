@@ -162,14 +162,14 @@ void MainWindow::PaintDiag(const GuiControl& guiCtrl, QPainter& painter, const Q
 
 void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, const int& iPerimeterCode, const bool bGap)
 {
-	const bool		bMaxDiags		= ( guiCtrl.GetDiagsMode() == DIAGSMODE::MAX );
-	const int&		W				= guiCtrl.GetGRIDPIXELS();	// Square width in pixels
-	const int		C				= W >> 1;					// Half square width in pixels
-	const int		gapWidth		= ( bGap ) ? guiCtrl.GetGapWidth() : 0;
-	const int		padWidth		= ( guiCtrl.GetHalfPadWidth()   + gapWidth ) << 1;	// Pad width in pixels
-	const int		trackWidth		= ( guiCtrl.GetHalfTrackWidth() + gapWidth ) << 1;	// Track width in pixels
-	const bool&		bCurvedTracks	= guiCtrl.GetCurvedTracks();
-	QPolygonF		polygon;
+	const bool	bMaxDiags		= ( guiCtrl.GetDiagsMode() == DIAGSMODE::MAX );
+	const int&	W				= guiCtrl.GetGRIDPIXELS();	// Square width in pixels
+	const int	C				= W >> 1;					// Half square width in pixels
+	const int	gapWidth		= ( bGap ) ? guiCtrl.GetGapWidth() : 0;
+	const int	padWidth		= ( guiCtrl.GetHalfPadWidth()   + gapWidth ) << 1;	// Pad width in pixels
+	const int	trackWidth		= ( guiCtrl.GetHalfTrackWidth() + gapWidth ) << 1;	// Track width in pixels
+	const bool&	bCurvedTracks	= guiCtrl.GetCurvedTracks();
+	QPolygonF	polygon;
 
 	// Clockwise-ordered array of perimeter points around the square, starting at left...
 	const QPointF p[8] = { pC+QPointF(-C,0), pC+QPointF(-C,-C), pC+QPointF(0,-C), pC+QPointF(C,-C),
@@ -296,14 +296,23 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 	{
 		if ( m_bWriteGerber )
 		{
+			auto& osT = m_gWriter.GetStream(GFILE::GTL);	// Top    copper layer
 			auto& osB = m_gWriter.GetStream(GFILE::GBL);	// Bottom copper layer
 			const GPEN ePen		= bGap ? GPEN::TRACK_GAP : GPEN::TRACK;
 			const GPEN ePenHV	= bGap ? GPEN::PAD_GAP   : GPEN::PAD;
 
 			if ( !bCurvedTracks && padWidth > trackWidth )
+			{
+				if ( m_board.GetLyrs() > 1 )
+					osT.AddVariTrack(ePenHV, ePen, polygon);
 				osB.AddVariTrack(ePenHV, ePen, polygon);
+			}
 			else
+			{
+				if ( m_board.GetLyrs() > 1 )
+					osT.AddTrack(ePen, polygon);
 				osB.AddTrack(ePen, polygon);
+			}
 		}
 		else
 		{
@@ -323,9 +332,15 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 	{
 		if ( m_bWriteGerber )
 		{
+			auto& osT = m_gWriter.GetStream(GFILE::GTL);	// Top    copper layer
 			auto& osB = m_gWriter.GetStream(GFILE::GBL);	// Bottom copper layer
-			osB.AddLoop(bGap ? GPEN::TRACK_GAP : GPEN::TRACK, polygon);		// Closed polygon outline
-			if ( !bGap ) osB.AddRegion(polygon);	// Only non-Gap polygon needs filling
+			if ( m_board.GetLyrs() > 1 )
+			{
+				osT.AddLoop(bGap ? GPEN::TRACK_GAP : GPEN::TRACK, polygon);		// Closed polygon outline
+				if ( !bGap ) osT.AddRegion(polygon);	// Only non-Gap polygon needs filling
+			}
+			osB.AddLoop(bGap ? GPEN::TRACK_GAP : GPEN::TRACK, polygon);			// Closed polygon outline
+			if ( !bGap ) osB.AddRegion(polygon);		// Only non-Gap polygon needs filling
 		}
 		else
 		{
@@ -340,6 +355,7 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 	{
 		if ( m_bWriteGerber )
 		{
+			auto& osT = m_gWriter.GetStream(GFILE::GTL);	// Top    copper layer
 			auto& osB = m_gWriter.GetStream(GFILE::GBL);	// Bottom copper layer
 			const GPEN ePen = bGap ? GPEN::PAD_GAP : GPEN::PAD;
 			for (int iNbr = 0; iNbr < 8; iNbr += 2)	// Loop non-diagonal perimeter points
@@ -353,14 +369,18 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 					{
 						polygon.clear();
 						polygon << p[iNbr] << p[iNbrOpp];
-						osB.AddTrack(ePen, polygon);	// Draw track across
+						if ( m_board.GetLyrs() > 1 )
+							osT.AddTrack(ePen, polygon);	// Draw track across
+						osB.AddTrack(ePen, polygon);		// Draw track across
 					}
 				}
 				else
 				{
 					polygon.clear();
 					polygon << pC << p[iNbr];
-					osB.AddTrack(ePen, polygon);	// Draw track from centre to perimeter point
+					if ( m_board.GetLyrs() > 1 )
+						osT.AddTrack(ePen, polygon);	// Draw track from centre to perimeter point
+					osB.AddTrack(ePen, polygon);		// Draw track from centre to perimeter point
 				}
 			}
 		}
@@ -577,6 +597,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	const bool		 bPixmapCache	= !bVero && !bPCB && !bGroundFill && !m_bWritePDF;
 	const bool		 bDirect		= !bVero && !bPixmapCache && !bGroundFill;
 	const int&		 layer			= board.GetCurrentLayer();
+	const int&		 groundNodeId	= ( layer == 0 ) ? board.GetGroundNodeId0() :  board.GetGroundNodeId1();
+	const bool		 bWiresAsTracks	= m_bWriteGerber && m_bTwoLayers && board.GetLyrs() == 1;	// true ==> Convert wires to tracks on the top layer
 	const int&		 W				= board.GetGRIDPIXELS();		// Square width in pixels
 	const int		 C				= W >> 1;						// Half square width in pixels
 	const int		 D				= board.GetHalfPadWidth();		// Half pad width in pixels
@@ -599,8 +621,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	board.CalculateColors();	// Work out best way to color things
 
 	// Get bounds to minimise looping
-	int minLyr, maxLyr, minRow, minCol, maxRow,  maxCol;
-	board.GetBounds(minLyr, maxLyr, minRow, minCol, maxRow, maxCol);
+	int minRow, minCol, maxRow, maxCol;
+	board.GetBounds(minRow, minCol, maxRow, maxCol);
 
 	GPainter painter;	// Works like QPainter unless you give it a GStream for Gerber
 
@@ -618,9 +640,6 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	{
 		assert( bPCB );
 		if ( board.GetFlipH() || board.GetFlipV() ) return;		// No mirrored Gerber
-
-		const bool bOK = m_gWriter.Open(m_gerberFileName.toStdString().c_str(), m_board, m_bTwoLayers);
-		if ( !bOK ) return;
 
 		auto& os = m_gWriter.GetStream(GFILE::GTO);	// Top silk layer
 		os.SetPolarity(GPOLARITY::DARK);
@@ -756,10 +775,10 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				const int		colorId			= colorMgr.GetColorId(nodeId);
 				const bool		bPin			= pC->GetHasPin();	// true ==> real pin
 				const bool		bWire			= pC->GetHasWire();
-				const bool		bWireAsVia		= bWire && m_bWriteGerber && m_bTwoLayers;	// true ==> draw small via pad
+				const bool		bWireAsVia		= bWire && bWiresAsTracks;	// true ==> draw small via pad
 				const int		iPerimeterCode	= pC->GetPerimeterCode(bDiagsOK, bMinDiags);	// 0 to 255
 				const Element*	pLyr			= pC->GetNbr(NBR_X);	// Point on layer above/below
-				const bool		bTunnel			= !bPin && nodeId != BAD_NODEID && pLyr && pLyr->GetNodeId() == nodeId;	// true ==> a true via between layers
+				const bool		bVia			= !bPin && nodeId != BAD_NODEID && pLyr && pLyr->GetNodeId() == nodeId;
 
 				if ( colorId == BAD_COLORID && !bWire ) continue;	// Usually don't color places with no NodeID assigned unless they are wire ends
 
@@ -841,7 +860,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						painter.drawPixmap(L, T,*(m_ppPixmapBlob[iPerimeterCode]));
 
 						// Draw pad
-						if ( bPin || bTunnel ) painter.drawPixmap(L+C-D, T+C-D,*(m_ppPixmapPad[iEffColorId]));
+						if ( bPin || bVia ) painter.drawPixmap(L+C-D, T+C-D,*(m_ppPixmapPad[iEffColorId]));
 					}
 					else if ( iLoop == 1 )
 					{
@@ -856,9 +875,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				{
 					if ( iLoop == 0 )
 					{
-						if ( nodeId != board.GetGroundNodeId() )	// Only the non-ground tracks have a "white" surround
+						if ( nodeId != groundNodeId )	// Only the non-ground tracks have a "white" surround
 							PaintBlob(board, painter, backgroundColor, pCentre, iPerimeterCode, true);	// Draw fat "white" track blob
-						if ( bWireAsVia || bTunnel )
+						if ( bWireAsVia || bVia )
 							PaintViaPad(board, painter, backgroundColor, pCentre, true);				// Draw fat "white" via-pad
 						else if ( bPin )
 							PaintPad(board, painter, backgroundColor, pCentre, true);					// Draw fat "white" pad
@@ -868,7 +887,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						PaintBlob(board, painter, color, pCentre, iPerimeterCode);	// Draw track blob
 						if ( !bGreyPads )
 						{
-							if ( bWireAsVia || bTunnel )
+							if ( bWireAsVia || bVia )
 								PaintViaPad(board, painter, color, pCentre);		// Draw via-pad same color as track
 							else if ( bPin )
 								PaintPad(board, painter, color, pCentre);			// Draw pad same color as track
@@ -878,7 +897,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					{
 						if ( bPin )
 							PaintPad(board, painter, padGrey, pCentre);		// Draw grey pad
-						else if ( bTunnel )
+						else if ( bVia )
 							PaintViaPad(board, painter, padGrey, pCentre);	// Draw grey via-pad
 					}
 				}
@@ -889,7 +908,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						PaintBlob(board, painter, color, pCentre, iPerimeterCode);				// Draw track blob
 						if ( !bGreyPads )
 						{
-							if ( bWireAsVia || bTunnel )
+							if ( bWireAsVia || bVia )
 								PaintViaPad(board, painter, color, pCentre);	// Draw via-pad same color as track
 							else if ( bPin )
 								PaintPad(board, painter, color, pCentre);		// Draw pad same color as track
@@ -899,12 +918,12 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					{
 						if ( bPin )
 							PaintPad(board, painter, padGrey, pCentre);		// Draw grey pad
-						else if ( bTunnel )
+						else if ( bVia )
 							PaintViaPad(board, painter, padGrey, pCentre);	// Draw grey via-pad
 					}
 				}
 			}
-			if ( m_bWriteGerber && m_bTwoLayers )
+			if ( bWiresAsTracks )
 			{
 				for (const auto& pComp : sortedComps)	// Iterate sorted components
 				{
@@ -1017,7 +1036,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		painter.restore();
 	}
 
-	// Draw via tunnels ==========================================================================
+	// Draw vias =================================================================================
 	if ( !m_bWriteGerber && !bVero && ( bPCB || trackMode != TRACKMODE::OFF ) )	// Force in PCB mode
 	{
 		painter.save();
@@ -1031,8 +1050,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			const int&		nodeId	= pC->GetNodeId();
 			const bool		bPin	= pC->GetHasPin();		// true ==> real pin
 			const Element*	pLyr	= pC->GetNbr(NBR_X);	// Point on layer above/below
-			const bool		bTunnel	= !bPin && nodeId != BAD_NODEID && pLyr && pLyr->GetNodeId() == nodeId;	// true ==> a "true" via
-			if ( bTunnel )
+			const bool		bVia	= !bPin && nodeId != BAD_NODEID && pLyr && pLyr->GetNodeId() == nodeId;
+			if ( bVia )
 			{
 				GetLRTB(board, board.GetVIAHOLE_PERCENT(), j, i, L, R, T, B);						
 				painter.drawEllipse(L, T, R-L, B-T);	// A pin is drawn with a circle
@@ -1053,11 +1072,11 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			const Component& comp			= *pComp;
 			const COMP&		 compType		= comp.GetType();
 			const char&		 compDirection	= comp.GetDirection();
-			const bool		 bVia			= compType == COMP::VIA;
+			const bool		 bMark			= compType == COMP::MARK;
 			const bool		 bWire			= compType == COMP::WIRE;
-			if ( bPCB && bVia )	continue;	// Don't show vias in PCB mode
+			if ( bPCB && bMark )	continue;	// Don't show markers in PCB mode
 			if ( m_bWriteGerber && !comp.GetIsPlaced() ) continue;	// Don't write floating components to Gerber
-			if ( m_bWriteGerber && m_bTwoLayers && bWire && compMgr.GetWireShift(&comp) == 0 ) continue;	//TODO Probably not a good enough check since wires may cross yet have no shift
+			if ( bWiresAsTracks && bWire && compMgr.GetWireShift(&comp) == 0 ) continue;	//TODO Probably not a good enough check since wires may cross yet have no shift
 			const bool		 bPinLabels		= (comp.GetPinFlags() & PIN_LABELS) > 0;
 			const bool		 bRectPins		= (comp.GetPinFlags() & PIN_RECT)   > 0;
 			const bool		 bHighlightComp	= board.GetGroupMgr().GetIsUserComp( comp.GetId() );
@@ -1072,10 +1091,10 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				{
 					if ( bPCB )	// Use floating point pen width to better match Gerber output
 						penPlaced.setWidthF( bHighlightComp ? ( board.GetSilkWidth() * 1.5 )
-															: ( bVia ? ( board.GetSilkWidth() * 0.5 )
-																	 :   board.GetSilkWidth() ) );
+															: ( bMark ? ( board.GetSilkWidth() * 0.5 )
+																	  :   board.GetSilkWidth() ) );
 					else
-						penPlaced.setWidth( bHighlightComp ? 3 : bVia ? 1 : 2 );
+						penPlaced.setWidth( bHighlightComp ? 3 : bMark ? 1 : 2 );
 				}
 				else
 					m_redPen.setWidth(4);	// Make floating components stand out in red
@@ -1211,9 +1230,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					painter.setBrush(Qt::NoBrush);
 				}
 
-				if ( bVia )	// Vias are a special case since they don't actually have a pin !!!
+				if ( bMark )	// Markers are a special case since they don't actually have a pin !!!
 				{
-					if ( bMono )  // Only draw vias as pins in MONO mode
+					if ( bMono )  // Only draw markers as pins in MONO mode
 					{
 						GetLRTB(board, board.GetHOLE_PERCENT(), jComp, iComp, L, R, T, B);
 						painter.drawEllipse(L, T, R-L, B-T);	// A pin is drawn with a circle
@@ -1336,7 +1355,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			const Component& comp			= mapObj.second;
 			const COMP&		 compType		= comp.GetType();
 			const char&		 compDirection	= comp.GetDirection();
-			if ( compType == COMP::VIA || compType == COMP::WIRE ) continue;
+			if ( compType == COMP::MARK || compType == COMP::WIRE ) continue;
 
 			GetXY(board, comp, X, Y);	// Get footprint centre
 
@@ -1418,8 +1437,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			painter.setPen(m_varPen);
 			painter.setBrush(Qt::NoBrush);
 			painter.save();
-			painter.translate(bMono ? R : L, T);							// Mirror all text boxes in Mono mode
-			painter.scale(bMono ? -dTextScale : dTextScale, dTextScale);	// Mirror all text boxes in Mono mode
+			painter.translate((bMono && layer == 0) ? R : L, T);							// Mirror all text boxes in Mono mode for bottom layer
+			painter.scale((bMono && layer == 0) ? -dTextScale : dTextScale, dTextScale);	// Mirror all text boxes in Mono mode for bottom layer
 			painter.drawText(0,0,(R-L)/dTextScale,(B-T)/dTextScale, Qt::TextWordWrap | rect.GetFlags(), QString::fromStdString(rect.GetStr()));
 			painter.restore();
 
@@ -1433,10 +1452,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	}
 
 	if ( m_bWriteGerber )
-	{
 		m_gWriter.GetStream(GFILE::GTO).DrawBuffers();	// Top silk layer
-		m_gWriter.Close();
-	}
 
 	painter.end();
 

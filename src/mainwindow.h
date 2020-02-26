@@ -145,7 +145,6 @@ public slots:
 	void ToggleDiagsMax();
 	void ToggleFill();
 	void ToggleSelectArea();
-	void ToggleLayer();
 	// Edit menu items
 	void Undo();
 	void Redo();
@@ -156,7 +155,7 @@ public slots:
 	void SelectAllInRects();
 	void Delete();
 	// Add menu items
-	void AddVia()				{ AddPart(COMP::VIA); }
+	void AddMarker()			{ AddPart(COMP::MARK); }
 	void AddPad()				{ AddPart(COMP::PAD); }
 	void AddWire()				{ AddPart(COMP::WIRE); }
 	void AddResistor()			{ AddPart(COMP::RESISTOR); }
@@ -218,6 +217,10 @@ public slots:
 	void ShowPinDialog();
 	void ShowAbout();
 	void ShowSupport();
+	// Layers menu items
+	void AddLayer();
+	void RemoveLayer();
+	void SwitchLayer();
 	// Help menu items
 	void LoadFirstTutorial();
 	void LoadPrevTutorial();
@@ -451,6 +454,8 @@ private:
 	MyScrollArea*			m_scrollArea;	// The mainwindow contains a scrollable area ...
 	QLabel*					m_label;		// ... for a QLabel widget that ...
 	QPixmap					m_mainPixmap;	// ... contains an image of the whole board
+
+	QLabel*					m_labelStatus;	// For permanent status bar text
 
 	ControlDialog*			m_controlDlg;
 	RenderingDialog*		m_renderingDlg;

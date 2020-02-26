@@ -32,7 +32,7 @@ GStream::~GStream()
 }
 void GStream::Close()
 {
-	ClearBuffers();
+	ClearBuffers(false);	// false ==> skip GetOK() checks
 	if ( !is_open() ) return;
 	switch( m_eType )
 	{
@@ -48,11 +48,11 @@ void GStream::Initialise(const GFILE& eType, const Board& board, const QString& 
 	m_pBoard = &board;
 	m_iLastX = INT_MAX;
 	m_iLastY = INT_MAX;
-	ClearBuffers();
+	ClearBuffers(false);	// false ==> skip GetOK() checks
 	WriteHeader(UTC);
 	MakeApertures();
 	LinearInterpolation();
-	SetPolarity(GPOLARITY::DARK);
+	SetPolarity(GPOLARITY::DARK, false);	// false ==> skip GetOK() checks
 }
 void GStream::WriteHeader(const QString& UTC)	// Write header for current stream
 {
@@ -154,30 +154,49 @@ void GStream::MakeApertures()	// Make "pens" for current stream
 			break;
 	}
 }
-void GStream::SetPen(const GPEN& ePen)
+void GStream::LinearInterpolation()
 {
-	if ( !is_open() || m_ePen == ePen ) return;
-	m_ePen = ePen;
-	switch( m_ePen )
+	if ( !is_open() || m_eType == GFILE::DRL ) return;
+	(*this) << "G01";
+	EndLine();
+}
+void GStream::Comment(const char* sz)
+{
+	if ( !is_open() ) return;
+	if ( m_eType == GFILE::DRL )
+		(*this) << ";" << sz;
+	else
+		(*this) << "G04 " << sz << " ";
+	EndLine();
+}
+void GStream::EndLine()
+{
+	if ( !is_open() ) return;
+	if ( m_eType == GFILE::DRL )
+		(*this) << std::endl;
+	else
+		(*this) << "*" << std::endl;
+}
+bool GStream::GetOK() const
+{
+	if ( m_pBoard == nullptr ) return false;
+	switch( m_eType )
 	{
-		case GPEN::UNKNOWN:		return;
-		case GPEN::MIL10:		(*this) << "D10"; EndLine(); return;
-		case GPEN::PAD:			(*this) << "D11"; EndLine(); return;
-		case GPEN::VIA:			(*this) << "D12"; EndLine(); return;
-		case GPEN::TRACK:		(*this) << "D13"; EndLine(); return;
-		case GPEN::PAD_GAP:		(*this) << "D14"; EndLine(); return;
-		case GPEN::VIA_GAP:		(*this) << "D15"; EndLine(); return;
-		case GPEN::TRACK_GAP:	(*this) << "D16"; EndLine(); return;
-		case GPEN::PAD_MASK:	(*this) << "D17"; EndLine(); return;
-		case GPEN::VIA_MASK:	(*this) << "D18"; EndLine(); return;
-		case GPEN::SILK:		(*this) << "D19"; EndLine(); return;
-		case GPEN::PAD_HOLE:	(*this) << "T01"; EndLine(); return;
-		case GPEN::VIA_HOLE:	(*this) << "T02"; EndLine(); return;
+		case GFILE::GKO: return m_pBoard->GetCurrentLayer() == 0;
+		case GFILE::GBL: return m_pBoard->GetCurrentLayer() == 0 ||  m_pBoard->GetLyrs() == 1;
+		case GFILE::GBS: return m_pBoard->GetCurrentLayer() == 0 ||  m_pBoard->GetLyrs() == 1;
+		case GFILE::GBO: return m_pBoard->GetCurrentLayer() == 0 ||  m_pBoard->GetLyrs() == 1;
+		case GFILE::GTL: return m_pBoard->GetCurrentLayer() == 1 ||  m_pBoard->GetLyrs() == 1;
+		case GFILE::GTS: return m_pBoard->GetCurrentLayer() == 1 ||  m_pBoard->GetLyrs() == 1;
+		case GFILE::GTO: return m_pBoard->GetCurrentLayer() == 1 ||  m_pBoard->GetLyrs() == 1;
+		case GFILE::DRL: return m_pBoard->GetCurrentLayer() == 0;
+		default:		 return false;
 	}
 }
-void GStream::SetPolarity(const GPOLARITY& ePolarity)
+void GStream::SetPolarity(const GPOLARITY& ePolarity, bool bCheckOK)
 {
 	if ( !is_open() || m_ePolarity == ePolarity || m_eType == GFILE::DRL ) return;
+	if ( bCheckOK && !GetOK() ) return;
 	m_ePolarity = ePolarity;
 	switch( m_ePolarity )
 	{
@@ -188,44 +207,35 @@ void GStream::SetPolarity(const GPOLARITY& ePolarity)
 }
 void GStream::Drill(const QPoint& p)
 {
-	if ( !is_open() || m_eType != GFILE::DRL ) return;
+	if ( !GetOK() || !is_open() || m_eType != GFILE::DRL ) return;
 	(*this) << "X";  WriteDrillValue( p.x() );
 	(*this) << "Y";  WriteDrillValue( p.y() );
 	(*this) << std::endl;
 }
-void GStream::WriteDrillValue(const int& iMil)
-{
-	if ( !is_open() || m_eType != GFILE::DRL ) return;
-	const int	iAbs	= abs(iMil);
-	assert(iMil > 0);	// All veroRoute grid points are >= 0
-	(*this) << ( iMil >= 0 ? "+" : "-" );
-	if ( iAbs < 100000 ) (*this) << "0";
-	if ( iAbs <  10000 ) (*this) << "0";
-	if ( iAbs <   1000 ) (*this) << "0";
-	if ( iAbs <    100 ) (*this) << "0";
-	if ( iAbs <     10 ) (*this) << "0";
-	(*this) << iAbs;
-}
 void GStream::AddPad(const GPEN& ePen, const QPointF& pF)		// Add to m_pads buffer for later writing to file
 {
+	if ( !GetOK() ) return;
 	QPoint p;
 	GetQPoint(pF, p);
 	m_pads.push_back( new Curve(ePen, p) );
 }
 void GStream::AddViaPad(const GPEN& ePen, const QPointF& pF)	// Add to m_viapads buffer for later writing to file
 {
+	if ( !GetOK() ) return;
 	QPoint p;
 	GetQPoint(pF, p);
 	m_viapads.push_back( new Curve(ePen, p) );
 }
 void GStream::AddTrack(const GPEN& ePen, const QPolygonF& pF)	// Add to m_tracks buffer for later writing to file
 {
+	if ( !GetOK() ) return;
 	QPolygon p;
 	GetQPolygon(pF, p);
 	m_tracks.push_back( new Curve(ePen, p) );
 }
 void GStream::AddVariTrack(const GPEN& ePenHV, const GPEN& ePen, const QPolygonF& pF)	// Add to m_tracks buffer for later writing to file
 {
+	if ( !GetOK() ) return;
 	QPolygon p;
 	GetQPolygon(pF, p);
 
@@ -242,6 +252,7 @@ void GStream::AddVariTrack(const GPEN& ePenHV, const GPEN& ePen, const QPolygonF
 }
 void GStream::AddLoop(const GPEN& ePen, const QPolygonF& pF)	// Add to m_loops buffer for later writing to file
 {
+	if ( !GetOK() ) return;
 	assert(pF.size() >= 3);
 	if ( pF.size() < 3 ) return;	// Loop must have at least 3 points
 	QPolygon p;
@@ -250,6 +261,7 @@ void GStream::AddLoop(const GPEN& ePen, const QPolygonF& pF)	// Add to m_loops b
 }
 void GStream::AddRegion(const QPolygonF& pF)	// Add to m_regions buffer for later writing to file
 {
+	if ( !GetOK() ) return;
 	assert(pF.size() >= 3);
 	if ( pF.size() < 3 ) return;	// Region must have at least 3 points
 	QPolygon p;
@@ -258,18 +270,21 @@ void GStream::AddRegion(const QPolygonF& pF)	// Add to m_regions buffer for late
 }
 void GStream::AddPadHole(const GPEN& ePen, const QPointF& pF)	// Add to m_padholes buffer for later writing to file
 {
+	if ( !GetOK() ) return;
 	QPoint p;
 	GetQPoint(pF, p);
 	m_padholes.push_back( new Curve(ePen, p) );
 }
 void GStream::AddViaHole(const GPEN& ePen, const QPointF& pF)	// Add to m_viaholes buffer for later writing to file
 {
+	if ( !GetOK() ) return;
 	QPoint p;
 	GetQPoint(pF, p);
 	m_viaholes.push_back( new Curve(ePen, p) );
 }
-void GStream::ClearBuffers()
+void GStream::ClearBuffers(bool bCheckOK)
 {
+	if ( bCheckOK && !GetOK() ) return;
 	m_pads.clear();
 	m_viapads.clear();
 	m_tracks.clear();
@@ -280,6 +295,7 @@ void GStream::ClearBuffers()
 }
 void GStream::DrawBuffers()
 {
+	if ( !GetOK() ) return;
 	m_tracks.SpliceAll();	// Only tracks (not loops) are spliced
 	for (auto& o : m_regions)	Region(*o);
 	for (auto& o : m_loops)		OutLine(*o, true);	// true  ==> closed
@@ -311,6 +327,27 @@ void GStream::OutLine(const Curve& curve, bool bForceClose)	// Outline of a curv
 	for (auto iterEnd = curve.end(); iter != iterEnd; ++iter)
 		Draw(*iter);	// Draw line to next point in curve
 	if ( bForceClose && front != curve.back() ) Draw( front );
+}
+void GStream::SetPen(const GPEN& ePen)
+{
+	if ( !is_open() || m_ePen == ePen ) return;
+	m_ePen = ePen;
+	switch( m_ePen )
+	{
+		case GPEN::UNKNOWN:		return;
+		case GPEN::MIL10:		(*this) << "D10"; EndLine(); return;
+		case GPEN::PAD:			(*this) << "D11"; EndLine(); return;
+		case GPEN::VIA:			(*this) << "D12"; EndLine(); return;
+		case GPEN::TRACK:		(*this) << "D13"; EndLine(); return;
+		case GPEN::PAD_GAP:		(*this) << "D14"; EndLine(); return;
+		case GPEN::VIA_GAP:		(*this) << "D15"; EndLine(); return;
+		case GPEN::TRACK_GAP:	(*this) << "D16"; EndLine(); return;
+		case GPEN::PAD_MASK:	(*this) << "D17"; EndLine(); return;
+		case GPEN::VIA_MASK:	(*this) << "D18"; EndLine(); return;
+		case GPEN::SILK:		(*this) << "D19"; EndLine(); return;
+		case GPEN::PAD_HOLE:	(*this) << "T01"; EndLine(); return;
+		case GPEN::VIA_HOLE:	(*this) << "T02"; EndLine(); return;
+	}
 }
 void GStream::Flash(const QPoint& p)
 {
@@ -352,6 +389,19 @@ void GStream::WriteXY(const QPoint& p,  const bool& bFullLine)
 	if ( bFullLine || m_iLastY != iy ) (*this) << "Y" << iy;
 	m_iLastY = iy;
 }
+void GStream::WriteDrillValue(const int& iMil)
+{
+	if ( !is_open() || m_eType != GFILE::DRL ) return;
+	const int	iAbs	= abs(iMil);
+	assert(iMil > 0);	// All veroRoute grid points are >= 0
+	(*this) << ( iMil >= 0 ? "+" : "-" );
+	if ( iAbs < 100000 ) (*this) << "0";
+	if ( iAbs <  10000 ) (*this) << "0";
+	if ( iAbs <   1000 ) (*this) << "0";
+	if ( iAbs <    100 ) (*this) << "0";
+	if ( iAbs <     10 ) (*this) << "0";
+	(*this) << iAbs;
+}
 void GStream::GetQPoint(const QPointF& in, QPoint& out) const
 {
 	if ( m_pBoard == nullptr ) { out = QPoint(0,0); return; }
@@ -363,29 +413,6 @@ void GStream::GetQPolygon(const QPolygonF& in, QPolygon& out) const
 	out.clear();
 	out.resize( in.size() );
 	for (auto i = 0; i < in.size(); i++) GetQPoint(in[i], out[i]);
-}
-void GStream::LinearInterpolation()
-{
-	if ( !is_open() || m_eType == GFILE::DRL ) return;
-	(*this) << "G01";
-	EndLine();
-}
-void GStream::Comment(const char* sz)
-{
-	if ( !is_open() ) return;
-	if ( m_eType == GFILE::DRL )
-		(*this) << ";" << sz;
-	else
-		(*this) << "G04 " << sz << " ";
-	EndLine();
-}
-void GStream::EndLine()
-{
-	if ( !is_open() ) return;
-	if ( m_eType == GFILE::DRL )
-		(*this) << std::endl;
-	else
-		(*this) << "*" << std::endl;
 }
 std::string GStream::MilToInch(const int& iMil) const	// Just for pen sizes
 {

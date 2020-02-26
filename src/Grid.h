@@ -111,9 +111,9 @@ public:
 	// Merge interface functions
 	virtual void UpdateMergeOffsets(MergeOffsets& o) override
 	{
-//		o.deltaLyr	= std::max(o.deltaLyr,	GetLyrs() + 1);
-		o.deltaRow	= std::max(o.deltaRow, 	GetRows() + 1);
-//		o.deltaCol	= std::max(o.deltaCol, 	GetCols() + 1);
+//		o.deltaLyr	= std::max(o.deltaLyr, GetLyrs() + 1);
+		o.deltaRow	= std::max(o.deltaRow, GetRows() + 1);
+//		o.deltaCol	= std::max(o.deltaCol, GetCols() + 1);
 		for (int i = 0, iSize = GetSize(); i < iSize; i++) m_pData[i].UpdateMergeOffsets(o);
 	}
 	virtual void ApplyMergeOffsets(const MergeOffsets& o) override

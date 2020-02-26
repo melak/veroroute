@@ -128,5 +128,5 @@ private:
 	int					m_minCol;		// For the bounding rectangle based on comp pins
 	int					m_maxRow;		// For the bounding rectangle based on comp pins
 	int					m_maxCol;		// For the bounding rectangle based on comp pins
-	std::vector<int>	m_compIds;		// ComponentIDs of components (not vias/wires) that use the nodeId
+	std::vector<int>	m_compIds;		// ComponentIDs of components (not markers/wires) that use the nodeId
 };

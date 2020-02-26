@@ -548,15 +548,6 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
 		}
 	}
 
-	// Toggle layers
-	if ( !bIsAutoRepeat )
-	{
-		switch( event->key() )
-		{
-			case Qt::Key_L:		ToggleLayer();	break;
-		}
-	}
-
 	// Component manipulation
 	switch( event->key() )
 	{

@@ -89,6 +89,11 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	m_scrollArea->setWidget(m_label);
 	setCentralWidget(m_scrollArea);
 
+	// Do multipart status bar
+	m_labelStatus		= new QLabel("Left", this);
+	m_labelStatus->setFrameStyle(QFrame::NoFrame);
+	ui->statusBar->addPermanentWidget(m_labelStatus, 0);
+
 	m_yellowPen			= QPen(Qt::yellow, 0,					Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 	m_backgroundPen		= QPen(Qt::white, 0,					Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 	m_darkGreyPen		= QPen(QColor(96,96,96,255), 0,			Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
@@ -139,7 +144,7 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	QObject::connect(ui->actionUngroup,					SIGNAL(triggered()), this, SLOT(Ungroup()));
 	QObject::connect(ui->actionSelectAll,				SIGNAL(triggered()), this, SLOT(SelectAll()));
 	QObject::connect(ui->actionDelete,					SIGNAL(triggered()), this, SLOT(Delete()));
-	QObject::connect(ui->actionVia,						SIGNAL(triggered()), this, SLOT(AddVia()));
+	QObject::connect(ui->actionMarker,					SIGNAL(triggered()), this, SLOT(AddMarker()));
 	QObject::connect(ui->actionPad,						SIGNAL(triggered()), this, SLOT(AddPad()));
 	QObject::connect(ui->actionStrip100,				SIGNAL(triggered()), this, SLOT(AddStrip100()));
 	QObject::connect(ui->actionBlock100,				SIGNAL(triggered()), this, SLOT(AddBlock100()));
@@ -190,6 +195,9 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	QObject::connect(ui->actionTemplatesDlg,			SIGNAL(triggered()), this, SLOT(ShowTemplatesDialog()));
 	QObject::connect(ui->actionPinDlg,					SIGNAL(triggered()), this, SLOT(ShowPinDialog()));
 	QObject::connect(ui->actionCompDlg,					SIGNAL(triggered()), this, SLOT(ShowCompDialog()));
+	QObject::connect(ui->actionAddLayer,				SIGNAL(triggered()), this, SLOT(AddLayer()));
+	QObject::connect(ui->actionRemoveLayer,				SIGNAL(triggered()), this, SLOT(RemoveLayer()));
+	QObject::connect(ui->actionSwitchLayer,				SIGNAL(triggered()), this, SLOT(SwitchLayer()));
 	QObject::connect(ui->actionAbout,					SIGNAL(triggered()), this, SLOT(ShowAbout()));
 	QObject::connect(ui->actionTutorial,				SIGNAL(triggered()), this, SLOT(LoadFirstTutorial()));
 	QObject::connect(ui->actionSupport,					SIGNAL(triggered()), this, SLOT(ShowSupport()));
@@ -221,6 +229,7 @@ MainWindow::~MainWindow()
 	delete m_infoDlg;
 	delete m_bomDlg;
 	delete m_pinDlg;
+	delete m_labelStatus;
 	delete m_label;
 	delete m_scrollArea;
 	delete ui;
@@ -646,7 +655,18 @@ void MainWindow::WriteGerber(const bool& bTwoLayers)
 		m_board.SetGRIDPIXELS(gerberGridPixels);
 
 		m_bWriteGerber = true;		// Makes paintEvent() write to Gerber file instead of pixmap
-		RepaintSkipRouting(true);	// true  ==> force use of repaint() rather than update()
+
+		if ( m_gWriter.Open(m_gerberFileName.toStdString().c_str(), m_board, m_bTwoLayers) )
+		{
+			const int origlayer = m_board.GetCurrentLayer();
+			for (int lyr = 0, lyrs = m_board.GetLyrs(); lyr < lyrs; lyr++)
+			{
+				m_board.SetCurrentLayer(lyr);
+				RepaintSkipRouting(true);	// true  ==> force use of repaint() rather than update()
+			}
+			m_board.SetCurrentLayer(origlayer);
+			m_gWriter.Close();
+		}
 		m_bWriteGerber = false;		// Makes paintEvent() go back to writing to pixmap
 
 		m_board.SetGRIDPIXELS(oldGridPixels);	// Restore number of pixels per grid square
@@ -862,7 +882,7 @@ void MainWindow::Delete()
 	}
 	else
 	{
-		// Ask for confirmation unless deleting only wires and vias
+		// Ask for confirmation unless deleting only wires and markers
 		if ( m_board.ConfirmDestroyUserComps() &&
 			 QMessageBox::question(this, tr("Confirm Delete"),
 										 tr("Are you sure you want to delete the selected part(s)?"),
@@ -889,6 +909,33 @@ void MainWindow::ShowBomDialog()		{ UpdateBOM();					m_bomDlg->showNormal();		m_
 void MainWindow::ShowTemplatesDialog()	{ UpdateTemplatesDialog();		m_templatesDlg->showNormal();	m_templatesDlg->raise(); m_templatesDlg->activateWindow(); }
 void MainWindow::ShowPinDialog()		{ m_pinDlg->Update();			m_pinDlg->showNormal();		m_pinDlg->raise(); m_pinDlg->activateWindow(); }
 
+// Layers menu items
+void MainWindow::AddLayer()
+{
+	assert( m_board.GetLyrs() == 1 );
+	m_board.GrowThenPan(1, 0, 0, 0, 0);
+	m_board.SetCurrentLayer(1);
+	UpdateHistory("Add top layer");
+	UpdateControls();
+	RepaintWithRouting();
+}
+void MainWindow::RemoveLayer()
+{
+	assert( m_board.GetLyrs() == 2 );
+	m_board.GrowThenPan(-1, 0, 0, 0, 0);
+	m_board.SetCurrentLayer(0);
+	UpdateHistory("Remove top layer");
+	UpdateControls();
+	RepaintWithRouting();
+}
+void MainWindow::SwitchLayer()
+{
+	assert( m_board.GetLyrs() == 2 );
+	m_board.SetCurrentLayer( ( m_board.GetCurrentLayer() + 1 ) % 2 );
+	UpdateHistory("Toggle layer");
+	UpdateControls();
+	RepaintWithRouting();
+}
 // Help menu items
 void MainWindow::ShowAbout()
 {
@@ -1011,7 +1058,8 @@ void MainWindow::SetFill(bool b)
 {
 	if ( m_board.SetGroundFill(b) )
 	{
-		if ( b ) m_board.SetGroundNodeId( m_board.GetCurrentNodeId() );
+		if ( b && m_board.GetCurrentLayer() == 0 ) m_board.SetGroundNodeId0( m_board.GetCurrentNodeId() );
+		if ( b && m_board.GetCurrentLayer() == 1 ) m_board.SetGroundNodeId1( m_board.GetCurrentNodeId() );
 		UpdateHistory("Toggle ground-fill");
 		UpdateControls();
 		RepaintSkipRouting();
@@ -1040,15 +1088,6 @@ void MainWindow::ToggleSelectArea()
 		centralWidget()->setCursor(Qt::SizeFDiagCursor);
 	else
 		centralWidget()->setCursor(Qt::OpenHandCursor);
-}
-void MainWindow::ToggleLayer()
-{
-	const int newLyr	= ( m_board.GetCurrentLayer() + 1 ) % 2;
-	const int incLyrs	= 1 + newLyr - m_board.GetLyrs();
-	if ( incLyrs > 0 ) m_board.GrowThenPan(incLyrs, 0, 0, 0, 0);
-	m_board.SetCurrentLayer(newLyr);
-	UpdateHistory("Toggle layer");
-	RepaintWithRouting();
 }
 
 // Part controls
@@ -1549,11 +1588,17 @@ void MainWindow::UpdateControls()
 	const bool		bStraight		= !m_board.GetVeroTracks() && !m_board.GetCurvedTracks();
 	const bool		bCurved			= !m_board.GetVeroTracks() &&  m_board.GetCurvedTracks();
 
-	ui->actionWrite_Gerber->setEnabled(bPCB && !m_board.GetMirrored() && !m_board.GetVeroTracks());
-	ui->actionWrite_Gerber2->setEnabled(bPCB && !m_board.GetMirrored() && !m_board.GetVeroTracks());
-	ui->actionMerge->setEnabled(!bPCB && !bCompEdit);
+	ui->actionWrite_Gerber->setEnabled( bPCB && !bCompEdit && !m_board.GetMirrored() && !m_board.GetVeroTracks() && m_board.GetLyrs() == 1);
+	ui->actionWrite_Gerber2->setEnabled(bPCB && !bCompEdit && !m_board.GetMirrored() && !m_board.GetVeroTracks());
+	ui->actionMerge->setEnabled(    !bPCB && !bCompEdit);
 	ui->actionWrite_PDF->setEnabled(!bPCB && !bCompEdit);
 	ui->menuAdd->setEnabled( !bCompEdit && m_board.GetCompMode() != COMPSMODE::OFF && !m_board.GetMirrored() );
+	ui->menuLayers->setEnabled( !bCompEdit );
+	ui->actionAddLayer->setEnabled(		m_board.GetLyrs() == 1 );
+	ui->actionRemoveLayer->setEnabled(	m_board.GetLyrs() != 1 );
+	ui->actionSwitchLayer->setEnabled(	m_board.GetLyrs() != 1 );
+	ui->actionSwitchLayer->setText(		m_board.GetCurrentLayer() == 0 ? QString("Switch to Top Layer") : QString("Switch to Bottom Layer") );
+	m_labelStatus->setText(m_board.GetCurrentLayer() == 0 ? QString("   Layer = Bottom   ") : QString("   Layer = Top   "));
 
 	ui->actionCopy->setEnabled( bTextOK || bCompOK );
 	if ( bTextOK )	// Text Box takes precedence over comps

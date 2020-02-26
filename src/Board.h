@@ -208,8 +208,8 @@ public:
 
 		int incRows(0), incCols(0);	// What we need to grow the grid by if we move too far
 
-		int minLyr, maxLyr, minRow, minCol, maxRow, maxCol;
-		const bool bOK = GetBounds(minLyr, maxLyr, minRow, minCol, maxRow, maxCol);	// Get the circuit bounds
+		int minRow, minCol, maxRow, maxCol;
+		const bool bOK = GetBounds(minRow, minCol, maxRow, maxCol);	// Get the circuit bounds
 		if ( !bOK )	return false;	// Can't move an empty circuit
 
 		if ( minRow + iDown  < 0 )						// Too far up ...
@@ -238,8 +238,8 @@ public:
 
 		int incRows(0), incCols(0);	// What we need to grow the grid by if we pan too far
 
-		int minLyr, maxLyr, minRow, minCol, maxRow, maxCol;
-		const bool bOK = GetBounds(minLyr, maxLyr, minRow, minCol, maxRow, maxCol);	// Get the circuit bounds
+		int minRow, minCol, maxRow, maxCol;
+		const bool bOK = GetBounds(minRow, minCol, maxRow, maxCol);	// Get the circuit bounds
 
 		if ( !bOK )	// Have empty board, so there is nothing to pan. Just grow or shrink instead.
 		{
@@ -272,13 +272,13 @@ public:
 
 	bool Crop(int iRowMargin = -1, int iColMargin = -1)	// Moves whole circuit to the top-left, then crops the grid from the bottom-right, then adds margin
 	{
-		int minLyr, maxLyr, minRow, minCol, maxRow, maxCol;
-		const bool bOK = GetBounds(minLyr, maxLyr, minRow, minCol, maxRow, maxCol);	// Get the circuit bounds
+		int minRow, minCol, maxRow, maxCol;
+		const bool bOK = GetBounds(minRow, minCol, maxRow, maxCol);	// Get the circuit bounds
 		if ( !bOK ) return false;
-		Pan(-minRow, -minCol);	// First pan to top-left corner of grid
-		GrowThenPan(maxLyr - minLyr + 1 - GetLyrs(), maxRow - minRow + 1 - GetRows(), maxCol - minCol + 1 - GetCols(), 0, 0); // Then shrink grid from bottom-right
 
-		if ( GetLyrs() == 1 ) SetCurrentLayer(0);
+		Pan(-minRow, -minCol);	// First pan to top-left corner of grid
+		GrowThenPan(0, maxRow - minRow + 1 - GetRows(), maxCol - minCol + 1 - GetCols(), 0, 0); // Then shrink grid from bottom-right
+
 		if ( iRowMargin == -1 ) iRowMargin = GetCropMargin();	// -1 ==> use default
 		if ( iColMargin == -1 ) iColMargin = GetCropMargin();	// -1 ==> use defaul
 		if ( iRowMargin > 0 || iColMargin > 0 )
@@ -343,21 +343,18 @@ public:
 		}
 	}
 
-	bool GetBounds(int& minLyr, int& maxLyr, int& minRow, int& minCol, int& maxRow, int& maxCol) const
+	bool GetBounds(int& minRow, int& minCol, int& maxRow, int& maxCol) const
 	{
 		bool bOK(false);
 		// First consider all painted nodeIds on the board
 		const int numLyrs( GetLyrs() ), numRows( GetRows() ), numCols( GetCols() );
-		minLyr = numLyrs - 1;	maxLyr = 0;	// Start with min and max at the wrong ends
 		minRow = numRows - 1;	maxRow = 0;	// Start with min and max at the wrong ends
 		minCol = numCols - 1;	maxCol = 0;	// Start with min and max at the wrong ends
 		for (int k = 0; k < numLyrs; k++)
 		for (int j = 0; j < numRows; j++)
 		for (int i = 0; i < numCols; i++)
 		{
-			if ( Get(k,j,i)->GetHasPin() && k > 0 ) continue;	// Only consider pins in layer 0
 			if ( Get(k,j,i)->GetNodeId() == BAD_NODEID ) continue;
-			minLyr = std::min(minLyr, k);	maxLyr = std::max(maxLyr, k);
 			minRow = std::min(minRow, j);	maxRow = std::max(maxRow, j);
 			minCol = std::min(minCol, i);	maxCol = std::max(maxCol, i);
 			bOK = true;
@@ -437,7 +434,7 @@ public:
 
 	// GUI helpers for manipulating user-selected components
 	void SelectAllComps(bool bRestrictToRects);
-	bool ConfirmDestroyUserComps();	// returns false if user-group is empty or has only wires & vias
+	bool ConfirmDestroyUserComps();	// returns false if user-group is empty or has only wires and markers
 	void DestroyUserComps();		// Destroy components in the user-group
 	void MoveUserCompText(const int& deltaRow, const int& deltaCol);	// Move text label
 	void StretchUserComp(const bool& bGrow);		// Stretch the selected component length

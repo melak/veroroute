@@ -38,11 +38,8 @@ public:
 	~GStream();
 	void Close();
 	void Initialise(const GFILE& eType, const Board& board, const QString& UTC);
-	void WriteHeader(const QString& UTC);
-	void MakeApertures();
 	void Drill(const QPoint& pF);
-	void WriteDrillValue(const int& iMil);
-	void SetPolarity(const GPOLARITY& ePolarity);
+	void SetPolarity(const GPOLARITY& ePolarity, bool bCheckOK = true);
 	void AddPad(const GPEN& ePen, const QPointF& pF);		// Add to m_pads buffer
 	void AddViaPad(const GPEN& ePen, const QPointF& pF);	// Add to m_viapads buffer
 	void AddTrack(const GPEN& ePen, const QPolygonF& pF);	// Add to m_tracks buffer
@@ -51,7 +48,7 @@ public:
 	void AddRegion(const QPolygonF& pF);					// Add to m_regions buffer
 	void AddPadHole(const GPEN& ePen, const QPointF& pF);	// Add to m_padholes buffer
 	void AddViaHole(const GPEN& ePen, const QPointF& pF);	// Add to m_viaholes buffer
-	void ClearBuffers();
+	void ClearBuffers(bool bCheckOK = true);
 	void DrawBuffers();
 	// Methods to draw things immediately
 	void DrawPad(const GPEN& ePen, const QPointF& pF)		{ ClearBuffers(); AddPad(ePen, pF);		DrawBuffers(); }
@@ -59,6 +56,12 @@ public:
 	void DrawLoop(const GPEN& ePen, const QPolygonF& pF)	{ ClearBuffers(); AddLoop(ePen, pF);	DrawBuffers(); }
 	void DrawRegion(const QPolygonF& pF)					{ ClearBuffers(); AddRegion(pF);		DrawBuffers(); };
 private:
+	void WriteHeader(const QString& UTC);
+	void MakeApertures();
+	void LinearInterpolation();
+	void Comment(const char* sz);
+	void EndLine();
+	bool GetOK() const;
 	void SetPen(const GPEN& ePen);
 	void Flash(const QPoint& p);
 	void Move(const QPoint& p);
@@ -68,11 +71,9 @@ private:
 	void Polygon(const Curve& curve);				// Filled polygon (with non-zero width pen)
 	void OutLine(const Curve& curve, bool bClose);	// Outline of a curve (can be closed)
 	void WriteXY(const QPoint& p,   const bool& bFullLine);
+	void WriteDrillValue(const int& iMil);
 	void GetQPoint(const QPointF& in, QPoint& out) const;		// Convert float to integer
 	void GetQPolygon(const QPolygonF& in, QPolygon& out) const;	// Convert float to integer
-	void LinearInterpolation();
-	void Comment(const char* sz);
-	void EndLine();
 	std::string MilToInch(const int& iMil) const;
 	// Data
 	GFILE			m_eType		= GFILE::GBL;	// GKO, GBL, GBS, GTL, GTS, GTO

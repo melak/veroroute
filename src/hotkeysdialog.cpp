@@ -50,6 +50,7 @@ void HotkeysDialog::Setup()
 	list.push_back( KEY_ACTION("G",								"Group selected parts") );
 	list.push_back( KEY_ACTION("U",								"Un-group selected parts") );
 	list.push_back( KEY_ACTION("W",								"Wipe all tracks") );
+	list.push_back( KEY_ACTION("L",								"Switch layer (Top/Bottom)") );
 	list.push_back( KEY_ACTION("P + left mouse button",			"Paint pin") );
 	list.push_back( KEY_ACTION("P + right mouse button",		"Un-paint pin") );
 	list.push_back( KEY_ACTION("SPACE + left mouse button",		"Paint track (excluding pins)") );

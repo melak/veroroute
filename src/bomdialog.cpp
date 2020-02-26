@@ -60,7 +60,7 @@ void BomDialog::Update()
 		const Component& comp = mapObj.second;
 		switch( comp.GetType() )
 		{
-			case COMP::VIA:
+			case COMP::MARK:
 			case COMP::PAD:
 			case COMP::WIRE:	break;	// Not true components
 			default:			pComps.push_back(&comp);

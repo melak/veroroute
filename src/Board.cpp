@@ -262,8 +262,8 @@ void Board::FloodNodeId(const int& nodeId)
 
 void Board::AutoFillVero()
 {
-	int minLyr, maxLyr, minRow, minCol, maxRow, maxCol;
-	GetBounds(minLyr, maxLyr, minRow, minCol, maxRow, maxCol);
+	int minRow, minCol, maxRow, maxCol;
+	GetBounds(minRow, minCol, maxRow, maxCol);
 
 	const bool& bVertical = GetVerticalStrips();
 
@@ -423,7 +423,7 @@ bool Board::GetDisableCompText()
 	if ( ( GetGroupMgr().GetNumUserComps() != 1 ) || ( GetCompMode() == COMPSMODE::OFF || GetCompMode() == COMPSMODE::OUTLINE ) ) return true;
 	const Component& comp	= GetUserComponent();
 	const COMP&		 eType	= comp.GetType();
-	return ( eType == COMP::WIRE || eType == COMP::VIA );	// No labels for wires and vias
+	return ( eType == COMP::WIRE || eType == COMP::MARK );	// No labels for wires and markers
 }
 
 bool Board::GetDisableMove()
@@ -446,9 +446,9 @@ bool Board::GetDisableRotate()
 	const bool bHidingTrax	= ( trax.GetSize() > 0 ) && ( GetTrackMode() == TRACKMODE::OFF );
 	if ( bHidingComps || bHidingTrax ) return true;
 	const bool bNoComps		= ( GetGroupMgr().GetNumUserComps() == 0 );
-	const bool bVia			= ( GetGroupMgr().GetNumUserComps() == 1 && GetUserComponent().GetType() == COMP::VIA );	// Can't rotate a via
+	const bool bMark		= ( GetGroupMgr().GetNumUserComps() == 1 && GetUserComponent().GetType() == COMP::MARK );	// Can't rotate a marker
 	const bool bNoTrax		= ( trax.GetSize() == 0 );
-	return ( bNoComps || bVia ) && bNoTrax;
+	return ( bNoComps || bMark ) && bNoTrax;
 }
 
 bool Board::GetDisableStretch(bool bGrow)

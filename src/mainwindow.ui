@@ -163,7 +163,7 @@
     <addaction name="actionSIP"/>
     <addaction name="menuConnector"/>
     <addaction name="menuSwitch"/>
-    <addaction name="actionVia"/>
+    <addaction name="actionMarker"/>
     <addaction name="separator"/>
     <addaction name="actionTextBox"/>
    </widget>
@@ -212,11 +212,21 @@
     <addaction name="separator"/>
     <addaction name="actionUpdateCheck"/>
    </widget>
+   <widget class="QMenu" name="menuLayers">
+    <property name="title">
+     <string>Layers</string>
+    </property>
+    <addaction name="actionAddLayer"/>
+    <addaction name="actionRemoveLayer"/>
+    <addaction name="separator"/>
+    <addaction name="actionSwitchLayer"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuAdd"/>
    <addaction name="menuView"/>
    <addaction name="menuWindow"/>
+   <addaction name="menuLayers"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusBar">
@@ -778,9 +788,9 @@
     <string>Single Throw (DIP)</string>
    </property>
   </action>
-  <action name="actionVia">
+  <action name="actionMarker">
    <property name="text">
-    <string>Via</string>
+    <string>Marker</string>
    </property>
   </action>
   <action name="actionControlDlg">
@@ -1146,6 +1156,27 @@
   <action name="actionClearRecent">
    <property name="text">
     <string>Clear recent files list</string>
+   </property>
+  </action>
+  <action name="actionAddLayer">
+   <property name="text">
+    <string>Add Top Layer</string>
+   </property>
+  </action>
+  <action name="actionRemoveLayer">
+   <property name="text">
+    <string>Remove Top layer</string>
+   </property>
+  </action>
+  <action name="actionSwitchLayer">
+   <property name="text">
+    <string>Switch Layer</string>
+   </property>
+   <property name="shortcut">
+    <string>L</string>
+   </property>
+   <property name="autoRepeat">
+    <bool>false</bool>
    </property>
   </action>
  </widget>

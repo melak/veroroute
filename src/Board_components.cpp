@@ -160,7 +160,7 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 	const bool	bAllowHoleShare	= GetWireShare();
 	const bool	bDiagsOK		= GetDiagsMode() != DIAGSMODE::OFF;
 	const bool	bWire			= comp.GetType() == COMP::WIRE;	// Wire's only get NodeIDs while placed
-	const bool	bVia			= comp.GetType() == COMP::VIA;	// Via can go anywhere without a pin
+	const bool	bMark			= comp.GetType() == COMP::MARK;	// Marker can go anywhere without a pin
 	const bool	bTrax			= comp.GetType() == COMP::TRACKS;
 	const int&	compCols		= comp.GetCompCols();
 	const int&	compRows		= comp.GetCompRows();
@@ -254,22 +254,22 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 				if ( !bOK ) continue;
 
 				// Check pins
-				if ( bVia )	// Via can go anywhere except for pins, holes, (or other vias)
+				if ( bMark )	// Marker can go anywhere except for pins, holes, (or other marker)
 				{
-					bOK = !pGrid->GetHasPin() && !pGrid->GetIsHole() && !pGrid->GetIsVia();
+					bOK = !pGrid->GetHasPin() && !pGrid->GetIsHole() && !pGrid->GetIsMark();
 				}
 				else if ( pComp->GetIsHole() )	// Check holes
 				{
 					// We've already checked the boardSurface is SURFACE_FREE
-					// Now test it is not a via and not painted
-					bOK = !pGrid->GetIsVia() && pGrid->GetNodeId() == BAD_NODEID;
+					// Now test it is not a marker and not painted
+					bOK = !pGrid->GetIsMark() && pGrid->GetNodeId() == BAD_NODEID;
 				}
 				else
 				{
 					const size_t pinIndex = pComp->GetPinIndex();
 					if ( pinIndex == BAD_PININDEX ) continue;
 
-					bOK = !pGrid->GetIsVia(); // Pin can't go on via
+					bOK = !pGrid->GetIsMark(); // Pin can't go on marker
 					if ( !bOK ) continue;
 
 					// Check bottom grid
@@ -511,7 +511,7 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 		}
 	}
 	comp.SetIsPlaced(true);	
-	if ( comp.GetType() == COMP::VIA ) Get(lyr, rowTL, colTL)->SetIsVia(true);	// Set via flag
+	if ( comp.GetType() == COMP::MARK ) Get(lyr, rowTL, colTL)->SetIsMark(true);	// Set marker flag
 
 	m_colorMgr.ReAssignColors();	// Forces colors to be worked out again
 	return true;
@@ -695,7 +695,7 @@ bool Board::TakeOff(Component& comp)
 		}
 	}
 	comp.SetIsPlaced(false);
-	if ( comp.GetType() == COMP::VIA ) Get(lyr, rowTL, colTL)->SetIsVia(false);	// Clear via flag
+	if ( comp.GetType() == COMP::MARK ) Get(lyr, rowTL, colTL)->SetIsMark(false);	// Clear marker flag
 	return true;
 }
 
@@ -756,7 +756,7 @@ void Board::SelectAllComps(bool bRestrictToRects)
 	SetCurrentTextId(BAD_TEXTID);
 }
 
-bool Board::ConfirmDestroyUserComps()	// returns false if user-group is empty or has only wires & vias
+bool Board::ConfirmDestroyUserComps()	// returns false if user-group is empty or has only wires and markers
 {
 	std::list<int> userCompIds;
 	m_groupMgr.GetGroupCompIds(USER_GROUPID, userCompIds);
@@ -765,7 +765,7 @@ bool Board::ConfirmDestroyUserComps()	// returns false if user-group is empty or
 		switch( m_compMgr.GetComponentById(compId).GetType() )
 		{
 			case COMP::WIRE:
-			case COMP::VIA:		continue;
+			case COMP::MARK:	continue;
 			default:			return true;
 		}
 	}

@@ -23,7 +23,7 @@
 
 //*** Don't delete or modify existing values in COMP.  Just add new ones and update all methods below. ***
 enum class COMP {	INVALID					=   -1,
-					VIA						=    0,
+					MARK					=    0,
 					PAD						=  100,
 					WIRE					=  200,
 					RESISTOR				=  300,
@@ -154,7 +154,7 @@ static int GetListOrder(const COMP& eType)	// For dialogs/menus.  Lower number =
 		case COMP::RELAY_DIP_4PIN		:
 		case COMP::RELAY_DIP_8PIN		: return 17;
 		case COMP::FUSE_HOLDER			: return 18;
-		case COMP::VIA					: return 100;
+		case COMP::MARK					: return 100;
 		default							: return 1000;	// Unhandled eType
 	}
 }
@@ -163,7 +163,7 @@ static bool IsPlug(const COMP& type)	// true ==> Can plug gap between rows of IC
 {
 	switch( type )
 	{
-		case COMP::VIA:
+		case COMP::MARK:
 		case COMP::PAD:
 		case COMP::WIRE:
 		case COMP::RESISTOR:
@@ -187,7 +187,7 @@ static void UpdateMaps(const COMP& eType, const std::string& typeStr, const std:
 static void InitMapsCompTypeToStr()
 {
 	if ( !mapCompTypeToTypeStr.empty() ) return;
-	UpdateMaps(COMP::VIA,					"Via",							"");	// No import string
+	UpdateMaps(COMP::MARK,					"Marker",						"");	// No import string
 	UpdateMaps(COMP::PAD,					"Pad",							"PAD");
 	UpdateMaps(COMP::WIRE,					"Wire",							"");	// No import string
 	UpdateMaps(COMP::RESISTOR,				"Resistor",						"RESISTOR");
@@ -342,7 +342,7 @@ static std::string GetDefaultPrefixStr(const COMP& eType)	// Prefix for name on 
 {
 	switch( eType )
 	{
-		case COMP::VIA					: return "Via";
+		case COMP::MARK					: return "Marker";
 		case COMP::PAD					: return "Pad";
 		case COMP::WIRE					: return "Wire";
 		case COMP::RESISTOR				: return "R";
@@ -454,7 +454,7 @@ static std::string GetMakeInstructions(const COMP& eType, int& rows, int& cols)
 {
 	switch( eType )
 	{
-		case COMP::VIA					: rows = 1; cols = 1;  return ".";
+		case COMP::MARK					: rows = 1; cols = 1;  return ".";
 		case COMP::PAD					: rows = 1; cols = 1;  return "1";
 		case COMP::WIRE					: rows = 1; cols = 3;  return "1+2";
 		case COMP::RESISTOR				: rows = 1; cols = 5;  return "1+++2";
@@ -561,7 +561,7 @@ static int GetDefaultNumPins(const COMP& eType)
 	assert(true || StopBuildWarnings());
 	switch( eType )
 	{
-		case COMP::VIA					: return 0;
+		case COMP::MARK					: return 0;
 		case COMP::PAD					: return 1;
 		case COMP::WIRE					:
 		case COMP::RESISTOR				:

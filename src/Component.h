@@ -26,7 +26,7 @@
 class CompManager;
 
 // Class to describe a component.
-// Wires (i.e. jumpers) and Vias also use this class even though they are not true components.
+// Wires (i.e. jumpers) and markers also use this class even though they are not true components.
 
 class Component : public FootPrint
 {
@@ -400,7 +400,7 @@ public:
 	{
 		switch( GetType() )
 		{
-			case COMP::VIA:
+			case COMP::MARK:
 			case COMP::WIRE:
 			case COMP::TRACKS:	return false;
 			default:			return true;

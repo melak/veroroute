@@ -25,18 +25,14 @@
 // The board is basically a Grid of "Element" objects.
 // "Element" derives from "Pin" and therefore has a description
 // of the surface at a location, and the pin index there (if any).
-// Each Element in the grid is "glued" (i.e. has pointers to) it's
-// 8 neighbours, and wires (jumpers) "glue" remote elements together.
+// Each Element in the grid is "glued" to (i.e. has pointers to) it's neighbours.
+// There are always 8 "same-layer" neighbours.
+// For 2-layer boards, there is an additional "other layer" neighbour.
+// Wires (jumpers) "glue" remote elements together within layer 0 (i.e. the base layer).
+
 // This makes all the routing/connectivity code tidy because
 // each Element knows what it can be connected to without having
 // to go through the parent Grid object.
-//
-// Note: It should be straightforward to extend this model to
-// multi-layer routing by having multiple nodeIds per element (1 per layer).
-// A component pin (or via or wire) at a location would force all nodeIds
-// there to the same value.  Other elements can have different NodeIds on each layer.
-// So within a layer there would still be 8 neighbours per element, but at pin element
-// there would be 8*numlayer neighbours.
 
 const int			TRAX_COMPID = -2;		// The component manager member m_trax has this ID
 const int			BAD_COMPID  = -1;		// Invalid component ID
@@ -59,31 +55,18 @@ typedef std::list<ElementInt> WIRELIST;	// Helper for chains of wires
 class Element : public Pin, public TrackElement
 {
 public:
-	//TODO_NEW See if we need the following overrides
-	// OVERRIDES BEGIN
-	//  Pin::operator=
-	//  Pin::operator==
-	//	Pin::UpdateMergeOffsets()
-	//	Pin::ApplyMergeOffsets()
-	//	Pin::Merge()
-	//  Pin::Load()
-	// 	Pin::Save()
-	// OVERRIDES END
-	bool				 IsLayer0() const				{ Element* p = GetNbr(NBR_X); return p == nullptr || p > this; }
-	Element*			 GetBase()						{ Element* p = GetNbr(NBR_X); return p == nullptr || p > this ? this : p; }
-	const Element*		 GetBaseConst() const			{ Element* p = GetNbr(NBR_X); return p == nullptr || p > this ? this : p; }
-	virtual void		 SetPinIndex(const size_t& i)	{ return IsLayer0() ? Pin::SetPinIndex(i)		: GetBase()->SetPinIndex(i); }
-	virtual void		 SetSurface(const uchar& c)		{ return IsLayer0() ? Pin::SetSurface(c)		: GetBase()->SetSurface(c); }
-	virtual void		 SetHoleUse(const uchar& c)		{ return IsLayer0() ? Pin::SetHoleUse(c)		: GetBase()->SetHoleUse(c); }
-	virtual void		 SetWireOccupancies()			{ return IsLayer0() ? Pin::SetWireOccupancies()	: GetBase()->SetWireOccupancies(); }
-	virtual size_t		 GetPinIndex() const			{ return IsLayer0() ? Pin::GetPinIndex()		: GetBaseConst()->GetPinIndex(); }
-	virtual const uchar& GetSurface() const				{ return IsLayer0() ? Pin::GetSurface()			: GetBaseConst()->GetSurface(); }
-	virtual const uchar& GetHoleUse() const				{ return IsLayer0() ? Pin::GetHoleUse()			: GetBaseConst()->GetHoleUse(); }
-	virtual bool		 GetIsPin() const				{ return IsLayer0() ? Pin::GetIsPin()			: GetBaseConst()->GetIsPin(); }
-	virtual bool		 GetIsHole() const				{ return IsLayer0() ? Pin::GetIsHole()			: GetBaseConst()->GetIsHole(); }
+	virtual void		 SetPinIndex(const size_t& i)	{ auto pBase = GetBase();		return pBase == this ? Pin::SetPinIndex(i)		 : pBase->SetPinIndex(i); }
+	virtual void		 SetSurface(const uchar& c)		{ auto pBase = GetBase();		return pBase == this ? Pin::SetSurface(c)		 : pBase->SetSurface(c); }
+	virtual void		 SetHoleUse(const uchar& c)		{ auto pBase = GetBase();		return pBase == this ? Pin::SetHoleUse(c)		 : pBase->SetHoleUse(c); }
+	virtual void		 SetWireOccupancies()			{ auto pBase = GetBase();		return pBase == this ? Pin::SetWireOccupancies() : pBase->SetWireOccupancies(); }
+	virtual size_t		 GetPinIndex() const			{ auto pBase = GetBaseConst();	return pBase == this ? Pin::GetPinIndex()		 : pBase->GetPinIndex(); }
+	virtual const uchar& GetSurface() const				{ auto pBase = GetBaseConst();	return pBase == this ? Pin::GetSurface()		 : pBase->GetSurface(); }
+	virtual const uchar& GetHoleUse() const				{ auto pBase = GetBaseConst();	return pBase == this ? Pin::GetHoleUse()		 : pBase->GetHoleUse(); }
+	virtual bool		 GetIsPin() const				{ auto pBase = GetBaseConst();	return pBase == this ? Pin::GetIsPin()			 : pBase->GetIsPin(); }
+	virtual bool		 GetIsHole() const				{ auto pBase = GetBaseConst();	return pBase == this ? Pin::GetIsHole()			 : pBase->GetIsHole(); }
 	virtual const int&	 GetNodeId() const
 	{
-		return ( !IsLayer0() && GetHasPin() ) ? GetBaseConst()->GetNodeId() : TrackElement::GetNodeId();
+		auto pBase = GetBaseConst();	return ( pBase != this && GetHasPin() ) ? pBase->GetNodeId() : TrackElement::GetNodeId();
 	}
 	virtual void		 SetNodeId(const int& i)	// Only called via the parent board method Board::SetNodeId()
 	{
@@ -100,7 +83,7 @@ public:
 		GetNbr(NBR_L)->UpdateUsed(NBR_RT);	GetNbr(NBR_R)->UpdateUsed(NBR_LT);	// LTX, RTX
 		GetNbr(NBR_L)->UpdateUsed(NBR_RB);	GetNbr(NBR_R)->UpdateUsed(NBR_LB);	// LBX, RBX
 
-		if ( !IsLayer0() && GetHasPin() ) return GetBase()->SetNodeId(i);
+		auto pBase = GetBase();	if ( pBase != this && GetHasPin() ) pBase->SetNodeId(i);
 	}
 
 	Element() : Pin(), TrackElement() { ZeroConnectionPointers(); }
@@ -115,7 +98,7 @@ public:
 	{
 		Pin::operator=(o);			// Call operator= in base class
 		TrackElement::operator=(o);	// Call operator= in base class
-		m_bIsVia	= o.m_bIsVia;
+		m_bIsMark	= o.m_bIsMark;
 		m_compId	= o.m_compId;
 		m_compId2	= o.m_compId2;
 		m_pinChar2	= o.m_pinChar2;
@@ -134,7 +117,7 @@ public:
 	{
 		return	Pin::operator==(o)
 			&&	TrackElement::operator==(o)
-			&&	m_bIsVia	== o.m_bIsVia
+			&&	m_bIsMark	== o.m_bIsMark
 			&&	m_compId	== o.m_compId
 			&&	m_compId2	== o.m_compId2
 			&&	m_pinChar2	== o.m_pinChar2;
@@ -143,17 +126,18 @@ public:
 	{
 		return !(*this == o);
 	}
-	void SetIsVia(const bool& b)		{ if ( IsLayer0() ) m_bIsVia = b;		else GetBase()->SetIsVia(b); }
-	void SetCompId(const int& i)		{ if ( IsLayer0() ) m_compId = i;		else GetBase()->SetCompId(i); }
-	void SetCompId2(const int& i)		{ if ( IsLayer0() ) m_compId2 = i;		else GetBase()->SetCompId2(i); }
+	void SetIsMark(const bool& b)		{ auto pBase = GetBase(); if ( pBase == this ) m_bIsMark = b; else pBase->SetIsMark(b); }
+	void SetCompId(const int& i)		{ auto pBase = GetBase(); if ( pBase == this ) m_compId  = i; else pBase->SetCompId(i); }
+	void SetCompId2(const int& i)		{ auto pBase = GetBase(); if ( pBase == this ) m_compId2 = i; else pBase->SetCompId2(i); }
 	void SetPinIndex2(const size_t& i)
 	{
-		if ( IsLayer0() )
+		auto pBase = GetBase();
+		if ( pBase == this )
 			m_pinChar2 = ( i >= BAD_PINCHAR ) ? BAD_PINCHAR : static_cast<uchar> (i);
 		else
-			GetBase()->SetPinIndex2(i);
+			pBase->SetPinIndex2(i);
 	}
-	void SetSolderR(const bool& b)		{ if ( IsLayer0() ) m_bSolderR	= b;	else GetBase()->SetSolderR(b); }
+	void SetSolderR(const bool& b)		{ auto pBase = GetBase(); if ( pBase == this ) m_bSolderR = b; else pBase->SetSolderR(b); }
 	void SetRoutable(const int& i)		{ m_iRoutable	= i; }
 	void ResetMH()
 	{
@@ -227,26 +211,24 @@ public:
 	{
 		assert( !GetWireExists(p) );	// No duplicates allowed
 		assert(iSlot == 0 || iSlot == 1);
-		if ( IsLayer0() )
-			m_pW[iSlot] = p;
-		else
-			GetBase()->SetW(iSlot, p);
+		auto pBase = GetBase();	if ( pBase == this ) m_pW[iSlot] = p; else pBase->SetW(iSlot, p);
 	}
-	const bool&			GetIsVia() const				{ return IsLayer0() ? m_bIsVia		: GetBaseConst()->GetIsVia(); }
-	const int&			GetCompId() const				{ return IsLayer0() ? m_compId		: GetBaseConst()->GetCompId(); }
-	const int&			GetCompId2() const				{ return IsLayer0() ? m_compId2		: GetBaseConst()->GetCompId2(); }
-	const uchar&		GetPinChar2() const				{ return IsLayer0() ? m_pinChar2	: GetBaseConst()->GetPinChar2(); }
+	const bool&			GetIsMark() const				{ auto pBase = GetBaseConst(); return pBase == this ? m_bIsMark		: pBase->GetIsMark(); }
+	const int&			GetCompId() const				{ auto pBase = GetBaseConst(); return pBase == this ? m_compId		: pBase->GetCompId(); }
+	const int&			GetCompId2() const				{ auto pBase = GetBaseConst(); return pBase == this ? m_compId2		: pBase->GetCompId2(); }
+	const uchar&		GetPinChar2() const				{ auto pBase = GetBaseConst(); return pBase == this ? m_pinChar2	: pBase->GetPinChar2(); }
 	int					GetNumCompIds() const			{ int i(0); if ( GetCompId() != BAD_COMPID ) i++; if ( GetCompId2() != BAD_COMPID ) i++; return i; }
 	bool				GetHasComp() const				{ return GetCompId() != BAD_COMPID || GetCompId2() != BAD_COMPID; }
 	bool				GetHasPin() const				{ return GetIsPin() || GetPinChar2() != BAD_PINCHAR; }
 	size_t				GetPinIndex2() const			{ return ( GetPinChar2() == BAD_PINCHAR ) ? BAD_PININDEX : GetPinChar2(); }
-	const bool&			GetSolderR() const				{ return IsLayer0() ? m_bSolderR	: GetBaseConst()->GetSolderR(); }
+	const bool&			GetSolderR() const				{ auto pBase = GetBaseConst(); return pBase == this ? m_bSolderR	: pBase->GetSolderR(); }
 	const int&			GetRoutable() const				{ return m_iRoutable; }
 	const unsigned int&	GetRouteId() const				{ return m_routeId; }
 	const unsigned int&	GetMH() const					{ return m_MH; }
 	const unsigned int&	GetMaxMH() const				{ return m_maxMH; }
 	Element*			GetNbr(const int& iNbr) const	{ return m_pNbr[iNbr]; }
-	Element*			GetW(const int& i) const		{ return IsLayer0() ? m_pW[i]		: GetBaseConst()->GetW(i); }
+	Element*			GetW(const int& i) const		{ auto pBase = GetBaseConst(); return pBase == this ? m_pW[i]		: pBase->GetW(i); }
+	bool				IsLayer0() const 				{ return GetBaseConst() == this; }
 
 	// Helpers
 	bool HaveNoBlankPins(const int& iNbr) const
@@ -368,7 +350,7 @@ public:
 	{
 		Pin::Merge(o);
 		TrackElement::Merge(o);
-		m_bIsVia	= o.m_bIsVia;
+		m_bIsMark	= o.m_bIsMark;
 		m_compId	= o.m_compId;
 		m_compId2	= o.m_compId2;
 		m_pinChar2	= o.m_pinChar2;
@@ -381,13 +363,13 @@ public:
 			Pin::Load(inStream);			// Load() base class
 			inStream.Load(m_compId);
 			TrackElement::Load(inStream);	// Load() base class
-			inStream.Load(m_bIsVia);
+			inStream.Load(m_bIsMark);
 		}
 		else
 		{
 			Pin::Load(inStream);			// Load() base class
 			TrackElement::Load(inStream);	// Load() base class
-			inStream.Load(m_bIsVia);
+			inStream.Load(m_bIsMark);
 			inStream.Load(m_compId);
 		}
 		m_compId2	= BAD_COMPID;
@@ -402,12 +384,14 @@ public:
 	{
 		Pin::Save(outStream);				// Save() base class
 		TrackElement::Save(outStream);		// Save() base class
-		outStream.Save(m_bIsVia);
+		outStream.Save(m_bIsMark);
 		outStream.Save(m_compId);
 		outStream.Save(m_compId2);		// Added in VRT_VERSION_27
 		outStream.Save(m_pinChar2);		// Added in VRT_VERSION_27
 	}
 private:
+	Element*		GetBase()				{ Element*		 pBase = GetNbr(NBR_X);	return pBase == nullptr || pBase > this ? this : pBase; }
+	const Element*	GetBaseConst() const	{ const Element* pBase = GetNbr(NBR_X);	return pBase == nullptr || pBase > this ? this : pBase; }
 	bool WireListHelper(WIRELIST& wireList, const Element* p, unsigned int iStep) const
 	{
 		for (auto& o : wireList)
@@ -429,7 +413,7 @@ private:
 	}
 private:
 	// Persist info
-	bool			m_bIsVia	= false;
+	bool			m_bIsMark	= false;
 	int				m_compId	= BAD_COMPID;	// For elements with a valid pinindex, this is the ID of the parent component
 	int				m_compId2	= BAD_COMPID;	// Only used when we have 2 wires sharing a hole
 	uchar			m_pinChar2	= BAD_PINCHAR;	// Only used when we have 2 wires sharing a hole
