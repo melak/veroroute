@@ -628,7 +628,7 @@ void MainWindow::keyReleaseEvent(QKeyEvent* event)
 		if ( bUpdateControls )
 			UpdateControls();
 
-		ListNodes();		// Slow due lots of MH calcs
+		ListNodes();	// Slow due lots of MH calcs
 	}
 	event->accept();	// If we don't do this, we can get the same event passed multiple times if we're on MS Windows.
 }

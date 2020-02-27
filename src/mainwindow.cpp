@@ -919,6 +919,7 @@ void MainWindow::AddLayer()
 	UpdateHistory("Add top layer");
 	UpdateControls();
 	RepaintWithRouting();
+	ListNodes();
 }
 void MainWindow::RemoveLayer()
 {
@@ -928,6 +929,7 @@ void MainWindow::RemoveLayer()
 	UpdateHistory("Remove top layer");
 	UpdateControls();
 	RepaintWithRouting();
+	ListNodes();
 }
 void MainWindow::SwitchLayer()
 {
