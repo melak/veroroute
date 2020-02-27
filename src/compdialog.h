@@ -24,14 +24,15 @@
 class MainWindow;
 class Ui_CompDialog;
 
-class CompDialog : public QDialog
+class CompDialog : public QWidget
 {
 	Q_OBJECT
 
 public:
-	explicit CompDialog(MainWindow* parent = 0);
+	explicit CompDialog(QWidget* parent = 0);
 	~CompDialog();
 
+	void SetMainWindow(MainWindow* p);
 	void Update();
 	void EnableControls();
 protected:

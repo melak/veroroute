@@ -64,22 +64,7 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	const std::string iconStr = m_tutorialsPathStr + "/veroroute.png";
 	setWindowIcon(QIcon( iconStr.c_str() ));
 
-	m_controlDlg	= new ControlDialog(this);
-	m_renderingDlg	= new RenderingDialog(this);
-	m_wireDlg		= new WireDialog(this);
-	m_hotkeysDlg	= new HotkeysDialog(this);
-	m_infoDlg		= new InfoDialog(this);
-	m_compDlg		= new CompDialog(this);
-	m_textDlg		= new TextDialog(this);
-	m_bomDlg		= new BomDialog(this);
-	m_templatesDlg	= new TemplatesDialog(this);
-	m_pinDlg		= new PinDialog(this);
-	m_controlDlg->move(50,50);
-	m_compDlg->move(50,50);
-	m_templatesDlg->move(940,50);
-	move(320,50);
-	m_infoDlg->move(940,50);
-
+	// Create the scrollable area and make it occuoy the main window area
 	m_label			= new QLabel(this);
 	m_scrollArea	= new MyScrollArea(this);
 	m_label->setBackgroundRole(QPalette::Base);
@@ -88,6 +73,37 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	m_scrollArea->setBackgroundRole(QPalette::Dark);
 	m_scrollArea->setWidget(m_label);
 	setCentralWidget(m_scrollArea);
+
+	// Put control dialog in right dock area
+	m_dockControlDlg = new QDockWidget(tr("  Control"), this);
+	m_dockControlDlg->setAllowedAreas(Qt::RightDockWidgetArea);
+	m_dockControlDlg->setStyleSheet("QDockWidget { font: bold }");
+	m_controlDlg	= new ControlDialog(m_dockControlDlg);
+	m_dockControlDlg->setWidget(m_controlDlg);
+	addDockWidget(Qt::RightDockWidgetArea, m_dockControlDlg);
+	m_controlDlg->SetMainWindow(this);
+
+	// Put component editor dialog in right dock area
+	m_dockCompDlg = new QDockWidget(tr("  Component Definition"), this);
+	m_dockCompDlg->setAllowedAreas(Qt::RightDockWidgetArea);
+	m_dockCompDlg->setStyleSheet("QDockWidget { font: bold }");
+	m_compDlg	= new CompDialog(m_dockCompDlg);
+	m_dockCompDlg->setWidget(m_compDlg);
+	addDockWidget(Qt::RightDockWidgetArea, m_dockCompDlg);
+	m_compDlg->SetMainWindow(this);
+
+	m_renderingDlg	= new RenderingDialog(this);
+	m_wireDlg		= new WireDialog(this);
+	m_hotkeysDlg	= new HotkeysDialog(this);
+	m_infoDlg		= new InfoDialog(this);
+	m_textDlg		= new TextDialog(this);
+	m_bomDlg		= new BomDialog(this);
+	m_templatesDlg	= new TemplatesDialog(this);
+	m_pinDlg		= new PinDialog(this);
+
+	m_templatesDlg->move(940,50);
+	move(320,50);
+	m_infoDlg->move(940,50);
 
 	// Do multipart status bar
 	m_labelStatus		= new QLabel("Left", this);
@@ -212,17 +228,20 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	QObject::connect(ui->actionAddChord,				SIGNAL(triggered()), this, SLOT(DefinerAddChord()));
 	m_fileName.clear();
 	CheckFolders();
-	ResetView();
 	ResetHistory("Empty");
 
 	setAcceptDrops(true);
+
+	QTimer::singleShot(0, this, SLOT(Startup()));
 }
 
 MainWindow::~MainWindow()
 {
 	DestroyPixmapCache();
 	delete m_compDlg;
+	delete m_dockCompDlg;
 	delete m_controlDlg;
+	delete m_dockControlDlg;
 	delete m_templatesDlg;
 	delete m_renderingDlg;
 	delete m_wireDlg;
@@ -233,6 +252,11 @@ MainWindow::~MainWindow()
 	delete m_label;
 	delete m_scrollArea;
 	delete ui;
+}
+
+void MainWindow::Startup()
+{
+	ResetView();
 }
 
 void MainWindow::CheckFolders()
@@ -340,12 +364,12 @@ void MainWindow::ResetView(bool bTutorial)
 
 	if ( m_board.GetCompEdit() )
 	{
-		m_controlDlg->close();
+		m_dockControlDlg->hide();	// Hide control dialog
 		ShowCompDialog();
 	}
 	else
 	{
-		m_compDlg->close();
+		m_dockCompDlg->hide();		// Hide component definition dialog
 		ShowControlDialog();
 	}
 
@@ -899,16 +923,17 @@ void MainWindow::Delete()
 }
 
 // Windows menu items
-void MainWindow::ShowControlDialog()	{ m_controlDlg->showNormal();	m_controlDlg->raise();		m_controlDlg->activateWindow(); }
-void MainWindow::ShowRenderingDialog()	{ m_renderingDlg->showNormal();	m_renderingDlg->raise();	m_renderingDlg->activateWindow(); }
-void MainWindow::ShowWireDialog()		{ m_wireDlg->showNormal();		m_wireDlg->raise();			m_wireDlg->activateWindow(); }
-void MainWindow::ShowHotkeysDialog()	{ m_hotkeysDlg->showNormal();	m_hotkeysDlg->raise();		m_hotkeysDlg->activateWindow(); }
-void MainWindow::ShowInfoDialog()		{ m_infoDlg->showNormal();		m_infoDlg->raise();			m_infoDlg->activateWindow(); }
-void MainWindow::ShowCompDialog()		{ m_compDlg->showNormal();		m_compDlg->raise();			m_compDlg->activateWindow(); }
-void MainWindow::ShowTextDialog()		{ m_textDlg->showNormal();		m_textDlg->raise();			m_textDlg->activateWindow(); }
-void MainWindow::ShowBomDialog()		{ UpdateBOM();					m_bomDlg->showNormal();		m_bomDlg->raise(); m_bomDlg->activateWindow(); }
-void MainWindow::ShowTemplatesDialog()	{ UpdateTemplatesDialog();		m_templatesDlg->showNormal();	m_templatesDlg->raise(); m_templatesDlg->activateWindow(); }
-void MainWindow::ShowPinDialog()		{ m_pinDlg->Update();			m_pinDlg->showNormal();		m_pinDlg->raise(); m_pinDlg->activateWindow(); }
+void MainWindow::ShowDlg(QWidget* p)	{ p->showNormal();	p->raise();	p->activateWindow(); }
+void MainWindow::ShowControlDialog()	{ ShowDlg(m_dockControlDlg); }
+void MainWindow::ShowRenderingDialog()	{ ShowDlg(m_renderingDlg); }
+void MainWindow::ShowWireDialog()		{ ShowDlg(m_wireDlg); }
+void MainWindow::ShowHotkeysDialog()	{ ShowDlg(m_hotkeysDlg); }
+void MainWindow::ShowInfoDialog()		{ ShowDlg(m_infoDlg); }
+void MainWindow::ShowCompDialog()		{ ShowDlg(m_dockCompDlg); }
+void MainWindow::ShowTextDialog()		{ ShowDlg(m_textDlg); }
+void MainWindow::ShowBomDialog()		{ UpdateBOM();				ShowDlg(m_bomDlg); }
+void MainWindow::ShowTemplatesDialog()	{ UpdateTemplatesDialog();	ShowDlg(m_templatesDlg); }
+void MainWindow::ShowPinDialog()		{ m_pinDlg->Update();		ShowDlg(m_pinDlg); }
 
 // Layers menu items
 void MainWindow::AddLayer()
@@ -1468,15 +1493,15 @@ void MainWindow::DefinerToggleEditor()
 			if ( !comp.GetShapes().empty() )
 				GetCompDefiner().Populate( comp );
 		}
-		m_controlDlg->close();	// Hide control dialog
-		UpdateCompDialog();		// Show component definition dialog
+		m_dockControlDlg->hide();	// Hide control dialog
+		UpdateCompDialog();			// Show component definition dialog
 		ShowCompDialog();
 		UpdateHistory("Open component editor");
 	}
 	else
 	{
-		m_compDlg->close();		// Hide component definition dialog
-		ShowControlDialog();	// Show control dialog
+		m_dockCompDlg->hide();		// Hide component definition dialog
+		ShowControlDialog();		// Show control dialog
 		UpdateHistory("Close component editor");
 	}
 	UpdateControls();
@@ -1494,8 +1519,7 @@ void MainWindow::DefinerAddArc()		{ const int id = GetCompDefiner().AddArc();			
 void MainWindow::DefinerAddChord()		{ const int id = GetCompDefiner().AddChord();		if ( id != BAD_ID ) { SetCurrentShapeId(id); UpdateCompDialog(); UpdateHistory("Add shape"); RepaintSkipRouting(); } }
 void MainWindow::DefinerChooseColor()
 {
-	auto& def = GetCompDefiner();
-	assert(def.GetCurrentShapeId() != BAD_ID );
+	auto& def = GetCompDefiner();	assert( def.GetCurrentShapeId() != BAD_ID );
 	if ( def.GetCurrentShapeId() == BAD_ID ) return;
 	const MyRGB& rgb		= def.GetCurrentShape().GetFillColor();
 	const QColor oldColor	= QColor(rgb.GetR(), rgb.GetG(), rgb.GetB());
@@ -1512,8 +1536,7 @@ void MainWindow::DefinerChooseColor()
 }
 void MainWindow::DefinerRaise()
 {
-	auto& def = GetCompDefiner();
-	assert(def.GetCurrentShapeId() != BAD_ID );
+	auto& def = GetCompDefiner();	assert( def.GetCurrentShapeId() != BAD_ID );
 	if ( def.Raise() )
 	{
 		UpdateCompDialog(); UpdateHistory("Raise"); RepaintSkipRouting();
@@ -1521,8 +1544,7 @@ void MainWindow::DefinerRaise()
 }
 void MainWindow::DefinerLower()
 {
-	auto& def = GetCompDefiner();
-	assert(def.GetCurrentShapeId() != BAD_ID );
+	auto& def = GetCompDefiner();	assert( def.GetCurrentShapeId() != BAD_ID );
 	if ( def.Lower() )
 	{
 		UpdateCompDialog(); UpdateHistory("Lower"); RepaintSkipRouting();

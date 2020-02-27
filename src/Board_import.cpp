@@ -164,7 +164,7 @@ bool Board::ImportTango(const TemplateManager& templateMgr, const std::string& f
 				{
 					if ( bCustom )
 					{
-						assert(custom.GetType() == COMP::CUSTOM);
+						assert( custom.GetType() == COMP::CUSTOM );
 						custom.SetNameStr(nameStr);
 						custom.SetValueStr(valueStr);
 						bOK = ( AddComponent(nullptr, custom) != BAD_COMPID );	// Create part and place it
@@ -423,7 +423,7 @@ bool Board::ImportOrcad(const TemplateManager& templateMgr, const std::string& f
 			}
 			if ( bCustom )
 			{
-				assert(custom.GetType() == COMP::CUSTOM);
+				assert( custom.GetType() == COMP::CUSTOM );
 				custom.SetNameStr(nameStr);
 				custom.SetValueStr(valueStr);
 				bOK = ( AddComponent(nullptr, custom) != BAD_COMPID );	// Create part and place it

@@ -54,7 +54,7 @@ public:
 			pNew = m_list.back();
 		}
 		// Modify adjacency info for newNodeId
-		assert(pNew->GetNodeId() == newNodeId);	// Sanity check.
+		assert( pNew->GetNodeId() == newNodeId );	// Sanity check.
 		for (int iNbr = 0; iNbr < NUM_NBRS; iNbr++)
 		{
 			if ( p->GetNbr(iNbr) && ReadCodeBit(iNbr, p->GetRoutable()) )
@@ -82,7 +82,7 @@ public:
 			pNew = m_list.back();
 		}
 		// Modify adjacency info for oldNodeId and newNodeId
-		assert(pNew == nullptr || pNew->GetNodeId() == newNodeId);	// Sanity check.
+		assert( pNew == nullptr || pNew->GetNodeId() == newNodeId );	// Sanity check.
 		for (int iNbr = 0; iNbr < NUM_NBRS; iNbr++)
 		{
 			if ( p->GetNbr(iNbr) && ReadCodeBit(iNbr, p->GetRoutable()) )

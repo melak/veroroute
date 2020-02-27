@@ -94,7 +94,7 @@ void Board::BuildTargetPins(const int& nodeId)
 void Board::Route(bool bMinimal)
 {
 	m_bRouteMinimal	= bMinimal;
-	assert(m_bRouteVias);
+	assert( m_bRouteVias );
 
 //	const auto start = std::chrono::steady_clock::now();
 
@@ -260,8 +260,8 @@ void Board::Flood_Helper(bool** ppConn, unsigned int& cost, const bool bBuildTra
 	unsigned int RID(BAD_ROUTEID);
 	for (auto p : m_targetPins)
 	{
-		m_tmpVec[m_tmpVecSize++] = p;		// Add p to set of visited points
-		RID++;	assert(RID < BAD_ROUTEID);	// Should be safely < UINT_MAX in practice
+		m_tmpVec[m_tmpVecSize++] = p;			// Add p to set of visited points
+		RID++;	assert( RID < BAD_ROUTEID );	// Should be safely < UINT_MAX in practice
 		p->UpdateMH(RID, iMH, iMaxMH);
 	}
 
@@ -446,7 +446,7 @@ void Board::Backtrace(Element* pEnd, const int& nodeId)
 			}
 			else if ( p->ReadFlagBits(USERSET) )
 			{
-				assert(p->GetNodeId() == nodeId);
+				assert( p->GetNodeId() == nodeId );
 				SetFlagBits(p, AUTOSET, bAllLyrs);
 				if ( bWire )
 				{
@@ -557,7 +557,7 @@ void Board::Manhatten(Element* p)
 			pW->UpdateMH(RID, iOtherMH, iMaxMH);
 		}
 	}
-	assert(m_bRouteVias);
+	assert( m_bRouteVias );
 	while ( true )
 	{
 		iMH++;	// Increase MH (think of this as distance from start point).

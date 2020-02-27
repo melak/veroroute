@@ -93,14 +93,14 @@ public:
 	void UnLock()	{ m_bLocked = false; }
 	bool Undo(Board& board)
 	{
-		assert(m_bLocked);	// Should only Undo while the list is locked
+		assert( m_bLocked );	// Should only Undo while the list is locked
 		if ( !GetCanUndo() ) return false;
 		--m_currentIter;
 		return Load(board);
 	}
 	bool Redo(Board& board)
 	{
-		assert(m_bLocked);	// Should only Redo while the list is locked
+		assert( m_bLocked );	// Should only Redo while the list is locked
 		if ( !GetCanRedo() ) return false;
 		++m_currentIter;
 		return Load(board);
@@ -138,7 +138,7 @@ private:
 	HistoryItemIter GetNextIter() const { auto iter = m_currentIter; ++iter; return iter; }
 	const char* GetFilename(const size_t& index) const
 	{
-		assert(index < MAX_HISTORY_FILES);	// Sanity check
+		assert( index < MAX_HISTORY_FILES );	// Sanity check
 		memset(m_buffer, 0, 256 * sizeof(char));
 		sprintf(m_buffer, "%s/history/history_%d_%d.vrt", m_pathStr.c_str(), m_ID, (int)index);
 		return m_buffer;

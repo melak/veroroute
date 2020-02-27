@@ -75,7 +75,7 @@ void FootPrint::BuildTrax(CompManager* pCompMgr, const RectManager& rectMgr, con
 			if ( !rectMgr.ContainsPoint(jRow,iCol) ) continue;
 
 			CompElement*	pTarget = Grid<CompElement>::Get(0, j, i);
-			Element*		pSource = o.Get(nLyr, jRow, iCol);	assert(pSource);
+			Element*		pSource = o.Get(nLyr, jRow, iCol);	assert( pSource );
 
 			int iNodeId = pSource->GetNodeId();
 
@@ -85,7 +85,7 @@ void FootPrint::BuildTrax(CompManager* pCompMgr, const RectManager& rectMgr, con
 				{
 					pSource->GetSlotInfo(iSlot, pinIndex, compId);
 					if ( pinIndex == BAD_PININDEX ) continue;
-					assert(compId != BAD_COMPID);
+					assert( compId != BAD_COMPID );
 					const Component& comp = pCompMgr->GetComponentById( compId );
 					iNodeId = comp.GetOrigId(nLyr, pinIndex);
 					break;

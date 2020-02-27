@@ -47,7 +47,7 @@ void PinDialog::CellChanged(int row, int col)
 {
 	if ( col == 0 ) return;
 
-	Component*			pComp		= GetUserComp();	assert(pComp);
+	Component*			pComp		= GetUserComp();	assert( pComp );
 	QTableWidgetItem*	pItemLabel	= ui->tableWidget->item(row, col);
 	const size_t		iPinIndex	= row;
 	const std::string	strLabel	= pItemLabel->text().toStdString();

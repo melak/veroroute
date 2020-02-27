@@ -281,7 +281,7 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 	{
 		if ( m_bWriteGerber )
 		{
-			assert(polygon.size() == 1);
+			assert( polygon.size() == 1 );
 			m_gWriter.GetStream(GFILE::GTL).AddTrack(bGap ? GPEN::PAD_GAP : GPEN::PAD, polygon);	// Top    copper layer
 			m_gWriter.GetStream(GFILE::GBL).AddTrack(bGap ? GPEN::PAD_GAP : GPEN::PAD, polygon);	// Bottom copper layer
 		}

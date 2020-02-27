@@ -253,7 +253,7 @@ void GStream::AddVariTrack(const GPEN& ePenHV, const GPEN& ePen, const QPolygonF
 void GStream::AddLoop(const GPEN& ePen, const QPolygonF& pF)	// Add to m_loops buffer for later writing to file
 {
 	if ( !GetOK() ) return;
-	assert(pF.size() >= 3);
+	assert( pF.size() >= 3 );
 	if ( pF.size() < 3 ) return;	// Loop must have at least 3 points
 	QPolygon p;
 	GetQPolygon(pF, p);
@@ -262,7 +262,7 @@ void GStream::AddLoop(const GPEN& ePen, const QPolygonF& pF)	// Add to m_loops b
 void GStream::AddRegion(const QPolygonF& pF)	// Add to m_regions buffer for later writing to file
 {
 	if ( !GetOK() ) return;
-	assert(pF.size() >= 3);
+	assert( pF.size() >= 3 );
 	if ( pF.size() < 3 ) return;	// Region must have at least 3 points
 	QPolygon p;
 	GetQPolygon(pF, p);
@@ -308,7 +308,7 @@ void GStream::DrawBuffers()
 void GStream::Region(const Curve& curve)	// A filled closed curve (with zero width pen)
 {
 	if ( !is_open() || m_eType == GFILE::DRL ) return;
-	assert(curve.m_pen == GPEN::UNKNOWN);
+	assert( curve.m_pen == GPEN::UNKNOWN );
 	if ( curve.size() < 3 ) return;	// Region must have >= 3 points
 	(*this) << "G36";	EndLine();	// "Begin region"
 	OutLine(curve, true);			// true ==> force close
@@ -393,7 +393,7 @@ void GStream::WriteDrillValue(const int& iMil)
 {
 	if ( !is_open() || m_eType != GFILE::DRL ) return;
 	const int	iAbs	= abs(iMil);
-	assert(iMil > 0);	// All veroRoute grid points are >= 0
+	assert( iMil > 0 );	// All veroRoute grid points are >= 0
 	(*this) << ( iMil >= 0 ? "+" : "-" );
 	if ( iAbs < 100000 ) (*this) << "0";
 	if ( iAbs <  10000 ) (*this) << "0";
@@ -416,7 +416,7 @@ void GStream::GetQPolygon(const QPolygonF& in, QPolygon& out) const
 }
 std::string GStream::MilToInch(const int& iMil) const	// Just for pen sizes
 {
-	assert(iMil >= 0 && iMil < 1000);	//TODO Generalise this
+	assert( iMil >= 0 && iMil < 1000 );	//TODO Generalise this
 	std::string str("0.");
 	if ( iMil < 100 ) str += "0";
 	if ( iMil < 10  ) str += "0";

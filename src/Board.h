@@ -182,18 +182,18 @@ public:
 			const Component&	comp	= mapObj.second;
 			if ( comp.GetType() == COMP::WIRE && comp.GetIsPlaced() )
 			{
-				const int& lyr  = comp.GetLyr();	assert(lyr == 0);
+				const int& lyr  = comp.GetLyr();	assert( lyr == 0 );
 				const int& rowA = comp.GetRow();
 				const int& colA = comp.GetCol();
 				const int  rowB = comp.GetLastRow();
 				const int  colB = comp.GetLastCol();
 
-				Element* pA = Get(lyr, rowA, colA);	assert(pA->GetNumWires() < 2);
-				Element* pB = Get(lyr, rowB, colB);	assert(pB->GetNumWires() < 2);
+				Element* pA = Get(lyr, rowA, colA);	assert( pA->GetNumWires() < 2 );
+				Element* pB = Get(lyr, rowB, colB);	assert( pB->GetNumWires() < 2 );
 
-				assert(pA->GetNumCompIds() > 0 && pA->GetNumCompIds() < 3);
-				assert(pB->GetNumCompIds() > 0 && pB->GetNumCompIds() < 3);
-				assert(pB->GetNodeId() == pA->GetNodeId());	// Wire ends must have same NodeId
+				assert( pA->GetNumCompIds() > 0 && pA->GetNumCompIds() < 3 );
+				assert( pB->GetNumCompIds() > 0 && pB->GetNumCompIds() < 3 );
+				assert( pB->GetNodeId() == pA->GetNodeId() );	// Wire ends must have same NodeId
 
 				const int iSlotA = pA->GetSlotFromCompId(compId);
 				const int iSlotB = pB->GetSlotFromCompId(compId);
@@ -338,8 +338,8 @@ public:
 			{
 				Component& comp	= mapObj.second;
 				if ( !comp.GetIsPlaced() ) continue;
-				const bool bOK1 = TakeOff(comp); assert(bOK1);
-				const bool bOK2 = PutDown(comp); assert(bOK2);
+				const bool bOK1 = TakeOff(comp); assert( bOK1 );
+				const bool bOK2 = PutDown(comp); assert( bOK2 );
 			}
 		}
 	}
@@ -385,7 +385,7 @@ public:
 
 	Component& GetUserComponent()	// The currently selected component
 	{
-		assert(m_groupMgr.GetNumUserComps() == 1);	// Should only have one component selected
+		assert( m_groupMgr.GetNumUserComps() == 1 );	// Should only have one component selected
 		return m_compMgr.GetComponentById( m_groupMgr.GetUserCompId() );
 	}
 
@@ -608,7 +608,7 @@ private:
 			const Component& comp = mapObj.second;
 			if ( comp.GetType() == COMP::WIRE && comp.GetIsPlaced() )
 			{
-				const int& lyr = comp.GetLyr();	assert(lyr == 0);
+				const int& lyr = comp.GetLyr();	assert( lyr == 0 );
 				int jRow( comp.GetRow() );
 				for (int j = 0, jRows = comp.GetCompRows(); j < jRows; j++, jRow++)
 				{

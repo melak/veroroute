@@ -21,6 +21,7 @@
 
 #include <QApplication>
 #include <QMainWindow>
+#include <QDockWidget>
 #include <QListWidgetItem>
 #include <QtGui>
 #include <QWidget>
@@ -112,6 +113,7 @@ protected:
 	void dragEnterEvent(QDragEnterEvent *e);
 	void dropEvent(QDropEvent *e);
 public slots:
+	void Startup();
 	// File menu items
 	void New();
 	void Open();
@@ -231,6 +233,7 @@ public slots:
 	void HandleNetworkReply(QNetworkReply* reply);
 
 	// Helpers for child dialogs
+	void ShowDlg(QWidget* p);
 
 	// View controls
 	void TrackSliderChanged(int i);
@@ -457,6 +460,8 @@ private:
 
 	QLabel*					m_labelStatus;	// For permanent status bar text
 
+	QDockWidget*			m_dockControlDlg;
+	QDockWidget*			m_dockCompDlg;
 	ControlDialog*			m_controlDlg;
 	RenderingDialog*		m_renderingDlg;
 	WireDialog*				m_wireDlg;

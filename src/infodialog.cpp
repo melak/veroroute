@@ -21,7 +21,7 @@
 #include "ui_infodialog.h"
 #include "mainwindow.h"
 
-InfoDialog::InfoDialog(MainWindow *parent)
+InfoDialog::InfoDialog(MainWindow* parent)
 : QDialog(parent)
 , ui(new Ui::InfoDialog)
 , m_pMainWindow(parent)

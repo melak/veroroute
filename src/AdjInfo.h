@@ -42,13 +42,13 @@ public:
 	bool		GetHasAdj(int nodeId) const	{ return m_adjCount.find(nodeId) != m_adjCount.end(); }
 	void IncCount(int nodeId)
 	{
-		assert(m_nodeId != nodeId);	// Sanity check.  Can't be adjacent to self
+		assert( m_nodeId != nodeId );	// Sanity check.  Can't be adjacent to self
 		const auto iter = m_adjCount.find(nodeId);
 		if ( iter != m_adjCount.end() ) iter->second++; else m_adjCount[nodeId] = 1;
 	}
 	void DecCount(int nodeId)
 	{
-		assert(m_nodeId != nodeId);	// Sanity check.  Can't be adjacent to self
+		assert( m_nodeId != nodeId );	// Sanity check.  Can't be adjacent to self
 		const auto iter = m_adjCount.find(nodeId);
 		if ( iter != m_adjCount.end() ) { iter->second--; if ( iter->second == 0 ) m_adjCount.erase(iter); }
 	}

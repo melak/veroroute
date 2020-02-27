@@ -21,7 +21,7 @@
 #include "ui_textdialog.h"
 #include "mainwindow.h"
 
-TextDialog::TextDialog(MainWindow *parent)
+TextDialog::TextDialog(MainWindow* parent)
 : QDialog(parent)
 , ui(new Ui::TextDialog)
 , m_pMainWindow(parent)

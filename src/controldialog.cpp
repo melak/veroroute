@@ -21,12 +21,12 @@
 #include "ui_controldialog.h"
 #include "mainwindow.h"
 
-ControlDialog::ControlDialog(MainWindow* parent)
-: QDialog(parent)
+ControlDialog::ControlDialog(QWidget* parent)
+: QWidget(parent)
 , ui(new Ui_ControlDialog)
-, m_pMainWindow(parent)
+, m_pMainWindow(nullptr)
 {
-	ui->setupUi(this);
+	ui->setupUi((QDialog*)(this));
 
 	QFont font = ui->rotateCCW->font();
 	font.setFamily(QString("Arial Unicode MS"));
@@ -47,6 +47,11 @@ ControlDialog::ControlDialog(MainWindow* parent)
 	ui->textR->setText(QChar(0x25b6));
 	ui->textT->setText(QChar(0x25b2));
 	ui->textB->setText(QChar(0x25bc));
+}
+
+void ControlDialog::SetMainWindow(MainWindow* p)
+{
+	m_pMainWindow = p;
 
 	QObject::connect(ui->trackSlider,		SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(TrackSliderChanged(int)));
 	QObject::connect(ui->saturationSlider,	SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SaturationSliderChanged(int)));
@@ -228,11 +233,11 @@ void ControlDialog::UpdateControls()	// Non-component controls
 void ControlDialog::keyPressEvent(QKeyEvent* event)
 {
 	m_pMainWindow->specialKeyPressEvent(event);
-	QDialog::keyPressEvent(event);
+	QWidget::keyPressEvent(event);
 }
 
 void ControlDialog::keyReleaseEvent(QKeyEvent* event)
 {
 	m_pMainWindow->commonKeyReleaseEvent(event);
-	QDialog::keyReleaseEvent(event);
+	QWidget::keyReleaseEvent(event);
 }

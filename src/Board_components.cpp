@@ -77,7 +77,7 @@ int Board::AddComponent(MyScrollArea* pScrollArea, const Component& tmp, bool bD
 
 	m_nodeInfoMgr.AddComp(comp);
 
-	assert(!comp.GetIsPlaced()); // Sanity check.  Should not be placed yet
+	assert( !comp.GetIsPlaced() ); // Sanity check.  Should not be placed yet
 
 	if ( !bDoPlace ) return compId;
 
@@ -173,8 +173,8 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 	if ( bAllowHoleShare && bWire )
 	{
 		// pA and pB are the opposite ends of the wire
-		Element* pA = Get(lyr, rowTL, colTL);						assert(pA);
-		Element* pB = Get(lyr, rowTL+compRows-1, colTL+compCols-1);	assert(pB);
+		Element* pA = Get(lyr, rowTL, colTL);						assert( pA );
+		Element* pB = Get(lyr, rowTL+compRows-1, colTL+compCols-1);	assert( pB );
 		assert( !pA->GetCompExists(comp.GetId()) && !pB->GetCompExists(comp.GetId()) );
 		if ( pA->GetWireExists(pB) || pB->GetWireExists(pA) ) return false;	// No duplicates !!!
 	}
@@ -300,9 +300,9 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 	if ( bOK && bWire )
 	{
 		// Check for short-circuit in this layer
-		assert(lyr == 0);
-		Element* pW0 = Get(lyr, rowTL, colTL);							assert(pW0);
-		Element* pW1 = Get(lyr, rowTL+compRows-1, colTL+compCols-1);	assert(pW1);
+		assert( lyr == 0 );
+		Element* pW0 = Get(lyr, rowTL, colTL);							assert( pW0 );
+		Element* pW1 = Get(lyr, rowTL+compRows-1, colTL+compCols-1);	assert( pW1 );
 		bOK = pW0->GetNodeId() == BAD_NODEID ||
 			  pW1->GetNodeId() == BAD_NODEID ||
 			  pW0->GetNodeId() == pW1->GetNodeId();
@@ -465,10 +465,10 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 				pGrid->SetSlotInfo(iSlot, pinIndex, compId);
 
 				const int& iCompNodeId = comp.GetNodeId(pinIndex);
-				assert(!bWire || iCompNodeId == BAD_NODEID); // Wire shouldn't have a NodeId yet
+				assert( !bWire || iCompNodeId == BAD_NODEID ); // Wire shouldn't have a NodeId yet
 				if ( !bWire )	// Write nodeId & flag
 				{
-					const bool bAllLyrs = pGrid->GetHasPin();	assert(bAllLyrs);
+					const bool bAllLyrs = pGrid->GetHasPin();	assert( bAllLyrs );
 					SetNodeId(pGrid, iCompNodeId, bAllLyrs);
 					ClearFlagBits(pGrid, AUTOSET|VEROSET, bAllLyrs);
 					SetFlagBits(pGrid, USERSET, bAllLyrs);
@@ -479,8 +479,8 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 	if ( bWire )	// Handle wires setting the wire ends on the board to same value
 	{
 		// pA and pB are the opposite ends of the wire
-		Element*	pA		= Get(lyr, rowTL, colTL);						assert(pA);
-		Element*	pB		= Get(lyr, rowTL+compRows-1, colTL+compCols-1);	assert(pB);
+		Element*	pA		= Get(lyr, rowTL, colTL);						assert( pA );
+		Element*	pB		= Get(lyr, rowTL+compRows-1, colTL+compCols-1);	assert( pB );
 		const int	iSlotA	= pA->GetSlotFromCompId(compId);
 		const int	iSlotB	= pB->GetSlotFromCompId(compId);
 		pA->SetW(iSlotA, pB);	// Link wire ends
@@ -489,7 +489,7 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 		const bool bAllLyrs(true);
 		if ( pA->GetNodeId() == BAD_NODEID ) { SetNodeId(pA, wireNodeId, bAllLyrs); SetFlagBits(pA, pB->GetFlag() & (USERSET|AUTOSET|VEROSET), bAllLyrs); }	// Write nodeId & flag
 		if ( pB->GetNodeId() == BAD_NODEID ) { SetNodeId(pB, wireNodeId, bAllLyrs); SetFlagBits(pB, pA->GetFlag() & (USERSET|AUTOSET|VEROSET), bAllLyrs); }	// Write nodeId & flag
-		assert(pA->GetNodeId() == pB->GetNodeId());	// Wire ends must have same NodeId
+		assert( pA->GetNodeId() == pB->GetNodeId() );	// Wire ends must have same NodeId
 
 		const char& iFlag	= pA->GetFlag();
 
@@ -542,13 +542,13 @@ bool Board::TakeOff(Component& comp)
 	if ( pA )
 	{
 		iSlotA = pA->GetSlotFromCompId(compId);
-		pA->GetSlotInfo(iSlotA, iPinIndex, tmpCompId);	assert(tmpCompId == compId);
+		pA->GetSlotInfo(iSlotA, iPinIndex, tmpCompId);	assert( tmpCompId == compId );
 		for (int iLyr = 0; iLyr < 2; iLyr++) iOrigIdA[iLyr] = comp.GetOrigId(iLyr, iPinIndex);
 	}
 	if ( pB )
 	{
 		iSlotB = pB->GetSlotFromCompId(compId) ;
-		pB->GetSlotInfo(iSlotB, iPinIndex, tmpCompId);	assert(tmpCompId == compId);
+		pB->GetSlotInfo(iSlotB, iPinIndex, tmpCompId);	assert( tmpCompId == compId );
 		for (int iLyr = 0; iLyr < 2; iLyr++) iOrigIdB[iLyr] = comp.GetOrigId(iLyr, iPinIndex);
 	}
 
@@ -636,13 +636,13 @@ bool Board::TakeOff(Component& comp)
 				{
 					pW->GetSlotInfo(iSlot, iPinIndex, tmpCompId);
 					if ( iPinIndex == BAD_PININDEX ) continue;
-					assert(tmpCompId != BAD_COMPID);
+					assert( tmpCompId != BAD_COMPID );
 					Component& comp = m_compMgr.GetComponentById( tmpCompId );
 					assert( comp.GetType() == COMP::WIRE );
 					origId0 = comp.GetOrigId(0, iPinIndex);
 					origId1 = comp.GetOrigId(1, iPinIndex);
-					assert(origId0 == BAD_NODEID || origId0 == comp.GetNodeId(iPinIndex));
-					assert(origId1 == BAD_NODEID || origId1 == comp.GetNodeId(iPinIndex));
+					assert( origId0 == BAD_NODEID || origId0 == comp.GetNodeId(iPinIndex) );
+					assert( origId1 == BAD_NODEID || origId1 == comp.GetNodeId(iPinIndex) );
 				}
 				if ( origId0 != BAD_NODEID || origId1 != BAD_NODEID) break;
 			}
@@ -657,7 +657,7 @@ bool Board::TakeOff(Component& comp)
 					{
 						pW->GetSlotInfo(iSlot, iPinIndex, tmpCompId);
 						if ( iPinIndex == BAD_PININDEX ) continue;
-						assert(tmpCompId != BAD_COMPID);
+						assert( tmpCompId != BAD_COMPID );
 						Component& comp = m_compMgr.GetComponentById( tmpCompId );
 						comp.SetNodeId(iPinIndex, BAD_NODEID);
 					}

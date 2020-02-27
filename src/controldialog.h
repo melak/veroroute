@@ -24,14 +24,15 @@
 class MainWindow;
 class Ui_ControlDialog;
 
-class ControlDialog : public QDialog
+class ControlDialog : public QWidget
 {
 	Q_OBJECT
 
 public:
-	explicit ControlDialog(MainWindow* parent = 0);
+	explicit ControlDialog(QWidget* parent);
 	~ControlDialog();
 
+	void SetMainWindow(MainWindow* p);
 	void ClearLists();
 	void AddListItem(const std::string& str, bool bBroken, bool bFloating);
 	void SetListItems(const int nodeId);

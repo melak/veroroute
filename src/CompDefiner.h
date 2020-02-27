@@ -146,10 +146,10 @@ public:
 		dCentreCol = 0.5 * ( GetGridColMin() + GetGridColMax() );
 	}
 
-	Pin&	GetCurrentPin()		{ assert(m_currentPinId   != BAD_ID); return *m_grid.GetAt(m_currentPinId); }
+	Pin&	GetCurrentPin()		{ assert( m_currentPinId != BAD_ID ); return *m_grid.GetAt(m_currentPinId); }
 	Shape&	GetCurrentShape()
 	{
-		assert(m_currentShapeId != BAD_ID);
+		assert( m_currentShapeId != BAD_ID );
 		for (auto& s : m_mapShapes)
 			if ( s.first == m_currentShapeId ) return s.second;
 		assert(0);

@@ -82,7 +82,7 @@ public:
 	int  GetNumUserComps() const	{ return GetNumGroupComps(USER_GROUPID); }	// Get number of user-group components
 	int  GetUserCompId() const	// Get the only component in the user-group
 	{
-		assert(GetNumUserComps() == 1);
+		assert( GetNumUserComps() == 1 );
 		return m_list.begin()->second;
 	}
 	void ResetUserGroup(const int& compId)	// Reset the user-group with the comp (and its siblings)

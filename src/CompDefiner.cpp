@@ -78,7 +78,7 @@ void CompDefiner::Build(Component& comp) const
 	comp.SetImportStr( GetImportStr() );
 
 	comp.SetType(COMP::CUSTOM);
-	assert(m_grid.GetLyrs() == 1);
+	assert( m_grid.GetLyrs() == 1 );
 	comp.Allocate(m_grid.GetLyrs(), m_grid.GetRows(), m_grid.GetCols());
 	for (int i = 0, iSize = m_grid.GetSize(); i < iSize; i++)
 		comp.GetAt(i)->Pin::operator=( *m_grid.GetAtConst(i) );
@@ -128,7 +128,7 @@ int CompDefiner::GetNewShapeId() const
 }
 bool CompDefiner::SetWidth(const int& i)
 {
-	assert(i > 0);
+	assert( i > 0 );
 	const bool bChanged = m_grid.GetCols() != i;
 	if ( bChanged )
 	{
@@ -143,7 +143,7 @@ bool CompDefiner::SetWidth(const int& i)
 }
 bool CompDefiner::SetHeight(const int& i)
 {
-	assert(i > 0);
+	assert( i > 0 );
 	const bool bChanged = m_grid.GetRows() != i;
 	if ( bChanged )
 	{

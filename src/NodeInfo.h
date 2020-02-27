@@ -76,8 +76,8 @@ public:
 		m_compIds.pop_back();						// ... then erase it
 	}
 	// Following are for ranking nodes based on the spread of component pins
-	int	 GetWidth() const	{ assert(m_maxCol >= m_minCol);	return m_maxCol - m_minCol; }
-	int	 GetHeight() const	{ assert(m_maxRow >= m_minRow);	return m_maxRow - m_minRow; }
+	int	 GetWidth() const	{ assert( m_maxCol >= m_minCol );	return m_maxCol - m_minCol; }
+	int	 GetHeight() const	{ assert( m_maxRow >= m_minRow );	return m_maxRow - m_minRow; }
 	int	 GetArea() const	{ return GetWidth() * GetHeight(); }
 	int	 GetLength() const	{ return std::max(GetWidth(), GetHeight()); }
 	bool GetHasFloatingComp(CompManager& compMgr) const

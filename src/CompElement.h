@@ -69,9 +69,9 @@ public:
 			int  compId;	// Dummy
 			bool bIsMark;	// Dummy
 			Pin::Load(inStream);			// Load() base class
-			inStream.Load(compId);			assert(compId == -1);
+			inStream.Load(compId);			assert( compId == -1 );
 			TrackElement::Load(inStream);	// Load() base class
-			inStream.Load(bIsMark);			assert(bIsMark == false);
+			inStream.Load(bIsMark);			assert( bIsMark == false );
 		}
 		else
 		{

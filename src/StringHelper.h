@@ -72,7 +72,7 @@ struct StringHelper
 			strList.push_back(s);
 	}
 
-	StringHelper() { assert(true || PreventBuildWarnings()); }
+	StringHelper() { assert( true || PreventBuildWarnings() ); }
 private:
 	bool PreventBuildWarnings() const
 	{

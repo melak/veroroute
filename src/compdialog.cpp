@@ -21,12 +21,12 @@
 #include "ui_compdialog.h"
 #include "mainwindow.h"
 
-CompDialog::CompDialog(MainWindow *parent)
-: QDialog(parent)
+CompDialog::CompDialog(QWidget* parent)
+: QWidget(parent)
 , ui(new Ui::CompDialog)
-, m_pMainWindow(parent)
+, m_pMainWindow(nullptr)
 {
-	ui->setupUi(this);
+	ui->setupUi((QDialog*)this);
 
 	QFont font = ui->pushButtonU->font();
 	font.setFamily(QString("Arial Unicode MS"));
@@ -37,6 +37,27 @@ CompDialog::CompDialog(MainWindow *parent)
 	// Unicode triangles ...
 	ui->pushButtonU->setText(QChar(0x25b3));
 	ui->pushButtonD->setText(QChar(0x25bd));
+
+	ui->spinBox_Width->installEventFilter( this );	// Prevent accidental wheel behaviour from wiping the footprint
+	ui->spinBox_Height->installEventFilter( this );	// Prevent accidental wheel behaviour from wiping the footprint
+
+	ui->comboBox_Shape->blockSignals(true);		// Block signals while populating box
+	ui->comboBox_Shape->clear();
+	MakeMapShapeStrings();
+	for (const auto& mapObj : mapShapeToStr)
+		ui->comboBox_Shape->addItem(QString::fromStdString( mapObj.second ));
+	ui->comboBox_Shape->blockSignals(false);	// We're done populating, so unblock signals
+
+	ui->comboBox_PinShape->blockSignals(true);	// Block signals while populating box
+	ui->comboBox_PinShape->clear();
+	ui->comboBox_PinShape->addItem(QString("Circle"));
+	ui->comboBox_PinShape->addItem(QString("Rectangle"));
+	ui->comboBox_PinShape->blockSignals(false);	// We're done populating, so unblock signals
+}
+
+void CompDialog::SetMainWindow(MainWindow* p)
+{
+	m_pMainWindow = p;
 
 	QObject::connect(ui->lineEdit_Value,	SIGNAL(textChanged(const QString&)),		m_pMainWindow,	SLOT(DefinerSetValueStr(const QString&)));
 	QObject::connect(ui->lineEdit_Prefix,	SIGNAL(textChanged(const QString&)),		m_pMainWindow,	SLOT(DefinerSetPrefixStr(const QString&)));
@@ -61,22 +82,6 @@ CompDialog::CompDialog(MainWindow *parent)
 	QObject::connect(ui->doubleSpinBox_A2,	SIGNAL(valueChanged(double)),				m_pMainWindow,	SLOT(DefinerSetA2(double)));
 	QObject::connect(ui->doubleSpinBox_A3,	SIGNAL(valueChanged(double)),				m_pMainWindow,	SLOT(DefinerSetA3(double)));
 	QObject::connect(ui->pushButton_Build,	SIGNAL(clicked()),							m_pMainWindow,	SLOT(DefinerBuild()));
-
-	ui->spinBox_Width->installEventFilter( this );	// Prevent accidental wheel behaviour from wiping the footprint
-	ui->spinBox_Height->installEventFilter( this );	// Prevent accidental wheel behaviour from wiping the footprint
-
-	ui->comboBox_Shape->blockSignals(true);	// Block signals while populating box
-	ui->comboBox_Shape->clear();
-	MakeMapShapeStrings();
-	for (const auto& mapObj : mapShapeToStr)
-		ui->comboBox_Shape->addItem(QString::fromStdString( mapObj.second ));
-	ui->comboBox_Shape->blockSignals(false);	// We're done populating, so unblock signals
-
-	ui->comboBox_PinShape->blockSignals(true);	// Block signals while populating box
-	ui->comboBox_PinShape->clear();
-	ui->comboBox_PinShape->addItem(QString("Circle"));
-	ui->comboBox_PinShape->addItem(QString("Rectangle"));
-	ui->comboBox_PinShape->blockSignals(false);	// We're done populating, so unblock signals
 }
 
 bool CompDialog::eventFilter(QObject* object, QEvent* event)
@@ -193,11 +198,11 @@ void CompDialog::EnableControls()	// Enable/disable controls
 void CompDialog::keyPressEvent(QKeyEvent* event)
 {
 	m_pMainWindow->specialKeyPressEvent(event);
-	QDialog::keyPressEvent(event);
+	QWidget::keyPressEvent(event);
 }
 
 void CompDialog::keyReleaseEvent(QKeyEvent* event)
 {
 	m_pMainWindow->commonKeyReleaseEvent(event);
-	QDialog::keyReleaseEvent(event);
+	QWidget::keyReleaseEvent(event);
 }

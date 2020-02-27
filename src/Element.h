@@ -212,7 +212,7 @@ public:
 	void SetW(const int& iSlot, Element* p)
 	{
 		assert( !GetWireExists(p) );	// No duplicates allowed
-		assert(iSlot == 0 || iSlot == 1);
+		assert( iSlot == 0 || iSlot == 1 );
 		auto pBase = GetBase();	if ( pBase == this ) m_pW[iSlot] = p; else pBase->SetW(iSlot, p);
 	}
 	const bool&			GetIsMark() const				{ auto pBase = GetBaseConst(); return pBase == this ? m_bIsMark		: pBase->GetIsMark(); }
@@ -286,7 +286,7 @@ public:
 	}
 	bool IsNbr(const Element* p) const
 	{
-		assert(p != nullptr);	// Sanity check
+		assert( p != nullptr );	// Sanity check
 		for (int iNbr = 0; iNbr < NUM_NBRS; iNbr++)
 			if ( GetNbr(iNbr) == p ) return true;
 		return false;

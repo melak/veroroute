@@ -190,7 +190,7 @@ public:
 	void SetNodeId(const size_t& iPinIndex, const int& i)			{ m_nodeIdPins[iPinIndex] = i; }
 	void SetOrigId(const int& lyr, const size_t& iPinIndex, const int& i)
 	{
-		assert(lyr == 0 || lyr == 1);
+		assert( lyr == 0 || lyr == 1 );
 		if ( lyr == 0 ) m_origIdPins1[iPinIndex] = i; else m_origIdPins2[iPinIndex] = i;
 	}
 	void SetPinLabel(const size_t& iPinIndex, const std::string& s)	{ m_pinLabels[iPinIndex] = s; }
@@ -198,8 +198,8 @@ public:
 	void SetShape(const size_t& iShapeIndex, const Shape& o)		{ m_shapes[iShapeIndex] = o; }
 	void CopyPinLabels(const Component& o)
 	{
-		assert(m_pinLabels.size() == o.m_pinLabels.size());
-		assert(m_pinAligns.size() == o.m_pinAligns.size());
+		assert( m_pinLabels.size() == o.m_pinLabels.size() );
+		assert( m_pinAligns.size() == o.m_pinAligns.size() );
 		std::copy(o.m_pinLabels.begin(), o.m_pinLabels.end(), m_pinLabels.begin());
 		std::copy(o.m_pinAligns.begin(), o.m_pinAligns.end(), m_pinAligns.begin());
 	}
