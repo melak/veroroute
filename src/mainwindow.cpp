@@ -329,8 +329,8 @@ void MainWindow::ResetView(bool bTutorial)
 	m_infoDlg->Update();
 	m_infoDlg->SetReadOnly(bTutorial);
 	m_infoDlg->ShowButtons(bTutorial);
-	m_infoDlg->EnablePrev(bTutorial && m_iTutorialNumber > 0);	// Tutorials go to 0 to 20
-	m_infoDlg->EnableNext(bTutorial && m_iTutorialNumber < 20);	// Tutorials go to 0 to 20
+	m_infoDlg->EnablePrev(bTutorial && m_iTutorialNumber > 0);	// Tutorials go to 0 to 21
+	m_infoDlg->EnableNext(bTutorial && m_iTutorialNumber < 21);	// Tutorials go to 0 to 21
 	if ( !bTutorial ) m_iTutorialNumber = -1;	// Cancel tutorial mode
 	UpdateControls();
 	UpdateBOM();
