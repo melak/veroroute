@@ -29,8 +29,7 @@ std::string mouseActionString("Action");	// For the undo/redo history
 
 void MainWindow::GetPixMapXY(const QPoint& currentPoint, int& pixmapX, int& pixmapY) const
 {
-	const int iToolbarHeight = ui->toolBar->isFloating() ? 0 : ui->toolBar->height();
-
+	const int iToolbarHeight = ( ui->toolBar->isFloating()   || ui->toolBar->isHidden()   ) ? 0 : ui->toolBar->height();
 	pixmapX = currentPoint.x() + m_scrollArea->horizontalScrollBar()->value();
 	pixmapY = currentPoint.y() + m_scrollArea->verticalScrollBar()->value() - ui->menuBar->height()- iToolbarHeight;
 }

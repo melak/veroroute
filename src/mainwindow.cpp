@@ -925,11 +925,13 @@ void MainWindow::Delete()
 // Windows menu items
 void MainWindow::ShowDlg(QWidget* p)	{ p->showNormal();	p->raise();	p->activateWindow(); }
 void MainWindow::ShowControlDialog()	{ ShowDlg(m_dockControlDlg); }
+void MainWindow::HideControlDialog()	{ m_dockControlDlg->hide(); }
 void MainWindow::ShowRenderingDialog()	{ ShowDlg(m_renderingDlg); }
 void MainWindow::ShowWireDialog()		{ ShowDlg(m_wireDlg); }
 void MainWindow::ShowHotkeysDialog()	{ ShowDlg(m_hotkeysDlg); }
 void MainWindow::ShowInfoDialog()		{ ShowDlg(m_infoDlg); }
 void MainWindow::ShowCompDialog()		{ ShowDlg(m_dockCompDlg); }
+void MainWindow::HideCompDialog()		{ m_dockCompDlg->hide(); }
 void MainWindow::ShowTextDialog()		{ ShowDlg(m_textDlg); }
 void MainWindow::ShowBomDialog()		{ UpdateBOM();				ShowDlg(m_bomDlg); }
 void MainWindow::ShowTemplatesDialog()	{ UpdateTemplatesDialog();	ShowDlg(m_templatesDlg); }

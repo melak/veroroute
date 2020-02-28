@@ -650,7 +650,7 @@ void Board::CheckAllComplete()
 	// Calling Route() when routing is not enabled sets the cost info without building new tracks.
 	// So we can use that to set the "Complete" flags
 	Route(true);
-	for (size_t n = 0; n < m_nodeInfoMgr.GetSize(); n++)
+	for (size_t n = 0, nSize = m_nodeInfoMgr.GetSize(); n < nSize; n++)
 	{
 		NodeInfo* pNodeInfo = m_nodeInfoMgr.GetAt(n);
 		pNodeInfo->SetComplete( pNodeInfo->GetCost() == 0 );
@@ -721,15 +721,14 @@ void Board::PasteTracks(bool bTidy)
 		for (int iSlot = 0; iSlot < 2; iSlot++)
 		{
 			Element* pW = p->GetW(iSlot);
-			if ( pW )
+			if ( pW == nullptr ) continue;
+
+			p->GetSlotInfo(iSlot, iPinIndex, tmpCompId);
+			Component& comp = m_compMgr.GetComponentById( tmpCompId );
+			for (size_t i = 0, iSize = comp.GetNumPins(); i < iSize; i++)
 			{
-				p->GetSlotInfo(iSlot, iPinIndex, tmpCompId);
-				Component& comp = m_compMgr.GetComponentById( tmpCompId );
-				for (size_t i = 0; i < comp.GetNumPins(); i++)
-				{
-					comp.SetNodeId(i, nodeId);
-					for (int lyr = 0; lyr < 2; lyr++) comp.SetOrigId(lyr, i, nodeId);
-				}
+				comp.SetNodeId(i, nodeId);
+				for (int lyr = 0; lyr < 2; lyr++) comp.SetOrigId(lyr, i, nodeId);
 			}
 		}
 	}
@@ -745,28 +744,19 @@ void Board::WipeTracks()
 	if ( trax.GetSize() > 0 && trax.GetIsPlaced() )
 	{
 		const bool bAllLyrs(false);
+		const int& lyr = trax.GetLyr();
 
-		const int&	lyrTL		= trax.GetLyr();
-		const int&	rowTL		= trax.GetRow();
-		const int&	colTL		= trax.GetCol();
-		const int&	compCols	= trax.GetCompCols();
-		const int&	compRows	= trax.GetCompRows();
-
-		int jRow(rowTL);
-		for (int j = 0; j < compRows; j++, jRow++)
+		for (int j = 0, jRow = trax.GetRow(), rows = trax.GetCompRows(); j < rows; j++, jRow++)
+		for (int i = 0, iCol = trax.GetCol(), cols = trax.GetCompCols(); i < cols; i++, iCol++)
 		{
-			int iCol(colTL);
-			for (int i = 0; i < compCols; i++, iCol++)
-			{
-				if ( !trax.GetCompElement(j,i)->ReadFlagBits(RECTSET) ) continue;
-				Element* p = Get(lyrTL, jRow, iCol);
-				assert( !p->GetHasPin() && !p->GetIsHole() && !p->GetHasComp() );	// Sanity check
+			if ( !trax.GetCompElement(j,i)->ReadFlagBits(RECTSET) ) continue;
+			Element* p = Get(lyr, jRow, iCol);
+			assert( !p->GetHasPin() && !p->GetIsHole() && !p->GetHasComp() );	// Sanity check
 
-				SetNodeId(p, BAD_NODEID, bAllLyrs);
-				p->SetSurface(SURFACE_FREE);
-				ClearFlagBits(p, AUTOSET|VEROSET|RECTSET, bAllLyrs);
-				SetFlagBits(p, USERSET, bAllLyrs);
-			}
+			SetNodeId(p, BAD_NODEID, bAllLyrs);
+			p->SetSurface(SURFACE_FREE);
+			ClearFlagBits(p, AUTOSET|VEROSET|RECTSET, bAllLyrs);
+			SetFlagBits(p, USERSET, bAllLyrs);
 		}
 		m_compMgr.ClearTrax();
 		m_rectMgr.Clear();
@@ -775,9 +765,9 @@ void Board::WipeTracks()
 	{
 		const bool bAllLyrs(true);
 
-		for (int k = 0, kMax = GetLyrs(); k < kMax; k++)
-		for (int j = 0, jMax = GetRows(); j < jMax; j++)
-		for (int i = 0, iMax = GetCols(); i < iMax; i++)
+		for (int k = 0, lyrs = GetLyrs(); k < lyrs; k++)
+		for (int j = 0, rows = GetRows(); j < rows; j++)
+		for (int i = 0, cols = GetCols(); i < cols; i++)
 		{
 			Element* p = Get(k, j, i);
 			assert( !p->GetHasPin() && !p->GetIsHole() && !p->GetHasComp() );	// Sanity check

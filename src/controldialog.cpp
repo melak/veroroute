@@ -230,6 +230,16 @@ void ControlDialog::UpdateControls()	// Non-component controls
 	ui->fillSlider->setValue( board.GetFillSaturation() );
 }
 
+void ControlDialog::paintEvent(QPaintEvent* event)
+{
+	if ( m_pMainWindow->GetBoard().GetCompEdit() )	//TODO Try to prevent both dialogs appearing at same time
+	{
+		m_pMainWindow->HideControlDialog();
+		return event->accept();
+	}
+	QWidget::paintEvent(event);
+}
+
 void ControlDialog::keyPressEvent(QKeyEvent* event)
 {
 	m_pMainWindow->specialKeyPressEvent(event);

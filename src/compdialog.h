@@ -36,6 +36,7 @@ public:
 	void Update();
 	void EnableControls();
 protected:
+	void paintEvent(QPaintEvent* event);
 	bool eventFilter(QObject* object, QEvent* event);
 	void keyPressEvent(QKeyEvent* event);
 	void keyReleaseEvent(QKeyEvent* event);

@@ -84,6 +84,7 @@ public:
 	void GetLRTB(const GuiControl& guiCtrl, const Rect& rect, int& L, int& R, int& T, int& B) const;
 	void GetXY(const GuiControl& guiCtrl, const Component& comp, int& X, int& Y) const;
 
+	const Board& GetBoard() const		{ return m_board; }
 	const bool&	GetCtrlKeyDown() const	{ return m_bCtrlKeyDown;	}
 	const bool&	GetShiftKeyDown() const	{ return m_bShiftKeyDown;	}
 	const bool&	GetPaintPins() const	{ return m_bPaintPins;		}
@@ -208,12 +209,14 @@ public slots:
 	}
 	// Windows menu items
 	void ShowControlDialog();
+	void HideControlDialog();
 	void ShowTemplatesDialog();
 	void ShowRenderingDialog();
 	void ShowWireDialog();
 	void ShowHotkeysDialog();
 	void ShowInfoDialog();
 	void ShowCompDialog();
+	void HideCompDialog();
 	void ShowTextDialog();
 	void ShowBomDialog();
 	void ShowPinDialog();
