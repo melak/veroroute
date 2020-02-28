@@ -178,10 +178,12 @@ static const char* szVEROROUTE_VERSION =
 //"1.78";	// Bug fix:  Unpainted wire ends were being drawn as painted.
 			// Improvement: Added default label offsets to small Electrolytic Caps so they don't lie over pin holes.
 			// Stop offsetting pad labels by default (it was too confusing manipulating them like that).
-  "1.79";	// New feature:  File menu allows Gerber export as either 1-layer or 2-layer.
+//"1.79";	// New feature:  File menu allows Gerber export as either 1-layer or 2-layer.
 			// Removed NPTH/PTH selection since it is implied by the export type (1-layer/2-layer).
 			// Changed hatched lines in Mono mode from yellow to red.
 			// Hide vias in PCB mode (as they are ignored at the moment).
 			// Help->Support now opens forum in browser.
 			// Added "Clear recent files list" to File menu.
-
+  "1.80";	// Added second board layer.
+			// Made the Control and Component Editor dialogs dockable and docked by default.
+			// Updated the tutorials to describe 2-layer functionality.

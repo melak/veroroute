@@ -187,4 +187,7 @@ V1.79  New feature:  File menu allows Gerber export as either 1-layer or 2-layer
        Hide vias in PCB mode (as they are ignored at the moment).
        Help->Support now opens forum in browser.
        Added "Clear recent files list" to File menu.
+V1.80  Added second board layer.
+       Made the Control and Component Editor dialogs dockable and docked by default.
+       Updated the tutorials to describe 2-layer functionality.
 

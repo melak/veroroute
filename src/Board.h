@@ -338,8 +338,8 @@ public:
 			{
 				Component& comp	= mapObj.second;
 				if ( !comp.GetIsPlaced() ) continue;
-				const bool bOK1 = TakeOff(comp); assert( bOK1 );
-				const bool bOK2 = PutDown(comp); assert( bOK2 );
+				TakeOff(comp);
+				PutDown(comp);
 			}
 		}
 	}
