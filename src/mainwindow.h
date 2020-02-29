@@ -289,6 +289,8 @@ public slots:
 	void SetMaskWidth(int i);
 	void SetSilkWidth(int i);
 	void SetEdgeWidth(int i);
+	void SetViaPadWidth(int i);
+	void SetViaHoleWidth(int i);
 
 	// Rendering
 	void SetTextSizeComp(int i);

@@ -44,6 +44,8 @@ RenderingDialog::RenderingDialog(MainWindow* parent)
 	QObject::connect(ui->maskWidth,		SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetMaskWidth(int)));
 	QObject::connect(ui->silkWidth,		SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetSilkWidth(int)));
 	QObject::connect(ui->edgeWidth,		SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetEdgeWidth(int)));
+	QObject::connect(ui->viapadWidth,	SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetViaPadWidth(int)));
+	QObject::connect(ui->viaholeWidth,	SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetViaHoleWidth(int)));
 }
 
 RenderingDialog::~RenderingDialog()
@@ -79,18 +81,13 @@ void RenderingDialog::UpdateControls()
 	ui->trackWidth->setDisabled(	bCompEdit || bNoTrackOptions || bVero );
 	ui->holeWidth->setDisabled(		bCompEdit || bNoTrackOptions || bVero );
 	ui->gapWidth->setDisabled(		bCompEdit || bVero || !bMonoPCB || !bGndFill );
-	ui->maskWidth->setDisabled(		bCompEdit || bVero || !bPCB );
-	ui->silkWidth->setDisabled(		bCompEdit || bVero || !bPCB );
-	ui->edgeWidth->setDisabled(		bCompEdit || bVero || !bPCB );
+	ui->groupBox_pcb->setDisabled(	bCompEdit || bVero || !bPCB );
 
 	// ... and corresponding labels
 	ui->label_pad->setDisabled(		bCompEdit || bNoTrackOptions || bVero );
 	ui->label_track->setDisabled(	bCompEdit || bNoTrackOptions || bVero );
 	ui->label_hole->setDisabled(	bCompEdit || bNoTrackOptions || bVero );
 	ui->label_gap->setDisabled(		bCompEdit || bVero || !bMonoPCB || !bGndFill );
-	ui->label_mask->setDisabled(	bCompEdit || bVero || !bPCB );
-	ui->label_silk->setDisabled(	bCompEdit || bVero || !bPCB );
-	ui->label_edge->setDisabled(	bCompEdit || bVero || !bPCB );
 
 	ui->padWidth->setValue(		board.GetPAD_PERCENT()		);
 	ui->trackWidth->setValue(	board.GetTRACK_PERCENT()	);
@@ -99,6 +96,8 @@ void RenderingDialog::UpdateControls()
 	ui->maskWidth->setValue(	board.GetMASK_PERCENT()		);
 	ui->silkWidth->setValue(	board.GetSILK_PERCENT()		);
 	ui->edgeWidth->setValue(	board.GetEDGE_PERCENT()		);
+	ui->viapadWidth->setValue(	board.GetVIAPAD_PERCENT()	);
+	ui->viaholeWidth->setValue(	board.GetVIAHOLE_PERCENT()	);
 
 	const int minTrackSep = board.GetMIN_TRACK_SEPARATION_PERCENT();
 	const std::string str = "Guaranteed minimum track separation = " + std::to_string(minTrackSep) + " mil";
