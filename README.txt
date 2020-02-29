@@ -44,13 +44,18 @@ There is no installer. Just unzip everything to a folder and run it from there.
 A precompiled 64-bit version for Linux Mint 18.3 is also available.
 This has been tested on Cinnamon/MATE/Xfce/KDE versions.
 It may also work on other recent 64-bit Linux distributions depending on whether
-they have the necessary Qt libraries installed.
-There is no installer. Just unzip everything to a folder and run it from there.
+they have the necessary Qt libraries installed (it needs Qt version 5).
 
-To install the pre-compiled version of VeroRoute on Linux Mint 18.3, unzip everything
-to a folder.  Then open a command line prompt in that folder and type
+To install on Linux:  Unzip everything to a folder.  Then open a command line prompt in that folder and type
 
-sudo ./veroroute-install.sh
+    sudo ./veroroute-install.sh
+
+To uninstall on Linux:  Open a command line prompt in the unzipped folder and type
+
+    sudo ./veroroute-uninstall.sh
+
+
+On MS Windows: There is no installer, so just unzip everything to a folder and run it from there.
 
 
 
