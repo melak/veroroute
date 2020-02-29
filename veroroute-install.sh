@@ -6,12 +6,13 @@
 #
 
 install -Dm755 veroroute "$pkgdir/usr/bin/veroroute"
-mkdir -p "$pkgdir/usr/share/pixmaps/"
-install -Dm644 veroroute.png "$pkgdir/usr/share/pixmaps/"
 mkdir -p "$pkgdir/usr/share/applications/"
 install -Dm644 "veroroute.desktop" "$pkgdir/usr/share/applications/"
+mkdir -p "$pkgdir/usr/share/pixmaps/"
+install -Dm644 veroroute.png "$pkgdir/usr/share/pixmaps/"
+mkdir -p "$pkgdir/usr/share/veroroute"
+install -Dm644 veroroute.png "$pkgdir/usr/share/veroroute/"
 mkdir -p "$pkgdir/usr/share/veroroute/tutorials"
-install -Dm644 veroroute.png "$pkgdir/usr/share/veroroute/"  # install veroroute.png twice
 find tutorials -maxdepth 1 -type f -exec install -Dm644 "{}" "$pkgdir/usr/share/veroroute/tutorials" \;
 mkdir -p "$pkgdir/usr/share/gEDA/sym"
 (cd libraries/gEDA; find . -mindepth 2 -type f -exec install -Dm644 "{}" "$pkgdir/usr/share/gEDA/sym/{}" \;)
