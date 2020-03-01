@@ -600,7 +600,7 @@ bool Board::TakeOff(Component& comp)
 				// Wire-ends need special treatment, so just handle non-wire pins here
 				if ( !bWire )
 				{
-					for (int lyr = 0; lyr < GetLyrs(); lyr++)	//TODO_NEW Use 2 instead of GetLyrs() ???
+					for (int lyr = 0; lyr < GetLyrs(); lyr++)
 					{
 						Element* p = ( lyr == 0 ) ? pGrid : pGrid->GetNbr(NBR_X);
 						if ( p == nullptr ) continue;
@@ -672,7 +672,7 @@ bool Board::TakeOff(Component& comp)
 		if ( !pA->GetHasWire() )	// If we've taken off the last wire at the location
 		{
 			const bool bAllLyrs = false;
-			for (int lyr = 0; lyr < GetLyrs(); lyr++)	//TODO_NEW Use 2 instead of GetLyrs() ???
+			for (int lyr = 0; lyr < GetLyrs(); lyr++)
 			{
 				Element* p = ( lyr == 0 ) ? pA : pA->GetNbr(NBR_X);
 				if ( p == nullptr ) continue;
@@ -684,7 +684,7 @@ bool Board::TakeOff(Component& comp)
 		if ( !pB->GetHasWire() )	// If we've taken off the last wire at the location
 		{
 			const bool bAllLyrs = false;
-			for (int lyr = 0; lyr < GetLyrs(); lyr++)	//TODO_NEW Use 2 instead of GetLyrs() ???
+			for (int lyr = 0; lyr < GetLyrs(); lyr++)
 			{
 				Element* p = ( lyr == 0 ) ? pB : pB->GetNbr(NBR_X);
 				if ( p == nullptr ) continue;

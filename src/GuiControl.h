@@ -455,7 +455,7 @@ private:
 	int			m_TRACK_PERCENT		= 46;				// Range 30 to 50 of a grid square   (i.e. 1 PERCENT = 1 mil)
 	int			m_HOLE_PERCENT		= 26;				// Range 20 to 40 of a grid square   (i.e. 1 PERCENT = 1 mil)
 	int			m_GAP_PERCENT		= 10;				// Range  5 to 30 of a grid square   (i.e. 1 PERCENT = 1 mil)
-	int			m_MASK_PERCENT		= 4;				// Range  0 to 10 of a grid square   (i.e. 1 PERCENTSetEdgeWidth = 1 mil)
+	int			m_MASK_PERCENT		= 4;				// Range  0 to 10 of a grid square   (i.e. 1 PERCENT = 1 mil)
 	int			m_SILK_PERCENT		= 7;				// Range  1 to 10 of a grid square   (i.e. 1 PERCENT = 1 mil)
 	int			m_EDGE_PERCENT		= 20;				// Range  0 to 50 of a grid square   (i.e. 1 PERCENT = 1 mil)
 	int			m_VIAPAD_PERCENT	= 50;				// Range 50 to 80 of a grid square   (i.e. 1 PERCENT = 1 mil)

@@ -250,20 +250,12 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 					}
 				}
 				else
-				{
-					// Draw a sharp bend for L-C-R instead of a smooth curve
-					polygon << p[iL] << pC << p[iR];
-				}
+					polygon << p[iL] << pC << p[iR];	// Draw a sharp bend for L-C-R instead of a smooth curve
 			}
 			else
 			{
-				if ( iL == iFirst )	polygon << p[iL];	// Add "L" to the polygon is it's the first point
-				//TODO
-				// Not sure ( iR != iFirst ) is correct for straight tracks with diags and perimeter code 145
-				// Test shows it is needed for curved tracks with max diags mode though
-				//if ( bCurvedTracks && bMaxDiags ) // <== This is no good either !!!
-				if ( iR != iFirst )
-					polygon << p[iR];	// Add "R" to the polygon if it isn't the first point
+				if ( iL == iFirst ) polygon << p[iL];	// Add "L" to the polygon is it's the first point
+				if ( iR != iFirst ) polygon << p[iR];	// Add "R" to the polygon if it isn't the first point
 			}
 		}
 		if ( polygon.size() == 2 && !bStraight )	// If points are not directly opposite the centre ...
