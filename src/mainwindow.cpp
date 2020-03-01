@@ -456,7 +456,8 @@ void MainWindow::OpenVrt(const QString& fileName, bool bMerge)	// Helper for ope
 				m_board.Merge(tmp);	// ... merge in the temporary board
 			else
 				m_board	= tmp;		// ... copy the temporary board
-			m_fileName	= fileName;
+			if ( !bMerge )
+				m_fileName = fileName;	// Only a regular open (not a merge) should update the filename
 			ResetView();
 			if ( bMerge )
 				UpdateHistory("File->Open (merge into current)");
@@ -471,7 +472,8 @@ void MainWindow::OpenVrt(const QString& fileName, bool bMerge)	// Helper for ope
 	else
 		QMessageBox::information(this, tr("Unable to open file"), tr(fileNameStr.c_str()));
 
-	UpdateRecentFiles(&fileName, bOK);	// Remove file from list if bOK == false
+	if ( !bMerge || !bOK )	// A successful merge should not add the merged-in file to the recent files list
+		UpdateRecentFiles(&fileName, bOK);	// Remove file from list if bOK == false
 }
 
 // File menu items

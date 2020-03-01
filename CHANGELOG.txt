@@ -63,8 +63,8 @@ V1.25  Usability tweaks:
 V1.26  Bug fix: Holding down "P" and SPACE at the same time would allow mouse move to modify component pins.
        Usability tweak: Holding down SPACE now allows un-painting the board under a placed component pin,
        or painting the board under the pin to match the existing NodeId on the pin.
-V1.27  Bug fix:  Deleting a component was not immediately updating the Bad Nodes lists.
-       Bug fix:  V1.26 allowed components to be dragged while user was painting pins.
+V1.27  Bug fix: Deleting a component was not immediately updating the Bad Nodes lists.
+       Bug fix: V1.26 allowed components to be dragged while user was painting pins.
 V1.28  Improvements:
        Added "Toggle Grid" and "Toggle Mirror" as View menu items.
        List part types in B.O.M.
@@ -85,7 +85,7 @@ V1.31  Improvement: User-defined areas select tracks as well as components.
 V1.32  New feature: "File->Open (merge into current)".
 V1.33  New feature: Allow horizontal veroboard strips.
        Tweaked color assignment algorithm.
-V1.34  Bug fix:  Merge was not clearing existing user-defined areas.
+V1.34  Bug fix: Merge was not clearing existing user-defined areas.
        New feature: Added margin control for auto-crop.
        New feature: While the user draws a rectangle, show its size in the status bar.
 V1.35  New feature: Replace "Mirror" with "Flip-H" and "Flip-V" options.
@@ -150,8 +150,8 @@ V1.61  Improvement: Auto-router respects manually painted track between two pins
 V1.62  Bug fix: Don't allow parts/tracks selected by area to be manipulated if a control slider is hiding some of the selection.
        Bug fix: Don't show selected area if both control sliders are moved to Off.
        New feature: Allow wires to cross, and allow up to two wires to be stacked next to each other (but no hole sharing yet).
-V1.63  Bug fix:  V1.62 could crash or corrupt the layout if stacking wires under an IC.
-V1.64  Bug fix:  Fixed algorithm for stacking wires.
+V1.63  Bug fix: V1.62 could crash or corrupt the layout if stacking wires under an IC.
+V1.64  Bug fix: Fixed algorithm for stacking wires.
        New feature: Allow 2 wires to share a hole.
        Added "Wire Options" dialog to set allowed wire operations.
 V1.65  Bug fix: Wire hole-sharing under an IC only worked with wire-crossing enabled.
@@ -171,17 +171,17 @@ V1.75  Partial bug fix: Rendering components to PDF would always show them fille
        Fixed to show only outline if "Fill" slider is off.
        New feature: Added info to rendering dialog showing the minimum guaranteed track separation
        based on the current (pad, track, gap, diagonal mode, ground fill) settings.
-       New feature:  Allow Gerber export when in Mono mode (Beta).
+       New feature: Allow Gerber export when in Mono mode (Beta).
 V1.76  Improvement: In Mono mode, all text boxes are now automatically mirrored for toner-transfer.
        Improvement: In Mono mode, all component outlines and component text are rendered to match Gerber output.
 V1.77  Bug fix: Text rendering to PDF was broken by changes for PCB text.
        Improvement: Text size setting in Renderer Dialog affects PCB text size also.
        Improvement: Added more PCB parameters (for Gerber) to Rendering Dialog.
        Moved all Gerber related viewing from Mono mode to new PCB mode on the Track slider.
-V1.78  Bug fix:  Unpainted wire ends were being drawn as painted.
+V1.78  Bug fix: Unpainted wire ends were being drawn as painted.
        Improvement: Added default label offsets to small Electrolytic Caps so they don't lie over pin holes.
        Stop offsetting pad labels by default (it was too confusing manipulating them like that).
-V1.79  New feature:  File menu allows Gerber export as either 1-layer or 2-layer.
+V1.79  New feature: File menu allows Gerber export as either 1-layer or 2-layer.
        Removed NPTH/PTH selection since it is implied by the export type (1-layer/2-layer).
        Changed hatched lines in Mono mode from yellow to red.
        Hide vias in PCB mode (as they are ignored at the moment).
@@ -193,3 +193,4 @@ V1.80  Added second board layer.
 V1.81  Bug fix: Hiding the top toolbar made mouse clicks map to the wrong grid locations.
        Bug fix: Right clicking on the top toolbar allowed control and component editor dialogs to be displayed together.
        Added shell script to uninstall on Linux and updated README.txt with info on uninstall procedure.
+V1.82  Bug fix: Merge should not update the filename used for saving.

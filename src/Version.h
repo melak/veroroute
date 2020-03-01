@@ -60,8 +60,8 @@ static const char* szVEROROUTE_VERSION =
 //"1.26";	// Bug fix: Holding down "P" and SPACE at the same time would allow mouse move to modify component pins.
 //			// Usability tweak: Holding down SPACE now allows un-painting the board under a placed component pin,
 //			// or painting the board under the pin to match the existing NodeId on the pin.
-//"1.27";	// Bug fix:  Deleting a component was not immediately updating the Bad Nodes lists.
-//			// Bug fix:  V1.26 allowed components to be dragged while user was painting pins.
+//"1.27";	// Bug fix: Deleting a component was not immediately updating the Bad Nodes lists.
+//			// Bug fix: V1.26 allowed components to be dragged while user was painting pins.
 //"1.28";	// Improvements:
 //			// Added "Toggle Grid" and "Toggle Mirror" as View menu items.
 //			// List part types in B.O.M.
@@ -82,7 +82,7 @@ static const char* szVEROROUTE_VERSION =
 //"1.32";	// New feature: "File->Open (merge into current)".
 //"1.33";	// New feature: Allow horizontal veroboard strips.
 //			// Tweaked color assignment algorithm.
-//"1.34";	// Bug fix:  Merge was not clearing existing user-defined areas.
+//"1.34";	// Bug fix: Merge was not clearing existing user-defined areas.
 //			// New feature: Added margin control for auto-crop.
 //			// New feature: While the user draws a rectangle, show its size in the status bar.
 //"1.35";	// New feature: Replace "Mirror" with "Flip-H" and "Flip-V" options.
@@ -147,8 +147,8 @@ static const char* szVEROROUTE_VERSION =
 //"1.62";	// Bug fix: Don't allow parts/tracks selected by area to be manipulated if a control slider is hiding some of the selection.
 //			// Bug fix: Don't show selected area if both control sliders are moved to Off.
 //			// New feature: Allow wires to cross, and allow up to two wires to be stacked next to each other (but no hole sharing yet).
-//"1.63";	// Bug fix:  1.62 could crash or corrupt the layout if stacking wires under an IC.
-//"1.64";	// Bug fix:  Fixed algorithm for stacking wires.
+//"1.63";	// Bug fix: 1.62 could crash or corrupt the layout if stacking wires under an IC.
+//"1.64";	// Bug fix: Fixed algorithm for stacking wires.
 //			// New feature: Allow 2 wires to share a hole.
 //			// Added "Wire Options" dialog to set allowed wire operations.
 //"1.65";	// Bug fix: Wire hole-sharing under an IC only worked with wire-crossing enabled.
@@ -168,17 +168,17 @@ static const char* szVEROROUTE_VERSION =
 			// Fixed to show only outline if "Fill" slider is off.
 			// New feature: Added info to rendering dialog showing the minimum guaranteed track separation
 			// based on the current (pad, track, gap, diagonal mode, ground fill) settings.
-			// New feature:  Allow Gerber export when in Mono mode (Beta).
+			// New feature: Allow Gerber export when in Mono mode (Beta).
 //"1.76";	// Improvement: In Mono mode, all text boxes are now automatically mirrored for toner-transfer.
 			// Improvement: In Mono mode, all component outlines and component text are rendered to match Gerber output.
 //"1.77";	// Bug fix: Text rendering to PDF was broken by changes for PCB text.
 			// Improvement: Text size setting in Renderer Dialog affects PCB text size also.
 			// Improvement: Added more PCB parameters (for Gerber) to Rendering Dialog.
 			// Moved all Gerber related viewing from Mono mode to new PCB mode on the Track slider.
-//"1.78";	// Bug fix:  Unpainted wire ends were being drawn as painted.
+//"1.78";	// Bug fix: Unpainted wire ends were being drawn as painted.
 			// Improvement: Added default label offsets to small Electrolytic Caps so they don't lie over pin holes.
 			// Stop offsetting pad labels by default (it was too confusing manipulating them like that).
-//"1.79";	// New feature:  File menu allows Gerber export as either 1-layer or 2-layer.
+//"1.79";	// New feature: File menu allows Gerber export as either 1-layer or 2-layer.
 			// Removed NPTH/PTH selection since it is implied by the export type (1-layer/2-layer).
 			// Changed hatched lines in Mono mode from yellow to red.
 			// Hide vias in PCB mode (as they are ignored at the moment).
@@ -187,6 +187,7 @@ static const char* szVEROROUTE_VERSION =
 //"1.80";	// Added second board layer.
 			// Made the Control and Component Editor dialogs dockable and docked by default.
 			// Updated the tutorials to describe 2-layer functionality.
-  "1.81";	// Bug fix: Hiding the top toolbar made mouse clicks map to the wrong grid locations.
+//"1.81";	// Bug fix: Hiding the top toolbar made mouse clicks map to the wrong grid locations.
 			// Bug fix: Right clicking on the top toolbar allowed control and component editor dialogs to be displayed together.
 			// Added shell script to uninstall on Linux and updated README.txt with info on uninstall procedure.
+  "1.82";	// Bug fix:  Merge should not update the filename used for saving.
