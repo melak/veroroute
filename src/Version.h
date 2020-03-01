@@ -184,6 +184,9 @@ static const char* szVEROROUTE_VERSION =
 			// Hide vias in PCB mode (as they are ignored at the moment).
 			// Help->Support now opens forum in browser.
 			// Added "Clear recent files list" to File menu.
-  "1.80";	// Added second board layer.
+//"1.80";	// Added second board layer.
 			// Made the Control and Component Editor dialogs dockable and docked by default.
 			// Updated the tutorials to describe 2-layer functionality.
+  "1.81";	// Bug fix: Hiding the top toolbar made mouse clicks map to the wrong grid locations.
+			// Bug fix: Right clicking on the top toolbar allowed control and component editor dialogs to be displayed together.
+			// Added shell script to uninstall on Linux and updated README.txt with info on uninstall procedure.

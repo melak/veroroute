@@ -190,4 +190,6 @@ V1.79  New feature:  File menu allows Gerber export as either 1-layer or 2-layer
 V1.80  Added second board layer.
        Made the Control and Component Editor dialogs dockable and docked by default.
        Updated the tutorials to describe 2-layer functionality.
-
+V1.81  Bug fix: Hiding the top toolbar made mouse clicks map to the wrong grid locations.
+       Bug fix: Right clicking on the top toolbar allowed control and component editor dialogs to be displayed together.
+       Added shell script to uninstall on Linux and updated README.txt with info on uninstall procedure.
