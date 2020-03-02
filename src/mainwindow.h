@@ -142,7 +142,8 @@ public slots:
 	// Toolbar items
 	void VeroV();
 	void VeroH();
-	void Straight();
+	void Fat();
+	void Thin();
 	void Curved();
 	void ToggleDiagsMin();
 	void ToggleDiagsMax();
@@ -220,6 +221,7 @@ public slots:
 	void ShowTextDialog();
 	void ShowBomDialog();
 	void ShowPinDialog();
+	void HidePinDialog();
 	void ShowAbout();
 	void ShowSupport();
 	// Layers menu items
@@ -277,7 +279,8 @@ public slots:
 	// Track controls
 	void SetTracksVeroV(bool b);
 	void SetTracksVeroH(bool b);
-	void SetTracksStraight(bool b);
+	void SetTracksFat(bool b);
+	void SetTracksThin(bool b);
 	void SetTracksCurved(bool b);
 	void SetDiagonalsOff(bool b);
 	void SetDiagonalsMin(bool b);

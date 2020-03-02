@@ -72,6 +72,7 @@ public:
 		m_bWireCross		= o.m_bWireCross;
 		m_bVeroTracks		= o.m_bVeroTracks;
 		m_bCurvedTracks		= o.m_bCurvedTracks;
+		m_bFatTracks		= o.m_bFatTracks;
 		m_bRoutingEnabled	= o.m_bRoutingEnabled;
 		m_bShowGrid			= o.m_bShowGrid;
 		m_bShowText			= o.m_bShowText;
@@ -119,6 +120,7 @@ public:
 			&&	m_bWireCross		== o.m_bWireCross
 			&&	m_bVeroTracks		== o.m_bVeroTracks
 			&&	m_bCurvedTracks		== o.m_bCurvedTracks
+			&&	m_bFatTracks		== o.m_bFatTracks
 			&&	m_bRoutingEnabled	== o.m_bRoutingEnabled
 			&&	m_bShowGrid			== o.m_bShowGrid
 			&&	m_bShowText			== o.m_bShowText
@@ -259,6 +261,9 @@ public:
 			inStream.Load(m_bWireCross);		// Added in VRT_VERSION_28
 		inStream.Load(m_bVeroTracks);
 		inStream.Load(m_bCurvedTracks);
+		m_bFatTracks = true;
+		if ( inStream.GetVersion() >= VRT_VERSION_36 )
+			inStream.Load(m_bFatTracks);		// Added in VRT_VERSION_36
 		inStream.Load(m_bRoutingEnabled);
 		m_bShowGrid = m_iTrackMode != TRACKMODE::OFF;
 		if ( inStream.GetVersion() >= VRT_VERSION_5 )
@@ -319,6 +324,7 @@ public:
 		outStream.Save(m_bWireCross);		// Added in VRT_VERSION_28
 		outStream.Save(m_bVeroTracks);
 		outStream.Save(m_bCurvedTracks);
+		outStream.Save(m_bFatTracks);		// Added in VRT_VERSION_36
 		outStream.Save(m_bRoutingEnabled);
 		outStream.Save(m_bShowGrid);		// Added in VRT_VERSION_5
 		outStream.Save(m_bShowText);		// Added in VRT_VERSION_14
@@ -363,6 +369,7 @@ public:
 	bool SetWireCross(const bool& b)		{ const bool bChanged = m_bWireCross		!= b; m_bWireCross		= b; return bChanged; }
 	bool SetVeroTracks(const bool& b)		{ const bool bChanged = m_bVeroTracks		!= b; m_bVeroTracks		= b; return bChanged; }
 	bool SetCurvedTracks(const bool& b)		{ const bool bChanged = m_bCurvedTracks		!= b; m_bCurvedTracks	= b; return bChanged; }
+	bool SetFatTracks(const bool& b)		{ const bool bChanged = m_bFatTracks		!= b; m_bFatTracks		= b; return bChanged; }
 	bool SetRoutingEnabled(const bool& b)	{ const bool bChanged = m_bRoutingEnabled	!= b; m_bRoutingEnabled	= b; return bChanged; }
 	bool SetShowGrid(const bool& b)			{ const bool bChanged = m_bShowGrid			!= b; m_bShowGrid		= b; return bChanged; }
 	bool SetShowText(const bool& b)			{ const bool bChanged = m_bShowText			!= b; m_bShowText		= b; return bChanged; }
@@ -406,6 +413,7 @@ public:
 	const bool&			GetWireCross() const		{ return m_bWireCross; }
 	const bool&			GetVeroTracks() const		{ return m_bVeroTracks; }
 	const bool&			GetCurvedTracks() const		{ return m_bCurvedTracks; }
+	const bool&			GetFatTracks() const		{ return m_bFatTracks; }
 	const bool&			GetRoutingEnabled() const	{ return m_bRoutingEnabled; }
 	const bool&			GetShowGrid() const			{ return m_bShowGrid; }
 	const bool&			GetShowText() const			{ return m_bShowText; }
@@ -474,6 +482,7 @@ private:
 	bool		m_bWireCross		= false;			// true ==> allow wires to cross/overlay
 	bool		m_bVeroTracks		= false;
 	bool		m_bCurvedTracks		= false;
+	bool		m_bFatTracks		= true;
 	bool		m_bRoutingEnabled	= false;
 	bool		m_bShowGrid			= true;				// true ==> show grid dots
 	bool		m_bShowText			= true;				// true ==> show text boxes

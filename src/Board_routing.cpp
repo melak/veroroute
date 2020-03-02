@@ -28,7 +28,7 @@
 // Routing algorithm assumes:  MH_LVIA >= MH_DIAG > MH_LRTB > MH_WIRE >= MH_LPIN
 
 // Increasing MH_LVIA will try harder to avoid making vias but makes the algorithm much slower.
-// For maximum speed put MN_LVIA = 3.
+// For maximum speed put MH_LVIA = 3.
 
 #define MH_LPIN 1
 #define MH_WIRE 1

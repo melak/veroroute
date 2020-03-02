@@ -147,7 +147,8 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	QObject::connect(ui->actionTogglePinLabels,			SIGNAL(triggered()), this, SLOT(TogglePinLabels()));
 	QObject::connect(ui->actionVeroV,					SIGNAL(triggered()), this, SLOT(VeroV()));
 	QObject::connect(ui->actionVeroH,					SIGNAL(triggered()), this, SLOT(VeroH()));
-	QObject::connect(ui->actionStraight,				SIGNAL(triggered()), this, SLOT(Straight()));
+	QObject::connect(ui->actionFat,						SIGNAL(triggered()), this, SLOT(Fat()));
+	QObject::connect(ui->actionThin,					SIGNAL(triggered()), this, SLOT(Thin()));
 	QObject::connect(ui->actionCurved,					SIGNAL(triggered()), this, SLOT(Curved()));
 	QObject::connect(ui->actionDiagsMin,				SIGNAL(triggered()), this, SLOT(ToggleDiagsMin()));
 	QObject::connect(ui->actionDiagsMax,				SIGNAL(triggered()), this, SLOT(ToggleDiagsMax()));
@@ -364,12 +365,13 @@ void MainWindow::ResetView(bool bTutorial)
 
 	if ( m_board.GetCompEdit() )
 	{
-		m_dockControlDlg->hide();	// Hide control dialog
+		HidePinDialog();		// Hide pin dialog
+		HideControlDialog();	// Hide control dialog
 		ShowCompDialog();
 	}
 	else
 	{
-		m_dockCompDlg->hide();		// Hide component definition dialog
+		HideCompDialog();		// Hide component definition dialog
 		ShowControlDialog();
 	}
 
@@ -938,6 +940,7 @@ void MainWindow::ShowTextDialog()		{ ShowDlg(m_textDlg); }
 void MainWindow::ShowBomDialog()		{ UpdateBOM();				ShowDlg(m_bomDlg); }
 void MainWindow::ShowTemplatesDialog()	{ UpdateTemplatesDialog();	ShowDlg(m_templatesDlg); }
 void MainWindow::ShowPinDialog()		{ m_pinDlg->Update();		ShowDlg(m_pinDlg); }
+void MainWindow::HidePinDialog()		{ m_pinDlg->hide(); }
 
 // Layers menu items
 void MainWindow::AddLayer()
@@ -1108,7 +1111,8 @@ void MainWindow::TogglePinLabels()		{ SetShowPinLabels( !m_board.GetShowPinLabel
 // Toolbar items
 void MainWindow::VeroV()				{ SetTracksVeroV(true); }
 void MainWindow::VeroH()				{ SetTracksVeroH(true); }
-void MainWindow::Straight()				{ SetTracksStraight(true); }
+void MainWindow::Fat()					{ SetTracksFat(true);}
+void MainWindow::Thin()					{ SetTracksThin(true); }
 void MainWindow::Curved()				{ SetTracksCurved(true); }
 void MainWindow::ToggleDiagsMin()		{ if ( m_board.GetDiagsMode() == DIAGSMODE::MIN ) SetDiagonalsOff(true); else SetDiagonalsMin(true); }
 void MainWindow::ToggleDiagsMax()		{ if ( m_board.GetDiagsMode() == DIAGSMODE::MAX ) SetDiagonalsOff(true); else SetDiagonalsMax(true); }
@@ -1334,15 +1338,30 @@ void MainWindow::SetTracksVeroH(bool b)
 	UpdateControls();
 	if ( bDiagsModeChanged ) { RepaintWithRouting(); ListNodes(); } else RepaintSkipRouting();
 }
-void MainWindow::SetTracksStraight(bool b)
+void MainWindow::SetTracksFat(bool b)
 {
 	if (!b) return;
-	if ( !m_board.GetCurvedTracks() && !m_board.GetVeroTracks() ) return UpdateControls();
+	if ( !m_board.GetCurvedTracks() && !m_board.GetVeroTracks() && m_board.GetFatTracks() ) return UpdateControls();
 	bool bDiagsModeChanged(false);
 	if ( m_board.SetVeroTracks(false) )	// If changed from Vero style ...
 		bDiagsModeChanged = m_board.SetDiagsMode(oldDiagsMode);	// ... restore old diag mode
 	m_board.SetCurvedTracks(false);
-	UpdateHistory("Straight tracks");
+	m_board.SetFatTracks(true);
+	UpdateHistory("Fat tracks");
+	UpdateControls();
+	DestroyPixmapCache();
+	if ( bDiagsModeChanged ) { RepaintWithRouting(); ListNodes(); } else RepaintSkipRouting();
+}
+void MainWindow::SetTracksThin(bool b)
+{
+	if (!b) return;
+	if ( !m_board.GetCurvedTracks() && !m_board.GetVeroTracks() && !m_board.GetFatTracks() ) return UpdateControls();
+	bool bDiagsModeChanged(false);
+	if ( m_board.SetVeroTracks(false) )	// If changed from Vero style ...
+		bDiagsModeChanged = m_board.SetDiagsMode(oldDiagsMode);	// ... restore old diag mode
+	m_board.SetCurvedTracks(false);
+	m_board.SetFatTracks(false);
+	UpdateHistory("Thin tracks");
 	UpdateControls();
 	DestroyPixmapCache();
 	if ( bDiagsModeChanged ) { RepaintWithRouting(); ListNodes(); } else RepaintSkipRouting();
@@ -1499,15 +1518,16 @@ void MainWindow::DefinerToggleEditor()
 			if ( !comp.GetShapes().empty() )
 				GetCompDefiner().Populate( comp );
 		}
-		m_dockControlDlg->hide();	// Hide control dialog
-		UpdateCompDialog();			// Show component definition dialog
+		HidePinDialog();		// Hide pin dialog
+		HideControlDialog();	// Hide control dialog
+		UpdateCompDialog();		// Show component definition dialog
 		ShowCompDialog();
 		UpdateHistory("Open component editor");
 	}
 	else
 	{
-		m_dockCompDlg->hide();		// Hide component definition dialog
-		ShowControlDialog();		// Show control dialog
+		HideCompDialog();		// Hide component definition dialog
+		ShowControlDialog();	// Show control dialog
 		UpdateHistory("Close component editor");
 	}
 	UpdateControls();
@@ -1616,7 +1636,8 @@ void MainWindow::UpdateControls()
 	const bool		bTracks			= !bCompEdit && m_board.GetTrackMode() != TRACKMODE::OFF;
 	const bool		bVeroV			=  m_board.GetVeroTracks() &&  m_board.GetVerticalStrips();
 	const bool		bVeroH			=  m_board.GetVeroTracks() && !m_board.GetVerticalStrips();
-	const bool		bStraight		= !m_board.GetVeroTracks() && !m_board.GetCurvedTracks();
+	const bool		bFat			= !m_board.GetVeroTracks() && !m_board.GetCurvedTracks() &&  m_board.GetFatTracks();
+	const bool		bThin			= !m_board.GetVeroTracks() && !m_board.GetCurvedTracks() && !m_board.GetFatTracks();
 	const bool		bCurved			= !m_board.GetVeroTracks() &&  m_board.GetCurvedTracks();
 
 	ui->actionWrite_Gerber->setEnabled( bPCB && !bCompEdit && !m_board.GetMirrored() && !m_board.GetVeroTracks() && m_board.GetLyrs() == 1);
@@ -1667,12 +1688,14 @@ void MainWindow::UpdateControls()
 	ui->actionToggleFlipV->setChecked( m_board.GetFlipV() );
 	ui->actionTogglePinLabels->setChecked( m_board.GetShowPinLabels() );
 
+	ui->actionPinDlg->setEnabled( !bCompEdit );
 	ui->actionControlDlg->setEnabled( !bCompEdit );
 	ui->actionCompDlg->setEnabled( bCompEdit );
 
 	ui->actionVeroV->setEnabled(		bTracks );
 	ui->actionVeroH->setEnabled(		bTracks );
-	ui->actionStraight->setEnabled(		bTracks );
+	ui->actionFat->setEnabled(			bTracks );
+	ui->actionThin->setEnabled(			bTracks );
 	ui->actionCurved->setEnabled(		bTracks );
 	ui->actionDiagsMin->setEnabled(		bTracks && !bVeroV && ! bVeroH );
 	ui->actionDiagsMax->setEnabled(		bTracks && !bVeroV && ! bVeroH );
@@ -1681,7 +1704,8 @@ void MainWindow::UpdateControls()
 
 	ui->actionVeroV->setChecked( bVeroV );
 	ui->actionVeroH->setChecked( bVeroH );
-	ui->actionStraight->setChecked( bStraight );
+	ui->actionFat->setChecked( bFat );
+	ui->actionThin->setChecked( bThin );
 	ui->actionCurved->setChecked( bCurved );
 	ui->actionDiagsMin->setChecked( m_board.GetDiagsMode() == DIAGSMODE::MIN );
 	ui->actionDiagsMax->setChecked( m_board.GetDiagsMode() == DIAGSMODE::MAX );

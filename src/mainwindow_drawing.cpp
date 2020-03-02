@@ -169,6 +169,7 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 	const int	padWidth		= ( guiCtrl.GetHalfPadWidth()   + gapWidth ) << 1;	// Pad width in pixels
 	const int	trackWidth		= ( guiCtrl.GetHalfTrackWidth() + gapWidth ) << 1;	// Track width in pixels
 	const bool&	bCurvedTracks	= guiCtrl.GetCurvedTracks();
+	const bool&	bFatTracks		= !bCurvedTracks && guiCtrl.GetFatTracks();
 	QPolygonF	polygon;
 
 	// Clockwise-ordered array of perimeter points around the square, starting at left...
@@ -194,9 +195,10 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 	for (int i = 0; i < 8; i++)
 		if ( bUsed[i] ) { N++; if ( iFirst == -1 ) iFirst = i; }
 
-	bool bStraight(false), bBent(false);	// Flags to help describe track sections
+	bool bStraight(false), bOrtho(false), bObtuse(false);	// Flags to help describe track sections
 	// bStraight	==> Track goes straight across the centre point
-	// bBent		==> Track bends <= 90 degrees
+	// bOrtho		==> Track bends 90 degrees
+	// bObtuse		==> Track bends < 90 degrees
 
 	if ( N == 0 )
 		polygon << pC;
@@ -219,10 +221,11 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 				iL = iR;	iR = jj;	// Update iL and iR
 				const int iDiff = ( 8 + iR - iL ) % 8;
 				bStraight	= ( iDiff == 4 );
-				bBent		= ( iDiff == 2 || iDiff == 3 || iDiff == 5 || iDiff == 6 );
+				bOrtho		= ( iDiff == 2 || iDiff == 6 );
+				bObtuse		= ( iDiff == 3 || iDiff == 5 );
 				nCount++;
 			}
-			bOpenLine = ( bBent || bStraight );
+			bOpenLine = ( bOrtho || bObtuse || bStraight );
 		}
 		int  nCount(0);					// Perimeter point counter
 		int  iL(iFirst), iR(iFirst);	// Indexes of consecutive used perimeter points
@@ -234,9 +237,10 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 			iL = iR;	iR = jj;	// Update iL and iR
 			const int iDiff = ( 8 + iR - iL ) % 8;
 			bStraight	= ( iDiff == 4 );
-			bBent		= ( iDiff == 2 || iDiff == 3 || iDiff == 5 || iDiff == 6 );
+			bOrtho		= ( iDiff == 2 || iDiff == 6 );
+			bObtuse		= ( iDiff == 3 || iDiff == 5 );
 			nCount++;
-			if ( bBent )
+			if ( bOrtho || bObtuse )	// Bend <= 90 degrees
 			{
 				if ( bCurvedTracks )
 				{
@@ -249,6 +253,8 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 						polygon << p[iL]*(u*u) + pC*(2.0*t*u) + p[iR]*(t*t);
 					}
 				}
+				else if ( bOrtho )	// Bend == 90 degrees
+					polygon << p[iL] << (p[iL] + pC)*0.5 << (p[iR] + pC)*0.5 << p[iR];	// Draw mitred corner instead of 90 degree bend for L-C-R
 				else
 					polygon << p[iL] << pC << p[iR];	// Draw a sharp bend for L-C-R instead of a smooth curve
 			}
@@ -284,7 +290,7 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 			painter.drawPoint(pC);
 		}
 	}
-	else if ( N <= 2 && ( bBent || bStraight ) )	// Draw open line segment
+	else if ( N <= 2 && ( bOrtho || bObtuse || bStraight ) )	// Draw open line segment
 	{
 		if ( m_bWriteGerber )
 		{
@@ -293,7 +299,7 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 			const GPEN ePen		= bGap ? GPEN::TRACK_GAP : GPEN::TRACK;
 			const GPEN ePenHV	= bGap ? GPEN::PAD_GAP   : GPEN::PAD;
 
-			if ( !bCurvedTracks && padWidth > trackWidth )
+			if ( bFatTracks && padWidth > trackWidth )
 			{
 				if ( m_board.GetLyrs() > 1 )
 					osT.AddVariTrack(ePenHV, ePen, polygon);
@@ -343,7 +349,7 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 		}
 	}
 
-	if ( !bCurvedTracks && padWidth > trackWidth )	// Widen H and V tracks to pad width
+	if ( bFatTracks && padWidth > trackWidth )	// Widen H and V tracks to pad width
 	{
 		if ( m_bWriteGerber )
 		{
@@ -848,18 +854,18 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						painter.drawRect(L, T, R-L, B-T);
 
 						// Set the area that is not in the "blob" to the background color
-						painter.drawPixmap(L, T,*(m_ppPixmapBlob[iPerimeterCode]));
+						painter.drawPixmap(L, T, *(m_ppPixmapBlob[iPerimeterCode]));
 
 						// Draw pad
-						if ( bPin || bVia ) painter.drawPixmap(L+C-D, T+C-D,*(m_ppPixmapPad[iEffColorId]));
+						if ( bPin || bVia ) painter.drawPixmap(L+C-D, T+C-D, *(m_ppPixmapPad[iEffColorId]));
 					}
 					else if ( iLoop == 1 )
 					{
 						// Read flags for LT and RT so we can fill diagonal gaps produced on previous iLoop
 						const bool bUsedLT = ReadCodeBit(NBR_LT, iPerimeterCode);
 						const bool bUsedRT = ReadCodeBit(NBR_RT, iPerimeterCode);
-						if ( bUsedLT ) painter.drawPixmap(L-H, T-H,*(m_ppPixmapDiag[iEffColorId]));
-						if ( bUsedRT ) painter.drawPixmap(R-H, T-H,*(m_ppPixmapDiag[iEffColorId + NUM_PIXMAP_COLORS]));
+						if ( bUsedLT ) painter.drawPixmap(L-H, T-H, *(m_ppPixmapDiag[iEffColorId]));
+						if ( bUsedRT ) painter.drawPixmap(R-H, T-H, *(m_ppPixmapDiag[iEffColorId + NUM_PIXMAP_COLORS]));
 					}
 				}
 				if ( bGroundFill )	// Draw track "blobs" and pads directly (PDF/Gerber)

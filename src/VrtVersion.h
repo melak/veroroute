@@ -35,4 +35,5 @@ const int VRT_VERSION_32 = 32;	// Added size of solder mask and silk screen pen
 const int VRT_VERSION_33 = 33;	// Added PCB track mode, board edge margin, PTH/NPTH option
 const int VRT_VERSION_34 = 34;	// Added 3rd dimension to grid, and display layer
 const int VRT_VERSION_35 = 35;	// Added via dimensions
-const int VRT_VERSION_CURRENT = VRT_VERSION_35;
+const int VRT_VERSION_36 = 36;	// Added thin tracks style
+const int VRT_VERSION_CURRENT = VRT_VERSION_36;

@@ -292,7 +292,8 @@
    <addaction name="actionToggleFlipH"/>
    <addaction name="actionToggleFlipV"/>
    <addaction name="separator"/>
-   <addaction name="actionStraight"/>
+   <addaction name="actionFat"/>
+   <addaction name="actionThin"/>
    <addaction name="actionCurved"/>
    <addaction name="actionVeroV"/>
    <addaction name="actionVeroH"/>
@@ -952,19 +953,19 @@
     <string>Vero track style (horizontal strips)</string>
    </property>
   </action>
-  <action name="actionStraight">
+  <action name="actionFat">
    <property name="checkable">
     <bool>true</bool>
    </property>
    <property name="icon">
     <iconset resource="veroroute.qrc">
-     <normaloff>:/images/straight.png</normaloff>:/images/straight.png</iconset>
+     <normaloff>:/images/fat.png</normaloff>:/images/fat.png</iconset>
    </property>
    <property name="text">
-    <string>Straight</string>
+    <string>Fat</string>
    </property>
    <property name="toolTip">
-    <string>Straight track style</string>
+    <string>Fat track style</string>
    </property>
   </action>
   <action name="actionCurved">
@@ -1182,6 +1183,21 @@
    </property>
    <property name="autoRepeat">
     <bool>false</bool>
+   </property>
+  </action>
+  <action name="actionThin">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="veroroute.qrc">
+     <normaloff>:/images/thin.png</normaloff>:/images/thin.png</iconset>
+   </property>
+   <property name="text">
+    <string>Thin</string>
+   </property>
+   <property name="toolTip">
+    <string>Thin track style</string>
    </property>
   </action>
  </widget>
