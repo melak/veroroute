@@ -23,7 +23,7 @@
 
 class MainWindow;
 class Ui_TemplatesDialog;
-class CompManager;
+class Board;
 
 class TemplatesDialog : public QDialog
 {
@@ -50,7 +50,7 @@ private:
 	void LoadFromUserVrt(bool bInfoMsg);
 	void SaveToUserVrt();
 	const QString GetUserFilename() const;
-	void AddTemplatesFromBoard(CompManager& compMgr, bool bInfoMsg);
+	void AddTemplatesFromBoard(Board& board, bool bAllComps, bool bInfoMsg);
 private:
 	Ui_TemplatesDialog*	ui;
 	MainWindow*			m_pMainWindow;

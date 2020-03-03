@@ -57,7 +57,7 @@
     <enum>Qt::NoFocus</enum>
    </property>
    <property name="toolTip">
-    <string>Updates the templates with parts from the current circuit.</string>
+    <string>Updates the templates with the selected parts from the current circuit.</string>
    </property>
    <property name="text">
     <string>Add from current circuit</string>

@@ -167,7 +167,7 @@ bool Board::ImportTango(const TemplateManager& templateMgr, const std::string& f
 						assert( custom.GetType() == COMP::CUSTOM );
 						custom.SetNameStr(nameStr);
 						custom.SetValueStr(valueStr);
-						bOK = ( AddComponent(nullptr, custom) != BAD_COMPID );	// Create part and place it
+						bOK = ( AddComponent(-1, -1, custom) != BAD_COMPID );	// Create part and place it
 
 					}
 					else
@@ -179,7 +179,7 @@ bool Board::ImportTango(const TemplateManager& templateMgr, const std::string& f
 							while ( tmp.GetCols() < nLength ) tmp.Stretch(true);	// grow
 							while ( tmp.GetCols() > nLength ) tmp.Stretch(false);	// shrink
 						}
-						bOK = ( AddComponent(nullptr, tmp) != BAD_COMPID );	// Create part and place it
+						bOK = ( AddComponent(-1, -1, tmp) != BAD_COMPID );	// Create part and place it
 					}
 					if ( !bOK ) errorStr = "Part section: " + nameStr + "\nInternal error creating and placing the part";
 				}
@@ -426,7 +426,7 @@ bool Board::ImportOrcad(const TemplateManager& templateMgr, const std::string& f
 				assert( custom.GetType() == COMP::CUSTOM );
 				custom.SetNameStr(nameStr);
 				custom.SetValueStr(valueStr);
-				bOK = ( AddComponent(nullptr, custom) != BAD_COMPID );	// Create part and place it
+				bOK = ( AddComponent(-1, -1, custom) != BAD_COMPID );	// Create part and place it
 			}
 			else
 			{
@@ -437,7 +437,7 @@ bool Board::ImportOrcad(const TemplateManager& templateMgr, const std::string& f
 					while ( tmp.GetCols() < nLength ) tmp.Stretch(true);	// grow
 					while ( tmp.GetCols() > nLength ) tmp.Stretch(false);	// shrink
 				}
-				compId = AddComponent(nullptr, tmp);
+				compId = AddComponent(-1, -1, tmp);
 				bOK = ( compId!= BAD_COMPID );	// Create part and place it
 			}
 			if ( !bOK )
@@ -552,7 +552,7 @@ bool Board::BreakComponentIntoPads(Component& comp)
 		{
 			tmp.SetRow(row);
 			tmp.SetCol(col);
-			AddComponent(nullptr, tmp, false);	// Add PAD floating over the existing pin
+			AddComponent(-1, -1, tmp, false);	// Add PAD floating over the existing pin
 		}
 	}
 	DestroyComponent(comp);	// All pins have been copied, so destroy the old component

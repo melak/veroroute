@@ -1453,6 +1453,13 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	delete pdfWriter;
 }
 
+void MainWindow::GetFirstRowCol(int& iRow, int& iCol) const
+{
+	const int& W = m_board.GetGRIDPIXELS();	// Square width in pixels
+	iRow = 1 + m_scrollArea->verticalScrollBar()->value()   / W;	// The first fully visible row
+	iCol = 1 + m_scrollArea->horizontalScrollBar()->value() / W;	// The first fully visible col
+}
+		
 void MainWindow::GetXY(const GuiControl& guiCtrl, double row, double col, int& X, int& Y) const
 {
 	// For rendering.

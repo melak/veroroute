@@ -154,7 +154,7 @@ void TemplatesDialog::UserDoubleClicked(int row, int col)
 
 void TemplatesDialog::AddTemplates()
 {
-	AddTemplatesFromBoard(m_pMainWindow->m_board.GetCompMgr(), true);
+	AddTemplatesFromBoard(m_pMainWindow->m_board, false, true);	// false ==> Restrict to user-group
 }
 
 void TemplatesDialog::DeleteTemplate()
@@ -207,7 +207,7 @@ void TemplatesDialog::Load(QString& fileName, bool bInfoMsg)
 		tmp.Load(inStream);
 		inStream.Close();
 		if ( inStream.GetOK() ) // If it loaded OK ...
-			AddTemplatesFromBoard(tmp.GetCompMgr(), bInfoMsg);
+			AddTemplatesFromBoard(tmp, true, bInfoMsg);	// true ==> Don't restrict to user group
 		else
 			QMessageBox::information(this, tr("Unsupported VRT version"), tr(fileNameStr.c_str()));
 	}
@@ -233,7 +233,7 @@ void TemplatesDialog::SaveToUserVrt()
 			for (size_t i = 0, iSize = mgr.GetSize(bGeneric); i < iSize; i++)
 			{
 				const Component& comp = mgr.GetNth(bGeneric,i);
-				tmp.AddComponent(nullptr, comp, false);
+				tmp.AddComponent(-1, -1, comp, false);
 			}
 			tmp.Save(outStream);
 			outStream.Close();
@@ -243,17 +243,27 @@ void TemplatesDialog::SaveToUserVrt()
 	}
 }
 
-void TemplatesDialog::AddTemplatesFromBoard(CompManager& compMgr, bool bInfoMsg)
+void TemplatesDialog::AddTemplatesFromBoard(Board& board, bool bAllComps, bool bInfoMsg)
 {
-	TemplateManager& mgr = m_pMainWindow->GetTemplateManager();
+	CompManager&	 compMgr	= board.GetCompMgr();
+	GroupManager&	 groupMgr	= board.GetGroupMgr();
+	TemplateManager& mgr		= m_pMainWindow->GetTemplateManager();
 
+	if ( !bAllComps && groupMgr.GetNumUserComps() == 0 && bInfoMsg )
+	{
+		char buffer[64] = {'\0'};
+		sprintf(buffer, "No parts are currently selected in the main view.");
+		QMessageBox::information(this, "Information", tr(buffer));
+		return;
+	}
+	
 	const bool bGeneric = false;
 
 	int nCount(0);
 	for (const auto& mapObj : compMgr.GetMapIdToComp())
 	{
-		const Component& comp = mapObj.second;
-		if ( mgr.Add(bGeneric, comp) ) nCount++;
+		if ( bAllComps || groupMgr.GetIsUserComp(mapObj.first) )
+			if ( mgr.Add(bGeneric, mapObj.second) ) nCount++;
 	}
 	if ( nCount > 0 ) Update();
 

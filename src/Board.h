@@ -422,9 +422,9 @@ public:
 
 	// Methods for component creation/destruction
 	void DestroyComponent(Component& comp);	// Destroys a component on the board
-	int  CreateComponent(MyScrollArea* pScrollArea, const COMP& eType, const Component* pComp = nullptr);
-	int  AddComponent(MyScrollArea* pScrollArea, const Component& tmp, bool bDoPlace = true);
-	void AddTextBox(MyScrollArea* pScrollArea);
+	int  CreateComponent(int iRow, int iCol, const COMP& eType, const Component* pComp = nullptr);
+	int  AddComponent(int iRow, int iCol, const Component& tmp, bool bDoPlace = true);
+	void AddTextBox(int iRow, int iCol);
 
 	// Methods for component placement/removal
 	bool CanPutDown(Component& comp);	// Checks if its possible to place the (floating) component on the board

@@ -18,7 +18,6 @@
 */
 
 #include "Board.h"
-#include "myscrollarea.h"	//TODO Not nice !! The board should not have knowledge of the rendered view
 
 // Methods for component creation/destruction
 
@@ -30,7 +29,7 @@ void Board::DestroyComponent(Component& comp)	// Destroys a component on the boa
 	m_compMgr.DestroyComp(comp);			// Destroy the component in the m_compMgr
 }
 
-int Board::CreateComponent(MyScrollArea* pScrollArea, const COMP& eType, const Component* pComp)
+int Board::CreateComponent(int iRow, int iCol, const COMP& eType, const Component* pComp)
 {
 	assert( pComp == nullptr || pComp->GetType() == eType );	// Sanity check
 
@@ -63,10 +62,10 @@ int Board::CreateComponent(MyScrollArea* pScrollArea, const COMP& eType, const C
 			tmp.SetValueStr( pComp->GetValueStr() );
 	}
 	const bool bDoPlace = ( pComp == nullptr || pComp->GetIsTemplate() );	// Leave copied components floating
-	return AddComponent(pScrollArea, tmp, bDoPlace);
+	return AddComponent(iRow, iCol, tmp, bDoPlace);
 }
 
-int Board::AddComponent(MyScrollArea* pScrollArea, const Component& tmp, bool bDoPlace)
+int Board::AddComponent(int iRow, int iCol, const Component& tmp, bool bDoPlace)
 {
 	// Adds a new component to the board, and returns its compId
 
@@ -84,14 +83,11 @@ int Board::AddComponent(MyScrollArea* pScrollArea, const Component& tmp, bool bD
 	// Try place the component in free space on the board
 	bool bOK(false);
 
-	if ( pScrollArea )	// If we know about the view area ...
+	if ( iRow != -1 && iCol != -1  )	// If we passed in a valid row and col
 	{
 		// Put the component in the top left of the current visible view.
 		// Grow the board and float the component if necessary.
 
-		const int& W = GetGRIDPIXELS();	// Square width in pixels
-		int iRow = 1 + pScrollArea->verticalScrollBar()->value()   / W;	// The first fully visible row
-		int iCol = 1 + pScrollArea->horizontalScrollBar()->value() / W;	// The first fully visible col
 		iRow = std::max(0, std::min(GetRows()-1, iRow));
 		iCol = std::max(0, std::min(GetCols()-1, iCol));
 		const int incRows(iRow + comp.GetRows() - GetRows()), incCols(iCol + comp.GetCols() - GetCols());
@@ -122,14 +118,11 @@ int Board::AddComponent(MyScrollArea* pScrollArea, const Component& tmp, bool bD
 	return compId;
 }
 
-void Board::AddTextBox(MyScrollArea* pScrollArea)
+void Board::AddTextBox(int iRow, int iCol)
 {
 	// Put the text in the top left of the current visible view.
 	// Grow the board if necessary.
 
-	const int& W = GetGRIDPIXELS();	// Square width in pixels
-	int iRow = 1 + pScrollArea->verticalScrollBar()->value()   / W;	// The first fully visible row
-	int iCol = 1 + pScrollArea->horizontalScrollBar()->value() / W;	// The first fully visible col
 	iRow = std::max(0, std::min(GetRows()-1, iRow));
 	iCol = std::max(0, std::min(GetCols()-1, iCol));
 
@@ -925,7 +918,7 @@ void Board::CopyComps(const std::list<int>& compIds)	// Make a blank copy of the
 	for (auto& compId : compIds)
 	{
 		const Component&	comp		= m_compMgr.GetComponentById( compId );
-		const int			newCompId	= CreateComponent(nullptr, comp.GetType(), &comp);	// Create blank copy of the component and get its compId
+		const int			newCompId	= CreateComponent(-1, -1, comp.GetType(), &comp);	// Create blank copy of the component and get its compId
 		if ( newCompId == BAD_COMPID ) break;	// Reached component limit
 		if ( bMakeNewGroup ) m_groupMgr.Add(newGroupId, newCompId);
 	}

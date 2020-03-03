@@ -335,6 +335,7 @@ void MainWindow::CheckFolders()
 
 void MainWindow::ResetView(bool bTutorial)
 {
+	m_mousePos = QPoint(0,0);
 	m_bMouseClick	= m_bLeftClick	= m_bRightClick = m_bCtrlKeyDown  = m_bShiftKeyDown	=false;
 	m_bPaintPins	= m_bPaintBoard	= m_bPaintFlood = m_bDefiningRect = m_bResizingText	= m_bWritePDF = m_bWriteGerber = m_bTwoLayers = false;
 	m_XGRIDOFFSET	= m_YGRIDOFFSET	= 0;
@@ -757,50 +758,33 @@ void MainWindow::Quit()
 void MainWindow::ZoomIn()
 {
 	if ( !CanZoomIn() ) return;		// Need this check for wheel zoom
-
-	// Calc grid coords of scroll area centre
-	auto*		 pH	= m_scrollArea->horizontalScrollBar();
-	auto*		 pV	= m_scrollArea->verticalScrollBar();
-	const int	 pX	= m_mainPixmap.width();
-	const int	 pY	= m_mainPixmap.height();
-	const int	 sX	= m_scrollArea->width();
-	const int	 sY	= m_scrollArea->height();
-	const double dX	= ( pX > sX ) ? (pH->value() + 0.5 * sX) * 1.0 / m_board.GetGRIDPIXELS() : -1;
-	const double dY	= ( pY > sY ) ? (pV->value() + 0.5 * sY) * 1.0 / m_board.GetGRIDPIXELS() : -1;
-
-	m_board.SetGRIDPIXELS( m_board.GetGRIDPIXELS() + 2);
+	ZoomHelper(2);	// +2 ==> Change in GRIDPIXELS
 	UpdateHistory("Zoom in");
-	DestroyPixmapCache();
-	UpdateControls();
-	RepaintSkipRouting();
-
-	// Try to have same grid position in centre after zoom
-	if ( dX != -1 )	pH->setValue( dX * m_board.GetGRIDPIXELS() - 0.5 * sX );
-	if ( dY != -1 )	pV->setValue( dY * m_board.GetGRIDPIXELS() - 0.5 * sY );
 }
 void MainWindow::ZoomOut()
 {
 	if ( !CanZoomOut() ) return;	// Need this check for wheel zoom
-
-	// Calc grid coords of scroll area centre
-	auto*		 pH	= m_scrollArea->horizontalScrollBar();
-	auto*		 pV	= m_scrollArea->verticalScrollBar();
-	const int	 pX	= m_mainPixmap.width();
-	const int	 pY	= m_mainPixmap.height();
-	const int	 sX	= m_scrollArea->width();
-	const int	 sY	= m_scrollArea->height();
-	const double dX	= ( pX > sX ) ? (pH->value() + 0.5 * sX) * 1.0 / m_board.GetGRIDPIXELS() : -1;
-	const double dY	= ( pY > sY ) ? (pV->value() + 0.5 * sY) * 1.0 / m_board.GetGRIDPIXELS() : -1;
-
-	m_board.SetGRIDPIXELS( m_board.GetGRIDPIXELS() - 2);
+	ZoomHelper(-2);	// -2 ==> Change in GRIDPIXELS
 	UpdateHistory("Zoom out");
+}
+void MainWindow::ZoomHelper(int delta)	// delta == change in GRIDPIXELS
+{
+	int X, Y;
+	GetPixMapXY(m_mousePos, X, Y);
+	auto*		pH	= m_scrollArea->horizontalScrollBar();
+	auto*		pV	= m_scrollArea->verticalScrollBar();
+	const int	L	= pH->value();	// Left of visible area (measured in pixmap pixels)
+	const int	T	= pV->value();	// Top  of visible area (measured in pixmap pixels)
+	const int	W	= m_board.GetGRIDPIXELS();	// Current scale
+	m_board.SetGRIDPIXELS(W + delta);			// Change scale
+
 	DestroyPixmapCache();
 	UpdateControls();
 	RepaintSkipRouting();
 
-	// Try to have same grid position in centre after zoom
-	if ( dX != -1 ) pH->setValue( dX * m_board.GetGRIDPIXELS() - 0.5 * sX );
-	if ( dY != -1 ) pV->setValue( dY * m_board.GetGRIDPIXELS() - 0.5 * sY );
+	// Try to have same grid position under mouse after zoom
+	pH->setValue(L + X * delta * 1.0 / W);
+	pV->setValue(T + Y * delta * 1.0 / W);
 }
 
 // Edit menu items
@@ -835,7 +819,9 @@ void MainWindow::Copy()
 	if ( GetCurrentTextId() != BAD_TEXTID )
 	{
 		if ( StringHelper::IsEmptyStr( GetCurrentTextRect().GetStr() ) ) return;	// Don't copy empty text boxes
-		m_board.AddTextBox(m_scrollArea);
+		int iRow, iCol;
+		GetFirstRowCol(iRow, iCol);
+		m_board.AddTextBox(iRow, iCol);
 		UpdateHistory("Copy text box");
 		UpdateControls();
 		RepaintSkipRouting();

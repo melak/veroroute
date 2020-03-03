@@ -78,13 +78,13 @@ public:
 	void GetRowCol(const QPoint& currentPoint, const int rows, const int cols, int& row, int& col, double& deltaRow, double& deltaCol) const;
 
 	// Helpers for rendering
+	void GetFirstRowCol(int& iRow, int& iCol) const;
 	void GetXY(const GuiControl& guiCtrl, double row, double col, int& X, int& Y) const;
 	void GetLRTB(const GuiControl& guiCtrl, double percent, double row, double col, int& L, int& R, int& T, int& B) const;
 	void GetLRTB(const GuiControl& guiCtrl, const Component& comp, int& L, int& R, int& T, int& B) const;
 	void GetLRTB(const GuiControl& guiCtrl, const Rect& rect, int& L, int& R, int& T, int& B) const;
 	void GetXY(const GuiControl& guiCtrl, const Component& comp, int& X, int& Y) const;
 
-	const Board& GetBoard() const		{ return m_board; }
 	const bool&	GetCtrlKeyDown() const	{ return m_bCtrlKeyDown;	}
 	const bool&	GetShiftKeyDown() const	{ return m_bShiftKeyDown;	}
 	const bool&	GetPaintPins() const	{ return m_bPaintPins;		}
@@ -202,7 +202,9 @@ public slots:
 	void AddTextBox()
 	{
 		SetCurrentTextId(BAD_TEXTID);
-		m_board.AddTextBox(m_scrollArea);
+		int iRow, iCol;
+		GetFirstRowCol(iRow, iCol);
+		m_board.AddTextBox(iRow, iCol);
 		UpdateHistory("Add text");
 		UpdateControls();
 		RepaintSkipRouting();
@@ -384,11 +386,14 @@ private:
 	void SetCurrentShapeId(const int& i)	{ m_board.SetCurrentShapeId(i);	UpdateCompDialog(); }
 	TextRect& GetCurrentTextRect()			{ return m_board.GetTextMgr().GetTextRectById( GetCurrentTextId() ); }
 	// Helpers for slots
+	void ZoomHelper(int delta);
 	void AddPart(COMP eType)
 	{
 		if ( m_board.GetCompEdit() ) return;	// Do nothing in component editor mode
 
-		const int compId = m_board.CreateComponent(m_scrollArea, eType);
+		int iRow, iCol;
+		GetFirstRowCol(iRow, iCol);
+		const int compId = m_board.CreateComponent(iRow, iCol, eType);
 		if ( compId == BAD_COMPID ) return;	// Reached component limit
 
 		GroupManager& groupMgr = m_board.GetGroupMgr();
@@ -401,7 +406,9 @@ private:
 	{
 		if ( m_board.GetCompEdit() ) return;	// Do nothing in component editor mode
 
-		const int compId = m_board.CreateComponent(m_scrollArea, compTemp.GetType(), &compTemp);
+		int iRow, iCol;
+		GetFirstRowCol(iRow, iCol);
+		const int compId = m_board.CreateComponent(iRow, iCol, compTemp.GetType(), &compTemp);
 		if ( compId == BAD_COMPID ) return;	// Reached component limit
 
 		GroupManager& groupMgr = m_board.GetGroupMgr();
@@ -455,7 +462,6 @@ private:
 	QBrush	m_darkBrush;
 	QBrush	m_varBrush;
 private:
-
 	Ui::MainWindow*			ui;
 	QAction*				m_recentFileAction[MAX_RECENT_FILES];
 	QAction*				m_separator;	// At the end of the recent files list
@@ -495,6 +501,7 @@ private:
 	QPixmap**	m_ppPixmapPad;		// A pad in the host element
 	QPixmap**	m_ppPixmapDiag;		// For filling small diagonal gaps not covered by blob pixmaps
 	QPixmap**	m_ppPixmapBlob;		// A composite shape with all the host element connections
+	QPoint		m_mousePos;
 	bool		m_bRepaint;			// Flag to make paintEvent() do something useful
 	bool		m_bMouseClick;		// Flag of click beginning
 	bool		m_bLeftClick;

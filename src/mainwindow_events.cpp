@@ -29,7 +29,7 @@ std::string mouseActionString("Action");	// For the undo/redo history
 
 void MainWindow::GetPixMapXY(const QPoint& currentPoint, int& pixmapX, int& pixmapY) const
 {
-	const int iToolbarHeight = ( ui->toolBar->isFloating()   || ui->toolBar->isHidden()   ) ? 0 : ui->toolBar->height();
+	const int iToolbarHeight = ( ui->toolBar->isFloating() || ui->toolBar->isHidden() ) ? 0 : ui->toolBar->height();
 	pixmapX = currentPoint.x() + m_scrollArea->horizontalScrollBar()->value();
 	pixmapY = currentPoint.y() + m_scrollArea->verticalScrollBar()->value() - ui->menuBar->height()- iToolbarHeight;
 }
@@ -58,6 +58,7 @@ void MainWindow::GetRowCol(const QPoint& currentPoint, const int rows, const int
 
 void MainWindow::wheelEvent(QWheelEvent* event)
 {
+	m_mousePos = event->pos();
 	if ( GetShiftKeyDown() ) return;		// Ignore wheel events while trying to group components
 	const bool bBack = ( event->delta() < 0 );
 	if ( GetCtrlKeyDown() )
@@ -76,6 +77,7 @@ void MainWindow::wheelEvent(QWheelEvent* event)
 
 void MainWindow::mousePressEvent(QMouseEvent* event)
 {
+	m_mousePos = event->pos();
 	if ( m_board.GetMirrored() ) return;
 
 	const TRACKMODE&	trackMode	= m_board.GetTrackMode();
@@ -83,7 +85,7 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 	CompDefiner&		compDefiner	= m_board.GetCompDefiner();
 	const int&			layer		= m_board.GetCurrentLayer();
 
-	m_bMouseClick	= true;			// Set the flag meaning "click begin"
+	m_bMouseClick	= true;		// Set the flag meaning "click begin"
 	m_bLeftClick	= ( event->button() & Qt::LeftButton );
 	m_bRightClick	= ( event->button() & Qt::RightButton );
 
@@ -260,6 +262,7 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 
 void MainWindow::mouseDoubleClickEvent(QMouseEvent* event)
 {
+	m_mousePos = event->pos();
 	if ( m_board.GetMirrored() ) return;
 	if ( m_board.GetCompEdit() ) return;
 	if ( m_board.GetTrackMode() == TRACKMODE::OFF ) return;
@@ -290,6 +293,7 @@ void MainWindow::mouseDoubleClickEvent(QMouseEvent* event)
 
 void MainWindow::mouseMoveEvent(QMouseEvent* event)
 {
+	m_mousePos = event->pos();
 	if ( m_board.GetMirrored() ) return;
 	if ( !m_bMouseClick ) return;
 	const TRACKMODE&	trackMode	= m_board.GetTrackMode();
@@ -458,8 +462,9 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 	}
 }
 
-void MainWindow::mouseReleaseEvent(QMouseEvent*)
+void MainWindow::mouseReleaseEvent(QMouseEvent* event)
 {
+	m_mousePos = event->pos();
 	releaseMouse();
 
 	if ( m_board.GetMirrored() ) return;
