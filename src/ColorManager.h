@@ -92,7 +92,6 @@ public:
 					assert( pJ->GetHasAdj(nodeIdI) );	// Sanity check.  Adjacencies should be symmetric
 					if ( iColorId == GetColorId(nodeIdJ) ) cost++;
 				}
-				//if ( nodeIdI != 1 && iColorId == 0 ) cost = INT_MAX;	//TODO May want to give low nodeIds unique colors (e.g. 1 is often ground)
 				if ( cost < minCost ) { minCost = cost;	bestColorId = iColorId; }	// Update bestColorId
 			}
 			m_mapNodeIdToColorId[nodeIdI] = bestColorId;

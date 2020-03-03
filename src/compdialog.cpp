@@ -86,7 +86,7 @@ void CompDialog::SetMainWindow(MainWindow* p)
 
 void CompDialog::paintEvent(QPaintEvent* event)
 {
-	if ( !m_pMainWindow->m_board.GetCompEdit() )	//TODO Try to prevent both dialogs appearing at same time
+	if ( !m_pMainWindow->m_board.GetCompEdit() )	// Prevent both dialogs appearing at same time
 	{
 		m_pMainWindow->HideCompDialog();
 		return event->accept();

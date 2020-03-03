@@ -392,7 +392,7 @@ void GStream::WriteXY(const QPoint& p,  const bool& bFullLine)
 void GStream::WriteDrillValue(const int& iMil)
 {
 	if ( !is_open() || m_eType != GFILE::DRL ) return;
-	const int	iAbs	= abs(iMil);
+	const int iAbs = abs(iMil);
 	assert( iMil > 0 );	// All veroRoute grid points are >= 0
 	(*this) << ( iMil >= 0 ? "+" : "-" );
 	if ( iAbs < 100000 ) (*this) << "0";
@@ -416,11 +416,15 @@ void GStream::GetQPolygon(const QPolygonF& in, QPolygon& out) const
 }
 std::string GStream::MilToInch(const int& iMil) const	// Just for pen sizes
 {
-	assert( iMil >= 0 && iMil < 1000 );	//TODO Generalise this
-	std::string str("0.");
-	if ( iMil < 100 ) str += "0";
-	if ( iMil < 10  ) str += "0";
-	str += std::to_string(iMil);
+	assert(iMil >= 0);
+	std::string str;
+	const int inches = iMil / 1000;
+	const int remain = iMil - 1000 * inches;
+	str += std::to_string(inches);
+	str += ".";
+	if ( remain < 100 ) str += "0";
+	if ( remain < 10  ) str += "0";
+	str += std::to_string(remain);
 	return str;
 }
 
