@@ -37,6 +37,7 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 , m_localDataPathStr(localDataPathStr.toStdString())
 , m_tutorialsPathStr(tutorialsPathStr.toStdString())
 , m_ppPixmapPad(nullptr)
+, m_ppPixmapVia(nullptr)
 , m_ppPixmapDiag(nullptr)
 , m_ppPixmapBlob(nullptr)
 , m_bRepaint(false)
@@ -215,6 +216,7 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	QObject::connect(ui->actionAddLayer,				SIGNAL(triggered()), this, SLOT(AddLayer()));
 	QObject::connect(ui->actionRemoveLayer,				SIGNAL(triggered()), this, SLOT(RemoveLayer()));
 	QObject::connect(ui->actionSwitchLayer,				SIGNAL(triggered()), this, SLOT(SwitchLayer()));
+	QObject::connect(ui->actionToggleVias,				SIGNAL(triggered()), this, SLOT(ToggleVias()));
 	QObject::connect(ui->actionAbout,					SIGNAL(triggered()), this, SLOT(ShowAbout()));
 	QObject::connect(ui->actionTutorial,				SIGNAL(triggered()), this, SLOT(LoadFirstTutorial()));
 	QObject::connect(ui->actionSupport,					SIGNAL(triggered()), this, SLOT(ShowSupport()));
@@ -934,6 +936,7 @@ void MainWindow::AddLayer()
 	assert( m_board.GetLyrs() == 1 );
 	m_board.GrowThenPan(1, 0, 0, 0, 0);
 	m_board.SetCurrentLayer(1);
+	m_board.SetViasEnabled(true);
 	UpdateHistory("Add top layer");
 	UpdateControls();
 	RepaintWithRouting();
@@ -957,6 +960,16 @@ void MainWindow::SwitchLayer()
 	UpdateControls();
 	RepaintWithRouting();
 }
+void MainWindow::ToggleVias()
+{
+	assert( m_board.GetLyrs() == 2 );
+	m_board.SetViasEnabled( !m_board.GetViasEnabled() );
+	UpdateHistory("Toggle vias");
+	UpdateControls();
+	RepaintWithRouting();
+	ListNodes();
+}
+
 // Help menu items
 void MainWindow::ShowAbout()
 {
@@ -1634,7 +1647,9 @@ void MainWindow::UpdateControls()
 	ui->menuLayers->setEnabled( !bCompEdit );
 	ui->actionAddLayer->setEnabled(		m_board.GetLyrs() == 1 );
 	ui->actionRemoveLayer->setEnabled(	m_board.GetLyrs() != 1 );
+	ui->actionToggleVias->setEnabled(	m_board.GetLyrs() != 1 );
 	ui->actionSwitchLayer->setEnabled(	m_board.GetLyrs() != 1 );
+	ui->actionToggleVias->setText(		m_board.GetLyrs() != 1 && m_board.GetViasEnabled() ? QString("Disable Vias") : QString("Enable Vias") );
 	ui->actionSwitchLayer->setText(		m_board.GetCurrentLayer() == 0 ? QString("Switch to Top Layer") : QString("Switch to Bottom Layer") );
 	ui->actionSwitchLayer->setIcon(		m_board.GetCurrentLayer() == 0 ? QIcon(":/images/layertop.png") : QIcon(":/images/layerbot.png"));
 	m_labelStatus->setText(m_board.GetCurrentLayer() == 0 ? QString("   Layer = Bottom   ") : QString("   Layer = Top   "));

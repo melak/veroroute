@@ -74,6 +74,7 @@ public:
 		m_bCurvedTracks		= o.m_bCurvedTracks;
 		m_bFatTracks		= o.m_bFatTracks;
 		m_bRoutingEnabled	= o.m_bRoutingEnabled;
+		m_bViasEnabled		= o.m_bViasEnabled;
 		m_bShowGrid			= o.m_bShowGrid;
 		m_bShowText			= o.m_bShowText;
 		m_bFlipH			= o.m_bFlipH;
@@ -122,6 +123,7 @@ public:
 			&&	m_bCurvedTracks		== o.m_bCurvedTracks
 			&&	m_bFatTracks		== o.m_bFatTracks
 			&&	m_bRoutingEnabled	== o.m_bRoutingEnabled
+			&&	m_bViasEnabled		== o.m_bViasEnabled
 			&&	m_bShowGrid			== o.m_bShowGrid
 			&&	m_bShowText			== o.m_bShowText
 			&&	m_bFlipH			== o.m_bFlipH
@@ -265,6 +267,9 @@ public:
 		if ( inStream.GetVersion() >= VRT_VERSION_36 )
 			inStream.Load(m_bFatTracks);		// Added in VRT_VERSION_36
 		inStream.Load(m_bRoutingEnabled);
+		m_bViasEnabled = true;
+		if ( inStream.GetVersion() >= VRT_VERSION_37 )
+			inStream.Load(m_bViasEnabled);		// Added in VRT_VERSION_37
 		m_bShowGrid = m_iTrackMode != TRACKMODE::OFF;
 		if ( inStream.GetVersion() >= VRT_VERSION_5 )
 			inStream.Load(m_bShowGrid);			// Added in VRT_VERSION_5
@@ -326,6 +331,7 @@ public:
 		outStream.Save(m_bCurvedTracks);
 		outStream.Save(m_bFatTracks);		// Added in VRT_VERSION_36
 		outStream.Save(m_bRoutingEnabled);
+		outStream.Save(m_bViasEnabled);		// Added in VRT_VERSION_37
 		outStream.Save(m_bShowGrid);		// Added in VRT_VERSION_5
 		outStream.Save(m_bShowText);		// Added in VRT_VERSION_14
 		outStream.Save(m_bFlipH);
@@ -371,6 +377,7 @@ public:
 	bool SetCurvedTracks(const bool& b)		{ const bool bChanged = m_bCurvedTracks		!= b; m_bCurvedTracks	= b; return bChanged; }
 	bool SetFatTracks(const bool& b)		{ const bool bChanged = m_bFatTracks		!= b; m_bFatTracks		= b; return bChanged; }
 	bool SetRoutingEnabled(const bool& b)	{ const bool bChanged = m_bRoutingEnabled	!= b; m_bRoutingEnabled	= b; return bChanged; }
+	bool SetViasEnabled(const bool& b)		{ const bool bChanged = m_bViasEnabled		!= b; m_bViasEnabled	= b; return bChanged; }
 	bool SetShowGrid(const bool& b)			{ const bool bChanged = m_bShowGrid			!= b; m_bShowGrid		= b; return bChanged; }
 	bool SetShowText(const bool& b)			{ const bool bChanged = m_bShowText			!= b; m_bShowText		= b; return bChanged; }
 	bool SetFlipH(const bool& b)			{ const bool bChanged = m_bFlipH			!= b; m_bFlipH			= b; return bChanged; }
@@ -415,6 +422,7 @@ public:
 	const bool&			GetCurvedTracks() const		{ return m_bCurvedTracks; }
 	const bool&			GetFatTracks() const		{ return m_bFatTracks; }
 	const bool&			GetRoutingEnabled() const	{ return m_bRoutingEnabled; }
+	const bool&			GetViasEnabled() const		{ return m_bViasEnabled; }
 	const bool&			GetShowGrid() const			{ return m_bShowGrid; }
 	const bool&			GetShowText() const			{ return m_bShowText; }
 	const bool&			GetFlipH() const			{ return m_bFlipH; }
@@ -484,6 +492,7 @@ private:
 	bool		m_bCurvedTracks		= false;
 	bool		m_bFatTracks		= true;
 	bool		m_bRoutingEnabled	= false;
+	bool		m_bViasEnabled		= true;				// true ==> allow vias for 2-layer boards
 	bool		m_bShowGrid			= true;				// true ==> show grid dots
 	bool		m_bShowText			= true;				// true ==> show text boxes
 	bool		m_bFlipH			= false;			// true ==> flip L and R (with no manual manipulation)

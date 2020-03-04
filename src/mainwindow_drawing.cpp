@@ -24,6 +24,7 @@
 void MainWindow::DestroyPixmapCache()
 {
 	if ( m_ppPixmapPad )	for (int i = 0; i <     NUM_PIXMAP_COLORS; i++) delete m_ppPixmapPad[i];	delete[] m_ppPixmapPad;		m_ppPixmapPad	= nullptr;
+	if ( m_ppPixmapVia )	for (int i = 0; i <     NUM_PIXMAP_COLORS; i++) delete m_ppPixmapVia[i];	delete[] m_ppPixmapVia;		m_ppPixmapVia	= nullptr;
 	if ( m_ppPixmapDiag )	for (int i = 0; i < 2 * NUM_PIXMAP_COLORS; i++) delete m_ppPixmapDiag[i];	delete[] m_ppPixmapDiag;	m_ppPixmapDiag	= nullptr;
 	if ( m_ppPixmapBlob )	for (int i = 0; i < 256; i++)					delete m_ppPixmapBlob[i];	delete[] m_ppPixmapBlob;	m_ppPixmapBlob	= nullptr;
 }
@@ -47,6 +48,7 @@ void MainWindow::CreatePixmapCache(const GuiControl& guiCtrl, ColorManager& colo
 	const int	D	= guiCtrl.GetHalfPadWidth();	// Half pad width in pixels
 	const int	H	= (int) ceil(1.414 * guiCtrl.GetHalfTrackWidth());
 	m_ppPixmapPad	= new QPixmap*[NUM_PIXMAP_COLORS];
+	m_ppPixmapVia	= new QPixmap*[NUM_PIXMAP_COLORS];
 	m_ppPixmapDiag	= new QPixmap*[2 * NUM_PIXMAP_COLORS];
 	m_ppPixmapBlob	= new QPixmap*[256];
 
@@ -62,6 +64,13 @@ void MainWindow::CreatePixmapCache(const GuiControl& guiCtrl, ColorManager& colo
 
 		painter.begin(m_ppPixmapPad[i]);
 		PaintPad(guiCtrl, painter, color, QPointF(D,D));
+		painter.end();
+
+		m_ppPixmapVia[i] = new QPixmap(2*D, 2*D);
+		m_ppPixmapVia[i]->fill(Qt::transparent);
+
+		painter.begin(m_ppPixmapVia[i]);
+		PaintViaPad(guiCtrl, painter, color, QPointF(D,D));
 		painter.end();
 
 		for (int jDiagCode = 0; jDiagCode < 2; jDiagCode++)	// 0 ==> LT, 1 ==> RT
@@ -244,17 +253,26 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 			{
 				if ( bCurvedTracks )
 				{
-					// Make an N-point Bezier curve from L to R (via the central control point C)
+					// Make an N-point curve from L to R passing near central control point C
+					// Current interpolation is quadratic.
+					// Using higher order (e.g. 2.5) gives bends passing closer to C (hence sharper corners)
 					const int		N = 10;
 					const double	d = 1.0 / N;
+					const QPointF	pLC(p[iL] - pC), pRC(p[iR] -pC);
 					for (int i = 0; i <= N; i++)
 					{
 						const double t(i * d), u(1 - t);
-						polygon << p[iL]*(u*u) + pC*(2.0*t*u) + p[iR]*(t*t);
+						polygon << pC + pLC*(u*u) + pRC*(t*t);	// Bezier curve (quadratic interpolation)
+					//	polygon << pC + pLC*pow(u,2.5) + pRC*pow(t,2.5);	// Sharper bends
 					}
 				}
-				else if ( bOrtho )	// Bend == 90 degrees
-					polygon << p[iL] << (p[iL] + pC)*0.5 << (p[iR] + pC)*0.5 << p[iR];	// Draw mitred corner instead of 90 degree bend for L-C-R
+				else if ( bOrtho )	// Bend == 90 degrees (chosen to approximate the above curve)
+				{
+					const double r = 0.5;			// i.e. 2*t^2	when t = 0.5
+				//	const double r = 0.25*sqrt(2);	// i.e. 2*t^2.5	when t = 0.5
+					const double s = 1 - r;
+					polygon << p[iL] << p[iL]*r + pC*s << p[iR]*r + pC*s << p[iR];	// Draw mitred corner instead of 90 degree bend for L-C-R
+				}
 				else
 					polygon << p[iL] << pC << p[iR];	// Draw a sharp bend for L-C-R instead of a smooth curve
 			}
@@ -856,8 +874,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						// Set the area that is not in the "blob" to the background color
 						painter.drawPixmap(L, T, *(m_ppPixmapBlob[iPerimeterCode]));
 
-						// Draw pad
-						if ( bPin || bVia ) painter.drawPixmap(L+C-D, T+C-D, *(m_ppPixmapPad[iEffColorId]));
+						// Draw pad/via
+						if ( bPin ) painter.drawPixmap(L+C-D, T+C-D, *(m_ppPixmapPad[iEffColorId]));
+						if ( bVia ) painter.drawPixmap(L+C-D, T+C-D, *(m_ppPixmapVia[iEffColorId]));
 					}
 					else if ( iLoop == 1 )
 					{

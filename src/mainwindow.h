@@ -230,6 +230,7 @@ public slots:
 	void AddLayer();
 	void RemoveLayer();
 	void SwitchLayer();
+	void ToggleVias();
 	// Help menu items
 	void LoadFirstTutorial();
 	void LoadPrevTutorial();
@@ -499,6 +500,7 @@ private:
 
 	// Cached pixmaps containing pre-colored pads and blobs.
 	QPixmap**	m_ppPixmapPad;		// A pad in the host element
+	QPixmap**	m_ppPixmapVia;		// A via in the host element
 	QPixmap**	m_ppPixmapDiag;		// For filling small diagonal gaps not covered by blob pixmaps
 	QPixmap**	m_ppPixmapBlob;		// A composite shape with all the host element connections
 	QPoint		m_mousePos;

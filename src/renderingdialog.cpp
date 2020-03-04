@@ -76,18 +76,23 @@ void RenderingDialog::UpdateControls()
 	const bool bNoTrackOptions	= board.GetTrackMode() == TRACKMODE::OFF;
 	const bool bGndFill			= board.GetGroundFill();
 	const bool bVero			= board.GetVeroTracks();
+	const bool bVias			= board.GetViasEnabled();
 
 	ui->padWidth->setDisabled(		bCompEdit || bNoTrackOptions || bVero );
 	ui->trackWidth->setDisabled(	bCompEdit || bNoTrackOptions || bVero );
 	ui->holeWidth->setDisabled(		bCompEdit || bNoTrackOptions || bVero );
 	ui->gapWidth->setDisabled(		bCompEdit || bVero || !bMonoPCB || !bGndFill );
 	ui->groupBox_pcb->setDisabled(	bCompEdit || bVero || !bPCB );
+	ui->viapadWidth->setDisabled(	bCompEdit || bVero || !bPCB || !bVias);
+	ui->viaholeWidth->setDisabled(	bCompEdit || bVero || !bPCB || !bVias);
 
 	// ... and corresponding labels
 	ui->label_pad->setDisabled(		bCompEdit || bNoTrackOptions || bVero );
 	ui->label_track->setDisabled(	bCompEdit || bNoTrackOptions || bVero );
 	ui->label_hole->setDisabled(	bCompEdit || bNoTrackOptions || bVero );
 	ui->label_gap->setDisabled(		bCompEdit || bVero || !bMonoPCB || !bGndFill );
+	ui->label_viapad->setDisabled(	bCompEdit || bVero || !bPCB || !bVias);
+	ui->label_viahole->setDisabled(	bCompEdit || bVero || !bPCB || !bVias);
 
 	ui->padWidth->setValue(		board.GetPAD_PERCENT()		);
 	ui->trackWidth->setValue(	board.GetTRACK_PERCENT()	);

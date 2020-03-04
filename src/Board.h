@@ -41,7 +41,6 @@ public:
 	, m_infoStr("Use this box to enter a circuit description or other info")
 	, m_tmpVecSize(0)
 	, m_bRouteMinimal(true)
-	, m_bRouteVias(true)
 	{
 		Allocate(lyrs, rows, cols);
 		GlueNbrs();		// Set pointers between neighbouring grid elements
@@ -95,7 +94,7 @@ public:
 		m_targetPins.clear();
 		m_tmpVec.clear();
 		m_tmpVecSize	= 0;
-		m_bRouteMinimal	= m_bRouteVias = true;
+		m_bRouteMinimal	= true;
 
 		return *this;
 	}
@@ -647,5 +646,4 @@ private:
 	std::vector<Element*>	m_tmpVec;		// The set of visited points.
 	size_t					m_tmpVecSize;	// The number of visited points.
 	bool					m_bRouteMinimal;// true ==> don't build tracks between pins that are already connected
-	bool					m_bRouteVias;	// true ==> allow routing to other layers through vias (in addition to pins)
 };

@@ -94,7 +94,6 @@ void Board::BuildTargetPins(const int& nodeId)
 void Board::Route(bool bMinimal)
 {
 	m_bRouteMinimal	= bMinimal;
-	assert( m_bRouteVias );
 
 //	const auto start = std::chrono::steady_clock::now();
 
@@ -185,17 +184,19 @@ void Board::Route(bool bMinimal)
 
 void Board::UpdateVias()	// Sets the via flag to true on all candidate vias
 {
-	// If the ends of a candidate via can be connected through a pin on the board then it is not a via.
-	const bool bRoutingEnabled = GetRoutingEnabled();	// Log routing state
-	SetRoutingEnabled(false);
 	m_bRouteMinimal	= true;
-	m_bRouteVias	= false;	// Disable routing through vias to perform test
+	
+	// If the ends of a candidate via can be connected through a pin on the board then it is not a via.
+	const bool bRoutingEnabled	= GetRoutingEnabled();	// Log routing state
+	const bool bViasEnabled		= GetViasEnabled();		// Log vias state
+	SetRoutingEnabled(false);	// Don't build tracks
+	SetViasEnabled(false);		// Disable routing through vias to perform test
 	for (int i = 0, iSize = ( GetLyrs() == 1 ) ? GetSize() : ( GetSize() / 2 ); i < iSize; i++)	// Loop layer 0 only
 	{
 		Element* p = GetAt(i);
 		Element* q = p->GetNbr(NBR_X);
 		bool bIsVia = false;
-		if ( q && !p->GetHasPin() && p->GetNodeId() == q->GetNodeId() && p->GetNodeId() != BAD_NODEID )	// If candidate via ...
+		if ( bViasEnabled && q && !p->GetHasPin() && p->GetNodeId() == q->GetNodeId() && p->GetNodeId() != BAD_NODEID )	// If candidate via ...
 		{
 			m_targetPins.clear();
 			m_targetPins.push_back(p);
@@ -204,7 +205,7 @@ void Board::UpdateVias()	// Sets the via flag to true on all candidate vias
 		}
 		p->SetIsVia(bIsVia);
 	}
-	m_bRouteVias = true;				// Restore routing through vias
+	SetViasEnabled(bViasEnabled);		// Restore vias state
 	SetRoutingEnabled(bRoutingEnabled);	// Restore routing state
 }
 
@@ -246,8 +247,6 @@ unsigned int Board::Flood()
 
 void Board::Flood_Helper(bool** ppConn, unsigned int& cost, const bool bBuildTracks)
 {
-	const bool bMultiLayer = GetLyrs() > 1;
-
 	for (int i = 0, iSize = GetSize(); i < iSize; i++)	// Loop all grid points
 		GetAt(i)->ResetMH();	// Wipe RouteId. Set "infinite" MH distance.  Zero max MH parameter.
 
@@ -265,10 +264,12 @@ void Board::Flood_Helper(bool** ppConn, unsigned int& cost, const bool bBuildTra
 		p->UpdateMH(RID, iMH, iMaxMH);
 	}
 
+	const bool			bMultiLayer	 = GetLyrs() > 1;
+	const bool			bViasEnabled = bMultiLayer && GetViasEnabled();
 	const int&			iFloodNodeId = m_targetPins[0]->GetNodeId();
 	const unsigned int	numRIDs		 = RID + 1;	assert( m_targetPins.size() == (size_t) numRIDs );
 	const bool			bDiagsOK	 = ( GetDiagsMode() != DIAGSMODE::OFF );
-	const unsigned int	iMaxDeltaMH	 = ( bMultiLayer && m_bRouteVias ) ? MH_LVIA : bDiagsOK ? MH_DIAG : MH_LRTB;	// The max MH increment in single-layer mode depends on if diagonals are allowed
+	const unsigned int	iMaxDeltaMH	 = ( bViasEnabled ) ? MH_LVIA : bDiagsOK ? MH_DIAG : MH_LRTB;	// The max MH increment in single-layer mode depends on if diagonals are allowed
 
 	size_t jjStart(0);
 
@@ -297,7 +298,7 @@ void Board::Flood_Helper(bool** ppConn, unsigned int& cost, const bool bBuildTra
 				continue;
 			}
 
-			const int iTypeMin(bMultiLayer ? 0 : 1), iTypeMax(bMultiLayer && m_bRouteVias ? 2 : 1);
+			const int iTypeMin(bMultiLayer ? 0 : 1), iTypeMax(bViasEnabled ? 2 : 1);
 			for (int iType = iTypeMin; iType <= iTypeMax && !bDone; iType++)
 			{
 				switch( iType )
@@ -416,6 +417,7 @@ void Board::Backtrace(Element* pEnd, const int& nodeId)
 	WIRELIST wireList;	// Helper for chains of wires
 
 	const bool bMultiLayer	= GetLyrs() > 1;
+	const bool bViasEnabled	= bMultiLayer && GetViasEnabled();
 	const bool bDiagsOK		= ( GetDiagsMode() != DIAGSMODE::OFF );
 
 	unsigned int MH = p->GetMH();
@@ -474,7 +476,7 @@ void Board::Backtrace(Element* pEnd, const int& nodeId)
 
 		for (int iLoop = 0; iLoop < 2 && !bOK; iLoop++)	// First pass to give preference to nbrs that are not wire ends
 		{
-			const int iTypeMin(bMultiLayer ? 0 : 1), iTypeMax(bMultiLayer && m_bRouteVias ? 2 : 1);
+			const int iTypeMin(bMultiLayer ? 0 : 1), iTypeMax(bViasEnabled ? 2 : 1);
 			for (int iType = iTypeMin; iType <= iTypeMax && !bOK; iType++)
 			{
 				switch( iType )
@@ -524,16 +526,16 @@ void Board::Manhatten(Element* p)
 
 	WIRELIST wireList;	// Helper for chains of wires
 
-	const bool bMultiLayer = GetLyrs() > 1;
-
 	for (int i = 0, iSize = GetSize(); i < iSize; i++)	// Loop all grid points
 		GetAt(i)->ResetMH();	// Wipe RouteId. Set "infinite" MH distance.  Zero max MH parameter.
 
 	m_tmpVec.resize(GetSize(), nullptr);	// Clear the set of visited points
 	m_tmpVecSize = 0;
-
-	const bool			bDiagsOK	= ( GetDiagsMode() != DIAGSMODE::OFF );
-	const unsigned int	iMaxDeltaMH	= ( bMultiLayer ) ? MH_LVIA : bDiagsOK ? MH_DIAG : MH_LRTB;	// The max MH increment in single-layer mode depends on if diagonals are allowed
+	
+	const bool			bMultiLayer	 = GetLyrs() > 1;
+	const bool			bViasEnabled = bMultiLayer && GetViasEnabled();
+	const bool			bDiagsOK	 = ( GetDiagsMode() != DIAGSMODE::OFF );
+	const unsigned int	iMaxDeltaMH	 = ( bMultiLayer ) ? MH_LVIA : bDiagsOK ? MH_DIAG : MH_LRTB;	// The max MH increment in single-layer mode depends on if diagonals are allowed
 
 	size_t jjStart(0);
 	const unsigned int RID(0);
@@ -557,7 +559,6 @@ void Board::Manhatten(Element* p)
 			pW->UpdateMH(RID, iOtherMH, iMaxMH);
 		}
 	}
-	assert( m_bRouteVias );
 	while ( true )
 	{
 		iMH++;	// Increase MH (think of this as distance from start point).
@@ -581,7 +582,7 @@ void Board::Manhatten(Element* p)
 				continue;
 			}
 
-			const int iTypeMin(bMultiLayer ? 0 : 1), iTypeMax(bMultiLayer && m_bRouteVias ? 2 : 1);
+			const int iTypeMin(bMultiLayer ? 0 : 1), iTypeMax(bViasEnabled ? 2 : 1);
 			for (int iType = iTypeMin; iType <= iTypeMax; iType++)
 			{
 				switch( iType )

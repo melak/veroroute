@@ -220,6 +220,7 @@
     <addaction name="actionRemoveLayer"/>
     <addaction name="separator"/>
     <addaction name="actionSwitchLayer"/>
+    <addaction name="actionToggleVias"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -1198,6 +1199,11 @@
    </property>
    <property name="toolTip">
     <string>Thin track style</string>
+   </property>
+  </action>
+  <action name="actionToggleVias">
+   <property name="text">
+    <string>Toggle Vias</string>
    </property>
   </action>
  </widget>

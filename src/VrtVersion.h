@@ -36,4 +36,5 @@ const int VRT_VERSION_33 = 33;	// Added PCB track mode, board edge margin, PTH/N
 const int VRT_VERSION_34 = 34;	// Added 3rd dimension to grid, and display layer
 const int VRT_VERSION_35 = 35;	// Added via dimensions
 const int VRT_VERSION_36 = 36;	// Added thin tracks style
-const int VRT_VERSION_CURRENT = VRT_VERSION_36;
+const int VRT_VERSION_37 = 37;	// Added flag to enable/disable vias
+const int VRT_VERSION_CURRENT = VRT_VERSION_37;
