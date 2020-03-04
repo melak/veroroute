@@ -460,7 +460,7 @@ private:
 	HOLETYPE	m_iHoleType			= HOLETYPE::NPTH;	// NPTH, PTH (Non-Plated Through Hole, Plated Through Hole)
 	int			m_GRIDPIXELS		= 24;				// Default 24 pixels per grid square (i.e. per 100 mil)
 	int			m_PAD_PERCENT		= 90;				// Range 50 to 98 of a grid square   (i.e. 1 PERCENT = 1 mil)
-	int			m_TRACK_PERCENT		= 46;				// Range 30 to 50 of a grid square   (i.e. 1 PERCENT = 1 mil)
+	int			m_TRACK_PERCENT		= 46;				// Range 12 to 50 of a grid square   (i.e. 1 PERCENT = 1 mil)
 	int			m_HOLE_PERCENT		= 26;				// Range 20 to 40 of a grid square   (i.e. 1 PERCENT = 1 mil)
 	int			m_GAP_PERCENT		= 10;				// Range  5 to 30 of a grid square   (i.e. 1 PERCENT = 1 mil)
 	int			m_MASK_PERCENT		= 4;				// Range  0 to 10 of a grid square   (i.e. 1 PERCENT = 1 mil)

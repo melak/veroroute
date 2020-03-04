@@ -438,7 +438,7 @@
      <string>Track width (1 mil = 0.001 inches)</string>
     </property>
     <property name="minimum">
-     <number>30</number>
+     <number>12</number>
     </property>
     <property name="maximum">
      <number>50</number>
