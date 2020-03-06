@@ -191,10 +191,12 @@ static const char* szVEROROUTE_VERSION =
 			// Bug fix: Right clicking on the top toolbar allowed control and component editor dialogs to be displayed together.
 			// Added shell script to uninstall on Linux and updated README.txt with info on uninstall procedure.
 //"1.82";	// Bug fix:  Merge should not update the filename used for saving.
-  "1.83";	// Bug fix:  Pin dialog should be hidden in component editor mode.
+//"1.83";	// Bug fix:  Pin dialog should be hidden in component editor mode.
 			// Bug fix:  Vias were only drawn with correct size in PCB mode.
 			// Improvement:  Zoom with repect to mouse position rather then centre of view.
 			// Improvement:  When adding to part templates from current circuit, only consider currently selected parts.
 			// Improvement:  Reduce minimum allowed track width from 30 mil to 12 mil.
 			// New feature:  Allow use vias to be enabled/disabled under Layers menu.
 			// New feature:  Added new "Thin" track style for more traditional look and smaller Gerber files.
+  "1.84";	// Bug fix:  Repainting pins on layer 2 did not update grid connections properly, and could crash when the part is moved.
+

@@ -1,6 +1,6 @@
 VeroRoute - Qt based Veroboard/Perfboard/PCB layout & routing application.
 
-Version 1.83
+Version 1.84
 
 Copyright (C) 2017  Alex Lawrow    ( dralx@users.sourceforge.net )
 
@@ -37,12 +37,12 @@ Note:  The Qt project file has been configured so that the executable VeroRoute.
 
 PRE-COMPILED VERSIONS
 =====================
-Pre-compiled 32-bit and 64-bit versions of VeroRoute for Windows 7 are available.
-They should also work on later versions of windows but have not been tested.
-There is no installer. Just unzip everything to a folder and run it from there.
 
-A precompiled 64-bit version for Linux Mint 18.3 is also available.
-This has been tested on Cinnamon/MATE/Xfce/KDE versions.
+For MS Windows:  Pre-compiled 32-bit and 64-bit versions of VeroRoute for Windows 7 are available.
+They should also work on later versions of windows but have not been tested.
+There is no installer for windows.  Just unzip everything to a folder and run it from there.
+
+For Linux:  A precompiled 64-bit version for Linux Mint 18.3 is available.
 It may also work on other recent 64-bit Linux distributions depending on whether
 they have the necessary Qt libraries installed (it needs Qt version 5).
 
@@ -53,9 +53,6 @@ To install on Linux:  Unzip everything to a folder.  Then open a command line pr
 To uninstall on Linux:  Open a command line prompt in the unzipped folder and type
 
     sudo ./veroroute-uninstall.sh
-
-
-On MS Windows: There is no installer, so just unzip everything to a folder and run it from there.
 
 
 
