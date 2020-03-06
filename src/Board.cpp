@@ -95,29 +95,40 @@ int Board::GetTextId(int row, int col)	// Pick the most relevant text box at the
 
 void Board::SetNodeId(Element* p, const int& nodeId, const bool bAllLyrs)	// Helper to make sure we do UpdateCounts() before painting an element
 {
-	m_adjInfoMgr.UpdateCounts(p, nodeId);	// Do this BEFORE we call SetNodeId() on the element
-	p->SetNodeId(nodeId);					// Write node value
-	if ( !bAllLyrs ) return;
-	Element* q = p->GetNbr(NBR_X);
-	if ( q == nullptr ) return;
-	m_adjInfoMgr.UpdateCounts(q, nodeId);	// Do this BEFORE we call SetNodeId() on the element
-	q->SetNodeId(nodeId);					// Write node value
+	// For all layers case, always write base layer first
+	Element* q	= bAllLyrs ? p->GetNbr(NBR_X) : nullptr;
+	Element* p1	= std::min(p, q);
+	Element* p2	= std::max(p, q);
+	if ( p1 )
+	{
+		m_adjInfoMgr.UpdateCounts(p1, nodeId);	// Do this BEFORE we call SetNodeId() on the element
+		p1->SetNodeId(nodeId);					// Write node value
+	}
+	if ( p2 )
+	{
+		m_adjInfoMgr.UpdateCounts(p2, nodeId);	// Do this BEFORE we call SetNodeId() on the element
+		p2->SetNodeId(nodeId);					// Write node value
+	}
 }
 
 void Board::ClearFlagBits(Element* p, const char& i, const bool bAllLyrs)
 {
-	p->ClearFlagBits(i);
-	if ( !bAllLyrs ) return;
-	Element* q = p->GetNbr(NBR_X);
-	if ( q ) q->ClearFlagBits(i);
+	// For all layers case, always write base layer first
+	Element* q	= bAllLyrs ? p->GetNbr(NBR_X) : nullptr;
+	Element* p1	= std::min(p, q);
+	Element* p2	= std::max(p, q);
+	if ( p1 ) p1->ClearFlagBits(i);
+	if ( p2 ) p2->ClearFlagBits(i);
 }
 
 void Board::SetFlagBits(Element* p, const char& i, const bool bAllLyrs)
 {
-	p->SetFlagBits(i);
-	if ( !bAllLyrs ) return;
-	Element* q = p->GetNbr(NBR_X);
-	if ( q ) q->SetFlagBits(i);
+	// For all layers case, always write base layer first
+	Element* q	= bAllLyrs ? p->GetNbr(NBR_X) : nullptr;
+	Element* p1	= std::min(p, q);
+	Element* p2	= std::max(p, q);
+	if ( p1 ) p1->SetFlagBits(i);
+	if ( p2 ) p2->SetFlagBits(i);
 }
 
 bool Board::SetNodeIdByUser(const int& lyr, const int& row, const int& col, const int& nodeId, const bool& bPaintPins)
@@ -228,8 +239,9 @@ bool Board::SetNodeIdByUser(const int& lyr, const int& row, const int& col, cons
 			// Need to do (RemoveComp/ SetNodeId/ AddComp) to ensure m_nodeInfoMgr is updated OK
 			m_nodeInfoMgr.RemoveComp(comp);
 			comp.SetNodeId(pinIndex, nodeId);
-			if ( comp.GetOrigId(lyr, pinIndex) != nodeId )	// Modifying a pin on a previously painted track ...
-				comp.SetOrigId(lyr, pinIndex, BAD_NODEID);	// ... should wipe the track under the pin
+			for (int iLyr = 0; iLyr < 2; iLyr++)
+				if ( comp.GetOrigId(iLyr, pinIndex) != nodeId )	// Modifying a pin on a previously painted track ...
+					comp.SetOrigId(iLyr, pinIndex, BAD_NODEID);	// ... should wipe the track under the pin
 			m_nodeInfoMgr.AddComp(comp);
 		}
 	}
