@@ -1393,7 +1393,7 @@ void MainWindow::SetGapWidth(int i)			{ if ( m_board.SetGAP_PERCENT(i)   ) { Upd
 void MainWindow::SetMaskWidth(int i)		{ if ( m_board.SetMASK_PERCENT(i)  ) { UpdateHistory("Solder mask margin change");		UpdateControls();	RepaintSkipRouting(); } }
 void MainWindow::SetSilkWidth(int i)		{ if ( m_board.SetSILK_PERCENT(i)  ) { UpdateHistory("Silkscreen line width change");	UpdateControls();	RepaintSkipRouting(); } }
 void MainWindow::SetEdgeWidth(int i)		{ if ( m_board.SetEDGE_PERCENT(i)  ) { UpdateHistory("Board edge margin change");		UpdateControls();	RepaintSkipRouting(); } }
-void MainWindow::SetViaPadWidth(int i)		{ if ( m_board.SetVIAPAD_PERCENT(i)) { UpdateHistory("Via pad width change");			UpdateControls();	RepaintSkipRouting(); } }
+void MainWindow::SetViaPadWidth(int i)		{ if ( m_board.SetVIAPAD_PERCENT(i)) { UpdateHistory("Via pad width change");			UpdateControls();	DestroyPixmapCache();	RepaintSkipRouting(); } }
 void MainWindow::SetViaHoleWidth(int i)		{ if ( m_board.SetVIAHOLE_PERCENT(i)){ UpdateHistory("Via hole width change");			UpdateControls();	RepaintSkipRouting(); } }
 
 // Rendering dialog
