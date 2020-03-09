@@ -36,12 +36,6 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 , ui(new Ui::MainWindow)
 , m_localDataPathStr(localDataPathStr.toStdString())
 , m_tutorialsPathStr(tutorialsPathStr.toStdString())
-, m_ppPixmapPad(nullptr)
-, m_ppPixmapVia(nullptr)
-, m_ppPixmapDiag(nullptr)
-, m_ppPixmapBlob(nullptr)
-, m_bRepaint(false)
-, m_iTutorialNumber(-1)	// -1 ==> we're not in a tutorial
 {
 	m_historyMgr.SetPathStr(m_localDataPathStr);
 	m_templateMgr.SetPathStr(m_localDataPathStr);

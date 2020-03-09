@@ -31,13 +31,13 @@ enum class	GFILE		{GKO = 0, GBL, GBS, GBO, GTL, GTS, GTO, DRL};
 const int	NUM_STREAMS	= 8;
 
 // Wrapper for a stream to a Gerber file
-class GStream : public std::ofstream
+class GStream
 {
 public:
 	GStream() {}
 	~GStream();
 	void Close();
-	void Initialise(const GFILE& eType, const Board& board, const QString& UTC);
+	bool Open(const char* fileName, const GFILE& eType, const Board& board, const QString& UTC);
 	void Drill(const QPoint& pF);
 	void SetPolarity(const GPOLARITY& ePolarity, bool bCheckOK = true);
 	void AddPad(const GPEN& ePen, const QPointF& pF);		// Add to m_pads buffer
@@ -90,6 +90,8 @@ private:
 	CurveList		m_regions;	// Drawn with zero width pen. For filling gaps between tracks.
 	CurveList		m_padholes;	// Pad holes
 	CurveList		m_viaholes;	// Via holes
+	// The output stream
+	std::ofstream	m_os;
 };
 
 // Wrapper for handling a set of Gerber files

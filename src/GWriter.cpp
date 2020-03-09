@@ -33,30 +33,46 @@ GStream::~GStream()
 void GStream::Close()
 {
 	ClearBuffers(false);	// false ==> skip GetOK() checks
-	if ( !is_open() ) return;
+	if ( !m_os.is_open() ) return;
 	switch( m_eType )
 	{
-		case GFILE::DRL:	(*this) << "M30";	EndLine();	return close();	// End of program
-		default:			(*this) << "M00";	EndLine();					// Program stop
-							(*this) << "M02";	EndLine();	return close();	// End of file
+		case GFILE::DRL:	m_os << "M30";	EndLine();	return m_os.close();	// End of program
+		default:			m_os << "M00";	EndLine();							// Program stop
+							m_os << "M02";	EndLine();	return m_os.close();	// End of file
 	}
 }
-void GStream::Initialise(const GFILE& eType, const Board& board, const QString& UTC)
+bool GStream::Open(const char* fileName, const GFILE& eType, const Board& board, const QString& UTC)
 {
 	m_eType	 = eType;
 	m_ePen	 = GPEN::UNKNOWN;
 	m_pBoard = &board;
 	m_iLastX = INT_MAX;
 	m_iLastY = INT_MAX;
+
+	std::string str(fileName);
+	switch( m_eType )
+	{
+		case GFILE::GKO: str += ".GKO";	break;
+		case GFILE::GBL: str += ".GBL";	break;
+		case GFILE::GBS: str += ".GBS";	break;
+		case GFILE::GBO: str += ".GBO";	break;
+		case GFILE::GTL: str += ".GTL";	break;
+		case GFILE::GTS: str += ".GTS";	break;
+		case GFILE::GTO: str += ".GTO";	break;
+		case GFILE::DRL: str += ".DRL";	break;
+	}
+	m_os.open(str.c_str(), std::ios::out);
+
 	ClearBuffers(false);	// false ==> skip GetOK() checks
 	WriteHeader(UTC);
 	MakeApertures();
 	LinearInterpolation();
 	SetPolarity(GPOLARITY::DARK, false);	// false ==> skip GetOK() checks
+	return m_os.is_open();
 }
 void GStream::WriteHeader(const QString& UTC)	// Write header for current stream
 {
-	if ( !is_open() ) return;
+	if ( !m_os.is_open() ) return;
 	assert( m_pBoard->GetGRIDPIXELS() == 1000 );	// ==> 4 decimal places per inch
 	std::string	strLayer	= std::string("Layer: ");
 	std::string	strProgram	= std::string("VeroRoute V") + std::string(szVEROROUTE_VERSION);
@@ -83,38 +99,38 @@ void GStream::WriteHeader(const QString& UTC)	// Write header for current stream
 		const int hole		= m_pBoard->GetHOLE_PERCENT();
 		const int viahole	= m_pBoard->GetVIAHOLE_PERCENT();
 
-		(*this) << "M48";				EndLine();	// M48 is start of header
-		(*this) << "INCH,LZ,00.0000";	EndLine();	// Inches.  Leading zeros INCLUDED.  2 integer and 4 decimal
+		m_os << "M48";				EndLine();	// M48 is start of header
+		m_os << "INCH,LZ,00.0000";	EndLine();	// Inches.  Leading zeros INCLUDED.  2 integer and 4 decimal
 
 		// Comment about hole size:		";Holesize 1 = 0.032 INCH"
 		// Define Tool 1:				"T01C0.032" ==> 0.032 inch diameter
 
-		(*this) << ";Holesize 1 = " << MilToInch(hole) << " INCH";	EndLine();
-		(*this) << "T01C" << MilToInch(hole);		EndLine();
+		m_os << ";Holesize 1 = " << MilToInch(hole) << " INCH";	EndLine();
+		m_os << "T01C" << MilToInch(hole);		EndLine();
 
-		(*this) << ";Holesize 2 = " << MilToInch(viahole) << " INCH";	EndLine();
-		(*this) << "T02C" << MilToInch(viahole);	EndLine();
+		m_os << ";Holesize 2 = " << MilToInch(viahole) << " INCH";	EndLine();
+		m_os << "T02C" << MilToInch(viahole);	EndLine();
 
-	//	(*this) << "M95";	EndLine();	// M95 End of the header
-		(*this) << "%";		EndLine();	// Rewind Stop.  Often used instead of M95.
-		(*this) << "G05";	EndLine();	// Turn on drill mode (Format 2 command)
-		(*this) << "G81";	EndLine();	// Turn on drill mode (Format 1 command)
-		(*this) << "G90";	EndLine();	// Absolute mode
+	//	m_os << "M95";	EndLine();	// M95 End of the header
+		m_os << "%";	EndLine();	// Rewind Stop.  Often used instead of M95.
+		m_os << "G05";	EndLine();	// Turn on drill mode (Format 2 command)
+		m_os << "G81";	EndLine();	// Turn on drill mode (Format 1 command)
+		m_os << "G90";	EndLine();	// Absolute mode
 	}
 	else
 	{
 		Comment("Scale: 100 percent, Rotated: No, Reflected: No");
 		Comment("Dimensions in inches");
 		Comment("Leading zeros omitted, Absolute positions, 2 integer and 4 decimal");
-		(*this) << "%FSLAX24Y24*%"	<< std::endl;
-		(*this) << "%MOIN*%"		<< std::endl;	// MOIN/MOCM ==> Inches/cm
-		(*this) << "G90";		EndLine();			// G90/G91   ==> Absolute/relative coords
-		(*this) << "G70D02";	EndLine();			// G70/G71   ==> in/mm
+		m_os << "%FSLAX24Y24*%"	<< std::endl;
+		m_os << "%MOIN*%"		<< std::endl;	// MOIN/MOCM ==> Inches/cm
+		m_os << "G90";		EndLine();			// G90/G91   ==> Absolute/relative coords
+		m_os << "G70D02";	EndLine();			// G70/G71   ==> in/mm
 	}
 }
 void GStream::MakeApertures()	// Make "pens" for current stream
 {
-	if ( !is_open() ) return;
+	if ( !m_os.is_open() ) return;
 	const int pad		= m_pBoard->GetPAD_PERCENT();
 	const int via		= m_pBoard->GetVIAPAD_PERCENT();
 	const int track		= m_pBoard->GetTRACK_PERCENT();
@@ -130,25 +146,25 @@ void GStream::MakeApertures()	// Make "pens" for current stream
 	switch( m_eType )
 	{
 		case GFILE::GKO:
-			(*this) << "%ADD10C," << MilToInch(10)		 << "*%" << std::endl;	// D10 ==> GPEN::MIL10
+			m_os << "%ADD10C," << MilToInch(10)			<< "*%" << std::endl;	// D10 ==> GPEN::MIL10
 			break;
 		case GFILE::GBL:
 		case GFILE::GTL:
-			(*this) << "%ADD11C," << MilToInch(pad)		 << "*%" << std::endl;	// D11 ==> GPEN::PAD
-			(*this) << "%ADD12C," << MilToInch(via)		 << "*%" << std::endl;	// D12 ==> GPEN::VIA
-			(*this) << "%ADD13C," << MilToInch(track)	 << "*%" << std::endl;	// D13 ==> GPEN::TRACK
-			(*this) << "%ADD14C," << MilToInch(padgap)	 << "*%" << std::endl;	// D14 ==> GPEN::PAD_GAP
-			(*this) << "%ADD15C," << MilToInch(viagap)	 << "*%" << std::endl;	// D15 ==> GPEN::VIA_GAP
-			(*this) << "%ADD16C," << MilToInch(trackgap) << "*%" << std::endl;	// D16 ==> GPEN::TRACK_GAP
+			m_os << "%ADD11C," << MilToInch(pad)		<< "*%" << std::endl;	// D11 ==> GPEN::PAD
+			m_os << "%ADD12C," << MilToInch(via)		<< "*%" << std::endl;	// D12 ==> GPEN::VIA
+			m_os << "%ADD13C," << MilToInch(track)		<< "*%" << std::endl;	// D13 ==> GPEN::TRACK
+			m_os << "%ADD14C," << MilToInch(padgap)		<< "*%" << std::endl;	// D14 ==> GPEN::PAD_GAP
+			m_os << "%ADD15C," << MilToInch(viagap)		<< "*%" << std::endl;	// D15 ==> GPEN::VIA_GAP
+			m_os << "%ADD16C," << MilToInch(trackgap)	<< "*%" << std::endl;	// D16 ==> GPEN::TRACK_GAP
 			break;
 		case GFILE::GBS:
 		case GFILE::GTS:
-			(*this) << "%ADD17C," << MilToInch(padmask)	 << "*%" << std::endl;	// D17 ==> GPEN::PAD_MASK
-			(*this) << "%ADD18C," << MilToInch(viamask)	 << "*%" << std::endl;	// D18 ==> GPEN::VIA_MASK
+			m_os << "%ADD17C," << MilToInch(padmask)	<< "*%" << std::endl;	// D17 ==> GPEN::PAD_MASK
+			m_os << "%ADD18C," << MilToInch(viamask)	<< "*%" << std::endl;	// D18 ==> GPEN::VIA_MASK
 			break;
 		case GFILE::GTO:
 		case GFILE::GBO:
-			(*this) << "%ADD19C," << MilToInch(silk)	 << "*%" << std::endl;	// D19 ==> GPEN::SILK
+			m_os << "%ADD19C," << MilToInch(silk)		<< "*%" << std::endl;	// D19 ==> GPEN::SILK
 			break;
 		case GFILE::DRL:
 			break;
@@ -156,26 +172,26 @@ void GStream::MakeApertures()	// Make "pens" for current stream
 }
 void GStream::LinearInterpolation()
 {
-	if ( !is_open() || m_eType == GFILE::DRL ) return;
-	(*this) << "G01";
+	if ( !m_os.is_open() || m_eType == GFILE::DRL ) return;
+	m_os << "G01";
 	EndLine();
 }
 void GStream::Comment(const char* sz)
 {
-	if ( !is_open() ) return;
+	if ( !m_os.is_open() ) return;
 	if ( m_eType == GFILE::DRL )
-		(*this) << ";" << sz;
+		m_os << ";" << sz;
 	else
-		(*this) << "G04 " << sz << " ";
+		m_os << "G04 " << sz << " ";
 	EndLine();
 }
 void GStream::EndLine()
 {
-	if ( !is_open() ) return;
+	if ( !m_os.is_open() ) return;
 	if ( m_eType == GFILE::DRL )
-		(*this) << std::endl;
+		m_os << std::endl;
 	else
-		(*this) << "*" << std::endl;
+		m_os << "*" << std::endl;
 }
 bool GStream::GetOK() const
 {
@@ -195,22 +211,22 @@ bool GStream::GetOK() const
 }
 void GStream::SetPolarity(const GPOLARITY& ePolarity, bool bCheckOK)
 {
-	if ( !is_open() || m_ePolarity == ePolarity || m_eType == GFILE::DRL ) return;
+	if ( !m_os.is_open() || m_ePolarity == ePolarity || m_eType == GFILE::DRL ) return;
 	if ( bCheckOK && !GetOK() ) return;
 	m_ePolarity = ePolarity;
 	switch( m_ePolarity )
 	{
 		case GPOLARITY::UNKNOWN:	return;
-		case GPOLARITY::DARK:		(*this) << "%LPD*%" << std::endl;	return;
-		case GPOLARITY::CLEAR:		(*this) << "%LPC*%" << std::endl;	return;
+		case GPOLARITY::DARK:		m_os << "%LPD*%" << std::endl;	return;
+		case GPOLARITY::CLEAR:		m_os << "%LPC*%" << std::endl;	return;
 	}
 }
 void GStream::Drill(const QPoint& p)
 {
-	if ( !GetOK() || !is_open() || m_eType != GFILE::DRL ) return;
-	(*this) << "X";  WriteDrillValue( p.x() );
-	(*this) << "Y";  WriteDrillValue( p.y() );
-	(*this) << std::endl;
+	if ( !GetOK() || !m_os.is_open() || m_eType != GFILE::DRL ) return;
+	m_os << "X";  WriteDrillValue( p.x() );
+	m_os << "Y";  WriteDrillValue( p.y() );
+	m_os << std::endl;
 }
 void GStream::AddPad(const GPEN& ePen, const QPointF& pF)		// Add to m_pads buffer for later writing to file
 {
@@ -285,13 +301,13 @@ void GStream::AddViaHole(const GPEN& ePen, const QPointF& pF)	// Add to m_viahol
 void GStream::ClearBuffers(bool bCheckOK)
 {
 	if ( bCheckOK && !GetOK() ) return;
-	m_pads.clear();
-	m_viapads.clear();
-	m_tracks.clear();
-	m_loops.clear();
-	m_regions.clear();
-	m_padholes.clear();
-	m_viaholes.clear();
+	m_pads.Clear();
+	m_viapads.Clear();
+	m_tracks.Clear();
+	m_loops.Clear();
+	m_regions.Clear();
+	m_padholes.Clear();
+	m_viaholes.Clear();
 }
 void GStream::DrawBuffers()
 {
@@ -307,12 +323,12 @@ void GStream::DrawBuffers()
 }
 void GStream::Region(const Curve& curve)	// A filled closed curve (with zero width pen)
 {
-	if ( !is_open() || m_eType == GFILE::DRL ) return;
+	if ( !m_os.is_open() || m_eType == GFILE::DRL ) return;
 	assert( curve.m_pen == GPEN::UNKNOWN );
 	if ( curve.size() < 3 ) return;	// Region must have >= 3 points
-	(*this) << "G36";	EndLine();	// "Begin region"
+	m_os << "G36";	EndLine();		// "Begin region"
 	OutLine(curve, true);			// true ==> force close
-	(*this) << "G37";	EndLine();	// "End region"
+	m_os << "G37";	EndLine();		// "End region"
 }
 void GStream::OutLine(const Curve& curve, bool bForceClose)	// Outline of a curve
 {
@@ -330,48 +346,48 @@ void GStream::OutLine(const Curve& curve, bool bForceClose)	// Outline of a curv
 }
 void GStream::SetPen(const GPEN& ePen)
 {
-	if ( !is_open() || m_ePen == ePen ) return;
+	if ( !m_os.is_open() || m_ePen == ePen ) return;
 	m_ePen = ePen;
 	switch( m_ePen )
 	{
 		case GPEN::UNKNOWN:		return;
-		case GPEN::MIL10:		(*this) << "D10"; EndLine(); return;
-		case GPEN::PAD:			(*this) << "D11"; EndLine(); return;
-		case GPEN::VIA:			(*this) << "D12"; EndLine(); return;
-		case GPEN::TRACK:		(*this) << "D13"; EndLine(); return;
-		case GPEN::PAD_GAP:		(*this) << "D14"; EndLine(); return;
-		case GPEN::VIA_GAP:		(*this) << "D15"; EndLine(); return;
-		case GPEN::TRACK_GAP:	(*this) << "D16"; EndLine(); return;
-		case GPEN::PAD_MASK:	(*this) << "D17"; EndLine(); return;
-		case GPEN::VIA_MASK:	(*this) << "D18"; EndLine(); return;
-		case GPEN::SILK:		(*this) << "D19"; EndLine(); return;
-		case GPEN::PAD_HOLE:	(*this) << "T01"; EndLine(); return;
-		case GPEN::VIA_HOLE:	(*this) << "T02"; EndLine(); return;
+		case GPEN::MIL10:		m_os << "D10"; EndLine(); return;
+		case GPEN::PAD:			m_os << "D11"; EndLine(); return;
+		case GPEN::VIA:			m_os << "D12"; EndLine(); return;
+		case GPEN::TRACK:		m_os << "D13"; EndLine(); return;
+		case GPEN::PAD_GAP:		m_os << "D14"; EndLine(); return;
+		case GPEN::VIA_GAP:		m_os << "D15"; EndLine(); return;
+		case GPEN::TRACK_GAP:	m_os << "D16"; EndLine(); return;
+		case GPEN::PAD_MASK:	m_os << "D17"; EndLine(); return;
+		case GPEN::VIA_MASK:	m_os << "D18"; EndLine(); return;
+		case GPEN::SILK:		m_os << "D19"; EndLine(); return;
+		case GPEN::PAD_HOLE:	m_os << "T01"; EndLine(); return;
+		case GPEN::VIA_HOLE:	m_os << "T02"; EndLine(); return;
 	}
 }
 void GStream::Flash(const QPoint& p)
 {
-	if ( !is_open() ) return;
+	if ( !m_os.is_open() ) return;
 	if ( m_eType == GFILE::DRL ) return Drill(p);
 	WriteXY(p, FULL_LINE);
-	(*this) << "D03";		// Always specify D03 code
+	m_os << "D03";		// Always specify D03 code
 	EndLine();
 }
 void GStream::Move(const QPoint& p)
 {
-	if ( !is_open() || m_eType == GFILE::DRL ) return;
+	if ( !m_os.is_open() || m_eType == GFILE::DRL ) return;
 	const int& ix = p.x();
 	const int& iy = p.y();
 	if ( m_iLastX == ix && m_iLastY == iy ) return;
 	WriteXY(p, FULL_LINE);
-	(*this) << "D02";		// Always specify D02 code
+	m_os << "D02";		// Always specify D02 code
 	EndLine();
 }
 void GStream::Draw(const QPoint& p)
 {
-	if ( !is_open() || m_eType == GFILE::DRL ) return;
+	if ( !m_os.is_open() || m_eType == GFILE::DRL ) return;
 	WriteXY(p, FULL_LINE);
-	(*this) << "D01";		// Always specify D01 code
+	m_os << "D01";		// Always specify D01 code
 	EndLine();
 }
 void GStream::Line(const QPoint& pA, const QPoint& pB)
@@ -381,26 +397,26 @@ void GStream::Line(const QPoint& pA, const QPoint& pB)
 }
 void GStream::WriteXY(const QPoint& p,  const bool& bFullLine)
 {
-	if ( !is_open() ) return;
+	if ( !m_os.is_open() ) return;
 	const int& ix = p.x();
 	const int& iy = p.y();
-	if ( bFullLine || m_iLastX != ix ) (*this) << "X" << ix;
+	if ( bFullLine || m_iLastX != ix ) m_os << "X" << ix;
 	m_iLastX = ix;
-	if ( bFullLine || m_iLastY != iy ) (*this) << "Y" << iy;
+	if ( bFullLine || m_iLastY != iy ) m_os << "Y" << iy;
 	m_iLastY = iy;
 }
 void GStream::WriteDrillValue(const int& iMil)
 {
-	if ( !is_open() || m_eType != GFILE::DRL ) return;
+	if ( !m_os.is_open() || m_eType != GFILE::DRL ) return;
 	const int iAbs = abs(iMil);
 	assert( iMil > 0 );	// All veroRoute grid points are >= 0
-	(*this) << ( iMil >= 0 ? "+" : "-" );
-	if ( iAbs < 100000 ) (*this) << "0";
-	if ( iAbs <  10000 ) (*this) << "0";
-	if ( iAbs <   1000 ) (*this) << "0";
-	if ( iAbs <    100 ) (*this) << "0";
-	if ( iAbs <     10 ) (*this) << "0";
-	(*this) << iAbs;
+	m_os << ( iMil >= 0 ? "+" : "-" );
+	if ( iAbs < 100000 ) m_os << "0";
+	if ( iAbs <  10000 ) m_os << "0";
+	if ( iAbs <   1000 ) m_os << "0";
+	if ( iAbs <    100 ) m_os << "0";
+	if ( iAbs <     10 ) m_os << "0";
+	m_os << iAbs;
 }
 void GStream::GetQPoint(const QPointF& in, QPoint& out) const
 {
@@ -438,24 +454,10 @@ bool GWriter::Open(const char* fileName, const Board& board, const bool& bTwoLay
 	bool bOK(fileName != nullptr);
 	for (int i = 0; i < NUM_STREAMS && bOK; i++)
 	{
-		std::string str(fileName);
-		switch( GFILE(i) )
-		{
-			case GFILE::GKO: str += ".GKO";	break;
-			case GFILE::GBL: str += ".GBL";	break;
-			case GFILE::GBS: str += ".GBS";	break;
-			case GFILE::GBO: str += ".GBO";	break;
-			case GFILE::GTL: str += ".GTL";	break;
-			case GFILE::GTS: str += ".GTS";	break;
-			case GFILE::GTO: str += ".GTO";	break;
-			case GFILE::DRL: str += ".DRL";	break;
-		}
 		if ( GFILE(i) == GFILE::GTL && !bTwoLayers ) continue;
 		if ( GFILE(i) == GFILE::GTS && !bTwoLayers ) continue;
 		if ( GFILE(i) == GFILE::GBO ) continue;	// Don't write this layer yet
-		m_os[i].open(str.c_str(), std::ios::out);
-		m_os[i].Initialise(GFILE(i), board, UTC);
-		bOK = m_os[i].is_open();
+		bOK = m_os[i].Open(fileName, GFILE(i), board, UTC);
 	}
 	if ( !bOK ) Close();
 	return bOK;

@@ -43,10 +43,11 @@ void MainWindow::CreatePixmapCache(const GuiControl& guiCtrl, ColorManager& colo
 	// Each way produces a different local track pattern (or "blob") for the grid point.
 	// The pixmap cache provides a way of quickly mapping the "perimeter code" to a "blob" pixmap.
 
-	const int&	W	= guiCtrl.GetGRIDPIXELS();		// Square width size in pixels
-	const int	C	= W >> 1;						// Half square width in pixels
-	const int	D	= guiCtrl.GetHalfPadWidth();	// Half pad width in pixels
-	const int	H	= (int) ceil(1.414 * guiCtrl.GetHalfTrackWidth());
+	m_radPixmapPad	= guiCtrl.GetHalfPadWidth();	// Half pad width in pixels
+	m_radPixmapVia	= guiCtrl.GetHalfViaWidth();	// Half via width in pixels
+	m_radPixmapDiag	= (int) ceil(1.414 * guiCtrl.GetHalfTrackWidth());
+	m_radPixmapBlob	= guiCtrl.GetGRIDPIXELS() >> 1;	// Half grid-square width in pixels
+
 	m_ppPixmapPad	= new QPixmap*[NUM_PIXMAP_COLORS];
 	m_ppPixmapVia	= new QPixmap*[NUM_PIXMAP_COLORS];
 	m_ppPixmapDiag	= new QPixmap*[2 * NUM_PIXMAP_COLORS];
@@ -59,40 +60,40 @@ void MainWindow::CreatePixmapCache(const GuiControl& guiCtrl, ColorManager& colo
 		colorMgr.GetPixmapRGB(i, R, G, B);
 		const QColor color(R, G, B, 255);
 
-		m_ppPixmapPad[i] = new QPixmap(2*D, 2*D);
+		m_ppPixmapPad[i] = new QPixmap(2*m_radPixmapPad, 2*m_radPixmapPad);
 		m_ppPixmapPad[i]->fill(Qt::transparent);
 
 		painter.begin(m_ppPixmapPad[i]);
-		PaintPad(guiCtrl, painter, color, QPointF(D,D));
+		PaintPad(guiCtrl, painter, color, QPointF(m_radPixmapPad, m_radPixmapPad));
 		painter.end();
 
-		m_ppPixmapVia[i] = new QPixmap(2*D, 2*D);
+		m_ppPixmapVia[i] = new QPixmap(2*m_radPixmapVia, 2*m_radPixmapVia);
 		m_ppPixmapVia[i]->fill(Qt::transparent);
 
 		painter.begin(m_ppPixmapVia[i]);
-		PaintViaPad(guiCtrl, painter, color, QPointF(D,D));
+		PaintVia(guiCtrl, painter, color, QPointF(m_radPixmapVia, m_radPixmapVia));
 		painter.end();
 
 		for (int jDiagCode = 0; jDiagCode < 2; jDiagCode++)	// 0 ==> LT, 1 ==> RT
 		{
 			const int ii = i + jDiagCode * NUM_PIXMAP_COLORS;
 
-			m_ppPixmapDiag[ii] = new QPixmap(2*H, 2*H);
+			m_ppPixmapDiag[ii] = new QPixmap(2*m_radPixmapDiag, 2*m_radPixmapDiag);
 			m_ppPixmapDiag[ii]->fill(Qt::transparent);
 
 			painter.begin(m_ppPixmapDiag[ii]);
-			PaintDiag(guiCtrl, painter, color, QPointF(H,H), H, jDiagCode == 0);
+			PaintDiag(guiCtrl, painter, color, QPointF(m_radPixmapDiag, m_radPixmapDiag), jDiagCode == 0);
 			painter.end();
 		}
 	}
 	const QColor backgroundColor = GetBackgroundColor();
 	for (int i = 0; i < 256; i++)	// Loop all possible perimeter codes
 	{
-		m_ppPixmapBlob[i] = new QPixmap(2*C, 2*C);
+		m_ppPixmapBlob[i] = new QPixmap(2*m_radPixmapBlob, 2*m_radPixmapBlob);
 		m_ppPixmapBlob[i]->fill(backgroundColor);
 
 		painter.begin(m_ppPixmapBlob[i]);
-		PaintBlob(guiCtrl, painter, Qt::black, QPointF(C,C), i);
+		PaintBlob(guiCtrl, painter, Qt::black, QPointF(m_radPixmapBlob, m_radPixmapBlob), i);
 		painter.end();
 
 		// Now turn the black blob area transparent, so we can overlay it over colored nodes.
@@ -103,7 +104,7 @@ void MainWindow::CreatePixmapCache(const GuiControl& guiCtrl, ColorManager& colo
 	releaseMouse();
 }
 
-void MainWindow::PaintViaPad(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, const bool& bGap)
+void MainWindow::PaintVia(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, const bool& bGap)
 {
 	if ( m_bWriteGerber )
 	{
@@ -119,7 +120,7 @@ void MainWindow::PaintViaPad(const GuiControl& guiCtrl, QPainter& painter, const
 	else
 	{
 		const int gapWidth = ( bGap ) ? guiCtrl.GetGapWidth() : 0;
-		const int padWidth = ( guiCtrl.GetHalfViaPadWidth() + gapWidth ) << 1;
+		const int padWidth = ( guiCtrl.GetHalfViaWidth() + gapWidth ) << 1;
 		static QPen	pen(Qt::black, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 		pen.setColor(color);
 		pen.setWidth(padWidth);
@@ -154,8 +155,9 @@ void MainWindow::PaintPad(const GuiControl& guiCtrl, QPainter& painter, const QC
 	}
 }
 
-void MainWindow::PaintDiag(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pCorner, const int& H, bool bLT)
+void MainWindow::PaintDiag(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pCorner, bool bLT)
 {
+	const int& 	H		= m_radPixmapDiag;
 	const int	trackWidth	= guiCtrl.GetHalfTrackWidth() << 1;	// Track width in pixels
 
 	static QPen	pen(Qt::black, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
@@ -617,11 +619,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	const bool		 bWiresAsTracks	= m_bWriteGerber && m_bTwoLayers && board.GetLyrs() == 1;	// true ==> Convert wires to tracks on the top layer
 	const int&		 W				= board.GetGRIDPIXELS();		// Square width in pixels
 	const int		 C				= W >> 1;						// Half square width in pixels
-	const int		 D				= board.GetHalfPadWidth();		// Half pad width in pixels
-	const int		 H				= (int) ceil(1.414 * board.GetHalfTrackWidth());
 	const int		 iHalfGap		= std::max(1, W / 12);			// For vero only
 	const int		 iGap			= iHalfGap + iHalfGap;			// For vero only
-	const int		 iWirePenWidth	= D / 4;						// For wires with no NodeID
+	const int		 iWirePenWidth	= board.GetHalfPadWidth() / 4;	// For wires with no NodeID
 	const int		 iWireBoxWidth	= 3 * iWirePenWidth;			// For wires with no NodeID
 	const double	 dTextScale		= ( m_bWritePDF ) ? (48.0 / W) : (W / 24.0);	// For scaling text when zooming
 	if ( bVero && trackMode != TRACKMODE::OFF ) board.CalcSolder();	// Calculate positions of solder blobs for stripboard builds
@@ -788,13 +788,13 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			{
 				const Element*	pC				= board.Get(layer, j, i);
 				const int&		nodeId			= pC->GetNodeId();
-				const int		colorId			= colorMgr.GetColorId(nodeId);
-				const bool		bPin			= pC->GetHasPin();	// true ==> real pin
+				const int		colorId			= colorMgr.GetColorId(nodeId);	
 				const bool		bWire			= pC->GetHasWire();
 				const bool		bWireAsVia		= bWire && bWiresAsTracks;	// true ==> draw small via pad
 				const int		iPerimeterCode	= pC->GetPerimeterCode(bDiagsOK, bMinDiags);	// 0 to 255
-				const bool		bVia			= pC->GetIsVia();
-
+				const bool		bVia			= pC->GetIsVia()  ||  bWireAsVia;
+				const bool		bPad			= pC->GetHasPin() && !bWireAsVia;
+				assert( !(bVia && bPad) );	// Can't be both a via and a regular pad
 				if ( colorId == BAD_COLORID && !bWire ) continue;	// Usually don't color places with no NodeID assigned unless they are wire ends
 
 				// Use GetPixmapRGB for pixmaps.  It can handle MY_GREY, MY_BLACK as special cases
@@ -869,22 +869,22 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						// Draw background square first in relevant color
 						painter.setPen(Qt::NoPen);
 						painter.setBrush(color);
-						painter.drawRect(L, T, R-L, B-T);
+						painter.drawRect(L+C-m_radPixmapBlob, T+C-m_radPixmapBlob, m_radPixmapBlob << 1, m_radPixmapBlob << 1);
 
 						// Set the area that is not in the "blob" to the background color
-						painter.drawPixmap(L, T, *(m_ppPixmapBlob[iPerimeterCode]));
+						painter.drawPixmap(L+C-m_radPixmapBlob, T+C-m_radPixmapBlob, *(m_ppPixmapBlob[iPerimeterCode]));
 
 						// Draw pad/via
-						if ( bPin ) painter.drawPixmap(L+C-D, T+C-D, *(m_ppPixmapPad[iEffColorId]));
-						if ( bVia ) painter.drawPixmap(L+C-D, T+C-D, *(m_ppPixmapVia[iEffColorId]));
+						if ( bVia ) painter.drawPixmap(L+C-m_radPixmapVia, T+C-m_radPixmapVia, *(m_ppPixmapVia[iEffColorId]));
+						if ( bPad ) painter.drawPixmap(L+C-m_radPixmapPad, T+C-m_radPixmapPad, *(m_ppPixmapPad[iEffColorId]));
 					}
 					else if ( iLoop == 1 )
 					{
 						// Read flags for LT and RT so we can fill diagonal gaps produced on previous iLoop
 						const bool bUsedLT = ReadCodeBit(NBR_LT, iPerimeterCode);
 						const bool bUsedRT = ReadCodeBit(NBR_RT, iPerimeterCode);
-						if ( bUsedLT ) painter.drawPixmap(L-H, T-H, *(m_ppPixmapDiag[iEffColorId]));
-						if ( bUsedRT ) painter.drawPixmap(R-H, T-H, *(m_ppPixmapDiag[iEffColorId + NUM_PIXMAP_COLORS]));
+						if ( bUsedLT ) painter.drawPixmap(L-m_radPixmapDiag, T-m_radPixmapDiag, *(m_ppPixmapDiag[iEffColorId]));
+						if ( bUsedRT ) painter.drawPixmap(R-m_radPixmapDiag, T-m_radPixmapDiag, *(m_ppPixmapDiag[iEffColorId + NUM_PIXMAP_COLORS]));
 					}
 				}
 				if ( bGroundFill )	// Draw track "blobs" and pads directly (PDF/Gerber)
@@ -893,49 +893,39 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					{
 						if ( nodeId != groundNodeId )	// Only the non-ground tracks have a "white" surround
 							PaintBlob(board, painter, backgroundColor, pCentre, iPerimeterCode, true);	// Draw fat "white" track blob
-						if ( bWireAsVia || bVia )
-							PaintViaPad(board, painter, backgroundColor, pCentre, true);				// Draw fat "white" via-pad
-						else if ( bPin )
-							PaintPad(board, painter, backgroundColor, pCentre, true);					// Draw fat "white" pad
+						if ( bVia ) PaintVia(board, painter, backgroundColor, pCentre, true);			// Draw fat "white" via
+						if ( bPad ) PaintPad(board, painter, backgroundColor, pCentre, true);			// Draw fat "white" pad
 					}
 					else if ( iLoop == 1 )	// Draw track "blobs" and pads directly
 					{
 						PaintBlob(board, painter, color, pCentre, iPerimeterCode);	// Draw track blob
 						if ( !bGreyPads )
 						{
-							if ( bWireAsVia || bVia )
-								PaintViaPad(board, painter, color, pCentre);		// Draw via-pad same color as track
-							else if ( bPin )
-								PaintPad(board, painter, color, pCentre);			// Draw pad same color as track
+							if ( bVia ) PaintVia(board, painter, color, pCentre);	// Draw via same color as track
+							if ( bPad ) PaintPad(board, painter, color, pCentre);	// Draw pad same color as track
 						}
 					}
 					else if ( bDrawGrey )
 					{
-						if ( bPin )
-							PaintPad(board, painter, padGrey, pCentre);		// Draw grey pad
-						else if ( bVia )
-							PaintViaPad(board, painter, padGrey, pCentre);	// Draw grey via-pad
+						if ( bVia ) PaintVia(board, painter, padGrey, pCentre);		// Draw grey via
+						if ( bPad ) PaintPad(board, painter, padGrey, pCentre);		// Draw grey pad
 					}
 				}
 				if ( bDirect )	// Draw track "blobs" and pads directly (PDF/Gerber)
 				{
 					if ( iLoop == 0 )
 					{
-						PaintBlob(board, painter, color, pCentre, iPerimeterCode);				// Draw track blob
+						PaintBlob(board, painter, color, pCentre, iPerimeterCode);	// Draw track blob
 						if ( !bGreyPads )
 						{
-							if ( bWireAsVia || bVia )
-								PaintViaPad(board, painter, color, pCentre);	// Draw via-pad same color as track
-							else if ( bPin )
-								PaintPad(board, painter, color, pCentre);		// Draw pad same color as track
+							if ( bVia ) PaintVia(board, painter, color, pCentre);	// Draw via same color as track
+							if ( bPad ) PaintPad(board, painter, color, pCentre);	// Draw pad same color as track
 						}
 					}
 					else if ( bDrawGrey )
 					{
-						if ( bPin )
-							PaintPad(board, painter, padGrey, pCentre);		// Draw grey pad
-						else if ( bVia )
-							PaintViaPad(board, painter, padGrey, pCentre);	// Draw grey via-pad
+						if ( bVia ) PaintVia(board, painter, padGrey, pCentre);		// Draw grey via
+						if ( bPad ) PaintPad(board, painter, padGrey, pCentre);		// Draw grey pad
 					}
 				}
 			}

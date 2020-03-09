@@ -364,9 +364,9 @@ public slots:
 private:
 	void DestroyPixmapCache();
 	void CreatePixmapCache(const GuiControl& guiCtrl, ColorManager& colorManager);
-	void PaintViaPad(const GuiControl& guiCtrl, QPainter& painter,  const QColor& color, const QPointF& pC, const bool& bGap = false);	// Helper
-	void PaintPad(const GuiControl& guiCtrl, QPainter& painter,  const QColor& color, const QPointF& pC, const bool& bGap = false);		// Helper
-	void PaintDiag(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pCorner, const int& H, bool bLT);
+	void PaintVia(const GuiControl& guiCtrl, QPainter& painter,  const QColor& color, const QPointF& pC, const bool& bGap = false);	// Helper
+	void PaintPad(const GuiControl& guiCtrl, QPainter& painter,  const QColor& color, const QPointF& pC, const bool& bGap = false);	// Helper
+	void PaintDiag(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pCorner, bool bLT);
 	void PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, const int& iPerimeterCode, const bool bGap = false);	// Helper
 	void PaintBoard();
 	void PaintCompDefiner();
@@ -499,30 +499,34 @@ private:
 	std::string				m_tutorialsPathStr;	// The path to the "tutorials" folder and "veroroute.png"
 
 	// Cached pixmaps containing pre-colored pads and blobs.
-	QPixmap**	m_ppPixmapPad;		// A pad in the host element
-	QPixmap**	m_ppPixmapVia;		// A via in the host element
-	QPixmap**	m_ppPixmapDiag;		// For filling small diagonal gaps not covered by blob pixmaps
-	QPixmap**	m_ppPixmapBlob;		// A composite shape with all the host element connections
+	QPixmap**	m_ppPixmapPad	= nullptr;	// A pad in the host element
+	QPixmap**	m_ppPixmapVia	= nullptr;	// A via in the host element
+	QPixmap**	m_ppPixmapDiag	= nullptr;	// For filling small diagonal gaps not covered by blob pixmaps
+	QPixmap**	m_ppPixmapBlob	= nullptr;	// A composite shape with all the host element connections
+	int			m_radPixmapPad	= 0;		// Half pixmap width ...
+	int			m_radPixmapVia	= 0;		// ...
+	int			m_radPixmapDiag	= 0;		// ...
+	int			m_radPixmapBlob	= 0;		// ...
 	QPoint		m_mousePos;
-	bool		m_bRepaint;			// Flag to make paintEvent() do something useful
-	bool		m_bMouseClick;		// Flag of click beginning
+	bool		m_bRepaint		= false;	// Flag to make paintEvent() do something useful
+	bool		m_bMouseClick;				// Flag of click beginning
 	bool		m_bLeftClick;
 	bool		m_bRightClick;
 	bool		m_bCtrlKeyDown;
 	bool		m_bShiftKeyDown;
-	bool		m_bPaintPins;		// true ==> allow paint the component pins (and the board)
-	bool		m_bPaintBoard;		// true ==> allow paint the board only (not the component pins)
-	bool		m_bPaintFlood;		// true ==> allow flood-fill all connected tracks & pins
-	bool		m_bDefiningRect;	// true ==> user is defining a rectangle
-	bool		m_bResizingText;	// true ==> user is resizing a text rectangle
-	bool		m_bWritePDF;		// true ==> draw to PDF file instead of screen
-	bool		m_bWriteGerber;		// true ==> draw to Gerber file instead of screen
-	bool		m_bTwoLayers;		// true ==> 2-layer Gerber output instead of 1-layer
-	bool		m_bHistoryDir;		// true ==> have "history" folder
-	bool		m_bTemplatesDir;	// true ==> have "templates" folder
-	int			m_XGRIDOFFSET;		// So we can centre when writing to PDF
-	int			m_YGRIDOFFSET;		// So we can centre when writing to PDF
-	int			m_gridRow;			// Board row corresponding to mouse position
-	int			m_gridCol;			// Board col correspondong to mouse position
-	int			m_iTutorialNumber;	// Tutorial file number 0,1,2,... (or -1 if not in tutorial mode)
+	bool		m_bPaintPins;			// true ==> allow paint the component pins (and the board)
+	bool		m_bPaintBoard;			// true ==> allow paint the board only (not the component pins)
+	bool		m_bPaintFlood;			// true ==> allow flood-fill all connected tracks & pins
+	bool		m_bDefiningRect;		// true ==> user is defining a rectangle
+	bool		m_bResizingText;		// true ==> user is resizing a text rectangle
+	bool		m_bWritePDF;			// true ==> draw to PDF file instead of screen
+	bool		m_bWriteGerber;			// true ==> draw to Gerber file instead of screen
+	bool		m_bTwoLayers;			// true ==> 2-layer Gerber output instead of 1-layer
+	bool		m_bHistoryDir;			// true ==> have "history" folder
+	bool		m_bTemplatesDir;		// true ==> have "templates" folder
+	int			m_XGRIDOFFSET;			// So we can centre when writing to PDF
+	int			m_YGRIDOFFSET;			// So we can centre when writing to PDF
+	int			m_gridRow;				// Board row corresponding to mouse position
+	int			m_gridCol;				// Board col correspondong to mouse position
+	int			m_iTutorialNumber = -1;	// Tutorial file number 0,1,2,... (or -1 if not in tutorial mode)
 };

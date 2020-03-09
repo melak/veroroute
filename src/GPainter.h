@@ -28,10 +28,10 @@
 // Painter class that supports Gerber export, supporting transformations
 // with same convention as some QPainter methods
 
-struct GPainter : public QPainter, public std::list<Transform>
+struct GPainter : public QPainter
 {
 	GPainter() : QPainter()					{}
-	~GPainter()								{ clear(); }
+	~GPainter()								{ m_transforms.clear(); }
 	void SetGStream(GStream* p)				{ m_pStream = p; }
 	virtual bool begin(QPaintDevice* p)		{ if ( !m_pStream ) return QPainter::begin(p);	return true; }
 	virtual bool end()						{ if ( !m_pStream ) return QPainter::end();		return true; }
@@ -97,31 +97,31 @@ struct GPainter : public QPainter, public std::list<Transform>
 	virtual void scale(qreal sx, qreal sy)
 	{
 		if ( !m_pStream ) return QPainter::scale(sx, sy);
-		push_front( Transform(TRANSFORM::SCALE, sx, sy) );
+		m_transforms.push_front( Transform(TRANSFORM::SCALE, sx, sy) );
 	}
 	virtual void translate(qreal dx, qreal dy)
 	{
 		if ( !m_pStream ) return QPainter::translate(dx, dy);
-		push_front( Transform(TRANSFORM::TRANSLATE, dx, dy) );
+		m_transforms.push_front( Transform(TRANSFORM::TRANSLATE, dx, dy) );
 	}
 	virtual void rotate(qreal a)
 	{
 		if ( !m_pStream ) return QPainter::rotate(a);
-		push_front( Transform(TRANSFORM::ROTATE, a) );
+		m_transforms.push_front( Transform(TRANSFORM::ROTATE, a) );
 	}
 	virtual void save()
 	{
 		if ( !m_pStream ) return QPainter::save();
-		push_front( Transform(TRANSFORM::NONE) );	// Add save point
+		m_transforms.push_front( Transform(TRANSFORM::NONE) );	// Add save point
 	}
 	virtual void restore()
 	{
 		if ( !m_pStream ) return QPainter::restore();
 		bool bDone(false);
-		while( !empty() && !bDone )
+		while( !m_transforms.empty() && !bDone )
 		{
-			bDone = front().GetType() == TRANSFORM::NONE;	// Reached save point
-			pop_front();
+			bDone = m_transforms.front().GetType() == TRANSFORM::NONE;	// Reached save point
+			m_transforms.pop_front();
 		}
 	}
 	virtual void drawPoint(const QPointF& p)
@@ -205,19 +205,19 @@ struct GPainter : public QPainter, public std::list<Transform>
 		drawArc(x, y, w, h, 0, 5760, true);	// true ==> close
 	}
 private:
-	std::list<Transform>& GetTransforms() { return *this; }
 	void AddTrack()
 	{
 		for (auto& o : m_polygon)	// Loop polygon points
-			for (auto& t : GetTransforms()) t.Do(o);	// Apply set of transforms to each
+			for (auto& t : m_transforms) t.Do(o);	// Apply set of transforms to each
 		if ( m_pStream ) m_pStream->AddTrack(GPEN::SILK, m_polygon);
 	}
 	void AddPad()
 	{
 		for (auto& o : m_polygon)	// Loop polygon points
-			for (auto& t : GetTransforms()) t.Do(o);	// Apply set of transforms to each
+			for (auto& t : m_transforms) t.Do(o);	// Apply set of transforms to each
 		if ( m_pStream ) m_pStream->AddPad(GPEN::SILK, m_polygon.first());
 	}
-	GStream*	m_pStream	= nullptr;
-	QPolygonF	m_polygon;	// Helper to avoid passing things around
+	GStream*				m_pStream	= nullptr;
+	QPolygonF				m_polygon;	// Helper to avoid passing things around
+	std::list<Transform>	m_transforms;
 };
