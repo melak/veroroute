@@ -379,8 +379,7 @@ void MainWindow::ResetView(bool bTutorial)
 	activateWindow();	// Select mainwindow rather than child dialogs
 	DestroyPixmapCache();
 
-	RepaintWithRouting();
-	ListNodes();		// Slow due lots of MH calcs
+	RepaintWithListNodes();
 }
 
 void MainWindow::HandleRouting()
@@ -411,6 +410,15 @@ void MainWindow::HandleRouting()
 		if ( bOK ) m_board.Manhatten(pC);	// Only calc MH over relevant elements
 		releaseMouse();
 	}
+}
+
+void MainWindow::RepaintWithListNodes(bool bNow)
+{
+	UpdateWindowTitle();
+	HandleRouting();
+	ListNodes();	// Slow due lots of MH calcs
+	m_bRepaint = true;
+	if ( bNow ) repaint(); else update();
 }
 
 void MainWindow::RepaintWithRouting(bool bNow)
@@ -903,8 +911,7 @@ void MainWindow::Delete()
 		UpdateHistory("Delete part(s)");
 		UpdateControls();
 		UpdateBOM();
-		RepaintWithRouting();
-		ListNodes();
+		RepaintWithListNodes();
 	}
 }
 
@@ -933,8 +940,7 @@ void MainWindow::AddLayer()
 	m_board.SetViasEnabled(true);
 	UpdateHistory("Add top layer");
 	UpdateControls();
-	RepaintWithRouting();
-	ListNodes();
+	RepaintWithListNodes();
 }
 void MainWindow::RemoveLayer()
 {
@@ -943,8 +949,7 @@ void MainWindow::RemoveLayer()
 	m_board.SetCurrentLayer(0);
 	UpdateHistory("Remove top layer");
 	UpdateControls();
-	RepaintWithRouting();
-	ListNodes();
+	RepaintWithListNodes();
 }
 void MainWindow::SwitchLayer()
 {
@@ -960,8 +965,7 @@ void MainWindow::ToggleVias()
 	m_board.SetViasEnabled( !m_board.GetViasEnabled() );
 	UpdateHistory("Toggle vias");
 	UpdateControls();
-	RepaintWithRouting();
-	ListNodes();
+	RepaintWithListNodes();
 }
 
 // Help menu items
@@ -1153,8 +1157,7 @@ void MainWindow::SetCompType(const QString& str)
 	m_board.ChangeTypeUserComp(eType);
 	UpdateHistory("Change part type");
 	UpdateControls();
-	RepaintWithRouting();
-	ListNodes();	// Slow due lots of MH calcs
+	RepaintWithListNodes();
 }
 void MainWindow::CompRotate(const bool& bCW)
 {
@@ -1164,8 +1167,7 @@ void MainWindow::CompRotate(const bool& bCW)
 
 	UpdateHistory(bCW ? "Rotate part CW" : "Rotate part CCW");
 	UpdateControls();
-	RepaintWithRouting();
-	ListNodes();	// Slow due lots of MH calcs
+	RepaintWithListNodes();
 }
 void MainWindow::CompStretch(const bool& bGrow)
 {
@@ -1175,8 +1177,7 @@ void MainWindow::CompStretch(const bool& bGrow)
 
 	UpdateHistory(bGrow ? "Increase part length" : "Decrease part length");
 	UpdateControls();
-	RepaintWithRouting();
-	ListNodes();	// Slow due lots of MH calcs
+	RepaintWithListNodes();
 }
 void MainWindow::CompStretchWidth(const bool& bGrow)
 {
@@ -1186,8 +1187,7 @@ void MainWindow::CompStretchWidth(const bool& bGrow)
 
 	UpdateHistory(bGrow ? "Increase part width" : "Decrease part width");
 	UpdateControls();
-	RepaintWithRouting();
-	ListNodes();	// Slow due lots of MH calcs
+	RepaintWithListNodes();
 }
 void MainWindow::CompTextMove(const int& deltaRow, const int& deltaCol)
 {
@@ -1258,8 +1258,7 @@ void MainWindow::EnableRouting(bool b)
 	if ( !b ) m_board.WipeAutoSetPoints();
 	UpdateHistory(b ? "Enable Auto-Routing" : "Disable Auto-Routing");
 	UpdateControls();
-	RepaintWithRouting();
-	ListNodes();
+	RepaintWithListNodes();
 }
 
 void MainWindow::EnableFastRouting(bool b)
@@ -1269,8 +1268,7 @@ void MainWindow::EnableFastRouting(bool b)
 	if ( !b ) m_board.WipeAutoSetPoints();
 	UpdateHistory(b ? "Enable Fast-Routing" : "Disable Fast-Routing");
 	UpdateControls();
-	RepaintWithRouting();
-	ListNodes();
+	RepaintWithListNodes();
 }
 
 void MainWindow::Paste()		// On hitting the Paste button ...
@@ -1280,8 +1278,7 @@ void MainWindow::Paste()		// On hitting the Paste button ...
 	if ( m_board.GetVeroTracks() )  m_board.AutoFillVero();
 	UpdateHistory("Paste Track");
 	UpdateControls();
-	RepaintWithRouting();
-	ListNodes();
+	RepaintWithListNodes();
 }
 void MainWindow::Tidy()	// On hitting the Paste+Tidy button ...
 {
@@ -1290,8 +1287,7 @@ void MainWindow::Tidy()	// On hitting the Paste+Tidy button ...
 	if ( m_board.GetVeroTracks() ) m_board.AutoFillVero();
 	UpdateHistory("Tidy Tracks");
 	UpdateControls();
-	RepaintWithRouting();
-	ListNodes();
+	RepaintWithListNodes();
 }
 void MainWindow::WipeTracks()	// On hitting the Wipe All button ...
 {
@@ -1300,8 +1296,7 @@ void MainWindow::WipeTracks()	// On hitting the Wipe All button ...
 	m_board.SetRoutingEnabled(false);
 	UpdateHistory("Wipe Tracks");
 	UpdateControls();
-	RepaintWithRouting();
-	ListNodes();
+	RepaintWithListNodes();
 }
 
 // Track controls
@@ -1317,7 +1312,7 @@ void MainWindow::SetTracksVeroV(bool b)
 	m_board.SetVerticalStrips(true);
 	UpdateHistory("Vero tracks (vertical)");
 	UpdateControls();
-	if ( bDiagsModeChanged ) { RepaintWithRouting(); ListNodes(); } else RepaintSkipRouting();
+	if ( bDiagsModeChanged ) RepaintWithListNodes(); else RepaintSkipRouting();
 }
 void MainWindow::SetTracksVeroH(bool b)
 {
@@ -1329,7 +1324,7 @@ void MainWindow::SetTracksVeroH(bool b)
 	m_board.SetVerticalStrips(false);
 	UpdateHistory("Vero tracks (horizontal)");
 	UpdateControls();
-	if ( bDiagsModeChanged ) { RepaintWithRouting(); ListNodes(); } else RepaintSkipRouting();
+	if ( bDiagsModeChanged ) RepaintWithListNodes(); else RepaintSkipRouting();
 }
 void MainWindow::SetTracksFat(bool b)
 {
@@ -1343,7 +1338,7 @@ void MainWindow::SetTracksFat(bool b)
 	UpdateHistory("Fat tracks");
 	UpdateControls();
 	DestroyPixmapCache();
-	if ( bDiagsModeChanged ) { RepaintWithRouting(); ListNodes(); } else RepaintSkipRouting();
+	if ( bDiagsModeChanged ) RepaintWithListNodes(); else RepaintSkipRouting();
 }
 void MainWindow::SetTracksThin(bool b)
 {
@@ -1357,7 +1352,7 @@ void MainWindow::SetTracksThin(bool b)
 	UpdateHistory("Thin tracks");
 	UpdateControls();
 	DestroyPixmapCache();
-	if ( bDiagsModeChanged ) { RepaintWithRouting(); ListNodes(); } else RepaintSkipRouting();
+	if ( bDiagsModeChanged ) RepaintWithListNodes(); else RepaintSkipRouting();
 }
 void MainWindow::SetTracksCurved(bool b)
 {
@@ -1370,21 +1365,21 @@ void MainWindow::SetTracksCurved(bool b)
 	UpdateHistory("Curved tracks");
 	UpdateControls();
 	DestroyPixmapCache();
-	if ( bDiagsModeChanged ) { RepaintWithRouting(); ListNodes(); } else RepaintSkipRouting();
+	if ( bDiagsModeChanged ) RepaintWithListNodes(); else RepaintSkipRouting();
 }
 void MainWindow::SetDiagonalsOff(bool b)
 {
-	if ( b && m_board.SetDiagsMode(DIAGSMODE::OFF) )	{ UpdateHistory("Diagonals off"); UpdateControls(); DestroyPixmapCache(); RepaintWithRouting(); ListNodes(); }
+	if ( b && m_board.SetDiagsMode(DIAGSMODE::OFF) )	{ UpdateHistory("Diagonals off"); UpdateControls(); DestroyPixmapCache(); RepaintWithListNodes();; }
 }
 void MainWindow::SetDiagonalsMin(bool b)
 {
 	const bool bListNodes = ( m_board.GetDiagsMode() == DIAGSMODE::OFF );	// Only ListNodes() again if necessary
-	if ( b && m_board.SetDiagsMode(DIAGSMODE::MIN) )	{ UpdateHistory("Diagonals min"); UpdateControls(); DestroyPixmapCache(); RepaintWithRouting(); if ( bListNodes ) ListNodes(); }
+	if ( b && m_board.SetDiagsMode(DIAGSMODE::MIN) )	{ UpdateHistory("Diagonals min"); UpdateControls(); DestroyPixmapCache(); if ( bListNodes ) RepaintWithListNodes(); else RepaintWithRouting(); }
 }
 void MainWindow::SetDiagonalsMax(bool b)
 {
 	const bool bListNodes = ( m_board.GetDiagsMode() == DIAGSMODE::OFF );	// Only ListNodes() again if necessary
-	if ( b && m_board.SetDiagsMode(DIAGSMODE::MAX) )	{ UpdateHistory("Diagonals max"); UpdateControls(); DestroyPixmapCache(); RepaintWithRouting(); if ( bListNodes ) ListNodes(); }
+	if ( b && m_board.SetDiagsMode(DIAGSMODE::MAX) )	{ UpdateHistory("Diagonals max"); UpdateControls(); DestroyPixmapCache(); if ( bListNodes ) RepaintWithListNodes(); else RepaintWithRouting(); }
 }
 void MainWindow::SetPadWidth(int i)			{ if ( m_board.SetPAD_PERCENT(i)   ) { UpdateHistory("Pad width change");				UpdateControls();	DestroyPixmapCache();	RepaintSkipRouting(); } }
 void MainWindow::SetTrackWidth(int i)		{ if ( m_board.SetTRACK_PERCENT(i) ) { UpdateHistory("Track width change");				UpdateControls();	DestroyPixmapCache();	RepaintSkipRouting(); } }

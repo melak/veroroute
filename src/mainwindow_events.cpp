@@ -497,8 +497,7 @@ void MainWindow::mouseReleaseEvent(QMouseEvent* event)
 		centralWidget()->setCursor(Qt::OpenHandCursor);
 
 	UpdateHistory(mouseActionString);
-	RepaintWithRouting();
-	ListNodes();	// Slow due lots of MH calcs
+	RepaintWithListNodes();
 }
 
 void MainWindow::keyPressEvent(QKeyEvent* event)
@@ -632,7 +631,7 @@ void MainWindow::keyReleaseEvent(QKeyEvent* event)
 		if ( bUpdateControls )
 			UpdateControls();
 
-		ListNodes();	// Slow due lots of MH calcs
+		RepaintWithListNodes();
 	}
 	event->accept();	// If we don't do this, we can get the same event passed multiple times if we're on MS Windows.
 }

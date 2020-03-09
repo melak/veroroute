@@ -371,6 +371,7 @@ private:
 	void PaintBoard();
 	void PaintCompDefiner();
 	void HandleRouting();
+	void RepaintWithListNodes(bool bNow = false);
 	void RepaintWithRouting(bool bNow = false);
 	void RepaintSkipRouting(bool bNow = false);
 	void ShowCurrentRectSize();	// Show current rect size in status bar
