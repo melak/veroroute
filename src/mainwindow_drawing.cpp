@@ -157,7 +157,7 @@ void MainWindow::PaintPad(const GuiControl& guiCtrl, QPainter& painter, const QC
 
 void MainWindow::PaintDiag(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pCorner, bool bLT)
 {
-	const int& 	H		= m_radPixmapDiag;
+	const int&	H			= m_radPixmapDiag;
 	const int	trackWidth	= guiCtrl.GetHalfTrackWidth() << 1;	// Track width in pixels
 
 	static QPen	pen(Qt::black, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
@@ -166,9 +166,9 @@ void MainWindow::PaintDiag(const GuiControl& guiCtrl, QPainter& painter, const Q
 	painter.setPen(pen);
 	painter.setBrush(Qt::NoBrush);
 	if ( bLT )
-		painter.drawLine(pCorner + QPoint(-H,-H), pCorner + QPoint(H, H));
+		painter.drawLine(pCorner + QPointF(-H,-H), pCorner + QPointF(H, H));
 	else // bRT
-		painter.drawLine(pCorner + QPoint(-H, H), pCorner + QPoint(H,-H));
+		painter.drawLine(pCorner + QPointF(-H, H), pCorner + QPointF(H,-H));
 }
 
 void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, const int& iPerimeterCode, const bool bGap)
@@ -883,8 +883,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						// Read flags for LT and RT so we can fill diagonal gaps produced on previous iLoop
 						const bool bUsedLT = ReadCodeBit(NBR_LT, iPerimeterCode);
 						const bool bUsedRT = ReadCodeBit(NBR_RT, iPerimeterCode);
-						if ( bUsedLT ) painter.drawPixmap(L-m_radPixmapDiag, T-m_radPixmapDiag, *(m_ppPixmapDiag[iEffColorId]));
-						if ( bUsedRT ) painter.drawPixmap(R-m_radPixmapDiag, T-m_radPixmapDiag, *(m_ppPixmapDiag[iEffColorId + NUM_PIXMAP_COLORS]));
+						if ( bUsedLT ) painter.drawPixmap(  L-m_radPixmapDiag, T-m_radPixmapDiag, *(m_ppPixmapDiag[iEffColorId]));
+						if ( bUsedRT ) painter.drawPixmap(W+L-m_radPixmapDiag, T-m_radPixmapDiag, *(m_ppPixmapDiag[iEffColorId + NUM_PIXMAP_COLORS]));
 					}
 				}
 				if ( bGroundFill )	// Draw track "blobs" and pads directly (PDF/Gerber)
