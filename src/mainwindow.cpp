@@ -762,13 +762,23 @@ void MainWindow::Quit()
 void MainWindow::ZoomIn()
 {
 	if ( !CanZoomIn() ) return;		// Need this check for wheel zoom
-	ZoomHelper(2);	// +2 ==> Change in GRIDPIXELS
+	const int& W = m_board.GetGRIDPIXELS();
+	int delta(2);	// Change in GRIDPIXELS
+	if ( W >= 64  ) delta *= 2;
+	if ( W >= 96  ) delta *= 2;
+	if ( W >= 128 ) delta *= 2;
+	ZoomHelper(delta);
 	UpdateHistory("Zoom in");
 }
 void MainWindow::ZoomOut()
 {
 	if ( !CanZoomOut() ) return;	// Need this check for wheel zoom
-	ZoomHelper(-2);	// -2 ==> Change in GRIDPIXELS
+	const int& W = m_board.GetGRIDPIXELS();
+	int delta(-2);	// Change in GRIDPIXELS
+	if ( W > 64  ) delta *= 2;
+	if ( W > 96  ) delta *= 2;
+	if ( W > 128 ) delta *= 2;
+	ZoomHelper(delta);
 	UpdateHistory("Zoom out");
 }
 void MainWindow::ZoomHelper(int delta)	// delta == change in GRIDPIXELS
@@ -1746,8 +1756,8 @@ void MainWindow::SetQuality(QPainter& painter)
 		default:	return painter.setRenderHint(QPainter::HighQualityAntialiasing, true);
 	}
 }
-bool MainWindow::CanZoomIn() const	{ return m_board.GetGRIDPIXELS() < 64; }	// 64 == MAX_GRIDPIXELS
-bool MainWindow::CanZoomOut() const	{ return m_board.GetGRIDPIXELS() > 6;  }	//  6 == MIN_GRIDPIXELS
+bool MainWindow::CanZoomIn() const	{ return m_board.GetGRIDPIXELS() < 256; }	// 256 == MAX_GRIDPIXELS
+bool MainWindow::CanZoomOut() const	{ return m_board.GetGRIDPIXELS() > 6;   }	//   6 == MIN_GRIDPIXELS
 bool MainWindow::GetIsModified() const
 {
 	if ( m_iTutorialNumber >= 0 ) return false;	// Skip check if in tutorial mode

@@ -31,9 +31,6 @@ void MainWindow::DestroyPixmapCache()
 
 void MainWindow::CreatePixmapCache(const GuiControl& guiCtrl, ColorManager& colorMgr)
 {
-	colorMgr.SetSaturation( guiCtrl.GetSaturation() );			// Must do this BEFORE making pixmaps
-	colorMgr.SetFillSaturation( guiCtrl.GetFillSaturation() );	// Must do this BEFORE making pixmaps
-
 	if ( m_ppPixmapPad ) return;	// Cache exists
 
 	grabMouse(Qt::WaitCursor);
@@ -601,9 +598,6 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	Board&			 board			= m_board;
 	CompManager&	 compMgr		= board.GetCompMgr();
 	ColorManager&	 colorMgr		= board.GetColorMgr();
-
-	CreatePixmapCache(board, colorMgr);	// Sets color saturation, then builds pixmaps if the cache is empty
-
 	const TRACKMODE& trackMode		= board.GetTrackMode();
 	const COMPSMODE& compMode		= board.GetCompMode();
 	const bool&		 bVero			= board.GetVeroTracks();
@@ -625,6 +619,11 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	const int		 iWireBoxWidth	= 3 * iWirePenWidth;			// For wires with no NodeID
 	const double	 dTextScale		= ( m_bWritePDF ) ? (48.0 / W) : (W / 24.0);	// For scaling text when zooming
 	if ( bVero && trackMode != TRACKMODE::OFF ) board.CalcSolder();	// Calculate positions of solder blobs for stripboard builds
+
+	colorMgr.SetSaturation( board.GetSaturation() );			// Must do this BEFORE making pixmaps
+	colorMgr.SetFillSaturation( board.GetFillSaturation() );	// Must do this BEFORE making pixmaps
+	if ( bPixmapCache )
+		CreatePixmapCache(board, colorMgr);	// Builds pixmaps if the cache is empty
 
 	// Pre-process component list for rendering
 	std::vector<const Component*> sortedComps;
@@ -883,8 +882,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						// Read flags for LT and RT so we can fill diagonal gaps produced on previous iLoop
 						const bool bUsedLT = ReadCodeBit(NBR_LT, iPerimeterCode);
 						const bool bUsedRT = ReadCodeBit(NBR_RT, iPerimeterCode);
-						if ( bUsedLT ) painter.drawPixmap(  L-m_radPixmapDiag, T-m_radPixmapDiag, *(m_ppPixmapDiag[iEffColorId]));
-						if ( bUsedRT ) painter.drawPixmap(W+L-m_radPixmapDiag, T-m_radPixmapDiag, *(m_ppPixmapDiag[iEffColorId + NUM_PIXMAP_COLORS]));
+						if ( bUsedLT ) painter.drawPixmap(L-m_radPixmapDiag, T-m_radPixmapDiag, *(m_ppPixmapDiag[iEffColorId]));
+						if ( bUsedRT ) painter.drawPixmap(R-m_radPixmapDiag, T-m_radPixmapDiag, *(m_ppPixmapDiag[iEffColorId + NUM_PIXMAP_COLORS]));
 					}
 				}
 				if ( bGroundFill )	// Draw track "blobs" and pads directly (PDF/Gerber)
@@ -1487,7 +1486,7 @@ void MainWindow::GetLRTB(const GuiControl& guiCtrl, double percent, double row, 
 	const int& W = guiCtrl.GetGRIDPIXELS();	// Square width in pixels
 	int X(0), Y(0);
 	GetXY(guiCtrl, row, col, X, Y);
-	const int S = ( W * 0.005 * percent );
+	const int S = (int) round(W * 0.005 * percent);
 	L = X - S;	T = Y - S;
 	R = X + S;	B = Y + S;
 }
