@@ -144,8 +144,8 @@ void GStream::MakeApertures()	// Make "pens" for current stream
 	const int  viagap	= via	+ 2 * gap;	// Gap  is the radius increase
 	const int  trackgap	= track	+ 2 * gap;	// Gap  is the radius increase
 	const bool bGTS		= ( m_eType == GFILE::GTS );	// Limit top solder mask to holes rather than pads
-	const int  padmask	= ( bGTS ? pad : hole  ) + 2 * mask;	// Mask is the radius increase
-	const int  viamask	= ( bGTS ? via : vhole ) + 2 * mask;	// Mask is the radius increase
+	const int  padmask	= ( bGTS ? hole  : pad ) + 2 * mask;	// Mask is the radius increase
+	const int  viamask	= ( bGTS ? vhole : via ) + 2 * mask;	// Mask is the radius increase
 
 	switch( m_eType )
 	{
