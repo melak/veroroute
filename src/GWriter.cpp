@@ -24,6 +24,7 @@
 #include <QTimeZone>
 
 const bool	FULL_LINE	= false;	// Set to true to force each Gerber line to be written in long format
+const bool	XNC_FORMAT	= true;		// true ==> XNC Format / Excellon Format 2.		false ==> Excellon Format 1.
 
 // Wrapper for a stream to a Gerber file
 GStream::~GStream()
@@ -77,7 +78,7 @@ void GStream::WriteHeader(const QString& UTC)	// Write header for current stream
 	std::string	strLayer	= std::string("Layer: ");
 	std::string	strProgram	= std::string("VeroRoute V") + std::string(szVEROROUTE_VERSION);
 	std::string	strUTC		= UTC.toStdString();
-	std::string	strGen		= std::string("Gerber Generator version 0.1");
+	std::string	strGen		= std::string("Gerber Generator version 0.2");
 	switch(m_eType)
 	{
 		case GFILE::GKO: strLayer += "BoardOutline";			break;
@@ -111,11 +112,10 @@ void GStream::WriteHeader(const QString& UTC)	// Write header for current stream
 		m_os << ";Holesize 2 = " << MilToInch(viahole) << " INCH";	EndLine();
 		m_os << "T02C" << MilToInch(viahole);	EndLine();
 
-	//	m_os << "M95";	EndLine();	// M95 End of the header
-		m_os << "%";	EndLine();	// Rewind Stop.  Often used instead of M95.
-		m_os << "G05";	EndLine();	// Turn on drill mode (Format 2 command)
-		m_os << "G81";	EndLine();	// Turn on drill mode (Format 1 command)
-		m_os << "G90";	EndLine();	// Absolute mode
+	//	m_os << "M95";	EndLine();							// M95 End of the header
+		m_os << "%";	EndLine();							// Rewind Stop.  Often used instead of M95.
+		m_os << ( XNC_FORMAT ? "G05" : "G81" );	EndLine();	// Turn on drill
+		m_os << "G90";	EndLine();							// Absolute mode
 	}
 	else
 	{
