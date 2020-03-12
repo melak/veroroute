@@ -135,6 +135,7 @@ void MainWindow::PaintPad(const GuiControl& guiCtrl, QPainter& painter, const QC
 		m_gWriter.GetStream(GFILE::GBL).AddPad(bGap ? GPEN::PAD_GAP : GPEN::PAD, pC); // Bottom copper layer
 		if ( !bGap )
 		{
+			m_gWriter.GetStream(GFILE::GTS).AddPad(GPEN::PAD_MASK, pC);		// Top    solder mask layer
 			m_gWriter.GetStream(GFILE::GBS).AddPad(GPEN::PAD_MASK, pC);		// Bottom solder mask layer
 			m_gWriter.GetStream(GFILE::DRL).AddPadHole(GPEN::PAD_HOLE, pC);	// Drill file
 		}
@@ -760,7 +761,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	{
 		painter.save();
 
-		const bool	bGreyPads	= bPCB && !m_bWriteGerber;
+		const bool	bGreyPads	= bPCB && !m_bWriteGerber && layer == 0;
 		const int	numLoops	= ( ( bPixmapCache || bGroundFill ) ? 2 : 1 ) + ( bGreyPads ? 1 : 0);
 		const QColor	padGrey(200,200,200,255);
 		// bGroundFill		==> 1st pass draws fat tracks in white, 2nd pass draws tracks

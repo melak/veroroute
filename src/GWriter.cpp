@@ -131,17 +131,21 @@ void GStream::WriteHeader(const QString& UTC)	// Write header for current stream
 void GStream::MakeApertures()	// Make "pens" for current stream
 {
 	if ( !m_os.is_open() ) return;
-	const int pad		= m_pBoard->GetPAD_PERCENT();
-	const int via		= m_pBoard->GetVIAPAD_PERCENT();
-	const int track		= m_pBoard->GetTRACK_PERCENT();
-	const int gap		= m_pBoard->GetGAP_PERCENT();
-	const int mask		= m_pBoard->GetMASK_PERCENT();
-	const int silk		= m_pBoard->GetSILK_PERCENT();
-	const int padgap	= pad	+ 2 * gap;	// Gap  is the radius increase
-	const int viagap	= via	+ 2 * gap;	// Gap  is the radius increase
-	const int trackgap	= track	+ 2 * gap;	// Gap  is the radius increase
-	const int padmask	= pad	+ 2 * mask;	// Mask is the radius increase
-	const int viamask	= via	+ 2 * mask;	// Mask is the radius increase
+
+	const int  pad		= m_pBoard->GetPAD_PERCENT();
+	const int  via		= m_pBoard->GetVIAPAD_PERCENT();
+	const int  track	= m_pBoard->GetTRACK_PERCENT();
+	const int  gap		= m_pBoard->GetGAP_PERCENT();
+	const int  mask		= m_pBoard->GetMASK_PERCENT();
+	const int  silk		= m_pBoard->GetSILK_PERCENT();
+	const int  hole		= m_pBoard->GetHOLE_PERCENT();
+	const int  vhole	= m_pBoard->GetVIAHOLE_PERCENT();
+	const int  padgap	= pad	+ 2 * gap;	// Gap  is the radius increase
+	const int  viagap	= via	+ 2 * gap;	// Gap  is the radius increase
+	const int  trackgap	= track	+ 2 * gap;	// Gap  is the radius increase
+	const bool bGTS		= ( m_eType == GFILE::GTS );	// Limit top solder mask to holes rather than pads
+	const int  padmask	= ( bGTS ? pad : hole  ) + 2 * mask;	// Mask is the radius increase
+	const int  viamask	= ( bGTS ? via : vhole ) + 2 * mask;	// Mask is the radius increase
 
 	switch( m_eType )
 	{
