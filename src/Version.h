@@ -198,5 +198,11 @@ static const char* szVEROROUTE_VERSION =
 			// Improvement:  Reduce minimum allowed track width from 30 mil to 12 mil.
 			// New feature:  Allow use vias to be enabled/disabled under Layers menu.
 			// New feature:  Added new "Thin" track style for more traditional look and smaller Gerber files.
-  "1.84";	// Bug fix:  Repainting pins on layer 2 did not update grid connections properly, and could crash when the part is moved.
-
+//"1.84";	// Bug fix:  Repainting pins on layer 2 did not update grid connections properly, and could crash when the part is moved.
+  "1.85";	// Bug fix:  Refresh problem.  Broken and Floating lists could show zombie entries when the control dialog is docked.
+			// Bug fix:  Rendering problem.  In Mono and Color modes, some zoom levels would leave gaps between pixmaps and draw offset diagonals.
+			// Bug fix:  In Mono and Color modes, it was not possible to set via-pad and via-hole sizes.
+			// Improvement:  Allow larger zoom level.
+			// Improvement:  To avoid problems with some PCB companies, made the top solder mask cover most (but not all) of each pad/via.
+			// Improvement:  When rendering the top layer in PCB mode, make it better represent the fact that a portion each pad/via is visible.
+			// Improvement:  When writing the drill file, use XNC/Excellon Format 2.
