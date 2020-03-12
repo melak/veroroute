@@ -101,6 +101,30 @@ void MainWindow::CreatePixmapCache(const GuiControl& guiCtrl, ColorManager& colo
 	releaseMouse();
 }
 
+void MainWindow::PaintViaGrey(const GuiControl& guiCtrl, QPainter& painter, const QPointF& pC, const int& iLyr)
+{
+	assert(!m_bWriteGerber);
+	const int width = ( iLyr == 0 ) ? ( guiCtrl.GetHalfViaWidth() << 1 )
+									: ( ( guiCtrl.GetHalfViaHoleWidth() + guiCtrl.GetMaskWidth() ) << 1 );
+	static QPen	pen(QColor(200,200,200,255), 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+	pen.setWidth(width);
+	painter.setPen(pen);
+	painter.setBrush(Qt::NoBrush);
+	painter.drawPoint(pC);
+}
+
+void MainWindow::PaintPadGrey(const GuiControl& guiCtrl, QPainter& painter, const QPointF& pC, const int& iLyr)
+{
+	assert(!m_bWriteGerber);
+	const int width = ( iLyr == 0 ) ? ( guiCtrl.GetHalfPadWidth() << 1 )
+									: ( ( guiCtrl.GetHalfHoleWidth() + guiCtrl.GetMaskWidth() ) << 1 );
+	static QPen	pen(QColor(200,200,200,255), 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+	pen.setWidth(width);
+	painter.setPen(pen);
+	painter.setBrush(Qt::NoBrush);
+	painter.drawPoint(pC);
+}
+
 void MainWindow::PaintVia(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, const bool& bGap)
 {
 	if ( m_bWriteGerber )
@@ -604,6 +628,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	const bool&		 bVero			= board.GetVeroTracks();
 	const bool		 bDiagsOK		= ( board.GetDiagsMode() != DIAGSMODE::OFF );
 	const bool		 bMinDiags		= ( board.GetDiagsMode() == DIAGSMODE::MIN );
+	const bool		 bColor			= trackMode == TRACKMODE::COLOR;
 	const bool		 bMono			= trackMode == TRACKMODE::MONO;
 	const bool		 bPCB			= trackMode == TRACKMODE::PCB;
 	const bool		 bGroundFill	= !bVero && ( bMono || bPCB ) && board.GetGroundFill();
@@ -634,7 +659,6 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		compMgr.GetSortedComps(sortedComps);	// Sorted so "plug" components get rendered last
 	}
 
-	const QColor padGrey(200,200,200,255);
 	board.CalculateColors();	// Work out best way to color things
 
 	// Get bounds to minimise looping
@@ -762,7 +786,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	{
 		painter.save();
 
-		const bool	bGreyPads	= bPCB && !m_bWriteGerber && layer == 0;
+		const bool	bGreyPads	= bPCB && !m_bWriteGerber;
 		const int	numLoops	= ( ( bPixmapCache || bGroundFill ) ? 2 : 1 ) + ( bGreyPads ? 1 : 0);
 		// bGroundFill		==> 1st pass draws fat tracks in white, 2nd pass draws tracks
 		// bPixmapCache		==> 1st pass draws the pixmaps,			2nd pass fixes up diagonals
@@ -899,16 +923,13 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					else if ( iLoop == 1 )	// Draw track "blobs" and pads directly
 					{
 						PaintBlob(board, painter, color, pCentre, iPerimeterCode);	// Draw track blob
-						if ( !bGreyPads )
-						{
-							if ( bVia ) PaintVia(board, painter, color, pCentre);	// Draw via same color as track
-							if ( bPad ) PaintPad(board, painter, color, pCentre);	// Draw pad same color as track
-						}
+						if ( bVia ) PaintVia(board, painter, color, pCentre);		// Draw via same color as track
+						if ( bPad ) PaintPad(board, painter, color, pCentre);		// Draw pad same color as track
 					}
 					else if ( bDrawGrey )
 					{
-						if ( bVia ) PaintVia(board, painter, padGrey, pCentre);		// Draw grey via
-						if ( bPad ) PaintPad(board, painter, padGrey, pCentre);		// Draw grey pad
+						if ( bVia ) PaintViaGrey(board, painter, pCentre, layer);	// Draw grey via
+						if ( bPad ) PaintPadGrey(board, painter, pCentre, layer);	// Draw grey pad
 					}
 				}
 				if ( bDirect )	// Draw track "blobs" and pads directly (PDF/Gerber)
@@ -916,16 +937,13 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					if ( iLoop == 0 )
 					{
 						PaintBlob(board, painter, color, pCentre, iPerimeterCode);	// Draw track blob
-						if ( !bGreyPads )
-						{
-							if ( bVia ) PaintVia(board, painter, color, pCentre);	// Draw via same color as track
-							if ( bPad ) PaintPad(board, painter, color, pCentre);	// Draw pad same color as track
-						}
+						if ( bVia ) PaintVia(board, painter, color, pCentre);		// Draw via same color as track
+						if ( bPad ) PaintPad(board, painter, color, pCentre);		// Draw pad same color as track
 					}
 					else if ( bDrawGrey )
 					{
-						if ( bVia ) PaintVia(board, painter, padGrey, pCentre);		// Draw grey via
-						if ( bPad ) PaintPad(board, painter, padGrey, pCentre);		// Draw grey pad
+						if ( bVia ) PaintViaGrey(board, painter, pCentre, layer);	// Draw grey via
+						if ( bPad ) PaintPadGrey(board, painter, pCentre, layer);	// Draw grey pad
 					}
 				}
 			}
@@ -1042,32 +1060,22 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		painter.restore();
 	}
 
-	QPen	greyPen(m_backgroundPen);		greyPen.setColor(padGrey);
-	QBrush	greyBrush(m_backgroundBrush);	greyBrush.setColor(padGrey);
-
 	// Draw vias =================================================================================
 	if ( !m_bWriteGerber && !bVero && ( bPCB || trackMode != TRACKMODE::OFF ) )	// Force in PCB mode
 	{
-		for (int iLoop = 0, numLoops = ( bPCB && layer == 1 ) ? 2 : 1; iLoop < numLoops; iLoop++)
+		painter.save();
+		m_backgroundPen.setWidth( board.GetHalfViaHoleWidth() << 1 );
+		painter.setPen(m_backgroundPen);
+		painter.setBrush(Qt::NoBrush);
+		for (int j = minRow; j <= maxRow; j++)
+		for (int i = minCol; i <= maxCol; i++)
 		{
-			const bool bLastLoop( iLoop == numLoops - 1 );
-			painter.save();
-			QPen&	bgPen	= bLastLoop ? m_backgroundPen   : greyPen;
-			QBrush&	bgBrush	= bLastLoop ? m_backgroundBrush : greyBrush;
-			bgPen.setWidth(0);
-			painter.setPen(bgPen);
-			painter.setBrush(bgBrush);
-			for (int j = minRow; j <= maxRow; j++)
-			for (int i = minCol; i <= maxCol; i++)
-			{
-				const Element* pC = board.Get(layer, j, i);
-				if ( !pC->GetIsVia() ) continue;
-				const int iPinSize = board.GetVIAHOLE_PERCENT() + ( bLastLoop ? 0 : ( board.GetMASK_PERCENT() << 1 ) );
-				GetLRTB(board, iPinSize, j, i, L, R, T, B);
-				painter.drawEllipse(L, T, R-L, B-T);	// A pin is drawn with a circle
-			}
-			painter.restore();
-		}	// Next iLoop
+			const Element* pC = board.Get(layer, j, i);
+			if ( !pC->GetIsVia() ) continue;
+			GetLRTB(board, 100, j, i, L, R, T, B);	// 100% size square
+			painter.drawPoint((L+R)/2, (T+B)/2);
+		}
+		painter.restore();
 	}
 
 	// Draw Component outlines and pins ==========================================================
@@ -1224,122 +1232,126 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				pinsFont.setPointSize( m_board.GetTextSizePins() );
 				painter.setFont(pinsFont);
 
-				for (int iLoop = 0, numLoops = ( bPCB && layer == 1 ) ? 2 : 1; iLoop < numLoops; iLoop++)
+				painter.save();
+				if ( bMono || bPCB )
 				{
-					const bool bLastLoop( iLoop == numLoops - 1 );
-					painter.save();
-					if ( bMono || bPCB )
-					{
-						QPen&	bgPen	= bLastLoop ? m_backgroundPen   : greyPen;
-						QBrush&	bgBrush	= bLastLoop ? m_backgroundBrush : greyBrush;
-						bgPen.setWidth(0);
-						painter.setPen(bgPen);
-						painter.setBrush(bgBrush);
-					}
-					else
-					{
-						penPlaced.setWidth(0);		// For pin labels
-						m_redPen.setWidth(0);		// For pin labels
-						m_darkGreyPen.setWidth(0);	// For pins
-						painter.setPen(m_darkGreyPen);
-						painter.setBrush(Qt::NoBrush);
-					}
+					m_backgroundPen.setWidth( board.GetHalfHoleWidth() << 1 );
+					painter.setPen(m_backgroundPen);
+				}
+				else
+				{
+					penPlaced.setWidth(0);		// For pin labels
+					m_redPen.setWidth(0);		// For pin labels
+					m_darkGreyPen.setWidth(0);	// For pins
+					painter.setPen(m_darkGreyPen);
+				}
+				painter.setBrush(Qt::NoBrush);
 
-					if ( bMark )	// Markers are a special case since they don't actually have a pin !!!
+				if ( bMark )	// Markers are a special case since they don't actually have a pin !!!
+				{
+					if ( bMono )	// Only draw markers as pins in MONO mode
 					{
-						if ( bMono )	// Only draw markers as pins in MONO mode
+						GetLRTB(board, 100, jComp, iComp, L, R, T, B);	// 100% size square
+						painter.drawPoint((L+R)/2, (T+B)/2);			// A pin is drawn with a circle
+					}
+				}
+				else			// Regular components/pads/wires ...
+				{
+					for (int jj = 0; jj < comp.GetCompRows(); jj++)
+					for (int ii = 0; ii < comp.GetCompCols(); ii++)
+					{
+						const int j = jComp + jj;
+						const int i = iComp + ii;
+
+						const size_t iPinIndex = comp.GetCompElement(jj,ii)->GetPinIndex();
+						if ( iPinIndex == BAD_PININDEX ) continue;
+
+						if ( bColor && !comp.GetIsPlaced() )	// Color pins of floating components (if in Color mode)
 						{
-							GetLRTB(board, board.GetHOLE_PERCENT(), jComp, iComp, L, R, T, B);
-							painter.drawEllipse(L, T, R-L, B-T);	// A pin is drawn with a circle
+							const int&	nodeId	= comp.GetNodeId(iPinIndex);
+							int			colorId	= colorMgr.GetColorId(nodeId);
+
+							if ( colorId != BAD_COLORID && nodeId == GetCurrentNodeId() )
+								colorId = MY_GREY;
+
+							int cR, cG, cB;
+							colorMgr.GetPixmapRGB(colorId, cR, cG, cB);
+
+							const QColor color(cR, cG, cB, 255);
+							m_varPen.setColor(color);
+							m_varBrush.setColor(color);
+							painter.setBrush( (bMono || bPCB) ? Qt::NoBrush : m_varBrush);	// No pin color fill in Mono/PCB mode
 						}
-					}
-					else		// Regular components/pads/wires ...
-					{
-						for (int jj = 0; jj < comp.GetCompRows(); jj++)
-						for (int ii = 0; ii < comp.GetCompCols(); ii++)
+
+						const int iPinSize  = ( bMono || bPCB || comp.GetIsPlaced() )
+											? board.GetHOLE_PERCENT()
+											: std::min(3*board.GetHOLE_PERCENT()/2, board.GetPAD_PERCENT());
+						GetLRTB(board, iPinSize, j, i, L, R, T, B);
+
+						// Stop pins vanishing if zoomed too far out
+						if ( L == R ) { L--, R++; }
+						if ( T == B ) { T--, B++; }
+
+						if ( bPinLabels && !bMono && !bPCB && board.GetShowPinLabels() )	// No pin labels in Mono/PCB mode
 						{
-							const int j = jComp + jj;
-							const int i = iComp + ii;
+							// Write pin labels
+							painter.save();
 
-							const size_t iPinIndex = comp.GetCompElement(jj,ii)->GetPinIndex();
-							if ( iPinIndex == BAD_PININDEX ) continue;
+							painter.translate((L+R)/2, (T+B)/2);
 
-							if ( !comp.GetIsPlaced() )	// Color pins of floating components (if in Color mode)
+							// Set text orientation
+							switch( compDirection )
 							{
-								const int&	nodeId	= comp.GetNodeId(iPinIndex);
-								int			colorId	= colorMgr.GetColorId(nodeId);
-
-								if ( colorId != BAD_COLORID && nodeId == GetCurrentNodeId() )
-									colorId = MY_GREY;
-
-								int cR, cG, cB;
-								colorMgr.GetPixmapRGB(colorId, cR, cG, cB);
-
-								const QColor color(cR, cG, cB, 255);
-								m_varBrush.setColor(color);
-								painter.setBrush( (bMono || bPCB) ? Qt::NoBrush : m_varBrush);	// No pin color fill in Mono/PCB mode
+								case 'W':
+								case 'E':	painter.rotate(270);	break;
 							}
-							const int iPinSize  = ( bMono || bPCB || comp.GetIsPlaced() )
-												? ( board.GetHOLE_PERCENT() + ( bLastLoop ? 0 : ( board.GetMASK_PERCENT() << 1 ) ) )
-												: std::min(3*board.GetHOLE_PERCENT()/2, board.GetPAD_PERCENT());
-							GetLRTB(board, iPinSize, j, i, L, R, T, B);
-							// Stop pins vanishing if zoomed too far out
-							if ( L == R ) { L--, R++; }
-							if ( T == B ) { T--, B++; }
 
-							if ( bPinLabels && !bMono && !bPCB && board.GetShowPinLabels() )	// No pin labels in Mono/PCB mode
+							// Handle L/R pin label alignment
+							int iFlag = comp.GetPinAlign(iPinIndex);
+							if ( iFlag == Qt::AlignLeft || iFlag == Qt::AlignRight )
 							{
-								// Write pin labels
-								painter.save();
-
-								painter.translate((L+R)/2, (T+B)/2);
-
-								// Set text orientation
+								const bool bLeft = ( iFlag == Qt::AlignLeft );
 								switch( compDirection )
 								{
-									case 'W':
-									case 'E':	painter.rotate(270);	break;
+									case 'E':
+									case 'S':	iFlag = bLeft ? Qt::AlignRight : Qt::AlignLeft;	// Swap align L/R
+												painter.translate(bLeft ? C/2 : -C/2, 0);
+												break;
+									default:	painter.translate(bLeft ? -C/2 : C/2, 0);
 								}
-
-								// Handle L/R pin label alignment
-								int iFlag = comp.GetPinAlign(iPinIndex);
-								if ( iFlag == Qt::AlignLeft || iFlag == Qt::AlignRight )
-								{
-									const bool bLeft = ( iFlag == Qt::AlignLeft );
-									switch( compDirection )
-									{
-										case 'E':
-										case 'S':	iFlag = bLeft ? Qt::AlignRight : Qt::AlignLeft;	// Swap align L/R
-													painter.translate(bLeft ? C/2 : -C/2, 0);
-													break;
-										default:	painter.translate(bLeft ? -C/2 : C/2, 0);
-									}
-								}
-								iFlag |= ( Qt::TextDontClip | Qt::AlignVCenter );
-
-								painter.scale(dTextScale, dTextScale);
-								painter.setPen( comp.GetIsPlaced() ? penPlaced : m_redPen);
-								painter.drawText(0,0,0,0, iFlag, comp.GetPinLabel(iPinIndex).c_str());
-								painter.restore();
 							}
-							else if ( bRectPins && !bMono && !bPCB )	// Draw switch pins as rectangles
+							iFlag |= ( Qt::TextDontClip | Qt::AlignVCenter );
+
+							painter.scale(dTextScale, dTextScale);
+							painter.setPen( comp.GetIsPlaced() ? penPlaced : m_redPen);
+							painter.drawText(0,0,0,0, iFlag, comp.GetPinLabel(iPinIndex).c_str());
+							painter.restore();
+						}
+						else if ( bRectPins && !bMono && !bPCB )	// Draw switch pins as rectangles
+						{
+							const int d = std::max(1, static_cast<int>(iPinSize * W * 0.005));
+							switch( compDirection )
 							{
-								const int d = std::max(1, static_cast<int>(iPinSize * W * 0.005));
-								switch( compDirection )
-								{
-									case 'W':
-									case 'E':	L -= d; R += d;	break;
-									case 'N':
-									case 'S':	T -= d; B += d;	break;
-								}
-								painter.drawRect(L, T, R-L, B-T);
+								case 'W':
+								case 'E':	L -= d; R += d;	break;
+								case 'N':
+								case 'S':	T -= d; B += d;	break;
 							}
-							else
-								painter.drawEllipse(L, T, R-L, B-T);	// A regular pin is drawn as a circle
+							painter.drawRect(L, T, R-L, B-T);
+						}
+						else	// A regular pin is drawn as a circle
+						{
+							if ( ( bMono || bPCB ) && comp.GetIsPlaced() )
+							{
+								GetLRTB(board, 100, j, i, L, R, T, B);	// 100% size square
+								painter.drawPoint((L+R)/2, (T+B)/2);
+							}
+							else if ( bColor )
+								painter.drawEllipse(L, T, R-L, B-T);
 						}
 					}
-					painter.restore();
-				}	// Next iLoop
+				}
+				painter.restore();
 			}
 			// End draw component pins -----------------------------------------------------------
 		}
