@@ -93,8 +93,12 @@ ControlDialog::~ControlDialog()
 
 void ControlDialog::ClearLists()
 {
-	ui->brokenList->clear();
-	ui->floatingList->clear();
+	for (int j = 0; j < 2; j++)	// Loop both lists
+	{
+		auto* pList = ( j == 0 ) ? ui->brokenList : ui->floatingList;
+		for (int i = 0; i < pList->count(); i++) pList->takeItem(i);
+		pList->clear();
+	}
 }
 
 void ControlDialog::SetListItems(const int nodeId)
@@ -108,7 +112,7 @@ void ControlDialog::SetListItems(const int nodeId)
 			bFound = ( pList->item(i)->text().toInt() == nodeId );
 			if ( bFound ) pList->setCurrentRow(i);
 		}
-		if ( !bFound ) pList->setCurrentRow(0, QItemSelectionModel::Clear);
+		if ( !bFound && pList->count() > 0 ) pList->setCurrentRow(0, QItemSelectionModel::Clear);
 	}
 	ui->tidy->setEnabled( !ui->autoRoute->isChecked() && ui->brokenList->count() == 0 );
 }
