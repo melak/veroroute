@@ -118,6 +118,9 @@ unix {
     target.path = $${PREFIX}/bin/
     target.files = ../veroroute
 
+    manpage.path = $${PREFIX}/share/man/man1
+    manpage.files = ../veroroute.1
+
     desktopentry.path = $${PREFIX}/share/applications
     desktopentry.files = ../veroroute.desktop
 
@@ -136,6 +139,6 @@ unix {
     gedalib.path = $${PREFIX}/share/gEDA/gafrc.d
     gedalib.files = ../libraries/gEDA/veroroute-clib.scm
 
-    INSTALLS += target desktopentry pixmapA pixmapB tutorials gedasymbols gedalib
+    INSTALLS += target manpage desktopentry pixmapA pixmapB tutorials gedasymbols gedalib
 }
 

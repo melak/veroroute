@@ -6,6 +6,13 @@
 #
 
 rm -f  "$pkgdir/usr/bin/veroroute"
+rm -f  "$pkgdir/usr/share/man/man1/veroroute.1"
+if find -- "$pkgdir/usr/share/man/man1/" -prune -type d -empty | grep -q .; then
+   rmdir "$pkgdir/usr/share/man/man1/"
+fi
+if find -- "$pkgdir/usr/share/man/" -prune -type d -empty | grep -q .; then
+   rmdir "$pkgdir/usr/share/man/"
+fi
 rm -f  "$pkgdir/usr/share/applications/veroroute.desktop"
 if find -- "$pkgdir/usr/share/applications/" -prune -type d -empty | grep -q .; then
    rmdir "$pkgdir/usr/share/applications/"
