@@ -25,7 +25,7 @@
 // See http://paulbourke.net/dataformats/hershey/
 // First value is number of "points" and second is nominal width
 
-std::vector<std::vector<int>> g_simplex
+std::vector< std::vector<int> > g_simplex
 {
 	std::vector<int> {0,16},
 	std::vector<int> {8,10,5,21,5,7,-1,-1,5,2,4,1,5,0,6,1,5,2},
@@ -124,7 +124,7 @@ std::vector<std::vector<int>> g_simplex
 	std::vector<int> {23,24,3,6,3,8,4,11,6,12,8,12,10,11,14,8,16,7,18,7,20,8,21,10,-1,-1,3,8,4,10,6,11,8,11,10,10,14,7,16,6,18,6,20,7,21,10,21,12}
 };
 
-static std::vector<std::pair<int,int>> g_xLimits;	// A cache of the min/max X values for each simplex letter
+static std::vector< std::pair<int,int> > g_xLimits;	// A cache of the min/max X values for each simplex letter
 
 namespace Simplex
 {
@@ -140,7 +140,7 @@ namespace Simplex
 	inline static void CalcXlimits(const size_t& i, std::pair<int,int>& o)
 	{
 		if ( i == 0 ) { o.first = 0; o.second = 5; return; }	// ' ' character
-		o.first	 = INT_MAX;	o.second = INT_MIN;
+		o.first = INT_MAX;	o.second = INT_MIN;
 		const int jEnd = 2 + 2 * GetLetterData(i, 0);
 		for (int j = 2; j < jEnd; j += 2)	// Loop x,y pairs
 		{

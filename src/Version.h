@@ -2,8 +2,9 @@
 
 static const char* szVEROROUTE_VERSION =
 
-//"0.91";	// Fixed bad write to pdf. Allow backspace to work as delete.
-//"0.92";	// Add Ctrl shortcuts for File menu options. Changed tutorials.  Fixed origId bug.
+//"0.90";	// First release to Sourceforge.
+//"0.91";	// Fixed bad write to PDF.  Allow backspace to work as delete.
+//"0.92";	// Add Ctrl shortcuts for File menu options.  Changed tutorials.  Fixed origId bug.
 //"0.93";	// Try auto-generate unique Name when adding new part.
 //"0.94";	// Added B.O.M.
 //"0.95";	// Added save to PNG.
@@ -16,16 +17,16 @@ static const char* szVEROROUTE_VERSION =
 //"0.992";	// Improve routing.
 //"0.993";	// Routing improvement.
 //"0.994";	// Bug fix: Erasing under floating pins while auto-routing.
-//"0.995";	// Check if circuit has been saved before launching Tutorials. Don't auto-raise Info window on Undo/Redo.
-//"0.996";	// Bug fix: Deleting grouped components could cause a crash later. Allow DIP gap resizing with "E","R" keys.
+//"0.995";	// Check if circuit has been saved before launching Tutorials.  Don't auto-raise Info window on Undo/Redo.
+//"0.996";	// Bug fix: Deleting grouped components could cause a crash later.  Allow DIP gap resizing with "E","R" keys.
 //"0.997";	// Added part type combo.  Added width buttons for DIP gap resizing instead of "E","R" keys.
 //"0.998";	// Bug fix: After "Paste" auto-routed wire, color should stay on board when wire moved.
 //"0.999";	// Bug fix: Fix possible crash if adding new wire while auto-routing is enabled.
 //"1.00";	// Disable component text buttons when appropriate.  Tidy code.  Drop Beta.
-//"1.01";	// Added scroll bars. Place new components in top-left of visible view and float them if needed.
-//"1.10";	// Added import of netlist from TinyCAD schematic. Hide old Import/Export.
-//"1.11";	// Fixed crash on importing unknown package. Increased maximum number of pins per component to over 200.
-//"1.12";	// Fixed TinyCAD package names for NP capacitors. Make netlist import allow spaces in Name and Value fields.
+//"1.01";	// Added scroll bars.  Place new components in top-left of visible view and float them if needed.
+//"1.10";	// Added import of netlist from TinyCAD schematic.  Hide old Import/Export.
+//"1.11";	// Fixed crash on importing unknown package.  Increased maximum number of pins per component to over 200.
+//"1.12";	// Fixed TinyCAD package names for NP capacitors.  Make netlist import allow spaces in Name and Value fields.
 //"1.13";	// Bug fixes: PDF write was broken since V1.10.  "Add" menu item was enabled when view was mirrored.
 //"1.14";	// Added Help menu item to check if a new version is available.
 //"1.15";	// Added more Edit menu items.  Check for Tutorials and History folders at start-up.
@@ -42,8 +43,8 @@ static const char* szVEROROUTE_VERSION =
 //			// Draw floating component text in red.
 //			// Made export to PDF centre on grid bounds instead of circuit bounds.
 //			// Write status bar messages.
-//"1.22";	// Added command line options to specify vrt file and path to VeroRoute home directory.
-//			// Support drag and drop of vrt files from file explorer.
+//"1.22";	// Added command line options to specify VRT file and path to VeroRoute home directory.
+//			// Support drag and drop of VRT files from file explorer.
 //			// Allow multiple VeroRoute instances to run at the same time.
 //			// Improved error reporting during netlist import.
 //			// Added color saturation slider.
@@ -193,7 +194,7 @@ static const char* szVEROROUTE_VERSION =
 //"1.82";	// Bug fix: Merge should not update the filename used for saving.
 //"1.83";	// Bug fix: Pin dialog should be hidden in component editor mode.
 			// Bug fix: Vias were only drawn with correct size in PCB mode.
-			// Improvement: Zoom with repect to mouse position rather then centre of view.
+			// Improvement: Zoom with respect to mouse position rather than centre of view.
 			// Improvement: When adding to part templates from current circuit, only consider currently selected parts.
 			// Improvement: Reduce minimum allowed track width from 30 mil to 12 mil.
 			// New feature: Allow use vias to be enabled/disabled under Layers menu.
@@ -204,5 +205,5 @@ static const char* szVEROROUTE_VERSION =
 			// Bug fix: In Mono and Color modes, it was not possible to set via-pad and via-hole sizes.
 			// Improvement: Allow larger zoom level.
 			// Improvement: To avoid problems with some PCB companies, made the top solder mask cover most (but not all) of each pad/via.
-			// Improvement: When rendering the top layer in PCB mode, make it better represent the fact that a portion each pad/via is visible.
+			// Improvement: When rendering the top layer in PCB mode, make it better represent the fact that a portion of each pad/via is visible.
 			// Improvement: When writing the drill file, use XNC/Excellon Format 2.

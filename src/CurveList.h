@@ -35,7 +35,7 @@ public:
 	Curve() {}
 	Curve(const GPEN& pen, const QPoint& p);
 	Curve(const GPEN& pen, const QPolygon& polygon);
-	~Curve()					{ clear(); }
+	~Curve() { clear(); }
 	void Compress();		// Removes redundant points
 	bool Splice(Curve* pB);	// Tries to splice curve B to this
 	struct HasSmallerPen	// Predicate for sorting

@@ -355,8 +355,7 @@ public:
 		for (int i = 0, iSize = GetSize(); i < iSize; i++)
 		{
 			const int& iNodeId = GetAtConst(i)->GetNodeId();
-			if ( iNodeId != BAD_NODEID )
-				nodeIds.insert(iNodeId);
+			if ( iNodeId != BAD_NODEID ) nodeIds.insert(iNodeId);
 		}
 		return nodeIds.size();
 	}

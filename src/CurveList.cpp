@@ -34,11 +34,9 @@ Curve::Curve(const GPEN& pen, const QPolygon& polygon) : m_pen(pen)
 void Curve::Compress()	// Removes redundant points
 {
 	unique();
-	bool bDone = size() < 3;
-	while ( !bDone )
+	while ( size() > 2 )
 	{
-		bDone = true;
-
+		bool bChanged(false);
 		auto A = begin();
 		auto B = A; ++B;
 		auto C = B; ++C;
@@ -50,7 +48,7 @@ void Curve::Compress()	// Removes redundant points
 					 ( B->y() >= C->y() && B->y() <= A->y() ) )
 				{
 					(*B) = (*A);	// .. make B == A so we can remove it as not unique
-					bDone = false;
+					bChanged = true;
 				}
 			}
 			else if ( A->y() == B->y() && B->y() == C->y() )	// Horizontal
@@ -59,15 +57,12 @@ void Curve::Compress()	// Removes redundant points
 					 ( B->x() >= C->x() && B->x() <= A->x() ) )
 				{
 					(*B) = (*A);	// .. make B == A so we can remove it as not unique
-					bDone = false;
+					bChanged = true;
 				}
 			}
 		}
-		if ( !bDone )
-		{
-			unique();
-			bDone = size() < 3;
-		}
+		if ( !bChanged ) return;
+		unique();
 	}
 }
 
