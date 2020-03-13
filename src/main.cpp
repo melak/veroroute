@@ -23,18 +23,15 @@
 
 void versionmsg()
 {
-	std::cout << "VeroRoute V" << szVEROROUTE_VERSION << std::endl;
+	std::cout << "VeroRoute Version " << szVEROROUTE_VERSION << std::endl;
 }
 
 void helpmsg()
 {
-	std::cout << "Usage: veroroute" << std::endl;
-	std::cout << "       veroroute [OPTION]" << std::endl;
-	std::cout << "       veroroute [FILE] [OPTION]"<< std::endl;
-	std::cout << "       veroroute [OPTION] [FILE]"<< std::endl << std::endl;
-	std::cout << "Starts veroroute, and opens the specified VRT file." << std::endl << std::endl;
+	std::cout << "Usage: veroroute [OPTION] [FILE]"<< std::endl << std::endl;
+	std::cout << "Starts the application and opens the specified FILE (a VeroRoute VRT file)." << std::endl << std::endl;
 	std::cout << "[OPTION] is one of the following" << std::endl;
-	std::cout << "   -p [PATH]       specify the path to the tutorials directory" << std::endl;
+	std::cout << "   -p PATH         specify the PATH to the 'tutorials' directory" << std::endl;
 	std::cout << "   -h, --help      display this help and exit" << std::endl;
 	std::cout << "   -v, --version   display version information and exit" << std::endl;
 }

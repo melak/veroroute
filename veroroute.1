@@ -1,0 +1,43 @@
+.TH veroroute 1
+.SH NAME
+veroroute \- Qt based Veroboard/Perfboard/PCB layout and routing application
+.SH SYNOPSIS
+.B veroroute
+[\fIOPTION\fR]
+[\fIFILE\fR]
+.SH DESCRIPTION
+Starts the application and opens the FILE (a VeroRoute VRT file).
+.SH OPTIONS
+.TP
+.BR \-h ", " \-\-help\fR
+display help and exit
+.TP
+.BR \-v ", " \-\-version\fR
+display version information and exit
+.TP
+.BR \-p " " \fIPATH\fR
+specify the path to the 'tutorials' directory.
+.RS
+By default the application looks in a location relative to the binary.
+.RE
+.RS
+For example, if the veroroute binary is in
+     ~/sandbox/bin/
+.RE
+.RS
+then it will look for the 'tutorials' directory in
+      ~/sandbox/share/veroroute/
+.RE
+.RS
+If not found in the relative location, it will look for the 'tutorials' directory in
+     /usr/share/veroroute/
+.RE
+.SH AUTHOR
+Written by Alex Lawrow.
+.SH COPYRIGHT
+Copyright (C) 2017  Alex Lawrow
+.PP
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
+.PP
+This is free software: you are free to change and redistribute it.  There is NO WARRANTY, to the extent permitted by law.
+
