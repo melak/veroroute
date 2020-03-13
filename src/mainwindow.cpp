@@ -1247,14 +1247,10 @@ void MainWindow::ListNodes(bool bRebuild)
 			NodeInfo* p = nodeInfoMgr.GetAt(i);
 			if ( p->GetNodeId() == BAD_NODEID ) continue;
 
-			std::stringstream mystream;
-			mystream << p->GetNodeId();
-			std::string myStr = mystream.str();
-
 			const bool bFloating = p->GetHasFloatingComp(compMgr);
 			const bool bComplete = ( bAutoRouting ) ? ( p->GetCost() == 0 ) : p->GetComplete();
 			const bool bBroken	 = bFloating || !bComplete;
-			m_controlDlg->AddListItem(myStr, bBroken, bFloating);
+			m_controlDlg->AddListItem(p->GetNodeId(), bBroken, bFloating);
 		}
 		if ( !bAutoRouting) delete pBoard;	// If we made a copy of the board then delete it
 	}

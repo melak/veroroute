@@ -34,7 +34,7 @@ public:
 
 	void SetMainWindow(MainWindow* p);
 	void ClearLists();
-	void AddListItem(const std::string& str, bool bBroken, bool bFloating);
+	void AddListItem(const int nodeId, bool bBroken, bool bFloating);
 	void SetListItems(const int nodeId);
 
 	void UpdateCompControls();	// Component controls

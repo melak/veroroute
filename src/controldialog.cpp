@@ -96,7 +96,11 @@ void ControlDialog::ClearLists()
 	for (int j = 0; j < 2; j++)	// Loop both lists
 	{
 		auto* pList = ( j == 0 ) ? ui->brokenList : ui->floatingList;
-		for (int i = 0; i < pList->count(); i++) pList->takeItem(i);
+		for (int i = 0; i < pList->count(); i++)
+		{
+			QListWidgetItem* p = pList->takeItem(i);
+			if ( p ) delete p;
+		}
 		pList->clear();
 	}
 }
@@ -117,8 +121,9 @@ void ControlDialog::SetListItems(const int nodeId)
 	ui->tidy->setEnabled( !ui->autoRoute->isChecked() && ui->brokenList->count() == 0 );
 }
 
-void ControlDialog::AddListItem(const std::string& str, bool bBroken, bool bFloating)
+void ControlDialog::AddListItem(const int nodeId, bool bBroken, bool bFloating)
 {
+	const std::string str = std::to_string(nodeId);
 	if ( bBroken   ) ui->brokenList->addItem( str.c_str() );
 	if ( bFloating ) ui->floatingList->addItem( str.c_str() );
 }
