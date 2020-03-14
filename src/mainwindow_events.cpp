@@ -658,13 +658,14 @@ void MainWindow::commonKeyReleaseEvent(QKeyEvent* event)	// So child dialogs can
 void MainWindow::specialKeyPressEvent(QKeyEvent* event)		// So child dialogs can do Ctrl+Q etc
 {
 	commonKeyPressEvent(event);
+	if ( !GetCtrlKeyDown() ) return;
 	switch( event->key() )
 	{
-		case Qt::Key_N:	if ( GetCtrlKeyDown() ) return New();
-		case Qt::Key_O:	if ( GetCtrlKeyDown() ) return Open();
-		case Qt::Key_M:	if ( GetCtrlKeyDown() ) return Merge();
-		case Qt::Key_S:	if ( GetCtrlKeyDown() ) return GetShiftKeyDown() ? SaveAs() : Save();
-		case Qt::Key_Q:	if ( GetCtrlKeyDown() ) return Quit();
+		case Qt::Key_N:	return New();
+		case Qt::Key_O:	return Open();
+		case Qt::Key_M:	return Merge();
+		case Qt::Key_S:	return GetShiftKeyDown() ? SaveAs() : Save();
+		case Qt::Key_Q:	return Quit();
 	}
 }
 

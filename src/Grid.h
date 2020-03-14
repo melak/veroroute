@@ -68,9 +68,12 @@ public:
 	}
 	void DeAllocate()
 	{
-		if ( m_pppData ) delete[] m_pppData;	m_pppData = nullptr;
-		if ( m_ppData  ) delete[] m_ppData;		m_ppData  = nullptr;
-		if ( m_pData   ) delete[] m_pData;		m_pData   = nullptr;
+		if ( m_pppData ) delete[] m_pppData;
+		if ( m_ppData  ) delete[] m_ppData;
+		if ( m_pData   ) delete[] m_pData;
+		m_pppData = nullptr;
+		m_ppData  = nullptr;
+		m_pData   = nullptr;
 		m_lyrs = m_rows = m_cols = 0;
 	}
 	const int& GetLyrs() const	{ return m_lyrs; }

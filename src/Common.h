@@ -28,7 +28,7 @@
 #include <ios>
 #include <assert.h>
 #include <cfloat>
-#include <limits.h>
+#include <climits>
 #include <algorithm>
 #include <vector>
 #include <list>

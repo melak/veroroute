@@ -23,10 +23,14 @@
 
 void MainWindow::DestroyPixmapCache()
 {
-	if ( m_ppPixmapPad )	for (int i = 0; i <     NUM_PIXMAP_COLORS; i++) delete m_ppPixmapPad[i];	delete[] m_ppPixmapPad;		m_ppPixmapPad	= nullptr;
-	if ( m_ppPixmapVia )	for (int i = 0; i <     NUM_PIXMAP_COLORS; i++) delete m_ppPixmapVia[i];	delete[] m_ppPixmapVia;		m_ppPixmapVia	= nullptr;
-	if ( m_ppPixmapDiag )	for (int i = 0; i < 2 * NUM_PIXMAP_COLORS; i++) delete m_ppPixmapDiag[i];	delete[] m_ppPixmapDiag;	m_ppPixmapDiag	= nullptr;
-	if ( m_ppPixmapBlob )	for (int i = 0; i < 256; i++)					delete m_ppPixmapBlob[i];	delete[] m_ppPixmapBlob;	m_ppPixmapBlob	= nullptr;
+	if ( m_ppPixmapPad )	for (int i = 0; i <     NUM_PIXMAP_COLORS; i++)	delete m_ppPixmapPad[i];
+	if ( m_ppPixmapVia )	for (int i = 0; i <     NUM_PIXMAP_COLORS; i++)	delete m_ppPixmapVia[i];
+	if ( m_ppPixmapDiag )	for (int i = 0; i < 2 * NUM_PIXMAP_COLORS; i++)	delete m_ppPixmapDiag[i];
+	if ( m_ppPixmapBlob )	for (int i = 0; i < 256; i++)					delete m_ppPixmapBlob[i];
+	delete[] m_ppPixmapPad;		m_ppPixmapPad	= nullptr;
+	delete[] m_ppPixmapVia;		m_ppPixmapVia	= nullptr;
+	delete[] m_ppPixmapDiag;	m_ppPixmapDiag	= nullptr;
+	delete[] m_ppPixmapBlob;	m_ppPixmapBlob	= nullptr;
 }
 
 void MainWindow::CreatePixmapCache(const GuiControl& guiCtrl, ColorManager& colorMgr)
