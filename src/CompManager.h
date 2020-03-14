@@ -312,7 +312,8 @@ private:
 		{
 			const COMP& eTypeA = pA->GetType();
 			const COMP& eTypeB = pB->GetType();
-			if ( IsPlug(eTypeA) != IsPlug(eTypeB) ) return IsPlug(eTypeB);
+			if ( pA->GetIsPlaced() != pB->GetIsPlaced() ) return pA->GetIsPlaced();	// Render floating components last
+			if ( IsPlug(eTypeA) != IsPlug(eTypeB) ) return IsPlug(eTypeB);			// Render "plug" components last
 			return static_cast<int>(eTypeA) < static_cast<int>(eTypeB);
 		}
 	};

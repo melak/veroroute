@@ -631,7 +631,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	const bool		 bColor			= trackMode == TRACKMODE::COLOR;
 	const bool		 bMono			= trackMode == TRACKMODE::MONO;
 	const bool		 bPCB			= trackMode == TRACKMODE::PCB;
-	const bool		 bGroundFill	= !bVero && ( bMono || bPCB ) && board.GetGroundFill();
+	const bool		 bMonoPCB		= bMono || bPCB;
+	const bool		 bGroundFill	= !bVero && bMonoPCB && board.GetGroundFill();
 	const bool		 bPixmapCache	= !bVero && !bPCB && !bGroundFill && !m_bWritePDF;
 	const bool		 bDirect		= !bVero && !bPixmapCache && !bGroundFill;
 	const int&		 layer			= board.GetCurrentLayer();
@@ -646,20 +647,26 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	const double	 dTextScale		= ( m_bWritePDF ) ? (48.0 / W) : (W / 24.0);	// For scaling text when zooming
 	if ( bVero && trackMode != TRACKMODE::OFF ) board.CalcSolder();	// Calculate positions of solder blobs for stripboard builds
 
+	int X(0), Y(0), L(0), R(0), T(0), B(0), cR(0), cG(0), cB(0);
+
+	const int iGroundFillColor = ( bPCB ) ? ( layer == 0 ? MY_LYR_BOT : MY_LYR_TOP ) : MY_BLACK;
+	colorMgr.GetPixmapRGB(iGroundFillColor, cR, cG, cB);
+	const QColor groundFillColor(cR, cG, cB, 255);
+
 	colorMgr.SetSaturation( board.GetSaturation() );			// Must do this BEFORE making pixmaps
 	colorMgr.SetFillSaturation( board.GetFillSaturation() );	// Must do this BEFORE making pixmaps
 	if ( bPixmapCache )
 		CreatePixmapCache(board, colorMgr);	// Builds pixmaps if the cache is empty
 
+	board.CalculateColors();	// Work out best way to color things
+
 	// Pre-process component list for rendering
 	std::vector<const Component*> sortedComps;
-	if ( compMode != COMPSMODE::OFF || bMono || bPCB )
+	if ( compMode != COMPSMODE::OFF || bMonoPCB )
 	{
 		compMgr.CalculateWireShifts();			// Work out shifts for overlaid wires
-		compMgr.GetSortedComps(sortedComps);	// Sorted so "plug" components get rendered last
+		compMgr.GetSortedComps(sortedComps);	// Sorted so floating and "plug" components get rendered last
 	}
-
-	board.CalculateColors();	// Work out best way to color things
 
 	// Get bounds to minimise looping
 	int minRow, minCol, maxRow, maxCol;
@@ -718,8 +725,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	const QColor backgroundColor = ( m_bWritePDF ) ? Qt::white : GetBackgroundColor();
 	m_backgroundPen.setColor(backgroundColor);
 	m_backgroundBrush.setColor(backgroundColor);
-
-	int X(0), Y(0), L(0), R(0), T(0), B(0), cR(0), cG(0), cB(0);
+	QPen wirePen(m_blackPen );
+	wirePen.setColor(bGroundFill ? backgroundColor : groundFillColor);
+	wirePen.setWidth(iWirePenWidth);
 
 	// Draw board background
 	QPolygonF edge;		edge.clear();		// The board outline in Gerber
@@ -742,9 +750,6 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	}
 	else
 	{
-		const int iGroundFillColor = ( bPCB ) ? ( layer == 0 ? MY_LYR_BOT : MY_LYR_TOP ) : MY_BLACK;
-		colorMgr.GetPixmapRGB(iGroundFillColor, cR, cG, cB);
-		const QColor groundFillColor(cR, cG, cB, 255);
 		painter.fillRect(m_XGRIDOFFSET, m_YGRIDOFFSET, W * board.GetCols(), W * board.GetRows(), bGroundFill ? groundFillColor : backgroundColor);
 	}
 
@@ -822,8 +827,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				if ( colorId == BAD_COLORID && !bWire ) continue;	// Usually don't color places with no NodeID assigned unless they are wire ends
 
 				// Use GetPixmapRGB for pixmaps.  It can handle MY_GREY, MY_BLACK as special cases
-				const bool		bInvalidColor	=  colorId == BAD_COLORID ||
-												  ( ( bMono || bPCB ) && nodeId != GetCurrentNodeId() );
+				const bool		bInvalidColor	=  colorId == BAD_COLORID || ( bMonoPCB && nodeId != GetCurrentNodeId() );
 				const int		iEffColorId		= ( bInvalidColor )	? ( bPCB ? ( layer == 0 ? MY_LYR_BOT : MY_LYR_TOP ) : MY_BLACK )
 												: ( nodeId == GetCurrentNodeId() ) ? MY_GREY : ( colorId % MYNUMCOLORS );
 
@@ -837,12 +841,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				// Common special case: Draw blank wire-ends as squares (so we can easily see them)
 				if ( colorId == BAD_COLORID && bWire )
 				{
-					QPen& wirePen = ( bGroundFill ) ? m_whitePen : m_blackPen;
-					wirePen.setWidth(iWirePenWidth);
 					painter.setPen(wirePen);
 					painter.setBrush(Qt::NoBrush);
 					painter.drawRect(X-iWireBoxWidth, Y-iWireBoxWidth, iWireBoxWidth*2, iWireBoxWidth*2);
-					wirePen.setWidth(0);
 					continue;	// Next grid square
 				}
 
@@ -976,7 +977,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	}
 
 	// Draw target board area ====================================================================
-	if ( m_board.GetShowTarget() && !bMono && !bPCB )
+	if ( m_board.GetShowTarget() && !bMonoPCB )
 	{
 		const int targetT = ( board.GetRows() - m_board.GetTargetRows() ) / 2;
 		const int targetB = targetT + m_board.GetTargetRows() - 1;
@@ -1031,7 +1032,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				}
 				if ( pC->GetNodeId() == GetCurrentNodeId() && pC->GetMH() == BAD_MH )
 				{
-					painter.setPen(bPCB || bMono ? m_redPen : m_yellowPen);
+					painter.setPen(bMonoPCB ? m_redPen : m_yellowPen);
 					painter.drawLine(L, B, R, T);		// Draw "/" (hatched) line
 				}
 			}
@@ -1083,8 +1084,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	QPen  fillBlackPen = m_blackPen;	// Used for lines in the component pixmap
 	fillBlackPen.setWidth(2);
 
-	if ( compMode != COMPSMODE::OFF || bMono || bPCB )	// Mono/PCB modes still need pin holes drawn
+	if ( compMode != COMPSMODE::OFF || bMonoPCB )	// Mono/PCB modes still need pin holes drawn for placed parts
 	{
+		const bool bFill = !bMonoPCB && board.GetFillSaturation() > 0;	// No component fill in Mono/PCB mode
 		for (const auto& pComp : sortedComps)	// Iterate sorted components
 		{
 			const Component& comp			= *pComp;
@@ -1095,8 +1097,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			if ( bPCB && bMark )	continue;	// Don't show markers in PCB mode
 			if ( m_bWriteGerber && !comp.GetIsPlaced() ) continue;	// Don't write floating components to Gerber
 			if ( bWiresAsTracks && bWire && compMgr.GetWireShift(&comp) == 0 ) continue;	//TODO Probably not a good enough check since wires may cross yet have no shift
-			const bool		 bPinLabels		= (comp.GetPinFlags() & PIN_LABELS) > 0;
-			const bool		 bRectPins		= (comp.GetPinFlags() & PIN_RECT)   > 0;
+			const bool		 bPinLabels		= !bMonoPCB && (comp.GetPinFlags() & PIN_LABELS) > 0 && board.GetShowPinLabels();
+			const bool		 bRectPins		= !bMonoPCB && (comp.GetPinFlags() & PIN_RECT) > 0;
 			const bool		 bHighlightComp	= board.GetGroupMgr().GetIsUserComp( comp.GetId() );
 			const int		 jComp			= comp.GetRow();
 			const int		 iComp			= comp.GetCol();
@@ -1131,8 +1133,6 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					else
 						X += compMgr.GetWireShift( &comp ) * 0.1 * W;
 				}
-
-				const bool bFill = !bMono && !bPCB && board.GetFillSaturation() > 0;	// No component fill in Mono/PCB mode
 
 				double SL,ST,SR,SB;
 				comp.GetSafeBounds(SL,SR,ST,SB);
@@ -1226,14 +1226,17 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			// End draw component fill + outline -------------------------------------------------
 
 			// Begin draw component pins ---------------------------------------------------------
-			if ( !m_bWriteGerber )
+			if ( !m_bWriteGerber && ( compMode != COMPSMODE::OFF || ( bMonoPCB && comp.GetIsPlaced() ) ) )
 			{
+				if ( bWire && comp.GetNodeId(0) == BAD_NODEID )	continue;	// Skip blank wires
+
+				painter.save();
+
 				QFont pinsFont = painter.font();	// Copy of current font
 				pinsFont.setPointSize( m_board.GetTextSizePins() );
 				painter.setFont(pinsFont);
 
-				painter.save();
-				if ( (bMono || bPCB) && comp.GetIsPlaced() )
+				if ( bMonoPCB && comp.GetIsPlaced() )
 				{
 					m_backgroundPen.setWidth( board.GetHalfHoleWidth() << 1 );
 					painter.setPen(m_backgroundPen);
@@ -1252,7 +1255,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 				if ( bMark )	// Markers are a special case since they don't actually have a pin !!!
 				{
-					if ( bMono )	// Only draw markers as pins in MONO mode
+					// Only draw markers as holes in ground fill MONO mode and only in places with no track
+					if ( bMono && bGroundFill && board.Get(layer, jComp, iComp)->GetNodeId() == BAD_NODEID )
 					{
 						GetLRTB(board, 100, jComp, iComp, L, R, T, B);	// 100% size square
 						painter.drawPoint((L+R)/2, (T+B)/2);			// A pin is drawn with a circle
@@ -1283,7 +1287,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 							const QColor color(cR, cG, cB, 255);
 							m_varPen.setColor(color);
 							m_varBrush.setColor(color);
-							painter.setBrush( (bMono || bPCB) ? Qt::NoBrush : m_varBrush);	// No pin color fill in Mono/PCB mode
+							painter.setBrush( bMonoPCB ? Qt::NoBrush : m_varBrush);	// No pin color fill in Mono/PCB mode
 						}
 
 						const int iPinSize  = ( !bColor || comp.GetIsPlaced() )
@@ -1295,11 +1299,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						if ( L == R ) { L--, R++; }
 						if ( T == B ) { T--, B++; }
 
-						if ( bPinLabels && !bMono && !bPCB && board.GetShowPinLabels() )	// No pin labels in Mono/PCB mode
+						if ( bPinLabels )	// Write pin labels
 						{
-							// Write pin labels
 							painter.save();
-
 							painter.translate((L+R)/2, (T+B)/2);
 
 							// Set text orientation
@@ -1330,7 +1332,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 							painter.drawText(0,0,0,0, iFlag, comp.GetPinLabel(iPinIndex).c_str());
 							painter.restore();
 						}
-						else if ( bRectPins && !bMono && !bPCB )	// Draw switch pins as rectangles
+						else if ( bRectPins )	// Draw switch pins as rectangles
 						{
 							const int d = std::max(1, static_cast<int>(iPinSize * W * 0.005));
 							switch( compDirection )
@@ -1344,12 +1346,12 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						}
 						else	// A regular pin is drawn as a circle
 						{
-							if ( ( bMono || bPCB ) && comp.GetIsPlaced() )
+							if ( bMonoPCB && comp.GetIsPlaced() )
 							{
 								GetLRTB(board, 100, j, i, L, R, T, B);	// 100% size square
 								painter.drawPoint((L+R)/2, (T+B)/2);
 							}
-							else
+							else 
 								painter.drawEllipse(L, T, R-L, B-T);
 						}
 					}
@@ -1357,57 +1359,51 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				painter.restore();
 			}
 			// End draw component pins -----------------------------------------------------------
-		}
-	}
 
-	// Draw Component Text =======================================================================
-	if ( compMode != COMPSMODE::OFF )
-	{
-		double dCopyTextScale = dTextScale;
-		if ( bPCB )
-		{
-			dCopyTextScale *= m_board.GetTextSizeComp() * (20.0 / 243 );	// Scale to make the Gerber font size similar to regular component font size
-		}
-		else
-		{
-			QFont compFont = painter.font();	// Copy of current font
-			compFont.setPointSize( m_board.GetTextSizeComp() );
-			painter.setFont(compFont);
-		}
+			// Begin draw component text ---------------------------------------------------------
+			if ( compMode != COMPSMODE::OFF && !bMark && !bWire )
+			{
+				painter.save();
 
-		// Use floating point pen width to better match Gerber output.
-		// Scale the pen width down to compensate for painter.scale() scaling things up in the loop below.
-		const double dPenWidth = ( bPCB ) ? board.GetSilkWidth() / dCopyTextScale : 0;
-		m_redPen.setWidthF(dPenWidth);	// Use red text for floating components
-		penPlaced.setWidthF(dPenWidth);	// Use this for placed components
+				double dCopyTextScale = dTextScale;
+				if ( bPCB )
+				{
+					dCopyTextScale *= m_board.GetTextSizeComp() * (20.0 / 243 );	// Scale to make the Gerber font size similar to regular component font size
+				}
+				else
+				{
+					QFont compFont = painter.font();	// Copy of current font
+					compFont.setPointSize( m_board.GetTextSizeComp() );
+					painter.setFont(compFont);
+				}
 
-		for (const auto& mapObj : compMgr.GetMapIdToComp())	// Iterate components
-		{
-			const Component& comp			= mapObj.second;
-			const COMP&		 compType		= comp.GetType();
-			const char&		 compDirection	= comp.GetDirection();
-			if ( compType == COMP::MARK || compType == COMP::WIRE ) continue;
+				// Use floating point pen width to better match Gerber output.
+				// Scale the pen width down to compensate for painter.scale() scaling things up in the loop below.
+				const double dPenWidth = ( bPCB ) ? board.GetSilkWidth() / dCopyTextScale : 0;
+				m_redPen.setWidthF(dPenWidth);	// Use red text for floating components
+				penPlaced.setWidthF(dPenWidth);	// Use this for placed components
 
-			GetXY(board, comp, X, Y);	// Get footprint centre
+				GetXY(board, comp, X, Y);	// Get footprint centre
 
-			int offsetRow(0), offsetCol(0);
-			comp.GetLabelOffsets(offsetRow, offsetCol);
+				int offsetRow(0), offsetCol(0);
+				comp.GetLabelOffsets(offsetRow, offsetCol);
 
-			X += W * 0.0625 * offsetCol; // Offset for text is 1/16 of a grid square
-			Y += W * 0.0625 * offsetRow; // Offset for text is 1/16 of a grid square
+				X += W * 0.0625 * offsetCol; // Offset for text is 1/16 of a grid square
+				Y += W * 0.0625 * offsetRow; // Offset for text is 1/16 of a grid square
 
-			painter.save();
-			painter.translate(X, Y);
-			if ( compDirection == 'N' || compDirection == 'S' )
-				painter.rotate(270);
+				painter.translate(X, Y);
+				if ( compDirection == 'N' || compDirection == 'S' )
+					painter.rotate(270);
 
-			const std::string& myStr = ( compMode == COMPSMODE::NAME )  ? comp.GetNameStr() :
-									   ( compMode == COMPSMODE::VALUE ) ? comp.GetValueStr() : "";
+				const std::string& myStr = ( compMode == COMPSMODE::NAME )  ? comp.GetNameStr() :
+										   ( compMode == COMPSMODE::VALUE ) ? comp.GetValueStr() : "";
 
-			painter.scale(dCopyTextScale, dCopyTextScale);
-			painter.setPen( comp.GetIsPlaced() ? penPlaced : m_redPen );
-			painter.drawText(0,0,0,0, Qt::AlignCenter | Qt::TextDontClip, myStr.c_str(), bPCB);
-			painter.restore();
+				painter.scale(dCopyTextScale, dCopyTextScale);
+				painter.setPen( comp.GetIsPlaced() ? penPlaced : m_redPen );
+				painter.drawText(0,0,0,0, Qt::AlignCenter | Qt::TextDontClip, myStr.c_str(), bPCB);
+				painter.restore();
+			}
+			// End draw component text -----------------------------------------------------------
 		}
 	}
 
