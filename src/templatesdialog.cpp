@@ -37,6 +37,7 @@ TemplatesDialog::TemplatesDialog(MainWindow* parent)
 	QObject::connect(ui->pushButton,	SIGNAL(clicked()),					this,	SLOT(AddTemplates()));
 	QObject::connect(ui->pushButton_2,	SIGNAL(clicked()),					this,	SLOT(DeleteTemplate()));
 	QObject::connect(ui->pushButton_3,	SIGNAL(clicked()),					this,	SLOT(LoadFromVrt()));
+	QObject::connect(ui->pushButton_4,	SIGNAL(clicked()),					this,	SLOT(SaveToVrt()));
 	LoadFromUserVrt(false);	// false ==> no message box
 }
 
@@ -184,19 +185,19 @@ const QString TemplatesDialog::GetUserFilename() const
 
 void TemplatesDialog::LoadFromVrt()
 {
-	QString fileName = QFileDialog::getOpenFileName(this, tr("Open file"), ""/*directory*/,	tr("VeroRoute (*.vrt);;All Files (*)"));
+	const QString fileName = QFileDialog::getOpenFileName(this, tr("Open file"), ""/*directory*/,	tr("VeroRoute (*.vrt);;All Files (*)"));
 	if ( !fileName.isEmpty() )
 		Load(fileName, true);
 }
 
 void TemplatesDialog::LoadFromUserVrt(bool bInfoMsg)
 {
-	QString fileName = GetUserFilename();
+	const QString fileName = GetUserFilename();
 	if ( !fileName.isEmpty() )
 		Load(fileName, bInfoMsg);
 }
 
-void TemplatesDialog::Load(QString& fileName, bool bInfoMsg)
+void TemplatesDialog::Load(const QString& fileName, bool bInfoMsg)
 {
 	const std::string fileNameStr = fileName.toStdString();
 
@@ -215,32 +216,40 @@ void TemplatesDialog::Load(QString& fileName, bool bInfoMsg)
 		QMessageBox::information(this, tr("Unable to open file"), tr(fileNameStr.c_str()));
 }
 
+void TemplatesDialog::SaveToVrt()
+{
+	const QString fileName = m_pMainWindow->GetSaveFileName(tr("Save templates as"), tr("VeroRoute (*.vrt);;All Files (*)"), QString("vrt"));
+	if ( !fileName.isEmpty() )
+		Save(fileName);
+}
+
+void TemplatesDialog::Save(const QString& fileName)
+{
+	DataStream outStream(DataStream::WRITE);
+	const std::string fileNameStr = fileName.toStdString();
+	if ( outStream.Open( fileNameStr.c_str() ) )
+	{
+		Board tmp;	// Load using a temporary board in case there is a problem with the file
+
+		const bool bGeneric = false;
+		TemplateManager& mgr = m_pMainWindow->GetTemplateManager();
+		for (size_t i = 0, iSize = mgr.GetSize(bGeneric); i < iSize; i++)
+		{
+			const Component& comp = mgr.GetNth(bGeneric,i);
+			tmp.AddComponent(-1, -1, comp, false);
+		}
+		tmp.Save(outStream);
+		outStream.Close();
+	}
+	else
+		QMessageBox::information(this, tr("Unable to save file"), tr(fileNameStr.c_str()));
+}
+
 void TemplatesDialog::SaveToUserVrt()
 {
 	if ( !m_pMainWindow->m_bTemplatesDir ) return;
-
 	QString fileName = GetUserFilename();
-	if ( !fileName.isEmpty() )
-	{
-		DataStream outStream(DataStream::WRITE);
-		const std::string fileNameStr = fileName.toStdString();
-		if ( outStream.Open( fileNameStr.c_str() ) )
-		{
-			Board tmp;	// Load using a temporary board in case there is a problem with the file
-
-			const bool bGeneric = false;
-			TemplateManager& mgr = m_pMainWindow->GetTemplateManager();
-			for (size_t i = 0, iSize = mgr.GetSize(bGeneric); i < iSize; i++)
-			{
-				const Component& comp = mgr.GetNth(bGeneric,i);
-				tmp.AddComponent(-1, -1, comp, false);
-			}
-			tmp.Save(outStream);
-			outStream.Close();
-		}
-		else
-			QMessageBox::information(this, tr("Unable to save file"), tr(fileNameStr.c_str()));
-	}
+	if ( !fileName.isEmpty() ) Save(fileName);
 }
 
 void TemplatesDialog::AddTemplatesFromBoard(Board& board, bool bAllComps, bool bInfoMsg)

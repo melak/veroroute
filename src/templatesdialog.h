@@ -45,8 +45,10 @@ public slots:
 	void AddTemplates();
 	void DeleteTemplate();
 	void LoadFromVrt();
+	void SaveToVrt();
 private:
-	void Load(QString& fileName, bool bInfoMsg);
+	void Load(const QString& fileName, bool bInfoMsg);
+	void Save(const QString& fileName);
 	void LoadFromUserVrt(bool bInfoMsg);
 	void SaveToUserVrt();
 	const QString GetUserFilename() const;

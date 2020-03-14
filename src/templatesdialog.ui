@@ -57,7 +57,7 @@
     <enum>Qt::NoFocus</enum>
    </property>
    <property name="toolTip">
-    <string>Updates the templates with the selected parts from the current circuit.</string>
+    <string>Update the templates with the selected parts from the current circuit.</string>
    </property>
    <property name="text">
     <string>Add from current circuit</string>
@@ -135,7 +135,7 @@
     <rect>
      <x>269</x>
      <y>580</y>
-     <width>321</width>
+     <width>151</width>
      <height>24</height>
     </rect>
    </property>
@@ -143,10 +143,29 @@
     <enum>Qt::NoFocus</enum>
    </property>
    <property name="toolTip">
-    <string>Updates the templates with parts from an existing circuit</string>
+    <string>Update the templates with parts from a VRT file</string>
    </property>
    <property name="text">
     <string>Add from VRT file</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="pushButton_4">
+   <property name="geometry">
+    <rect>
+     <x>440</x>
+     <y>580</y>
+     <width>151</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="focusPolicy">
+    <enum>Qt::NoFocus</enum>
+   </property>
+   <property name="toolTip">
+    <string>Save all templates to a VRT file</string>
+   </property>
+   <property name="text">
+    <string>Save to VRT file</string>
    </property>
   </widget>
  </widget>
