@@ -1233,7 +1233,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				painter.setFont(pinsFont);
 
 				painter.save();
-				if ( bMono || bPCB )
+				if ( (bMono || bPCB) && comp.GetIsPlaced() )
 				{
 					m_backgroundPen.setWidth( board.GetHalfHoleWidth() << 1 );
 					painter.setPen(m_backgroundPen);
@@ -1283,7 +1283,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 							painter.setBrush( (bMono || bPCB) ? Qt::NoBrush : m_varBrush);	// No pin color fill in Mono/PCB mode
 						}
 
-						const int iPinSize  = ( bMono || bPCB || comp.GetIsPlaced() )
+						const int iPinSize  = ( !bColor || comp.GetIsPlaced() )
 											? board.GetHOLE_PERCENT()
 											: std::min(3*board.GetHOLE_PERCENT()/2, board.GetPAD_PERCENT());
 						GetLRTB(board, iPinSize, j, i, L, R, T, B);
@@ -1346,7 +1346,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 								GetLRTB(board, 100, j, i, L, R, T, B);	// 100% size square
 								painter.drawPoint((L+R)/2, (T+B)/2);
 							}
-							else if ( bColor )
+							else
 								painter.drawEllipse(L, T, R-L, B-T);
 						}
 					}
