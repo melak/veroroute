@@ -19,6 +19,11 @@
 
 #pragma once
 
+// Comment out following 3 lines on debug builds to enable assert()
+#ifndef NDEBUG
+#define NDEBUG
+#endif
+
 #include <cmath>
 #include <stdio.h>
 #include <string.h>

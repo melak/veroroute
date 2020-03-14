@@ -558,7 +558,7 @@ static bool StopBuildWarnings()
 
 static int GetDefaultNumPins(const COMP& eType)
 {
-	assert(true || StopBuildWarnings());
+	if ( false ) StopBuildWarnings();
 	switch( eType )
 	{
 		case COMP::MARK					: return 0;
