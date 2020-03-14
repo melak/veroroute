@@ -1241,9 +1241,12 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				else
 				{
 					penPlaced.setWidth(0);		// For pin labels
-					m_redPen.setWidth(0);		// For pin labels
+					m_redPen.setWidth(0);		// For pin labels and pins
 					m_darkGreyPen.setWidth(0);	// For pins
-					painter.setPen(m_darkGreyPen);
+					if ( !bColor && !comp.GetIsPlaced() )
+						painter.setPen(m_redPen);
+					else
+						painter.setPen(m_darkGreyPen);
 				}
 				painter.setBrush(Qt::NoBrush);
 
