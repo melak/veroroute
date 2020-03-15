@@ -200,10 +200,19 @@ static const char* szVEROROUTE_VERSION =
 			// New feature: Allow use vias to be enabled/disabled under Layers menu.
 			// New feature: Added new "Thin" track style for more traditional look and smaller Gerber files.
 //"1.84";	// Bug fix: Repainting pins on layer 2 did not update grid connections properly, and could crash when the part is moved.
-  "1.85";	// Bug fix: Refresh problem.  Broken and Floating lists could show zombie entries when the control dialog is docked.
+//"1.85";	// Bug fix: Refresh problem.  Broken and Floating lists could show zombie entries when the control dialog is docked.
 			// Bug fix: Rendering problem.  In Mono and Color modes, some zoom levels would leave gaps between pixmaps and draw offset diagonals.
 			// Bug fix: In Mono and Color modes, it was not possible to set via-pad and via-hole sizes.
 			// Improvement: Allow larger zoom level.
 			// Improvement: To avoid problems with some PCB companies, made the top solder mask cover most (but not all) of each pad/via.
 			// Improvement: When rendering the top layer in PCB mode, make it better represent the fact that a portion of each pad/via is visible.
 			// Improvement: When writing the drill file, use XNC/Excellon Format 2.
+  "1.86";	// Bug fix: V1.85 was sometimes hiding pin outlines (e.g. when track slider was set to Off).
+			// Bug fix: Switching to Component Editor mode from PCB mode gave black background.
+			// Bug fix: Placing a wire in 2-layer mode did not handle both wire ends properly.
+			// Improvement: Added button to Templates dialog to save all templates to a VRT file.
+			// Improvement: For ground-fills, auto-generate additional tags for thermal reliefs.
+			// Functionality change: To avoid track breaks, markers in Mono mode only make holes in ground-fills.
+			// Functionality change: Disabled show/hide of docked widgets by right mouse-click on menu bar.
+			// Added command line options (-h, --help, -v, --version).
+			// Added manpage as part of unix installation.
