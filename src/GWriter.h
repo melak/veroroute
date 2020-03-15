@@ -100,7 +100,7 @@ class GWriter
 public:
 	GWriter()	{}
 	~GWriter()	{ Close(); }
-	bool		Open(const char* fileName, const Board& board, const bool& bTwoLayers);
+	bool		Open(const char* fileName, const Board& board, const bool& bTwoLayerGerber);
 	void		Close();
 	GStream&	GetStream(const GFILE& eType);
 private:

@@ -335,7 +335,7 @@ void MainWindow::ResetView(bool bTutorial)
 {
 	m_mousePos = QPoint(0,0);
 	m_bMouseClick	= m_bLeftClick	= m_bRightClick = m_bCtrlKeyDown  = m_bShiftKeyDown	=false;
-	m_bPaintPins	= m_bPaintBoard	= m_bPaintFlood = m_bDefiningRect = m_bResizingText	= m_bWritePDF = m_bWriteGerber = m_bTwoLayers = false;
+	m_bPaintPins	= m_bPaintBoard	= m_bPaintFlood = m_bDefiningRect = m_bResizingText	= m_bWritePDF = m_bWriteGerber = m_bTwoLayerGerber = false;
 	m_XGRIDOFFSET	= m_YGRIDOFFSET	= 0;
 
 	// Try to set m_gridRow, m_gridCol to match the current NodeId in the board
@@ -669,10 +669,10 @@ void MainWindow::WritePDF()
 	}
 }
 
-void MainWindow::WriteGerber(const bool& bTwoLayers)
+void MainWindow::WriteGerber(const bool& bTwoLayerGerber)
 {
-	m_bTwoLayers = bTwoLayers;
-	m_board.SetHoleType(m_bTwoLayers ? HOLETYPE::PTH : HOLETYPE::NPTH);
+	m_bTwoLayerGerber = bTwoLayerGerber;
+	m_board.SetHoleType(m_bTwoLayerGerber ? HOLETYPE::PTH : HOLETYPE::NPTH);
 
 	m_gerberFileName = GetSaveFileName(tr("Choose a Gerber File Prefix"), tr("All Files (*)"), QString(""));
 	if ( !m_gerberFileName.isEmpty() )
@@ -685,7 +685,7 @@ void MainWindow::WriteGerber(const bool& bTwoLayers)
 
 		m_bWriteGerber = true;		// Makes paintEvent() write to Gerber file instead of pixmap
 
-		if ( m_gWriter.Open(m_gerberFileName.toStdString().c_str(), m_board, m_bTwoLayers) )
+		if ( m_gWriter.Open(m_gerberFileName.toStdString().c_str(), m_board, m_bTwoLayerGerber) )
 		{
 			const int origlayer = m_board.GetCurrentLayer();
 			for (int lyr = 0, lyrs = m_board.GetLyrs(); lyr < lyrs; lyr++)
@@ -705,7 +705,7 @@ void MainWindow::WriteGerber(const bool& bTwoLayers)
 		QDesktopServices::openUrl(m_gerberFileName + ".GBL");
 		QDesktopServices::openUrl(m_gerberFileName + ".GBS");
 //		QDesktopServices::openUrl(m_gerberFileName + ".GBO");
-		if ( m_bTwoLayers )
+		if ( m_bTwoLayerGerber )
 		{
 			QDesktopServices::openUrl(m_gerberFileName + ".GTL");
 			QDesktopServices::openUrl(m_gerberFileName + ".GTS");

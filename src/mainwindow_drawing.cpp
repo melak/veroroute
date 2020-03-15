@@ -201,7 +201,6 @@ void MainWindow::PaintTag(const GuiControl& guiCtrl, QPainter& painter, const QC
 	if ( m_bWriteGerber )
 	{
 		QPolygonF polygon;
-		polygon.clear();
 		polygon.push_back(pC);
 		polygon.push_back(pD);
 		switch(iLyr)
@@ -248,7 +247,6 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 	const int	trackWidth		= ( guiCtrl.GetHalfTrackWidth() + gapWidth ) << 1;	// Track width in pixels
 	const bool&	bCurvedTracks	= guiCtrl.GetCurvedTracks();
 	const bool&	bFatTracks		= !bCurvedTracks && guiCtrl.GetFatTracks();
-	QPolygonF	polygon;
 
 	// Clockwise-ordered array of perimeter points around the square, starting at left...
 	const QPointF p[8] = { pC+QPointF(-C,0), pC+QPointF(-C,-C), pC+QPointF(0,-C), pC+QPointF(C,-C),
@@ -266,7 +264,7 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 	}
 
 	// Construct polygon ("blob") based on used perimeter points
-	polygon.clear();
+	QPolygonF	polygon;
 
 	// Count used perimeter points and find the first
 	int iFirst(-1), N(0);	// N ==> number of perimeter points
@@ -682,7 +680,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	const bool		 bDirect		= !bVero && !bPixmapCache && !bGroundFill;
 	const int&		 layer			= board.GetCurrentLayer();
 	const int&		 groundNodeId	= ( layer == 0 ) ? board.GetGroundNodeId0() :  board.GetGroundNodeId1();
-	const bool		 bWiresAsTracks	= m_bWriteGerber && m_bTwoLayers && board.GetLyrs() == 1;	// true ==> Convert wires to tracks on the top layer
+	const bool		 bWiresAsTracks	= m_bWriteGerber && m_bTwoLayerGerber && board.GetLyrs() == 1;	// true ==> Convert wires to tracks on the top layer
 	const int&		 W				= board.GetGRIDPIXELS();		// Square width in pixels
 	const int		 C				= W >> 1;						// Half square width in pixels
 	const int		 iHalfGap		= std::max(1, W / 12);			// For vero only
@@ -775,8 +773,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	wirePen.setWidth(iWirePenWidth);
 
 	// Draw board background
-	QPolygonF edge;		edge.clear();		// The board outline in Gerber
-	QPolygonF gndPoly;	gndPoly.clear();	// The rectangle for ground fill
+	QPolygonF edge;		// The board outline in Gerber
+	QPolygonF gndPoly;	// The rectangle for ground fill
 	if ( m_bWriteGerber )
 	{
 		// Grow board outline to guarantee separation from tracks and ground
@@ -1016,12 +1014,12 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					if ( comp.GetType() != COMP::WIRE || !comp.GetIsPlaced() ) continue;	// Only want placed wires
 					if ( compMgr.GetWireShift( &comp ) != 0 ) continue;	//TODO Probably not a good enough check since wires may cross yet have no shift
 
-					QPolygonF polygonF; polygonF.clear();
+					QPolygonF polygon;
 					GetXY(board, comp.GetRow(), comp.GetCol(), X, Y);
-					polygonF << QPointF(X, Y);
+					polygon << QPointF(X, Y);
 					GetXY(board, comp.GetRow() + comp.GetCompRows() - 1, comp.GetCol() + comp.GetCompCols() - 1, X, Y);
-					polygonF << QPointF(X, Y);
-					m_gWriter.GetStream(GFILE::GTL).AddTrack(bGap ? GPEN::TRACK_GAP : GPEN::TRACK, polygonF);
+					polygon << QPointF(X, Y);
+					m_gWriter.GetStream(GFILE::GTL).AddTrack(bGap ? GPEN::TRACK_GAP : GPEN::TRACK, polygon);
 				}
 			}
 			if ( m_bWriteGerber )

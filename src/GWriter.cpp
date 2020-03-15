@@ -440,8 +440,7 @@ std::string GStream::MilToInch(const int& iMil) const	// Just for pen sizes
 	std::string str;
 	const int inches = iMil / 1000;
 	const int remain = iMil - 1000 * inches;
-	str += std::to_string(inches);
-	str += ".";
+	str += std::to_string(inches) + ".";
 	if ( remain < 100 ) str += "0";
 	if ( remain < 10  ) str += "0";
 	str += std::to_string(remain);
@@ -449,7 +448,7 @@ std::string GStream::MilToInch(const int& iMil) const	// Just for pen sizes
 }
 
 // Wrapper for handling a set of Gerber files
-bool GWriter::Open(const char* fileName, const Board& board, const bool& bTwoLayers)
+bool GWriter::Open(const char* fileName, const Board& board, const bool& bTwoLayerGerber)
 {
 	QDateTime	local(QDateTime::currentDateTime());
 	QString		UTC = local.toTimeSpec(Qt::UTC).toString(Qt::ISODate);
@@ -458,8 +457,8 @@ bool GWriter::Open(const char* fileName, const Board& board, const bool& bTwoLay
 	bool bOK(fileName != nullptr);
 	for (int i = 0; i < NUM_STREAMS && bOK; i++)
 	{
-		if ( GFILE(i) == GFILE::GTL && !bTwoLayers ) continue;
-		if ( GFILE(i) == GFILE::GTS && !bTwoLayers ) continue;
+		if ( GFILE(i) == GFILE::GTL && !bTwoLayerGerber ) continue;
+		if ( GFILE(i) == GFILE::GTS && !bTwoLayerGerber ) continue;
 		if ( GFILE(i) == GFILE::GBO ) continue;	// Don't write this layer yet
 		bOK = m_os[i].Open(fileName, GFILE(i), board, UTC);
 	}

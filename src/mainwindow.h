@@ -126,7 +126,7 @@ public slots:
 	void ImportOrcad();
 	void WritePDF();
 	void WritePNG();
-	void WriteGerber(const bool& bTwoLayers = false);
+	void WriteGerber(const bool& bTwoLayerGerber = false);
 	void WriteGerber2() { WriteGerber(true); }
 	void ClearRecentFiles();
 	void Quit();
@@ -522,7 +522,7 @@ private:
 	bool		m_bResizingText;		// true ==> user is resizing a text rectangle
 	bool		m_bWritePDF;			// true ==> draw to PDF file instead of screen
 	bool		m_bWriteGerber;			// true ==> draw to Gerber file instead of screen
-	bool		m_bTwoLayers;			// true ==> 2-layer Gerber output instead of 1-layer
+	bool		m_bTwoLayerGerber;		// true ==> 2-layer Gerber output instead of 1-layer
 	bool		m_bHistoryDir;			// true ==> have "history" folder
 	bool		m_bTemplatesDir;		// true ==> have "templates" folder
 	int			m_XGRIDOFFSET;			// So we can centre when writing to PDF
