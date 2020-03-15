@@ -396,8 +396,7 @@ void MainWindow::HandleRouting()
 		Element* pC = m_board.Get(k, m_gridRow, m_gridCol);
 		bool bOK = ( pC->GetNodeId() == GetCurrentNodeId() );
 		// If current element has wrong NodeID, search the grid for the first element with the correct NodeID
-		const int iSize = m_board.GetSize();
-		for (int i = 0; i < iSize && !bOK; i++)
+		for (int i = 0, iSize = m_board.GetSize(); i < iSize && !bOK; i++)
 		{
 			pC = m_board.GetAt(i);
 			bOK = ( pC->GetNodeId() == GetCurrentNodeId() );

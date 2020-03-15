@@ -80,12 +80,12 @@ public:
 	const int& GetRows() const	{ return m_rows; }
 	const int& GetCols() const	{ return m_cols; }
 	int		   GetSize() const	{ return m_lyrs * m_rows * m_cols; }
-	void GetRowCol(T* p, int& row, int& col) const
+	void GetRowCol(const T* p, int& row, int& col) const
 	{
 		int lyr;	// dummy
 		GetLyrRowCol(p, lyr, row, col);
 	}
-	void GetLyrRowCol(T* p, int& lyr, int& row, int& col) const
+	void GetLyrRowCol(const T* p, int& lyr, int& row, int& col) const
 	{
 		const size_t ii		= ( p - m_pData );	assert( ii < static_cast<size_t> ( GetSize() ) );
 		const int i			= static_cast<int> (ii);

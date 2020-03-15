@@ -479,12 +479,12 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 		pA->SetW(iSlotA, pB);	// Link wire ends
 		pB->SetW(iSlotB, pA);	// Link wire ends
 
+		// Write nodeIds & flags
 		const bool bAllLyrs(true);
-		if ( pA->GetNodeId() == BAD_NODEID ) { SetNodeId(pA, wireNodeId, bAllLyrs); SetFlagBits(pA, pB->GetFlag() & (USERSET|AUTOSET|VEROSET), bAllLyrs); }	// Write nodeId & flag
-		if ( pB->GetNodeId() == BAD_NODEID ) { SetNodeId(pB, wireNodeId, bAllLyrs); SetFlagBits(pB, pA->GetFlag() & (USERSET|AUTOSET|VEROSET), bAllLyrs); }	// Write nodeId & flag
-		assert( pA->GetNodeId() == pB->GetNodeId() );	// Wire ends must have same NodeId
+		SetNodeId(pA, wireNodeId, bAllLyrs); SetFlagBits(pA, pB->GetFlag() & (USERSET|AUTOSET|VEROSET), bAllLyrs);
+		SetNodeId(pB, wireNodeId, bAllLyrs); SetFlagBits(pB, pA->GetFlag() & (USERSET|AUTOSET|VEROSET), bAllLyrs);
 
-		const char& iFlag	= pA->GetFlag();
+		const char& iFlag = pA->GetFlag();
 
 		comp.SetNodeId(0, wireNodeId);
 		comp.SetNodeId(1, wireNodeId);
@@ -499,7 +499,7 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 			{
 				Element* p = const_cast<Element*> (o.first);
 				if ( p == pA || p == pB ) continue;	// Can skip pA and pB (we've done these already)
-				if ( p->GetNodeId() == BAD_NODEID ) { SetNodeId(p, wireNodeId, bAllLyrs); SetFlagBits(p, iFlag & (USERSET|AUTOSET|VEROSET), bAllLyrs); }	// Write nodeId & flag
+				SetNodeId(p, wireNodeId, bAllLyrs); SetFlagBits(p, iFlag & (USERSET|AUTOSET|VEROSET), bAllLyrs);
 			}
 		}
 	}

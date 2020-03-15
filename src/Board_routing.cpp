@@ -531,11 +531,11 @@ void Board::Manhatten(Element* p)
 
 	m_tmpVec.resize(GetSize(), nullptr);	// Clear the set of visited points
 	m_tmpVecSize = 0;
-	
+
 	const bool			bMultiLayer	 = GetLyrs() > 1;
 	const bool			bViasEnabled = bMultiLayer && GetViasEnabled();
 	const bool			bDiagsOK	 = ( GetDiagsMode() != DIAGSMODE::OFF );
-	const unsigned int	iMaxDeltaMH	 = ( bMultiLayer ) ? MH_LVIA : bDiagsOK ? MH_DIAG : MH_LRTB;	// The max MH increment in single-layer mode depends on if diagonals are allowed
+	const unsigned int	iMaxDeltaMH	 = ( bViasEnabled ) ? MH_LVIA : bDiagsOK ? MH_DIAG : MH_LRTB;	// The max MH increment in single-layer mode depends on if diagonals are allowed
 
 	size_t jjStart(0);
 	const unsigned int RID(0);
