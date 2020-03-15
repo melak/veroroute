@@ -37,6 +37,8 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 , m_localDataPathStr(localDataPathStr.toStdString())
 , m_tutorialsPathStr(tutorialsPathStr.toStdString())
 {
+	setContextMenuPolicy(Qt::NoContextMenu);	// Prevent show/hide of docked widgets and toolbars via right mouse click
+
 	m_historyMgr.SetPathStr(m_localDataPathStr);
 	m_templateMgr.SetPathStr(m_localDataPathStr);
 
@@ -361,16 +363,9 @@ void MainWindow::ResetView(bool bTutorial)
 	UpdateWindowTitle();
 
 	if ( m_board.GetCompEdit() )
-	{
-		HidePinDialog();		// Hide pin dialog
-		HideControlDialog();	// Hide control dialog
 		ShowCompDialog();
-	}
 	else
-	{
-		HideCompDialog();		// Hide component definition dialog
 		ShowControlDialog();
-	}
 
 	if ( bTutorial ) ShowInfoDialog();			// Always show Info dialog in Tutorial Mode
 	ui->actionSave->setEnabled(!bTutorial);		// Disable "Save" in Tutorial Mode
@@ -927,19 +922,16 @@ void MainWindow::Delete()
 
 // Windows menu items
 void MainWindow::ShowDlg(QWidget* p)	{ p->showNormal();	p->raise();	p->activateWindow(); }
-void MainWindow::ShowControlDialog()	{ ShowDlg(m_dockControlDlg); }
-void MainWindow::HideControlDialog()	{ m_dockControlDlg->hide(); }
+void MainWindow::ShowControlDialog()	{ m_dockCompDlg->hide();	ShowDlg(m_dockControlDlg); }
 void MainWindow::ShowRenderingDialog()	{ ShowDlg(m_renderingDlg); }
 void MainWindow::ShowWireDialog()		{ ShowDlg(m_wireDlg); }
 void MainWindow::ShowHotkeysDialog()	{ ShowDlg(m_hotkeysDlg); }
 void MainWindow::ShowInfoDialog()		{ ShowDlg(m_infoDlg); }
-void MainWindow::ShowCompDialog()		{ ShowDlg(m_dockCompDlg); }
-void MainWindow::HideCompDialog()		{ m_dockCompDlg->hide(); }
+void MainWindow::ShowCompDialog()		{ m_dockControlDlg->hide(); m_pinDlg->hide();	ShowDlg(m_dockCompDlg); }
 void MainWindow::ShowTextDialog()		{ ShowDlg(m_textDlg); }
 void MainWindow::ShowBomDialog()		{ UpdateBOM();				ShowDlg(m_bomDlg); }
 void MainWindow::ShowTemplatesDialog()	{ UpdateTemplatesDialog();	ShowDlg(m_templatesDlg); }
 void MainWindow::ShowPinDialog()		{ m_pinDlg->Update();		ShowDlg(m_pinDlg); }
-void MainWindow::HidePinDialog()		{ m_pinDlg->hide(); }
 
 // Layers menu items
 void MainWindow::AddLayer()
@@ -1512,15 +1504,12 @@ void MainWindow::DefinerToggleEditor()
 			if ( !comp.GetShapes().empty() )
 				GetCompDefiner().Populate( comp );
 		}
-		HidePinDialog();		// Hide pin dialog
-		HideControlDialog();	// Hide control dialog
-		UpdateCompDialog();		// Show component definition dialog
-		ShowCompDialog();
+		UpdateCompDialog();
+		ShowCompDialog();		// Show component definition dialog
 		UpdateHistory("Open component editor");
 	}
 	else
 	{
-		HideCompDialog();		// Hide component definition dialog
 		ShowControlDialog();	// Show control dialog
 		UpdateHistory("Close component editor");
 	}

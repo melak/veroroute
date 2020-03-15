@@ -212,18 +212,15 @@ public slots:
 	}
 	// Windows menu items
 	void ShowControlDialog();
-	void HideControlDialog();
 	void ShowTemplatesDialog();
 	void ShowRenderingDialog();
 	void ShowWireDialog();
 	void ShowHotkeysDialog();
 	void ShowInfoDialog();
 	void ShowCompDialog();
-	void HideCompDialog();
 	void ShowTextDialog();
 	void ShowBomDialog();
 	void ShowPinDialog();
-	void HidePinDialog();
 	void ShowAbout();
 	void ShowSupport();
 	// Layers menu items

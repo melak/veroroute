@@ -84,16 +84,6 @@ void CompDialog::SetMainWindow(MainWindow* p)
 	QObject::connect(ui->pushButton_Build,	SIGNAL(clicked()),							m_pMainWindow,	SLOT(DefinerBuild()));
 }
 
-void CompDialog::paintEvent(QPaintEvent* event)
-{
-	if ( !m_pMainWindow->m_board.GetCompEdit() )	// Prevent both dialogs appearing at same time
-	{
-		m_pMainWindow->HideCompDialog();
-		return event->accept();
-	}
-	QWidget::paintEvent(event);
-}
-
 bool CompDialog::eventFilter(QObject* object, QEvent* event)
 {
 	if ( event->type() == QEvent::Wheel && qobject_cast<QAbstractSpinBox*>( object ) )
