@@ -365,6 +365,7 @@ private:
 	void PaintPadGrey(const GuiControl& guiCtrl, QPainter& painter, const QPointF& pC, const int& iLyr);
 	void PaintVia(const GuiControl& guiCtrl, QPainter& painter,  const QColor& color, const QPointF& pC, const bool& bGap = false);	// Helper
 	void PaintPad(const GuiControl& guiCtrl, QPainter& painter,  const QColor& color, const QPointF& pC, const bool& bGap = false);	// Helper
+	void PaintTag(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, const int& iNbr, const int& iLyr);
 	void PaintDiag(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pCorner, bool bLT);
 	void PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, const int& iPerimeterCode, const bool bGap = false);	// Helper
 	void PaintBoard();

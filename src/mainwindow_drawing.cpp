@@ -181,6 +181,47 @@ void MainWindow::PaintPad(const GuiControl& guiCtrl, QPainter& painter, const QC
 	}
 }
 
+void MainWindow::PaintTag(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, const int& iNbr, const int& iLyr)
+{
+	// Paints a short tag connecting a pad to the ground fill
+	const int X = guiCtrl.GetHalfPadWidth() + guiCtrl.GetGapWidth();
+	const int D = (int) ( X * sqrt(0.5) );
+	QPointF pD;	// The other end of the tag
+	switch( iNbr)
+	{
+		case NBR_L:		pD = pC + QPointF(-X,  0);	break;
+		case NBR_LT:	pD = pC + QPointF(-D, -D);	break;
+		case NBR_T:		pD = pC + QPointF( 0, -X);	break;
+		case NBR_RT:	pD = pC + QPointF( D, -D);	break;
+		case NBR_R:		pD = pC + QPointF( X,  0);	break;
+		case NBR_RB:	pD = pC + QPointF( D,  D);	break;
+		case NBR_B:		pD = pC + QPointF( 0,  X);	break;
+		case NBR_LB:	pD = pC + QPointF(-D,  D);	break;
+	}
+	if ( m_bWriteGerber )
+	{
+		QPolygonF polygon;
+		polygon.clear();
+		polygon.push_back(pC);
+		polygon.push_back(pD);
+		switch(iLyr)
+		{
+			case 0:	m_gWriter.GetStream(GFILE::GBL).AddTrack(GPEN::TRACK, polygon); break;	// Bottom copper layer
+			case 1:	m_gWriter.GetStream(GFILE::GTL).AddTrack(GPEN::TRACK, polygon); break;	// Top    copper layer
+		}
+	}
+	else
+	{
+		const int trackWidth = ( guiCtrl.GetHalfTrackWidth() ) << 1;
+		static QPen	pen(Qt::black, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+		pen.setColor(color);
+		pen.setWidth(trackWidth);
+		painter.setPen(pen);
+		painter.setBrush(Qt::NoBrush);
+		painter.drawLine(pC, pD);
+	}
+}
+
 void MainWindow::PaintDiag(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pCorner, bool bLT)
 {
 	const int&	H			= m_radPixmapDiag;
@@ -930,6 +971,21 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						PaintBlob(board, painter, color, pCentre, iPerimeterCode);	// Draw track blob
 						if ( bVia ) PaintVia(board, painter, color, pCentre);		// Draw via same color as track
 						if ( bPad ) PaintPad(board, painter, color, pCentre);		// Draw pad same color as track
+						if ( bPad && nodeId == groundNodeId )						// Draw therml relief tags
+						{
+							int iCode(iPerimeterCode);		// Take a copy of the perimeter code
+							for (int iDiag = 0, iDiagMax = ( bDiagsOK ) ? 2 : 1; iDiag < iDiagMax; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
+							for (int iNbr = iDiag; iNbr < 8; iNbr += 2)	// Even/Odd iNbr ==> Non-diagonal/Diagonal
+							{
+								const Element* pNbr = pC->GetNbr(iNbr);
+								if ( pNbr->GetNodeId() != BAD_NODEID ) continue;	// Skip if direction is not empty
+								if ( pC->IsBlocked(iNbr, nodeId) ) continue;		// Skip is direction is blocked
+								if ( ReadCodeBit((iNbr+1)%8 , iCode) ) continue;	// Skip if adjacent CW  direction already has connection
+								if ( ReadCodeBit((iNbr+7)%8, iCode) ) continue;		// Skip if adjacent CCW direction already has connection
+								SetCodeBit(iNbr, iCode);	// Update the copy of the perimeter code
+								PaintTag(board, painter, color, pCentre, iNbr, layer);	// Draw tag to ground fill
+							}
+						}
 					}
 					else if ( bDrawGrey )
 					{
@@ -1424,23 +1480,13 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			painter.setPen(Qt::NoPen);
 			painter.setBrush(m_varBrush);
 
-			const int&	rowTL		= trax.GetRow();
-			const int&	colTL		= trax.GetCol();
-			const int&	compCols	= trax.GetCompCols();
-			const int&	compRows	= trax.GetCompRows();
-			int jRow(rowTL);
-			for (int j = 0; j < compRows; j++, jRow++)
-			{
-				int iCol(colTL);
-				for (int i = 0; i < compCols; i++, iCol++)
+			for (int j = 0, jRow = trax.GetRow(), compRows = trax.GetCompRows(); j < compRows; j++, jRow++)
+			for (int i = 0, iCol = trax.GetCol(), compCols = trax.GetCompCols(); i < compCols; i++, iCol++)
+				if ( trax.GetCompElement(j, i)->ReadFlagBits(RECTSET) )
 				{
-					if ( trax.GetCompElement(j, i)->ReadFlagBits(RECTSET) )
-					{
-						GetLRTB(board, 100, jRow, iCol, L, R, T, B);	// 100% size square
-						painter.drawRect(L,T,R-L,B-T);
-					}
+					GetLRTB(board, 100, jRow, iCol, L, R, T, B);	// 100% size square
+					painter.drawRect(L,T,R-L,B-T);
 				}
-			}
 		}
 	}
 
