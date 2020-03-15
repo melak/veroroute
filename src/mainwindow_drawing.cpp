@@ -524,11 +524,7 @@ void MainWindow::PaintCompDefiner()	// The paint method in "component editor mod
 
 	SetQuality(painter);
 
-	const QColor backgroundColor = GetBackgroundColor();
-	m_backgroundPen.setColor(backgroundColor);
-	m_backgroundBrush.setColor(backgroundColor);
-
-	painter.fillRect(m_XGRIDOFFSET, m_YGRIDOFFSET, reqWidth, reqHeight, backgroundColor);
+	painter.fillRect(m_XGRIDOFFSET, m_YGRIDOFFSET, reqWidth, reqHeight, Qt::white);
 
 	m_blackPen.setWidth(0);
 	m_whitePen.setWidth(0);
@@ -552,7 +548,6 @@ void MainWindow::PaintCompDefiner()	// The paint method in "component editor mod
 	// Draw shapes ===============================================================================
 	painter.save();
 	painter.translate(AXIS_X, AXIS_Y);
-
 	for (const auto& mapObj : def.GetShapes() )
 	{
 		const Shape& s = mapObj.second;
@@ -657,7 +652,6 @@ void MainWindow::PaintCompDefiner()	// The paint method in "component editor mod
 		}
 		painter.restore();
 	}
-
 	painter.end();
 }
 
@@ -833,7 +827,6 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	if ( bPCB || trackMode != TRACKMODE::OFF )	// Force tracks in PCB mode
 	{
 		painter.save();
-
 		const bool	bGreyPads	= bPCB && !m_bWriteGerber;
 		const int	numLoops	= ( ( bPixmapCache || bGroundFill ) ? 2 : 1 ) + ( bGreyPads ? 1 : 0);
 		// bGroundFill		==> 1st pass draws fat tracks in white, 2nd pass draws tracks
