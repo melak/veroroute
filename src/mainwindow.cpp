@@ -1657,20 +1657,20 @@ void MainWindow::UpdateControls()
 		ui->actionDelete->setText("Delete Selected Part(s) / Text Box");
 
 	ui->actionCrop->setEnabled( !bCompEdit );
-	ui->actionTextBox->setEnabled( !bCompEdit && m_board.GetShowText() );
+	ui->actionTextBox->setEnabled( !bCompEdit && !bPCB && m_board.GetShowText() );
 	ui->actionZoom_In->setEnabled( CanZoomIn() );
 	ui->actionZoom_Out->setEnabled( CanZoomOut() ) ;
-	ui->actionToggleText->setEnabled(  !bCompEdit );
-	ui->actionToggleFlipH->setEnabled( !bCompEdit );
-	ui->actionToggleFlipV->setEnabled( !bCompEdit );
+	ui->actionToggleText->setEnabled(  !bCompEdit && !bPCB );
+	ui->actionToggleFlipH->setEnabled( !bCompEdit && !bPCB );
+	ui->actionToggleFlipV->setEnabled( !bCompEdit && !bPCB );
 	ui->actionTogglePinLabels->setEnabled( !bCompEdit
 											&& m_board.GetCompMode()  != COMPSMODE::OFF
 											&& m_board.GetTrackMode() != TRACKMODE::MONO
 											&& m_board.GetTrackMode() != TRACKMODE::PCB	);
 	ui->actionToggleGrid->setChecked( m_board.GetShowGrid() );
-	ui->actionToggleText->setChecked( m_board.GetShowText() );
-	ui->actionToggleFlipH->setChecked( m_board.GetFlipH() );
-	ui->actionToggleFlipV->setChecked( m_board.GetFlipV() );
+	ui->actionToggleText->setChecked( m_board.GetShowText() && !bCompEdit && !bPCB);
+	ui->actionToggleFlipH->setChecked( m_board.GetFlipH()   && !bCompEdit && !bPCB);
+	ui->actionToggleFlipV->setChecked( m_board.GetFlipV()   && !bCompEdit && !bPCB);
 	ui->actionTogglePinLabels->setChecked( m_board.GetShowPinLabels() );
 
 	ui->actionPinDlg->setEnabled( !bCompEdit );
