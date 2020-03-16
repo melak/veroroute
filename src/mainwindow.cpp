@@ -788,7 +788,7 @@ void MainWindow::ZoomHelper(int delta)	// delta == change in GRIDPIXELS
 
 	DestroyPixmapCache();
 	UpdateControls();
-	RepaintSkipRouting();
+	RepaintSkipRouting(true);
 
 	// Try to have same grid position under mouse after zoom
 	pH->setValue(L + X * delta * 1.0 / W);
