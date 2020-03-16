@@ -723,9 +723,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	}
 	else if ( m_bWriteGerber )
 	{
-		assert( bPCB );
-		if ( board.GetFlipH() || board.GetFlipV() ) return;		// No mirrored Gerber
-
+		assert( bPCB && !board.GetMirrored() );
 		auto& os = m_gWriter.GetStream(GFILE::GTO);	// Top silk layer
 		os.SetPolarity(GPOLARITY::DARK);
 		os.ClearBuffers();
@@ -743,20 +741,16 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		painter.begin(&m_mainPixmap);	// Paint to main pixmap
 	}
 
-	if ( !bPCB )
+	SetQuality(painter);
+	if ( board.GetFlipH() )
 	{
-		SetQuality(painter);
-
-		if ( board.GetFlipH() )
-		{
-			painter.translate(2*m_XGRIDOFFSET + W * board.GetCols(), 0);
-			painter.scale(-1, 1);	// Mirror L-R
-		}
-		if ( board.GetFlipV() )
-		{
-			painter.translate(0, 2*m_YGRIDOFFSET + W * board.GetRows());
-			painter.scale(1, -1);	// Mirror T-B
-		}
+		painter.translate(2*m_XGRIDOFFSET + W * board.GetCols(), 0);
+		painter.scale(-1, 1);	// Mirror L-R
+	}
+	if ( board.GetFlipV() )
+	{
+		painter.translate(0, 2*m_YGRIDOFFSET + W * board.GetRows());
+		painter.scale(1, -1);	// Mirror T-B
 	}
 
 	const QColor backgroundColor = ( m_bWritePDF ) ? Qt::white : GetBackgroundColor();
