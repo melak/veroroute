@@ -18,15 +18,16 @@ display version information and exit
 .BR \-p " " \fIPATH\fR
 specify the path to the 'tutorials' directory.
 .RS
-By default the application looks in a location relative to the binary.
+By default the application looks in the same location as the binary.
+If not found, then it tries a location relative to the binary.
 .RE
 .RS
 For example, if the veroroute binary is in
-     ~/sandbox/bin/
+     ~/sandbox/usr/bin/
 .RE
 .RS
 then it will look for the 'tutorials' directory in
-      ~/sandbox/share/veroroute/
+     ~/sandbox/usr/share/veroroute/
 .RE
 .RS
 If not found in the relative location, it will look for the 'tutorials' directory in
