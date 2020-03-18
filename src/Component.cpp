@@ -326,17 +326,18 @@ void Component::SetDefaultLabelOffsets()
 	m_iLabelOffsetCol = 0;
 	switch( GetType() )
 	{
-//		case COMP::PAD:					m_iLabelOffsetRow = 14;	return;
-		case COMP::LED:					m_iLabelOffsetRow = 8;	return;
+//		case COMP::PAD:					m_iLabelOffsetRow =  14;	return;
+		case COMP::LED:					m_iLabelOffsetRow =   8;	return;
 		case COMP::CRYSTAL:
 		case COMP::CAP_ELECTRO_200:
-		case COMP::CAP_ELECTRO_200_NP:	m_iLabelOffsetRow = 10;	return;
+		case COMP::CAP_ELECTRO_200_NP:	m_iLabelOffsetRow =  10;	return;
 		case COMP::CAP_ELECTRO_250:
-		case COMP::CAP_ELECTRO_250_NP:	m_iLabelOffsetRow = 11;	return;
-		case COMP::STRIP_100:			m_iLabelOffsetRow = 14;	return;
-		case COMP::BLOCK_100:			m_iLabelOffsetRow = 30;	return;
-		case COMP::BLOCK_200:			m_iLabelOffsetRow = 30;	return;
-		default:						m_iLabelOffsetRow = 0;
+		case COMP::CAP_ELECTRO_250_NP:	m_iLabelOffsetRow =  11;	return;
+		case COMP::TRIM_3329H:			m_iLabelOffsetRow = -11;	return;
+		case COMP::STRIP_100:			m_iLabelOffsetRow =  14;	return;
+		case COMP::BLOCK_100:			m_iLabelOffsetRow =  30;	return;
+		case COMP::BLOCK_200:			m_iLabelOffsetRow =  30;	return;
+		default:						m_iLabelOffsetRow =   0;
 	}
 }
 
