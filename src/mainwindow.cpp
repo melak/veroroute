@@ -1613,9 +1613,11 @@ void MainWindow::UpdateControls()
 	const bool		bTextActionsOK	= !bCompEdit && !m_board.GetMirrored() && ( m_board.GetShowText() );
 	const bool		bTextOK			=  bTextActionsOK && GetCurrentTextId() != BAD_TEXTID;
 	const bool		bCompOK			=  bCompActionsOK && groupMgr.GetNumUserComps();
+	const bool		bNoTracks		= !bCompEdit && m_board.GetTrackMode() == TRACKMODE::OFF;
 	const bool		bMono			= !bCompEdit && m_board.GetTrackMode() == TRACKMODE::MONO;
+	const bool		bColor			= !bCompEdit && m_board.GetTrackMode() == TRACKMODE::COLOR;
 	const bool		bPCB			= !bCompEdit && m_board.GetTrackMode() == TRACKMODE::PCB;
-	const bool		bTracks			= !bCompEdit && m_board.GetTrackMode() != TRACKMODE::OFF;
+	const bool		bTracks			= bMono || bColor || bPCB;
 	const bool		bVeroV			=  m_board.GetVeroTracks() &&  m_board.GetVerticalStrips();
 	const bool		bVeroH			=  m_board.GetVeroTracks() && !m_board.GetVerticalStrips();
 	const bool		bFat			= !m_board.GetVeroTracks() && !m_board.GetCurvedTracks() &&  m_board.GetFatTracks();
@@ -1664,15 +1666,13 @@ void MainWindow::UpdateControls()
 	ui->actionToggleText->setEnabled(  !bCompEdit && !bPCB );
 	ui->actionToggleFlipH->setEnabled( !bCompEdit );
 	ui->actionToggleFlipV->setEnabled( !bCompEdit );
-	ui->actionTogglePinLabels->setEnabled( !bCompEdit
-											&& m_board.GetCompMode()  != COMPSMODE::OFF
-											&& m_board.GetTrackMode() != TRACKMODE::MONO
-											&& m_board.GetTrackMode() != TRACKMODE::PCB	);
+	const bool bPinLabels = m_board.GetCompMode() != COMPSMODE::OFF && ( bNoTracks || bColor );
+	ui->actionTogglePinLabels->setEnabled( bPinLabels );
 	ui->actionToggleGrid->setChecked( m_board.GetShowGrid() && !bPCB );
 	ui->actionToggleText->setChecked( m_board.GetShowText() && !bCompEdit && !bPCB );
 	ui->actionToggleFlipH->setChecked( m_board.GetFlipH()   && !bCompEdit );
 	ui->actionToggleFlipV->setChecked( m_board.GetFlipV()   && !bCompEdit );
-	ui->actionTogglePinLabels->setChecked( m_board.GetShowPinLabels() );
+	ui->actionTogglePinLabels->setChecked( m_board.GetShowPinLabels() && bPinLabels );
 
 	ui->actionPinDlg->setEnabled( !bCompEdit );
 	ui->actionControlDlg->setEnabled( !bCompEdit );
