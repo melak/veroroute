@@ -1599,7 +1599,7 @@ void MainWindow::UpdateWindowTitle()
 	if ( !bCompEdit )
 	{
 		char buffer[256] = {'\0'};
-		sprintf(buffer, "    (%d x %d)     (%gmm x %gmm)     Layer %d/%d", m_board.GetRows(), m_board.GetCols(), m_board.GetRows()*2.54, m_board.GetCols()*2.54, m_board.GetCurrentLayer() + 1, m_board.GetLyrs());
+		sprintf(buffer, "    (%d x %d)     (%gmm x %gmm)", m_board.GetRows(), m_board.GetCols(), m_board.GetRows()*2.54, m_board.GetCols()*2.54);
 		title += buffer;
 	}
 	setWindowTitle(title);
@@ -1635,6 +1635,7 @@ void MainWindow::UpdateControls()
 	ui->actionToggleVias->setText(		m_board.GetLyrs() != 1 && m_board.GetViasEnabled() ? QString("Disable Vias") : QString("Enable Vias") );
 	ui->actionSwitchLayer->setText(		m_board.GetCurrentLayer() == 0 ? QString("Switch to Top Layer") : QString("Switch to Bottom Layer") );
 	ui->actionSwitchLayer->setIcon(		m_board.GetCurrentLayer() == 0 ? QIcon(":/images/layertop.png") : QIcon(":/images/layerbot.png"));
+	if ( bCompEdit ) m_labelStatus->hide(); else m_labelStatus->show();
 	m_labelStatus->setText(m_board.GetCurrentLayer() == 0 ? QString("   Layer = Bottom   ") : QString("   Layer = Top   "));
 
 	ui->actionCopy->setEnabled( bTextOK || bCompOK );
