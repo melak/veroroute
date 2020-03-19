@@ -362,6 +362,9 @@
      <height>24</height>
     </rect>
    </property>
+   <property name="toolTip">
+    <string>Mouse wheel for small change. CTRL + mouse wheel for large change</string>
+   </property>
    <property name="minimum">
     <number>0</number>
    </property>
@@ -518,6 +521,9 @@
      <height>24</height>
     </rect>
    </property>
+   <property name="toolTip">
+    <string>Mouse wheel for small change. CTRL + mouse wheel for large change</string>
+   </property>
    <property name="decimals">
     <number>2</number>
    </property>
@@ -528,7 +534,7 @@
     <double>100.000000000000000</double>
    </property>
    <property name="singleStep">
-    <double>0.050000000000000</double>
+    <double>0.010000000000000</double>
    </property>
   </widget>
   <widget class="QDoubleSpinBox" name="doubleSpinBox_A1">
@@ -540,6 +546,9 @@
      <height>24</height>
     </rect>
    </property>
+   <property name="toolTip">
+    <string>Mouse wheel for small change. CTRL + mouse wheel for large change</string>
+   </property>
    <property name="decimals">
     <number>0</number>
    </property>
@@ -550,7 +559,7 @@
     <double>360.000000000000000</double>
    </property>
    <property name="singleStep">
-    <double>5.000000000000000</double>
+    <double>1.000000000000000</double>
    </property>
   </widget>
   <widget class="QLabel" name="label_A3">
@@ -610,6 +619,9 @@
      <height>24</height>
     </rect>
    </property>
+   <property name="toolTip">
+    <string>Mouse wheel for small change. CTRL + mouse wheel for large change</string>
+   </property>
    <property name="decimals">
     <number>0</number>
    </property>
@@ -620,7 +632,7 @@
     <double>360.000000000000000</double>
    </property>
    <property name="singleStep">
-    <double>5.000000000000000</double>
+    <double>1.000000000000000</double>
    </property>
   </widget>
   <widget class="QDoubleSpinBox" name="doubleSpinBox_DX">
@@ -632,6 +644,9 @@
      <height>24</height>
     </rect>
    </property>
+   <property name="toolTip">
+    <string>Mouse wheel for small change. CTRL + mouse wheel for large change</string>
+   </property>
    <property name="decimals">
     <number>2</number>
    </property>
@@ -642,7 +657,7 @@
     <double>100.000000000000000</double>
    </property>
    <property name="singleStep">
-    <double>0.050000000000000</double>
+    <double>0.010000000000000</double>
    </property>
   </widget>
   <widget class="QComboBox" name="comboBox_Shape">
@@ -749,6 +764,9 @@
      <height>24</height>
     </rect>
    </property>
+   <property name="toolTip">
+    <string>Mouse wheel for small change. CTRL + mouse wheel for large change</string>
+   </property>
    <property name="decimals">
     <number>2</number>
    </property>
@@ -759,7 +777,7 @@
     <double>100.000000000000000</double>
    </property>
    <property name="singleStep">
-    <double>0.050000000000000</double>
+    <double>0.010000000000000</double>
    </property>
   </widget>
   <widget class="QLabel" name="label_units_8">
@@ -803,6 +821,9 @@
      <height>24</height>
     </rect>
    </property>
+   <property name="toolTip">
+    <string>Mouse wheel for small change. CTRL + mouse wheel for large change</string>
+   </property>
    <property name="decimals">
     <number>2</number>
    </property>
@@ -813,7 +834,7 @@
     <double>100.000000000000000</double>
    </property>
    <property name="singleStep">
-    <double>0.050000000000000</double>
+    <double>0.010000000000000</double>
    </property>
   </widget>
   <widget class="QDoubleSpinBox" name="doubleSpinBox_A3">
@@ -825,6 +846,9 @@
      <height>24</height>
     </rect>
    </property>
+   <property name="toolTip">
+    <string>Mouse wheel for small change. CTRL + mouse wheel for large change</string>
+   </property>
    <property name="decimals">
     <number>0</number>
    </property>
@@ -835,7 +859,7 @@
     <double>360.000000000000000</double>
    </property>
    <property name="singleStep">
-    <double>5.000000000000000</double>
+    <double>1.000000000000000</double>
    </property>
   </widget>
   <widget class="QPushButton" name="pushButtonU">
