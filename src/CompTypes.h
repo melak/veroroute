@@ -59,6 +59,11 @@ enum class COMP {	INVALID					=   -1,
 					TRIM_3006Y				= 1453,
 					TRIM_3329H				= 1460,
 					TRIM_3329P_DK9_RC		= 1465,
+					TRIM_3362F				= 1470,
+					TRIM_3362H				= 1471,
+					TRIM_3362P				= 1472,
+					TRIM_3362R				= 1473,
+					TRIM_3362U				= 1474,
 					SIP						= 1500,
 					DIP						= 1600,
 					DIP_RECTIFIER			= 1620,
@@ -94,68 +99,73 @@ static int GetListOrder(const COMP& eType)	// For dialogs/menus.  Lower number =
 {
 	switch( eType )
 	{
-		case COMP::PAD					: return 1;
-		case COMP::WIRE					: return 2;
-		case COMP::RESISTOR				: return 3;
-		case COMP::INDUCTOR				: return 4;
-		case COMP::CAP_CERAMIC			:
-		case COMP::CAP_FILM				:
-		case COMP::CAP_FILM_WIDE		: return 5;
-		case COMP::CAP_ELECTRO_200		:
-		case COMP::CAP_ELECTRO_250		:
-		case COMP::CAP_ELECTRO_300		:
-		case COMP::CAP_ELECTRO_400		:
-		case COMP::CAP_ELECTRO_500		:
-		case COMP::CAP_ELECTRO_600		: return 6;
-		case COMP::CAP_ELECTRO_200_NP	:
-		case COMP::CAP_ELECTRO_250_NP	:
-		case COMP::CAP_ELECTRO_300_NP	:
-		case COMP::CAP_ELECTRO_400_NP	:
-		case COMP::CAP_ELECTRO_500_NP	:
-		case COMP::CAP_ELECTRO_600_NP	: return 7;
-		case COMP::TRIM_VERT			:
-		case COMP::TRIM_VERT_OFFSET		:
+		case COMP::PAD:					return 1;
+		case COMP::WIRE:				return 2;
+		case COMP::RESISTOR:			return 3;
+		case COMP::INDUCTOR:			return 4;
+		case COMP::CAP_CERAMIC:
+		case COMP::CAP_FILM:
+		case COMP::CAP_FILM_WIDE:		return 5;
+		case COMP::CAP_ELECTRO_200:
+		case COMP::CAP_ELECTRO_250:
+		case COMP::CAP_ELECTRO_300:
+		case COMP::CAP_ELECTRO_400:
+		case COMP::CAP_ELECTRO_500:
+		case COMP::CAP_ELECTRO_600:		return 6;
+		case COMP::CAP_ELECTRO_200_NP:
+		case COMP::CAP_ELECTRO_250_NP:
+		case COMP::CAP_ELECTRO_300_NP:
+		case COMP::CAP_ELECTRO_400_NP:
+		case COMP::CAP_ELECTRO_500_NP:
+		case COMP::CAP_ELECTRO_600_NP:	return 7;
+		case COMP::TRIM_VERT:
+		case COMP::TRIM_VERT_OFFSET:
 		case COMP::TRIM_VERT_OFFSET_WIDE:
-		case COMP::TRIM_FLAT			:
-		case COMP::TRIM_FLAT_WIDE		:
-		case COMP::TRIM_3006P			:
-		case COMP::TRIM_3006W			:
-		case COMP::TRIM_3006Y			:
-		case COMP::TRIM_3329H			:
-		case COMP::TRIM_3329P_DK9_RC	: return 8;
-		case COMP::DIODE				:
-		case COMP::LED					: return 10;
-		case COMP::TO92					:
-		case COMP::TO18					:
-		case COMP::TO39					:
-		case COMP::TO220				: return 11;
-		case COMP::DIP					: return 12;
-		case COMP::DIP_RECTIFIER		: return 13;
-		case COMP::SIP					: return 14;
-		case COMP::STRIP_100			:
-		case COMP::BLOCK_100			:
-		case COMP::BLOCK_200			: return 15;
-		case COMP::SWITCH_ST			:
-		case COMP::SWITCH_DT			:
-		case COMP::SWITCH_ST_DIP		:
-		case COMP::SWITCH_BUTTON_4PIN	: return 16;
-		case COMP::CRYSTAL				: return 9;
-		case COMP::RELAY_HK19F			:
-		case COMP::RELAY_HJR_4102		:
-		case COMP::RELAY_FTR_B3C		:
-		case COMP::RELAY_G2R_2			:
-		case COMP::RELAY_G2R_2A			:
-		case COMP::RELAY_G2RK_2			:
-		case COMP::RELAY_G2RK_2A		:
-		case COMP::RELAY_G3MB_202P		:
-		case COMP::RELAY_JQC_3F_APPROX	:
-		case COMP::RELAY_S1A050000		:
-		case COMP::RELAY_TRCD			:
-		case COMP::RELAY_DIP_4PIN		:
-		case COMP::RELAY_DIP_8PIN		: return 17;
-		case COMP::FUSE_HOLDER			: return 18;
-		case COMP::MARK					: return 100;
-		default							: return 1000;	// Unhandled eType
+		case COMP::TRIM_FLAT:
+		case COMP::TRIM_FLAT_WIDE:
+		case COMP::TRIM_3006P:
+		case COMP::TRIM_3006W:
+		case COMP::TRIM_3006Y:
+		case COMP::TRIM_3329H:
+		case COMP::TRIM_3329P_DK9_RC:
+		case COMP::TRIM_3362F:
+		case COMP::TRIM_3362H:
+		case COMP::TRIM_3362P:
+		case COMP::TRIM_3362R:
+		case COMP::TRIM_3362U:			return 8;
+		case COMP::DIODE:
+		case COMP::LED:					return 10;
+		case COMP::TO92:
+		case COMP::TO18:
+		case COMP::TO39:
+		case COMP::TO220:				return 11;
+		case COMP::DIP:					return 12;
+		case COMP::DIP_RECTIFIER:		return 13;
+		case COMP::SIP:					return 14;
+		case COMP::STRIP_100:
+		case COMP::BLOCK_100:
+		case COMP::BLOCK_200:			return 15;
+		case COMP::SWITCH_ST:
+		case COMP::SWITCH_DT:
+		case COMP::SWITCH_ST_DIP:
+		case COMP::SWITCH_BUTTON_4PIN:	return 16;
+		case COMP::CRYSTAL:				return 9;
+		case COMP::RELAY_HK19F:
+		case COMP::RELAY_HJR_4102:
+		case COMP::RELAY_FTR_B3C:
+		case COMP::RELAY_G2R_2:
+		case COMP::RELAY_G2R_2A:
+		case COMP::RELAY_G2RK_2:
+		case COMP::RELAY_G2RK_2A:
+		case COMP::RELAY_G3MB_202P:
+		case COMP::RELAY_JQC_3F_APPROX:
+		case COMP::RELAY_S1A050000:
+		case COMP::RELAY_TRCD:
+		case COMP::RELAY_DIP_4PIN:
+		case COMP::RELAY_DIP_8PIN:		return 17;
+		case COMP::FUSE_HOLDER:			return 18;
+		case COMP::MARK:				return 100;
+		default:						return 1000;	// Unhandled eType
 	}
 }
 
@@ -223,6 +233,11 @@ static void InitMapsCompTypeToStr()
 	UpdateMaps(COMP::TRIM_3006Y,			"Bourns 3006Y",					"TRIM_3006Y");
 	UpdateMaps(COMP::TRIM_3329H,			"Bourns 3329H",					"TRIM_3329H");
 	UpdateMaps(COMP::TRIM_3329P_DK9_RC,		"Bourns 3329P-DK9-RC",			"TRIM_3329P_DK9_RC");
+	UpdateMaps(COMP::TRIM_3362F,			"Bourns 3362F",					"TRIM_3362F");
+	UpdateMaps(COMP::TRIM_3362H,			"Bourns 3362H",					"TRIM_3362H");
+	UpdateMaps(COMP::TRIM_3362P,			"Bourns 3362P",					"TRIM_3362P");
+	UpdateMaps(COMP::TRIM_3362R,			"Bourns 3362R",					"TRIM_3362R");
+	UpdateMaps(COMP::TRIM_3362U,			"Bourns 3362U",					"TRIM_3362U");
 	UpdateMaps(COMP::SIP,					"SIP",							"SIP");
 	UpdateMaps(COMP::DIP,					"DIP",							"DIP");
 	UpdateMaps(COMP::DIP_RECTIFIER,			"DIP (Rectifier)",				"DIP_RECTIFIER");
@@ -289,52 +304,57 @@ static std::string GetFamilyStr(const COMP& eType)	// For grouping in the templa
 {
 	switch( eType )
 	{
-		case COMP::CAP_CERAMIC			:
-		case COMP::CAP_FILM				:
-		case COMP::CAP_FILM_WIDE		:
-		case COMP::CAP_ELECTRO_200_NP	:
-		case COMP::CAP_ELECTRO_250_NP	:
-		case COMP::CAP_ELECTRO_300_NP	:
-		case COMP::CAP_ELECTRO_400_NP	:
-		case COMP::CAP_ELECTRO_500_NP	:
-		case COMP::CAP_ELECTRO_600_NP	:
-		case COMP::CAP_ELECTRO_200		:
-		case COMP::CAP_ELECTRO_250		:
-		case COMP::CAP_ELECTRO_300		:
-		case COMP::CAP_ELECTRO_400		:
-		case COMP::CAP_ELECTRO_500		:
-		case COMP::CAP_ELECTRO_600		: return "Capacitor";
-		case COMP::TRIM_VERT			:
-		case COMP::TRIM_VERT_OFFSET		:
+		case COMP::CAP_CERAMIC:
+		case COMP::CAP_FILM:
+		case COMP::CAP_FILM_WIDE:
+		case COMP::CAP_ELECTRO_200_NP:
+		case COMP::CAP_ELECTRO_250_NP:
+		case COMP::CAP_ELECTRO_300_NP:
+		case COMP::CAP_ELECTRO_400_NP:
+		case COMP::CAP_ELECTRO_500_NP:
+		case COMP::CAP_ELECTRO_600_NP:
+		case COMP::CAP_ELECTRO_200:
+		case COMP::CAP_ELECTRO_250:
+		case COMP::CAP_ELECTRO_300:
+		case COMP::CAP_ELECTRO_400:
+		case COMP::CAP_ELECTRO_500:
+		case COMP::CAP_ELECTRO_600:		return "Capacitor";
+		case COMP::TRIM_VERT:
+		case COMP::TRIM_VERT_OFFSET:
 		case COMP::TRIM_VERT_OFFSET_WIDE:
-		case COMP::TRIM_FLAT			:
-		case COMP::TRIM_FLAT_WIDE		:
-		case COMP::TRIM_3006P			:
-		case COMP::TRIM_3006W			:
-		case COMP::TRIM_3006Y			:
-		case COMP::TRIM_3329H			:
-		case COMP::TRIM_3329P_DK9_RC	: return "Trim-pot";
-		case COMP::STRIP_100			:
-		case COMP::BLOCK_100			:
-		case COMP::BLOCK_200			: return "Connector";
-		case COMP::SWITCH_ST			:
-		case COMP::SWITCH_DT			:
-		case COMP::SWITCH_ST_DIP		:
-		case COMP::SWITCH_BUTTON_4PIN	: return "Switch";
-		case COMP::RELAY_HK19F			:
-		case COMP::RELAY_HJR_4102		:
-		case COMP::RELAY_FTR_B3C		:
-		case COMP::RELAY_G2R_2			:
-		case COMP::RELAY_G2R_2A			:
-		case COMP::RELAY_G2RK_2			:
-		case COMP::RELAY_G2RK_2A		:
-		case COMP::RELAY_G3MB_202P		:
-		case COMP::RELAY_JQC_3F_APPROX	:
-		case COMP::RELAY_S1A050000		:
-		case COMP::RELAY_TRCD			:
-		case COMP::RELAY_DIP_4PIN		:
-		case COMP::RELAY_DIP_8PIN		: return "Relay";
-		default							: return "";
+		case COMP::TRIM_FLAT:
+		case COMP::TRIM_FLAT_WIDE:
+		case COMP::TRIM_3006P:
+		case COMP::TRIM_3006W:
+		case COMP::TRIM_3006Y:
+		case COMP::TRIM_3329H:
+		case COMP::TRIM_3329P_DK9_RC:
+		case COMP::TRIM_3362F:
+		case COMP::TRIM_3362H:
+		case COMP::TRIM_3362P:
+		case COMP::TRIM_3362R:
+		case COMP::TRIM_3362U:			return "Trim-pot";
+		case COMP::STRIP_100:
+		case COMP::BLOCK_100:
+		case COMP::BLOCK_200:			return "Connector";
+		case COMP::SWITCH_ST:
+		case COMP::SWITCH_DT:
+		case COMP::SWITCH_ST_DIP:
+		case COMP::SWITCH_BUTTON_4PIN:	return "Switch";
+		case COMP::RELAY_HK19F:
+		case COMP::RELAY_HJR_4102:
+		case COMP::RELAY_FTR_B3C:
+		case COMP::RELAY_G2R_2:
+		case COMP::RELAY_G2R_2A:
+		case COMP::RELAY_G2RK_2:
+		case COMP::RELAY_G2RK_2A:
+		case COMP::RELAY_G3MB_202P:
+		case COMP::RELAY_JQC_3F_APPROX:
+		case COMP::RELAY_S1A050000:
+		case COMP::RELAY_TRCD:
+		case COMP::RELAY_DIP_4PIN:
+		case COMP::RELAY_DIP_8PIN:		return "Relay";
+		default:						return "";
 	}
 }
 
@@ -342,69 +362,74 @@ static std::string GetDefaultPrefixStr(const COMP& eType)	// Prefix for name on 
 {
 	switch( eType )
 	{
-		case COMP::MARK					: return "Marker";
-		case COMP::PAD					: return "Pad";
-		case COMP::WIRE					: return "Wire";
-		case COMP::RESISTOR				: return "R";
-		case COMP::INDUCTOR				: return "L";
-		case COMP::DIODE				:
-		case COMP::LED					: return "D";
-		case COMP::CAP_CERAMIC			:
-		case COMP::CAP_FILM				:
-		case COMP::CAP_FILM_WIDE		:
-		case COMP::CAP_ELECTRO_200_NP	:
-		case COMP::CAP_ELECTRO_250_NP	:
-		case COMP::CAP_ELECTRO_300_NP	:
-		case COMP::CAP_ELECTRO_400_NP	:
-		case COMP::CAP_ELECTRO_500_NP	:
-		case COMP::CAP_ELECTRO_600_NP	:
-		case COMP::CAP_ELECTRO_200		:
-		case COMP::CAP_ELECTRO_250		:
-		case COMP::CAP_ELECTRO_300		:
-		case COMP::CAP_ELECTRO_400		:
-		case COMP::CAP_ELECTRO_500		:
-		case COMP::CAP_ELECTRO_600		: return "C";
-		case COMP::TO92					:
-		case COMP::TO18					:
-		case COMP::TO39					:
-		case COMP::TO220				: return "Q";
-		case COMP::TRIM_VERT			:
-		case COMP::TRIM_VERT_OFFSET		:
+		case COMP::MARK:				return "Marker";
+		case COMP::PAD:					return "Pad";
+		case COMP::WIRE:				return "Wire";
+		case COMP::RESISTOR:			return "R";
+		case COMP::INDUCTOR:			return "L";
+		case COMP::DIODE:
+		case COMP::LED:					return "D";
+		case COMP::CAP_CERAMIC:
+		case COMP::CAP_FILM:
+		case COMP::CAP_FILM_WIDE:
+		case COMP::CAP_ELECTRO_200_NP:
+		case COMP::CAP_ELECTRO_250_NP:
+		case COMP::CAP_ELECTRO_300_NP:
+		case COMP::CAP_ELECTRO_400_NP:
+		case COMP::CAP_ELECTRO_500_NP:
+		case COMP::CAP_ELECTRO_600_NP:
+		case COMP::CAP_ELECTRO_200:
+		case COMP::CAP_ELECTRO_250:
+		case COMP::CAP_ELECTRO_300:
+		case COMP::CAP_ELECTRO_400:
+		case COMP::CAP_ELECTRO_500:
+		case COMP::CAP_ELECTRO_600:		return "C";
+		case COMP::TO92:
+		case COMP::TO18:
+		case COMP::TO39:
+		case COMP::TO220:				return "Q";
+		case COMP::TRIM_VERT:
+		case COMP::TRIM_VERT_OFFSET:
 		case COMP::TRIM_VERT_OFFSET_WIDE:
-		case COMP::TRIM_FLAT			:
-		case COMP::TRIM_FLAT_WIDE		:
-		case COMP::TRIM_3006P			:
-		case COMP::TRIM_3006W			:
-		case COMP::TRIM_3006Y			:
-		case COMP::TRIM_3329H			:
-		case COMP::TRIM_3329P_DK9_RC	: return "RT";
-		case COMP::SIP					:
-		case COMP::DIP					:
-		case COMP::DIP_RECTIFIER		: return "IC";
-		case COMP::STRIP_100			:
-		case COMP::BLOCK_100			:
-		case COMP::BLOCK_200			: return "Connector";
-		case COMP::SWITCH_ST			:
-		case COMP::SWITCH_DT			:
-		case COMP::SWITCH_ST_DIP		:
-		case COMP::SWITCH_BUTTON_4PIN	: return "SW";
-		case COMP::CRYSTAL				: return "XT";
-		case COMP::RELAY_HK19F			:
-		case COMP::RELAY_HJR_4102		:
-		case COMP::RELAY_FTR_B3C		:
-		case COMP::RELAY_G2R_2			:
-		case COMP::RELAY_G2R_2A			:
-		case COMP::RELAY_G2RK_2			:
-		case COMP::RELAY_G2RK_2A		:
-		case COMP::RELAY_G3MB_202P		:
-		case COMP::RELAY_JQC_3F_APPROX	:
-		case COMP::RELAY_S1A050000		:
-		case COMP::RELAY_TRCD			:
-		case COMP::RELAY_DIP_4PIN		:
-		case COMP::RELAY_DIP_8PIN		: return "SW";
-		case COMP::FUSE_HOLDER			: return "F";
-		case COMP::CUSTOM				: return "";
-		default							: return "INVALID";	// Unhandled eType
+		case COMP::TRIM_FLAT:
+		case COMP::TRIM_FLAT_WIDE:
+		case COMP::TRIM_3006P:
+		case COMP::TRIM_3006W:
+		case COMP::TRIM_3006Y:
+		case COMP::TRIM_3329H:
+		case COMP::TRIM_3329P_DK9_RC:
+		case COMP::TRIM_3362F:
+		case COMP::TRIM_3362H:
+		case COMP::TRIM_3362P:
+		case COMP::TRIM_3362R:
+		case COMP::TRIM_3362U:			return "RT";
+		case COMP::SIP:
+		case COMP::DIP:
+		case COMP::DIP_RECTIFIER:		return "IC";
+		case COMP::STRIP_100:
+		case COMP::BLOCK_100:
+		case COMP::BLOCK_200:			return "Connector";
+		case COMP::SWITCH_ST:
+		case COMP::SWITCH_DT:
+		case COMP::SWITCH_ST_DIP:
+		case COMP::SWITCH_BUTTON_4PIN:	return "SW";
+		case COMP::CRYSTAL:				return "XT";
+		case COMP::RELAY_HK19F:
+		case COMP::RELAY_HJR_4102:
+		case COMP::RELAY_FTR_B3C:
+		case COMP::RELAY_G2R_2:
+		case COMP::RELAY_G2R_2A:
+		case COMP::RELAY_G2RK_2:
+		case COMP::RELAY_G2RK_2A:
+		case COMP::RELAY_G3MB_202P:
+		case COMP::RELAY_JQC_3F_APPROX:
+		case COMP::RELAY_S1A050000:
+		case COMP::RELAY_TRCD:
+		case COMP::RELAY_DIP_4PIN:
+		case COMP::RELAY_DIP_8PIN:		return "SW";
+		case COMP::FUSE_HOLDER:			return "F";
+		case COMP::CUSTOM:				return "";
+		default:						return "INVALID";	// Unhandled eType
 	}
 }
 
@@ -424,20 +449,20 @@ static int GetPinSeparation(const COMP& eType)	// To handle change of component 
 {
 	switch( eType )
 	{
-		case COMP::LED					:
-		case COMP::CAP_ELECTRO_200_NP	:
-		case COMP::CAP_ELECTRO_200		:
-		case COMP::CAP_ELECTRO_250_NP	:
-		case COMP::CAP_ELECTRO_250		: return 2;
-		case COMP::CAP_ELECTRO_300_NP	:
-		case COMP::CAP_ELECTRO_300		:
-		case COMP::CAP_ELECTRO_400_NP	:
-		case COMP::CAP_ELECTRO_400		: return 3;
-		case COMP::CAP_ELECTRO_500_NP	:
-		case COMP::CAP_ELECTRO_500		:
-		case COMP::CAP_ELECTRO_600_NP	:
-		case COMP::CAP_ELECTRO_600		: return 4;
-		default: return 0;
+		case COMP::LED:
+		case COMP::CAP_ELECTRO_200_NP:
+		case COMP::CAP_ELECTRO_200:
+		case COMP::CAP_ELECTRO_250_NP:
+		case COMP::CAP_ELECTRO_250:		return 2;
+		case COMP::CAP_ELECTRO_300_NP:
+		case COMP::CAP_ELECTRO_300:
+		case COMP::CAP_ELECTRO_400_NP:
+		case COMP::CAP_ELECTRO_400:		return 3;
+		case COMP::CAP_ELECTRO_500_NP:
+		case COMP::CAP_ELECTRO_500:
+		case COMP::CAP_ELECTRO_600_NP:
+		case COMP::CAP_ELECTRO_600:		return 4;
+		default:						return 0;
 	}
 }
 
@@ -490,6 +515,11 @@ static std::string GetMakeInstructions(const COMP& eType, int& rows, int& cols)
 		case COMP::TRIM_3006Y			: rows = 2; cols = 8;  return "1++++++3++++2+++";
 		case COMP::TRIM_3329H			: rows = 3; cols = 3;  return ".+.12+.3.";
 		case COMP::TRIM_3329P_DK9_RC	: rows = 3; cols = 3;  return ".2.1+3.+.";
+		case COMP::TRIM_3362F			: rows = 3; cols = 3;  return "+2++++1+3";
+		case COMP::TRIM_3362H			: rows = 5; cols = 5;  return "..+...+++.+12++.+3+...+..";
+		case COMP::TRIM_3362P			: rows = 3; cols = 3;  return "+2+1+3+++";
+		case COMP::TRIM_3362R			: rows = 3; cols = 3;  return "+++1+3+2+";
+		case COMP::TRIM_3362U			: rows = 3; cols = 3;  return "+++123+++";
 		case COMP::SIP					: rows = 1; cols = 8;  return "12345678";
 		case COMP::DIP					: rows = 4; cols = 4;  return "8765--------1234";
 		case COMP::DIP_RECTIFIER		: rows = 4; cols = 4;  return "4++3--------1++2";
@@ -561,152 +591,157 @@ static int GetDefaultNumPins(const COMP& eType)
 	if ( false ) StopBuildWarnings();
 	switch( eType )
 	{
-		case COMP::MARK					: return 0;
-		case COMP::PAD					: return 1;
-		case COMP::WIRE					:
-		case COMP::RESISTOR				:
-		case COMP::INDUCTOR				:
-		case COMP::DIODE				:
-		case COMP::LED					:
-		case COMP::CAP_CERAMIC			:
-		case COMP::CAP_FILM				:
-		case COMP::CAP_FILM_WIDE		:
-		case COMP::CAP_ELECTRO_200_NP	:
-		case COMP::CAP_ELECTRO_250_NP	:
-		case COMP::CAP_ELECTRO_300_NP	:
-		case COMP::CAP_ELECTRO_400_NP	:
-		case COMP::CAP_ELECTRO_500_NP	:
-		case COMP::CAP_ELECTRO_600_NP	:
-		case COMP::CAP_ELECTRO_200		:
-		case COMP::CAP_ELECTRO_250		:
-		case COMP::CAP_ELECTRO_300		:
-		case COMP::CAP_ELECTRO_400		:
-		case COMP::CAP_ELECTRO_500		:
-		case COMP::CAP_ELECTRO_600		: return 2;
-		case COMP::TO92					:
-		case COMP::TO18					:
-		case COMP::TO39					:
-		case COMP::TO220				:
-		case COMP::TRIM_VERT			:
-		case COMP::TRIM_VERT_OFFSET		:
+		case COMP::MARK:				return 0;
+		case COMP::PAD:					return 1;
+		case COMP::WIRE:
+		case COMP::RESISTOR:
+		case COMP::INDUCTOR:
+		case COMP::DIODE:
+		case COMP::LED:
+		case COMP::CAP_CERAMIC:
+		case COMP::CAP_FILM:
+		case COMP::CAP_FILM_WIDE:
+		case COMP::CAP_ELECTRO_200_NP:
+		case COMP::CAP_ELECTRO_250_NP:
+		case COMP::CAP_ELECTRO_300_NP:
+		case COMP::CAP_ELECTRO_400_NP:
+		case COMP::CAP_ELECTRO_500_NP:
+		case COMP::CAP_ELECTRO_600_NP:
+		case COMP::CAP_ELECTRO_200:
+		case COMP::CAP_ELECTRO_250:
+		case COMP::CAP_ELECTRO_300:
+		case COMP::CAP_ELECTRO_400:
+		case COMP::CAP_ELECTRO_500:
+		case COMP::CAP_ELECTRO_600:		return 2;
+		case COMP::TO92:
+		case COMP::TO18:
+		case COMP::TO39:
+		case COMP::TO220:
+		case COMP::TRIM_VERT:
+		case COMP::TRIM_VERT_OFFSET:
 		case COMP::TRIM_VERT_OFFSET_WIDE:
-		case COMP::TRIM_FLAT			:
-		case COMP::TRIM_FLAT_WIDE		:
-		case COMP::TRIM_3006P			:
-		case COMP::TRIM_3006W			:
-		case COMP::TRIM_3006Y			:
-		case COMP::TRIM_3329H			:
-		case COMP::TRIM_3329P_DK9_RC	: return 3;
-		case COMP::SIP					:
-		case COMP::DIP					: return 8;
-		case COMP::DIP_RECTIFIER		: return 4;
-		case COMP::STRIP_100			:
-		case COMP::BLOCK_100			:
-		case COMP::BLOCK_200			: return 2;
-		case COMP::SWITCH_ST			: return 2;
-		case COMP::SWITCH_DT			: return 3;
-		case COMP::SWITCH_ST_DIP		: return 4;
-		case COMP::SWITCH_BUTTON_4PIN	: return 4;
-		case COMP::CRYSTAL				: return 2;
-		case COMP::RELAY_HK19F			: return 8;
-		case COMP::RELAY_HJR_4102		: return 6;
-		case COMP::RELAY_FTR_B3C		: return 8;
-		case COMP::RELAY_G2R_2			: return 8;
-		case COMP::RELAY_G2R_2A			: return 6;
-		case COMP::RELAY_G2RK_2			: return 10;
-		case COMP::RELAY_G2RK_2A		: return 8;
-		case COMP::RELAY_G3MB_202P		: return 4;
-		case COMP::RELAY_JQC_3F_APPROX	: return 8;
-		case COMP::RELAY_S1A050000		: return 4;
-		case COMP::RELAY_TRCD			: return 4;
-		case COMP::RELAY_DIP_4PIN		: return 4;
-		case COMP::RELAY_DIP_8PIN		: return 8;
-		case COMP::FUSE_HOLDER			: return 2;
-		case COMP::CUSTOM				: return 0;
-		default							: return 0;	// Unhandled eType
+		case COMP::TRIM_FLAT:
+		case COMP::TRIM_FLAT_WIDE:
+		case COMP::TRIM_3006P:
+		case COMP::TRIM_3006W:
+		case COMP::TRIM_3006Y:
+		case COMP::TRIM_3329H:
+		case COMP::TRIM_3329P_DK9_RC:
+		case COMP::TRIM_3362F:
+		case COMP::TRIM_3362H:
+		case COMP::TRIM_3362P:
+		case COMP::TRIM_3362R:
+		case COMP::TRIM_3362U:			return 3;
+		case COMP::SIP:
+		case COMP::DIP:					return 8;
+		case COMP::DIP_RECTIFIER:		return 4;
+		case COMP::STRIP_100:
+		case COMP::BLOCK_100:
+		case COMP::BLOCK_200:			return 2;
+		case COMP::SWITCH_ST:			return 2;
+		case COMP::SWITCH_DT:			return 3;
+		case COMP::SWITCH_ST_DIP:		return 4;
+		case COMP::SWITCH_BUTTON_4PIN:	return 4;
+		case COMP::CRYSTAL:				return 2;
+		case COMP::RELAY_HK19F:			return 8;
+		case COMP::RELAY_HJR_4102:		return 6;
+		case COMP::RELAY_FTR_B3C:		return 8;
+		case COMP::RELAY_G2R_2:			return 8;
+		case COMP::RELAY_G2R_2A:		return 6;
+		case COMP::RELAY_G2RK_2:		return 10;
+		case COMP::RELAY_G2RK_2A:		return 8;
+		case COMP::RELAY_G3MB_202P:		return 4;
+		case COMP::RELAY_JQC_3F_APPROX:	return 8;
+		case COMP::RELAY_S1A050000:		return 4;
+		case COMP::RELAY_TRCD:			return 4;
+		case COMP::RELAY_DIP_4PIN:		return 4;
+		case COMP::RELAY_DIP_8PIN:		return 8;
+		case COMP::FUSE_HOLDER:			return 2;
+		case COMP::CUSTOM:				return 0;
+		default:						return 0;	// Unhandled eType
 	}
 }
 static int GetMinNumPins(const COMP& eType)
 {
 	switch( eType )
 	{
-		case COMP::STRIP_100		:
-		case COMP::BLOCK_100		:
-		case COMP::BLOCK_200		:
-		case COMP::SIP				: return 1;
-		case COMP::DIP				:
-		case COMP::SWITCH_ST		: return 2;
-		case COMP::SWITCH_DT		: return 3;
-		case COMP::SWITCH_ST_DIP	: return 2;
-		default						: return GetDefaultNumPins(eType);
+		case COMP::STRIP_100:
+		case COMP::BLOCK_100:
+		case COMP::BLOCK_200:
+		case COMP::SIP:				return 1;
+		case COMP::DIP:
+		case COMP::SWITCH_ST:		return 2;
+		case COMP::SWITCH_DT:		return 3;
+		case COMP::SWITCH_ST_DIP:	return 2;
+		default:					return GetDefaultNumPins(eType);
 	}
 }
 static int GetMaxNumPins(const COMP& eType)
 {
 	switch( eType )
 	{
-		case COMP::STRIP_100		:
-		case COMP::BLOCK_100		:
-		case COMP::BLOCK_200		:
-		case COMP::SIP				:
-		case COMP::DIP				:
-		case COMP::SWITCH_ST		:
-		case COMP::SWITCH_DT		:
-		case COMP::SWITCH_ST_DIP	: return 255;	// We're limited to (0 <= pinIndex <= 254)
-		default						: return GetDefaultNumPins(eType);
+		case COMP::STRIP_100:
+		case COMP::BLOCK_100:
+		case COMP::BLOCK_200:
+		case COMP::SIP:
+		case COMP::DIP:
+		case COMP::SWITCH_ST:
+		case COMP::SWITCH_DT:
+		case COMP::SWITCH_ST_DIP:	return 255;	// We're limited to (0 <= pinIndex <= 254)
+		default:					return GetDefaultNumPins(eType);
 	}
 }
 static int GetStretchIncrement(const COMP& eType)	// For stretchable components
 {
 	switch( eType )
 	{
-		case COMP::SWITCH_ST		:
-		case COMP::SWITCH_DT		:			// Growing a bulk switch increases its footprint by 2 columns instead of 1
-		case COMP::BLOCK_200		: return 2;	// As does a growing a strip with pitch of 2 squares
-		default						: return 1;
+		case COMP::SWITCH_ST:
+		case COMP::SWITCH_DT:				// Growing a bulk switch increases its footprint by 2 columns instead of 1
+		case COMP::BLOCK_200:	return 2;	// As does a growing a strip with pitch of 2 squares
+		default:				return 1;
 	}
 }
 static int GetMinLength(const COMP& eType)	// For stretchable components
 {
 	switch( eType )
 	{
-		case COMP::WIRE				:
-		case COMP::DIODE			:
-		case COMP::RESISTOR			:
-		case COMP::INDUCTOR			:
-		case COMP::CAP_CERAMIC		:
-		case COMP::CAP_FILM			:
-		case COMP::CAP_FILM_WIDE	: return 2;
-		case COMP::SIP				: return GetMinNumPins(eType);
-		case COMP::DIP				:
-		case COMP::STRIP_100		: return GetMinNumPins(eType);
-		case COMP::BLOCK_100		: return GetMinNumPins(eType);
-		case COMP::BLOCK_200		: return GetMinNumPins(eType) * 2 + 1;
-		case COMP::SWITCH_ST		: return GetMinNumPins(eType) / 2;
-		case COMP::SWITCH_DT		: return GetMinNumPins(eType) / 3;
-		case COMP::SWITCH_ST_DIP	: return GetMinNumPins(eType) / 2;
-		default:	assert(0);		  return 1;	// Non-stretchable component
+		case COMP::WIRE:
+		case COMP::DIODE:
+		case COMP::RESISTOR:
+		case COMP::INDUCTOR:
+		case COMP::CAP_CERAMIC:
+		case COMP::CAP_FILM:
+		case COMP::CAP_FILM_WIDE:	return 2;
+		case COMP::SIP:				return GetMinNumPins(eType);
+		case COMP::DIP:
+		case COMP::STRIP_100:		return GetMinNumPins(eType);
+		case COMP::BLOCK_100:		return GetMinNumPins(eType);
+		case COMP::BLOCK_200:		return GetMinNumPins(eType) * 2 + 1;
+		case COMP::SWITCH_ST:		return GetMinNumPins(eType) / 2;
+		case COMP::SWITCH_DT:		return GetMinNumPins(eType) / 3;
+		case COMP::SWITCH_ST_DIP:	return GetMinNumPins(eType) / 2;
+		default:	assert(0);		return 1;	// Non-stretchable component
 	}
 }
 static int GetMaxLength(const COMP& eType)	// For stretchable components
 {
 	switch( eType )
 	{
-		case COMP::WIRE				: return INT_MAX;
-		case COMP::DIODE			:
-		case COMP::RESISTOR			:
-		case COMP::INDUCTOR			:
-		case COMP::CAP_CERAMIC		:
-		case COMP::CAP_FILM			:
-		case COMP::CAP_FILM_WIDE	: return 16;
-		case COMP::SIP				: return GetMaxNumPins(eType);
-		case COMP::DIP				: return GetMaxNumPins(eType) / 2;
-		case COMP::STRIP_100		: return GetMaxNumPins(eType);
-		case COMP::BLOCK_100		: return GetMaxNumPins(eType);
-		case COMP::BLOCK_200		: return GetMaxNumPins(eType) * 2 + 1;
-		case COMP::SWITCH_ST		: return GetMaxNumPins(eType) - 1;
-		case COMP::SWITCH_DT		: return 2 * GetMaxNumPins(eType) / 3 - 1;
-		case COMP::SWITCH_ST_DIP	: return GetMaxNumPins(eType) / 2;
-		default:	assert(0);		  return 1;	// Non-stretchable component
+		case COMP::WIRE:			return INT_MAX;
+		case COMP::DIODE:
+		case COMP::RESISTOR:
+		case COMP::INDUCTOR:
+		case COMP::CAP_CERAMIC:
+		case COMP::CAP_FILM:
+		case COMP::CAP_FILM_WIDE:	return 16;
+		case COMP::SIP:				return GetMaxNumPins(eType);
+		case COMP::DIP:				return GetMaxNumPins(eType) / 2;
+		case COMP::STRIP_100:		return GetMaxNumPins(eType);
+		case COMP::BLOCK_100:		return GetMaxNumPins(eType);
+		case COMP::BLOCK_200:		return GetMaxNumPins(eType) * 2 + 1;
+		case COMP::SWITCH_ST:		return GetMaxNumPins(eType) - 1;
+		case COMP::SWITCH_DT:		return 2 * GetMaxNumPins(eType) / 3 - 1;
+		case COMP::SWITCH_ST_DIP:	return GetMaxNumPins(eType) / 2;
+		default:	assert(0);		return 1;	// Non-stretchable component
 	}
 }

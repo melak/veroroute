@@ -23,70 +23,75 @@ void Component::SetDefaultPinFlags()
 {
 	switch ( GetType() )
 	{
-		case COMP::TO92					:
-		case COMP::TO18					:
-		case COMP::TO39					:
-		case COMP::TO220				:
-		case COMP::SIP					:
-		case COMP::DIP					:
-		case COMP::DIP_RECTIFIER		:
-		case COMP::STRIP_100			:
-		case COMP::BLOCK_100			:
-		case COMP::BLOCK_200			: return SetPinFlags(PIN_LABELS);
-		case COMP::SWITCH_ST			:
-		case COMP::SWITCH_DT			:
-		case COMP::SWITCH_ST_DIP		:
+		case COMP::TO92:
+		case COMP::TO18:
+		case COMP::TO39:
+		case COMP::TO220:
+		case COMP::SIP:
+		case COMP::DIP:
+		case COMP::DIP_RECTIFIER:
+		case COMP::STRIP_100:
+		case COMP::BLOCK_100:
+		case COMP::BLOCK_200:			return SetPinFlags(PIN_LABELS);
+		case COMP::SWITCH_ST:
+		case COMP::SWITCH_DT:
+		case COMP::SWITCH_ST_DIP:
 		case COMP::SWITCH_BUTTON_4PIN	:
-		case COMP::RELAY_HK19F			:
-		case COMP::RELAY_HJR_4102		:
-		case COMP::RELAY_FTR_B3C		:
-		case COMP::RELAY_G2R_2			:
-		case COMP::RELAY_G2R_2A			:
-		case COMP::RELAY_G2RK_2			:
-		case COMP::RELAY_G2RK_2A		:
-		case COMP::RELAY_G3MB_202P		:
-		case COMP::RELAY_JQC_3F_APPROX	:
-		case COMP::RELAY_S1A050000		:
-		case COMP::RELAY_TRCD			:
-		case COMP::FUSE_HOLDER			: return SetPinFlags(PIN_RECT);
-		case COMP::RELAY_DIP_4PIN		:
-		case COMP::RELAY_DIP_8PIN		: return SetPinFlags(PIN_RECT | PIN_LABELS);
-		case COMP::MARK					:
-		case COMP::PAD					:
-		case COMP::WIRE					:
-		case COMP::RESISTOR				:
-		case COMP::INDUCTOR				:
-		case COMP::DIODE				:
-		case COMP::LED					:
-		case COMP::CAP_CERAMIC			:
-		case COMP::CAP_FILM				:
-		case COMP::CAP_FILM_WIDE		:
-		case COMP::CAP_ELECTRO_200_NP	:
-		case COMP::CAP_ELECTRO_200		:
-		case COMP::CAP_ELECTRO_250_NP	:
-		case COMP::CAP_ELECTRO_250		:
-		case COMP::CAP_ELECTRO_300_NP	:
-		case COMP::CAP_ELECTRO_300		:
-		case COMP::CAP_ELECTRO_400_NP	:
-		case COMP::CAP_ELECTRO_400		:
-		case COMP::CAP_ELECTRO_500_NP	:
-		case COMP::CAP_ELECTRO_500		:
-		case COMP::CAP_ELECTRO_600_NP	:
-		case COMP::CAP_ELECTRO_600		:
-		case COMP::TRIM_VERT			:
-		case COMP::TRIM_VERT_OFFSET		:
+		case COMP::RELAY_HK19F:
+		case COMP::RELAY_HJR_4102:
+		case COMP::RELAY_FTR_B3C:
+		case COMP::RELAY_G2R_2:
+		case COMP::RELAY_G2R_2A:
+		case COMP::RELAY_G2RK_2:
+		case COMP::RELAY_G2RK_2A:
+		case COMP::RELAY_G3MB_202P:
+		case COMP::RELAY_JQC_3F_APPROX:
+		case COMP::RELAY_S1A050000:
+		case COMP::RELAY_TRCD:
+		case COMP::FUSE_HOLDER:			return SetPinFlags(PIN_RECT);
+		case COMP::RELAY_DIP_4PIN:
+		case COMP::RELAY_DIP_8PIN:		return SetPinFlags(PIN_RECT | PIN_LABELS);
+		case COMP::MARK:
+		case COMP::PAD:
+		case COMP::WIRE:
+		case COMP::RESISTOR:
+		case COMP::INDUCTOR:
+		case COMP::DIODE:
+		case COMP::LED:
+		case COMP::CAP_CERAMIC:
+		case COMP::CAP_FILM:
+		case COMP::CAP_FILM_WIDE:
+		case COMP::CAP_ELECTRO_200_NP:
+		case COMP::CAP_ELECTRO_200:
+		case COMP::CAP_ELECTRO_250_NP:
+		case COMP::CAP_ELECTRO_250:
+		case COMP::CAP_ELECTRO_300_NP:
+		case COMP::CAP_ELECTRO_300:
+		case COMP::CAP_ELECTRO_400_NP:
+		case COMP::CAP_ELECTRO_400:
+		case COMP::CAP_ELECTRO_500_NP:
+		case COMP::CAP_ELECTRO_500:
+		case COMP::CAP_ELECTRO_600_NP:
+		case COMP::CAP_ELECTRO_600:
+		case COMP::TRIM_VERT:
+		case COMP::TRIM_VERT_OFFSET:
 		case COMP::TRIM_VERT_OFFSET_WIDE:
-		case COMP::TRIM_FLAT			:
-		case COMP::TRIM_FLAT_WIDE		:
-		case COMP::TRIM_3006P			:
-		case COMP::TRIM_3006W			:
-		case COMP::TRIM_3006Y			:
-		case COMP::TRIM_3329H			:
-		case COMP::TRIM_3329P_DK9_RC	:
-		case COMP::CRYSTAL				: assert( GetPinFlags() == 0 ); return SetPinFlags(0);
-		case COMP::CUSTOM				:
-		case COMP::TRACKS				: return;
-		default:	assert(0);			  return;	// Unhandled eType
+		case COMP::TRIM_FLAT:
+		case COMP::TRIM_FLAT_WIDE:
+		case COMP::TRIM_3006P:
+		case COMP::TRIM_3006W:
+		case COMP::TRIM_3006Y:
+		case COMP::TRIM_3329H:
+		case COMP::TRIM_3329P_DK9_RC:
+		case COMP::TRIM_3362F:
+		case COMP::TRIM_3362H:
+		case COMP::TRIM_3362P:
+		case COMP::TRIM_3362R:
+		case COMP::TRIM_3362U:
+		case COMP::CRYSTAL:				assert( GetPinFlags() == 0 ); return SetPinFlags(0);
+		case COMP::CUSTOM:
+		case COMP::TRACKS:				return;
+		default:	assert(0);			return;	// Unhandled eType
 	}
 }
 
@@ -127,6 +132,11 @@ void Component::AddDefaultShapes()
 		case COMP::TRIM_3006Y:				AddTwo( Shape(SHAPE::RECT,		true, true,		-3.75,  3.75, -0.50,  0.50) );	break;
 		case COMP::TRIM_3329H:				AddTwo( Shape(SHAPE::ELLIPSE,	true, true,		-1.25,  1.25, -1.25,  1.25) );	break;
 		case COMP::TRIM_3329P_DK9_RC:		AddTwo( Shape(SHAPE::ELLIPSE,	true, true,		-1.25,  1.25, -1.25,  1.25) );	break;
+		case COMP::TRIM_3362F:				AddTwo( Shape(SHAPE::RECT,		true, true,		-1.38,  1.38, -1.38,  1.38) );	break;
+		case COMP::TRIM_3362H:				AddTwo( Shape(SHAPE::RECT,		true, true,		-1.38,  1.38, -1.38,  1.38, 45) );	break;
+		case COMP::TRIM_3362P:				AddTwo( Shape(SHAPE::RECT,		true, true,		-1.38,  1.38, -1.38,  1.38) );	break;
+		case COMP::TRIM_3362R:				AddTwo( Shape(SHAPE::RECT,		true, true,		-1.38,  1.38, -1.38,  1.38) );	break;
+		case COMP::TRIM_3362U:				AddTwo( Shape(SHAPE::RECT,		true, true,		-1.38,  1.38, -1.38,  1.38) );	break;
 		case COMP::CRYSTAL:					AddTwo( Shape(SHAPE::ELLIPSE,	true, true,		-1.00,  1.00, -1.00,  1.00) );	break;
 		case COMP::TO92:					AddTwo( Shape(SHAPE::CHORD,		true, true,		-1.40,  1.40, -0.65,  1.15, -20, 200) );break;
 		case COMP::TO18:					AddOne( Shape(SHAPE::ARC,		true, false,	-0.95,  0.95, -0.95,  0.95, 101, 80) );
@@ -279,7 +289,12 @@ void Component::SetDefaultColor()
 		case COMP::TRIM_3006W:
 		case COMP::TRIM_3006Y:
 		case COMP::TRIM_3329H:
-		case COMP::TRIM_3329P_DK9_RC:		return SetFillColor(MyRGB(0x506BFD));
+		case COMP::TRIM_3329P_DK9_RC:
+		case COMP::TRIM_3362F:
+		case COMP::TRIM_3362H:
+		case COMP::TRIM_3362P:
+		case COMP::TRIM_3362R:
+		case COMP::TRIM_3362U:				return SetFillColor(MyRGB(0x506BFD));
 		case COMP::CRYSTAL:					return SetFillColor(MyRGB(0xC8C8C8));
 		case COMP::TO92:
 		case COMP::TO18:
@@ -334,6 +349,8 @@ void Component::SetDefaultLabelOffsets()
 		case COMP::CAP_ELECTRO_250:
 		case COMP::CAP_ELECTRO_250_NP:	m_iLabelOffsetRow =  11;	return;
 		case COMP::TRIM_3329H:			m_iLabelOffsetRow = -11;	return;
+		case COMP::TRIM_3362H:			m_iLabelOffsetRow = -11;	return;
+		case COMP::TRIM_3362U:			m_iLabelOffsetRow = -11;	return;
 		case COMP::STRIP_100:			m_iLabelOffsetRow =  14;	return;
 		case COMP::BLOCK_100:			m_iLabelOffsetRow =  30;	return;
 		case COMP::BLOCK_200:			m_iLabelOffsetRow =  30;	return;

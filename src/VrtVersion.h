@@ -37,4 +37,5 @@ const int VRT_VERSION_34 = 34;	// Added 3rd dimension to grid, and display layer
 const int VRT_VERSION_35 = 35;	// Added via dimensions
 const int VRT_VERSION_36 = 36;	// Added thin tracks style
 const int VRT_VERSION_37 = 37;	// Added flag to enable/disable vias
-const int VRT_VERSION_CURRENT = VRT_VERSION_37;
+const int VRT_VERSION_38 = 38;	// Added Bourns 3362 series trimpots
+const int VRT_VERSION_CURRENT = VRT_VERSION_38;
