@@ -98,8 +98,8 @@
   <widget class="QGroupBox" name="groupBox_2">
    <property name="geometry">
     <rect>
-     <x>9</x>
-     <y>70</y>
+     <x>10</x>
+     <y>200</y>
      <width>311</width>
      <height>61</height>
     </rect>
@@ -107,7 +107,7 @@
    <property name="title">
     <string>Component Text Size</string>
    </property>
-   <widget class="QSpinBox" name="spinBox">
+   <widget class="QSpinBox" name="comptext">
     <property name="geometry">
      <rect>
       <x>100</x>
@@ -129,7 +129,7 @@
      <number>9</number>
     </property>
    </widget>
-   <widget class="QLabel" name="label">
+   <widget class="QLabel" name="label_comptext">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -142,7 +142,7 @@
      <string>Name/Value</string>
     </property>
    </widget>
-   <widget class="QSpinBox" name="spinBox_2">
+   <widget class="QSpinBox" name="comppins">
     <property name="geometry">
      <rect>
       <x>240</x>
@@ -164,7 +164,7 @@
      <number>9</number>
     </property>
    </widget>
-   <widget class="QLabel" name="label_2">
+   <widget class="QLabel" name="label_comppins">
     <property name="geometry">
      <rect>
       <x>170</x>
@@ -178,11 +178,11 @@
     </property>
    </widget>
   </widget>
-  <widget class="QGroupBox" name="groupBox_3">
+<widget class="QGroupBox" name="groupBox_target">
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>140</y>
+     <y>70</y>
      <width>311</width>
      <height>121</height>
     </rect>
@@ -190,7 +190,7 @@
    <property name="title">
     <string>Target Board Dimensions</string>
    </property>
-   <widget class="QCheckBox" name="checkBox">
+   <widget class="QCheckBox" name="shade">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -212,7 +212,7 @@
      <string>Shade off-board area</string>
     </property>
    </widget>
-   <widget class="QLabel" name="label_6">
+   <widget class="QLabel" name="label_width">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -225,7 +225,7 @@
      <string>Width</string>
     </property>
    </widget>
-   <widget class="QSpinBox" name="spinBox_Height">
+   <widget class="QSpinBox" name="spinBox_height">
     <property name="geometry">
      <rect>
       <x>80</x>
@@ -247,7 +247,7 @@
      <number>10</number>
     </property>
    </widget>
-   <widget class="QSpinBox" name="spinBox_Width">
+   <widget class="QSpinBox" name="spinBox_width">
     <property name="geometry">
      <rect>
       <x>80</x>
@@ -269,7 +269,7 @@
      <number>9</number>
     </property>
    </widget>
-   <widget class="QLabel" name="label_5">
+   <widget class="QLabel" name="label_height">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -282,7 +282,7 @@
      <string>Height</string>
     </property>
    </widget>
-   <widget class="QLabel" name="label_units_3">
+   <widget class="QLabel" name="label_widthunits">
     <property name="geometry">
      <rect>
       <x>170</x>
@@ -298,7 +298,7 @@
      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
     </property>
    </widget>
-   <widget class="QLabel" name="label_units_4">
+   <widget class="QLabel" name="label_heightunits">
     <property name="geometry">
      <rect>
       <x>170</x>

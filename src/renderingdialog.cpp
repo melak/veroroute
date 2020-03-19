@@ -32,11 +32,11 @@ RenderingDialog::RenderingDialog(MainWindow* parent)
 	QObject::connect(ui->antiAliasOff,	SIGNAL(toggled(bool)),		m_pMainWindow, SLOT(SetAntialiasOff(bool)));
 	QObject::connect(ui->antiAliasOn,	SIGNAL(toggled(bool)),		m_pMainWindow, SLOT(SetAntialiasOn(bool)));
 	QObject::connect(ui->antiAliasHigh,	SIGNAL(toggled(bool)),		m_pMainWindow, SLOT(SetAntialiasHigh(bool)));
-	QObject::connect(ui->checkBox,		SIGNAL(toggled(bool)),		m_pMainWindow, SLOT(SetShowTarget(bool)));
-	QObject::connect(ui->spinBox,		SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetTextSizeComp(int)));
-	QObject::connect(ui->spinBox_2,		SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetTextSizePins(int)));
-	QObject::connect(ui->spinBox_Height,SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetTargetRows(int)));
-	QObject::connect(ui->spinBox_Width,	SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetTargetCols(int)));
+	QObject::connect(ui->shade,			SIGNAL(toggled(bool)),		m_pMainWindow, SLOT(SetShowTarget(bool)));
+	QObject::connect(ui->comptext,		SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetTextSizeComp(int)));
+	QObject::connect(ui->comppins,		SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetTextSizePins(int)));
+	QObject::connect(ui->spinBox_height,SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetTargetRows(int)));
+	QObject::connect(ui->spinBox_width,	SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetTargetCols(int)));
 	QObject::connect(ui->padWidth,		SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetPadWidth(int)));
 	QObject::connect(ui->trackWidth,	SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetTrackWidth(int)));
 	QObject::connect(ui->holeWidth,		SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetHoleWidth(int)));
@@ -57,11 +57,11 @@ void RenderingDialog::UpdateControls()
 {
 	Board& board = m_pMainWindow->m_board;
 
-	ui->spinBox->setValue( board.GetTextSizeComp() );
-	ui->spinBox_2->setValue( board.GetTextSizePins() );
-	ui->spinBox_Height->setValue( board.GetTargetRows() );
-	ui->spinBox_Width->setValue( board.GetTargetCols() );
-	ui->checkBox->setChecked( board.GetShowTarget() );
+	ui->comptext->setValue( board.GetTextSizeComp() );
+	ui->comppins->setValue( board.GetTextSizePins() );
+	ui->spinBox_height->setValue( board.GetTargetRows() );
+	ui->spinBox_width->setValue( board.GetTargetCols() );
+	ui->shade->setChecked( board.GetShowTarget() );
 	switch( board.GetRenderQuality() )
 	{
 		case 0:		ui->antiAliasOff->setChecked(true);		break;
@@ -78,21 +78,26 @@ void RenderingDialog::UpdateControls()
 	const bool bVero			= board.GetVeroTracks();
 	const bool bVias			= board.GetViasEnabled();
 
-	ui->padWidth->setDisabled(		bCompEdit || bNoTrackOptions || bVero );
-	ui->trackWidth->setDisabled(	bCompEdit || bNoTrackOptions || bVero );
-	ui->holeWidth->setDisabled(		bCompEdit || bNoTrackOptions || bVero );
-	ui->viapadWidth->setDisabled(	bCompEdit || bNoTrackOptions || bVero || !bVias );
-	ui->viaholeWidth->setDisabled(	bCompEdit || bNoTrackOptions || bVero || !bVias );
-	ui->gapWidth->setDisabled(		bCompEdit || bVero || !bMonoPCB || !bGndFill );
-	ui->groupBox_pcb->setDisabled(	bCompEdit || bVero || !bPCB );
+	ui->groupBox_target->setDisabled(	bCompEdit );
+	ui->comptext->setDisabled(			bCompEdit );
+	ui->comppins->setDisabled(			!bCompEdit && bMonoPCB );
+	ui->padWidth->setDisabled(			bCompEdit || bNoTrackOptions || bVero );
+	ui->trackWidth->setDisabled(		bCompEdit || bNoTrackOptions || bVero );
+	ui->holeWidth->setDisabled(			bCompEdit || bNoTrackOptions || bVero );
+	ui->viapadWidth->setDisabled(		bCompEdit || bNoTrackOptions || bVero || !bVias );
+	ui->viaholeWidth->setDisabled(		bCompEdit || bNoTrackOptions || bVero || !bVias );
+	ui->gapWidth->setDisabled(			bCompEdit || bVero || !bMonoPCB || !bGndFill );
+	ui->groupBox_pcb->setDisabled(		bCompEdit || bVero || !bPCB );
 
 	// ... and corresponding labels
-	ui->label_pad->setDisabled(		bCompEdit || bNoTrackOptions || bVero );
-	ui->label_track->setDisabled(	bCompEdit || bNoTrackOptions || bVero );
-	ui->label_hole->setDisabled(	bCompEdit || bNoTrackOptions || bVero );
-	ui->label_viapad->setDisabled(	bCompEdit || bNoTrackOptions || bVero || !bVias );
-	ui->label_viahole->setDisabled(	bCompEdit || bNoTrackOptions || bVero || !bVias );
-	ui->label_gap->setDisabled(		bCompEdit || bVero || !bMonoPCB || !bGndFill );
+	ui->label_comptext->setDisabled(	bCompEdit );
+	ui->label_comppins->setDisabled(	!bCompEdit && bMonoPCB );
+	ui->label_pad->setDisabled(			bCompEdit || bNoTrackOptions || bVero );
+	ui->label_track->setDisabled(		bCompEdit || bNoTrackOptions || bVero );
+	ui->label_hole->setDisabled(		bCompEdit || bNoTrackOptions || bVero );
+	ui->label_viapad->setDisabled(		bCompEdit || bNoTrackOptions || bVero || !bVias );
+	ui->label_viahole->setDisabled(		bCompEdit || bNoTrackOptions || bVero || !bVias );
+	ui->label_gap->setDisabled(			bCompEdit || bVero || !bMonoPCB || !bGndFill );
 
 	ui->padWidth->setValue(		board.GetPAD_PERCENT()		);
 	ui->trackWidth->setValue(	board.GetTRACK_PERCENT()	);
