@@ -207,7 +207,7 @@ static const char* szVEROROUTE_VERSION =
 			// Improvement: To avoid problems with some PCB companies, made the top solder mask cover most (but not all) of each pad/via.
 			// Improvement: When rendering the top layer in PCB mode, make it better represent the fact that a portion of each pad/via is visible.
 			// Improvement: When writing the drill file, use XNC/Excellon Format 2.
-  "1.86";	// Bug fix: V1.85 was sometimes hiding pin outlines (e.g. when track slider was set to Off).
+//"1.86";	// Bug fix: V1.85 was sometimes hiding pin outlines (e.g. when track slider was set to Off).
 			// Bug fix: Switching to Component Editor mode from PCB mode gave black background.
 			// Bug fix: Placing a wire in 2-layer mode did not handle both wire ends properly.
 			// Improvement: Added button to Templates dialog to save all templates to a VRT file.
@@ -216,3 +216,8 @@ static const char* szVEROROUTE_VERSION =
 			// Functionality change: Disabled show/hide of docked widgets by right mouse-click on menu bar.
 			// Added command line options (-h, --help, -v, --version).
 			// Added manpage as part of unix installation.
+  "1.87";	// Bug fix: 300 mil electrolytic cap was missing line marking negative side.
+			// Improvement: When modifying shapes in component editor, allow unit steps with the mouse wheel.
+			// Improvement: Allow flipped views in PCB mode but don't allow export/editing when flipped.
+			// Lots of minor GUI tweaks such as disabling certain buttons according to display mode.
+			// Added the Bourns 3362 series to the set of trimmers in the Templates dialog.

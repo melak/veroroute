@@ -218,3 +218,8 @@ V1.86  Bug fix: V1.85 was sometimes hiding pin outlines (e.g. when track slider 
        Functionality change: Disabled show/hide of docked widgets by right mouse-click on menu bar.
        Added command line options (-h, --help, -v, --version).
        Added manpage as part of unix installation.
+V1.87  Bug fix: 300 mil electrolytic cap was missing line marking negative side.
+       Improvement: When modifying shapes in component editor, allow unit steps with the mouse wheel.
+       Improvement: Allow flipped views in PCB mode but don't allow export/editing when flipped.
+       Lots of minor GUI tweaks such as disabling certain buttons according to display mode.
+       Added the Bourns 3362 series to the set of trimmers in the Templates dialog.
