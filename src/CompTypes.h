@@ -64,6 +64,11 @@ enum class COMP {	INVALID					=   -1,
 					TRIM_3362P				= 1472,
 					TRIM_3362R				= 1473,
 					TRIM_3362U				= 1474,
+					TRIM_3362M				= 1475,
+					TRIM_3362S				= 1476,
+					TRIM_3362W				= 1477,
+					TRIM_3362X				= 1478,
+					TRIM_3362Z				= 1479,
 					SIP						= 1500,
 					DIP						= 1600,
 					DIP_RECTIFIER			= 1620,
@@ -132,7 +137,12 @@ static int GetListOrder(const COMP& eType)	// For dialogs/menus.  Lower number =
 		case COMP::TRIM_3362H:
 		case COMP::TRIM_3362P:
 		case COMP::TRIM_3362R:
-		case COMP::TRIM_3362U:			return 8;
+		case COMP::TRIM_3362U:
+		case COMP::TRIM_3362M:
+		case COMP::TRIM_3362S:
+		case COMP::TRIM_3362W:
+		case COMP::TRIM_3362X:
+		case COMP::TRIM_3362Z:			return 8;
 		case COMP::DIODE:
 		case COMP::LED:					return 10;
 		case COMP::TO92:
@@ -238,6 +248,11 @@ static void InitMapsCompTypeToStr()
 	UpdateMaps(COMP::TRIM_3362P,			"Bourns 3362P",					"TRIM_3362P");
 	UpdateMaps(COMP::TRIM_3362R,			"Bourns 3362R",					"TRIM_3362R");
 	UpdateMaps(COMP::TRIM_3362U,			"Bourns 3362U",					"TRIM_3362U");
+	UpdateMaps(COMP::TRIM_3362M,			"Bourns 3362M",					"TRIM_3362M");
+	UpdateMaps(COMP::TRIM_3362S,			"Bourns 3362S",					"TRIM_3362S");
+	UpdateMaps(COMP::TRIM_3362W,			"Bourns 3362W",					"TRIM_3362W");
+	UpdateMaps(COMP::TRIM_3362X,			"Bourns 3362X",					"TRIM_3362X");
+	UpdateMaps(COMP::TRIM_3362Z,			"Bourns 3362Z",					"TRIM_3362Z");
 	UpdateMaps(COMP::SIP,					"SIP",							"SIP");
 	UpdateMaps(COMP::DIP,					"DIP",							"DIP");
 	UpdateMaps(COMP::DIP_RECTIFIER,			"DIP (Rectifier)",				"DIP_RECTIFIER");
@@ -333,7 +348,12 @@ static std::string GetFamilyStr(const COMP& eType)	// For grouping in the templa
 		case COMP::TRIM_3362H:
 		case COMP::TRIM_3362P:
 		case COMP::TRIM_3362R:
-		case COMP::TRIM_3362U:			return "Trim-pot";
+		case COMP::TRIM_3362U:
+		case COMP::TRIM_3362M:
+		case COMP::TRIM_3362S:
+		case COMP::TRIM_3362W:
+		case COMP::TRIM_3362X:
+		case COMP::TRIM_3362Z:			return "Trim-pot";
 		case COMP::STRIP_100:
 		case COMP::BLOCK_100:
 		case COMP::BLOCK_200:			return "Connector";
@@ -402,7 +422,12 @@ static std::string GetDefaultPrefixStr(const COMP& eType)	// Prefix for name on 
 		case COMP::TRIM_3362H:
 		case COMP::TRIM_3362P:
 		case COMP::TRIM_3362R:
-		case COMP::TRIM_3362U:			return "RT";
+		case COMP::TRIM_3362U:
+		case COMP::TRIM_3362M:
+		case COMP::TRIM_3362S:
+		case COMP::TRIM_3362W:
+		case COMP::TRIM_3362X:
+		case COMP::TRIM_3362Z:			return "RT";
 		case COMP::SIP:
 		case COMP::DIP:
 		case COMP::DIP_RECTIFIER:		return "IC";
@@ -520,6 +545,11 @@ static std::string GetMakeInstructions(const COMP& eType, int& rows, int& cols)
 		case COMP::TRIM_3362P			: rows = 3; cols = 3;  return "+2+1+3+++";
 		case COMP::TRIM_3362R			: rows = 3; cols = 3;  return "+++1+3+2+";
 		case COMP::TRIM_3362U			: rows = 3; cols = 3;  return "+++123+++";
+		case COMP::TRIM_3362M			: rows = 3; cols = 3;  return "+++123+++";
+		case COMP::TRIM_3362S			: rows = 2; cols = 3;  return "+2+1+3";
+		case COMP::TRIM_3362W			: rows = 2; cols = 3;  return "3+1+2+";
+		case COMP::TRIM_3362X			: rows = 2; cols = 3;  return "1+3+2+";
+		case COMP::TRIM_3362Z			: rows = 2; cols = 3;  return "+2+3+1";
 		case COMP::SIP					: rows = 1; cols = 8;  return "12345678";
 		case COMP::DIP					: rows = 4; cols = 4;  return "8765--------1234";
 		case COMP::DIP_RECTIFIER		: rows = 4; cols = 4;  return "4++3--------1++2";
@@ -631,7 +661,12 @@ static int GetDefaultNumPins(const COMP& eType)
 		case COMP::TRIM_3362H:
 		case COMP::TRIM_3362P:
 		case COMP::TRIM_3362R:
-		case COMP::TRIM_3362U:			return 3;
+		case COMP::TRIM_3362U:
+		case COMP::TRIM_3362M:
+		case COMP::TRIM_3362S:
+		case COMP::TRIM_3362W:
+		case COMP::TRIM_3362X:
+		case COMP::TRIM_3362Z:			return 3;
 		case COMP::SIP:
 		case COMP::DIP:					return 8;
 		case COMP::DIP_RECTIFIER:		return 4;

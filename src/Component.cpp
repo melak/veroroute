@@ -88,6 +88,11 @@ void Component::SetDefaultPinFlags()
 		case COMP::TRIM_3362P:
 		case COMP::TRIM_3362R:
 		case COMP::TRIM_3362U:
+		case COMP::TRIM_3362M:
+		case COMP::TRIM_3362S:
+		case COMP::TRIM_3362W:
+		case COMP::TRIM_3362X:
+		case COMP::TRIM_3362Z:
 		case COMP::CRYSTAL:				assert( GetPinFlags() == 0 ); return SetPinFlags(0);
 		case COMP::CUSTOM:
 		case COMP::TRACKS:				return;
@@ -137,6 +142,11 @@ void Component::AddDefaultShapes()
 		case COMP::TRIM_3362P:				AddTwo( Shape(SHAPE::RECT,		true, true,		-1.38,  1.38, -1.38,  1.38) );	break;
 		case COMP::TRIM_3362R:				AddTwo( Shape(SHAPE::RECT,		true, true,		-1.38,  1.38, -1.38,  1.38) );	break;
 		case COMP::TRIM_3362U:				AddTwo( Shape(SHAPE::RECT,		true, true,		-1.38,  1.38, -1.38,  1.38) );	break;
+		case COMP::TRIM_3362M:				AddTwo( Shape(SHAPE::RECT,		true, true,		-1.38,  1.38, -0.95,  0.95) );	break;
+		case COMP::TRIM_3362S:				AddTwo( Shape(SHAPE::RECT,		true, true,		-1.38,  1.38, -0.95,  0.95) );	break;
+		case COMP::TRIM_3362W:				AddTwo( Shape(SHAPE::RECT,		true, true,		-1.38,  1.38, -0.95,  0.95) );	break;
+		case COMP::TRIM_3362X:				AddTwo( Shape(SHAPE::RECT,		true, true,		-1.38,  1.38, -0.95,  0.95) );	break;
+		case COMP::TRIM_3362Z:				AddTwo( Shape(SHAPE::RECT,		true, true,		-1.38,  1.38, -0.95,  0.95) );	break;
 		case COMP::CRYSTAL:					AddTwo( Shape(SHAPE::ELLIPSE,	true, true,		-1.00,  1.00, -1.00,  1.00) );	break;
 		case COMP::TO92:					AddTwo( Shape(SHAPE::CHORD,		true, true,		-1.40,  1.40, -0.65,  1.15, -20, 200) );break;
 		case COMP::TO18:					AddOne( Shape(SHAPE::ARC,		true, false,	-0.95,  0.95, -0.95,  0.95, 101, 80) );
@@ -294,7 +304,12 @@ void Component::SetDefaultColor()
 		case COMP::TRIM_3362H:
 		case COMP::TRIM_3362P:
 		case COMP::TRIM_3362R:
-		case COMP::TRIM_3362U:				return SetFillColor(MyRGB(0x506BFD));
+		case COMP::TRIM_3362U:
+		case COMP::TRIM_3362M:
+		case COMP::TRIM_3362S:
+		case COMP::TRIM_3362W:
+		case COMP::TRIM_3362X:
+		case COMP::TRIM_3362Z:				return SetFillColor(MyRGB(0x506BFD));
 		case COMP::CRYSTAL:					return SetFillColor(MyRGB(0xC8C8C8));
 		case COMP::TO92:
 		case COMP::TO18:
@@ -351,6 +366,11 @@ void Component::SetDefaultLabelOffsets()
 		case COMP::TRIM_3329H:			m_iLabelOffsetRow = -11;	return;
 		case COMP::TRIM_3362H:			m_iLabelOffsetRow = -11;	return;
 		case COMP::TRIM_3362U:			m_iLabelOffsetRow = -11;	return;
+		case COMP::TRIM_3362M:			m_iLabelOffsetRow =  -8;	return;
+		case COMP::TRIM_3362S:			m_iLabelOffsetRow =   3;	return;
+		case COMP::TRIM_3362W:			m_iLabelOffsetRow =  -3;	return;
+		case COMP::TRIM_3362X:			m_iLabelOffsetRow =  -3;	return;
+		case COMP::TRIM_3362Z:			m_iLabelOffsetRow =   3;	return;
 		case COMP::STRIP_100:			m_iLabelOffsetRow =  14;	return;
 		case COMP::BLOCK_100:			m_iLabelOffsetRow =  30;	return;
 		case COMP::BLOCK_200:			m_iLabelOffsetRow =  30;	return;
