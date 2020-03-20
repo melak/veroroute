@@ -119,7 +119,7 @@ void Component::AddDefaultShapes()
 		case COMP::CAP_ELECTRO_200_NP:		AddTwo( Shape(SHAPE::ELLIPSE,	true, true,		-1.00,  1.00, -1.00,  1.00) );	break;
 		case COMP::CAP_ELECTRO_250:			AddOne( Shape(SHAPE::LINE,		true, false,	 0.96,  0.96, -0.80,  0.80) );
 		case COMP::CAP_ELECTRO_250_NP:		AddTwo( Shape(SHAPE::ELLIPSE,	true, true,		-1.25,  1.25, -1.25,  1.25) );	break;
-		case COMP::CAP_ELECTRO_300:			AddOne( Shape(SHAPE::LINE,		true, true,		 1.15,  1.15, -0.96,  0.96) );
+		case COMP::CAP_ELECTRO_300:			AddOne( Shape(SHAPE::LINE,		true, false,	 1.15,  1.15, -0.96,  0.96) );
 		case COMP::CAP_ELECTRO_300_NP:		AddTwo( Shape(SHAPE::ELLIPSE,	true, true,		-1.50,  1.50, -1.50,  1.50) );	break;
 		case COMP::CAP_ELECTRO_400:			AddOne( Shape(SHAPE::LINE,		true, false,	 1.53,  1.53, -1.29,  1.29) );
 		case COMP::CAP_ELECTRO_400_NP:		AddTwo( Shape(SHAPE::ELLIPSE,	true, true,		-2.00,  2.00, -2.00,  2.00) );	break;
