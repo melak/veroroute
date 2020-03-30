@@ -155,6 +155,7 @@ struct GPainter : public QPainter
 	virtual void drawRect(int x, int y, int w, int h)
 	{
 		if ( !m_pStream ) return QPainter::drawRect(x, y, w, h);
+		if ( w == 0 && h == 0 ) return;	// Behave like QPainter
 		m_polygon.clear();
 		m_polygon << QPointF(x,y) << QPointF(x+w,y) << QPointF(x+w,y+h) << QPointF(x,y+h) << QPointF(x,y);
 		AddTrack();
@@ -162,6 +163,7 @@ struct GPainter : public QPainter
 	virtual void drawRoundedRect(int x, int y, int w, int h, qreal xRadius, qreal yRadius)
 	{
 		if ( !m_pStream ) return QPainter::drawRoundedRect(x, y, w, h, xRadius, yRadius);
+		if ( w == 0 && h == 0 ) return;	// Behave like QPainter
 		xRadius = std::min(xRadius, 0.5 * w);
 		yRadius = std::min(yRadius, 0.5 * h);
 		const auto xDiameter = xRadius + xRadius;
@@ -178,6 +180,7 @@ struct GPainter : public QPainter
 	virtual void drawArc(int x, int y, int w, int h, int a, int alen, bool bClose = false)
 	{
 		if ( !m_pStream ) return QPainter::drawArc(x, y, w, h, a, alen);
+		if ( w == 0 && h == 0 ) return;	// Behave like QPainter
 		const double rX		= 0.5 * w;
 		const double rY		= 0.5 * h;
 		const double cX		= x + rX;
