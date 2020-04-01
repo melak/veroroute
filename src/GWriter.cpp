@@ -78,7 +78,7 @@ void GStream::WriteHeader(const QString& UTC)	// Write header for current stream
 	std::string	strLayer	= std::string("Layer: ");
 	std::string	strProgram	= std::string("VeroRoute V") + std::string(szVEROROUTE_VERSION);
 	std::string	strUTC		= UTC.toStdString();
-	std::string	strGen		= std::string("Gerber Generator version 0.2");
+	std::string	strGen		= std::string("Gerber Generator version 0.3");
 	switch(m_eType)
 	{
 		case GFILE::GKO: strLayer += "BoardOutline";			break;
@@ -387,6 +387,9 @@ void GStream::Move(const QPoint& p)
 void GStream::Draw(const QPoint& p)
 {
 	if ( !m_os.is_open() || m_eType == GFILE::DRL ) return;
+	const int& ix = p.x();
+	const int& iy = p.y();
+	if ( m_iLastX == ix && m_iLastY == iy ) return;
 	WriteXY(p, FULL_LINE);
 	m_os << "D01";		// Always specify D01 code
 	EndLine();
