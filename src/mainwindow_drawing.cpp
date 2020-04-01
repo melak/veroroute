@@ -105,11 +105,10 @@ void MainWindow::CreatePixmapCache(const GuiControl& guiCtrl, ColorManager& colo
 	releaseMouse();
 }
 
-void MainWindow::PaintViaGrey(const GuiControl& guiCtrl, QPainter& painter, const QPointF& pC, const int& iLyr)
+void MainWindow::PaintViaGrey(const GuiControl& guiCtrl, QPainter& painter, const QPointF& pC)
 {
 	assert(!m_bWriteGerber);
-	const int width = ( iLyr == 0 ) ? ( guiCtrl.GetHalfViaWidth() << 1 )
-									: ( ( guiCtrl.GetHalfViaHoleWidth() + guiCtrl.GetMaskWidth() ) << 1 );
+	const int width = guiCtrl.GetHalfViaWidth() << 1;
 	static QPen	pen(QColor(200,200,200,255), 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 	pen.setWidth(width);
 	painter.setPen(pen);
@@ -117,11 +116,10 @@ void MainWindow::PaintViaGrey(const GuiControl& guiCtrl, QPainter& painter, cons
 	painter.drawPoint(pC);
 }
 
-void MainWindow::PaintPadGrey(const GuiControl& guiCtrl, QPainter& painter, const QPointF& pC, const int& iLyr)
+void MainWindow::PaintPadGrey(const GuiControl& guiCtrl, QPainter& painter, const QPointF& pC)
 {
 	assert(!m_bWriteGerber);
-	const int width = ( iLyr == 0 ) ? ( guiCtrl.GetHalfPadWidth() << 1 )
-									: ( ( guiCtrl.GetHalfHoleWidth() + guiCtrl.GetMaskWidth() ) << 1 );
+	const int width = guiCtrl.GetHalfPadWidth() << 1;
 	static QPen	pen(QColor(200,200,200,255), 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 	pen.setWidth(width);
 	painter.setPen(pen);
@@ -974,8 +972,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					}
 					else if ( bDrawGrey )
 					{
-						if ( bVia ) PaintViaGrey(board, painter, pCentre, layer);	// Draw grey via
-						if ( bPad ) PaintPadGrey(board, painter, pCentre, layer);	// Draw grey pad
+						if ( bVia ) PaintViaGrey(board, painter, pCentre);	// Draw grey via
+						if ( bPad ) PaintPadGrey(board, painter, pCentre);	// Draw grey pad
 					}
 				}
 				if ( bDirect )	// Draw track "blobs" and pads directly (PDF/Gerber)
@@ -988,8 +986,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					}
 					else if ( bDrawGrey )
 					{
-						if ( bVia ) PaintViaGrey(board, painter, pCentre, layer);	// Draw grey via
-						if ( bPad ) PaintPadGrey(board, painter, pCentre, layer);	// Draw grey pad
+						if ( bVia ) PaintViaGrey(board, painter, pCentre);	// Draw grey via
+						if ( bPad ) PaintPadGrey(board, painter, pCentre);	// Draw grey pad
 					}
 				}
 			}

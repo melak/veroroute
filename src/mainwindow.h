@@ -361,8 +361,8 @@ public slots:
 private:
 	void DestroyPixmapCache();
 	void CreatePixmapCache(const GuiControl& guiCtrl, ColorManager& colorManager);
-	void PaintViaGrey(const GuiControl& guiCtrl, QPainter& painter, const QPointF& pC, const int& iLyr);
-	void PaintPadGrey(const GuiControl& guiCtrl, QPainter& painter, const QPointF& pC, const int& iLyr);
+	void PaintViaGrey(const GuiControl& guiCtrl, QPainter& painter, const QPointF& pC);
+	void PaintPadGrey(const GuiControl& guiCtrl, QPainter& painter, const QPointF& pC);
 	void PaintVia(const GuiControl& guiCtrl, QPainter& painter,  const QColor& color, const QPointF& pC, const bool& bGap = false);	// Helper
 	void PaintPad(const GuiControl& guiCtrl, QPainter& painter,  const QColor& color, const QPointF& pC, const bool& bGap = false);	// Helper
 	void PaintTag(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, const int& iNbr, const int& iLyr);
