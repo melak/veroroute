@@ -739,7 +739,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		painter.begin(&m_mainPixmap);	// Paint to main pixmap
 	}
 
-	SetQuality(painter);
+	if ( !m_bWriteGerber )
+		SetQuality(painter);
+
 	if ( board.GetFlipH() )
 	{
 		painter.translate(2*m_XGRIDOFFSET + W * board.GetCols(), 0);

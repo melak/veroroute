@@ -41,6 +41,7 @@ public:
 	, m_infoStr("Use this box to enter a circuit description or other info")
 	, m_tmpVecSize(0)
 	, m_bRouteMinimal(true)
+	, m_bHasVias(false)
 	{
 		Allocate(lyrs, rows, cols);
 		GlueNbrs();		// Set pointers between neighbouring grid elements
@@ -95,7 +96,7 @@ public:
 		m_tmpVec.clear();
 		m_tmpVecSize	= 0;
 		m_bRouteMinimal	= true;
-
+		m_bHasVias = false;
 		return *this;
 	}
 
@@ -407,6 +408,7 @@ public:
 	void BuildTargetPins(const int& nodeId);
 	void Route(bool bMinimal);
 	void UpdateVias();
+	const bool& GetHasVias() const { return m_bHasVias; }
 	unsigned int Flood(const int& nodeId);
 	unsigned int Flood();
 	void Flood_Helper(bool** ppConn, unsigned int& cost, const bool bBuildTracks);
@@ -646,4 +648,5 @@ private:
 	std::vector<Element*>	m_tmpVec;		// The set of visited points.
 	size_t					m_tmpVecSize;	// The number of visited points.
 	bool					m_bRouteMinimal;// true ==> don't build tracks between pins that are already connected
+	bool					m_bHasVias;		// true ==> there are vias in the design
 };

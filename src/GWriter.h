@@ -57,6 +57,7 @@ public:
 	void DrawRegion(const QPolygonF& pF)					{ ClearBuffers(); AddRegion(pF);		DrawBuffers(); };
 private:
 	void WriteHeader(const QString& UTC);
+	void MakeDrills();
 	void MakeApertures();
 	void LinearInterpolation();
 	void Comment(const char* sz);
@@ -70,11 +71,11 @@ private:
 	void Region(const Curve& curve)	;				// A filled curve (with zero width pen)
 	void Polygon(const Curve& curve);				// Filled polygon (with non-zero width pen)
 	void OutLine(const Curve& curve, bool bClose);	// Outline of a curve (can be closed)
-	void WriteXY(const QPoint& p,   const bool& bFullLine);
-	void WriteDrillValue(const int& iMil);
+	void WriteXY(const QPoint& p, const bool& bFullLine);
+	void WriteDrillOrdinate(const int& iDeciMils);
 	void GetQPoint(const QPointF& in, QPoint& out) const;		// Convert float to integer
 	void GetQPolygon(const QPolygonF& in, QPolygon& out) const;	// Convert float to integer
-	std::string MilToInch(const int& iMil) const;
+	std::string MilToInch(const int& iMil, const bool& bLZ = false) const;
 	// Data
 	GFILE			m_eType		= GFILE::GBL;	// GKO, GBL, GBS, GTL, GTS, GTO
 	GPEN			m_ePen		= GPEN::UNKNOWN;

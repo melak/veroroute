@@ -682,7 +682,9 @@ void MainWindow::WriteGerber(const bool& bTwoLayerGerber)
 		const int gerberGridPixels	= 1000;	// Gerber file had 4 decimal places per inch
 		m_board.SetGRIDPIXELS(gerberGridPixels);
 
-		m_bWriteGerber = true;		// Makes paintEvent() write to Gerber file instead of pixmap
+		m_bWriteGerber = true;	// Makes paintEvent() write to Gerber file instead of pixmap
+
+		HandleRouting();	// Update m_board.m_bHasVias BEFORE opening the Gerber files
 
 		if ( m_gWriter.Open(m_gerberFileName.toStdString().c_str(), m_board, m_bTwoLayerGerber) )
 		{

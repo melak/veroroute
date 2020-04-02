@@ -66,7 +66,6 @@ bool GStream::Open(const char* fileName, const GFILE& eType, const Board& board,
 
 	ClearBuffers(false);	// false ==> skip GetOK() checks
 	WriteHeader(UTC);
-	MakeApertures();
 	LinearInterpolation();
 	SetPolarity(GPOLARITY::DARK, false);	// false ==> skip GetOK() checks
 	return m_os.is_open();
@@ -78,7 +77,7 @@ void GStream::WriteHeader(const QString& UTC)	// Write header for current stream
 	std::string	strLayer	= std::string("Layer: ");
 	std::string	strProgram	= std::string("VeroRoute V") + std::string(szVEROROUTE_VERSION);
 	std::string	strUTC		= UTC.toStdString();
-	std::string	strGen		= std::string("Gerber Generator version 0.3");
+	std::string	strGen		= std::string("Gerber Generator version 0.4");
 	switch(m_eType)
 	{
 		case GFILE::GKO: strLayer += "BoardOutline";			break;
@@ -97,21 +96,9 @@ void GStream::WriteHeader(const QString& UTC)	// Write header for current stream
 
 	if ( m_eType == GFILE::DRL )
 	{
-		const int hole		= m_pBoard->GetHOLE_PERCENT();
-		const int viahole	= m_pBoard->GetVIAHOLE_PERCENT();
-
 		m_os << "M48";				EndLine();	// M48 is start of header
 		m_os << "INCH,LZ,00.0000";	EndLine();	// Inches.  Leading zeros INCLUDED.  2 integer and 4 decimal
-
-		// Comment about hole size:		";Holesize 1 = 0.032 INCH"
-		// Define Tool 1:				"T01C0.032" ==> 0.032 inch diameter
-
-		m_os << ";Holesize 1 = " << MilToInch(hole) << " INCH";	EndLine();
-		m_os << "T01C" << MilToInch(hole);		EndLine();
-
-		m_os << ";Holesize 2 = " << MilToInch(viahole) << " INCH";	EndLine();
-		m_os << "T02C" << MilToInch(viahole);	EndLine();
-
+		MakeDrills();
 	//	m_os << "M95";	EndLine();							// M95 End of the header
 		m_os << "%";	EndLine();							// Rewind Stop.  Often used instead of M95.
 		m_os << ( XNC_FORMAT ? "G05" : "G81" );	EndLine();	// Turn on drill
@@ -122,50 +109,90 @@ void GStream::WriteHeader(const QString& UTC)	// Write header for current stream
 		Comment("Scale: 100 percent, Rotated: No, Reflected: No");
 		Comment("Dimensions in inches");
 		Comment("Leading zeros omitted, Absolute positions, 2 integer and 4 decimal");
+		m_os << "%MOIN*%"		<< std::endl;	// MOIN/MOMM ==> Inches/mm
 		m_os << "%FSLAX24Y24*%"	<< std::endl;
-		m_os << "%MOIN*%"		<< std::endl;	// MOIN/MOCM ==> Inches/cm
 		m_os << "G90";		EndLine();			// G90/G91   ==> Absolute/relative coords
 		m_os << "G70D02";	EndLine();			// G70/G71   ==> in/mm
+		MakeApertures();
+	}
+}
+void GStream::MakeDrills()
+{
+	assert( m_os.is_open() && m_eType == GFILE::DRL );
+	const bool bVias	= m_pBoard->GetHasVias();
+	const int  hole		= m_pBoard->GetHOLE_PERCENT();
+	const int  viahole	= m_pBoard->GetVIAHOLE_PERCENT();
+
+	// Comment about hole size:	";Hole = 00.0320 INCH"
+	// Define Tool 1:			"T01C00.0320" ==> 00.0320 inch diameter
+	const bool bLZ(true);	// Include leading zeros
+	m_os << ";Hole = " << MilToInch(hole, bLZ) << " INCH";	EndLine();
+	m_os << "T01C"     << MilToInch(hole, bLZ);				EndLine();
+	if ( bVias )
+	{
+		m_os << ";Via Hole = " << MilToInch(viahole, bLZ) << " INCH";	EndLine();
+		m_os << "T02C"         << MilToInch(viahole, bLZ);				EndLine();
 	}
 }
 void GStream::MakeApertures()	// Make "pens" for current stream
 {
-	if ( !m_os.is_open() ) return;
-
-	const int pad		= m_pBoard->GetPAD_PERCENT();
-	const int via		= m_pBoard->GetVIAPAD_PERCENT();
-	const int track		= m_pBoard->GetTRACK_PERCENT();
-	const int gap		= m_pBoard->GetGAP_PERCENT();
-	const int mask		= m_pBoard->GetMASK_PERCENT();
-	const int silk		= m_pBoard->GetSILK_PERCENT();
-	const int padgap	= pad	+ 2 * gap;	// Gap  is the radius increase
-	const int viagap	= via	+ 2 * gap;	// Gap  is the radius increase
-	const int trackgap	= track	+ 2 * gap;	// Gap  is the radius increase
-	const int padmask	= pad	+ 2 * mask;	// Mask is the radius increase
-	const int viamask	= via	+ 2 * mask;	// Mask is the radius increase
+	assert( m_os.is_open() && && m_eType != GFILE::DRL);
+	const bool bGroundFill	= m_pBoard->GetGroundFill();
+	const bool bVias		= m_pBoard->GetHasVias();
+	const int  pad			= m_pBoard->GetPAD_PERCENT();
+	const int  via			= m_pBoard->GetVIAPAD_PERCENT();
+	const int  track		= m_pBoard->GetTRACK_PERCENT();
+	const int  gap			= m_pBoard->GetGAP_PERCENT();
+	const int  mask			= m_pBoard->GetMASK_PERCENT();
+	const int  silk			= m_pBoard->GetSILK_PERCENT();
+	const int  padgap		= pad	+ 2 * gap;	// Gap  is the radius increase
+	const int  viagap		= via	+ 2 * gap;	// Gap  is the radius increase
+	const int  trackgap		= track	+ 2 * gap;	// Gap  is the radius increase
+	const int  padmask		= pad	+ 2 * mask;	// Mask is the radius increase
+	const int  viamask		= via	+ 2 * mask;	// Mask is the radius increase
 
 	switch( m_eType )
 	{
 		case GFILE::GKO:
-			m_os << "%ADD10C," << MilToInch(10)			<< "*%" << std::endl;	// D10 ==> GPEN::MIL10
+			m_os << "%ADD10C," << MilToInch(10) << "*%" << std::endl;				// D10 ==> GPEN::MIL10
 			break;
 		case GFILE::GBL:
 		case GFILE::GTL:
-			m_os << "%ADD11C," << MilToInch(pad)		<< "*%" << std::endl;	// D11 ==> GPEN::PAD
-			m_os << "%ADD12C," << MilToInch(via)		<< "*%" << std::endl;	// D12 ==> GPEN::VIA
-			m_os << "%ADD13C," << MilToInch(track)		<< "*%" << std::endl;	// D13 ==> GPEN::TRACK
-			m_os << "%ADD14C," << MilToInch(padgap)		<< "*%" << std::endl;	// D14 ==> GPEN::PAD_GAP
-			m_os << "%ADD15C," << MilToInch(viagap)		<< "*%" << std::endl;	// D15 ==> GPEN::VIA_GAP
-			m_os << "%ADD16C," << MilToInch(trackgap)	<< "*%" << std::endl;	// D16 ==> GPEN::TRACK_GAP
+			Comment("D11 is for pad");
+			m_os << "%ADD11C," << MilToInch(pad) << "*%" << std::endl;				// D11 ==> GPEN::PAD
+			if ( bVias )
+			{
+				Comment("D12 is for via-pad");
+				m_os << "%ADD12C," << MilToInch(via) << "*%" << std::endl;			// D12 ==> GPEN::VIA
+			}
+			Comment("D13 is for track");
+			m_os << "%ADD13C," << MilToInch(track) << "*%" << std::endl;			// D13 ==> GPEN::TRACK
+			if ( bGroundFill )
+			{
+				Comment("D14 is for separating pad from ground-pour");
+				m_os << "%ADD14C," << MilToInch(padgap) << "*%" << std::endl;		// D14 ==> GPEN::PAD_GAP
+				if ( bVias )
+				{
+					Comment("D15 is for separating via-pad from ground-pour");
+					m_os << "%ADD15C," << MilToInch(viagap) << "*%" << std::endl;	// D15 ==> GPEN::VIA_GAP
+				}
+				Comment("D16 is for separating track from ground-pour");
+				m_os << "%ADD16C," << MilToInch(trackgap) << "*%" << std::endl;		// D16 ==> GPEN::TRACK_GAP
+			}
 			break;
 		case GFILE::GBS:
 		case GFILE::GTS:
-			m_os << "%ADD17C," << MilToInch(padmask)	<< "*%" << std::endl;	// D17 ==> GPEN::PAD_MASK
-			m_os << "%ADD18C," << MilToInch(viamask)	<< "*%" << std::endl;	// D18 ==> GPEN::VIA_MASK
+			Comment("D17 is slightly larger than a pad");
+			m_os << "%ADD17C," << MilToInch(padmask) << "*%" << std::endl;			// D17 ==> GPEN::PAD_MASK
+			if ( bVias )
+			{
+				Comment("D18 is slightly larger than a via-pad");
+				m_os << "%ADD18C," << MilToInch(viamask) << "*%" << std::endl;		// D18 ==> GPEN::VIA_MASK
+			}
 			break;
 		case GFILE::GTO:
 		case GFILE::GBO:
-			m_os << "%ADD19C," << MilToInch(silk)		<< "*%" << std::endl;	// D19 ==> GPEN::SILK
+			m_os << "%ADD19C," << MilToInch(silk) << "*%" << std::endl;				// D19 ==> GPEN::SILK
 			break;
 		case GFILE::DRL:
 			break;
@@ -225,8 +252,8 @@ void GStream::SetPolarity(const GPOLARITY& ePolarity, bool bCheckOK)
 void GStream::Drill(const QPoint& p)
 {
 	if ( !GetOK() || !m_os.is_open() || m_eType != GFILE::DRL ) return;
-	m_os << "X";  WriteDrillValue( p.x() );
-	m_os << "Y";  WriteDrillValue( p.y() );
+	m_os << "X";  WriteDrillOrdinate( p.x() );
+	m_os << "Y";  WriteDrillOrdinate( p.y() );
 	m_os << std::endl;
 }
 void GStream::AddPad(const GPEN& ePen, const QPointF& pF)		// Add to m_pads buffer for later writing to file
@@ -409,12 +436,13 @@ void GStream::WriteXY(const QPoint& p,  const bool& bFullLine)
 	if ( bFullLine || m_iLastY != iy ) m_os << "Y" << iy;
 	m_iLastY = iy;
 }
-void GStream::WriteDrillValue(const int& iMil)
+void GStream::WriteDrillOrdinate(const int& iDeciMils)	// Writes inches in format AABBBB
 {
 	if ( !m_os.is_open() || m_eType != GFILE::DRL ) return;
-	const int iAbs = abs(iMil);
-	assert( iMil > 0 );	// All veroRoute grid points are >= 0
-	m_os << ( iMil >= 0 ? "+" : "-" );
+	const int iAbs = abs(iDeciMils);
+	assert( iAbs <= 999999 );	// 999999 ==> 99.9999 inches
+	m_os << ( iDeciMils >= 0 ? "+" : "-" );	// Write sign	
+	// Add leading zeros
 	if ( iAbs < 100000 ) m_os << "0";
 	if ( iAbs <  10000 ) m_os << "0";
 	if ( iAbs <   1000 ) m_os << "0";
@@ -422,9 +450,26 @@ void GStream::WriteDrillValue(const int& iMil)
 	if ( iAbs <     10 ) m_os << "0";
 	m_os << iAbs;
 }
+std::string GStream::MilToInch(const int& iMil, const bool& bLZ) const	// Get inches in format AA.BBBB (for drills and apertures)
+{
+	std::string str;
+	const int i = iMil * 10;
+	assert( i >= 0 && i <= 999999 );	// 999999 ==> 99.9999 inches
+	const int inches = i / 10000;
+	const int remain = i - 10000 * inches;
+	assert( inches < 100 && remain < 10000 );	// i.e. AA.BBBB
+	if ( bLZ && inches < 10 ) str += "0";		// bLZ ==> Add leading zeros
+	str += std::to_string(inches) + ".";
+	if ( remain < 1000 ) str += "0";
+	if ( remain < 100  ) str += "0";
+	if ( remain < 10   ) str += "0";
+	str += std::to_string(remain);
+	return str;
+}
 void GStream::GetQPoint(const QPointF& in, QPoint& out) const
 {
 	if ( m_pBoard == nullptr ) { out = QPoint(0,0); return; }
+	assert( m_pBoard->GetGRIDPIXELS() == 10000 );	// Confirm each integer ordinate == 0.0001 inches
 	const double dEdge = m_pBoard->GetEdgeWidth();	// Add/subtract this offset so bottom-left corner of board outline is at (0,0)
 	out.setX( (int)(in.x()+dEdge) );
 	out.setY( m_pBoard->GetGRIDPIXELS() * m_pBoard->GetRows() - (int) (in.y()-dEdge) ); // Gerber y-axis goes up screen
@@ -434,18 +479,6 @@ void GStream::GetQPolygon(const QPolygonF& in, QPolygon& out) const
 	out.clear();
 	out.resize( in.size() );
 	for (auto i = 0; i < in.size(); i++) GetQPoint(in[i], out[i]);
-}
-std::string GStream::MilToInch(const int& iMil) const	// Just for pen sizes
-{
-	assert(iMil >= 0);
-	std::string str;
-	const int inches = iMil / 1000;
-	const int remain = iMil - 1000 * inches;
-	str += std::to_string(inches) + ".";
-	if ( remain < 100 ) str += "0";
-	if ( remain < 10  ) str += "0";
-	str += std::to_string(remain);
-	return str;
 }
 
 // Wrapper for handling a set of Gerber files
