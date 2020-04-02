@@ -244,9 +244,11 @@ void Component::AddDefaultShapes()
 		}
 		case COMP::DIODE:
 		{
-			double w(0.35 + 0.5*(GetCols() - 1)), h(0.35 + 0.5*(GetRows()-1));
+			double w(0.40 + 0.5*(GetCols() - 1)), h(0.40 + 0.5*(GetRows()-1));
 			AddTwo( Shape(SHAPE::RECT,	true, true,	-w,  w, -h,  h) );
-			AddOne( Shape(SHAPE::LINE,	true, false, w - 0.1666, w - 0.1666, -h, h) );
+			AddOne( Shape(SHAPE::LINE,	true, false, w - 0.05, w - 0.05,  -h, h) );
+			AddOne( Shape(SHAPE::LINE,	true, false, w - 0.75, w - 0.75, -h, h) );
+			AddOne( Shape(SHAPE::LINE,	true, false, w - 0.80, w - 0.80, -h, h) );
 			break;
 		}
 		case COMP::STRIP_100:
