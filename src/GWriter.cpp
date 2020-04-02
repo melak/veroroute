@@ -136,7 +136,7 @@ void GStream::MakeDrills()
 }
 void GStream::MakeApertures()	// Make "pens" for current stream
 {
-	assert( m_os.is_open() && && m_eType != GFILE::DRL);
+	assert( m_os.is_open() && m_eType != GFILE::DRL);
 	const bool bGroundFill	= m_pBoard->GetGroundFill();
 	const bool bVias		= m_pBoard->GetHasVias();
 	const int  pad			= m_pBoard->GetPAD_PERCENT();
@@ -158,35 +158,35 @@ void GStream::MakeApertures()	// Make "pens" for current stream
 			break;
 		case GFILE::GBL:
 		case GFILE::GTL:
-			Comment("D11 is for pad");
+			Comment("Aperture D11 is for pad");
 			m_os << "%ADD11C," << MilToInch(pad) << "*%" << std::endl;				// D11 ==> GPEN::PAD
 			if ( bVias )
 			{
-				Comment("D12 is for via-pad");
+				Comment("Aperture D12 is for via-pad");
 				m_os << "%ADD12C," << MilToInch(via) << "*%" << std::endl;			// D12 ==> GPEN::VIA
 			}
-			Comment("D13 is for track");
+			Comment("Aperture D13 is for track");
 			m_os << "%ADD13C," << MilToInch(track) << "*%" << std::endl;			// D13 ==> GPEN::TRACK
 			if ( bGroundFill )
 			{
-				Comment("D14 is for separating pad from ground-pour");
+				Comment("Aperture D14 is for separating pad from ground-pour");
 				m_os << "%ADD14C," << MilToInch(padgap) << "*%" << std::endl;		// D14 ==> GPEN::PAD_GAP
 				if ( bVias )
 				{
-					Comment("D15 is for separating via-pad from ground-pour");
+					Comment("Aperture D15 is for separating via-pad from ground-pour");
 					m_os << "%ADD15C," << MilToInch(viagap) << "*%" << std::endl;	// D15 ==> GPEN::VIA_GAP
 				}
-				Comment("D16 is for separating track from ground-pour");
+				Comment("Aperture D16 is for separating track from ground-pour");
 				m_os << "%ADD16C," << MilToInch(trackgap) << "*%" << std::endl;		// D16 ==> GPEN::TRACK_GAP
 			}
 			break;
 		case GFILE::GBS:
 		case GFILE::GTS:
-			Comment("D17 is slightly larger than a pad");
+			Comment("Aperture D17 is slightly larger than a pad");
 			m_os << "%ADD17C," << MilToInch(padmask) << "*%" << std::endl;			// D17 ==> GPEN::PAD_MASK
 			if ( bVias )
 			{
-				Comment("D18 is slightly larger than a via-pad");
+				Comment("Aperture D18 is slightly larger than a via-pad");
 				m_os << "%ADD18C," << MilToInch(viamask) << "*%" << std::endl;		// D18 ==> GPEN::VIA_MASK
 			}
 			break;
