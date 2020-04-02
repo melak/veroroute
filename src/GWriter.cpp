@@ -425,8 +425,9 @@ void GStream::WriteDrillValue(const int& iMil)
 void GStream::GetQPoint(const QPointF& in, QPoint& out) const
 {
 	if ( m_pBoard == nullptr ) { out = QPoint(0,0); return; }
-	out.setX( (int) in.x() );
-	out.setY( m_pBoard->GetGRIDPIXELS() * m_pBoard->GetRows() - (int) in.y() ); // Gerber y-axis goes up screen
+	const double dEdge = m_pBoard->GetEdgeWidth();	// Add/subtract this offset so bottom-left corner of board outline is at (0,0)
+	out.setX( (int)(in.x()+dEdge) );
+	out.setY( m_pBoard->GetGRIDPIXELS() * m_pBoard->GetRows() - (int) (in.y()-dEdge) ); // Gerber y-axis goes up screen
 }
 void GStream::GetQPolygon(const QPolygonF& in, QPolygon& out) const
 {
