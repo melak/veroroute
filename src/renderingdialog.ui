@@ -6,20 +6,20 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>330</width>
-    <height>560</height>
+    <width>332</width>
+    <height>590</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>330</width>
-    <height>560</height>
+    <width>332</width>
+    <height>590</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>330</width>
-    <height>560</height>
+    <width>332</width>
+    <height>590</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -178,7 +178,7 @@
     </property>
    </widget>
   </widget>
-<widget class="QGroupBox" name="groupBox_target">
+  <widget class="QGroupBox" name="groupBox_target">
    <property name="geometry">
     <rect>
      <x>10</x>
@@ -321,7 +321,7 @@
      <x>10</x>
      <y>270</y>
      <width>311</width>
-     <height>151</height>
+     <height>181</height>
     </rect>
    </property>
    <property name="title">
@@ -596,12 +596,35 @@
      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
     </property>
    </widget>
+   <widget class="QLabel" name="label_info_2">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>150</y>
+      <width>291</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <weight>50</weight>
+      <italic>true</italic>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>Info:</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+    </property>
+   </widget>
   </widget>
   <widget class="QGroupBox" name="groupBox_pcb">
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>430</y>
+     <y>460</y>
      <width>311</width>
      <height>121</height>
     </rect>

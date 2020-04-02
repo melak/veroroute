@@ -451,11 +451,28 @@ public:
 		// To keep track/pads at least N mil apart:
 		// In diags mode keep     (Pad + Track) / 2 <= ( 70.71 - N).  Keep Gap >= N if used.
 		// In non-diags mode keep (Pad + Pad  ) / 2 <= ( 100.0 - N).  Keep Gap >= N if used.
-		const double dGap		= ( GetGroundFill() ) ? GetGAP_PERCENT() : 100;
-		const double dPad		= std::max(GetPAD_PERCENT(), GetVIAPAD_PERCENT());
-		const double dPadPad	= 100 - dPad;
-		const double dPadTrack	= ( GetDiagsMode() == DIAGSMODE::OFF ) ? 100 : ( 50 * sqrt(2.0) - 0.5 * ( dPad + GetTRACK_PERCENT() ) );
-		return (int) floor(std::max(0.0, std::min(dGap, std::min(dPadPad, dPadTrack))));
+		const double dMinSep	= GetMIN_SEPARATION();	// Min separation without ground fill
+		const double dGap		= GetGroundFill() ? GetGAP_PERCENT() : 100.0;
+		return (int) floor( std::min(dGap, dMinSep) );
+	}
+	int		GetMIN_GROUNDFILL_PERCENT() const // Minimum guaranteed ground-fill width in mil
+	{
+		// To have a ground fill with no isolated islands this must be > 0 (and probably at least 8 mil)
+		if ( !GetGroundFill() ) return 100;
+		const double dMinSep	= GetMIN_SEPARATION();	// Min separation without ground fill
+		const double dDblGap	= GetGAP_PERCENT() * 2.0;
+		return (int) floor( std::max(0.0, dMinSep - dDblGap) );
+	}
+	double	GetMIN_SEPARATION() const	// Minimum possible separation (in mil) between a pad or track without ground fill
+	{
+		const bool   bNoDiags	= GetDiagsMode() == DIAGSMODE::OFF;
+		const double dPad		= ( GetViasEnabled() ) ? std::max(GetPAD_PERCENT(), GetVIAPAD_PERCENT()) : GetPAD_PERCENT();
+		const double dTrk		= GetTRACK_PERCENT();
+		const double dHypot		= 50.0 * sqrt(2.0);	// 70.71
+		const double dPadPad	= 100.0 - dPad;
+		const double dPadTrk	= ( bNoDiags ? 100.0 : dHypot ) - 0.5 * ( dPad + dTrk );
+		const double dTrkTrk	= ( bNoDiags ? 100.0 : dHypot ) - dTrk;
+		return std::max(0.0, std::min(dPadPad, std::min(dPadTrk, dTrkTrk)));
 	}
 	//const int H = std::min(GetHalfPadWidth(), (int) ( GetGRIDPIXELS() * (sqrt(2.0)-1) * 0.5));	// Biggest OK half track width in pixels
 private:

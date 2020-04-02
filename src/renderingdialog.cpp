@@ -98,6 +98,8 @@ void RenderingDialog::UpdateControls()
 	ui->label_viapad->setDisabled(		bCompEdit || bNoTrackOptions || bVero || !bVias );
 	ui->label_viahole->setDisabled(		bCompEdit || bNoTrackOptions || bVero || !bVias );
 	ui->label_gap->setDisabled(			bCompEdit || bVero || !bMonoPCB || !bGndFill );
+	ui->label_info->setDisabled(		bCompEdit || bVero );
+	ui->label_info_2->setDisabled(		bCompEdit || bVero || !bMonoPCB || !bGndFill );
 
 	ui->padWidth->setValue(		board.GetPAD_PERCENT()		);
 	ui->trackWidth->setValue(	board.GetTRACK_PERCENT()	);
@@ -110,8 +112,17 @@ void RenderingDialog::UpdateControls()
 	ui->viaholeWidth->setValue(	board.GetVIAHOLE_PERCENT()	);
 
 	const int minTrackSep = board.GetMIN_TRACK_SEPARATION_PERCENT();
+	const int minGndFill  = board.GetMIN_GROUNDFILL_PERCENT();
+
 	const std::string str = "Guaranteed minimum track separation = " + std::to_string(minTrackSep) + " mil";
 	ui->label_info->setText( QString::fromStdString(str) );
+
+	std::string str2 = "Guaranteed minimum ground-fill width = ";
+	if ( bGndFill )
+		str2 += std::to_string(minGndFill) + " mil";
+	else
+		str2 += "n/a";
+	ui->label_info_2->setText( QString::fromStdString(str2) );
 }
 
 void RenderingDialog::keyPressEvent(QKeyEvent* event)
