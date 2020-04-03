@@ -195,6 +195,36 @@ void CompDialog::EnableControls()	// Enable/disable controls
 	ui->pushButton_Build->setEnabled( bValidDefinition );
 }
 
+void CompDialog::wheelEvent(QWheelEvent* event)
+{
+	QWidget::wheelEvent(event);
+	event->accept();
+}
+
+void CompDialog::mousePressEvent(QMouseEvent* event)
+{
+	QWidget::mousePressEvent(event);
+	event->accept();
+}
+
+void CompDialog::mouseDoubleClickEvent(QMouseEvent* event)
+{
+	QWidget::mouseDoubleClickEvent(event);
+	event->accept();
+}
+
+void CompDialog::mouseMoveEvent(QMouseEvent* event)
+{
+	QWidget::mouseMoveEvent(event);
+	event->accept();
+}
+
+void CompDialog::mouseReleaseEvent(QMouseEvent* event)
+{
+	QWidget::mouseReleaseEvent(event);
+	event->accept();
+}
+
 void CompDialog::keyPressEvent(QKeyEvent* event)
 {
 	m_pMainWindow->specialKeyPressEvent(event);

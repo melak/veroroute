@@ -39,9 +39,11 @@ public:
 		m_id		= 0;
 		m_nameStr	= m_valueStr = m_prefixStr = m_typeStr = m_importStr = "";
 		m_lyr = m_row = m_col = m_iLabelOffsetRow = m_iLabelOffsetCol = 0;
-		m_direction	= 'W';
-		m_bIsPlaced	= false;
-		m_iPinFlags = 0;
+		m_direction		= 'W';
+		m_bIsPlaced		= false;
+		m_iPinFlags		= 0;
+		m_iPadWidth		= 70;
+		m_iHoleWidth	= 35;
 		m_nodeIdPins.clear();
 		m_origIdPins1.clear();
 		m_origIdPins2.clear();
@@ -122,6 +124,8 @@ public:
 		m_direction			= o.m_direction;
 		m_bIsPlaced			= o.m_bIsPlaced;
 		m_iPinFlags			= o.m_iPinFlags;
+		m_iPadWidth			= o.m_iPadWidth;
+		m_iHoleWidth		= o.m_iHoleWidth;
 		AllocatePins( o.GetNumPins() );
 		std::copy(o.m_nodeIdPins.begin(),	o.m_nodeIdPins.end(),	m_nodeIdPins.begin());
 		std::copy(o.m_origIdPins1.begin(),	o.m_origIdPins1.end(),	m_origIdPins1.begin());
@@ -154,6 +158,8 @@ public:
 				&& m_direction			== o.m_direction
 				&& m_bIsPlaced			== o.m_bIsPlaced
 				&& m_iPinFlags			== o.m_iPinFlags
+				&& m_iPadWidth			== o.m_iPadWidth
+				&& m_iHoleWidth			== o.m_iHoleWidth
 				&& GetNumPins()			== o.GetNumPins()
 				&& GetNumShapes()		== o.GetNumShapes();
 		for (size_t i = 0; i < GetNumPins() && bOK; i++)
@@ -229,6 +235,8 @@ public:
 	void SetDirection(const char& d)								{ m_direction = d; }
 	void SetIsPlaced(const bool& b)									{ m_bIsPlaced = b; }
 	void SetPinFlags(const uchar& i)								{ m_iPinFlags = i; }
+	void SetPadWidth(const int& i)									{ m_iPadWidth = i; }
+	void SetHoleWidth(const int& i)									{ m_iHoleWidth = i; }
 	void AddOne(const Shape& s)										{ m_shapes.push_back(s); }
 	void AddTwo(const Shape& s)	// Adds the shape twice.  Once with fill only, and once with line only
 	{
@@ -261,6 +269,8 @@ public:
 	const char&			GetDirection() const						{ return m_direction; }
 	const bool&			GetIsPlaced() const							{ return m_bIsPlaced; }
 	const uchar&		GetPinFlags() const							{ return m_iPinFlags; }
+	const int&			GetPadWidth() const							{ return m_iPadWidth; }
+	const int&			GetHoleWidth() const						{ return m_iHoleWidth; }
 	const std::vector<Shape>&	GetShapes() const					{ return m_shapes; }
 
 	// Helpers for labels
@@ -338,6 +348,15 @@ public:
 			if ( m_pinAligns[i]  != GetDefaultPinAlign(i, GetNumPins(), GetType()) ) return true;
 		}
 		return false;
+	}
+	bool GetAllowCustomPads() const	// true ==> allow custom pad and hole widths
+	{
+		switch( GetType()  )
+		{
+			case COMP::TRACKS:	return false;
+			case COMP::WIRE:	return false;	// Not allowed since 2 wires can share a hole
+			default:			return GetNumPins() > 0;
+		}
 	}
 	bool CanStretch(const bool& bGrow) const
 	{
@@ -497,6 +516,13 @@ public:
 		inStream.Load(m_bIsPlaced);
 		if ( inStream.GetVersion() >= VRT_VERSION_19 )
 			inStream.Load(m_iPinFlags);				// Added in VRT_VERSION_19
+		m_iPadWidth  = 70;
+		m_iHoleWidth = 35;
+		if ( inStream.GetVersion() >= VRT_VERSION_39 )
+		{
+			inStream.Load(m_iPadWidth);				// Added in VRT_VERSION_39
+			inStream.Load(m_iHoleWidth);			// Added in VRT_VERSION_39
+		}
 		unsigned int numPins(0);
 		inStream.Load(numPins);
 		AllocatePins(numPins);
@@ -543,6 +569,8 @@ public:
 		outStream.Save(m_direction);
 		outStream.Save(m_bIsPlaced);
 		outStream.Save(m_iPinFlags);			// Added in VRT_VERSION_19
+		outStream.Save(m_iPadWidth);			// Added in VRT_VERSION_39
+		outStream.Save(m_iHoleWidth);			// Added in VRT_VERSION_39
 		const unsigned int numPins = static_cast<unsigned int>( GetNumPins() );
 		outStream.Save(numPins);
 		for (unsigned int i = 0; i < numPins; i++)
@@ -571,7 +599,9 @@ private:
 	std::vector<std::string>	m_pinLabels;		// Pin labels
 	std::vector<int>			m_pinAligns;		// Pin label alignments (Qt::AlignLeft,Qt::AlignRight,Qt::AlignHCenter)
 	std::vector<Shape>			m_shapes;			// For rendering components. Coordinates are RELATIVE to footprint centre.
-	uchar						m_iPinFlags;		// 1 ==> PIN_RECT, 2 ==> PIN_LABELS
+	uchar						m_iPinFlags;		// 1 ==> PIN_RECT, 2 ==> PIN_LABELS, 4 ==> PIN_CUSTOM
+	int							m_iPadWidth;		// Used if the PIN_CUSTOM flag is set
+	int							m_iHoleWidth;		// Used if the PIN_CUSTOM flag is set
 	// Current placement in board
 	int							m_lyr;				// Board layer for component
 	int							m_row;				// Board row for top-left element of footprint

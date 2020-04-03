@@ -40,6 +40,11 @@ public:
 	void UpdateCompControls();	// Component controls
 	void UpdateControls();		// Non-component controls
 protected:
+	void wheelEvent(QWheelEvent* event);
+	void mousePressEvent(QMouseEvent* event);
+	void mouseDoubleClickEvent(QMouseEvent* event);
+	void mouseMoveEvent(QMouseEvent* event);
+	void mouseReleaseEvent(QMouseEvent* event);
 	void keyPressEvent(QKeyEvent* event);
 	void keyReleaseEvent(QKeyEvent* event);
 private:

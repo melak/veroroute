@@ -25,7 +25,7 @@ class QPoint;
 class QPolygon;
 
 // The GPEN enum is a bitfield.
-// The idea being we can do things in future such as GPEN(BITS_PAD | BITS_VAR)
+// The idea being we can do things in future such as GPEN(BIT_PAD | BIT_VAR)
 // to indicate a custom pad size without necessarily adding explicit enum entries.
 
 const int	BIT_GKO(1),	 BIT_PAD(2),  BIT_VIA(4),  BIT_TRK(8),

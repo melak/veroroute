@@ -1132,7 +1132,7 @@ void MainWindow::SetCompName(const QString& str)
 	if ( m_board.GetGroupMgr().GetNumUserComps() != 1 ) return;
 	Component&			comp	= m_board.GetUserComponent();
 	const std::string	newStr	= str.toStdString();
-	if ( newStr == comp.GetNameStr() ) return;
+	if ( newStr == comp.GetNameStr() ) return;	// No change
 	comp.SetNameStr(newStr);
 	UpdateHistory("Part name change", comp.GetId());
 	UpdateBOM();
@@ -1143,7 +1143,7 @@ void MainWindow::SetCompValue(const QString& str)
 	if ( m_board.GetGroupMgr().GetNumUserComps() != 1 ) return;
 	Component&			comp	= m_board.GetUserComponent();
 	const std::string	newStr	= str.toStdString();
-	if ( newStr == comp.GetValueStr() ) return;
+	if ( newStr == comp.GetValueStr() ) return;	// No change
 	comp.SetValueStr(newStr);
 	UpdateHistory("Part value change", comp.GetId());
 	UpdateBOM();
@@ -1162,13 +1162,50 @@ void MainWindow::SetCompType(const QString& str)
 	UpdateControls();
 	RepaintWithListNodes();
 }
+void MainWindow::SetCompCustomFlag(const bool& b)
+{
+	if ( m_board.GetDisableChangeCustom() ) return;
+	if ( m_board.GetGroupMgr().GetNumUserComps() != 1 ) return;
+	Component& comp = m_board.GetUserComponent();
+	const bool bCurrentState = (comp.GetPinFlags() & PIN_CUSTOM) != 0;
+	if ( b == bCurrentState ) return;	// No change
+	if ( b )
+		comp.SetPinFlags( comp.GetPinFlags() | PIN_CUSTOM );	// Set bit
+	else
+		comp.SetPinFlags( comp.GetPinFlags() & ~PIN_CUSTOM );	// Clear bit
+	UpdateHistory("Change custom pad/hole flag");
+	UpdateControls();
+	RepaintWithListNodes();
+}
+void MainWindow::SetCompPadWidth(const int& i)
+{
+	if ( m_board.GetDisableChangeCustom() ) return;
+	if ( m_board.GetGroupMgr().GetNumUserComps() != 1 ) return;
+	Component& comp = m_board.GetUserComponent();
+	if ( i == comp.GetPadWidth() ) return;	// No change
+	comp.SetPadWidth(i);
+	UpdateHistory("Change custom pad size");
+	UpdateControls();
+	RepaintWithListNodes();
+}
+void MainWindow::SetCompHoleWidth(const int& i)
+{
+	if ( m_board.GetDisableChangeCustom() ) return;
+	if ( m_board.GetGroupMgr().GetNumUserComps() != 1 ) return;
+	Component& comp = m_board.GetUserComponent();
+	if ( i == comp.GetHoleWidth() ) return;	// No change
+	comp.SetHoleWidth(i);
+	UpdateHistory("Change i hole size");
+	UpdateControls();
+	RepaintWithListNodes();
+}
 void MainWindow::CompRotate(const bool& bCW)
 {
 	if ( m_board.GetDisableRotate() ) return;
 
 	m_board.RotateUserComps(bCW);
 
-	UpdateHistory(bCW ? "Rotate part CW" : "Rotate part CCW");
+	UpdateHistory(bCW ? "Rotate part(s) CW" : "Rotate part(s) CCW");
 	UpdateControls();
 	RepaintWithListNodes();
 }

@@ -27,6 +27,8 @@ void CompDefiner::Populate(const Component& o)
 	Clear();
 
 	SetPinFlags( o.GetPinFlags() );
+	SetPadWidth( o.GetPadWidth() );
+	SetHoleWidth( o.GetHoleWidth() );
 
 	// Copy strings
 	SetValueStr( o.GetValueStr() );
@@ -72,6 +74,8 @@ void CompDefiner::Build(Component& comp) const
 
 	// Build component from definition
 	comp.SetPinFlags( GetPinFlags() );
+	comp.SetPadWidth( GetPadWidth() );
+	comp.SetHoleWidth( GetHoleWidth() );
 	comp.SetValueStr( GetValueStr() );
 	comp.SetPrefixStr( GetPrefixStr() );
 	comp.SetTypeStr( GetTypeStr() );

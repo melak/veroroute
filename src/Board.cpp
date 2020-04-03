@@ -487,6 +487,13 @@ bool Board::GetDisableChangeType()
 	const COMP		 eType	= comp.GetType();
 	return !AllowTypeChange(eType, eType);
 }
+bool Board::GetDisableChangeCustom()
+{
+	if ( GetMirrored() ) return true;
+	if ( ( GetGroupMgr().GetNumUserComps() != 1 ) || ( GetCompMode() == COMPSMODE::OFF ) ) return true;
+	const Component& comp	= GetUserComponent();
+	return !comp.GetAllowCustomPads();
+}
 
 bool Board::GetDisableWipe() const
 {

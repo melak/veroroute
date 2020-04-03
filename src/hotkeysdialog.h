@@ -39,6 +39,6 @@ private:
 	void Setup();
 
 	Ui_HotkeysDialog*	ui;
-	MainWindow*	    	m_pMainWindow;
-	QStringList	    	m_tableHeader;
+	MainWindow*			m_pMainWindow;
+	QStringList			m_tableHeader;
 };

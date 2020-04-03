@@ -156,9 +156,9 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>390</y>
+     <y>420</y>
      <width>111</width>
-     <height>111</height>
+     <height>81</height>
     </rect>
    </property>
    <property name="focusPolicy">
@@ -172,7 +172,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>365</y>
+     <y>400</y>
      <width>111</width>
      <height>24</height>
     </rect>
@@ -188,9 +188,9 @@
    <property name="geometry">
     <rect>
      <x>130</x>
-     <y>390</y>
+     <y>420</y>
      <width>111</width>
-     <height>111</height>
+     <height>81</height>
     </rect>
    </property>
    <property name="focusPolicy">
@@ -204,7 +204,7 @@
    <property name="geometry">
     <rect>
      <x>130</x>
-     <y>365</y>
+     <y>400</y>
      <width>111</width>
      <height>24</height>
     </rect>
@@ -362,7 +362,7 @@
    <property name="geometry">
     <rect>
      <x>0</x>
-     <y>350</y>
+     <y>380</y>
      <width>81</width>
      <height>21</height>
     </rect>
@@ -384,7 +384,7 @@
    <property name="geometry">
     <rect>
      <x>80</x>
-     <y>350</y>
+     <y>380</y>
      <width>91</width>
      <height>20</height>
     </rect>
@@ -428,7 +428,7 @@
    <property name="geometry">
     <rect>
      <x>170</x>
-     <y>350</y>
+     <y>380</y>
      <width>81</width>
      <height>21</height>
     </rect>
@@ -1254,6 +1254,110 @@
    </property>
    <property name="alignment">
     <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QSpinBox" name="padWidth">
+   <property name="geometry">
+    <rect>
+     <x>120</x>
+     <y>350</y>
+     <width>41</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>Custom pad width (mil)</string>
+   </property>
+   <property name="minimum">
+    <number>50</number>
+   </property>
+   <property name="maximum">
+    <number>98</number>
+   </property>
+   <property name="singleStep">
+    <number>1</number>
+   </property>
+   <property name="value">
+    <number>70</number>
+   </property>
+  </widget>
+  <widget class="QSpinBox" name="holeWidth">
+   <property name="geometry">
+    <rect>
+     <x>200</x>
+     <y>350</y>
+     <width>41</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>Custom hole width (mil)</string>
+   </property>
+   <property name="minimum">
+    <number>20</number>
+   </property>
+   <property name="maximum">
+    <number>40</number>
+   </property>
+   <property name="singleStep">
+    <number>1</number>
+   </property>
+   <property name="value">
+    <number>35</number>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_hole">
+   <property name="geometry">
+    <rect>
+     <x>160</x>
+     <y>350</y>
+     <width>41</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Hole  </string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="custom">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>350</y>
+     <width>71</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="mouseTracking">
+    <bool>false</bool>
+   </property>
+   <property name="focusPolicy">
+    <enum>Qt::NoFocus</enum>
+   </property>
+   <property name="toolTip">
+    <string>Use custom pad and hole size</string>
+   </property>
+   <property name="text">
+    <string>Custom</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_pad">
+   <property name="geometry">
+    <rect>
+     <x>80</x>
+     <y>350</y>
+     <width>41</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Pad  </string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
    </property>
   </widget>
  </widget>

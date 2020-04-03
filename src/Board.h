@@ -458,6 +458,7 @@ public:
 	bool GetDisableStretch(bool bGrow);
 	bool GetDisableStretchWidth(bool bGrow);
 	bool GetDisableChangeType();
+	bool GetDisableChangeCustom();
 	bool GetDisableWipe() const;
 
 	void				SetInfoStr(const std::string& str)	{ m_infoStr = str; }

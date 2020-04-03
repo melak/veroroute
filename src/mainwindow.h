@@ -256,6 +256,9 @@ public slots:
 	void SetCompName(const QString& str);
 	void SetCompValue(const QString& str);
 	void SetCompType(const QString& str);
+	void SetCompCustomFlag(const bool& b);
+	void SetCompPadWidth(const int& i);
+	void SetCompHoleWidth(const int& i);
 	void CompRotateCCW()	{ CompRotate(false); }
 	void CompRotateCW()		{ CompRotate(true); }
 	void CompGrow()			{ CompStretch(true); }

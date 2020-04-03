@@ -29,6 +29,7 @@ class Component;
 // The following flags are used to form a bitfield that determine how pins may be drawn
 const uchar PIN_RECT	= 1;	// Draw pin as a rectangle instead of circle (e.g. for switches/relays)
 const uchar PIN_LABELS	= 2;	// Allow pin labels to be drawn
+const uchar PIN_CUSTOM	= 4;	// Allow over-ride of pad and hole size
 
 const int BAD_ID = -1;
 
@@ -69,7 +70,7 @@ public:
 	void Clear()
 	{
 		m_currentPinId = m_currentShapeId = BAD_ID;
-		m_iPinFlags = 0;
+		m_iPinFlags = 0; m_iPadWidth = 70; m_iHoleWidth = 35;
 		m_valueStr = m_prefixStr = m_typeStr = m_importStr = "";
 		m_grid.Allocate(1,4,4);
 		m_grid.Clear( Pin(BAD_PINCHAR, SURFACE_FULL, HOLE_FREE) );
@@ -81,6 +82,8 @@ public:
 		m_currentPinId		= o.m_currentPinId;
 		m_currentShapeId	= o.m_currentShapeId;
 		m_iPinFlags			= o.m_iPinFlags;
+		m_iPadWidth			= o.m_iPadWidth;
+		m_iHoleWidth		= o.m_iHoleWidth;
 		m_valueStr			= o.m_valueStr;
 		m_prefixStr			= o.m_prefixStr;
 		m_typeStr			= o.m_typeStr;
@@ -95,6 +98,8 @@ public:
 		bool bOK = m_currentPinId		== o.m_currentPinId
 				&& m_currentShapeId		== o.m_currentShapeId
 				&& m_iPinFlags			== o.m_iPinFlags
+				&& m_iPadWidth			== o.m_iPadWidth
+				&& m_iHoleWidth			== o.m_iHoleWidth
 				&& m_valueStr			== o.m_valueStr
 				&& m_prefixStr			== o.m_prefixStr
 				&& m_typeStr			== o.m_typeStr
@@ -111,18 +116,22 @@ public:
 		m_grid.DeAllocate();
 		m_mapShapes.clear();
 	}
-	bool SetCurrentPinId(const int& i)				{ const bool bChanged = ( m_currentPinId	!= i );	m_currentPinId		= i; return bChanged; }
-	bool SetCurrentShapeId(const int& i)			{ const bool bChanged = ( m_currentShapeId	!= i );	m_currentShapeId	= i; return bChanged; }
-	bool SetPinFlags(const uchar& i)				{ const bool bChanged = ( m_iPinFlags		!= i );	m_iPinFlags			= i; return bChanged; }
-	bool SetValueStr(const std::string& s)			{ const bool bChanged = ( m_valueStr		!= s );	m_valueStr			= s; return bChanged; }
-	bool SetPrefixStr(const std::string& s)			{ const bool bChanged = ( m_prefixStr		!= s );	m_prefixStr			= s; return bChanged; }
-	bool SetTypeStr(const std::string& s)			{ const bool bChanged = ( m_typeStr			!= s );	m_typeStr			= s; return bChanged; }
-	bool SetImportStr(const std::string& s)			{ const bool bChanged = ( m_importStr		!= s );	m_importStr			= s; return bChanged; }
-	bool SetGrid(const PinGrid& o)					{ const bool bChanged = ( m_grid			!= o );	m_grid				= o; return bChanged; }
+	bool SetCurrentPinId(const int& i)		{ const bool bChanged = ( m_currentPinId	!= i );	m_currentPinId		= i; return bChanged; }
+	bool SetCurrentShapeId(const int& i)	{ const bool bChanged = ( m_currentShapeId	!= i );	m_currentShapeId	= i; return bChanged; }
+	bool SetPinFlags(const uchar& i)		{ const bool bChanged = ( m_iPinFlags		!= i );	m_iPinFlags			= i; return bChanged; }
+	bool SetPadWidth(const int& i)			{ const bool bChanged = ( m_iPadWidth		!= i );	m_iPadWidth			= i; return bChanged; }
+	bool SetHoleWidth(const int& i)			{ const bool bChanged = ( m_iHoleWidth		!= i );	m_iHoleWidth		= i; return bChanged; }
+	bool SetValueStr(const std::string& s)	{ const bool bChanged = ( m_valueStr		!= s );	m_valueStr			= s; return bChanged; }
+	bool SetPrefixStr(const std::string& s)	{ const bool bChanged = ( m_prefixStr		!= s );	m_prefixStr			= s; return bChanged; }
+	bool SetTypeStr(const std::string& s)	{ const bool bChanged = ( m_typeStr			!= s );	m_typeStr			= s; return bChanged; }
+	bool SetImportStr(const std::string& s)	{ const bool bChanged = ( m_importStr		!= s );	m_importStr			= s; return bChanged; }
+	bool SetGrid(const PinGrid& o)			{ const bool bChanged = ( m_grid			!= o );	m_grid				= o; return bChanged; }
 	void AddShape(const int& id, const Shape& o)	{ assert( id != BAD_ID );	m_mapShapes.push_back( IntShape(id, o) ); }
 	const int&				GetCurrentPinId() const		{ return m_currentPinId; }
 	const int&				GetCurrentShapeId() const	{ return m_currentShapeId; }
 	const uchar&			GetPinFlags() const			{ return m_iPinFlags; }
+	const int&				GetPadWidth() const			{ return m_iPadWidth; }
+	const int&				GetHoleWidth() const		{ return m_iHoleWidth; }
 	const std::string&		GetValueStr() const			{ return m_valueStr; }
 	const std::string&		GetPrefixStr() const		{ return m_prefixStr; }
 	const std::string&		GetTypeStr() const			{ return m_typeStr; }
@@ -303,7 +312,7 @@ public:
 	int  GetNewShapeId() const;
 	bool SetWidth(const int& i);
 	bool SetHeight(const int& i);
-	int  GetPinId(const int& row, const int& col) const;	// Pick the most relevant pin at the location
+	int  GetPinId(const int& row, const int& col) const;				// Pick the most relevant pin at the location
 	int  GetShapeId(const double& dRowIn, const double& dColIn) const;	// Pick the most relevant shape at the location
 	bool GetIsValid() const;
 	// Persist functions
@@ -312,6 +321,13 @@ public:
 		inStream.Load(m_currentPinId);
 		inStream.Load(m_currentShapeId);
 		inStream.Load(m_iPinFlags);
+		m_iPadWidth  = 70;
+		m_iHoleWidth = 35;
+		if ( inStream.GetVersion() >= VRT_VERSION_39 )
+		{
+			inStream.Load(m_iPadWidth);		// Added in VRT_VERSION_39
+			inStream.Load(m_iHoleWidth);	// Added in VRT_VERSION_39
+		}
 		inStream.Load(m_valueStr);
 		inStream.Load(m_prefixStr);
 		inStream.Load(m_typeStr);
@@ -335,6 +351,8 @@ public:
 		outStream.Save(m_currentPinId);
 		outStream.Save(m_currentShapeId);
 		outStream.Save(m_iPinFlags);
+		outStream.Save(m_iPadWidth);	// Added in VRT_VERSION_39
+		outStream.Save(m_iHoleWidth);	// Added in VRT_VERSION_39
 		outStream.Save(m_valueStr);
 		outStream.Save(m_prefixStr);
 		outStream.Save(m_typeStr);
@@ -363,7 +381,9 @@ private:
 	int						m_currentPinId;		// Current index into m_grid
 	int						m_currentShapeId;	// Current selected shape
 	// Component description
-	uchar					m_iPinFlags;		// 1 ==> PIN_RECT, 2 ==> PIN_LABELS
+	uchar					m_iPinFlags;		// 1 ==> PIN_RECT, 2 ==> PIN_LABELS, 4 ==> PIN_CUSTOM
+	int						m_iPadWidth;		// Used if the PIN_CUSTOM flag is set	//TODO Add to component editor dialog
+	int						m_iHoleWidth;		// Used if the PIN_CUSTOM flag is set	//TODO Add to component editor dialog
 	std::string				m_valueStr;			// Value label (e.g. "MN3004")
 	std::string				m_prefixStr;		// Prefix string (e.g. "IC")
 	std::string				m_typeStr;			// Component type (e.g. "BBD")

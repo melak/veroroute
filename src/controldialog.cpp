@@ -75,6 +75,9 @@ void ControlDialog::SetMainWindow(MainWindow* p)
 	QObject::connect(ui->textT,				SIGNAL(clicked()),			m_pMainWindow,	SLOT(CompTextT()));
 	QObject::connect(ui->textB,				SIGNAL(clicked()),			m_pMainWindow,	SLOT(CompTextB()));
 
+	QObject::connect(ui->custom,			SIGNAL(toggled(bool)),		m_pMainWindow,	SLOT(SetCompCustomFlag(bool)));
+	QObject::connect(ui->padWidth,			SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SetCompPadWidth(int)));
+	QObject::connect(ui->holeWidth,			SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SetCompHoleWidth(int)));
 	QObject::connect(ui->brokenList,		SIGNAL(itemClicked(QListWidgetItem*)),	m_pMainWindow, SLOT(SetNodeId(QListWidgetItem*)));
 	QObject::connect(ui->floatingList,		SIGNAL(itemClicked(QListWidgetItem*)),	m_pMainWindow, SLOT(SetNodeId(QListWidgetItem*)));
 
@@ -133,13 +136,18 @@ void ControlDialog::UpdateCompControls()	// Component controls
 	Board& board = m_pMainWindow->m_board;
 
 	std::string nameStr(""), valueStr(""), typeStr("");
+	bool bCustom(false);
+	int iPadWidth(0), iHoleWidth(0);
 
 	if ( board.GetGroupMgr().GetNumUserComps() == 1 )
 	{
 		const Component& comp = board.GetUserComponent();
-		nameStr		= comp.GetNameStr();
-		valueStr	= comp.GetValueStr();
-		typeStr		= comp.GetTypeStr();
+		nameStr			= comp.GetNameStr();
+		valueStr		= comp.GetValueStr();
+		typeStr			= comp.GetTypeStr();
+		bCustom			= ( comp.GetPinFlags() & PIN_CUSTOM ) != 0;
+		iPadWidth		= comp.GetPadWidth();
+		iHoleWidth		= comp.GetHoleWidth();
 
 		int currentIndex = ui->typeComboBox->findText( QString::fromStdString( typeStr ));
 		if ( currentIndex != -1 )
@@ -178,9 +186,29 @@ void ControlDialog::UpdateCompControls()	// Component controls
 	ui->nameEdit->show();
 	ui->valueEdit->show();
 
-	const bool bCompEdit	= board.GetCompEdit();
-	const bool bNoText		= bCompEdit || board.GetDisableCompText();
-	const bool bNoRotate	= bCompEdit || board.GetDisableRotate();
+	if ( ui->custom->isChecked() != bCustom ) ui->custom->setChecked(bCustom);
+	if ( bCustom )
+	{
+		if ( ui->padWidth->value()  != iPadWidth  ) ui->padWidth->setValue(iPadWidth);
+		if ( ui->holeWidth->value() != iHoleWidth ) ui->holeWidth->setValue(iHoleWidth);
+		ui->padWidth->show();
+		ui->holeWidth->show();
+		ui->label_pad->show();
+		ui->label_hole->show();
+	}
+	else
+	{
+		ui->padWidth->hide();
+		ui->holeWidth->hide();
+		ui->label_pad->hide();
+		ui->label_hole->hide();
+	}
+
+	const bool bCompEdit		= board.GetCompEdit();
+	const bool bNoTrackOptions	= board.GetTrackMode() == TRACKMODE::OFF;
+	const bool bVero			= board.GetVeroTracks();
+	const bool bNoText			= bCompEdit || board.GetDisableCompText();
+	const bool bNoRotate		= bCompEdit || board.GetDisableRotate();
 
 	// Disable controls	...
 	ui->nameEdit->setDisabled(		bNoText );
@@ -197,6 +225,10 @@ void ControlDialog::UpdateCompControls()	// Component controls
 	ui->shrink_2->setDisabled(		bCompEdit || board.GetDisableStretchWidth(false) );
 	ui->grow_2->setDisabled(		bCompEdit || board.GetDisableStretchWidth(true) );
 	ui->typeComboBox->setDisabled(	bCompEdit || board.GetDisableChangeType() );
+	ui->custom->setDisabled(		bCompEdit || bNoTrackOptions || bVero || board.GetDisableChangeCustom() );
+	ui->padWidth->setDisabled(		bCompEdit || bNoTrackOptions || bVero || board.GetDisableChangeCustom() || !ui->custom->isChecked() );
+	ui->holeWidth->setDisabled(		bCompEdit || bNoTrackOptions || bVero || board.GetDisableChangeCustom() || !ui->custom->isChecked() );
+
 	// ... and the corresponding labels
 	ui->label_name->setDisabled(	bNoText );
 	ui->label_value->setDisabled(	bNoText );
@@ -205,6 +237,8 @@ void ControlDialog::UpdateCompControls()	// Component controls
 	ui->label_length->setDisabled(	bCompEdit || (board.GetDisableStretch(false)      && board.GetDisableStretch(true)) );
 	ui->label_width->setDisabled(	bCompEdit || (board.GetDisableStretchWidth(false) && board.GetDisableStretchWidth(true)) );
 	ui->label_type->setDisabled(	bCompEdit || board.GetDisableChangeType() );
+	ui->label_pad->setDisabled(		bCompEdit || bNoTrackOptions || bVero || board.GetDisableChangeCustom() );
+	ui->label_hole->setDisabled(	bCompEdit || bNoTrackOptions || bVero || board.GetDisableChangeCustom() );
 }
 
 void ControlDialog::UpdateControls()	// Non-component controls
@@ -239,14 +273,46 @@ void ControlDialog::UpdateControls()	// Non-component controls
 	ui->fillSlider->setValue( board.GetFillSaturation() );
 }
 
+void ControlDialog::wheelEvent(QWheelEvent* event)
+{
+	QWidget::wheelEvent(event);
+	event->accept();
+}
+
+void ControlDialog::mousePressEvent(QMouseEvent* event)
+{
+	QWidget::mousePressEvent(event);
+	event->accept();
+}
+
+void ControlDialog::mouseDoubleClickEvent(QMouseEvent* event)
+{
+	QWidget::mouseDoubleClickEvent(event);
+	event->accept();
+}
+
+void ControlDialog::mouseMoveEvent(QMouseEvent* event)
+{
+	QWidget::mouseMoveEvent(event);
+	event->accept();
+}
+
+void ControlDialog::mouseReleaseEvent(QMouseEvent* event)
+{
+	QWidget::mouseReleaseEvent(event);
+	event->accept();
+}
+
 void ControlDialog::keyPressEvent(QKeyEvent* event)
 {
 	m_pMainWindow->specialKeyPressEvent(event);
 	QWidget::keyPressEvent(event);
+	event->accept();
 }
 
 void ControlDialog::keyReleaseEvent(QKeyEvent* event)
 {
 	m_pMainWindow->commonKeyReleaseEvent(event);
 	QWidget::keyReleaseEvent(event);
+	event->accept();
 }
