@@ -154,7 +154,7 @@ void GStream::MakeApertures()	// Make "pens" for current stream
 	switch( m_eType )
 	{
 		case GFILE::GKO:
-			m_os << "%ADD10C," << MilToInch(10) << "*%" << std::endl;				// D10 ==> GPEN::MIL10
+			m_os << "%ADD10C," << MilToInch(10) << "*%" << std::endl;				// D10 ==> GPEN::GKO
 			break;
 		case GFILE::GBL:
 		case GFILE::GTL:
@@ -166,7 +166,7 @@ void GStream::MakeApertures()	// Make "pens" for current stream
 				m_os << "%ADD12C," << MilToInch(via) << "*%" << std::endl;			// D12 ==> GPEN::VIA
 			}
 			Comment("Aperture D13 is for track");
-			m_os << "%ADD13C," << MilToInch(track) << "*%" << std::endl;			// D13 ==> GPEN::TRACK
+			m_os << "%ADD13C," << MilToInch(track) << "*%" << std::endl;			// D13 ==> GPEN::TRK
 			if ( bGroundFill )
 			{
 				Comment("Aperture D14 is for separating pad from ground-pour");
@@ -177,22 +177,22 @@ void GStream::MakeApertures()	// Make "pens" for current stream
 					m_os << "%ADD15C," << MilToInch(viagap) << "*%" << std::endl;	// D15 ==> GPEN::VIA_GAP
 				}
 				Comment("Aperture D16 is for separating track from ground-pour");
-				m_os << "%ADD16C," << MilToInch(trackgap) << "*%" << std::endl;		// D16 ==> GPEN::TRACK_GAP
+				m_os << "%ADD16C," << MilToInch(trackgap) << "*%" << std::endl;		// D16 ==> GPEN::TRK_GAP
 			}
 			break;
 		case GFILE::GBS:
 		case GFILE::GTS:
 			Comment("Aperture D17 is slightly larger than a pad");
-			m_os << "%ADD17C," << MilToInch(padmask) << "*%" << std::endl;			// D17 ==> GPEN::PAD_MASK
+			m_os << "%ADD17C," << MilToInch(padmask) << "*%" << std::endl;			// D17 ==> GPEN::PAD_MSK
 			if ( bVias )
 			{
 				Comment("Aperture D18 is slightly larger than a via-pad");
-				m_os << "%ADD18C," << MilToInch(viamask) << "*%" << std::endl;		// D18 ==> GPEN::VIA_MASK
+				m_os << "%ADD18C," << MilToInch(viamask) << "*%" << std::endl;		// D18 ==> GPEN::VIA_MSK
 			}
 			break;
 		case GFILE::GTO:
 		case GFILE::GBO:
-			m_os << "%ADD19C," << MilToInch(silk) << "*%" << std::endl;				// D19 ==> GPEN::SILK
+			m_os << "%ADD19C," << MilToInch(silk) << "*%" << std::endl;				// D19 ==> GPEN::SLK
 			break;
 		case GFILE::DRL:
 			break;
@@ -378,19 +378,19 @@ void GStream::SetPen(const GPEN& ePen)
 	m_ePen = ePen;
 	switch( m_ePen )
 	{
-		case GPEN::UNKNOWN:		return;
-		case GPEN::MIL10:		m_os << "D10"; EndLine(); return;
-		case GPEN::PAD:			m_os << "D11"; EndLine(); return;
-		case GPEN::VIA:			m_os << "D12"; EndLine(); return;
-		case GPEN::TRACK:		m_os << "D13"; EndLine(); return;
-		case GPEN::PAD_GAP:		m_os << "D14"; EndLine(); return;
-		case GPEN::VIA_GAP:		m_os << "D15"; EndLine(); return;
-		case GPEN::TRACK_GAP:	m_os << "D16"; EndLine(); return;
-		case GPEN::PAD_MASK:	m_os << "D17"; EndLine(); return;
-		case GPEN::VIA_MASK:	m_os << "D18"; EndLine(); return;
-		case GPEN::SILK:		m_os << "D19"; EndLine(); return;
-		case GPEN::PAD_HOLE:	m_os << "T01"; EndLine(); return;
-		case GPEN::VIA_HOLE:	m_os << "T02"; EndLine(); return;
+		case GPEN::UNKNOWN:	return;
+		case GPEN::GKO:		m_os << "D10"; EndLine(); return;
+		case GPEN::PAD:		m_os << "D11"; EndLine(); return;
+		case GPEN::VIA:		m_os << "D12"; EndLine(); return;
+		case GPEN::TRK:		m_os << "D13"; EndLine(); return;
+		case GPEN::PAD_GAP:	m_os << "D14"; EndLine(); return;
+		case GPEN::VIA_GAP:	m_os << "D15"; EndLine(); return;
+		case GPEN::TRK_GAP:	m_os << "D16"; EndLine(); return;
+		case GPEN::PAD_MSK:	m_os << "D17"; EndLine(); return;
+		case GPEN::VIA_MSK:	m_os << "D18"; EndLine(); return;
+		case GPEN::SLK:		m_os << "D19"; EndLine(); return;
+		case GPEN::PAD_HLE:	m_os << "T01"; EndLine(); return;
+		case GPEN::VIA_HLE:	m_os << "T02"; EndLine(); return;
 	}
 }
 void GStream::Flash(const QPoint& p)

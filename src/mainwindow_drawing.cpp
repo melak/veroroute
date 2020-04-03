@@ -135,9 +135,9 @@ void MainWindow::PaintVia(const GuiControl& guiCtrl, QPainter& painter, const QC
 		m_gWriter.GetStream(GFILE::GBL).AddViaPad(bGap ? GPEN::VIA_GAP : GPEN::VIA, pC);	// Bottom copper layer
 		if ( !bGap )
 		{
-			m_gWriter.GetStream(GFILE::GTS).AddPad(GPEN::VIA_MASK, pC);		// Top    solder mask layer
-			m_gWriter.GetStream(GFILE::GBS).AddPad(GPEN::VIA_MASK, pC);		// Bottom solder mask layer
-			m_gWriter.GetStream(GFILE::DRL).AddViaHole(GPEN::VIA_HOLE, pC);	// Drill file
+			m_gWriter.GetStream(GFILE::GTS).AddViaPad(GPEN::VIA_MSK, pC);	// Top    solder mask layer
+			m_gWriter.GetStream(GFILE::GBS).AddViaPad(GPEN::VIA_MSK, pC);	// Bottom solder mask layer
+			m_gWriter.GetStream(GFILE::DRL).AddViaHole(GPEN::VIA_HLE, pC);	// Drill file
 		}
 	}
 	else
@@ -161,9 +161,9 @@ void MainWindow::PaintPad(const GuiControl& guiCtrl, QPainter& painter, const QC
 		m_gWriter.GetStream(GFILE::GBL).AddPad(bGap ? GPEN::PAD_GAP : GPEN::PAD, pC); // Bottom copper layer
 		if ( !bGap )
 		{
-			m_gWriter.GetStream(GFILE::GTS).AddPad(GPEN::PAD_MASK, pC);		// Top    solder mask layer
-			m_gWriter.GetStream(GFILE::GBS).AddPad(GPEN::PAD_MASK, pC);		// Bottom solder mask layer
-			m_gWriter.GetStream(GFILE::DRL).AddPadHole(GPEN::PAD_HOLE, pC);	// Drill file
+			m_gWriter.GetStream(GFILE::GTS).AddPad(GPEN::PAD_MSK, pC);		// Top    solder mask layer
+			m_gWriter.GetStream(GFILE::GBS).AddPad(GPEN::PAD_MSK, pC);		// Bottom solder mask layer
+			m_gWriter.GetStream(GFILE::DRL).AddPadHole(GPEN::PAD_HLE, pC);	// Drill file
 		}
 	}
 	else
@@ -203,8 +203,8 @@ void MainWindow::PaintTag(const GuiControl& guiCtrl, QPainter& painter, const QC
 		polygon.push_back(pD);
 		switch(iLyr)
 		{
-			case 0:	m_gWriter.GetStream(GFILE::GBL).AddTrack(GPEN::TRACK, polygon); break;	// Bottom copper layer
-			case 1:	m_gWriter.GetStream(GFILE::GTL).AddTrack(GPEN::TRACK, polygon); break;	// Top    copper layer
+			case 0:	m_gWriter.GetStream(GFILE::GBL).AddTrack(GPEN::TRK, polygon); break;	// Bottom copper layer
+			case 1:	m_gWriter.GetStream(GFILE::GTL).AddTrack(GPEN::TRK, polygon); break;	// Top    copper layer
 		}
 	}
 	else
@@ -379,8 +379,8 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 		{
 			auto& osT = m_gWriter.GetStream(GFILE::GTL);	// Top    copper layer
 			auto& osB = m_gWriter.GetStream(GFILE::GBL);	// Bottom copper layer
-			const GPEN ePen		= bGap ? GPEN::TRACK_GAP : GPEN::TRACK;
-			const GPEN ePenHV	= bGap ? GPEN::PAD_GAP   : GPEN::PAD;
+			const GPEN ePen		= bGap ? GPEN::TRK_GAP : GPEN::TRK;
+			const GPEN ePenHV	= bGap ? GPEN::PAD_GAP : GPEN::PAD;
 
 			if ( bFatTracks && padWidth > trackWidth )
 			{
@@ -417,10 +417,10 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 			auto& osB = m_gWriter.GetStream(GFILE::GBL);	// Bottom copper layer
 			if ( m_board.GetLyrs() > 1 )
 			{
-				osT.AddLoop(bGap ? GPEN::TRACK_GAP : GPEN::TRACK, polygon);		// Closed polygon outline
+				osT.AddLoop(bGap ? GPEN::TRK_GAP : GPEN::TRK, polygon);	// Closed polygon outline
 				if ( !bGap ) osT.AddRegion(polygon);	// Only non-Gap polygon needs filling
 			}
-			osB.AddLoop(bGap ? GPEN::TRACK_GAP : GPEN::TRACK, polygon);			// Closed polygon outline
+			osB.AddLoop(bGap ? GPEN::TRK_GAP : GPEN::TRK, polygon);		// Closed polygon outline
 			if ( !bGap ) osB.AddRegion(polygon);		// Only non-Gap polygon needs filling
 		}
 		else
@@ -791,7 +791,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 	if ( m_bWriteGerber )
 	{
-		m_gWriter.GetStream(GFILE::GKO).DrawLoop(GPEN::MIL10, edge);	// Board outline layer
+		m_gWriter.GetStream(GFILE::GKO).DrawLoop(GPEN::GKO, edge);	// Board outline layer
 	}
 	else
 	{
@@ -1006,7 +1006,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					polygon << QPointF(X, Y);
 					GetXY(board, comp.GetRow() + comp.GetCompRows() - 1, comp.GetCol() + comp.GetCompCols() - 1, X, Y);
 					polygon << QPointF(X, Y);
-					m_gWriter.GetStream(GFILE::GTL).AddTrack(bGap ? GPEN::TRACK_GAP : GPEN::TRACK, polygon);
+					m_gWriter.GetStream(GFILE::GTL).AddTrack(bGap ? GPEN::TRK_GAP : GPEN::TRK, polygon);
 				}
 			}
 			if ( m_bWriteGerber )

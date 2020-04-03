@@ -212,13 +212,13 @@ private:
 	{
 		for (auto& o : m_polygon)	// Loop polygon points
 			for (auto& t : m_transforms) t.Do(o);	// Apply set of transforms to each
-		if ( m_pStream ) m_pStream->AddTrack(GPEN::SILK, m_polygon);
+		if ( m_pStream ) m_pStream->AddTrack(GPEN::SLK, m_polygon);
 	}
 	void AddPad()
 	{
 		for (auto& o : m_polygon)	// Loop polygon points
 			for (auto& t : m_transforms) t.Do(o);	// Apply set of transforms to each
-		if ( m_pStream ) m_pStream->AddPad(GPEN::SILK, m_polygon.first());
+		if ( m_pStream ) m_pStream->AddPad(GPEN::SLK, m_polygon.first());
 	}
 	GStream*				m_pStream	= nullptr;
 	QPolygonF				m_polygon;	// Helper to avoid passing things around
