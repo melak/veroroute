@@ -185,7 +185,7 @@ void Board::Route(bool bMinimal)
 void Board::UpdateVias()	// Sets the via flag to true on all candidate vias
 {
 	m_bRouteMinimal	= true;
-	m_bHasVias = false;	// Reset the flag indicating if the board has vias
+	m_bHasVias = false;	// Reset the flag indicating if the board has routed vias (as opposed to "wires-as-tracks" vias)
 
 	// If the ends of a candidate via can be connected through a pin on the board then it is not a via.
 	const bool bRoutingEnabled	= GetRoutingEnabled();	// Log routing state

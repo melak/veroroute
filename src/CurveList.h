@@ -34,7 +34,7 @@ const int	BIT_GKO(1),	 BIT_PAD(2),  BIT_VIA(4),  BIT_TRK(8),
 
 enum class GPEN
 {
-	UNKNOWN	= 0,
+	NONE	= 0,
 	GKO		= BIT_GKO,
 	PAD		= BIT_PAD,
 	VIA		= BIT_VIA,
@@ -56,8 +56,8 @@ class Curve : public std::list<QPoint>	// A curve drawn in a fixed size pen
 {
 public:
 	Curve() {}
-	Curve(const GPEN& pen, const QPoint& p);
-	Curve(const GPEN& pen, const QPolygon& polygon);
+	Curve(const GPEN& ePen, const QPoint& p);
+	Curve(const GPEN& ePen, const QPolygon& polygon);
 	~Curve() { clear(); }
 	void Compress();		// Removes redundant points
 	bool Splice(Curve* pB);	// Tries to splice curve B to this
@@ -65,10 +65,13 @@ public:
 	{
 		bool operator() (const Curve* p1, const Curve* p2) const
 		{
-			return (int)(p1->m_pen) < (int)(p2->m_pen);
+			if ( p1->m_ePen != p2->m_ePen ) return (int)(p1->m_ePen) < (int)(p2->m_ePen);
+			return p1->m_width < p2->m_width;
 		}
 	};
-	GPEN m_pen = GPEN::UNKNOWN;
+	GPEN	m_ePen	= GPEN::NONE;
+	int		m_width	= 0;
+
 };
 
 class CurveList : public std::list<Curve*>

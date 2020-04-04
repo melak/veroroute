@@ -37,7 +37,7 @@ public:
 	GStream() {}
 	~GStream();
 	void Close();
-	bool Open(const char* fileName, const GFILE& eType, const Board& board, const QString& UTC);
+	bool Open(const char* fileName, const GFILE& eType, const Board& board, const bool& bVias, const QString& UTC);
 	void Drill(const QPoint& pF);
 	void SetPolarity(const GPOLARITY& ePolarity, bool bCheckOK = true);
 	void AddPad(const GPEN& ePen, const QPointF& pF);		// Add to m_pads buffer
@@ -51,8 +51,8 @@ public:
 	void ClearBuffers(bool bCheckOK = true);
 	void DrawBuffers();
 	// Methods to draw things immediately
-	void DrawPad(const GPEN& ePen, const QPointF& pF)		{ ClearBuffers(); AddPad(ePen, pF);		DrawBuffers(); }
-	void DrawTrack(const GPEN& ePen, const QPolygonF& pF)	{ ClearBuffers(); AddTrack(ePen, pF);	DrawBuffers(); }
+//	void DrawPad(const GPEN& ePen, const QPointF& pF)		{ ClearBuffers(); AddPad(ePen, pF);		DrawBuffers(); }
+//	void DrawTrack(const GPEN& ePen, const QPolygonF& pF)	{ ClearBuffers(); AddTrack(ePen, pF);	DrawBuffers(); }
 	void DrawLoop(const GPEN& ePen, const QPolygonF& pF)	{ ClearBuffers(); AddLoop(ePen, pF);	DrawBuffers(); }
 	void DrawRegion(const QPolygonF& pF)					{ ClearBuffers(); AddRegion(pF);		DrawBuffers(); };
 private:
@@ -78,9 +78,10 @@ private:
 	std::string MilToInch(const int& iMil, const bool& bLZ = false) const;
 	// Data
 	GFILE			m_eType		= GFILE::GBL;	// GKO, GBL, GBS, GTL, GTS, GTO
-	GPEN			m_ePen		= GPEN::UNKNOWN;
+	GPEN			m_ePen		= GPEN::NONE;
 	GPOLARITY		m_ePolarity	= GPOLARITY::UNKNOWN;
 	const Board*	m_pBoard	= nullptr;		// The board, so we can get dimensions and track sizes
+	bool			m_bVias		= false;		// true ==> the board has vias
 	int				m_iLastX	= INT_MAX;		// Last X used
 	int				m_iLastY	= INT_MAX;		// Last Y used
 	// Buffers for optimising data before writing to file
@@ -101,7 +102,7 @@ class GWriter
 public:
 	GWriter()	{}
 	~GWriter()	{ Close(); }
-	bool		Open(const char* fileName, const Board& board, const bool& bTwoLayerGerber);
+	bool		Open(const char* fileName, const Board& board, const bool& bVias, const bool& bTwoLayerGerber);
 	void		Close();
 	GStream&	GetStream(const GFILE& eType);
 private:

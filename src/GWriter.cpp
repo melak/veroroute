@@ -42,11 +42,12 @@ void GStream::Close()
 							m_os << "M02";	EndLine();	return m_os.close();	// End of file
 	}
 }
-bool GStream::Open(const char* fileName, const GFILE& eType, const Board& board, const QString& UTC)
+bool GStream::Open(const char* fileName, const GFILE& eType, const Board& board, const bool& bVias, const QString& UTC)
 {
 	m_eType	 = eType;
-	m_ePen	 = GPEN::UNKNOWN;
+	m_ePen	 = GPEN::NONE;
 	m_pBoard = &board;
+	m_bVias	 = bVias;
 	m_iLastX = INT_MAX;
 	m_iLastY = INT_MAX;
 
@@ -119,7 +120,6 @@ void GStream::WriteHeader(const QString& UTC)	// Write header for current stream
 void GStream::MakeDrills()
 {
 	assert( m_os.is_open() && m_eType == GFILE::DRL );
-	const bool bVias	= m_pBoard->GetHasVias();
 	const int  hole		= m_pBoard->GetHOLE_PERCENT();
 	const int  viahole	= m_pBoard->GetVIAHOLE_PERCENT();
 
@@ -128,7 +128,7 @@ void GStream::MakeDrills()
 	const bool bLZ(true);	// Include leading zeros
 	m_os << ";Hole = " << MilToInch(hole, bLZ) << " INCH";	EndLine();
 	m_os << "T01C"     << MilToInch(hole, bLZ);				EndLine();
-	if ( bVias )
+	if ( m_bVias )
 	{
 		m_os << ";Via Hole = " << MilToInch(viahole, bLZ) << " INCH";	EndLine();
 		m_os << "T02C"         << MilToInch(viahole, bLZ);				EndLine();
@@ -138,7 +138,6 @@ void GStream::MakeApertures()	// Make "pens" for current stream
 {
 	assert( m_os.is_open() && m_eType != GFILE::DRL);
 	const bool bGroundFill	= m_pBoard->GetGroundFill();
-	const bool bVias		= m_pBoard->GetHasVias();
 	const int  pad			= m_pBoard->GetPAD_PERCENT();
 	const int  via			= m_pBoard->GetVIAPAD_PERCENT();
 	const int  track		= m_pBoard->GetTRACK_PERCENT();
@@ -160,7 +159,7 @@ void GStream::MakeApertures()	// Make "pens" for current stream
 		case GFILE::GTL:
 			Comment("Aperture D11 is for pad");
 			m_os << "%ADD11C," << MilToInch(pad) << "*%" << std::endl;				// D11 ==> GPEN::PAD
-			if ( bVias )
+			if ( m_bVias )
 			{
 				Comment("Aperture D12 is for via-pad");
 				m_os << "%ADD12C," << MilToInch(via) << "*%" << std::endl;			// D12 ==> GPEN::VIA
@@ -171,7 +170,7 @@ void GStream::MakeApertures()	// Make "pens" for current stream
 			{
 				Comment("Aperture D14 is for separating pad from ground-pour");
 				m_os << "%ADD14C," << MilToInch(padgap) << "*%" << std::endl;		// D14 ==> GPEN::PAD_GAP
-				if ( bVias )
+				if ( m_bVias )
 				{
 					Comment("Aperture D15 is for separating via-pad from ground-pour");
 					m_os << "%ADD15C," << MilToInch(viagap) << "*%" << std::endl;	// D15 ==> GPEN::VIA_GAP
@@ -184,7 +183,7 @@ void GStream::MakeApertures()	// Make "pens" for current stream
 		case GFILE::GTS:
 			Comment("Aperture D17 is slightly larger than a pad");
 			m_os << "%ADD17C," << MilToInch(padmask) << "*%" << std::endl;			// D17 ==> GPEN::PAD_MSK
-			if ( bVias )
+			if ( m_bVias )
 			{
 				Comment("Aperture D18 is slightly larger than a via-pad");
 				m_os << "%ADD18C," << MilToInch(viamask) << "*%" << std::endl;		// D18 ==> GPEN::VIA_MSK
@@ -310,7 +309,7 @@ void GStream::AddRegion(const QPolygonF& pF)	// Add to m_regions buffer for late
 	if ( pF.size() < 3 ) return;	// Region must have at least 3 points
 	QPolygon p;
 	GetQPolygon(pF, p);
-	m_regions.push_back( new Curve(GPEN::UNKNOWN, p) );
+	m_regions.push_back( new Curve(GPEN::NONE, p) );
 }
 void GStream::AddPadHole(const GPEN& ePen, const QPointF& pF)	// Add to m_padholes buffer for later writing to file
 {
@@ -352,7 +351,7 @@ void GStream::DrawBuffers()
 void GStream::Region(const Curve& curve)	// A filled closed curve (with zero width pen)
 {
 	if ( !m_os.is_open() || m_eType == GFILE::DRL ) return;
-	assert( curve.m_pen == GPEN::UNKNOWN );
+	assert( curve.m_ePen == GPEN::NONE );
 	if ( curve.size() < 3 ) return;	// Region must have >= 3 points
 	m_os << "G36";	EndLine();		// "Begin region"
 	OutLine(curve, true);			// true ==> force close
@@ -361,7 +360,7 @@ void GStream::Region(const Curve& curve)	// A filled closed curve (with zero wid
 void GStream::OutLine(const Curve& curve, bool bForceClose)	// Outline of a curve
 {
 	if ( curve.empty() ) return;
-	SetPen(curve.m_pen);
+	SetPen(curve.m_ePen);
 	const size_t N = curve.size();
 	if	( N == 1 ) return Flash( curve.front() );
 	if	( N == 2 ) return Line( curve.front(), curve.back() );
@@ -378,7 +377,7 @@ void GStream::SetPen(const GPEN& ePen)
 	m_ePen = ePen;
 	switch( m_ePen )
 	{
-		case GPEN::UNKNOWN:	return;
+		case GPEN::NONE:	return;
 		case GPEN::GKO:		m_os << "D10"; EndLine(); return;
 		case GPEN::PAD:		m_os << "D11"; EndLine(); return;
 		case GPEN::VIA:		m_os << "D12"; EndLine(); return;
@@ -482,7 +481,7 @@ void GStream::GetQPolygon(const QPolygonF& in, QPolygon& out) const
 }
 
 // Wrapper for handling a set of Gerber files
-bool GWriter::Open(const char* fileName, const Board& board, const bool& bTwoLayerGerber)
+bool GWriter::Open(const char* fileName, const Board& board, const bool& bVias, const bool& bTwoLayerGerber)
 {
 	QDateTime	local(QDateTime::currentDateTime());
 	QString		UTC = local.toTimeSpec(Qt::UTC).toString(Qt::ISODate);
@@ -494,7 +493,7 @@ bool GWriter::Open(const char* fileName, const Board& board, const bool& bTwoLay
 		if ( GFILE(i) == GFILE::GTL && !bTwoLayerGerber ) continue;
 		if ( GFILE(i) == GFILE::GTS && !bTwoLayerGerber ) continue;
 		if ( GFILE(i) == GFILE::GBO ) continue;	// Don't write this layer yet
-		bOK = m_os[i].Open(fileName, GFILE(i), board, UTC);
+		bOK = m_os[i].Open(fileName, GFILE(i), board, bVias, UTC);
 	}
 	if ( !bOK ) Close();
 	return bOK;

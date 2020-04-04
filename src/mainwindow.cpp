@@ -686,7 +686,10 @@ void MainWindow::WriteGerber(const bool& bTwoLayerGerber)
 
 		HandleRouting();	// Update m_board.m_bHasVias BEFORE opening the Gerber files
 
-		if ( m_gWriter.Open(m_gerberFileName.toStdString().c_str(), m_board, m_bTwoLayerGerber) )
+		const bool bWireVias	= m_bTwoLayerGerber && m_board.GetLyrs() == 1 && m_board.GetCompMgr().GetHavePlacedWires();
+		const bool bVias		= m_board.GetHasVias() || bWireVias;
+
+		if ( m_gWriter.Open(m_gerberFileName.toStdString().c_str(), m_board, bVias, m_bTwoLayerGerber) )
 		{
 			const int origlayer = m_board.GetCurrentLayer();
 			for (int lyr = 0, lyrs = m_board.GetLyrs(); lyr < lyrs; lyr++)

@@ -649,5 +649,5 @@ private:
 	std::vector<Element*>	m_tmpVec;		// The set of visited points.
 	size_t					m_tmpVecSize;	// The number of visited points.
 	bool					m_bRouteMinimal;// true ==> don't build tracks between pins that are already connected
-	bool					m_bHasVias;		// true ==> there are vias in the design
+	bool					m_bHasVias;		// true ==> there are routed vias in the design (as opposed to "wires-as-tracks" vias)
 };

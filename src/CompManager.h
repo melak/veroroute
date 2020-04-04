@@ -117,6 +117,15 @@ public:
 		if ( m_trax.GetSize() > 0 ) bounding |= m_trax.GetFootprintRect();	// If have a trax pattern
 		return bounding;
 	}
+	bool GetHavePlacedWires() const
+	{
+		for (const auto& mapObj : m_mapIdToComp)
+		{
+			const Component& comp = mapObj.second;
+			if ( comp.GetType() == COMP::WIRE && comp.GetIsPlaced() ) return true;
+		}
+		return false;
+	}
 	void CalculateWireShifts()
 	{
 		m_mapWireToShift.clear();

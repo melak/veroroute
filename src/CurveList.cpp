@@ -20,12 +20,12 @@
 #include "CurveList.h"
 #include <QPolygon>
 
-Curve::Curve(const GPEN& pen, const QPoint& p) : m_pen(pen)
+Curve::Curve(const GPEN& ePen, const QPoint& p) : m_ePen(ePen)
 {
 	push_back(p);
 }
 
-Curve::Curve(const GPEN& pen, const QPolygon& polygon) : m_pen(pen)
+Curve::Curve(const GPEN& ePen, const QPolygon& polygon) : m_ePen(ePen)
 {
 	for (auto& p : polygon) push_back(p);
 	// DO NOT COMPRESS BY DEFAULT.  That's only OK for open line segments
@@ -68,7 +68,8 @@ void Curve::Compress()	// Removes redundant points
 
 bool Curve::Splice(Curve* pB)	// Tries to splice curve B to this
 {
-	if	( m_pen != pB->m_pen ) return false;		// Pens must match
+	if	( m_ePen != pB->m_ePen ) return false;		// Pens must match
+	if	( m_width != pB->m_width ) return false;	// Widths must match
 	if	( empty() || pB->empty() ) return false;	// Curves must have points
 	// Try to get back of 'this' matching front of 'pB', then splice 'pB' to 'this'
 	if		( front() == pB->back()  ) { reverse(); pB->reverse(); }

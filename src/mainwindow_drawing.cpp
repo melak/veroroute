@@ -655,6 +655,8 @@ void MainWindow::PaintCompDefiner()	// The paint method in "component editor mod
 
 void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 {
+//	const auto start = std::chrono::steady_clock::now();
+
 	Board&			 board			= m_board;
 	CompManager&	 compMgr		= board.GetCompMgr();
 	ColorManager&	 colorMgr		= board.GetColorMgr();
@@ -709,7 +711,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 	GPainter painter;	// Works like QPainter unless you give it a GStream for Gerber
 
-	QPdfWriter*	pdfWriter = nullptr;
+	QPdfWriter* pdfWriter = nullptr;
 	if ( m_bWritePDF )
 	{
 		pdfWriter = new QPdfWriter(m_pdfFileName);
@@ -795,7 +797,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	}
 	else
 	{
-		const int iPenWidth = ( bPCB ) ? W * 0.100 : 0;	// Like GPEN::MIL10 used for Gerber
+		const int iPenWidth = ( bPCB ) ? W * 0.100 : 0;	// Like GPEN::GKO = 10 mil used for Gerber
 		m_blackPen.setWidth(iPenWidth);
 		m_whitePen.setWidth(iPenWidth);
 		painter.setPen(GetBackgroundColor() == Qt::black ? m_whitePen : m_blackPen);
@@ -854,6 +856,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				const bool		bVia			= pC->GetIsVia()  ||  bWireAsVia;
 				const bool		bPad			= pC->GetHasPin() && !bWireAsVia;
 				assert( !(bVia && bPad) );	// Can't be both a via and a regular pad
+		//TODO	const int		iPadWidth		= bPad ? pC->GetPadWidth()  : 0;
+		//TODO	const int		iHoleWidth		= bPad ? pC->GetHoleWidth() : 0;
+				const bool		bCustom			= false;	// true ==> custom pad size	//TODO
 				if ( colorId == BAD_COLORID && !bWire ) continue;	// Usually don't color places with no NodeID assigned unless they are wire ends
 
 				// Use GetPixmapRGB for pixmaps.  It can handle MY_GREY, MY_BLACK as special cases
@@ -931,7 +936,11 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 						// Draw pad/via
 						if ( bVia ) painter.drawPixmap(L+C-m_radPixmapVia, T+C-m_radPixmapVia, *(m_ppPixmapVia[iEffColorId]));
-						if ( bPad ) painter.drawPixmap(L+C-m_radPixmapPad, T+C-m_radPixmapPad, *(m_ppPixmapPad[iEffColorId]));
+						if ( bPad )
+						{
+							if ( bCustom )	PaintPad(board, painter, color, pCentre);
+							else			painter.drawPixmap(L+C-m_radPixmapPad, T+C-m_radPixmapPad, *(m_ppPixmapPad[iEffColorId]));
+						}
 					}
 					else if ( iLoop == 1 )
 					{
@@ -1519,6 +1528,10 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	painter.end();
 
 	delete pdfWriter;
+
+//	const auto elapsed = std::chrono::steady_clock::now() - start;
+//	const auto duration_ms	= std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
+//	std::cout << "Time : " << duration_ms << std::endl;
 }
 
 void MainWindow::GetFirstRowCol(int& iRow, int& iCol) const
