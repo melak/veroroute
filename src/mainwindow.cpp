@@ -1747,6 +1747,7 @@ void MainWindow::UpdateControls()
 	UpdateTextDialog(true);	// true ==> full
 
 	m_pinDlg->Update();
+	m_board.UpdateVias();	// Needed before m_renderingDlg->UpdateControls() for via info
 	m_renderingDlg->UpdateControls();
 	m_wireDlg->UpdateControls();
 	m_controlDlg->UpdateCompControls();

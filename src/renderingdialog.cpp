@@ -111,15 +111,20 @@ void RenderingDialog::UpdateControls()
 	ui->viapadWidth->setValue(	board.GetVIAPAD_MIL()	);
 	ui->viaholeWidth->setValue(	board.GetVIAHOLE_MIL()	);
 
-	const int minTrackSep = board.GetMIN_TRACK_SEPARATION_MIL();
-	const int minGndFill  = board.GetMIN_GROUNDFILL_MIL();
+	const double minTrk = board.GetMIN_TRACK_SEPARATION_MIL();
+	const double minGnd = board.GetMIN_GROUNDFILL_MIL();
+	const int minTrkMil = (int)minTrk;
+	const int minTrkRem = (int)(100.0 * (minTrk - minTrkMil) );
+	const int minGndMil = (int)minGnd;
+	const int minGndRem = (int)(100.0 * (minGnd - minGndMil) );
 
-	const std::string str = "Guaranteed minimum track separation = " + std::to_string(minTrackSep) + " mil";
+	const std::string str = "Current minimum track separation = "
+						  + std::to_string(minTrkMil) + "." + std::to_string(minTrkRem) + " mil";
 	ui->label_info->setText( QString::fromStdString(str) );
 
-	std::string str2 = "Guaranteed minimum ground-fill width = ";
+	std::string str2 = "Current minimum ground-fill width = ";
 	if ( bGndFill )
-		str2 += std::to_string(minGndFill) + " mil";
+		str2 += std::to_string(minGndMil) + "." + std::to_string(minGndRem) + " mil";
 	else
 		str2 += "n/a";
 	ui->label_info_2->setText( QString::fromStdString(str2) );

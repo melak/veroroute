@@ -396,9 +396,9 @@ public:
 	// Methods to handle variable pad/hole and PCB tolerances
 	void	GetPadWidths_MIL(std::list<int>& o) const;
 	void	GetHoleWidths_MIL(std::list<int>& o) const;
-	int		GetMIN_TRACK_SEPARATION_MIL() const;	// Minimum guaranteed track separation in mil
-	int		GetMIN_GROUNDFILL_MIL() const;			// Minimum guaranteed ground-fill width in mil
-	double	GetMIN_SEPARATION() const;				// Minimum possible separation (in mil) between a pad or track without ground fill
+	double	GetMIN_TRACK_SEPARATION_MIL();	// Minimum guaranteed track separation in mil
+	double	GetMIN_GROUNDFILL_MIL();		// Minimum guaranteed ground-fill width in mil
+	double	GetMIN_SEPARATION();			// Minimum possible separation (in mil) between a pad or track without ground fill
 
 	// Methods to paint/unpaint nodeIds
 	void SetNodeId(Element* p, const int& nodeId, const bool bAllLyrs);	// Helper to make sure we do UpdateCounts() before painting an element

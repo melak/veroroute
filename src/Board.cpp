@@ -100,37 +100,98 @@ void Board::GetHoleWidths_MIL(std::list<int>& o) const
 {
 	m_compMgr.GetHoleWidths(o, GetHOLE_MIL());
 }
-int Board::GetMIN_TRACK_SEPARATION_MIL() const	// Minimum guaranteed track separation in mil
+double Board::GetMIN_TRACK_SEPARATION_MIL()	// Minimum track separation in mil
 {
-	// To keep track/pads at least N mil apart:
-	// In diags mode keep     (Pad + Track) / 2 <= ( 70.71 - N).  Keep Gap >= N if used.
-	// In non-diags mode keep (Pad + Pad  ) / 2 <= ( 100.0 - N).  Keep Gap >= N if used.
 	const double dMinSep	= GetMIN_SEPARATION();	// Min separation without ground fill
 	const double dGap		= GetGroundFill() ? GetGAP_MIL() : 100.0;
-	return (int) floor( std::min(dGap, dMinSep) );
+	return std::min(dGap, dMinSep);
 }
-int Board::GetMIN_GROUNDFILL_MIL() const // Minimum guaranteed ground-fill width in mil
+double Board::GetMIN_GROUNDFILL_MIL()	// Minimum ground-fill width in mil
 {
 	// To have a ground fill with no isolated islands this must be > 0 (and probably at least 8 mil)
-	if ( !GetGroundFill() ) return 100;
+	if ( !GetGroundFill() ) return 100.0;
 	const double dMinSep	= GetMIN_SEPARATION();	// Min separation without ground fill
 	const double dDblGap	= GetGAP_MIL() * 2.0;
-	return (int) floor( std::max(0.0, dMinSep - dDblGap) );
+	return std::max(0.0, dMinSep - dDblGap);
 }
-double Board::GetMIN_SEPARATION() const	// Minimum possible separation (in mil) between a pad or track without ground fill
+double Board::GetMIN_SEPARATION()	// Minimum separation (in mil) between a pad or track without ground fill
 {
-	const bool   bNoDiags	= GetDiagsMode() == DIAGSMODE::OFF;
-	std::list<int> padWidths;
-	GetPadWidths_MIL(padWidths);
-	int maxPadWidth(0);
-	for (auto& padWidth : padWidths) maxPadWidth = std::max(maxPadWidth, padWidth);
-	const double dPad		= GetViasEnabled() ? std::max(maxPadWidth, GetVIAPAD_MIL()) : maxPadWidth;
-	const double dTrk		= GetTRACK_MIL();
-	const double dHypot		= 50.0 * sqrt(2.0);	// 70.71
-	const double dPadPad	= 100.0 - dPad;
-	const double dPadTrk	= ( bNoDiags ? 100.0 : dHypot ) - 0.5 * ( dPad + dTrk );
-	const double dTrkTrk	= ( bNoDiags ? 100.0 : dHypot ) - dTrk;
-	return std::max(0.0, std::min(dPadPad, std::min(dPadTrk, dTrkTrk)));
+	// Following code applies to proper 2-layer routing.
+	// So wires have regular pad sizes, and are not converted to tracks on the top layer using a via.
+
+	const bool bDiagsOK  = GetDiagsMode() != DIAGSMODE::OFF;
+	const bool bMinDiags = GetDiagsMode() == DIAGSMODE::MIN;
+
+	// Get bounds to minimise looping
+	int minRow, minCol, maxRow, maxCol;
+	GetBounds(minRow, minCol, maxRow, maxCol);
+
+	double dMin(100.0);
+	for (int k = 0, kMax = GetLyrs(); k < kMax; k++)	// Check all layers
+	for (int j = minRow; j <= maxRow; j++)
+	for (int i = minCol; i <= maxCol; i++)
+	{
+		const Element*	pA		= Get(k, j, i);
+		const int&		nodeIdA	= pA->GetNodeId();
+		if ( nodeIdA == BAD_NODEID ) continue;
+		const bool		bViaA	= pA->GetIsVia();
+		const bool		bPadA	= pA->GetHasPin();	assert( !(bViaA && bPadA) );
+
+		int iA(0);
+		if ( bPadA )
+		{
+			Component& comp = m_compMgr.GetComponentById( pA->GetCompId() );
+			iA = comp.GetCustomPads() ? comp.GetPadWidth() : GetPAD_MIL();
+		}
+		else if ( bViaA )	iA = GetVIAPAD_MIL();
+		else				iA = GetTRACK_MIL();
+
+		for (int iDiag = 0, iDiagMax = bDiagsOK ? 2 : 1; iDiag < iDiagMax; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
+		{
+			const bool		bDiag	= ( iDiag == 1 );
+			const double	D		= bDiag ? ( 100.0 * sqrt(2.0) ) : 100.0;	// Distance to diagonal/HV nbr
+			const double	d		= D * 0.5;	// Only used when bDiag is true
+			// Only need to loop half the directions in the following loop (the i,j scan takes care of the other half)
+			for (int iNbr = iDiag; iNbr < 4; iNbr += 2)	// Even/Odd iNbr ==> Non-diagonal/Diagonal
+			{
+				if ( !ReadCodeBit(iNbr, pA->GetRoutable()) ) continue;
+
+				const Element*	pB		= pA->GetNbr(iNbr);
+				const int&		nodeIdB	= pB->GetNodeId();
+				if ( nodeIdB == BAD_NODEID || nodeIdB == nodeIdA ) continue;
+
+				const bool bViaB = pB->GetIsVia();
+				const bool bPadB = pB->GetHasPin();	assert( !(bViaB && bPadB) );
+
+				int iB(0);
+				if ( bPadB )
+				{
+					Component& comp = m_compMgr.GetComponentById( pB->GetCompId() );
+					iB = comp.GetCustomPads() ? comp.GetPadWidth() : GetPAD_MIL();
+				}
+				else if ( bViaB )	iB = GetVIAPAD_MIL();
+				else				iB = GetTRACK_MIL();
+
+				dMin = std::min(dMin, D - 0.5 * ( iA + iB ));
+			}
+			if ( bDiag )
+			{
+				// Now consider connections between pA's non-diagonal nbrs (i.e. "adjacent diagonals")
+				bool bAdjDiag(false);
+				for (int iNbr = 0; iNbr < 8 && !bAdjDiag; iNbr += 2)	// Loop all non-diagonal nbrs
+				{
+					const Element*	pB		= pA->GetNbr(iNbr);
+					const int&		nodeIdB	= pB->GetNodeId();
+					if ( nodeIdB == BAD_NODEID || nodeIdB == nodeIdA ) continue;
+					const int iPerimeterCode = pB->GetPerimeterCode(bDiagsOK, bMinDiags);	// 0 to 255
+					// (iNbr+3)%8   NBR_L ==> NBR_RT,  NBR_T ==> NBR_RB, NBR_R ==> NBR_LB,  NBR_B ==> NBR_LT
+					bAdjDiag =  ReadCodeBit((iNbr+3) % 8, iPerimeterCode);
+				}
+				if ( bAdjDiag ) dMin = std::min(dMin, d - 0.5 * ( iA + GetTRACK_MIL() ));
+			}
+		}
+	}
+	return std::max(0.0, dMin);
 }
 
 // Methods to paint/unpaint nodeIds

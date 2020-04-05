@@ -497,6 +497,7 @@ void MainWindow::mouseReleaseEvent(QMouseEvent* event)
 		centralWidget()->setCursor(Qt::OpenHandCursor);
 
 	UpdateHistory(mouseActionString);
+	UpdateControls();
 	RepaintWithListNodes();
 }
 
@@ -611,10 +612,9 @@ void MainWindow::keyReleaseEvent(QKeyEvent* event)
 		UpdateCompDialog();
 	else
 	{
-		bool bUpdateControls(false);
 		switch( event->key() )
 		{
-			case Qt::Key_R:		SetDefiningRect(false);	bUpdateControls = true;	break;
+			case Qt::Key_R:		SetDefiningRect(false);	break;
 			case Qt::Key_P:		SetPaintPins(false);	break;
 			case Qt::Key_F:		SetPaintFlood(false);	break;
 			case Qt::Key_Space:	SetPaintBoard(false);	break;
@@ -628,9 +628,7 @@ void MainWindow::keyReleaseEvent(QKeyEvent* event)
 		else
 			centralWidget()->setCursor(Qt::OpenHandCursor);
 
-		if ( bUpdateControls )
-			UpdateControls();
-
+		UpdateControls();
 		RepaintWithListNodes();
 	}
 	event->accept();	// If we don't do this, we can get the same event passed multiple times if we're on MS Windows.
