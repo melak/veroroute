@@ -216,8 +216,15 @@ static const char* szVEROROUTE_VERSION =
 			// Functionality change: Disabled show/hide of docked widgets by right mouse-click on menu bar.
 			// Added command line options (-h, --help, -v, --version).
 			// Added manpage as part of unix installation.
-  "1.87";	// Bug fix: 300 mil electrolytic cap was missing line marking negative side.
+//"1.87";	// Bug fix: 300 mil electrolytic cap was missing line marking negative side.
 			// Improvement: When modifying shapes in component editor, allow unit steps with the mouse wheel.
 			// Improvement: Allow flipped views in PCB mode but don't allow export/editing when flipped.
 			// Lots of minor GUI tweaks such as disabling certain buttons according to display mode.
 			// Added the Bourns 3362 series to the set of trimmers in the Templates dialog.
+  "1.88";	// Roll back of change made in V1.85:  Top solder mask now works in same way as bottom solder mask.
+			// Bug fix: Fix problem with docked dialogs passing mouse clicks to the main window.
+			// Improvement: Various minor fixes, improvements and simplificatons to Gerber Export code.
+			// Improvement: Changed diode cathode marking so it is less likely to be erased on a PCB.
+			// Improvement: Show actual minimum track separation (instead of the guaranteed minimum).
+			// New feature: Show minimum ground fill width to help avoid isolated ground "islands".
+			// New feature: Allow custom pad and hole sizes to be set on each part.
