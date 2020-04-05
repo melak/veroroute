@@ -365,9 +365,9 @@ private:
 	void DestroyPixmapCache();
 	void CreatePixmapCache(const GuiControl& guiCtrl, ColorManager& colorManager);
 	void PaintViaGrey(const GuiControl& guiCtrl, QPainter& painter, const QPointF& pC);
-	void PaintPadGrey(const GuiControl& guiCtrl, QPainter& painter, const QPointF& pC);
+	void PaintPadGrey(const GuiControl& guiCtrl, QPainter& painter, const QPointF& pC, const int& iPadWidthMIL = 0);
 	void PaintVia(const GuiControl& guiCtrl, QPainter& painter,  const QColor& color, const QPointF& pC, const bool& bGap = false);	// Helper
-	void PaintPad(const GuiControl& guiCtrl, QPainter& painter,  const QColor& color, const QPointF& pC, const bool& bGap = false);	// Helper
+	void PaintPad(const GuiControl& guiCtrl, QPainter& painter,  const QColor& color, const QPointF& pC, const int& iPadWidthMIL = 0, const int& iHoleWidth_MIL = 0, const bool& bGap = false);	// Helper
 	void PaintTag(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, const int& iNbr, const int& iLyr);
 	void PaintDiag(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pCorner, bool bLT);
 	void PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, const int& iPerimeterCode, const bool bGap = false);	// Helper

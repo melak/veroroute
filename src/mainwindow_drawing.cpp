@@ -44,9 +44,9 @@ void MainWindow::CreatePixmapCache(const GuiControl& guiCtrl, ColorManager& colo
 	// Each way produces a different local track pattern (or "blob") for the grid point.
 	// The pixmap cache provides a way of quickly mapping the "perimeter code" to a "blob" pixmap.
 
-	m_radPixmapPad	= guiCtrl.GetHalfPadWidth();	// Half pad width in pixels
-	m_radPixmapVia	= guiCtrl.GetHalfViaWidth();	// Half via width in pixels
-	m_radPixmapDiag	= (int) ceil(1.414 * guiCtrl.GetHalfTrackWidth());
+	m_radPixmapPad	= guiCtrl.GetHalfPixelsFromMIL( guiCtrl.GetPAD_MIL() );		// Half pad width in pixels
+	m_radPixmapVia	= guiCtrl.GetHalfPixelsFromMIL( guiCtrl.GetVIAPAD_MIL() );	// Half via width in pixels
+	m_radPixmapDiag	= (int) ceil(1.414 * guiCtrl.GetHalfPixelsFromMIL( guiCtrl.GetTRACK_MIL() ));
 	m_radPixmapBlob	= guiCtrl.GetGRIDPIXELS() >> 1;	// Half grid-square width in pixels
 
 	m_ppPixmapPad	= new QPixmap*[NUM_PIXMAP_COLORS];
@@ -108,7 +108,7 @@ void MainWindow::CreatePixmapCache(const GuiControl& guiCtrl, ColorManager& colo
 void MainWindow::PaintViaGrey(const GuiControl& guiCtrl, QPainter& painter, const QPointF& pC)
 {
 	assert(!m_bWriteGerber);
-	const int width = guiCtrl.GetHalfViaWidth() << 1;
+	const int width = guiCtrl.GetHalfPixelsFromMIL( guiCtrl.GetVIAPAD_MIL() ) << 1;
 	static QPen	pen(QColor(200,200,200,255), 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 	pen.setWidth(width);
 	painter.setPen(pen);
@@ -116,10 +116,12 @@ void MainWindow::PaintViaGrey(const GuiControl& guiCtrl, QPainter& painter, cons
 	painter.drawPoint(pC);
 }
 
-void MainWindow::PaintPadGrey(const GuiControl& guiCtrl, QPainter& painter, const QPointF& pC)
+void MainWindow::PaintPadGrey(const GuiControl& guiCtrl, QPainter& painter, const QPointF& pC, const int& iPadWidthMIL)
 {
 	assert(!m_bWriteGerber);
-	const int width = guiCtrl.GetHalfPadWidth() << 1;
+
+	const int w		= ( iPadWidthMIL == 0 ) ? guiCtrl.GetPAD_MIL() : iPadWidthMIL;
+	const int width	= guiCtrl.GetHalfPixelsFromMIL(w) << 1;
 	static QPen	pen(QColor(200,200,200,255), 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 	pen.setWidth(width);
 	painter.setPen(pen);
@@ -131,19 +133,19 @@ void MainWindow::PaintVia(const GuiControl& guiCtrl, QPainter& painter, const QC
 {
 	if ( m_bWriteGerber )
 	{
-		m_gWriter.GetStream(GFILE::GTL).AddViaPad(bGap ? GPEN::VIA_GAP : GPEN::VIA, pC);	// Top    copper layer
-		m_gWriter.GetStream(GFILE::GBL).AddViaPad(bGap ? GPEN::VIA_GAP : GPEN::VIA, pC);	// Bottom copper layer
+		m_gWriter.GetStream(GFILE::GTL).AddViaPad(pC, bGap ? GPEN::VIA_GAP : GPEN::VIA);	// Top    copper layer
+		m_gWriter.GetStream(GFILE::GBL).AddViaPad(pC, bGap ? GPEN::VIA_GAP : GPEN::VIA);	// Bottom copper layer
 		if ( !bGap )
 		{
-			m_gWriter.GetStream(GFILE::GTS).AddViaPad(GPEN::VIA_MSK, pC);	// Top    solder mask layer
-			m_gWriter.GetStream(GFILE::GBS).AddViaPad(GPEN::VIA_MSK, pC);	// Bottom solder mask layer
-			m_gWriter.GetStream(GFILE::DRL).AddViaHole(GPEN::VIA_HLE, pC);	// Drill file
+			m_gWriter.GetStream(GFILE::GTS).AddViaPad(pC, GPEN::VIA_MSK);	// Top    solder mask layer
+			m_gWriter.GetStream(GFILE::GBS).AddViaPad(pC, GPEN::VIA_MSK);	// Bottom solder mask layer
+			m_gWriter.GetStream(GFILE::DRL).AddViaHole(pC, GPEN::VIA_HLE);	// Drill file
 		}
 	}
 	else
 	{
-		const int gapWidth = ( bGap ) ? guiCtrl.GetGapWidth() : 0;
-		const int padWidth = ( guiCtrl.GetHalfViaWidth() + gapWidth ) << 1;
+		const int gapWidth = bGap ? guiCtrl.GetPixelsFromMIL( guiCtrl.GetGAP_MIL() ) : 0;
+		const int padWidth = ( guiCtrl.GetHalfPixelsFromMIL( guiCtrl.GetVIAPAD_MIL() ) + gapWidth ) << 1;
 		static QPen	pen(Qt::black, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 		pen.setColor(color);
 		pen.setWidth(padWidth);
@@ -153,23 +155,24 @@ void MainWindow::PaintVia(const GuiControl& guiCtrl, QPainter& painter, const QC
 	}
 }
 
-void MainWindow::PaintPad(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, const bool& bGap)
+void MainWindow::PaintPad(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, const int& iPadWidthMIL, const int& iHoleWidthMIL, const bool& bGap)
 {
 	if ( m_bWriteGerber )
 	{
-		m_gWriter.GetStream(GFILE::GTL).AddPad(bGap ? GPEN::PAD_GAP : GPEN::PAD, pC); // Top    copper layer
-		m_gWriter.GetStream(GFILE::GBL).AddPad(bGap ? GPEN::PAD_GAP : GPEN::PAD, pC); // Bottom copper layer
+		m_gWriter.GetStream(GFILE::GTL).AddPad(pC, bGap ? GPEN::PAD_GAP : GPEN::PAD, iPadWidthMIL); // Top    copper layer
+		m_gWriter.GetStream(GFILE::GBL).AddPad(pC, bGap ? GPEN::PAD_GAP : GPEN::PAD, iPadWidthMIL); // Bottom copper layer
 		if ( !bGap )
 		{
-			m_gWriter.GetStream(GFILE::GTS).AddPad(GPEN::PAD_MSK, pC);		// Top    solder mask layer
-			m_gWriter.GetStream(GFILE::GBS).AddPad(GPEN::PAD_MSK, pC);		// Bottom solder mask layer
-			m_gWriter.GetStream(GFILE::DRL).AddPadHole(GPEN::PAD_HLE, pC);	// Drill file
+			m_gWriter.GetStream(GFILE::GTS).AddPad(pC, GPEN::PAD_MSK, iPadWidthMIL);		// Top    solder mask layer
+			m_gWriter.GetStream(GFILE::GBS).AddPad(pC, GPEN::PAD_MSK, iPadWidthMIL);		// Bottom solder mask layer
+			m_gWriter.GetStream(GFILE::DRL).AddPadHole(pC, GPEN::PAD_HLE, iHoleWidthMIL);	// Drill file
 		}
 	}
 	else
 	{
-		const int gapWidth = ( bGap ) ? guiCtrl.GetGapWidth() : 0;
-		const int padWidth = ( guiCtrl.GetHalfPadWidth() + gapWidth ) << 1;
+		const int gapWidth	= bGap ? guiCtrl.GetPixelsFromMIL( guiCtrl.GetGAP_MIL() ) : 0;
+		const int w			= ( iPadWidthMIL == 0 ) ? guiCtrl.GetPAD_MIL() : iPadWidthMIL;
+		const int padWidth	= ( guiCtrl.GetHalfPixelsFromMIL(w) + gapWidth ) << 1;
 		static QPen	pen(Qt::black, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 		pen.setColor(color);
 		pen.setWidth(padWidth);
@@ -182,7 +185,7 @@ void MainWindow::PaintPad(const GuiControl& guiCtrl, QPainter& painter, const QC
 void MainWindow::PaintTag(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, const int& iNbr, const int& iLyr)
 {
 	// Paints a short tag connecting a pad to the ground fill
-	const int X = guiCtrl.GetHalfPadWidth() + guiCtrl.GetGapWidth();
+	const int X = guiCtrl.GetHalfPixelsFromMIL( guiCtrl.GetPAD_MIL() ) + guiCtrl.GetPixelsFromMIL( guiCtrl.GetGAP_MIL() );
 	const int D = (int) ( X * sqrt(0.5) );
 	QPointF pD;	// The other end of the tag
 	switch( iNbr)
@@ -203,13 +206,13 @@ void MainWindow::PaintTag(const GuiControl& guiCtrl, QPainter& painter, const QC
 		polygon.push_back(pD);
 		switch(iLyr)
 		{
-			case 0:	m_gWriter.GetStream(GFILE::GBL).AddTrack(GPEN::TRK, polygon); break;	// Bottom copper layer
-			case 1:	m_gWriter.GetStream(GFILE::GTL).AddTrack(GPEN::TRK, polygon); break;	// Top    copper layer
+			case 0:	m_gWriter.GetStream(GFILE::GBL).AddTrack(polygon, GPEN::TRK); break;	// Bottom copper layer
+			case 1:	m_gWriter.GetStream(GFILE::GTL).AddTrack(polygon, GPEN::TRK); break;	// Top    copper layer
 		}
 	}
 	else
 	{
-		const int trackWidth = ( guiCtrl.GetHalfTrackWidth() ) << 1;
+		const int trackWidth = guiCtrl.GetHalfPixelsFromMIL( guiCtrl.GetTRACK_MIL() ) << 1;
 		static QPen	pen(Qt::black, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 		pen.setColor(color);
 		pen.setWidth(trackWidth);
@@ -222,7 +225,7 @@ void MainWindow::PaintTag(const GuiControl& guiCtrl, QPainter& painter, const QC
 void MainWindow::PaintDiag(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pCorner, bool bLT)
 {
 	const int&	H			= m_radPixmapDiag;
-	const int	trackWidth	= guiCtrl.GetHalfTrackWidth() << 1;	// Track width in pixels
+	const int	trackWidth	= guiCtrl.GetHalfPixelsFromMIL( guiCtrl.GetTRACK_MIL() ) << 1;	// Track width in pixels
 
 	static QPen	pen(Qt::black, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 	pen.setColor(color);
@@ -240,9 +243,9 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 	const bool	bMaxDiags		= ( guiCtrl.GetDiagsMode() == DIAGSMODE::MAX );
 	const int&	W				= guiCtrl.GetGRIDPIXELS();	// Square width in pixels
 	const int	C				= W >> 1;					// Half square width in pixels
-	const int	gapWidth		= ( bGap ) ? guiCtrl.GetGapWidth() : 0;
-	const int	padWidth		= ( guiCtrl.GetHalfPadWidth()   + gapWidth ) << 1;	// Pad width in pixels
-	const int	trackWidth		= ( guiCtrl.GetHalfTrackWidth() + gapWidth ) << 1;	// Track width in pixels
+	const int	gapWidth		= bGap ? guiCtrl.GetPixelsFromMIL( guiCtrl.GetGAP_MIL() ) : 0;
+	const int	padWidth		= ( guiCtrl.GetHalfPixelsFromMIL( guiCtrl.GetPAD_MIL() )   + gapWidth ) << 1;	// Pad width in pixels
+	const int	trackWidth		= ( guiCtrl.GetHalfPixelsFromMIL( guiCtrl.GetTRACK_MIL() ) + gapWidth ) << 1;	// Track width in pixels
 	const bool&	bCurvedTracks	= guiCtrl.GetCurvedTracks();
 	const bool&	bFatTracks		= !bCurvedTracks && guiCtrl.GetFatTracks();
 
@@ -358,17 +361,17 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 	brush.setColor(color);
 
 	// Draw
-	if ( N == 0 )	// Isolated node drawn as a pad
+	if ( N == 0 )	// Isolated node
 	{
 		if ( m_bWriteGerber )
 		{
 			assert( polygon.size() == 1 );
-			m_gWriter.GetStream(GFILE::GTL).AddTrack(bGap ? GPEN::PAD_GAP : GPEN::PAD, polygon);	// Top    copper layer
-			m_gWriter.GetStream(GFILE::GBL).AddTrack(bGap ? GPEN::PAD_GAP : GPEN::PAD, polygon);	// Bottom copper layer
+			m_gWriter.GetStream(GFILE::GTL).AddTrack(polygon, bGap ? GPEN::PAD_GAP : GPEN::PAD);	// Top    copper layer
+			m_gWriter.GetStream(GFILE::GBL).AddTrack(polygon, bGap ? GPEN::PAD_GAP : GPEN::PAD);	// Bottom copper layer
 		}
 		else
 		{
-			pen.setWidth(padWidth);
+			pen.setWidth(trackWidth);	// No longer drawn as a pad
 			painter.setPen(pen);
 			painter.drawPoint(pC);
 		}
@@ -385,14 +388,14 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 			if ( bFatTracks && padWidth > trackWidth )
 			{
 				if ( m_board.GetLyrs() > 1 )
-					osT.AddVariTrack(ePenHV, ePen, polygon);
-				osB.AddVariTrack(ePenHV, ePen, polygon);
+					osT.AddVariTrack(polygon, ePenHV, ePen);
+				osB.AddVariTrack(polygon, ePenHV, ePen);
 			}
 			else
 			{
 				if ( m_board.GetLyrs() > 1 )
-					osT.AddTrack(ePen, polygon);
-				osB.AddTrack(ePen, polygon);
+					osT.AddTrack(polygon, ePen);
+				osB.AddTrack(polygon, ePen);
 			}
 		}
 		else
@@ -417,10 +420,10 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 			auto& osB = m_gWriter.GetStream(GFILE::GBL);	// Bottom copper layer
 			if ( m_board.GetLyrs() > 1 )
 			{
-				osT.AddLoop(bGap ? GPEN::TRK_GAP : GPEN::TRK, polygon);	// Closed polygon outline
+				osT.AddLoop(polygon, bGap ? GPEN::TRK_GAP : GPEN::TRK);	// Closed polygon outline
 				if ( !bGap ) osT.AddRegion(polygon);	// Only non-Gap polygon needs filling
 			}
-			osB.AddLoop(bGap ? GPEN::TRK_GAP : GPEN::TRK, polygon);		// Closed polygon outline
+			osB.AddLoop(polygon, bGap ? GPEN::TRK_GAP : GPEN::TRK);		// Closed polygon outline
 			if ( !bGap ) osB.AddRegion(polygon);		// Only non-Gap polygon needs filling
 		}
 		else
@@ -451,8 +454,8 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 						polygon.clear();
 						polygon << p[iNbr] << p[iNbrOpp];
 						if ( m_board.GetLyrs() > 1 )
-							osT.AddTrack(ePen, polygon);	// Draw track across
-						osB.AddTrack(ePen, polygon);		// Draw track across
+							osT.AddTrack(polygon, ePen);	// Draw track across
+						osB.AddTrack(polygon, ePen);		// Draw track across
 					}
 				}
 				else
@@ -460,8 +463,8 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 					polygon.clear();
 					polygon << pC << p[iNbr];
 					if ( m_board.GetLyrs() > 1 )
-						osT.AddTrack(ePen, polygon);	// Draw track from centre to perimeter point
-					osB.AddTrack(ePen, polygon);		// Draw track from centre to perimeter point
+						osT.AddTrack(polygon, ePen);	// Draw track from centre to perimeter point
+					osB.AddTrack(polygon, ePen);		// Draw track from centre to perimeter point
 				}
 			}
 		}
@@ -679,7 +682,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	const int		 C				= W >> 1;						// Half square width in pixels
 	const int		 iHalfGap		= std::max(1, W / 12);			// For vero only
 	const int		 iGap			= iHalfGap + iHalfGap;			// For vero only
-	const int		 iWirePenWidth	= board.GetHalfPadWidth() / 4;	// For wires with no NodeID
+	const int		 iWirePenWidth	= board.GetHalfPixelsFromMIL( board.GetPAD_MIL() ) / 4;	// For wires with no NodeID
 	const int		 iWireBoxWidth	= 3 * iWirePenWidth;			// For wires with no NodeID
 	const double	 dTextScale		= ( m_bWritePDF ) ? (48.0 / W) : (W / 24.0);	// For scaling text when zooming
 	if ( bVero && trackMode != TRACKMODE::OFF ) board.CalcSolder();	// Calculate positions of solder blobs for stripboard builds
@@ -793,7 +796,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 	if ( m_bWriteGerber )
 	{
-		m_gWriter.GetStream(GFILE::GKO).DrawLoop(GPEN::GKO, edge);	// Board outline layer
+		m_gWriter.GetStream(GFILE::GKO).DrawLoop(edge, GPEN::GKO);	// Board outline layer
 	}
 	else
 	{
@@ -856,9 +859,21 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				const bool		bVia			= pC->GetIsVia()  ||  bWireAsVia;
 				const bool		bPad			= pC->GetHasPin() && !bWireAsVia;
 				assert( !(bVia && bPad) );	// Can't be both a via and a regular pad
-		//TODO	const int		iPadWidth		= bPad ? pC->GetPadWidth()  : 0;
-		//TODO	const int		iHoleWidth		= bPad ? pC->GetHoleWidth() : 0;
-				const bool		bCustom			= false;	// true ==> custom pad size	//TODO
+
+				bool bCustom(false);
+				int iPadWidthMIL(0), iHoleWidthMIL(0);	// 0 ==> Not a custom value
+				if ( bPad && !bWire )
+				{
+					const int	compId	= pC->GetCompId(); assert(compId != BAD_COMPID);
+					Component&	comp	= compMgr.GetComponentById(compId);
+					bCustom = comp.GetCustomPads();
+					if ( bCustom )
+					{
+						iPadWidthMIL	= comp.GetPadWidth();
+						iHoleWidthMIL	= comp.GetHoleWidth();
+					}
+				}
+
 				if ( colorId == BAD_COLORID && !bWire ) continue;	// Usually don't color places with no NodeID assigned unless they are wire ends
 
 				// Use GetPixmapRGB for pixmaps.  It can handle MY_GREY, MY_BLACK as special cases
@@ -938,7 +953,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						if ( bVia ) painter.drawPixmap(L+C-m_radPixmapVia, T+C-m_radPixmapVia, *(m_ppPixmapVia[iEffColorId]));
 						if ( bPad )
 						{
-							if ( bCustom )	PaintPad(board, painter, color, pCentre);
+							if ( bCustom )	PaintPad(board, painter, color, pCentre, iPadWidthMIL, iHoleWidthMIL);
 							else			painter.drawPixmap(L+C-m_radPixmapPad, T+C-m_radPixmapPad, *(m_ppPixmapPad[iEffColorId]));
 						}
 					}
@@ -956,16 +971,16 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					if ( iLoop == 0 )
 					{
 						if ( nodeId != groundNodeId )	// Only the non-ground tracks have a "white" surround
-							PaintBlob(board, painter, backgroundColor, pCentre, iPerimeterCode, true);	// Draw fat "white" track blob
-						if ( bVia ) PaintVia(board, painter, backgroundColor, pCentre, true);			// Draw fat "white" via
-						if ( bPad ) PaintPad(board, painter, backgroundColor, pCentre, true);			// Draw fat "white" pad
+							PaintBlob(board, painter, backgroundColor, pCentre, iPerimeterCode, true);						// Draw fat "white" track blob
+						if ( bVia ) PaintVia(board, painter, backgroundColor, pCentre, true);								// Draw fat "white" via
+						if ( bPad ) PaintPad(board, painter, backgroundColor, pCentre, iPadWidthMIL, iHoleWidthMIL, true);	// Draw fat "white" pad
 					}
 					else if ( iLoop == 1 )	// Draw track "blobs" and pads directly
 					{
-						PaintBlob(board, painter, color, pCentre, iPerimeterCode);	// Draw track blob
-						if ( bVia ) PaintVia(board, painter, color, pCentre);		// Draw via same color as track
-						if ( bPad ) PaintPad(board, painter, color, pCentre);		// Draw pad same color as track
-						if ( bPad && nodeId == groundNodeId )						// Draw therml relief tags
+						PaintBlob(board, painter, color, pCentre, iPerimeterCode);							// Draw track blob
+						if ( bVia ) PaintVia(board, painter, color, pCentre);								// Draw via same color as track
+						if ( bPad ) PaintPad(board, painter, color, pCentre, iPadWidthMIL, iHoleWidthMIL);	// Draw pad same color as track
+						if ( bPad && nodeId == groundNodeId )												// Draw therml relief tags
 						{
 							int iCode(iPerimeterCode);		// Take a copy of the perimeter code
 							for (int iDiag = 0, iDiagMax = ( bDiagsOK ) ? 2 : 1; iDiag < iDiagMax; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
@@ -983,22 +998,22 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					}
 					else if ( bDrawGrey )
 					{
-						if ( bVia ) PaintViaGrey(board, painter, pCentre);	// Draw grey via
-						if ( bPad ) PaintPadGrey(board, painter, pCentre);	// Draw grey pad
+						if ( bVia ) PaintViaGrey(board, painter, pCentre);					// Draw grey via
+						if ( bPad ) PaintPadGrey(board, painter, pCentre, iPadWidthMIL);	// Draw grey pad
 					}
 				}
 				if ( bDirect )	// Draw track "blobs" and pads directly (PDF/Gerber)
 				{
 					if ( iLoop == 0 )
 					{
-						PaintBlob(board, painter, color, pCentre, iPerimeterCode);	// Draw track blob
-						if ( bVia ) PaintVia(board, painter, color, pCentre);		// Draw via same color as track
-						if ( bPad ) PaintPad(board, painter, color, pCentre);		// Draw pad same color as track
+						PaintBlob(board, painter, color, pCentre, iPerimeterCode);							// Draw track blob
+						if ( bVia ) PaintVia(board, painter, color, pCentre);								// Draw via same color as track
+						if ( bPad ) PaintPad(board, painter, color, pCentre, iPadWidthMIL, iHoleWidthMIL);	// Draw pad same color as track
 					}
 					else if ( bDrawGrey )
 					{
-						if ( bVia ) PaintViaGrey(board, painter, pCentre);	// Draw grey via
-						if ( bPad ) PaintPadGrey(board, painter, pCentre);	// Draw grey pad
+						if ( bVia ) PaintViaGrey(board, painter, pCentre);					// Draw grey via
+						if ( bPad ) PaintPadGrey(board, painter, pCentre, iPadWidthMIL);	// Draw grey pad
 					}
 				}
 			}
@@ -1015,7 +1030,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					polygon << QPointF(X, Y);
 					GetXY(board, comp.GetRow() + comp.GetCompRows() - 1, comp.GetCol() + comp.GetCompCols() - 1, X, Y);
 					polygon << QPointF(X, Y);
-					m_gWriter.GetStream(GFILE::GTL).AddTrack(bGap ? GPEN::TRK_GAP : GPEN::TRK, polygon);
+					m_gWriter.GetStream(GFILE::GTL).AddTrack(polygon, bGap ? GPEN::TRK_GAP : GPEN::TRK);
 				}
 			}
 			if ( m_bWriteGerber )
@@ -1119,7 +1134,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	if ( !m_bWriteGerber && !bVero && ( bPCB || trackMode != TRACKMODE::OFF ) )	// Force in PCB mode
 	{
 		painter.save();
-		m_backgroundPen.setWidth( board.GetHalfViaHoleWidth() << 1 );
+		m_backgroundPen.setWidth( board.GetPixelsFromMIL( board.GetVIAHOLE_MIL() ) );
 		painter.setPen(m_backgroundPen);
 		painter.setBrush(Qt::NoBrush);
 		for (int j = minRow; j <= maxRow; j++)
@@ -1156,6 +1171,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			const bool		 bHighlightComp	= board.GetGroupMgr().GetIsUserComp( comp.GetId() );
 			const int		 jComp			= comp.GetRow();
 			const int		 iComp			= comp.GetCol();
+			const bool		 bCustom		= comp.GetCustomPads();
+			const int		 iPadWidthMIL	= bCustom ? comp.GetPadWidth()  : board.GetPAD_MIL();
+			const int		 iHoleWidthMIL	= bCustom ? comp.GetHoleWidth() : board.GetHOLE_MIL();
 
 			// Begin draw component fill + outline -----------------------------------------------
 			if ( compMode != COMPSMODE::OFF && !comp.GetShapes().empty() )
@@ -1292,7 +1310,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 				if ( bMonoPCB && comp.GetIsPlaced() )
 				{
-					m_backgroundPen.setWidth( board.GetHalfHoleWidth() << 1 );
+					m_backgroundPen.setWidth( board.GetPixelsFromMIL(iHoleWidthMIL) );
 					painter.setPen(m_backgroundPen);
 				}
 				else
@@ -1344,10 +1362,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 							painter.setBrush( bMonoPCB ? Qt::NoBrush : m_varBrush);	// No pin color fill in Mono/PCB mode
 						}
 
-						const int iPinSize  = ( !bColor || comp.GetIsPlaced() )
-											? board.GetHOLE_PERCENT()
-											: std::min(3*board.GetHOLE_PERCENT()/2, board.GetPAD_PERCENT());
-						GetLRTB(board, iPinSize, j, i, L, R, T, B);
+						const int iPinSizeMIL = ( !bColor || comp.GetIsPlaced() ) ? iHoleWidthMIL : std::min(3*iHoleWidthMIL/2, iPadWidthMIL);
+						GetLRTB(board, iPinSizeMIL, j, i, L, R, T, B);
 
 						// Stop pins vanishing if zoomed too far out
 						if ( L == R ) { L--, R++; }
@@ -1388,7 +1404,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						}
 						else if ( bRectPins )	// Draw switch pins as rectangles
 						{
-							const int d = std::max(1, static_cast<int>(iPinSize * W * 0.005));
+							const int d = board.GetHalfPixelsFromMIL( iPinSizeMIL );
 							switch( compDirection )
 							{
 								case 'W':
@@ -1540,7 +1556,7 @@ void MainWindow::GetFirstRowCol(int& iRow, int& iCol) const
 	iRow = 1 + m_scrollArea->verticalScrollBar()->value()   / W;	// The first fully visible row
 	iCol = 1 + m_scrollArea->horizontalScrollBar()->value() / W;	// The first fully visible col
 }
-		
+
 void MainWindow::GetXY(const GuiControl& guiCtrl, double row, double col, int& X, int& Y) const
 {
 	// For rendering.

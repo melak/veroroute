@@ -24,13 +24,8 @@
 class QPoint;
 class QPolygon;
 
-// The GPEN enum is a bitfield.
-// The idea being we can do things in future such as GPEN(BIT_PAD | BIT_VAR)
-// to indicate a custom pad size without necessarily adding explicit enum entries.
-
-const int	BIT_GKO(1),	 BIT_PAD(2),  BIT_VIA(4),  BIT_TRK(8),
+const int	BIT_GKO(1),	 BIT_PAD(2), BIT_VIA(4), BIT_TRK(8),
 			BIT_SLK(16), BIT_GAP(32), BIT_MSK(64), BIT_HLE(128);
-//TODO Add	BIT_VAR(256);
 
 enum class GPEN
 {
@@ -46,7 +41,7 @@ enum class GPEN
 	PAD_MSK	= BIT_PAD | BIT_MSK,
 	VIA_MSK	= BIT_VIA | BIT_MSK,
 	PAD_HLE	= BIT_PAD | BIT_HLE,
-	VIA_HLE	= BIT_VIA | BIT_HLE,
+	VIA_HLE	= BIT_VIA | BIT_HLE
 };
 
 // A class describing a curve as a set of points, with functionality for combining curves.
@@ -56,8 +51,8 @@ class Curve : public std::list<QPoint>	// A curve drawn in a fixed size pen
 {
 public:
 	Curve() {}
-	Curve(const GPEN& ePen, const QPoint& p);
-	Curve(const GPEN& ePen, const QPolygon& polygon);
+	Curve(const QPoint& p, const GPEN& ePen, const int& width = 0);
+	Curve(const QPolygon& polygon, const GPEN& ePen, const int& width = 0);
 	~Curve() { clear(); }
 	void Compress();		// Removes redundant points
 	bool Splice(Curve* pB);	// Tries to splice curve B to this

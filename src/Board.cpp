@@ -90,6 +90,48 @@ int Board::GetTextId(int row, int col)	// Pick the most relevant text box at the
 	return bestId;
 }
 
+// Methods to handle variable pad/hole and PCB tolerances
+
+void Board::GetPadWidths_MIL(std::list<int>& o) const
+{
+	m_compMgr.GetPadWidths(o, GetPAD_MIL());
+}
+void Board::GetHoleWidths_MIL(std::list<int>& o) const
+{
+	m_compMgr.GetHoleWidths(o, GetHOLE_MIL());
+}
+int Board::GetMIN_TRACK_SEPARATION_MIL() const	// Minimum guaranteed track separation in mil
+{
+	// To keep track/pads at least N mil apart:
+	// In diags mode keep     (Pad + Track) / 2 <= ( 70.71 - N).  Keep Gap >= N if used.
+	// In non-diags mode keep (Pad + Pad  ) / 2 <= ( 100.0 - N).  Keep Gap >= N if used.
+	const double dMinSep	= GetMIN_SEPARATION();	// Min separation without ground fill
+	const double dGap		= GetGroundFill() ? GetGAP_MIL() : 100.0;
+	return (int) floor( std::min(dGap, dMinSep) );
+}
+int Board::GetMIN_GROUNDFILL_MIL() const // Minimum guaranteed ground-fill width in mil
+{
+	// To have a ground fill with no isolated islands this must be > 0 (and probably at least 8 mil)
+	if ( !GetGroundFill() ) return 100;
+	const double dMinSep	= GetMIN_SEPARATION();	// Min separation without ground fill
+	const double dDblGap	= GetGAP_MIL() * 2.0;
+	return (int) floor( std::max(0.0, dMinSep - dDblGap) );
+}
+double Board::GetMIN_SEPARATION() const	// Minimum possible separation (in mil) between a pad or track without ground fill
+{
+	const bool   bNoDiags	= GetDiagsMode() == DIAGSMODE::OFF;
+	std::list<int> padWidths;
+	GetPadWidths_MIL(padWidths);
+	int maxPadWidth(0);
+	for (auto& padWidth : padWidths) maxPadWidth = std::max(maxPadWidth, padWidth);
+	const double dPad		= GetViasEnabled() ? std::max(maxPadWidth, GetVIAPAD_MIL()) : maxPadWidth;
+	const double dTrk		= GetTRACK_MIL();
+	const double dHypot		= 50.0 * sqrt(2.0);	// 70.71
+	const double dPadPad	= 100.0 - dPad;
+	const double dPadTrk	= ( bNoDiags ? 100.0 : dHypot ) - 0.5 * ( dPad + dTrk );
+	const double dTrkTrk	= ( bNoDiags ? 100.0 : dHypot ) - dTrk;
+	return std::max(0.0, std::min(dPadPad, std::min(dPadTrk, dTrkTrk)));
+}
 
 // Methods to paint/unpaint nodeIds
 

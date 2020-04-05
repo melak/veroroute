@@ -145,7 +145,7 @@ void ControlDialog::UpdateCompControls()	// Component controls
 		nameStr			= comp.GetNameStr();
 		valueStr		= comp.GetValueStr();
 		typeStr			= comp.GetTypeStr();
-		bCustom			= ( comp.GetPinFlags() & PIN_CUSTOM ) != 0;
+		bCustom			= comp.GetCustomPads();
 		iPadWidth		= comp.GetPadWidth();
 		iHoleWidth		= comp.GetHoleWidth();
 

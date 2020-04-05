@@ -126,6 +126,30 @@ public:
 		}
 		return false;
 	}
+	void GetPadWidths(std::list<int>& o, const int& iDefaultWidth) const
+	{
+		o.clear();
+		for (const auto& mapObj : m_mapIdToComp)
+		{
+			const Component& comp = mapObj.second;
+			if ( !comp.GetIsPlaced() ) continue;
+			const int& iWidth = comp.GetCustomPads() ? comp.GetPadWidth() : iDefaultWidth;
+			const auto iterFind = std::find(o.begin(), o.end(), iWidth);
+			if ( iterFind == o.end() ) o.push_back( iWidth );
+		}
+	}
+	void GetHoleWidths(std::list<int>& o, const int& iDefaultWidth) const
+	{
+		o.clear();
+		for (const auto& mapObj : m_mapIdToComp)
+		{
+			const Component& comp = mapObj.second;
+			if ( !comp.GetIsPlaced() ) continue;
+			const int& iWidth = comp.GetCustomPads() ? comp.GetHoleWidth() : iDefaultWidth;
+			const auto iterFind = std::find(o.begin(), o.end(), iWidth);
+			if ( iterFind == o.end() ) o.push_back( iWidth );
+		}
+	}
 	void CalculateWireShifts()
 	{
 		m_mapWireToShift.clear();

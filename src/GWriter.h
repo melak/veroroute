@@ -23,12 +23,45 @@
 
 class QPointF;
 class QPolygonF;
-class CBoard;
+class Board;
 class GStream;
 
 enum class	GPOLARITY	{UNKNOWN = 0, DARK, CLEAR};
 enum class	GFILE		{GKO = 0, GBL, GBS, GBO, GTL, GTS, GTO, DRL};
 const int	NUM_STREAMS	= 8;
+
+struct GPenInfo
+{
+	GPenInfo(const GPEN& ePen = GPEN::NONE,
+			 const int& iWidth = 0,
+			 const int& iCode = 0,
+			 const std::string& comment = "")
+	: m_ePen(ePen), m_iWidth(iWidth), m_iCode(iCode), m_comment(comment) {}
+	GPenInfo(const GPenInfo& o) { *this = o; }
+	GPenInfo& operator=(const GPenInfo& o)
+	{
+		m_ePen		= o.m_ePen;
+		m_iWidth	= o.m_iWidth;
+		m_iCode		= o.m_iCode;
+		m_comment	= o.m_comment;
+		return *this;
+	}
+	bool operator==(const GPenInfo& o) const
+	{
+		return m_ePen		== o.m_ePen
+			&& m_iWidth		== o.m_iWidth
+			&& m_iCode		== o.m_iCode
+			&& m_comment	== o.m_comment;
+	}
+	bool operator!=(const GPenInfo& o) const
+	{
+		return !(*this == o);
+	}
+	GPEN		m_ePen;
+	int			m_iWidth;
+	int			m_iCode;	// Aperture/Tool code	// e.g. "10" for D10 or T10
+	std::string m_comment;
+};
 
 // Wrapper for a stream to a Gerber file
 class GStream
@@ -40,21 +73,21 @@ public:
 	bool Open(const char* fileName, const GFILE& eType, const Board& board, const bool& bVias, const QString& UTC);
 	void Drill(const QPoint& pF);
 	void SetPolarity(const GPOLARITY& ePolarity, bool bCheckOK = true);
-	void AddPad(const GPEN& ePen, const QPointF& pF);		// Add to m_pads buffer
-	void AddViaPad(const GPEN& ePen, const QPointF& pF);	// Add to m_viapads buffer
-	void AddTrack(const GPEN& ePen, const QPolygonF& pF);	// Add to m_tracks buffer
-	void AddVariTrack(const GPEN& ePenHV, const GPEN& ePen, const QPolygonF& pF);	// Add to m_tracks buffer
-	void AddLoop(const GPEN& ePen, const QPolygonF& pF);	// Add to m_loops buffer
-	void AddRegion(const QPolygonF& pF);					// Add to m_regions buffer
-	void AddPadHole(const GPEN& ePen, const QPointF& pF);	// Add to m_padholes buffer
-	void AddViaHole(const GPEN& ePen, const QPointF& pF);	// Add to m_viaholes buffer
+	void AddPad(const QPointF& pF, const GPEN& ePen, const int& w = 0);				// Add to m_pads buffer
+	void AddViaPad(const QPointF& pF, const GPEN& ePen);							// Add to m_viapads buffer
+	void AddTrack(const QPolygonF& pF, const GPEN& ePen);							// Add to m_tracks buffer
+	void AddVariTrack(const QPolygonF& pF, const GPEN& ePenHV, const GPEN& ePen);	// Add to m_tracks buffer
+	void AddLoop(const QPolygonF& pF, const GPEN& ePen);							// Add to m_loops buffer
+	void AddRegion(const QPolygonF& pF);											// Add to m_regions buffer
+	void AddPadHole(const QPointF& pF, const GPEN& ePen, const int& w = 0);			// Add to m_padholes buffer
+	void AddViaHole(const QPointF& pF, const GPEN& ePen);							// Add to m_viaholes buffer
 	void ClearBuffers(bool bCheckOK = true);
 	void DrawBuffers();
 	// Methods to draw things immediately
-//	void DrawPad(const GPEN& ePen, const QPointF& pF)		{ ClearBuffers(); AddPad(ePen, pF);		DrawBuffers(); }
-//	void DrawTrack(const GPEN& ePen, const QPolygonF& pF)	{ ClearBuffers(); AddTrack(ePen, pF);	DrawBuffers(); }
-	void DrawLoop(const GPEN& ePen, const QPolygonF& pF)	{ ClearBuffers(); AddLoop(ePen, pF);	DrawBuffers(); }
-	void DrawRegion(const QPolygonF& pF)					{ ClearBuffers(); AddRegion(pF);		DrawBuffers(); };
+//	void DrawPad(const QPointF& pF, const GPEN& ePen, const int& w)	{ ClearBuffers(); AddPad(pF, ePen, w);	DrawBuffers(); }
+//	void DrawTrack(const QPolygonF& pF, const GPEN& ePen )			{ ClearBuffers(); AddTrack(pF, ePen);	DrawBuffers(); }
+	void DrawLoop(const QPolygonF& pF, const GPEN& ePen)			{ ClearBuffers(); AddLoop(pF,ePen);		DrawBuffers(); }
+	void DrawRegion(const QPolygonF& pF)							{ ClearBuffers(); AddRegion(pF);		DrawBuffers(); };
 private:
 	void WriteHeader(const QString& UTC);
 	void MakeDrills();
@@ -63,7 +96,7 @@ private:
 	void Comment(const char* sz);
 	void EndLine();
 	bool GetOK() const;
-	void SetPen(const GPEN& ePen);
+	void SetPen(const GPEN& ePen, const int& w);
 	void Flash(const QPoint& p);
 	void Move(const QPoint& p);
 	void Draw(const QPoint& p);
@@ -77,21 +110,23 @@ private:
 	void GetQPolygon(const QPolygonF& in, QPolygon& out) const;	// Convert float to integer
 	std::string MilToInch(const int& iMil, const bool& bLZ = false) const;
 	// Data
-	GFILE			m_eType		= GFILE::GBL;	// GKO, GBL, GBS, GTL, GTS, GTO
-	GPEN			m_ePen		= GPEN::NONE;
-	GPOLARITY		m_ePolarity	= GPOLARITY::UNKNOWN;
-	const Board*	m_pBoard	= nullptr;		// The board, so we can get dimensions and track sizes
-	bool			m_bVias		= false;		// true ==> the board has vias
-	int				m_iLastX	= INT_MAX;		// Last X used
-	int				m_iLastY	= INT_MAX;		// Last Y used
+	GFILE				m_eType		= GFILE::GBL;	// GKO, GBL, GBS, GTL, GTS, GTO
+	GPEN				m_ePen		= GPEN::NONE;
+	int					m_penWidth	= 0;
+	std::list<GPenInfo>	m_ePenList;
+	GPOLARITY			m_ePolarity	= GPOLARITY::UNKNOWN;
+	const Board*		m_pBoard	= nullptr;		// The board, so we can get dimensions and track sizes
+	bool				m_bVias		= false;		// true ==> the board has vias
+	int					m_iLastX	= INT_MAX;		// Last X used
+	int					m_iLastY	= INT_MAX;		// Last Y used
 	// Buffers for optimising data before writing to file
-	CurveList		m_pads;		// Pads
-	CurveList		m_viapads;	// Via pads
-	CurveList		m_tracks;	// Tracks (drawn with non-zero width pen).
-	CurveList		m_loops;	// Loops (drawn with non-zero width pen).
-	CurveList		m_regions;	// Drawn with zero width pen. For filling gaps between tracks.
-	CurveList		m_padholes;	// Pad holes
-	CurveList		m_viaholes;	// Via holes
+	CurveList			m_pads;		// Pads
+	CurveList			m_viapads;	// Via pads
+	CurveList			m_tracks;	// Tracks (drawn with non-zero width pen).
+	CurveList			m_loops;	// Loops (drawn with non-zero width pen).
+	CurveList			m_regions;	// Drawn with zero width pen. For filling gaps between tracks.
+	CurveList			m_padholes;	// Pad holes
+	CurveList			m_viaholes;	// Via holes
 	// The output stream
 	std::ofstream	m_os;
 };

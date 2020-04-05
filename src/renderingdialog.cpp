@@ -101,18 +101,18 @@ void RenderingDialog::UpdateControls()
 	ui->label_info->setDisabled(		bCompEdit || bVero );
 	ui->label_info_2->setDisabled(		bCompEdit || bVero || !bMonoPCB || !bGndFill );
 
-	ui->padWidth->setValue(		board.GetPAD_PERCENT()		);
-	ui->trackWidth->setValue(	board.GetTRACK_PERCENT()	);
-	ui->holeWidth->setValue(	board.GetHOLE_PERCENT()		);
-	ui->gapWidth->setValue(		board.GetGAP_PERCENT()		);
-	ui->maskWidth->setValue(	board.GetMASK_PERCENT()		);
-	ui->silkWidth->setValue(	board.GetSILK_PERCENT()		);
-	ui->edgeWidth->setValue(	board.GetEDGE_PERCENT()		);
-	ui->viapadWidth->setValue(	board.GetVIAPAD_PERCENT()	);
-	ui->viaholeWidth->setValue(	board.GetVIAHOLE_PERCENT()	);
+	ui->padWidth->setValue(		board.GetPAD_MIL()		);
+	ui->trackWidth->setValue(	board.GetTRACK_MIL()	);
+	ui->holeWidth->setValue(	board.GetHOLE_MIL()		);
+	ui->gapWidth->setValue(		board.GetGAP_MIL()		);
+	ui->maskWidth->setValue(	board.GetMASK_MIL()		);
+	ui->silkWidth->setValue(	board.GetSILK_MIL()		);
+	ui->edgeWidth->setValue(	board.GetEDGE_MIL()		);
+	ui->viapadWidth->setValue(	board.GetVIAPAD_MIL()	);
+	ui->viaholeWidth->setValue(	board.GetVIAHOLE_MIL()	);
 
-	const int minTrackSep = board.GetMIN_TRACK_SEPARATION_PERCENT();
-	const int minGndFill  = board.GetMIN_GROUNDFILL_PERCENT();
+	const int minTrackSep = board.GetMIN_TRACK_SEPARATION_MIL();
+	const int minGndFill  = board.GetMIN_GROUNDFILL_MIL();
 
 	const std::string str = "Guaranteed minimum track separation = " + std::to_string(minTrackSep) + " mil";
 	ui->label_info->setText( QString::fromStdString(str) );

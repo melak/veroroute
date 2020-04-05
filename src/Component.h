@@ -43,7 +43,7 @@ public:
 		m_bIsPlaced		= false;
 		m_iPinFlags		= 0;
 		m_iPadWidth		= 70;
-		m_iHoleWidth	= 35;
+		m_iHoleWidth	= 40;
 		m_nodeIdPins.clear();
 		m_origIdPins1.clear();
 		m_origIdPins2.clear();
@@ -278,6 +278,11 @@ public:
 	void GetLabelOffsets(int& offsetRow, int& offsetCol) const;			// w.r.t. screen, not comp rotation
 	void MoveLabelOffsets(const int& deltaRow, const int& deltaCol);	// w.r.t. screen, not comp rotation
 	void HandleLegacyLabelOffsets();	// For old VRT files
+
+	// Helpers for custom pads
+	void SetCustomPads(const bool& b)	{ if ( b )	SetPinFlags( m_iPinFlags |  PIN_CUSTOM );
+										  else		SetPinFlags( m_iPinFlags & ~PIN_CUSTOM ); }
+	bool GetCustomPads() const			{ return ( GetPinFlags() & PIN_CUSTOM ) != 0; }
 
 	void GetSafeBounds(double& L, double& R, double& T, double& B) const
 	{
@@ -517,7 +522,7 @@ public:
 		if ( inStream.GetVersion() >= VRT_VERSION_19 )
 			inStream.Load(m_iPinFlags);				// Added in VRT_VERSION_19
 		m_iPadWidth  = 70;
-		m_iHoleWidth = 35;
+		m_iHoleWidth = 40;
 		if ( inStream.GetVersion() >= VRT_VERSION_39 )
 		{
 			inStream.Load(m_iPadWidth);				// Added in VRT_VERSION_39

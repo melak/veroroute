@@ -1158,8 +1158,7 @@ void MainWindow::SetCompType(const QString& str)
 	if ( m_board.GetGroupMgr().GetNumUserComps() != 1 ) return;
 	Component&	comp	= m_board.GetUserComponent();
 	const COMP	eType	= GetTypeFromTypeStr( str.toStdString() );
-	if ( comp.GetType() == eType ) return;	// No change
-
+	if ( eType == comp.GetType() ) return;	// No change
 	m_board.ChangeTypeUserComp(eType);
 	UpdateHistory("Change part type");
 	UpdateControls();
@@ -1170,12 +1169,8 @@ void MainWindow::SetCompCustomFlag(const bool& b)
 	if ( m_board.GetDisableChangeCustom() ) return;
 	if ( m_board.GetGroupMgr().GetNumUserComps() != 1 ) return;
 	Component& comp = m_board.GetUserComponent();
-	const bool bCurrentState = (comp.GetPinFlags() & PIN_CUSTOM) != 0;
-	if ( b == bCurrentState ) return;	// No change
-	if ( b )
-		comp.SetPinFlags( comp.GetPinFlags() | PIN_CUSTOM );	// Set bit
-	else
-		comp.SetPinFlags( comp.GetPinFlags() & ~PIN_CUSTOM );	// Clear bit
+	if ( b == comp.GetCustomPads() ) return;	// No change
+	comp.SetCustomPads(b);
 	UpdateHistory("Change custom pad/hole flag");
 	UpdateControls();
 	RepaintWithListNodes();
@@ -1420,15 +1415,15 @@ void MainWindow::SetDiagonalsMax(bool b)
 	const bool bListNodes = ( m_board.GetDiagsMode() == DIAGSMODE::OFF );	// Only ListNodes() again if necessary
 	if ( b && m_board.SetDiagsMode(DIAGSMODE::MAX) )	{ UpdateHistory("Diagonals max"); UpdateControls(); DestroyPixmapCache(); if ( bListNodes ) RepaintWithListNodes(); else RepaintWithRouting(); }
 }
-void MainWindow::SetPadWidth(int i)			{ if ( m_board.SetPAD_PERCENT(i)   ) { UpdateHistory("Pad width change");				UpdateControls();	DestroyPixmapCache();	RepaintSkipRouting(); } }
-void MainWindow::SetTrackWidth(int i)		{ if ( m_board.SetTRACK_PERCENT(i) ) { UpdateHistory("Track width change");				UpdateControls();	DestroyPixmapCache();	RepaintSkipRouting(); } }
-void MainWindow::SetHoleWidth(int i)		{ if ( m_board.SetHOLE_PERCENT(i)  ) { UpdateHistory("Hole width change");				UpdateControls();	RepaintSkipRouting(); } }
-void MainWindow::SetGapWidth(int i)			{ if ( m_board.SetGAP_PERCENT(i)   ) { UpdateHistory("Gap width change");				UpdateControls();	RepaintSkipRouting(); } }
-void MainWindow::SetMaskWidth(int i)		{ if ( m_board.SetMASK_PERCENT(i)  ) { UpdateHistory("Solder mask margin change");		UpdateControls();	RepaintSkipRouting(); } }
-void MainWindow::SetSilkWidth(int i)		{ if ( m_board.SetSILK_PERCENT(i)  ) { UpdateHistory("Silkscreen line width change");	UpdateControls();	RepaintSkipRouting(); } }
-void MainWindow::SetEdgeWidth(int i)		{ if ( m_board.SetEDGE_PERCENT(i)  ) { UpdateHistory("Board edge margin change");		UpdateControls();	RepaintSkipRouting(); } }
-void MainWindow::SetViaPadWidth(int i)		{ if ( m_board.SetVIAPAD_PERCENT(i)) { UpdateHistory("Via pad width change");			UpdateControls();	DestroyPixmapCache();	RepaintSkipRouting(); } }
-void MainWindow::SetViaHoleWidth(int i)		{ if ( m_board.SetVIAHOLE_PERCENT(i)){ UpdateHistory("Via hole width change");			UpdateControls();	RepaintSkipRouting(); } }
+void MainWindow::SetPadWidth(int i)			{ if ( m_board.SetPAD_MIL(i)   ) { UpdateHistory("Pad width change");				UpdateControls();	DestroyPixmapCache();	RepaintSkipRouting(); } }
+void MainWindow::SetTrackWidth(int i)		{ if ( m_board.SetTRACK_MIL(i) ) { UpdateHistory("Track width change");				UpdateControls();	DestroyPixmapCache();	RepaintSkipRouting(); } }
+void MainWindow::SetHoleWidth(int i)		{ if ( m_board.SetHOLE_MIL(i)  ) { UpdateHistory("Hole width change");				UpdateControls();	RepaintSkipRouting(); } }
+void MainWindow::SetGapWidth(int i)			{ if ( m_board.SetGAP_MIL(i)   ) { UpdateHistory("Gap width change");				UpdateControls();	RepaintSkipRouting(); } }
+void MainWindow::SetMaskWidth(int i)		{ if ( m_board.SetMASK_MIL(i)  ) { UpdateHistory("Solder mask margin change");		UpdateControls();	RepaintSkipRouting(); } }
+void MainWindow::SetSilkWidth(int i)		{ if ( m_board.SetSILK_MIL(i)  ) { UpdateHistory("Silkscreen line width change");	UpdateControls();	RepaintSkipRouting(); } }
+void MainWindow::SetEdgeWidth(int i)		{ if ( m_board.SetEDGE_MIL(i)  ) { UpdateHistory("Board edge margin change");		UpdateControls();	RepaintSkipRouting(); } }
+void MainWindow::SetViaPadWidth(int i)		{ if ( m_board.SetVIAPAD_MIL(i)) { UpdateHistory("Via pad width change");			UpdateControls();	DestroyPixmapCache();	RepaintSkipRouting(); } }
+void MainWindow::SetViaHoleWidth(int i)		{ if ( m_board.SetVIAHOLE_MIL(i)){ UpdateHistory("Via hole width change");			UpdateControls();	RepaintSkipRouting(); } }
 
 // Rendering dialog
 void MainWindow::SetTextSizeComp(int i)		{ if ( m_board.SetTextSizeComp(i) )		  { UpdateHistory("Text size change (component)");	RepaintSkipRouting(); } }
@@ -1441,8 +1436,8 @@ void MainWindow::SetAntialiasOn(bool b)		{ if ( b && m_board.SetRenderQuality(1)
 void MainWindow::SetAntialiasHigh(bool b)	{ if ( b && m_board.SetRenderQuality(2) ) { UpdateHistory("Anti-alias high"); DestroyPixmapCache(); RepaintSkipRouting(); } }
 
 // Wire dialog
-void MainWindow::SetWireShare(bool b)		{ if ( m_board.SetWireShare(b) )		  { UpdateHistory("Wire hole-sharing on/off");	RepaintSkipRouting(); } }
-void MainWindow::SetWireCross(bool b)		{ if ( m_board.SetWireCross(b) )		  { UpdateHistory("Wire crossing on/off");		RepaintSkipRouting(); } }
+void MainWindow::SetWireShare(bool b)		{ if ( m_board.SetWireShare(b) ) { UpdateHistory("Wire hole-sharing on/off");	RepaintSkipRouting(); } }
+void MainWindow::SetWireCross(bool b)		{ if ( m_board.SetWireCross(b) ) { UpdateHistory("Wire crossing on/off");		RepaintSkipRouting(); } }
 
 // Text box dialog
 void MainWindow::SizeChanged(int i)			{ if ( GetCurrentTextId() != BAD_TEXTID && GetCurrentTextRect().SetSize(i) )												{ UpdateTextDialog(); RepaintSkipRouting(); } }

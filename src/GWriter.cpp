@@ -34,6 +34,7 @@ GStream::~GStream()
 void GStream::Close()
 {
 	ClearBuffers(false);	// false ==> skip GetOK() checks
+	m_ePenList.clear();
 	if ( !m_os.is_open() ) return;
 	switch( m_eType )
 	{
@@ -44,12 +45,13 @@ void GStream::Close()
 }
 bool GStream::Open(const char* fileName, const GFILE& eType, const Board& board, const bool& bVias, const QString& UTC)
 {
-	m_eType	 = eType;
-	m_ePen	 = GPEN::NONE;
-	m_pBoard = &board;
-	m_bVias	 = bVias;
-	m_iLastX = INT_MAX;
-	m_iLastY = INT_MAX;
+	m_eType		= eType;
+	m_ePen		= GPEN::NONE;
+	m_penWidth	= 0;
+	m_pBoard	= &board;
+	m_bVias		= bVias;
+	m_iLastX	= INT_MAX;
+	m_iLastY	= INT_MAX;
 
 	std::string str(fileName);
 	switch( m_eType )
@@ -120,81 +122,92 @@ void GStream::WriteHeader(const QString& UTC)	// Write header for current stream
 void GStream::MakeDrills()
 {
 	assert( m_os.is_open() && m_eType == GFILE::DRL );
-	const int  hole		= m_pBoard->GetHOLE_PERCENT();
-	const int  viahole	= m_pBoard->GetVIAHOLE_PERCENT();
 
-	// Comment about hole size:	";Hole = 00.0320 INCH"
-	// Define Tool 1:			"T01C00.0320" ==> 00.0320 inch diameter
-	const bool bLZ(true);	// Include leading zeros
-	m_os << ";Hole = " << MilToInch(hole, bLZ) << " INCH";	EndLine();
-	m_os << "T01C"     << MilToInch(hole, bLZ);				EndLine();
+	std::list<int>	holes;	  m_pBoard->GetHoleWidths_MIL(holes);
+	const int		viahole	= m_pBoard->GetVIAHOLE_MIL();
+
+	// Build drill list
+	int code = 1;	// Start with drill T01
+	for (auto& hole : holes)
+		m_ePenList.push_back( GPenInfo(GPEN::PAD_HLE, hole, code++, "Pad Hole = ") );
 	if ( m_bVias )
+		m_ePenList.push_back( GPenInfo(GPEN::VIA_HLE, viahole, code++, "Via Hole = ") );
+
+	// Write drill list to file
+	const bool bLZ(true);	// Include leading zeros
+	for (auto& o : m_ePenList)
 	{
-		m_os << ";Via Hole = " << MilToInch(viahole, bLZ) << " INCH";	EndLine();
-		m_os << "T02C"         << MilToInch(viahole, bLZ);				EndLine();
+		std::string codeStr("T");
+		if ( o.m_iCode < 10 ) codeStr += "0";	// Add leading zero
+		codeStr += std::to_string(o.m_iCode);
+
+		m_os << ";" << o.m_comment << MilToInch(o.m_iWidth, bLZ) << " INCH";	EndLine();
+		m_os << codeStr << "C" << MilToInch(o.m_iWidth, bLZ);	EndLine();
 	}
 }
+
 void GStream::MakeApertures()	// Make "pens" for current stream
 {
 	assert( m_os.is_open() && m_eType != GFILE::DRL);
-	const bool bGroundFill	= m_pBoard->GetGroundFill();
-	const int  pad			= m_pBoard->GetPAD_PERCENT();
-	const int  via			= m_pBoard->GetVIAPAD_PERCENT();
-	const int  track		= m_pBoard->GetTRACK_PERCENT();
-	const int  gap			= m_pBoard->GetGAP_PERCENT();
-	const int  mask			= m_pBoard->GetMASK_PERCENT();
-	const int  silk			= m_pBoard->GetSILK_PERCENT();
-	const int  padgap		= pad	+ 2 * gap;	// Gap  is the radius increase
-	const int  viagap		= via	+ 2 * gap;	// Gap  is the radius increase
-	const int  trackgap		= track	+ 2 * gap;	// Gap  is the radius increase
-	const int  padmask		= pad	+ 2 * mask;	// Mask is the radius increase
-	const int  viamask		= via	+ 2 * mask;	// Mask is the radius increase
 
+	std::list<int>	pads;	  m_pBoard->GetPadWidths_MIL(pads);
+	const int		via		= m_pBoard->GetVIAPAD_MIL();
+	const int		trk		= m_pBoard->GetTRACK_MIL();
+	const int		gap		= m_pBoard->GetGAP_MIL();
+	const int		msk		= m_pBoard->GetMASK_MIL();
+	const int		slk		= m_pBoard->GetSILK_MIL();
+	const int		gko		= 10;	// Draw border in 10 mil pen
+
+	// Build aperture list
+	int code = 10;	// Start with aperture D10
 	switch( m_eType )
 	{
 		case GFILE::GKO:
-			m_os << "%ADD10C," << MilToInch(10) << "*%" << std::endl;				// D10 ==> GPEN::GKO
+			m_ePenList.push_back( GPenInfo(GPEN::GKO, gko, code++, "") );
 			break;
 		case GFILE::GBL:
 		case GFILE::GTL:
-			Comment("Aperture D11 is for pad");
-			m_os << "%ADD11C," << MilToInch(pad) << "*%" << std::endl;				// D11 ==> GPEN::PAD
+			for (auto& pad : pads)
+				m_ePenList.push_back( GPenInfo(GPEN::PAD, pad, code++, " is for pads") );
 			if ( m_bVias )
-			{
-				Comment("Aperture D12 is for via-pad");
-				m_os << "%ADD12C," << MilToInch(via) << "*%" << std::endl;			// D12 ==> GPEN::VIA
-			}
-			Comment("Aperture D13 is for track");
-			m_os << "%ADD13C," << MilToInch(track) << "*%" << std::endl;			// D13 ==> GPEN::TRK
-			if ( bGroundFill )
-			{
-				Comment("Aperture D14 is for separating pad from ground-pour");
-				m_os << "%ADD14C," << MilToInch(padgap) << "*%" << std::endl;		// D14 ==> GPEN::PAD_GAP
-				if ( m_bVias )
-				{
-					Comment("Aperture D15 is for separating via-pad from ground-pour");
-					m_os << "%ADD15C," << MilToInch(viagap) << "*%" << std::endl;	// D15 ==> GPEN::VIA_GAP
-				}
-				Comment("Aperture D16 is for separating track from ground-pour");
-				m_os << "%ADD16C," << MilToInch(trackgap) << "*%" << std::endl;		// D16 ==> GPEN::TRK_GAP
-			}
+				m_ePenList.push_back( GPenInfo(GPEN::VIA, via, code++, " is for via-pads") );
+			if ( true )
+				m_ePenList.push_back( GPenInfo(GPEN::TRK, trk, code++, " is for tracks") );
+			if ( !m_pBoard->GetGroundFill() ) break;
+			for (auto& pad : pads)
+				m_ePenList.push_back( GPenInfo(GPEN::PAD_GAP, pad + 2 * gap, code++, " is for separating pads from fill") );
+			if ( m_bVias )
+				m_ePenList.push_back( GPenInfo(GPEN::VIA_GAP, via + 2 * gap, code++, " is for separating via-pads from fill") );
+			if ( true )
+				m_ePenList.push_back( GPenInfo(GPEN::TRK_GAP, trk + 2 * gap, code++, " is for separating tracks from fill") );
 			break;
 		case GFILE::GBS:
 		case GFILE::GTS:
-			Comment("Aperture D17 is slightly larger than a pad");
-			m_os << "%ADD17C," << MilToInch(padmask) << "*%" << std::endl;			// D17 ==> GPEN::PAD_MSK
+			for (auto& pad : pads)
+				m_ePenList.push_back( GPenInfo(GPEN::PAD_MSK, pad + 2 * msk, code++, " is slightly larger than a pad") );
 			if ( m_bVias )
-			{
-				Comment("Aperture D18 is slightly larger than a via-pad");
-				m_os << "%ADD18C," << MilToInch(viamask) << "*%" << std::endl;		// D18 ==> GPEN::VIA_MSK
-			}
+				m_ePenList.push_back( GPenInfo(GPEN::VIA_MSK, via + 2 * msk, code++, " is slightly larger than a via-pad") );
 			break;
 		case GFILE::GTO:
 		case GFILE::GBO:
-			m_os << "%ADD19C," << MilToInch(silk) << "*%" << std::endl;				// D19 ==> GPEN::SLK
+			m_ePenList.push_back( GPenInfo(GPEN::SLK, slk, code++, "") );
 			break;
-		case GFILE::DRL:
-			break;
+		case GFILE::DRL:	break;
+	}
+	// Write aperture list to file
+	for (auto& o : m_ePenList)
+	{
+		std::string codeStr("D");
+		assert(o.m_iCode >= 10);
+		if ( o.m_iCode < 10 ) codeStr += "0";	// Add leading zero
+		codeStr += std::to_string(o.m_iCode);
+
+		if ( !o.m_comment.empty() )
+		{
+			std::string str = std::string("Aperture ") + codeStr + o.m_comment;
+			Comment( str.c_str() );
+		}
+		m_os << "%AD" << codeStr << "C," << MilToInch(o.m_iWidth) << "*%" << std::endl;
 	}
 }
 void GStream::LinearInterpolation()
@@ -255,28 +268,28 @@ void GStream::Drill(const QPoint& p)
 	m_os << "Y";  WriteDrillOrdinate( p.y() );
 	m_os << std::endl;
 }
-void GStream::AddPad(const GPEN& ePen, const QPointF& pF)		// Add to m_pads buffer for later writing to file
+void GStream::AddPad(const QPointF& pF, const GPEN& ePen, const int& w)		// Add to m_pads buffer for later writing to file
 {
 	if ( !GetOK() ) return;
 	QPoint p;
 	GetQPoint(pF, p);
-	m_pads.push_back( new Curve(ePen, p) );
+	m_pads.push_back( new Curve(p, ePen, w) );
 }
-void GStream::AddViaPad(const GPEN& ePen, const QPointF& pF)	// Add to m_viapads buffer for later writing to file
+void GStream::AddViaPad(const QPointF& pF, const GPEN& ePen)	// Add to m_viapads buffer for later writing to file
 {
 	if ( !GetOK() ) return;
 	QPoint p;
 	GetQPoint(pF, p);
-	m_viapads.push_back( new Curve(ePen, p) );
+	m_viapads.push_back( new Curve(p, ePen) );
 }
-void GStream::AddTrack(const GPEN& ePen, const QPolygonF& pF)	// Add to m_tracks buffer for later writing to file
+void GStream::AddTrack(const QPolygonF& pF, const GPEN& ePen)	// Add to m_tracks buffer for later writing to file
 {
 	if ( !GetOK() ) return;
 	QPolygon p;
 	GetQPolygon(pF, p);
-	m_tracks.push_back( new Curve(ePen, p) );
+	m_tracks.push_back( new Curve(p, ePen) );
 }
-void GStream::AddVariTrack(const GPEN& ePenHV, const GPEN& ePen, const QPolygonF& pF)	// Add to m_tracks buffer for later writing to file
+void GStream::AddVariTrack(const QPolygonF& pF, const GPEN& ePenHV, const GPEN& ePen)	// Add to m_tracks buffer for later writing to file
 {
 	if ( !GetOK() ) return;
 	QPolygon p;
@@ -290,17 +303,17 @@ void GStream::AddVariTrack(const GPEN& ePenHV, const GPEN& ePen, const QPolygonF
 		temp.clear();
 		temp << *A << *B;
 		const bool bHV = ( A->x() == B->x() || A->y() == B->y() );
-		m_tracks.push_back( new Curve(bHV ? ePenHV : ePen, temp) );
+		m_tracks.push_back( new Curve(temp, bHV ? ePenHV : ePen) );
 	}
 }
-void GStream::AddLoop(const GPEN& ePen, const QPolygonF& pF)	// Add to m_loops buffer for later writing to file
+void GStream::AddLoop(const QPolygonF& pF, const GPEN& ePen)	// Add to m_loops buffer for later writing to file
 {
 	if ( !GetOK() ) return;
 	assert( pF.size() >= 3 );
 	if ( pF.size() < 3 ) return;	// Loop must have at least 3 points
 	QPolygon p;
 	GetQPolygon(pF, p);
-	m_loops.push_back( new Curve(ePen, p) );
+	m_loops.push_back( new Curve(p, ePen) );
 }
 void GStream::AddRegion(const QPolygonF& pF)	// Add to m_regions buffer for later writing to file
 {
@@ -309,21 +322,21 @@ void GStream::AddRegion(const QPolygonF& pF)	// Add to m_regions buffer for late
 	if ( pF.size() < 3 ) return;	// Region must have at least 3 points
 	QPolygon p;
 	GetQPolygon(pF, p);
-	m_regions.push_back( new Curve(GPEN::NONE, p) );
+	m_regions.push_back( new Curve(p, GPEN::NONE) );
 }
-void GStream::AddPadHole(const GPEN& ePen, const QPointF& pF)	// Add to m_padholes buffer for later writing to file
+void GStream::AddPadHole(const QPointF& pF, const GPEN& ePen, const int& w)	// Add to m_padholes buffer for later writing to file
 {
 	if ( !GetOK() ) return;
 	QPoint p;
 	GetQPoint(pF, p);
-	m_padholes.push_back( new Curve(ePen, p) );
+	m_padholes.push_back( new Curve(p, ePen, w) );
 }
-void GStream::AddViaHole(const GPEN& ePen, const QPointF& pF)	// Add to m_viaholes buffer for later writing to file
+void GStream::AddViaHole(const QPointF& pF, const GPEN& ePen)	// Add to m_viaholes buffer for later writing to file
 {
 	if ( !GetOK() ) return;
 	QPoint p;
 	GetQPoint(pF, p);
-	m_viaholes.push_back( new Curve(ePen, p) );
+	m_viaholes.push_back( new Curve(p, ePen) );
 }
 void GStream::ClearBuffers(bool bCheckOK)
 {
@@ -360,7 +373,7 @@ void GStream::Region(const Curve& curve)	// A filled closed curve (with zero wid
 void GStream::OutLine(const Curve& curve, bool bForceClose)	// Outline of a curve
 {
 	if ( curve.empty() ) return;
-	SetPen(curve.m_ePen);
+	SetPen(curve.m_ePen, curve.m_width);
 	const size_t N = curve.size();
 	if	( N == 1 ) return Flash( curve.front() );
 	if	( N == 2 ) return Line( curve.front(), curve.back() );
@@ -371,26 +384,41 @@ void GStream::OutLine(const Curve& curve, bool bForceClose)	// Outline of a curv
 		Draw(*iter);	// Draw line to next point in curve
 	if ( bForceClose && front != curve.back() ) Draw( front );
 }
-void GStream::SetPen(const GPEN& ePen)
+void GStream::SetPen(const GPEN& ePen, const int& w)
 {
-	if ( !m_os.is_open() || m_ePen == ePen ) return;
-	m_ePen = ePen;
-	switch( m_ePen )
+	if ( !m_os.is_open() ) return;
+	assert( m_pBoard );
+
+	int penWidth(w);
+	const bool bCustomWidth = ( penWidth != 0 );
+	if ( bCustomWidth )
 	{
-		case GPEN::NONE:	return;
-		case GPEN::GKO:		m_os << "D10"; EndLine(); return;
-		case GPEN::PAD:		m_os << "D11"; EndLine(); return;
-		case GPEN::VIA:		m_os << "D12"; EndLine(); return;
-		case GPEN::TRK:		m_os << "D13"; EndLine(); return;
-		case GPEN::PAD_GAP:	m_os << "D14"; EndLine(); return;
-		case GPEN::VIA_GAP:	m_os << "D15"; EndLine(); return;
-		case GPEN::TRK_GAP:	m_os << "D16"; EndLine(); return;
-		case GPEN::PAD_MSK:	m_os << "D17"; EndLine(); return;
-		case GPEN::VIA_MSK:	m_os << "D18"; EndLine(); return;
-		case GPEN::SLK:		m_os << "D19"; EndLine(); return;
-		case GPEN::PAD_HLE:	m_os << "T01"; EndLine(); return;
-		case GPEN::VIA_HLE:	m_os << "T02"; EndLine(); return;
+		switch( ePen )
+		{
+			case GPEN::PAD:
+			case GPEN::PAD_HLE:	break;
+			case GPEN::PAD_GAP:	penWidth += 2 * m_pBoard->GetGAP_MIL();		break;
+			case GPEN::PAD_MSK:	penWidth += 2 * m_pBoard->GetMASK_MIL();	break;
+			default:	assert(0);	// Only pads support variable width at the moment
+		}
 	}
+
+	if ( m_ePen == ePen && m_penWidth == penWidth ) return;	// No change
+	m_ePen		= ePen;
+	m_penWidth	= penWidth;
+
+	if ( m_ePen == GPEN::NONE ) return;
+
+	for (auto& o : m_ePenList)
+	{
+		if ( o.m_ePen == ePen && ( o.m_iWidth == penWidth || !bCustomWidth) )
+		{
+			m_os << ( m_eType == GFILE::DRL ? "T" : "D" );
+			m_os << o.m_iCode; EndLine();
+			return;
+		}
+	}
+	assert(0);	// No such pen
 }
 void GStream::Flash(const QPoint& p)
 {
@@ -467,8 +495,8 @@ std::string GStream::MilToInch(const int& iMil, const bool& bLZ) const	// Get in
 }
 void GStream::GetQPoint(const QPointF& in, QPoint& out) const
 {
-	if ( m_pBoard == nullptr ) { out = QPoint(0,0); return; }
-	assert( m_pBoard->GetGRIDPIXELS() == 10000 );	// Confirm each integer ordinate == 0.0001 inches
+	// GRIDPIXELS == 100 means each integer ordinate is 1 mil
+	assert( m_pBoard && m_pBoard->GetGRIDPIXELS() == 1000 );	// Confirm each integer ordinate == 0.0001 inches
 	const double dEdge = m_pBoard->GetEdgeWidth();	// Add/subtract this offset so bottom-left corner of board outline is at (0,0)
 	out.setX( (int)(in.x()+dEdge) );
 	out.setY( m_pBoard->GetGRIDPIXELS() * m_pBoard->GetRows() - (int) (in.y()-dEdge) ); // Gerber y-axis goes up screen

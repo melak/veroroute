@@ -21,6 +21,7 @@
 
 void Component::SetDefaultPinFlags()
 {
+	const int iCustomFlag = GetCustomPads() ? PIN_CUSTOM : 0;
 	switch ( GetType() )
 	{
 		case COMP::TO92:
@@ -32,11 +33,11 @@ void Component::SetDefaultPinFlags()
 		case COMP::DIP_RECTIFIER:
 		case COMP::STRIP_100:
 		case COMP::BLOCK_100:
-		case COMP::BLOCK_200:			return SetPinFlags(PIN_LABELS);
+		case COMP::BLOCK_200:		return SetPinFlags(PIN_LABELS | iCustomFlag);
 		case COMP::SWITCH_ST:
 		case COMP::SWITCH_DT:
 		case COMP::SWITCH_ST_DIP:
-		case COMP::SWITCH_BUTTON_4PIN	:
+		case COMP::SWITCH_BUTTON_4PIN:
 		case COMP::RELAY_HK19F:
 		case COMP::RELAY_HJR_4102:
 		case COMP::RELAY_FTR_B3C:
@@ -48,9 +49,9 @@ void Component::SetDefaultPinFlags()
 		case COMP::RELAY_JQC_3F_APPROX:
 		case COMP::RELAY_S1A050000:
 		case COMP::RELAY_TRCD:
-		case COMP::FUSE_HOLDER:			return SetPinFlags(PIN_RECT);
+		case COMP::FUSE_HOLDER:		return SetPinFlags(PIN_RECT | iCustomFlag);
 		case COMP::RELAY_DIP_4PIN:
-		case COMP::RELAY_DIP_8PIN:		return SetPinFlags(PIN_RECT | PIN_LABELS);
+		case COMP::RELAY_DIP_8PIN:	return SetPinFlags(PIN_RECT | PIN_LABELS | iCustomFlag);
 		case COMP::MARK:
 		case COMP::PAD:
 		case COMP::WIRE:
@@ -93,10 +94,10 @@ void Component::SetDefaultPinFlags()
 		case COMP::TRIM_3362W:
 		case COMP::TRIM_3362X:
 		case COMP::TRIM_3362Z:
-		case COMP::CRYSTAL:				assert( GetPinFlags() == 0 ); return SetPinFlags(0);
+		case COMP::CRYSTAL:	assert( GetPinFlags() == iCustomFlag );	return SetPinFlags(iCustomFlag);
 		case COMP::CUSTOM:
-		case COMP::TRACKS:				return;
-		default:	assert(0);			return;	// Unhandled eType
+		case COMP::TRACKS:		return;
+		default:	assert(0);	return;	// Unhandled eType
 	}
 }
 

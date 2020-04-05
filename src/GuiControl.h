@@ -49,15 +49,15 @@ public:
 		m_iCompMode			= o.m_iCompMode;
 		m_iHoleType			= o.m_iHoleType;
 		m_GRIDPIXELS		= o.m_GRIDPIXELS;
-		m_PAD_PERCENT		= o.m_PAD_PERCENT;
-		m_TRACK_PERCENT		= o.m_TRACK_PERCENT;
-		m_HOLE_PERCENT		= o.m_HOLE_PERCENT;
-		m_GAP_PERCENT		= o.m_GAP_PERCENT;
-		m_MASK_PERCENT		= o.m_MASK_PERCENT;
-		m_SILK_PERCENT		= o.m_SILK_PERCENT;
-		m_EDGE_PERCENT		= o.m_EDGE_PERCENT;
-		m_VIAPAD_PERCENT	= o.m_VIAPAD_PERCENT;
-		m_VIAHOLE_PERCENT	= o.m_VIAHOLE_PERCENT;
+		m_PAD_MIL			= o.m_PAD_MIL;
+		m_TRACK_MIL			= o.m_TRACK_MIL;
+		m_HOLE_MIL			= o.m_HOLE_MIL;
+		m_GAP_MIL			= o.m_GAP_MIL;
+		m_MASK_MIL			= o.m_MASK_MIL;
+		m_SILK_MIL			= o.m_SILK_MIL;
+		m_EDGE_MIL			= o.m_EDGE_MIL;
+		m_VIAPAD_MIL		= o.m_VIAPAD_MIL;
+		m_VIAHOLE_MIL		= o.m_VIAHOLE_MIL;
 		m_iRenderQuality	= o.m_iRenderQuality;
 		m_iSaturation		= o.m_iSaturation;
 		m_iFillSaturation	= o.m_iFillSaturation;
@@ -98,15 +98,15 @@ public:
 			&&	m_iCompMode			== o.m_iCompMode
 			&&	m_iHoleType			== o.m_iHoleType
 			&&	m_GRIDPIXELS		== o.m_GRIDPIXELS
-			&&	m_PAD_PERCENT		== o.m_PAD_PERCENT
-			&&	m_TRACK_PERCENT		== o.m_TRACK_PERCENT
-			&&	m_HOLE_PERCENT		== o.m_HOLE_PERCENT
-			&&	m_GAP_PERCENT		== o.m_GAP_PERCENT
-			&&	m_MASK_PERCENT		== o.m_MASK_PERCENT
-			&&	m_SILK_PERCENT		== o.m_SILK_PERCENT
-			&&	m_EDGE_PERCENT		== o.m_EDGE_PERCENT
-			&&	m_VIAPAD_PERCENT	== o.m_VIAPAD_PERCENT
-			&&	m_VIAHOLE_PERCENT	== o.m_VIAHOLE_PERCENT
+			&&	m_PAD_MIL			== o.m_PAD_MIL
+			&&	m_TRACK_MIL			== o.m_TRACK_MIL
+			&&	m_HOLE_MIL			== o.m_HOLE_MIL
+			&&	m_GAP_MIL			== o.m_GAP_MIL
+			&&	m_MASK_MIL			== o.m_MASK_MIL
+			&&	m_SILK_MIL			== o.m_SILK_MIL
+			&&	m_EDGE_MIL			== o.m_EDGE_MIL
+			&&	m_VIAPAD_MIL		== o.m_VIAPAD_MIL
+			&&	m_VIAHOLE_MIL		== o.m_VIAHOLE_MIL
 			&&	m_iRenderQuality	== o.m_iRenderQuality
 			&&	m_iSaturation		== o.m_iSaturation
 			&&	m_iFillSaturation	== o.m_iFillSaturation
@@ -204,28 +204,28 @@ public:
 		m_iCompMode		= static_cast<COMPSMODE>	(compMode);
 		m_iHoleType		= static_cast<HOLETYPE>		(holeType);
 		inStream.Load(m_GRIDPIXELS);
-		inStream.Load(m_PAD_PERCENT);
-		inStream.Load(m_TRACK_PERCENT);
-		inStream.Load(m_HOLE_PERCENT);
-		m_GAP_PERCENT = 10;
+		inStream.Load(m_PAD_MIL);
+		inStream.Load(m_TRACK_MIL);
+		inStream.Load(m_HOLE_MIL);
+		m_GAP_MIL = 10;
 		if ( inStream.GetVersion() >= VRT_VERSION_3 )
-			inStream.Load(m_GAP_PERCENT);		// Added in VRT_VERSION_3
-		m_MASK_PERCENT = 4;
-		m_SILK_PERCENT = 7;
+			inStream.Load(m_GAP_MIL);			// Added in VRT_VERSION_3
+		m_MASK_MIL = 4;
+		m_SILK_MIL = 7;
 		if ( inStream.GetVersion() >= VRT_VERSION_32 )
 		{
-			inStream.Load(m_MASK_PERCENT);		// Added in VRT_VERSION_32
-			inStream.Load(m_SILK_PERCENT);		// Added in VRT_VERSION_32
+			inStream.Load(m_MASK_MIL);			// Added in VRT_VERSION_32
+			inStream.Load(m_SILK_MIL);			// Added in VRT_VERSION_32
 		}
-		m_EDGE_PERCENT = 20;
+		m_EDGE_MIL = 20;
 		if ( inStream.GetVersion() >= VRT_VERSION_33 )
-			inStream.Load(m_EDGE_PERCENT);		// Added in VRT_VERSION_33
-		m_VIAPAD_PERCENT	= 50;
-		m_VIAHOLE_PERCENT	= 25;
+			inStream.Load(m_EDGE_MIL);			// Added in VRT_VERSION_33
+		m_VIAPAD_MIL	= 50;
+		m_VIAHOLE_MIL	= 25;
 		if ( inStream.GetVersion() >= VRT_VERSION_35 )
 		{
-			inStream.Load(m_VIAPAD_PERCENT);	// Added in VRT_VERSION_35
-			inStream.Load(m_VIAHOLE_PERCENT);	// Added in VRT_VERSION_35
+			inStream.Load(m_VIAPAD_MIL);		// Added in VRT_VERSION_35
+			inStream.Load(m_VIAHOLE_MIL);		// Added in VRT_VERSION_35
 		}
 		inStream.Load(m_iRenderQuality);
 		m_iSaturation = 100;
@@ -306,15 +306,15 @@ public:
 		outStream.Save((int) m_iCompMode);
 		outStream.Save((int) m_iHoleType);	// Added in VRT_VERSION_33
 		outStream.Save(m_GRIDPIXELS);
-		outStream.Save(m_PAD_PERCENT);
-		outStream.Save(m_TRACK_PERCENT);
-		outStream.Save(m_HOLE_PERCENT);
-		outStream.Save(m_GAP_PERCENT);		// Added in VRT_VERSION_3
-		outStream.Save(m_MASK_PERCENT);		// Added in VRT_VERSION_32
-		outStream.Save(m_SILK_PERCENT);		// Added in VRT_VERSION_32
-		outStream.Save(m_EDGE_PERCENT);		// Added in VRT_VERSION_33
-		outStream.Save(m_VIAPAD_PERCENT);	// Added in VRT_VERSION_35
-		outStream.Save(m_VIAHOLE_PERCENT);	// Added in VRT_VERSION_35
+		outStream.Save(m_PAD_MIL);
+		outStream.Save(m_TRACK_MIL);
+		outStream.Save(m_HOLE_MIL);
+		outStream.Save(m_GAP_MIL);			// Added in VRT_VERSION_3
+		outStream.Save(m_MASK_MIL);			// Added in VRT_VERSION_32
+		outStream.Save(m_SILK_MIL);			// Added in VRT_VERSION_32
+		outStream.Save(m_EDGE_MIL);			// Added in VRT_VERSION_33
+		outStream.Save(m_VIAPAD_MIL);		// Added in VRT_VERSION_35
+		outStream.Save(m_VIAHOLE_MIL);		// Added in VRT_VERSION_35
 		outStream.Save(m_iRenderQuality);
 		outStream.Save(m_iSaturation);		// Added in VRT_VERSION_6
 		outStream.Save(m_iFillSaturation);	// Added in VRT_VERSION_29
@@ -352,15 +352,15 @@ public:
 	bool SetCompMode(const COMPSMODE& e)	{ const bool bChanged = m_iCompMode			!= e; m_iCompMode		= e; return bChanged; }
 	bool SetHoleType(const HOLETYPE& e)		{ const bool bChanged = m_iHoleType			!= e; m_iHoleType		= e; return bChanged; }
 	bool SetGRIDPIXELS(const int& i)		{ const bool bChanged = m_GRIDPIXELS		!= i; m_GRIDPIXELS		= i; return bChanged; }
-	bool SetPAD_PERCENT(const int& i)		{ const bool bChanged = m_PAD_PERCENT		!= i; m_PAD_PERCENT		= i; return bChanged; }
-	bool SetTRACK_PERCENT(const int& i)		{ const bool bChanged = m_TRACK_PERCENT		!= i; m_TRACK_PERCENT	= i; return bChanged; }
-	bool SetHOLE_PERCENT(const int& i)		{ const bool bChanged = m_HOLE_PERCENT		!= i; m_HOLE_PERCENT	= i; return bChanged; }
-	bool SetGAP_PERCENT(const int& i)		{ const bool bChanged = m_GAP_PERCENT		!= i; m_GAP_PERCENT		= i; return bChanged; }
-	bool SetMASK_PERCENT(const int& i)		{ const bool bChanged = m_MASK_PERCENT		!= i; m_MASK_PERCENT	= i; return bChanged; }
-	bool SetSILK_PERCENT(const int& i)		{ const bool bChanged = m_SILK_PERCENT		!= i; m_SILK_PERCENT	= i; return bChanged; }
-	bool SetEDGE_PERCENT(const int& i)		{ const bool bChanged = m_EDGE_PERCENT		!= i; m_EDGE_PERCENT	= i; return bChanged; }
-	bool SetVIAPAD_PERCENT(const int& i)	{ const bool bChanged = m_VIAPAD_PERCENT	!= i; m_VIAPAD_PERCENT	= i; return bChanged; }
-	bool SetVIAHOLE_PERCENT(const int& i)	{ const bool bChanged = m_VIAHOLE_PERCENT	!= i; m_VIAHOLE_PERCENT	= i; return bChanged; }
+	bool SetPAD_MIL(const int& i)			{ const bool bChanged = m_PAD_MIL			!= i; m_PAD_MIL			= i; return bChanged; }
+	bool SetTRACK_MIL(const int& i)			{ const bool bChanged = m_TRACK_MIL			!= i; m_TRACK_MIL		= i; return bChanged; }
+	bool SetHOLE_MIL(const int& i)			{ const bool bChanged = m_HOLE_MIL			!= i; m_HOLE_MIL		= i; return bChanged; }
+	bool SetGAP_MIL(const int& i)			{ const bool bChanged = m_GAP_MIL			!= i; m_GAP_MIL			= i; return bChanged; }
+	bool SetMASK_MIL(const int& i)			{ const bool bChanged = m_MASK_MIL			!= i; m_MASK_MIL		= i; return bChanged; }
+	bool SetSILK_MIL(const int& i)			{ const bool bChanged = m_SILK_MIL			!= i; m_SILK_MIL		= i; return bChanged; }
+	bool SetEDGE_MIL(const int& i)			{ const bool bChanged = m_EDGE_MIL			!= i; m_EDGE_MIL		= i; return bChanged; }
+	bool SetVIAPAD_MIL(const int& i)		{ const bool bChanged = m_VIAPAD_MIL		!= i; m_VIAPAD_MIL		= i; return bChanged; }
+	bool SetVIAHOLE_MIL(const int& i)		{ const bool bChanged = m_VIAHOLE_MIL		!= i; m_VIAHOLE_MIL		= i; return bChanged; }
 	bool SetRenderQuality(const int& i)		{ const bool bChanged = m_iRenderQuality	!= i; m_iRenderQuality	= i; return bChanged; }
 	bool SetSaturation(const int& i)		{ const bool bChanged = m_iSaturation		!= i; m_iSaturation		= i; return bChanged; }
 	bool SetFillSaturation(const int& i)	{ const bool bChanged = m_iFillSaturation	!= i; m_iFillSaturation	= i; return bChanged; }
@@ -397,15 +397,15 @@ public:
 	const COMPSMODE&	GetCompMode() const			{ return m_iCompMode; }
 	const HOLETYPE&		GetHoleType() const			{ return m_iHoleType; }
 	const int&			GetGRIDPIXELS() const		{ return m_GRIDPIXELS; }
-	const int&			GetPAD_PERCENT() const		{ return m_PAD_PERCENT; }
-	const int&			GetTRACK_PERCENT() const	{ return m_TRACK_PERCENT; }
-	const int&			GetHOLE_PERCENT() const		{ return m_HOLE_PERCENT; }
-	const int&			GetGAP_PERCENT() const		{ return m_GAP_PERCENT; }
-	const int&			GetMASK_PERCENT() const		{ return m_MASK_PERCENT; }
-	const int&			GetSILK_PERCENT() const		{ return m_SILK_PERCENT; }
-	const int&			GetEDGE_PERCENT() const		{ return m_EDGE_PERCENT; }
-	const int&			GetVIAPAD_PERCENT() const	{ return m_VIAPAD_PERCENT; }
-	const int&			GetVIAHOLE_PERCENT() const	{ return m_VIAHOLE_PERCENT; }
+	const int&			GetPAD_MIL() const			{ return m_PAD_MIL; }
+	const int&			GetTRACK_MIL() const		{ return m_TRACK_MIL; }
+	const int&			GetHOLE_MIL() const			{ return m_HOLE_MIL; }
+	const int&			GetGAP_MIL() const			{ return m_GAP_MIL; }
+	const int&			GetMASK_MIL() const			{ return m_MASK_MIL; }
+	const int&			GetSILK_MIL() const			{ return m_SILK_MIL; }
+	const int&			GetEDGE_MIL() const			{ return m_EDGE_MIL; }
+	const int&			GetVIAPAD_MIL() const		{ return m_VIAPAD_MIL; }
+	const int&			GetVIAHOLE_MIL() const		{ return m_VIAHOLE_MIL; }
 	const int&			GetRenderQuality() const	{ return m_iRenderQuality; }
 	const int&			GetSaturation() const		{ return m_iSaturation; }
 	const int&			GetFillSaturation() const	{ return m_iFillSaturation; }
@@ -437,44 +437,16 @@ public:
 	bool	SetCompSliderValue(int i)	{ const bool bChanged = ( GetCompSliderValue()  != i ); SetCompMode(  static_cast<COMPSMODE>(i) ); return bChanged; }
 	int		GetTrackSliderValue() const	{ return static_cast<int>(GetTrackMode()); }
 	int		GetCompSliderValue() const	{ return static_cast<int>(GetCompMode());  }
-	int		GetHalfPadWidth() const		{ return std::max(1, static_cast<int> (GetGRIDPIXELS() * GetPAD_PERCENT()		* 0.005 )); }	// Half pad width in pixels
-	int		GetHalfTrackWidth() const	{ return std::max(1, static_cast<int> (GetGRIDPIXELS() * GetTRACK_PERCENT()		* 0.005 )); }	// Half track width in pixels
-	int		GetHalfViaWidth() const		{ return std::max(1, static_cast<int> (GetGRIDPIXELS() * GetVIAPAD_PERCENT()	* 0.005 )); }	// Half via-pad width in pixels
-	int		GetGapWidth() const			{ return std::max(1, static_cast<int> (GetGRIDPIXELS() * GetGAP_PERCENT()		* 0.010 )); }	// Gap width in pixels
-	int		GetHalfHoleWidth() const	{ return std::max(1, static_cast<int> (GetGRIDPIXELS() * GetHOLE_PERCENT()		* 0.005 )); }	// Half hole width in pixels
-	int		GetHalfViaHoleWidth() const	{ return std::max(1, static_cast<int> (GetGRIDPIXELS() * GetVIAHOLE_PERCENT()	* 0.005 )); }	// Half via-hole width in pixels
-	int		GetMaskWidth() const		{ return std::max(1, static_cast<int> (GetGRIDPIXELS() * GetMASK_PERCENT()		* 0.010 )); }	// Solder mask margin in pixels
-	double	GetSilkWidth() const		{ return std::max(1.0,				   GetGRIDPIXELS() * GetSILK_PERCENT()		* 0.010 );  }	// Silk-screen pen width in pixels
-	double	GetEdgeWidth() const		{ return std::max(1.0,				   GetGRIDPIXELS() * GetEDGE_PERCENT()		* 0.010 );  }	// Board edge margin in pixels
-	int		GetMIN_TRACK_SEPARATION_PERCENT() const	// Minimum guaranteed track separation in mil
+	double	GetSilkWidth() const		{ return std::max(1.0, GetGRIDPIXELS() * GetSILK_MIL() * 0.010 );  }	// Silk-screen pen width in pixels
+	double	GetEdgeWidth() const		{ return std::max(1.0, GetGRIDPIXELS() * GetEDGE_MIL() * 0.010 );  }	// Board edge margin in pixels
+	int		GetHalfPixelsFromMIL(const int& iMIL) const
 	{
-		// To keep track/pads at least N mil apart:
-		// In diags mode keep     (Pad + Track) / 2 <= ( 70.71 - N).  Keep Gap >= N if used.
-		// In non-diags mode keep (Pad + Pad  ) / 2 <= ( 100.0 - N).  Keep Gap >= N if used.
-		const double dMinSep	= GetMIN_SEPARATION();	// Min separation without ground fill
-		const double dGap		= GetGroundFill() ? GetGAP_PERCENT() : 100.0;
-		return (int) floor( std::min(dGap, dMinSep) );
+		return std::max(1, static_cast<int> (GetGRIDPIXELS() * iMIL	* 0.005 ));
 	}
-	int		GetMIN_GROUNDFILL_PERCENT() const // Minimum guaranteed ground-fill width in mil
+	int		GetPixelsFromMIL(const int& iMIL) const
 	{
-		// To have a ground fill with no isolated islands this must be > 0 (and probably at least 8 mil)
-		if ( !GetGroundFill() ) return 100;
-		const double dMinSep	= GetMIN_SEPARATION();	// Min separation without ground fill
-		const double dDblGap	= GetGAP_PERCENT() * 2.0;
-		return (int) floor( std::max(0.0, dMinSep - dDblGap) );
+		return std::max(1, static_cast<int> (GetGRIDPIXELS() * iMIL	* 0.010 ));
 	}
-	double	GetMIN_SEPARATION() const	// Minimum possible separation (in mil) between a pad or track without ground fill
-	{
-		const bool   bNoDiags	= GetDiagsMode() == DIAGSMODE::OFF;
-		const double dPad		= ( GetViasEnabled() ) ? std::max(GetPAD_PERCENT(), GetVIAPAD_PERCENT()) : GetPAD_PERCENT();
-		const double dTrk		= GetTRACK_PERCENT();
-		const double dHypot		= 50.0 * sqrt(2.0);	// 70.71
-		const double dPadPad	= 100.0 - dPad;
-		const double dPadTrk	= ( bNoDiags ? 100.0 : dHypot ) - 0.5 * ( dPad + dTrk );
-		const double dTrkTrk	= ( bNoDiags ? 100.0 : dHypot ) - dTrk;
-		return std::max(0.0, std::min(dPadPad, std::min(dPadTrk, dTrkTrk)));
-	}
-	//const int H = std::min(GetHalfPadWidth(), (int) ( GetGRIDPIXELS() * (sqrt(2.0)-1) * 0.5));	// Biggest OK half track width in pixels
 private:
 	int			m_currentLayer		= 0;				// Currently selected layer for display
 	int			m_currentCompId		= BAD_COMPID;		// Currently selected component ID
@@ -487,15 +459,15 @@ private:
 	COMPSMODE	m_iCompMode			= COMPSMODE::NAME;	// OFF, OUTLINE, NAME, VALUE
 	HOLETYPE	m_iHoleType			= HOLETYPE::NPTH;	// NPTH, PTH (Non-Plated Through Hole, Plated Through Hole)
 	int			m_GRIDPIXELS		= 24;				// Default 24 pixels per grid square (i.e. per 100 mil)
-	int			m_PAD_PERCENT		= 90;				// Range 50 to 98 of a grid square   (i.e. 1 PERCENT = 1 mil)
-	int			m_TRACK_PERCENT		= 46;				// Range 12 to 50 of a grid square   (i.e. 1 PERCENT = 1 mil)
-	int			m_HOLE_PERCENT		= 26;				// Range 20 to 40 of a grid square   (i.e. 1 PERCENT = 1 mil)
-	int			m_GAP_PERCENT		= 10;				// Range  5 to 30 of a grid square   (i.e. 1 PERCENT = 1 mil)
-	int			m_MASK_PERCENT		= 4;				// Range  0 to 10 of a grid square   (i.e. 1 PERCENT = 1 mil)
-	int			m_SILK_PERCENT		= 7;				// Range  1 to 10 of a grid square   (i.e. 1 PERCENT = 1 mil)
-	int			m_EDGE_PERCENT		= 20;				// Range  0 to 50 of a grid square   (i.e. 1 PERCENT = 1 mil)
-	int			m_VIAPAD_PERCENT	= 50;				// Range 50 to 80 of a grid square   (i.e. 1 PERCENT = 1 mil)
-	int			m_VIAHOLE_PERCENT	= 25;				// Range 20 to 40 of a grid square   (i.e. 1 PERCENT = 1 mil)
+	int			m_PAD_MIL			= 60;				// Range 50 to 98
+	int			m_TRACK_MIL			= 24;				// Range 12 to 50
+	int			m_HOLE_MIL			= 34;				// Range 20 to 40
+	int			m_GAP_MIL			= 10;				// Range  5 to 30
+	int			m_MASK_MIL			= 4;				// Range  0 to 10
+	int			m_SILK_MIL			= 7;				// Range  1 to 10
+	int			m_EDGE_MIL			= 20;				// Range  0 to 50
+	int			m_VIAPAD_MIL		= 50;				// Range 50 to 80
+	int			m_VIAHOLE_MIL		= 25;				// Range 20 to 40
 	int			m_iRenderQuality	= 1;				// 0 (Low) to 2 (High)
 	int			m_iSaturation		= 60;				// Track color saturation (20 to 100 percent)
 	int			m_iFillSaturation	= 0;				// Component fill saturation (0 to 100 percent)
