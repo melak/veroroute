@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include <list>
+#include "Common.h"
 
 class QPoint;
 class QPolygon;
@@ -56,6 +56,17 @@ public:
 	~Curve() { clear(); }
 	void Compress();		// Removes redundant points
 	bool Splice(Curve* pB);	// Tries to splice curve B to this
+	struct HasLargerDrill
+	{
+		bool operator() (const Curve* p1, const Curve* p2) const
+		{
+			assert( p1->m_ePen == GPEN::PAD_HLE || p1->m_ePen == GPEN::VIA_HLE );
+			assert( p2->m_ePen == GPEN::PAD_HLE || p2->m_ePen == GPEN::VIA_HLE );
+			assert( (int)GPEN::PAD_HLE < (int)GPEN::VIA_HLE );
+			if ( p1->m_width != p2->m_width ) return p1->m_width > p2->m_width;
+			return (int)(p1->m_ePen) < (int)(p2->m_ePen);	// Pads before Vias if drills are equal size
+		}
+	};
 	struct HasSmallerPen	// Predicate for sorting
 	{
 		bool operator() (const Curve* p1, const Curve* p2) const
@@ -75,5 +86,6 @@ public:
 	CurveList()		{}
 	~CurveList()	{ Clear(); }
 	void Clear()	{ for (auto& p : *this) p->clear(); clear(); }
+	void SortForDrilling();
 	void SpliceAll();
 };

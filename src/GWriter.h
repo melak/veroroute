@@ -79,8 +79,7 @@ public:
 	void AddVariTrack(const QPolygonF& pF, const GPEN& ePenHV, const GPEN& ePen);	// Add to m_tracks buffer
 	void AddLoop(const QPolygonF& pF, const GPEN& ePen);							// Add to m_loops buffer
 	void AddRegion(const QPolygonF& pF);											// Add to m_regions buffer
-	void AddPadHole(const QPointF& pF, const GPEN& ePen, const int& w = 0);			// Add to m_padholes buffer
-	void AddViaHole(const QPointF& pF, const GPEN& ePen);							// Add to m_viaholes buffer
+	void AddHole(const QPointF& pF, const GPEN& ePen, const int& w = 0);			// Add to m_holes buffer
 	void ClearBuffers(bool bCheckOK = true);
 	void DrawBuffers();
 	// Methods to draw things immediately
@@ -125,8 +124,7 @@ private:
 	CurveList			m_tracks;	// Tracks (drawn with non-zero width pen).
 	CurveList			m_loops;	// Loops (drawn with non-zero width pen).
 	CurveList			m_regions;	// Drawn with zero width pen. For filling gaps between tracks.
-	CurveList			m_padholes;	// Pad holes
-	CurveList			m_viaholes;	// Via holes
+	CurveList			m_holes;	// Pad/Via holes
 	// The output stream
 	std::ofstream	m_os;
 };

@@ -324,19 +324,12 @@ void GStream::AddRegion(const QPolygonF& pF)	// Add to m_regions buffer for late
 	GetQPolygon(pF, p);
 	m_regions.push_back( new Curve(p, GPEN::NONE) );
 }
-void GStream::AddPadHole(const QPointF& pF, const GPEN& ePen, const int& w)	// Add to m_padholes buffer for later writing to file
+void GStream::AddHole(const QPointF& pF, const GPEN& ePen, const int& w)	// Add to m_holes buffer for later writing to file
 {
 	if ( !GetOK() ) return;
 	QPoint p;
 	GetQPoint(pF, p);
-	m_padholes.push_back( new Curve(p, ePen, w) );
-}
-void GStream::AddViaHole(const QPointF& pF, const GPEN& ePen)	// Add to m_viaholes buffer for later writing to file
-{
-	if ( !GetOK() ) return;
-	QPoint p;
-	GetQPoint(pF, p);
-	m_viaholes.push_back( new Curve(p, ePen) );
+	m_holes.push_back( new Curve(p, ePen, w) );
 }
 void GStream::ClearBuffers(bool bCheckOK)
 {
@@ -346,20 +339,19 @@ void GStream::ClearBuffers(bool bCheckOK)
 	m_tracks.Clear();
 	m_loops.Clear();
 	m_regions.Clear();
-	m_padholes.Clear();
-	m_viaholes.Clear();
+	m_holes.Clear();
 }
 void GStream::DrawBuffers()
 {
 	if ( !GetOK() ) return;
 	m_tracks.SpliceAll();	// Only tracks (not loops) are spliced
+	m_holes.SortForDrilling();
 	for (auto& o : m_regions)	Region(*o);
 	for (auto& o : m_loops)		OutLine(*o, true);	// true  ==> closed
 	for (auto& o : m_tracks)	OutLine(*o, false);	// false ==> not closed
 	for (auto& o : m_pads)		OutLine(*o, false);	// false ==> not closed
 	for (auto& o : m_viapads)	OutLine(*o, false);	// false ==> not closed
-	for (auto& o : m_padholes)	OutLine(*o, false);	// false ==> not closed
-	for (auto& o : m_viaholes)	OutLine(*o, false);	// false ==> not closed
+	for (auto& o : m_holes)		OutLine(*o, false);	// false ==> not closed
 }
 void GStream::Region(const Curve& curve)	// A filled closed curve (with zero width pen)
 {

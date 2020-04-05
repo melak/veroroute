@@ -139,7 +139,7 @@ void MainWindow::PaintVia(const GuiControl& guiCtrl, QPainter& painter, const QC
 		{
 			m_gWriter.GetStream(GFILE::GTS).AddViaPad(pC, GPEN::VIA_MSK);	// Top    solder mask layer
 			m_gWriter.GetStream(GFILE::GBS).AddViaPad(pC, GPEN::VIA_MSK);	// Bottom solder mask layer
-			m_gWriter.GetStream(GFILE::DRL).AddViaHole(pC, GPEN::VIA_HLE);	// Drill file
+			m_gWriter.GetStream(GFILE::DRL).AddHole(pC,   GPEN::VIA_HLE);	// Drill file
 		}
 	}
 	else
@@ -163,9 +163,9 @@ void MainWindow::PaintPad(const GuiControl& guiCtrl, QPainter& painter, const QC
 		m_gWriter.GetStream(GFILE::GBL).AddPad(pC, bGap ? GPEN::PAD_GAP : GPEN::PAD, iPadWidthMIL); // Bottom copper layer
 		if ( !bGap )
 		{
-			m_gWriter.GetStream(GFILE::GTS).AddPad(pC, GPEN::PAD_MSK, iPadWidthMIL);		// Top    solder mask layer
-			m_gWriter.GetStream(GFILE::GBS).AddPad(pC, GPEN::PAD_MSK, iPadWidthMIL);		// Bottom solder mask layer
-			m_gWriter.GetStream(GFILE::DRL).AddPadHole(pC, GPEN::PAD_HLE, iHoleWidthMIL);	// Drill file
+			m_gWriter.GetStream(GFILE::GTS).AddPad(pC,  GPEN::PAD_MSK, iPadWidthMIL);	// Top    solder mask layer
+			m_gWriter.GetStream(GFILE::GBS).AddPad(pC,  GPEN::PAD_MSK, iPadWidthMIL);	// Bottom solder mask layer
+			m_gWriter.GetStream(GFILE::DRL).AddHole(pC, GPEN::PAD_HLE, iHoleWidthMIL);	// Drill file
 		}
 	}
 	else

@@ -79,6 +79,11 @@ bool Curve::Splice(Curve* pB)	// Tries to splice curve B to this
 	return false;
 }
 
+void CurveList::SortForDrilling()
+{
+	sort(Curve::HasLargerDrill());
+}
+
 void CurveList::SpliceAll()
 {
 	sort(Curve::HasSmallerPen());	// Sort list of curves by pen type
