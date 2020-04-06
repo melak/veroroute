@@ -27,14 +27,22 @@ const bool	FULL_LINE	= false;	// Set to true to force each Gerber line to be wri
 const bool	XNC_FORMAT	= true;		// true ==> XNC Format / Excellon Format 2.		false ==> Excellon Format 1.
 
 // Wrapper for a stream to a Gerber file
-GStream::~GStream()
+void GStream::Clear()
 {
-	Close();
+	m_eType		= GFILE::GBL;
+	m_ePen		= GPEN::NONE;
+	m_penWidth	= 0;
+	m_ePenList.clear();
+	m_ePolarity	= GPOLARITY::UNKNOWN;
+	m_pBoard	= nullptr;
+	m_bVias		= false;
+	m_iLastX	= INT_MAX;
+	m_iLastY	= INT_MAX;
+	ClearBuffers(false);	// false ==> skip GetOK() checks
 }
 void GStream::Close()
 {
-	ClearBuffers(false);	// false ==> skip GetOK() checks
-	m_ePenList.clear();
+	Clear();
 	if ( !m_os.is_open() ) return;
 	switch( m_eType )
 	{
@@ -45,13 +53,10 @@ void GStream::Close()
 }
 bool GStream::Open(const char* fileName, const GFILE& eType, const Board& board, const bool& bVias, const QString& UTC)
 {
+	Clear();
 	m_eType		= eType;
-	m_ePen		= GPEN::NONE;
-	m_penWidth	= 0;
 	m_pBoard	= &board;
 	m_bVias		= bVias;
-	m_iLastX	= INT_MAX;
-	m_iLastY	= INT_MAX;
 
 	std::string str(fileName);
 	switch( m_eType )
@@ -67,7 +72,6 @@ bool GStream::Open(const char* fileName, const GFILE& eType, const Board& board,
 	}
 	m_os.open(str.c_str(), std::ios::out);
 
-	ClearBuffers(false);	// false ==> skip GetOK() checks
 	WriteHeader(UTC);
 	LinearInterpolation();
 	SetPolarity(GPOLARITY::DARK, false);	// false ==> skip GetOK() checks
@@ -80,7 +84,7 @@ void GStream::WriteHeader(const QString& UTC)	// Write header for current stream
 	std::string	strLayer	= std::string("Layer: ");
 	std::string	strProgram	= std::string("VeroRoute V") + std::string(szVEROROUTE_VERSION);
 	std::string	strUTC		= UTC.toStdString();
-	std::string	strGen		= std::string("Gerber Generator version 0.4");
+	std::string	strGen		= std::string("Gerber Generator version 0.5");
 	switch(m_eType)
 	{
 		case GFILE::GKO: strLayer += "BoardOutline";			break;
@@ -344,8 +348,13 @@ void GStream::ClearBuffers(bool bCheckOK)
 void GStream::DrawBuffers()
 {
 	if ( !GetOK() ) return;
-	m_tracks.SpliceAll();	// Only tracks (not loops) are spliced
-	m_holes.SortForDrilling();
+
+	m_regions.Sort();
+	m_loops.Sort();
+	m_tracks.SpliceAll();	// Includes a Sort().  Only tracks (not loops) are spliced
+	m_pads.Sort();
+	m_viapads.Sort();
+	m_holes.Sort();
 	for (auto& o : m_regions)	Region(*o);
 	for (auto& o : m_loops)		OutLine(*o, true);	// true  ==> closed
 	for (auto& o : m_tracks)	OutLine(*o, false);	// false ==> not closed

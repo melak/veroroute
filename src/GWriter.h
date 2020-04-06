@@ -67,8 +67,9 @@ struct GPenInfo
 class GStream
 {
 public:
-	GStream() {}
-	~GStream();
+	GStream()	{ Clear(); }
+	~GStream()	{ Close(); }
+	void Clear();
 	void Close();
 	bool Open(const char* fileName, const GFILE& eType, const Board& board, const bool& bVias, const QString& UTC);
 	void Drill(const QPoint& pF);
