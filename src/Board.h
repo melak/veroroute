@@ -394,8 +394,8 @@ public:
 	int  GetTextId(int row, int col);		// Pick the most relevant text box at the location
 
 	// Methods to handle variable pad/hole and PCB tolerances
-	void	GetPadWidths_MIL(std::list<int>& o) const;
-	void	GetHoleWidths_MIL(std::list<int>& o) const;
+	void	GetPadWidths_MIL(std::list<int>& o, int& iDefaultWidth) const;
+	void	GetHoleWidths_MIL(std::list<int>& o, int& iDefaultWidth) const;
 	double	GetMIN_TRACK_SEPARATION_MIL();	// Minimum guaranteed track separation in mil
 	double	GetMIN_GROUNDFILL_MIL();		// Minimum guaranteed ground-fill width in mil
 	double	GetMIN_SEPARATION();			// Minimum possible separation (in mil) between a pad or track without ground fill

@@ -92,13 +92,15 @@ int Board::GetTextId(int row, int col)	// Pick the most relevant text box at the
 
 // Methods to handle variable pad/hole and PCB tolerances
 
-void Board::GetPadWidths_MIL(std::list<int>& o) const
+void Board::GetPadWidths_MIL(std::list<int>& o, int& iDefaultWidth) const
 {
-	m_compMgr.GetPadWidths(o, GetPAD_MIL());
+	iDefaultWidth = GetPAD_MIL();
+	m_compMgr.GetPadWidths(o, iDefaultWidth);
 }
-void Board::GetHoleWidths_MIL(std::list<int>& o) const
+void Board::GetHoleWidths_MIL(std::list<int>& o, int& iDefaultWidth) const
 {
-	m_compMgr.GetHoleWidths(o, GetHOLE_MIL());
+	iDefaultWidth = GetHOLE_MIL();
+	m_compMgr.GetHoleWidths(o, iDefaultWidth);
 }
 double Board::GetMIN_TRACK_SEPARATION_MIL()	// Minimum track separation in mil
 {

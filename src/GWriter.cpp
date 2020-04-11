@@ -42,7 +42,6 @@ void GStream::Clear()
 }
 void GStream::Close()
 {
-	Clear();
 	if ( !m_os.is_open() ) return;
 	switch( m_eType )
 	{
@@ -84,7 +83,7 @@ void GStream::WriteHeader(const QString& UTC)	// Write header for current stream
 	std::string	strLayer	= std::string("Layer: ");
 	std::string	strProgram	= std::string("VeroRoute V") + std::string(szVEROROUTE_VERSION);
 	std::string	strUTC		= UTC.toStdString();
-	std::string	strGen		= std::string("Gerber Generator version 0.5");
+	std::string	strGen		= std::string("Gerber Generator version 0.6");
 	switch(m_eType)
 	{
 		case GFILE::GKO: strLayer += "BoardOutline";			break;
@@ -127,13 +126,14 @@ void GStream::MakeDrills()
 {
 	assert( m_os.is_open() && m_eType == GFILE::DRL );
 
-	std::list<int>	holes;	  m_pBoard->GetHoleWidths_MIL(holes);
+	int				holeDefault;	// Default hole width
+	std::list<int>	holes;	  m_pBoard->GetHoleWidths_MIL(holes, holeDefault);
 	const int		viahole	= m_pBoard->GetVIAHOLE_MIL();
 
 	// Build drill list
 	int code = 1;	// Start with drill T01
 	for (auto& hole : holes)
-		m_ePenList.push_back( GPenInfo(GPEN::PAD_HLE, hole, code++, "Pad Hole = ") );
+		m_ePenList.push_back( GPenInfo(GPEN::PAD_HLE, hole, code++, "Pad Hole = ", hole != holeDefault) );
 	if ( m_bVias )
 		m_ePenList.push_back( GPenInfo(GPEN::VIA_HLE, viahole, code++, "Via Hole = ") );
 
@@ -154,7 +154,8 @@ void GStream::MakeApertures()	// Make "pens" for current stream
 {
 	assert( m_os.is_open() && m_eType != GFILE::DRL);
 
-	std::list<int>	pads;	  m_pBoard->GetPadWidths_MIL(pads);
+	int				padDefault;	// Default pad width
+	std::list<int>	pads;	  m_pBoard->GetPadWidths_MIL(pads, padDefault);
 	const int		via		= m_pBoard->GetVIAPAD_MIL();
 	const int		trk		= m_pBoard->GetTRACK_MIL();
 	const int		gap		= m_pBoard->GetGAP_MIL();
@@ -172,14 +173,14 @@ void GStream::MakeApertures()	// Make "pens" for current stream
 		case GFILE::GBL:
 		case GFILE::GTL:
 			for (auto& pad : pads)
-				m_ePenList.push_back( GPenInfo(GPEN::PAD, pad, code++, " is for pads") );
+				m_ePenList.push_back( GPenInfo(GPEN::PAD, pad, code++, " is for pads", pad != padDefault) );
 			if ( m_bVias )
 				m_ePenList.push_back( GPenInfo(GPEN::VIA, via, code++, " is for via-pads") );
 			if ( true )
 				m_ePenList.push_back( GPenInfo(GPEN::TRK, trk, code++, " is for tracks") );
 			if ( !m_pBoard->GetGroundFill() ) break;
 			for (auto& pad : pads)
-				m_ePenList.push_back( GPenInfo(GPEN::PAD_GAP, pad + 2 * gap, code++, " is for separating pads from fill") );
+				m_ePenList.push_back( GPenInfo(GPEN::PAD_GAP, pad + 2 * gap, code++, " is for separating pads from fill", pad != padDefault) );
 			if ( m_bVias )
 				m_ePenList.push_back( GPenInfo(GPEN::VIA_GAP, via + 2 * gap, code++, " is for separating via-pads from fill") );
 			if ( true )
@@ -188,7 +189,7 @@ void GStream::MakeApertures()	// Make "pens" for current stream
 		case GFILE::GBS:
 		case GFILE::GTS:
 			for (auto& pad : pads)
-				m_ePenList.push_back( GPenInfo(GPEN::PAD_MSK, pad + 2 * msk, code++, " is slightly larger than a pad") );
+				m_ePenList.push_back( GPenInfo(GPEN::PAD_MSK, pad + 2 * msk, code++, " is slightly larger than a pad", pad != padDefault) );
 			if ( m_bVias )
 				m_ePenList.push_back( GPenInfo(GPEN::VIA_MSK, via + 2 * msk, code++, " is slightly larger than a via-pad") );
 			break;
@@ -391,8 +392,8 @@ void GStream::SetPen(const GPEN& ePen, const int& w)
 	assert( m_pBoard );
 
 	int penWidth(w);
-	const bool bCustomWidth = ( penWidth != 0 );
-	if ( bCustomWidth )
+	const bool bCustom = ( penWidth != 0 );
+	if ( bCustom )
 	{
 		switch( ePen )
 		{
@@ -412,9 +413,10 @@ void GStream::SetPen(const GPEN& ePen, const int& w)
 
 	for (auto& o : m_ePenList)
 	{
-		if ( o.m_ePen == ePen && ( o.m_iWidth == penWidth || !bCustomWidth) )
+		if ( o.m_ePen == ePen && ( o.m_iWidth == penWidth || ( !bCustom && !o.m_bCustom ) ) )
 		{
 			m_os << ( m_eType == GFILE::DRL ? "T" : "D" );
+			if ( o.m_iCode < 10 ) m_os << "0";	// Add leading zero
 			m_os << o.m_iCode; EndLine();
 			return;
 		}

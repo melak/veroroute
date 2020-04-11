@@ -35,8 +35,9 @@ struct GPenInfo
 	GPenInfo(const GPEN& ePen = GPEN::NONE,
 			 const int& iWidth = 0,
 			 const int& iCode = 0,
-			 const std::string& comment = "")
-	: m_ePen(ePen), m_iWidth(iWidth), m_iCode(iCode), m_comment(comment) {}
+			 const std::string& comment = "",
+			 const bool& bCustom = false)
+	: m_ePen(ePen), m_iWidth(iWidth), m_iCode(iCode), m_comment(comment), m_bCustom(bCustom) {}
 	GPenInfo(const GPenInfo& o) { *this = o; }
 	GPenInfo& operator=(const GPenInfo& o)
 	{
@@ -44,6 +45,7 @@ struct GPenInfo
 		m_iWidth	= o.m_iWidth;
 		m_iCode		= o.m_iCode;
 		m_comment	= o.m_comment;
+		m_bCustom	= o.m_bCustom;
 		return *this;
 	}
 	bool operator==(const GPenInfo& o) const
@@ -51,7 +53,8 @@ struct GPenInfo
 		return m_ePen		== o.m_ePen
 			&& m_iWidth		== o.m_iWidth
 			&& m_iCode		== o.m_iCode
-			&& m_comment	== o.m_comment;
+			&& m_comment	== o.m_comment
+			&& m_bCustom	== o.m_bCustom;
 	}
 	bool operator!=(const GPenInfo& o) const
 	{
@@ -61,6 +64,7 @@ struct GPenInfo
 	int			m_iWidth;
 	int			m_iCode;	// Aperture/Tool code	// e.g. "10" for D10 or T10
 	std::string m_comment;
+	bool		m_bCustom;
 };
 
 // Wrapper for a stream to a Gerber file
@@ -68,7 +72,7 @@ class GStream
 {
 public:
 	GStream()	{ Clear(); }
-	~GStream()	{ Close(); }
+	~GStream()	{ Close(); Clear(); }
 	void Clear();
 	void Close();
 	bool Open(const char* fileName, const GFILE& eType, const Board& board, const bool& bVias, const QString& UTC);
@@ -127,7 +131,7 @@ private:
 	CurveList			m_regions;	// Drawn with zero width pen. For filling gaps between tracks.
 	CurveList			m_holes;	// Pad/Via holes
 	// The output stream
-	std::ofstream	m_os;
+	std::ofstream		m_os;
 };
 
 // Wrapper for handling a set of Gerber files
