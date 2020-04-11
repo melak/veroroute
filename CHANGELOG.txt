@@ -230,3 +230,4 @@ V1.88  Roll back of change made in V1.85:  Top solder mask now works in same way
        Improvement: Show actual minimum track separation (instead of the guaranteed minimum).
        New feature: Show minimum ground fill width to help avoid isolated ground "islands".
        New feature: Allow custom pad and hole sizes to be set on each part.
+V1.89  Bug fix: Gerber export in V1.88 was writing unusable drill file, and not handling variable pad/hole widths correctly.

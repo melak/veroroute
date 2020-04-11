@@ -221,10 +221,11 @@ static const char* szVEROROUTE_VERSION =
 			// Improvement: Allow flipped views in PCB mode but don't allow export/editing when flipped.
 			// Lots of minor GUI tweaks such as disabling certain buttons according to display mode.
 			// Added the Bourns 3362 series to the set of trimmers in the Templates dialog.
-  "1.88";	// Roll back of change made in V1.85:  Top solder mask now works in same way as bottom solder mask.
+//"1.88";	// Roll back of change made in V1.85:  Top solder mask now works in same way as bottom solder mask.
 			// Bug fix: Fix problem with docked dialogs passing mouse clicks to the main window.
 			// Improvement: Various minor fixes, improvements and simplificatons to Gerber Export code.
 			// Improvement: Changed diode cathode marking so it is less likely to be erased on a PCB.
 			// Improvement: Show actual minimum track separation (instead of the guaranteed minimum).
 			// New feature: Show minimum ground fill width to help avoid isolated ground "islands".
 			// New feature: Allow custom pad and hole sizes to be set on each part.
+  "1.89";	// Bug fix: Gerber export in V1.88 was writing unusable drill file, and not handling variable pad/hole widths correctly.
