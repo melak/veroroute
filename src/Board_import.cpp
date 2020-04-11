@@ -251,7 +251,7 @@ bool Board::ImportTango(const TemplateManager& templateMgr, const std::string& f
 }
 
 
-// Import OrCAD2 netlist (exported from KiCAD)
+// Import OrcadPCB2 netlist (exported from KiCAD)
 bool Board::ImportOrcad(const TemplateManager& templateMgr, const std::string& filename, std::string& errorStr)
 {
 	Clear();

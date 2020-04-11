@@ -597,7 +597,7 @@ private:
 	std::string					m_valueStr;			// Value label
 	std::string					m_prefixStr;		// The prefix for new components (overridden for CUSTOM components).
 	std::string					m_typeStr;			// The footprint type (overridden for CUSTOM components).
-	std::string					m_importStr;		// Protel/Tango/OrCAD2 footprint name. Only for CUSTOM components !!!
+	std::string					m_importStr;		// Protel/Tango/OrcadPCB2 footprint name. Only for CUSTOM components !!!
 	std::vector<int>			m_nodeIdPins;		// NodeIds of the pins
 	std::vector<int>			m_origIdPins1;		// NodeIds under the pins BEFORE placement (1st layer)
 	std::vector<int>			m_origIdPins2;		// NodeIds under the pins BEFORE placement (2nd Layer)

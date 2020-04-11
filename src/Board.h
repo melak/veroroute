@@ -486,7 +486,7 @@ public:
 
 	// Import Protel V1 / Tango netlist (exported from TinyCAD / gEDA)
 	bool ImportTango(const TemplateManager& templateMgr, const std::string& filename, std::string& errorStr);
-	// Import OrCAD2 netlist (exported from KiCAD)
+	// Import OrcadPCB2 netlist (exported from KiCAD)
 	bool ImportOrcad(const TemplateManager& templateMgr, const std::string& filename, std::string& errorStr);
 	bool BreakComponentIntoPads(Component& comp);
 	bool GetPinRowCol(const int& compId, const size_t& iPinIndex, int& row, int& col) const;
