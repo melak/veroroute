@@ -256,6 +256,7 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 			mouseActionString = ( GetCurrentNodeId() == BAD_NODEID) ? "Unselect NodeId" : "Select NodeId";
 	}
 
+	m_board.WipeAutoSetPoints();
 	m_board.PlaceFloaters();	// See if we can now place floating components down
 	RepaintWithRouting();
 }
@@ -284,6 +285,7 @@ void MainWindow::mouseDoubleClickEvent(QMouseEvent* event)
 	const bool	bSwapped = m_board.Get(layer, m_gridRow + dR, m_gridCol + dC)->SwapDiagLinks();
 	if ( bSwapped )
 	{
+		m_board.WipeAutoSetPoints();
 		m_board.PlaceFloaters();	// See if we can now place floating components down
 		UpdateHistory("Toggle competing diagonals");
 
@@ -386,6 +388,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 			if ( !bChanged ) return;	// No change
 			mouseActionString = "Erase";
 		}
+		m_board.WipeAutoSetPoints();
 		m_board.PlaceFloaters();	// See if we can now place floating components down
 	}
 	else if ( GetCurrentTextId() != BAD_TEXTID )
