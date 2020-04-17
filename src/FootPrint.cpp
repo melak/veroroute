@@ -48,9 +48,9 @@ void FootPrint::BuildDefault(const COMP& type)
 			case '-':	p->SetSurface(SURFACE_GAP);		break;
 			default:	p->SetSurface(bPlug ? SURFACE_PLUG : SURFACE_FULL);
 		}
-		p->SetPinIndex(GetPinIndexFromLegacyPinChar(pinChar));
+		p->SetPinIndex( GetPinIndexFromLegacyPinChar(pinChar) );
 	}
-	if ( m_type == COMP::WIRE ) SetupWire();
+	SetupOccupancies();	// Setup hole use (and for wires setup surface use too)
 }
 
 void FootPrint::BuildTrax(CompManager* pCompMgr, const RectManager& rectMgr, const ElementGrid& o, const int& nLyr, const int& nRowMin, const int& nRowMax, const int& nColMin, const int& nColMax)

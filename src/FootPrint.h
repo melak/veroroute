@@ -95,14 +95,14 @@ public:
 
 		switch( m_type )
 		{
-			case COMP::WIRE:	// Special case for wires
-				StretchSimple(bGrow, initVal);
-				return SetupWire();
+			case COMP::WIRE:
 			case COMP::DIODE:
 			case COMP::RESISTOR:
 			case COMP::INDUCTOR:
 			case COMP::CAP_CERAMIC:
-			case COMP::CAP_FILM:		return StretchSimple(bGrow, initVal);
+			case COMP::CAP_FILM:
+				StretchSimple(bGrow, initVal);
+				return SetupOccupancies();
 			case COMP::CAP_FILM_WIDE:
 				StretchComplex(m_type, bGrow);
 				for (int iRow = 0, rows = GetRows(); iRow < rows; iRow++)
@@ -112,9 +112,8 @@ public:
 					p->SetPinIndex( ( iRow == 1 && iCol == 0 ) ? 0 :
 									( iRow == 1 && iCol == GetCols()-1 ) ? 1 : BAD_PININDEX );
 					p->SetSurface( SURFACE_FULL );
-					p->SetHoleUse( p->GetIsPin() ? HOLE_FULL : HOLE_FREE );
 				}
-				return;
+				return SetupOccupancies();
 			case COMP::SIP:
 				StretchComplex(m_type, bGrow);
 				for (int i = 0; i < GetSize(); i++)
@@ -122,9 +121,8 @@ public:
 					CompElement* p = GetAt(i);
 					p->SetPinIndex( i );
 					p->SetSurface( SURFACE_FULL );
-					p->SetHoleUse( HOLE_FULL );
 				}
-				return;
+				return SetupOccupancies();
 			case COMP::DIP:
 				StretchComplex(m_type, bGrow);
 				for (int iRow = 0, rows = GetRows(); iRow < rows; iRow++)
@@ -134,9 +132,8 @@ public:
 					p->SetPinIndex( ( iRow == 0 ) ? 2*GetCols()-1-iCol :
 									( iRow == GetRows()-1 ) ? iCol : BAD_PININDEX );
 					p->SetSurface( p->GetIsPin() ? SURFACE_FULL : SURFACE_GAP );
-					p->SetHoleUse( p->GetIsPin() ? HOLE_FULL    : HOLE_FREE );
 				}
-				return;
+				return SetupOccupancies();
 			case COMP::STRIP_100:
 				StretchComplex(m_type, bGrow);
 				for (int i = 0, iSize = GetSize(); i < iSize; i++)
@@ -144,9 +141,8 @@ public:
 					CompElement* p = GetAt(i);
 					p->SetPinIndex( i );
 					p->SetSurface( SURFACE_FULL );
-					p->SetHoleUse( HOLE_FULL );
 				}
-				return;
+				return SetupOccupancies();
 			case COMP::BLOCK_100:
 				StretchComplex(m_type, bGrow);
 				for (int iRow = 0, rows = GetRows(); iRow < rows; iRow++)
@@ -155,9 +151,8 @@ public:
 					CompElement* p = Get(iRow,iCol);
 					p->SetPinIndex( ( iRow == 1 ) ? iCol : BAD_PININDEX );
 					p->SetSurface( SURFACE_FULL );
-					p->SetHoleUse( p->GetIsPin() ? HOLE_FULL : HOLE_FREE );
 				}
-				return;
+				return SetupOccupancies();
 			case COMP::BLOCK_200:
 				StretchComplex(m_type, bGrow);
 				for (int iRow = 0, rows = GetRows(); iRow < rows; iRow++)
@@ -166,9 +161,8 @@ public:
 					CompElement* p = Get(iRow,iCol);
 					p->SetPinIndex( ( iRow == 1 && iCol % 2 == 1 ) ? ( iCol - 1 ) / 2 : BAD_PININDEX );
 					p->SetSurface( ( iCol == 0 || iCol == GetCols()-1 ) ? SURFACE_FREE : SURFACE_FULL );
-					p->SetHoleUse( p->GetIsPin() ? HOLE_FULL : HOLE_FREE );
 				}
-				return;
+				return SetupOccupancies();
 			case COMP::SWITCH_ST:
 			case COMP::SWITCH_DT:
 				StretchComplex(m_type, bGrow);
@@ -178,9 +172,8 @@ public:
 					CompElement* p = Get(iRow,iCol);
 					p->SetPinIndex( ( iCol % 2 == 0 && iRow % 2 == 0 ) ? (iCol/2 + (iRow/2)*((1 + GetCols())/2)) : BAD_PININDEX );
 					p->SetSurface( SURFACE_FULL );
-					p->SetHoleUse( p->GetIsPin() ? HOLE_FULL : HOLE_FREE );
 				}
-				return;
+				return SetupOccupancies();
 			case COMP::SWITCH_ST_DIP:
 				assert( GetRows() == 4 );	// DIPs should have 4 rows on construction
 				StretchComplex(m_type, bGrow);
@@ -191,9 +184,8 @@ public:
 					p->SetPinIndex( ( iRow == 0 ) ? iCol :
 									( iRow == 3 ) ? iCol + GetCols() : BAD_PININDEX );
 					p->SetSurface( SURFACE_FULL );
-					p->SetHoleUse( p->GetIsPin() ? HOLE_FULL : HOLE_FREE );
 				}
-				return;
+				return SetupOccupancies();
 			default:	assert(0);	// Unhandled m_type
 		}
 	}
@@ -209,9 +201,15 @@ public:
 			p->SetPinIndex( ( iRow == 0 ) ? 2*GetCols()-1-iCol :
 							( iRow == GetRows()-1 ) ? iCol : BAD_PININDEX );
 			p->SetSurface( ( iRow == 0 || iRow == GetRows()-1 ) ? SURFACE_FULL : SURFACE_GAP );
-			p->SetHoleUse( p->GetIsPin() ? HOLE_FULL : HOLE_FREE );
 		}
-		return;
+		return SetupOccupancies();
+	}
+	void SetupOccupancies()
+	{
+		const bool bWire = m_type == COMP::WIRE;
+		assert( GetLyrs() == 1 );
+		assert( !bWire || (GetRows() == 1 && GetCols() > 1) );
+		for (int i = 0, iSize = GetSize(); i < iSize; i++) GetAt(i)->SetOccupancy(bWire);
 	}
 	// Persist interface functions
 	virtual void Load(DataStream& inStream) override
@@ -221,7 +219,7 @@ public:
 		inStream.Load(type);
 		m_type = static_cast<COMP> (type);
 		if ( inStream.GetVersion() < VRT_VERSION_26 )
-			if ( m_type == COMP::WIRE ) SetupWire();
+			SetupOccupancies();
 	}
 	virtual void Save(DataStream& outStream) override
 	{

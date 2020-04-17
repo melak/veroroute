@@ -58,7 +58,7 @@ public:
 	virtual void		 SetPinIndex(const size_t& i)	{ auto pBase = GetBase();		return pBase == this ? Pin::SetPinIndex(i)		 : pBase->SetPinIndex(i); }
 	virtual void		 SetSurface(const uchar& c)		{ auto pBase = GetBase();		return pBase == this ? Pin::SetSurface(c)		 : pBase->SetSurface(c); }
 	virtual void		 SetHoleUse(const uchar& c)		{ auto pBase = GetBase();		return pBase == this ? Pin::SetHoleUse(c)		 : pBase->SetHoleUse(c); }
-	virtual void		 SetWireOccupancies()			{ auto pBase = GetBase();		return pBase == this ? Pin::SetWireOccupancies() : pBase->SetWireOccupancies(); }
+	virtual void		 SetOccupancy(const bool& bWire){ auto pBase = GetBase();		return pBase == this ? Pin::SetOccupancy(bWire)	 : pBase->SetOccupancy(bWire); }
 	virtual size_t		 GetPinIndex() const			{ auto pBase = GetBaseConst();	return pBase == this ? Pin::GetPinIndex()		 : pBase->GetPinIndex(); }
 	virtual const uchar& GetSurface() const				{ auto pBase = GetBaseConst();	return pBase == this ? Pin::GetSurface()		 : pBase->GetSurface(); }
 	virtual const uchar& GetHoleUse() const				{ auto pBase = GetBaseConst();	return pBase == this ? Pin::GetHoleUse()		 : pBase->GetHoleUse(); }

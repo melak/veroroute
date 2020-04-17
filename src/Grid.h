@@ -210,11 +210,6 @@ public:
 		Transform(row, col, direction);	// Handle direction transformation
 		return Grid<CompElement>::Get(lyr, row, col);
 	}
-	void SetupWire()
-	{
-		assert( GetLyrs() == 1 && GetRows() == 1 && GetCols() > 1 );
-		for (int i = 0, iSize = GetSize(); i < iSize; i++) GetAt(i)->SetWireOccupancies();
-	}
 	void StretchSimple(bool bGrow, const CompElement& initVal)	// For simple 2-pin components like resistors, wires, diodes, caps
 	{
 		assert( GetLyrs() == 1 );	

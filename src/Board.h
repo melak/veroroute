@@ -629,7 +629,7 @@ private:
 						// assert( comp.GetCompElement(j, i)->GetIsPin() == p->GetIsPin() );
 						assert( p->GetSurface() == SURFACE_PLUG || p->GetSurface() == SURFACE_FULL );
 						const bool bGap = ( p->GetSurface() & SURFACE_GAP ) > 0;
-						p->SetWireOccupancies();
+						p->SetOccupancy(true);	// true ==> WIRE
 						if ( bGap ) p->SetSurface( p->GetSurface() + SURFACE_GAP );
 					}
 				}

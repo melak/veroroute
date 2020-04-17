@@ -119,10 +119,17 @@ public:
 	void		 SetPinIndex(const size_t& i)	{ m_pinChar = ( i >= BAD_PINCHAR ) ? BAD_PINCHAR : static_cast<uchar> (i); }
 	void		 SetSurface(const uchar& c)		{ m_surface = c; }
 	void		 SetHoleUse(const uchar& c)		{ m_holeUse = c; }
-	void		 SetWireOccupancies()	// Helper to handle wires
+	void		 SetOccupancy(const bool& bWire)	// Helper
 	{
-		SetSurface( GetIsPin() ? SURFACE_WIRE_END	: SURFACE_WIRE );	// Set surface occupancy for pins/non-pins
-		SetHoleUse( GetIsPin() ? HOLE_WIRE			: HOLE_FREE );		// Set hole occupancy for pins/non-pins
+		if ( bWire )
+		{
+			SetSurface( GetIsPin() ? SURFACE_WIRE_END	: SURFACE_WIRE );	// Set surface occupancy for pins/non-pins
+			SetHoleUse( GetIsPin() ? HOLE_WIRE			: HOLE_FREE );		// Set hole occupancy for pins/non-pins
+		}
+		else
+		{
+			SetHoleUse( GetIsPin() ? HOLE_FULL			: HOLE_FREE );		// Set hole occupancy for pins/non-pins
+		}
 	}
 	size_t		 GetPinIndex() const			{ return ( m_pinChar == BAD_PINCHAR ) ? BAD_PININDEX : m_pinChar; }
 	const uchar& GetSurface() const				{ return m_surface; }
@@ -153,6 +160,8 @@ public:
 		m_holeUse = GetIsPin() ? HOLE_FULL : HOLE_FREE;
 		if ( inStream.GetVersion() >= VRT_VERSION_26 )
 			inStream.Load(m_holeUse);	// Added in VRT_VERSION_26
+		if ( inStream.GetVersion() <= VRT_VERSION_39 )
+			if ( GetIsPin() && m_holeUse == HOLE_FREE ) m_holeUse = HOLE_FULL;	// Bug-fix non-wire hole-use
 	}
 	virtual void Save(DataStream& outStream) override
 	{

@@ -39,5 +39,5 @@ const int VRT_VERSION_36 = 36;	// Added thin tracks style
 const int VRT_VERSION_37 = 37;	// Added flag to enable/disable vias
 const int VRT_VERSION_38 = 38;	// Added Bourns 3362 series trimpots
 const int VRT_VERSION_39 = 39;	// Added custom pin/hole size on components
-const int VRT_VERSION_40 = 40;	// Allow 50 mil holes
+const int VRT_VERSION_40 = 40;	// Allow 50 mil holes, and fix bug with non-wire hole use
 const int VRT_VERSION_CURRENT = VRT_VERSION_40;
