@@ -24,7 +24,17 @@ fi
 rm -f  "$pkgdir/usr/share/veroroute/veroroute.png"
 rm -rf "$pkgdir/usr/share/veroroute/tutorials"
 rmdir  "$pkgdir/usr/share/veroroute"
-rm -rf "$pkgdir/usr/share/gEDA/sym/veroroute_*"
+rm -rf "$pkgdir/usr/share/gEDA/sym/veroroute_battery"
+rm -rf "$pkgdir/usr/share/gEDA/sym/veroroute_bbd"
+rm -rf "$pkgdir/usr/share/gEDA/sym/veroroute_connector"
+rm -rf "$pkgdir/usr/share/gEDA/sym/veroroute_diode"
+rm -rf "$pkgdir/usr/share/gEDA/sym/veroroute_electromechanical"
+rm -rf "$pkgdir/usr/share/gEDA/sym/veroroute_linear"
+rm -rf "$pkgdir/usr/share/gEDA/sym/veroroute_logic"
+rm -rf "$pkgdir/usr/share/gEDA/sym/veroroute_passive"
+rm -rf "$pkgdir/usr/share/gEDA/sym/veroroute_regulator"
+rm -rf "$pkgdir/usr/share/gEDA/sym/veroroute_spin"
+rm -rf "$pkgdir/usr/share/gEDA/sym/veroroute_transistor"
 if find -- "$pkgdir/usr/share/gEDA/sym/" -prune -type d -empty | grep -q .; then
    rmdir "$pkgdir/usr/share/gEDA/sym/"
 fi
