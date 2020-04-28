@@ -705,9 +705,9 @@ static int GetMinNumPins(const COMP& eType)
 		case COMP::BLOCK_200:
 		case COMP::SIP:				return 1;
 		case COMP::DIP:
-		case COMP::SWITCH_ST:		return 2;
-		case COMP::SWITCH_DT:		return 3;
+		case COMP::SWITCH_ST:
 		case COMP::SWITCH_ST_DIP:	return 2;
+		case COMP::SWITCH_DT:		return 3;
 		default:					return GetDefaultNumPins(eType);
 	}
 }
@@ -718,11 +718,12 @@ static int GetMaxNumPins(const COMP& eType)
 		case COMP::STRIP_100:
 		case COMP::BLOCK_100:
 		case COMP::BLOCK_200:
-		case COMP::SIP:
+		case COMP::SIP:				return 255;
 		case COMP::DIP:
 		case COMP::SWITCH_ST:
-		case COMP::SWITCH_DT:
-		case COMP::SWITCH_ST_DIP:	return 255;	// We're limited to (0 <= pinIndex <= 254)
+		case COMP::SWITCH_ST_DIP:	return 254;
+		case COMP::SWITCH_DT:		return 255;	// We're limited to (0 <= pinIndex <= 254)
+
 		default:					return GetDefaultNumPins(eType);
 	}
 }
@@ -747,11 +748,11 @@ static int GetMinLength(const COMP& eType)	// For stretchable components
 		case COMP::CAP_CERAMIC:
 		case COMP::CAP_FILM:
 		case COMP::CAP_FILM_WIDE:	return 2;
-		case COMP::SIP:				return GetMinNumPins(eType);
-		case COMP::DIP:
 		case COMP::STRIP_100:		return GetMinNumPins(eType);
 		case COMP::BLOCK_100:		return GetMinNumPins(eType);
 		case COMP::BLOCK_200:		return GetMinNumPins(eType) * 2 + 1;
+		case COMP::SIP:				return GetMinNumPins(eType);
+		case COMP::DIP:				return GetMinNumPins(eType) / 2;
 		case COMP::SWITCH_ST:		return GetMinNumPins(eType) / 2;
 		case COMP::SWITCH_DT:		return GetMinNumPins(eType) / 3;
 		case COMP::SWITCH_ST_DIP:	return GetMinNumPins(eType) / 2;
@@ -769,11 +770,11 @@ static int GetMaxLength(const COMP& eType)	// For stretchable components
 		case COMP::CAP_CERAMIC:
 		case COMP::CAP_FILM:
 		case COMP::CAP_FILM_WIDE:	return 16;
-		case COMP::SIP:				return GetMaxNumPins(eType);
-		case COMP::DIP:				return GetMaxNumPins(eType) / 2;
 		case COMP::STRIP_100:		return GetMaxNumPins(eType);
 		case COMP::BLOCK_100:		return GetMaxNumPins(eType);
 		case COMP::BLOCK_200:		return GetMaxNumPins(eType) * 2 + 1;
+		case COMP::SIP:				return GetMaxNumPins(eType);
+		case COMP::DIP:				return GetMaxNumPins(eType) / 2;
 		case COMP::SWITCH_ST:		return GetMaxNumPins(eType) - 1;
 		case COMP::SWITCH_DT:		return 2 * GetMaxNumPins(eType) / 3 - 1;
 		case COMP::SWITCH_ST_DIP:	return GetMaxNumPins(eType) / 2;
