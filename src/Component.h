@@ -379,10 +379,10 @@ public:
 			default:					return true;
 		}
 	}
-	void Stretch(const bool& bGrow, const bool& bPCB = false)
+	void Stretch(const bool& bGrow, const bool& bUsePCBshapes = false)
 	{
 		FootPrint::Stretch(bGrow);
-		SetDefaultShapes(bPCB);	// Rebuild the shapes list
+		SetDefaultShapes(bUsePCBshapes);	// Rebuild the shapes list
 
 		switch( GetType() )
 		{
@@ -397,10 +397,10 @@ public:
 			default:					return;
 		}
 	}
-	void StretchWidth(const bool& bGrow, const bool& bPCB = false)
+	void StretchWidth(const bool& bGrow, const bool& bUsePCBshapes = false)
 	{
 		FootPrint::StretchWidth(bGrow);
-		SetDefaultShapes(bPCB);	// Rebuild the shapes list
+		SetDefaultShapes(bUsePCBshapes);	// Rebuild the shapes list
 	}
 	void SetDefaultPinLabels()
 	{
@@ -482,7 +482,7 @@ public:
 		if ( GetImportStr().empty() || bForce || GetType() != COMP::CUSTOM )
 			SetImportStr( GetDefaultImportStr( GetType() ) );
 	}
-	void SetDefaultShapes(const bool& bPCB = false);
+	void SetDefaultShapes(const bool& bUsePCBshapes = false);
 	void SetDefaultColor();
 	// Persist interface functions
 	virtual void Load(DataStream& inStream) override
