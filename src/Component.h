@@ -105,7 +105,7 @@ public:
 		AllocatePins( numPins );
 		std::copy(nodeIdPins.begin(), nodeIdPins.end(), m_nodeIdPins.begin());
 
-		AddDefaultShapes();
+		SetDefaultShapes();
 	}
 	Component& operator=(const Component& o)
 	{
@@ -379,13 +379,10 @@ public:
 			default:					return true;
 		}
 	}
-	void Stretch(const bool& bGrow)
+	void Stretch(const bool& bGrow, const bool& bPCB = false)
 	{
 		FootPrint::Stretch(bGrow);
-
-		// Rebuild the shapes list
-		m_shapes.clear();
-		AddDefaultShapes();
+		SetDefaultShapes(bPCB);	// Rebuild the shapes list
 
 		switch( GetType() )
 		{
@@ -400,13 +397,10 @@ public:
 			default:					return;
 		}
 	}
-	void StretchWidth(const bool& bGrow)
+	void StretchWidth(const bool& bGrow, const bool& bPCB = false)
 	{
 		FootPrint::StretchWidth(bGrow);
-
-		// Rebuild the shapes list
-		m_shapes.clear();
-		AddDefaultShapes();
+		SetDefaultShapes(bPCB);	// Rebuild the shapes list
 	}
 	void SetDefaultPinLabels()
 	{
@@ -488,7 +482,7 @@ public:
 		if ( GetImportStr().empty() || bForce || GetType() != COMP::CUSTOM )
 			SetImportStr( GetDefaultImportStr( GetType() ) );
 	}
-	void AddDefaultShapes();
+	void SetDefaultShapes(const bool& bPCB = false);
 	void SetDefaultColor();
 	// Persist interface functions
 	virtual void Load(DataStream& inStream) override
@@ -555,7 +549,7 @@ public:
 		// Try to fix any missing definitions
 		SetDefaultPinFlags();
 		SetDefaultStrings(false);	// false ==> only set empty (m_prefixStr, m_guiStr, m_importStr)
-		AddDefaultShapes();
+		SetDefaultShapes();
 	}
 	virtual void Save(DataStream& outStream) override
 	{

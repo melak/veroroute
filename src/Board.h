@@ -457,6 +457,7 @@ public:
 	bool MoveComps(const std::list<int>& compIds, const int& deltaRow, const int& deltaCol);	// Move components and return true if the grid was panned
 	void RotateComps(const std::list<int>& compIds, const bool& bCW);	// Rotate components
 	Rect GetFootprintBounds(const std::list<int>& compIds);
+	void CustomPCBshapes();	// Allow some parts (e.g. DIPs) to be drawn differently in PCB mode
 
 	// Command enablers for GUI
 	bool GetDisableCompText();
@@ -573,6 +574,7 @@ public:
 
 		// Need all component locations before calling GlueWires()
 		m_compMgr.Load(inStream);			// Call Load() on component manager
+		CustomPCBshapes();					// Some parts (e.g. DIPs) are drawn differently in PCB mode
 
 		for (const auto& mapObj : m_compMgr.GetMapIdToComp())
 			m_nodeInfoMgr.AddComp(mapObj.second);

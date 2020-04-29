@@ -458,6 +458,18 @@ static std::string GetDefaultPrefixStr(const COMP& eType)	// Prefix for name on 
 	}
 }
 
+static bool AllowCustomPCBshapes(const COMP& eType)
+{
+	switch(eType)
+	{
+		case COMP::DIP:
+		case COMP::DIP_RECTIFIER:
+		case COMP::RELAY_DIP_4PIN:
+		case COMP::RELAY_DIP_8PIN:	return true;
+		default:					return false;
+	}
+}
+
 static bool AllowTypeChange(const COMP& eTypeA, const COMP& eTypeB)
 {
 	const std::string prefixA = GetDefaultPrefixStr(eTypeA);
@@ -602,6 +614,7 @@ static bool StopBuildWarnings()
 {
 	// Following lines are just to avoid pointless build warnings about the previous functions being unused
 	static int DUMMY(0);
+	AllowCustomPCBshapes(COMP::INVALID);
 	AllowTypeChange(COMP::INVALID,COMP::INVALID);
 	GetPinSeparation(COMP::INVALID);
 	GetTypeFromImportStr("");

@@ -101,7 +101,7 @@ void Component::SetDefaultPinFlags()
 	}
 }
 
-void Component::AddDefaultShapes()
+void Component::SetDefaultShapes(const bool& bPCB)
 {
 	switch( GetType() )
 	{
@@ -186,7 +186,8 @@ void Component::AddDefaultShapes()
 		case COMP::RELAY_DIP_4PIN:
 		case COMP::RELAY_DIP_8PIN:
 		{
-			double w(0.35 + 0.5*(GetCols() - 1)), h(0.35 + 0.5*(GetRows()-1));
+			const bool bInternalPins = ( !bPCB || GetRows() < 3 );	// true/false ==> IC outline has pins on the inside/outside
+			double w(0.35 + 0.5*(GetCols() - 1)), h( (bInternalPins ? 0.35 : -0.5) + 0.5*(GetRows()-1));
 			AddOne( Shape(SHAPE::LINE,	true, false,	-w, -w,  0.25,  h) );
 			AddOne( Shape(SHAPE::LINE,	true, false,	-w,  w,  h,  h) );
 			AddOne( Shape(SHAPE::LINE,	true, false,	 w,  w,  h, -h) );
