@@ -177,7 +177,7 @@ int CompDefiner::GetShapeId(const double& dRowIn, const double& dColIn) const	//
 
 	const double dRow(dRowIn - dCentreRow);	// w.r.t. footprint centre
 	const double dCol(dColIn - dCentreCol);	// w.r.t. footprint centre
-	const double epsilon(0.5);
+	const double epsilon(0.1);
 
 	int		iBestId(BAD_ID);
 	double	dMinArea(INT_MAX);
@@ -223,14 +223,16 @@ int CompDefiner::GetShapeId(const double& dRowIn, const double& dColIn) const	//
 			}
 			case SHAPE::RECT:
 			case SHAPE::ROUNDED_RECT:
-				dArea	= fabs(DX*DY);			// Area of the rectangle
-				bOK		= fabs(2.0*ry) <= DY + epsilon && fabs(2.0*rx) <= DX + epsilon;
+				dArea = fabs(DX*DY);			// Area of the rectangle
+				bOK   = fabs(2.0*ry) <= ( ( DY <= 0.1 ) ? epsilon : DY );
+				bOK  &= fabs(2.0*rx) <= ( ( DX <= 0.1 ) ? epsilon : DX );
 				break;
 			case SHAPE::ELLIPSE:
 			case SHAPE::ARC:
 			case SHAPE::CHORD:
 			{
 				dArea	= M_PI * 0.25*DX*DY;	// Area of the ellipse
+				double epsilon(dArea < 0.1 ? 0.1 : 0);
 				bOK		= rx*DY*rx*DY + ry*DX*ry*DX <= 0.25*DX*DX*DY*DY + epsilon;
 				break;
 			}
