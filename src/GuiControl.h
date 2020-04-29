@@ -432,6 +432,7 @@ public:
 	const bool&			GetVerticalStrips() const	{ return m_bVerticalStrips; }
 	const bool&			GetCompEdit() const			{ return m_bCompEdit; }
 	// Helpers
+	bool	GetUsePCBshapes()			{ return GetTrackMode() == TRACKMODE::PCB; }
 	bool	GetMirrored() const			{ return GetFlipH() || GetFlipV(); }
 	bool	SetTrackSliderValue(int i)	{ const bool bChanged = ( GetTrackSliderValue() != i ); SetTrackMode( static_cast<TRACKMODE>(i) ); return bChanged; }
 	bool	SetCompSliderValue(int i)	{ const bool bChanged = ( GetCompSliderValue()  != i ); SetCompMode(  static_cast<COMPSMODE>(i) ); return bChanged; }

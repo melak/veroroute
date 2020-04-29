@@ -69,7 +69,7 @@ int Board::AddComponent(int iRow, int iCol, const Component& tmp, bool bDoPlace)
 {
 	// Adds a new component to the board, and returns its compId
 
-	const int compId = m_compMgr.CreateComp(tmp, GetTrackMode() == TRACKMODE::PCB);	// CompMgr makes a copy of tmp and returns its compId
+	const int compId = m_compMgr.CreateComp(tmp, GetUsePCBshapes() );	// CompMgr makes a copy of tmp and returns its compId
 	if ( compId == INT_MAX ) return BAD_COMPID;		// Reached component limit !!!
 
 	Component& comp = m_compMgr.GetComponentById(compId);
@@ -809,7 +809,7 @@ void Board::StretchUserComp(const bool& bGrow)	// Stretch the selected component
 	}
 	WipeAutoSetPoints();
 	TakeOff(comp);
-	comp.Stretch(bGrow, GetTrackMode() == TRACKMODE::PCB);
+	comp.Stretch(bGrow, GetUsePCBshapes());
 	PutDown(comp);
 	PlaceFloaters();	// See if we can now place floating components down
 }
@@ -836,7 +836,7 @@ void Board::StretchWidthUserComp(const bool& bGrow)	// Stretch the selected comp
 	}
 	WipeAutoSetPoints();
 	TakeOff(comp);
-	comp.StretchWidth(bGrow, GetTrackMode() == TRACKMODE::PCB);
+	comp.StretchWidth(bGrow, GetUsePCBshapes());
 	PutDown(comp);
 	PlaceFloaters();	// See if we can now place floating components down
 }
@@ -863,7 +863,6 @@ void Board::ChangeTypeUserComp(const COMP& eType)
 	}
 
 	// Now change the component type
-	const bool bPCB				= GetTrackMode() == TRACKMODE::PCB;
 	const int  oldPinSeparation	= GetPinSeparation( comp.GetType() );	// For LEDs, and electro caps
 	const int  oldLength		= ( oldPinSeparation > 0 ) ? oldPinSeparation : comp.GetCols();
 	WipeAutoSetPoints();
@@ -872,11 +871,11 @@ void Board::ChangeTypeUserComp(const COMP& eType)
 	comp.SetDefaultPinFlags();
 	comp.SetDefaultStrings();
 	comp.SetDefaultLabelOffsets();
-	comp.SetDefaultShapes(bPCB);
+	comp.SetDefaultShapes(GetUsePCBshapes());
 	if ( bStretch )
 	{
-		while ( comp.GetCols() < oldLength ) comp.Stretch(true, bPCB);	// true  ==> grow
-		while ( comp.GetCols() > oldLength ) comp.Stretch(false, bPCB);	// false ==> shrink
+		while ( comp.GetCols() < oldLength ) comp.Stretch(true, GetUsePCBshapes());	// true  ==> grow
+		while ( comp.GetCols() > oldLength ) comp.Stretch(false, GetUsePCBshapes());	// false ==> shrink
 	}
 	PutDown(comp);
 	PlaceFloaters();	// See if we can now place floating components down
@@ -1120,5 +1119,5 @@ Rect Board::GetFootprintBounds(const std::list<int>& compIds)
 
 void Board::CustomPCBshapes()	// Allow some parts (e.g. DIPs) to be drawn differently in PCB mode
 {
-	m_compMgr.CustomPCBshapes( GetTrackMode() == TRACKMODE::PCB );
+	m_compMgr.CustomPCBshapes( GetUsePCBshapes() );
 }

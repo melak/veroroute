@@ -101,7 +101,7 @@ void Component::SetDefaultPinFlags()
 	}
 }
 
-void Component::SetDefaultShapes(const bool& bPCB)
+void Component::SetDefaultShapes(const bool& bUsePCBshapes)
 {
 	switch( GetType() )
 	{
@@ -186,7 +186,7 @@ void Component::SetDefaultShapes(const bool& bPCB)
 		case COMP::RELAY_DIP_4PIN:
 		case COMP::RELAY_DIP_8PIN:
 		{
-			const bool bInternalPins = ( !bPCB || GetRows() < 3 );	// true/false ==> IC outline has pins on the inside/outside
+			const bool bInternalPins = ( !bUsePCBshapes || GetRows() < 3 );	// true/false ==> outline has pins on the inside/outside
 			double w(0.35 + 0.5*(GetCols() - 1)), h( (bInternalPins ? 0.35 : -0.5) + 0.5*(GetRows()-1));
 			AddOne( Shape(SHAPE::LINE,	true, false,	-w, -w,  0.25,  h) );
 			AddOne( Shape(SHAPE::LINE,	true, false,	-w,  w,  h,  h) );
@@ -227,15 +227,31 @@ void Component::SetDefaultShapes(const bool& bPCB)
 		case COMP::RESISTOR:
 		case COMP::INDUCTOR:
 		{
-			double w(-0.32 + 0.5*(GetCols() - 1)), h(0.32 + 0.5*(GetRows()-1));
-			AddOne( Shape(SHAPE::ARC,		true, false,	-w - 0.64, -w + 0.16, -h -0.08, -h + 0.72,  53, -53) );
-			AddOne( Shape(SHAPE::ARC,		true, false,	 w - 0.16,  w + 0.64, -h -0.08, -h + 0.72, 233, 127) );
-			AddOne( Shape(SHAPE::LINE,		true, false,	-w, w, -h, -h) );
-			AddOne( Shape(SHAPE::LINE,		true, false,	-w, w,  h,  h) );
-			// Fill ...
-			AddOne( Shape(SHAPE::ELLIPSE,	false, true,	-w - 0.64, -w + 0.16, -h -0.08, -h + 0.72) );
-			AddOne( Shape(SHAPE::ELLIPSE,	false, true,	 w - 0.16,  w + 0.64, -h -0.08, -h + 0.72) );
-			AddOne( Shape(SHAPE::RECT,		false, true,	-w, w, -h,  h));
+			const bool bInternalPins = ( !bUsePCBshapes || GetCols() < 3 );	// true/false ==> outline has pins on the inside/outside
+			if ( bInternalPins )
+			{
+				double w(-0.32 + 0.5*(GetCols() - 1)), h(0.32 + 0.5*(GetRows()-1));
+				AddOne( Shape(SHAPE::ARC,		true, false,	-w - 0.64, -w + 0.16, -h -0.08, -h + 0.72,  53, -53) );
+				AddOne( Shape(SHAPE::ARC,		true, false,	 w - 0.16,  w + 0.64, -h -0.08, -h + 0.72, 233, 127) );
+				AddOne( Shape(SHAPE::LINE,		true, false,	-w, w, -h, -h) );
+				AddOne( Shape(SHAPE::LINE,		true, false,	-w, w,  h,  h) );
+				// Fill ...
+				AddOne( Shape(SHAPE::ELLIPSE,	false, true,	-w - 0.64, -w + 0.16, -h -0.08, -h + 0.72) );
+				AddOne( Shape(SHAPE::ELLIPSE,	false, true,	 w - 0.16,  w + 0.64, -h -0.08, -h + 0.72) );
+				AddOne( Shape(SHAPE::RECT,		false, true,	-w, w, -h,  h));
+			}
+			else
+			{
+				double w(-0.85 + 0.5*(GetCols() - 1)), h(0.34 + 0.5*(GetRows()-1));
+				AddOne( Shape(SHAPE::ARC,		true, false,	-w - 0.45, -w + 0.15, -h -0.06, -h + 0.74,  60, -60) );
+				AddOne( Shape(SHAPE::ARC,		true, false,	 w - 0.15,  w + 0.45, -h -0.06, -h + 0.74, 240, 120) );
+				AddOne( Shape(SHAPE::LINE,		true, false,	-w, w, -h, -h) );
+				AddOne( Shape(SHAPE::LINE,		true, false,	-w, w,  h,  h) );
+				// Fill ...
+				AddOne( Shape(SHAPE::ELLIPSE,	false, true,	-w - 0.45, -w + 0.15, -h -0.06, -h + 0.74) );
+				AddOne( Shape(SHAPE::ELLIPSE,	false, true,	 w - 0.15,  w + 0.45, -h -0.06, -h + 0.74) );
+				AddOne( Shape(SHAPE::RECT,		false, true,	-w, w, -h,  h));
+			}
 			break;
 		}
 		case COMP::WIRE:

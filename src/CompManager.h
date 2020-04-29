@@ -86,7 +86,7 @@ public:
 		for (const auto& mapObj : m_mapIdToComp) comps.push_back(&mapObj.second);
 		std::sort(comps.begin(), comps.end(), HasLowerRenderOrder());
 	}
-	int CreateComp(const Component& tmp, const bool& bPCB)	// Creates a copy of tmp and returns its compId
+	int CreateComp(const Component& tmp, const bool& bUsePCBshapes)	// Creates a copy of tmp and returns its compId
 	{
 		// Find the first unused compId.
 		int compId(0);
@@ -96,7 +96,7 @@ public:
 		// tmp is ***copied*** into the map, and the map component then has its compId set
 		Component& comp = m_mapIdToComp[compId] = tmp;
 		comp.SetId(compId);
-		if ( AllowCustomPCBshapes(comp.GetType()) ) comp.SetDefaultShapes(bPCB);
+		if ( AllowCustomPCBshapes(comp.GetType()) ) comp.SetDefaultShapes(bUsePCBshapes);
 		return compId;
 	}
 	void DestroyComp(Component& comp)
@@ -241,12 +241,12 @@ public:
 		auto iter = m_mapWireToShift.find( pWire );
 		return ( iter != m_mapWireToShift.end() ) ? iter->second : 0;
 	}
-	void CustomPCBshapes(const bool bPCB)
+	void CustomPCBshapes(const bool bUsePCBshapes)
 	{
 		for (auto& mapObj : m_mapIdToComp)
 		{
 			Component& comp = mapObj.second;
-			if ( AllowCustomPCBshapes(comp.GetType()) ) comp.SetDefaultShapes(bPCB);
+			if ( AllowCustomPCBshapes(comp.GetType()) ) comp.SetDefaultShapes(bUsePCBshapes);
 		}
 	}
 	// Merge interface functions
