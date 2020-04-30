@@ -229,6 +229,9 @@ static const char* szVEROROUTE_VERSION =
 			// New feature: Show minimum ground fill width to help avoid isolated ground "islands".
 			// New feature: Allow custom pad and hole sizes to be set on each part.
 //"1.89";	// Bug fix: Gerber export in V1.88 was writing unusable drill file, and not handling variable pad/hole widths correctly.
-  "1.90";	// Bug fix: While auto-routing, unpainting the board under a part would not always let it fall into place.
+//"1.90";	// Bug fix: While auto-routing, unpainting the board under a part would not always let it fall into place.
 			// Bug fix: Hole-usage was not handled properly for non-wires.
 			// Improvement: Increase max allowed hole size for parts from 40 mil to 50 mil.
+  "1.91";	// Bug fix: Allow 2-pin DIPs.
+			// Bug fix: Mouse click not always selecting most relevant shape in component editor mode.
+			// Improvement: Draw some parts (e.g. resistors/diodes/DIPs) differently in PCB mode when appropriate.
