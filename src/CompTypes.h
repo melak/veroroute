@@ -464,6 +464,7 @@ static bool AllowCustomPCBshapes(const COMP& eType)
 	{
 		case COMP::RESISTOR:
 		case COMP::INDUCTOR:
+		case COMP::DIODE:
 		case COMP::DIP:
 		case COMP::DIP_RECTIFIER:
 		case COMP::RELAY_DIP_4PIN:

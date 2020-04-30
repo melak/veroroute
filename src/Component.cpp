@@ -262,11 +262,24 @@ void Component::SetDefaultShapes(const bool& bUsePCBshapes)
 		}
 		case COMP::DIODE:
 		{
-			double w(0.40 + 0.5*(GetCols() - 1)), h(0.40 + 0.5*(GetRows()-1));
-			AddTwo( Shape(SHAPE::RECT,	true, true,	-w,  w, -h,  h) );
-			AddOne( Shape(SHAPE::LINE,	true, false, w - 0.05, w - 0.05,  -h, h) );
-			AddOne( Shape(SHAPE::LINE,	true, false, w - 0.75, w - 0.75, -h, h) );
-			AddOne( Shape(SHAPE::LINE,	true, false, w - 0.80, w - 0.80, -h, h) );
+			const bool bInternalPins = ( !bUsePCBshapes || GetCols() < 3 );	// true/false ==> outline has pins on the inside/outside
+			if ( bInternalPins )
+			{
+				double w(0.40 + 0.5*(GetCols() - 1)), h(0.40 + 0.5*(GetRows()-1));
+				AddTwo( Shape(SHAPE::RECT,	true, true,	-w,  w, -h,  h) );
+				AddOne( Shape(SHAPE::LINE,	true, false, w - 0.05, w - 0.05, -h, h) );
+				AddOne( Shape(SHAPE::LINE,	true, false, w - 0.75, w - 0.75, -h, h) );
+				AddOne( Shape(SHAPE::LINE,	true, false, w - 0.80, w - 0.80, -h, h) );
+			}
+			else
+			{
+				double w(-0.5 + 0.5*(GetCols() - 1)), h(0.40 + 0.5*(GetRows()-1));
+				AddTwo( Shape(SHAPE::RECT,	true, true,	-w,  w, -h,  h) );
+				AddOne( Shape(SHAPE::LINE,	true, false, w - 0.06, w - 0.06, -h, h) );
+				AddOne( Shape(SHAPE::LINE,	true, false, w - 0.12, w - 0.12, -h, h) );
+				AddOne( Shape(SHAPE::LINE,	true, false, w - 0.18, w - 0.18, -h, h) );
+				AddOne( Shape(SHAPE::LINE,	true, false, w - 0.24, w - 0.24, -h, h) );
+			}
 			break;
 		}
 		case COMP::STRIP_100:
