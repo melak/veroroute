@@ -89,14 +89,18 @@ public:
 		if ( GetType() != o.GetType() ) return (int)GetType() < (int)o.GetType();
 		// .. then by least pins
 		if ( GetNumPins() != o.GetNumPins() ) return GetNumPins() < o.GetNumPins();
+		// ... then by type string comparison
+		const int iCompareType = GetTypeStr().compare( o.GetTypeStr() );
+		if ( iCompareType != 0 ) return iCompareType < 0;
 		// ... then by value string comparison
-		const int i = GetValueStr().compare( o.GetValueStr() );
-		return i < 0;
+		const int iCompareVal = GetValueStr().compare( o.GetValueStr() );
+		return iCompareVal < 0;
 	}
 	bool operator==(const Template& o) const
 	{
 		return GetType()		== o.GetType()
 			&& GetNumPins()		== o.GetNumPins()
+			&& GetTypeStr()		== o.GetTypeStr()
 			&& GetValueStr()	== o.GetValueStr();
 	}
 };
