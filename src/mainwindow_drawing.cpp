@@ -874,7 +874,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					}
 				}
 
-				if ( colorId == BAD_COLORID && !bWire ) continue;	// Usually don't color places with no NodeID assigned unless they are wire ends
+				// Skip places with no NodeID assigned unless they are wire ends, or pins in Mono/PCB mode
+				if ( colorId == BAD_COLORID && !bWire && !(bMonoPCB && bPad) ) continue;
 
 				// Use GetPixmapRGB for pixmaps.  It can handle MY_GREY, MY_BLACK as special cases
 				const bool		bInvalidColor	=  colorId == BAD_COLORID || ( bMonoPCB && nodeId != GetCurrentNodeId() );

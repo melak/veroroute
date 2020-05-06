@@ -484,7 +484,7 @@ void MainWindow::New()
 	if ( GetIsModified() )
 	{
 		if ( QMessageBox::question(this, tr("Confirm New"),
-										 tr("Your circuit is not saved. You will lose it if you make a new one.  Continue?"),
+										 tr("Your circuit is not saved. You will lose changes if you make a new one.  Continue?"),
 										 QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::No ) return;
 	}
 	m_board.Clear();
@@ -499,7 +499,7 @@ void MainWindow::Open()
 	if ( GetIsModified() )
 	{
 		if ( QMessageBox::question(this, tr("Confirm Open"),
-										 tr("Your circuit is not saved. You will lose it if you open a new one.  Continue?"),
+										 tr("Your circuit is not saved. You will lose changes if you open a new one.  Continue?"),
 										 QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::No ) return;
 	}
 	QString fileName = QFileDialog::getOpenFileName(this, tr("Open file"), ""/*directory*/,	tr("VeroRoute (*.vrt);;All Files (*)"));
@@ -512,7 +512,7 @@ void MainWindow::OpenRecent()
 	if ( GetIsModified() )
 	{
 		if ( QMessageBox::question(this, tr("Confirm Open"),
-										 tr("Your circuit is not saved. You will lose it if you open a new one.  Continue?"),
+										 tr("Your circuit is not saved. You will lose changes if you open a new one.  Continue?"),
 										 QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::No ) return;
 	}
 
@@ -597,7 +597,7 @@ void MainWindow::ImportTango()
 	if ( GetIsModified() )
 	{
 		if ( QMessageBox::question(this, tr("Confirm Import"),
-									 tr("Your circuit is not saved. You will lose it if you Import a new one.  Continue?"),
+									 tr("Your circuit is not saved. You will lose changes if you Import a new one.  Continue?"),
 									 QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::No ) return;
 	}
 	QString fileName = QFileDialog::getOpenFileName(this, tr("Open file"), ""/*directory*/,	tr("Protel Netlist (*.net);;All Files (*)"));
@@ -623,10 +623,10 @@ void MainWindow::ImportOrcad()
 	if ( GetIsModified() )
 	{
 		if ( QMessageBox::question(this, tr("Confirm Import"),
-									 tr("Your circuit is not saved. You will lose it if you Import a new one.  Continue?"),
+									 tr("Your circuit is not saved. You will lose changes if you Import a new one.  Continue?"),
 									 QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::No ) return;
 	}
-	QString fileName = QFileDialog::getOpenFileName(this, tr("Open file"), ""/*directory*/,	tr("Orcad2 Netlist (*.net);;All Files (*)"));
+	QString fileName = QFileDialog::getOpenFileName(this, tr("Open file"), ""/*directory*/,	tr("OrcadPCB2 Netlist (*.net);;All Files (*)"));
 	if ( !fileName.isEmpty() )
 	{
 		ui->statusBar->showMessage( tr("Importing..."), 500 );
@@ -751,7 +751,7 @@ void MainWindow::Quit()
 	if ( GetIsModified() )
 	{
 		if ( QMessageBox::question(this, tr("Really Quit?"),
-										tr("Your circuit is not saved. You will lose it if you quit.  Continue?"),
+										tr("Your circuit is not saved. You will lose changes if you quit.  Continue?"),
 										QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::No ) return;
 	}
 	QApplication::quit();
@@ -1001,7 +1001,7 @@ void MainWindow::LoadFirstTutorial()
 	if ( GetIsModified() )
 	{
 		if ( QMessageBox::question(this, tr("Confirm Load Tutorials"),
-										 tr("Your circuit is not saved. You will lose it if you load the tutorials.  Continue?"),
+										 tr("Your circuit is not saved. You will lose changes if you load the tutorials.  Continue?"),
 										 QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::No ) return;
 	}
 	m_iTutorialNumber = 0;	LoadTutorial();
