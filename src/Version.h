@@ -235,4 +235,6 @@ static const char* szVEROROUTE_VERSION =
 //"1.91";	// Bug fix: Allow 2-pin DIPs.
 			// Bug fix: Mouse click not always selecting most relevant shape in component editor mode.
 			// Improvement: Draw some parts (e.g. resistors/diodes/DIPs) differently in PCB mode when appropriate.
-  "1.92";	// Bug fix: Delete selected template would sometimes remove wrong template.
+//"1.92";	// Bug fix: Delete selected template would sometimes remove wrong template.
+  "1.93";	// Make control dialog better handle large font.
+			// Draw pads for unassigned pins in Mono/PCB mode.
