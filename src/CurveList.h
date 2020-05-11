@@ -24,24 +24,26 @@
 class QPoint;
 class QPolygon;
 
+// Bits used to construct the GPEN enum
 const int	BIT_GKO(1),	 BIT_PAD(2), BIT_VIA(4), BIT_TRK(8),
 			BIT_SLK(16), BIT_GAP(32), BIT_MSK(64), BIT_HLE(128);
 
+// The GPEN enum defines "pen" types for writing to Gerber/Excellon files
 enum class GPEN
 {
 	NONE	= 0,
-	GKO		= BIT_GKO,
-	PAD		= BIT_PAD,
-	VIA		= BIT_VIA,
-	TRK		= BIT_TRK,
-	SLK		= BIT_SLK,
-	PAD_GAP	= BIT_PAD | BIT_GAP,
-	VIA_GAP	= BIT_VIA | BIT_GAP,
-	TRK_GAP	= BIT_TRK | BIT_GAP,
-	PAD_MSK	= BIT_PAD | BIT_MSK,
-	VIA_MSK	= BIT_VIA | BIT_MSK,
-	PAD_HLE	= BIT_PAD | BIT_HLE,
-	VIA_HLE	= BIT_VIA | BIT_HLE
+	GKO		= BIT_GKO,				// Used for board outline
+	PAD		= BIT_PAD,				// Used for pad
+	VIA		= BIT_VIA,				// Used for via
+	TRK		= BIT_TRK,				// Used for track
+	SLK		= BIT_SLK,				// Used for silkscreen
+	PAD_GAP	= BIT_PAD | BIT_GAP,	// Used for gap around a pad
+	VIA_GAP	= BIT_VIA | BIT_GAP,	// Used for gap around a via
+	TRK_GAP	= BIT_TRK | BIT_GAP,	// Used for gap around a track
+	PAD_MSK	= BIT_PAD | BIT_MSK,	// Used for solder mask at a pad
+	VIA_MSK	= BIT_VIA | BIT_MSK,	// Used for solder mask at a via
+	PAD_HLE	= BIT_PAD | BIT_HLE,	// Used for drill hole at a pad
+	VIA_HLE	= BIT_VIA | BIT_HLE		// Used for drill hole at a via
 };
 
 // A class describing a curve as a set of points, with functionality for combining curves.
@@ -67,7 +69,6 @@ public:
 	};
 	GPEN	m_ePen	= GPEN::NONE;
 	int		m_width	= 0;
-
 };
 
 class CurveList : public std::list<Curve*>

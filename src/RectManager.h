@@ -40,11 +40,11 @@ public:
 	}
 	bool operator==(const RectManager& o) const	// Compare persisted info
 	{
-		bool bOK = ( m_startRow	== o.m_startRow	)
-				&& ( m_startCol	== o.m_startCol	)
-				&& ( m_current	== o.m_current	)
-				&& ( m_bounding	== o.m_bounding	)
-				&& ( GetSize()	== o.GetSize()	);
+		bool bOK = m_startRow	== o.m_startRow
+				&& m_startCol	== o.m_startCol
+				&& m_current	== o.m_current
+				&& m_bounding	== o.m_bounding
+				&& GetSize()	== o.GetSize();
 		auto iter1 =   m_list.begin();
 		auto iter2 = o.m_list.begin();
 		while( iter1 != m_list.end() && bOK )

@@ -34,7 +34,7 @@
 const int NUM_NBRS = 9;	// (NBR_L to NBR_LB) + NBR_X
 
 // Indexes for the 8 neighbour elements in the same layer, starting on the left and going clockwise
-const int	NBR_L(0), NBR_LT(1), NBR_T(2), NBR_RT(3),	// Left,  Left-Top,     Top, Right-Top,
+const int	NBR_L(0), NBR_LT(1), NBR_T(2), NBR_RT(3),	// Left,  Left-Top,     Top,    Right-Top,
 			NBR_R(4), NBR_RB(5), NBR_B(6), NBR_LB(7);	// Right, Right-Bottom, Bottom, Left-Bottom
 const int	NBR_X(8);	// Index for the neighbour element in the layer above/below
 
@@ -48,8 +48,8 @@ static bool ReadCodeBit(const int& NBR, const int& iCode)	{ return ( iCode & (1<
 static void SetCodeBit(const int& NBR, int& iCode)			{ iCode |=  (1<<NBR); }
 static void ClearCodeBit(const int& NBR, int& iCode)		{ iCode &= ~(1<<NBR); }
 static void ToggleCodeBit(const int& NBR, int& iCode)		{ iCode ^=  (1<<NBR); }
-const int CODEBITS_LYR = 0xFF;
-const int CODEBITS_ALL = 0x1FF;
+const int CODEBITS_LYR = 0xFF;	// All neighbours in same layer
+const int CODEBITS_ALL = 0x1FF;	// All neighbours in same layer + the neighbour in the layer above/below
 
 // Flag is a bitfield describing the status of the nodeId at point.
 // USERSET points will not have their nodeId modified during the auto-routing.

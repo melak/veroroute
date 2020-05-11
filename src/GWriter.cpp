@@ -149,7 +149,6 @@ void GStream::MakeDrills()
 		m_os << codeStr << "C" << MilToInch(o.m_iWidth, bLZ);	EndLine();
 	}
 }
-
 void GStream::MakeApertures()	// Make "pens" for current stream
 {
 	assert( m_os.is_open() && m_eType != GFILE::DRL);
