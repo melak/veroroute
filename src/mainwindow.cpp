@@ -99,7 +99,7 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	m_pinDlg		= new PinDialog(this);
 
 	m_templatesDlg->move(940,50);
-	move(320,50);
+	move(50,50);
 	m_infoDlg->move(940,50);
 
 	// Do multipart status bar
