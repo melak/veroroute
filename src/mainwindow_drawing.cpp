@@ -981,7 +981,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						PaintBlob(board, painter, color, pCentre, iPerimeterCode);							// Draw track blob
 						if ( bVia ) PaintVia(board, painter, color, pCentre);								// Draw via same color as track
 						if ( bPad ) PaintPad(board, painter, color, pCentre, iPadWidthMIL, iHoleWidthMIL);	// Draw pad same color as track
-						if ( bPad && nodeId == groundNodeId )												// Draw therml relief tags
+						if ( bPad && nodeId == groundNodeId && nodeId != BAD_NODEID )						// Draw thermal relief tags
 						{
 							int iCode(iPerimeterCode);		// Take a copy of the perimeter code
 							for (int iDiag = 0, iDiagMax = ( bDiagsOK ) ? 2 : 1; iDiag < iDiagMax; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
