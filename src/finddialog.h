@@ -35,6 +35,7 @@ public:
 	void UpdateControls();
 public slots:
 	void ToggleName(bool b);
+	void ToggleExact(bool b);
 	void TextChanged(const QString& str);
 protected:
 	void closeEvent(QCloseEvent* event);
@@ -43,6 +44,7 @@ protected:
 private:
 	Ui_FindDialog*	ui;
 	MainWindow*		m_pMainWindow;
-	bool			m_bName = true;	// true/false ==> name/value
+	bool			m_bName = true;		// true/false ==> name/value
+	bool			m_bExact = false;	// true/false ==> exact match/substring match
 	QString			m_str;
 };

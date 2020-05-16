@@ -310,7 +310,7 @@ public slots:
 	void SetAntialiasOn(bool b);
 	void SetAntialiasHigh(bool b);
 	// Find parts by name/value
-	void Find(bool bUseName, const QString& str);
+	void Find(bool bUseName, bool bExact, const QString& str);
 	// Wire options
 	void SetWireShare(bool b);
 	void SetWireCross(bool b);

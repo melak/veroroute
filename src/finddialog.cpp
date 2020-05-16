@@ -29,6 +29,7 @@ FindDialog::FindDialog(MainWindow* parent)
 	ui->setupUi(this);
 	ui->radioName->setChecked(true);
 	QObject::connect(ui->radioName,	SIGNAL(toggled(bool)),					this, SLOT(ToggleName(bool)));
+	QObject::connect(ui->checkExact,SIGNAL(toggled(bool)),					this, SLOT(ToggleExact(bool)));
 	QObject::connect(ui->nameEdit,	SIGNAL(textChanged(const QString&)),	this, SLOT(TextChanged(const QString&)));
 }
 
@@ -46,13 +47,19 @@ void FindDialog::UpdateControls()
 void FindDialog::ToggleName(bool b)
 {
 	m_bName = b;
-	m_pMainWindow->Find(m_bName, m_str);
+	m_pMainWindow->Find(m_bName, m_bExact, m_str);
+}
+
+void FindDialog::ToggleExact(bool b)
+{
+	m_bExact = b;
+	m_pMainWindow->Find(m_bName, m_bExact, m_str);
 }
 
 void FindDialog::TextChanged(const QString& str)
 {
 	m_str = str;
-	m_pMainWindow->Find(m_bName, m_str);
+	m_pMainWindow->Find(m_bName, m_bExact, m_str);
 }
 
 void FindDialog::closeEvent(QCloseEvent* event)

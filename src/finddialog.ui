@@ -6,19 +6,19 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>320</width>
+    <width>360</width>
     <height>120</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>320</width>
+    <width>360</width>
     <height>100</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>320</width>
+    <width>360</width>
     <height>120</height>
    </size>
   </property>
@@ -30,7 +30,7 @@
     <rect>
      <x>10</x>
      <y>9</y>
-     <width>301</width>
+     <width>341</width>
      <height>101</height>
     </rect>
    </property>
@@ -53,7 +53,7 @@
    <widget class="QRadioButton" name="radioValue">
     <property name="geometry">
      <rect>
-      <x>120</x>
+      <x>110</x>
       <y>30</y>
       <width>91</width>
       <height>22</height>
@@ -68,7 +68,7 @@
      <rect>
       <x>10</x>
       <y>70</y>
-      <width>281</width>
+      <width>321</width>
       <height>24</height>
      </rect>
     </property>
@@ -77,6 +77,22 @@
     </property>
     <property name="toolTip">
      <string>Search for parts containing this text</string>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="checkExact">
+    <property name="geometry">
+     <rect>
+      <x>200</x>
+      <y>30</y>
+      <width>131</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="toolTip">
+     <string>Search for exact match instead of substring</string>
+    </property>
+    <property name="text">
+     <string> Exact Match</string>
     </property>
    </widget>
   </widget>

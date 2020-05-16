@@ -1448,9 +1448,9 @@ void MainWindow::SetWireShare(bool b)		{ if ( m_board.SetWireShare(b) ) { Update
 void MainWindow::SetWireCross(bool b)		{ if ( m_board.SetWireCross(b) ) { UpdateHistory("Wire crossing on/off");		RepaintSkipRouting(); } }
 
 // Find dialog
-void MainWindow::Find(const bool bUseName, const QString& str)
+void MainWindow::Find(const bool bUseName, const bool bExact, const QString& str)
 {
-	m_board.GetCompMgr().Find(bUseName, str.toStdString());	RepaintSkipRouting();
+	m_board.GetCompMgr().Find(bUseName, bExact, str.toStdString());	RepaintSkipRouting();
 }
 
 // Text box dialog

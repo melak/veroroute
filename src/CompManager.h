@@ -251,7 +251,7 @@ public:
 			if ( AllowCustomPCBshapes(comp.GetType()) ) comp.SetDefaultShapes(bUsePCBshapes);
 		}
 	}
-	void Find(const bool bUseName, const std::string& str)
+	void Find(const bool bUseName, const bool bExact, const std::string& str)
 	{
 		m_foundId.clear();
 		if ( str.empty() ) return;
@@ -259,8 +259,9 @@ public:
 		{
 			Component& comp = mapObj.second;
 			if ( comp.GetType() == COMP::WIRE || comp.GetType() == COMP::MARK ) continue;
-			const bool bFound = bUseName ? ( comp.GetNameStr().find(str)  != std::string::npos )
-										 : ( comp.GetValueStr().find(str) != std::string::npos );
+			const std::string& compStr = bUseName ? comp.GetNameStr() : comp.GetValueStr();
+			const bool bFound = bExact ? ( compStr == str )
+									   : ( compStr.find(str) != std::string::npos );
 			if ( bFound ) m_foundId.insert( mapObj.first );
 		}
 	}
