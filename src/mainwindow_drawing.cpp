@@ -1164,9 +1164,11 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			const char&		 compDirection	= comp.GetDirection();
 			const bool		 bMark			= compType == COMP::MARK;
 			const bool		 bWire			= compType == COMP::WIRE;
+			const bool		 bPlaced		= comp.GetIsPlaced();
 			if ( bPCB && bMark )	continue;	// Don't show markers in PCB mode
-			if ( m_bWriteGerber && !comp.GetIsPlaced() ) continue;	// Don't write floating components to Gerber
+			if ( m_bWriteGerber && !bPlaced ) continue;	// Don't write floating components to Gerber
 			if ( bWiresAsTracks && bWire && compMgr.GetWireShift(&comp) == 0 ) continue;	//TODO Probably not a good enough check since wires may cross yet have no shift
+			const bool 		 bFound			= compMgr.GetFound( comp.GetId() );
 			const bool		 bPinLabels		= !bMonoPCB && (comp.GetPinFlags() & PIN_LABELS) > 0 && board.GetShowPinLabels();
 			const bool		 bRectPins		= !bMonoPCB && (comp.GetPinFlags() & PIN_RECT) > 0;
 			const bool		 bHighlightComp	= board.GetGroupMgr().GetIsUserComp( comp.GetId() );
@@ -1180,7 +1182,10 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			if ( compMode != COMPSMODE::OFF && !comp.GetShapes().empty() )
 			{
 				// Set pen width.  Selected component shown thicker than normal components
-				if ( comp.GetIsPlaced() )
+
+				if ( bFound )
+					m_findPen.setWidth(4);// Make found components stand out
+				else if ( bPlaced )
 				{
 					if ( bPCB )	// Use floating point pen width to better match Gerber output
 						penPlaced.setWidthF( bHighlightComp ? ( board.GetSilkWidth() * 1.5 )
@@ -1192,14 +1197,14 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				else
 					m_redPen.setWidth(4);	// Make floating components stand out in red
 
-				QPen& linePen = ( comp.GetIsPlaced() ) ? penPlaced : m_redPen;
+				QPen& linePen = bFound ? m_findPen : bPlaced ? penPlaced : m_redPen;
 				painter.setPen(linePen);
 				painter.setBrush(Qt::NoBrush);
 
 				GetXY(board, comp, X, Y);	// Get footprint centre
 
 				// Implement wire shift
-				if ( bWire && comp.GetIsPlaced() )
+				if ( bWire && bPlaced )
 				{
 					if ( comp.GetCompRows() == 1 )	// Horizontal
 						Y += compMgr.GetWireShift( &comp ) * 0.1 * W;
@@ -1299,7 +1304,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			// End draw component fill + outline -------------------------------------------------
 
 			// Begin draw component pins ---------------------------------------------------------
-			if ( !m_bWriteGerber && ( compMode != COMPSMODE::OFF || ( bMonoPCB && comp.GetIsPlaced() ) ) )
+			if ( !m_bWriteGerber && ( compMode != COMPSMODE::OFF || ( bMonoPCB && bPlaced ) ) )
 			{
 				if ( bWire && comp.GetNodeId(0) == BAD_NODEID )	continue;	// Skip blank wires
 
@@ -1309,7 +1314,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				pinsFont.setPointSize( m_board.GetTextSizePins() );
 				painter.setFont(pinsFont);
 
-				if ( bMonoPCB && comp.GetIsPlaced() )
+				if ( bMonoPCB && bPlaced )
 				{
 					m_backgroundPen.setWidth( board.GetPixelsFromMIL(iHoleWidthMIL) );
 					painter.setPen(m_backgroundPen);
@@ -1317,9 +1322,10 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				else
 				{
 					penPlaced.setWidth(0);		// For pin labels
+					m_findPen.setWidth(0);		// For pin labels and pins
 					m_redPen.setWidth(0);		// For pin labels and pins
 					m_darkGreyPen.setWidth(0);	// For pins
-					painter.setPen(comp.GetIsPlaced() ? m_darkGreyPen : m_redPen);
+					painter.setPen(bFound ? m_findPen : bPlaced ? m_darkGreyPen : m_redPen);
 				}
 				painter.setBrush(Qt::NoBrush);
 
@@ -1343,7 +1349,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						const size_t iPinIndex = comp.GetCompElement(jj,ii)->GetPinIndex();
 						if ( iPinIndex == BAD_PININDEX ) continue;
 
-						if ( bColor && !comp.GetIsPlaced() )	// Color pins of floating components (if in Color mode)
+						if ( bColor && !bPlaced )	// Color pins of floating components (if in Color mode)
 						{
 							const int&	nodeId	= comp.GetNodeId(iPinIndex);
 							int			colorId	= colorMgr.GetColorId(nodeId);
@@ -1360,7 +1366,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 							painter.setBrush( bMonoPCB ? Qt::NoBrush : m_varBrush);	// No pin color fill in Mono/PCB mode
 						}
 
-						const int iPinSizeMIL = ( !bColor || comp.GetIsPlaced() ) ? iHoleWidthMIL : std::min(3*iHoleWidthMIL/2, iPadWidthMIL);
+						const int iPinSizeMIL = ( !bColor || bPlaced ) ? iHoleWidthMIL : std::min(3*iHoleWidthMIL/2, iPadWidthMIL);
 						GetLRTB(board, iPinSizeMIL, j, i, L, R, T, B);
 
 						// Stop pins vanishing if zoomed too far out
@@ -1396,7 +1402,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 							iFlag |= ( Qt::TextDontClip | Qt::AlignVCenter );
 
 							painter.scale(dTextScale, dTextScale);
-							painter.setPen( comp.GetIsPlaced() ? penPlaced : m_redPen);
+							painter.setPen(bFound ? m_findPen : bPlaced ? penPlaced : m_redPen);
 							painter.drawText(0,0,0,0, iFlag, comp.GetPinLabel(iPinIndex).c_str());
 							painter.restore();
 						}
@@ -1414,7 +1420,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						}
 						else	// A regular pin is drawn as a circle
 						{
-							if ( bMonoPCB && comp.GetIsPlaced() )
+							if ( bMonoPCB && bPlaced )
 							{
 								GetLRTB(board, 100, j, i, L, R, T, B);	// 100% size square
 								painter.drawPoint((L+R)/2, (T+B)/2);
@@ -1448,6 +1454,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				// Use floating point pen width to better match Gerber output.
 				// Scale the pen width down to compensate for painter.scale() scaling things up in the loop below.
 				const double dPenWidth = ( bPCB ) ? board.GetSilkWidth() / dCopyTextScale : 0;
+				m_findPen.setWidthF(dPenWidth);	// Use colored text for found components
 				m_redPen.setWidthF(dPenWidth);	// Use red text for floating components
 				penPlaced.setWidthF(dPenWidth);	// Use this for placed components
 
@@ -1467,7 +1474,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 										   ( compMode == COMPSMODE::VALUE ) ? comp.GetValueStr() : "";
 
 				painter.scale(dCopyTextScale, dCopyTextScale);
-				painter.setPen( comp.GetIsPlaced() ? penPlaced : m_redPen );
+				painter.setPen(bFound ? m_findPen : bPlaced ? penPlaced : m_redPen);
 				painter.drawText(0,0,0,0, Qt::AlignCenter | Qt::TextDontClip, myStr.c_str(), bPCB);
 				painter.restore();
 			}

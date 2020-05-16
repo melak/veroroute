@@ -94,7 +94,6 @@ enum class COMP {	INVALID					=   -1,
 					RELAY_DIP_4PIN			= 4050,
 					RELAY_DIP_8PIN			= 4052,
 					FUSE_HOLDER				= 5000,
-
 					CUSTOM					= 100000,	// A user-defined component
 					TRACKS					= 1000000	// A track pattern
 				};

@@ -48,6 +48,7 @@ class CompDialog;
 class TextDialog;
 class BomDialog;
 class PinDialog;
+class FindDialog;
 
 #define MAX_RECENT_FILES 10
 
@@ -63,6 +64,7 @@ class MainWindow : public QMainWindow
 	friend class TextDialog;
 	friend class BomDialog;
 	friend class PinDialog;
+	friend class FindDialog;
 
 	Q_OBJECT
 
@@ -221,6 +223,7 @@ public slots:
 	void ShowTextDialog();
 	void ShowBomDialog();
 	void ShowPinDialog();
+	void ShowFindDialog();
 	void ShowAbout();
 	void ShowSupport();
 	// Layers menu items
@@ -297,8 +300,7 @@ public slots:
 	void SetEdgeWidth(int i);
 	void SetViaPadWidth(int i);
 	void SetViaHoleWidth(int i);
-
-	// Rendering
+	// Rendering options
 	void SetTextSizeComp(int i);
 	void SetTextSizePins(int i);
 	void SetTargetRows(int i);
@@ -307,8 +309,9 @@ public slots:
 	void SetAntialiasOff(bool b);
 	void SetAntialiasOn(bool b);
 	void SetAntialiasHigh(bool b);
-
-	// Wire Options
+	// Find parts by name/value
+	void Find(bool bUseName, const QString& str);
+	// Wire options
 	void SetWireShare(bool b);
 	void SetWireCross(bool b);
 	// For text box dialog
@@ -459,6 +462,7 @@ private:
 	QPen	m_blackPen;
 	QPen	m_whitePen;
 	QPen	m_redPen;
+	QPen	m_findPen;
 	QPen	m_lightBluePen;
 	QPen	m_varPen;
 	QPen	m_dotPen;
@@ -491,6 +495,7 @@ private:
 	BomDialog*				m_bomDlg;
 	TemplatesDialog*		m_templatesDlg;
 	PinDialog*				m_pinDlg;
+	FindDialog*				m_findDlg;
 
 	Board					m_board;			// *** The main object ***
 	HistoryManager			m_historyMgr;		// Class to manage undo/redo

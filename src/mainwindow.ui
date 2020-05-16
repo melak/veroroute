@@ -87,6 +87,8 @@
     <addaction name="actionUndo"/>
     <addaction name="actionRedo"/>
     <addaction name="separator"/>
+    <addaction name="actionFind"/>
+    <addaction name="separator"/>
     <addaction name="actionCopy"/>
     <addaction name="separator"/>
     <addaction name="actionGroup"/>
@@ -578,7 +580,7 @@
   </action>
   <action name="actionCopy">
    <property name="text">
-    <string>Copy+Paste Selected Part(s) / Text</string>
+    <string>Copy+Paste selected Part(s) / Text Box</string>
    </property>
    <property name="shortcut">
     <string>V</string>
@@ -589,7 +591,7 @@
   </action>
   <action name="actionGroup">
    <property name="text">
-    <string>Group Selected Parts</string>
+    <string>Group selected Parts</string>
    </property>
    <property name="shortcut">
     <string>G</string>
@@ -600,7 +602,7 @@
   </action>
   <action name="actionUngroup">
    <property name="text">
-    <string>Ungroup Selected Parts</string>
+    <string>Ungroup selected Parts</string>
    </property>
    <property name="shortcut">
     <string>U</string>
@@ -622,7 +624,7 @@
   </action>
   <action name="actionDelete">
    <property name="text">
-    <string>Delete Selected Part(s) / Text</string>
+    <string>Delete selected Part(s) / Text Box</string>
    </property>
    <property name="shortcut">
     <string>Backspace</string>
@@ -1204,6 +1206,17 @@
   <action name="actionToggleVias">
    <property name="text">
     <string>Toggle Vias</string>
+   </property>
+  </action>
+  <action name="actionFind">
+   <property name="text">
+    <string>Find Parts in Layout</string>
+   </property>
+   <property name="statusTip">
+    <string>Search for parts by name or value</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+F</string>
    </property>
   </action>
  </widget>

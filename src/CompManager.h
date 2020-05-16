@@ -34,6 +34,7 @@ public:
 	{
 		m_mapIdToComp.clear();
 		m_mapWireToShift.clear();
+		m_foundId.clear();
 		ClearTrax();
 	}
 	CompManager& operator=(const CompManager& o)
@@ -42,6 +43,7 @@ public:
 		for (const auto& mapObj : o.m_mapIdToComp) m_mapIdToComp[ mapObj.second.GetId() ] = mapObj.second;
 		m_trax = o.m_trax;
 		// Don't copy m_mapWireToShift (it's just a helper)
+		// Don't copy m_foundId        (it's just a helper)
 		return *this;
 	}
 	bool operator==(const CompManager& o) const	// Compare persisted info
@@ -249,6 +251,24 @@ public:
 			if ( AllowCustomPCBshapes(comp.GetType()) ) comp.SetDefaultShapes(bUsePCBshapes);
 		}
 	}
+	void Find(const bool bUseName, const std::string& str)
+	{
+		m_foundId.clear();
+		if ( str.empty() ) return;
+		for (auto& mapObj : m_mapIdToComp)
+		{
+			Component& comp = mapObj.second;
+			if ( comp.GetType() == COMP::WIRE || comp.GetType() == COMP::MARK ) continue;
+			const bool bFound = bUseName ? ( comp.GetNameStr().find(str)  != std::string::npos )
+										 : ( comp.GetValueStr().find(str) != std::string::npos );
+			if ( bFound ) m_foundId.insert( mapObj.first );
+		}
+	}
+	bool GetFound(const int& compId) const
+	{
+		return m_foundId.find(compId) != m_foundId.end();
+	}
+
 	// Merge interface functions
 	virtual void UpdateMergeOffsets(MergeOffsets& o) override
 	{
@@ -364,4 +384,5 @@ private:
 	Component									m_trax;				// The "trax" component
 	// Helpers. Don't persist.
 	std::unordered_map<const Component*, int>	m_mapWireToShift;	// For stacking wires
+	std::set<int>								m_foundId;			// Set of compId's produced by Find()
 };

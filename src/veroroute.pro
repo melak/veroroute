@@ -28,6 +28,7 @@ SOURCES += main.cpp\
     templatesdialog.cpp \
     pindialog.cpp \
     textdialog.cpp \
+    finddialog.cpp \
     wiredialog.cpp \
     compdialog.cpp \
     Board_routing.cpp \
@@ -51,6 +52,7 @@ HEADERS  += mainwindow.h \
     templatesdialog.h \
     pindialog.h \
     textdialog.h \
+    finddialog.h \
     wiredialog.h \
     myscrollarea.h \
     Board.h \
@@ -102,6 +104,7 @@ FORMS    += mainwindow.ui \
     templatesdialog.ui \
     pindialog.ui \
     textdialog.ui \
+    finddialog.ui \
     wiredialog.ui
     
 

@@ -30,6 +30,7 @@
 #include "bomdialog.h"
 #include "templatesdialog.h"
 #include "pindialog.h"
+#include "finddialog.h"
 
 MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorialsPathStr, QWidget* parent)
 : QMainWindow(parent)
@@ -97,6 +98,7 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	m_bomDlg		= new BomDialog(this);
 	m_templatesDlg	= new TemplatesDialog(this);
 	m_pinDlg		= new PinDialog(this);
+	m_findDlg		= new FindDialog(this);
 
 	m_templatesDlg->move(940,50);
 	move(50,50);
@@ -113,6 +115,7 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	m_blackPen			= QPen(Qt::black, 0,					Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 	m_whitePen			= QPen(Qt::white, 0,					Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 	m_redPen			= QPen(Qt::red, 0,						Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+	m_findPen			= QPen(QColor(255,128,0,255), 0,		Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 	m_lightBluePen		= QPen(QColor(128, 128, 255, 255), 0,	Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 	m_varPen			= QPen(Qt::black, 0,					Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 	m_dotPen			= QPen(QColor(96,96,96,255), 0,			Qt::DotLine,   Qt::RoundCap, Qt::RoundJoin);
@@ -153,6 +156,7 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	QObject::connect(ui->actionSelectArea,				SIGNAL(triggered()), this, SLOT(ToggleSelectArea()));
 	QObject::connect(ui->actionUndo,					SIGNAL(triggered()), this, SLOT(Undo()));
 	QObject::connect(ui->actionRedo,					SIGNAL(triggered()), this, SLOT(Redo()));
+	QObject::connect(ui->actionFind,					SIGNAL(triggered()), this, SLOT(ShowFindDialog()));
 	QObject::connect(ui->actionCopy,					SIGNAL(triggered()), this, SLOT(Copy()));
 	QObject::connect(ui->actionGroup,					SIGNAL(triggered()), this, SLOT(Group()));
 	QObject::connect(ui->actionUngroup,					SIGNAL(triggered()), this, SLOT(Ungroup()));
@@ -247,6 +251,7 @@ MainWindow::~MainWindow()
 	delete m_infoDlg;
 	delete m_bomDlg;
 	delete m_pinDlg;
+	delete m_findDlg;
 	delete m_labelStatus;
 	delete m_label;
 	delete m_scrollArea;
@@ -349,6 +354,8 @@ void MainWindow::ResetView(bool bTutorial)
 		bOK = ( pC->GetNodeId() == m_board.GetCurrentNodeId() );
 		if ( bOK ) { m_gridRow = j;	m_gridCol = i; }
 	}
+
+	m_findDlg->hide();
 
 	m_infoDlg->Update();
 	m_infoDlg->SetReadOnly(bTutorial);
@@ -931,11 +938,12 @@ void MainWindow::ShowRenderingDialog()	{ ShowDlg(m_renderingDlg); }
 void MainWindow::ShowWireDialog()		{ ShowDlg(m_wireDlg); }
 void MainWindow::ShowHotkeysDialog()	{ ShowDlg(m_hotkeysDlg); }
 void MainWindow::ShowInfoDialog()		{ ShowDlg(m_infoDlg); }
-void MainWindow::ShowCompDialog()		{ m_dockControlDlg->hide(); m_pinDlg->hide();	ShowDlg(m_dockCompDlg); }
+void MainWindow::ShowCompDialog()		{ m_dockControlDlg->hide(); m_pinDlg->hide(); m_findDlg->hide(); ShowDlg(m_dockCompDlg); }
 void MainWindow::ShowTextDialog()		{ ShowDlg(m_textDlg); }
 void MainWindow::ShowBomDialog()		{ UpdateBOM();				ShowDlg(m_bomDlg); }
 void MainWindow::ShowTemplatesDialog()	{ UpdateTemplatesDialog();	ShowDlg(m_templatesDlg); }
 void MainWindow::ShowPinDialog()		{ m_pinDlg->Update();		ShowDlg(m_pinDlg); }
+void MainWindow::ShowFindDialog()		{ ShowDlg(m_findDlg); }
 
 // Layers menu items
 void MainWindow::AddLayer()
@@ -1439,6 +1447,12 @@ void MainWindow::SetAntialiasHigh(bool b)	{ if ( b && m_board.SetRenderQuality(2
 void MainWindow::SetWireShare(bool b)		{ if ( m_board.SetWireShare(b) ) { UpdateHistory("Wire hole-sharing on/off");	RepaintSkipRouting(); } }
 void MainWindow::SetWireCross(bool b)		{ if ( m_board.SetWireCross(b) ) { UpdateHistory("Wire crossing on/off");		RepaintSkipRouting(); } }
 
+// Find dialog
+void MainWindow::Find(const bool bUseName, const QString& str)
+{
+	m_board.GetCompMgr().Find(bUseName, str.toStdString());	RepaintSkipRouting();
+}
+
 // Text box dialog
 void MainWindow::SizeChanged(int i)			{ if ( GetCurrentTextId() != BAD_TEXTID && GetCurrentTextRect().SetSize(i) )												{ UpdateTextDialog(); RepaintSkipRouting(); } }
 void MainWindow::ToggleBold()				{ if ( GetCurrentTextId() != BAD_TEXTID && GetCurrentTextRect().SetStyle(GetCurrentTextRect().GetStyle() ^ TEXT_BOLD     ) ){ UpdateTextDialog(); RepaintSkipRouting(); } }
@@ -1679,21 +1693,21 @@ void MainWindow::UpdateControls()
 
 	ui->actionCopy->setEnabled( bTextOK || bCompOK );
 	if ( bTextOK )	// Text Box takes precedence over comps
-		ui->actionCopy->setText("Copy+Paste Selected Text Box");
+		ui->actionCopy->setText("Copy+Paste selected Text Box");
 	else if ( bCompOK )
-		ui->actionCopy->setText("Copy+Paste Selected Part(s)");
+		ui->actionCopy->setText("Copy+Paste selected Part(s)");
 	else
-		ui->actionCopy->setText("Copy+Paste Selected Part(s) / Text Box");
+		ui->actionCopy->setText("Copy+Paste selected Part(s) / Text Box");
 	ui->actionGroup->setEnabled( bCompOK && groupMgr.CanGroup() );
 	ui->actionUngroup->setEnabled( bCompOK && groupMgr.CanUnGroup() );
 	ui->actionSelectAll->setEnabled( bCompActionsOK && !compMgr.GetMapIdToComp().empty() );
 	ui->actionDelete->setEnabled( bTextOK || bCompOK );
 	if ( bTextOK )	// Text Box takes precedence over comps
-		ui->actionDelete->setText("Delete Selected Text Box");
+		ui->actionDelete->setText("Delete selected Text Box");
 	else if ( bCompOK )
-		ui->actionDelete->setText("Delete Selected Part(s)");
+		ui->actionDelete->setText("Delete selected Part(s)");
 	else
-		ui->actionDelete->setText("Delete Selected Part(s) / Text Box");
+		ui->actionDelete->setText("Delete selected Part(s) / Text Box");
 
 	ui->actionCrop->setEnabled( !bCompEdit );
 	ui->actionTextBox->setEnabled( !bCompEdit && !bPCB && m_board.GetShowText() );
@@ -1752,6 +1766,7 @@ void MainWindow::UpdateControls()
 	m_wireDlg->UpdateControls();
 	m_controlDlg->UpdateCompControls();
 	m_controlDlg->UpdateControls();
+	m_findDlg->UpdateControls();
 
 	UpdateUndoRedoControls();
 }
