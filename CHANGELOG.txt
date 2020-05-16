@@ -240,3 +240,6 @@ V1.91  Bug fix: Allow 2-pin DIPs.
 V1.92  Bug fix: Delete selected template would sometimes remove wrong template.
 V1.93  Make control dialog better handle large font.
        Draw pads for unassigned pins in Mono/PCB mode.
+V1.94  Bug fix: When ground-filling with no specified nodeId, do not draw thermal relief tags to unassigned pins.
+       New feature: Find parts in layout by Name or Value.
+       Improvement: Made Rendering Options dialog better handle 11pt font.

@@ -236,5 +236,8 @@ static const char* szVEROROUTE_VERSION =
 			// Bug fix: Mouse click not always selecting most relevant shape in component editor mode.
 			// Improvement: Draw some parts (e.g. resistors/diodes/DIPs) differently in PCB mode when appropriate.
 //"1.92";	// Bug fix: Delete selected template would sometimes remove wrong template.
-  "1.93";	// Make control dialog better handle large font.
-			// Draw pads for unassigned pins in Mono/PCB mode.
+//"1.93";	// Make control dialog better handle large font.
+//			// Draw pads for unassigned pins in Mono/PCB mode.
+  "1.94";	// Bug fix: When ground-filling with no specified nodeId, do not draw thermal relief tags to unassigned pins.
+			// New feature: Find parts in layout by Name or Value.
+			// Improvement: Made Rendering Options dialog better handle 11pt font.
