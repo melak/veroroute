@@ -23,6 +23,8 @@
 
 void FootPrint::BuildDefault(const COMP& type)
 {
+	assert(type != COMP::INVALID);
+
 	// This method is for building a regular component (not a "tracks" component, or "custom" component)
 	SetType(type);
 

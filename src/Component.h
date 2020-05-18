@@ -36,6 +36,7 @@ public:
 	void Clear()
 	{
 		FootPrint::DeAllocate();
+		SetType(COMP::INVALID);
 		m_id		= 0;
 		m_nameStr	= m_valueStr = m_prefixStr = m_typeStr = m_importStr = "";
 		m_lyr = m_row = m_col = m_iLabelOffsetRow = m_iLabelOffsetCol = 0;

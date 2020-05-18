@@ -630,7 +630,7 @@ bool Board::TakeOff(Component& comp)
 					pW->GetSlotInfo(iSlot, iPinIndex, tmpCompId);
 					if ( iPinIndex == BAD_PININDEX ) continue;
 					assert( tmpCompId != BAD_COMPID );
-					Component& comp = m_compMgr.GetComponentById( tmpCompId );
+					const Component& comp = m_compMgr.GetComponentById( tmpCompId );
 					assert( comp.GetType() == COMP::WIRE );
 					origId0 = comp.GetOrigId(0, iPinIndex);
 					origId1 = comp.GetOrigId(1, iPinIndex);

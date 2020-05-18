@@ -90,6 +90,8 @@ public:
 	}
 	int CreateComp(const Component& tmp, const bool& bUsePCBshapes)	// Creates a copy of tmp and returns its compId
 	{
+		assert(tmp.GetType() != COMP::INVALID);
+		assert(tmp.GetType() != COMP::TRACKS);
 		// Find the first unused compId.
 		int compId(0);
 		while ( GetComponentExists(compId) && compId != INT_MAX ) compId++;
@@ -103,6 +105,9 @@ public:
 	}
 	void DestroyComp(Component& comp)
 	{
+		const auto iterF = m_foundId.find(comp.GetId());
+		if ( iterF != m_foundId.end() )
+			m_foundId.erase(iterF);
 		const auto iter = m_mapIdToComp.find(comp.GetId());
 		if ( iter != m_mapIdToComp.end() )
 			m_mapIdToComp.erase(iter);

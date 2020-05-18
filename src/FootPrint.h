@@ -218,6 +218,7 @@ public:
 		int type(0);
 		inStream.Load(type);
 		m_type = static_cast<COMP> (type);
+		assert(m_type != COMP::INVALID);
 		if ( inStream.GetVersion() < VRT_VERSION_26 )
 			SetupOccupancies();
 	}

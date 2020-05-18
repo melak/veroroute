@@ -864,8 +864,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				int iPadWidthMIL(0), iHoleWidthMIL(0);	// 0 ==> Not a custom value
 				if ( bPad && !bWire )
 				{
-					const int	compId	= pC->GetCompId(); assert(compId != BAD_COMPID);
-					Component&	comp	= compMgr.GetComponentById(compId);
+					const int		 compId	= pC->GetCompId(); assert(compId != BAD_COMPID);
+					const Component& comp	= compMgr.GetComponentById(compId);
 					bCustom = comp.GetCustomPads();
 					if ( bCustom )
 					{

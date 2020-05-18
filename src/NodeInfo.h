@@ -97,7 +97,7 @@ public:
 		bool bHavePins(false);	// Remains false if no component pins have the nodeId
 		for (size_t i = 0, iSize = GetNumComps(); i < iSize; i++)	// Loop all comps with the nodeId
 		{
-			Component& comp = compMgr.GetComponentById( GetCompId(i) );
+			const Component& comp = compMgr.GetComponentById( GetCompId(i) );
 			if ( bIgnoreFloating && !comp.GetIsPlaced() ) continue;	// Skip floating components if needed
 
 			// Loop footprint and find the relevant pin locations

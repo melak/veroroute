@@ -142,7 +142,7 @@ double Board::GetMIN_SEPARATION()	// Minimum separation (in mil) between a pad o
 		int iA(0);
 		if ( bPadA )
 		{
-			Component& comp = m_compMgr.GetComponentById( pA->GetCompId() );
+			const Component& comp = m_compMgr.GetComponentById( pA->GetCompId() );
 			iA = comp.GetCustomPads() ? comp.GetPadWidth() : GetPAD_MIL();
 		}
 		else if ( bViaA )	iA = GetVIAPAD_MIL();
@@ -168,7 +168,7 @@ double Board::GetMIN_SEPARATION()	// Minimum separation (in mil) between a pad o
 				int iB(0);
 				if ( bPadB )
 				{
-					Component& comp = m_compMgr.GetComponentById( pB->GetCompId() );
+					const Component& comp = m_compMgr.GetComponentById( pB->GetCompId() );
 					iB = comp.GetCustomPads() ? comp.GetPadWidth() : GetPAD_MIL();
 				}
 				else if ( bViaB )	iB = GetVIAPAD_MIL();
@@ -279,8 +279,8 @@ bool Board::SetNodeIdByUser(const int& lyr, const int& row, const int& col, cons
 		int		compId;
 		p->GetSlotInfo(p->GetUsedSlot(), pinIndex, compId);
 
-		Component& comp = m_compMgr.GetComponentById(compId);	assert( comp.GetType() == COMP::WIRE );
-		const int origId = comp.GetOrigId(lyr, pinIndex);
+		const Component& comp	= m_compMgr.GetComponentById(compId);	assert( comp.GetType() == COMP::WIRE );
+		const int		 origId	= comp.GetOrigId(lyr, pinIndex);
 
 		if ( nodeId == p->GetNodeId() && origId == nodeId && p->ReadFlagBits(USERSET) )
 			return false;	// No change
@@ -368,8 +368,8 @@ void Board::FloodNodeId(const int& nodeId)
 			int compId;
 			p->GetSlotInfo(p->GetUsedSlot(), pinIndex, compId);
 
-			Component& comp = m_compMgr.GetComponentById(compId); assert( comp.GetType() == COMP::WIRE );
-			const int origId = comp.GetOrigId(lyr, pinIndex);
+			const Component& comp	= m_compMgr.GetComponentById(compId); assert( comp.GetType() == COMP::WIRE );
+			const int		 origId	= comp.GetOrigId(lyr, pinIndex);
 
 			if ( origId != p->GetNodeId() || !p->ReadFlagBits(USERSET) ) continue; // Don't paint directly if it wasn't painted directly in the first place
 		}
