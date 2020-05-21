@@ -182,10 +182,10 @@ void MainWindow::PaintPad(const GuiControl& guiCtrl, QPainter& painter, const QC
 	}
 }
 
-void MainWindow::PaintTag(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, const int& iNbr, const int& iLyr)
+void MainWindow::PaintTag(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, const int& iPadWidthMIL, const int& iNbr, const int& iLyr)
 {
 	// Paints a short tag connecting a pad to the ground fill
-	const int X = guiCtrl.GetHalfPixelsFromMIL( guiCtrl.GetPAD_MIL() ) + guiCtrl.GetPixelsFromMIL( guiCtrl.GetGAP_MIL() );
+	const int X = guiCtrl.GetHalfPixelsFromMIL( iPadWidthMIL ) + guiCtrl.GetPixelsFromMIL( guiCtrl.GetGAP_MIL() );
 	const int D = (int) ( X * sqrt(0.5) );
 	QPointF pD;	// The other end of the tag
 	switch( iNbr)
@@ -993,7 +993,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 								if ( ReadCodeBit((iNbr+1)%8 , iCode) ) continue;	// Skip if adjacent CW  direction already has connection
 								if ( ReadCodeBit((iNbr+7)%8, iCode) ) continue;		// Skip if adjacent CCW direction already has connection
 								SetCodeBit(iNbr, iCode);	// Update the copy of the perimeter code
-								PaintTag(board, painter, color, pCentre, iNbr, layer);	// Draw tag to ground fill
+								PaintTag(board, painter, color, pCentre, iPadWidthMIL, iNbr, layer);	// Draw tag to ground fill
 							}
 						}
 					}
