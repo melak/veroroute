@@ -121,7 +121,7 @@ void MainWindow::PaintPadGrey(const GuiControl& guiCtrl, QPainter& painter, cons
 	assert(!m_bWriteGerber);
 
 	const int w		= ( iPadWidthMIL == 0 ) ? guiCtrl.GetPAD_MIL() : iPadWidthMIL;
-	const int width	= guiCtrl.GetHalfPixelsFromMIL(w) << 1;
+	const int width	= guiCtrl.GetHalfPixelsFromMIL( w ) << 1;
 	static QPen	pen(QColor(200,200,200,255), 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 	pen.setWidth(width);
 	painter.setPen(pen);
@@ -172,7 +172,7 @@ void MainWindow::PaintPad(const GuiControl& guiCtrl, QPainter& painter, const QC
 	{
 		const int gapWidth	= bGap ? guiCtrl.GetPixelsFromMIL( guiCtrl.GetGAP_MIL() ) : 0;
 		const int w			= ( iPadWidthMIL == 0 ) ? guiCtrl.GetPAD_MIL() : iPadWidthMIL;
-		const int padWidth	= ( guiCtrl.GetHalfPixelsFromMIL(w) + gapWidth ) << 1;
+		const int padWidth	= ( guiCtrl.GetHalfPixelsFromMIL( w ) + gapWidth ) << 1;
 		static QPen	pen(Qt::black, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 		pen.setColor(color);
 		pen.setWidth(padWidth);
@@ -185,7 +185,8 @@ void MainWindow::PaintPad(const GuiControl& guiCtrl, QPainter& painter, const QC
 void MainWindow::PaintTag(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, const int& iPadWidthMIL, const int& iNbr, const int& iLyr)
 {
 	// Paints a short tag connecting a pad to the ground fill
-	const int X = guiCtrl.GetHalfPixelsFromMIL( iPadWidthMIL ) + guiCtrl.GetPixelsFromMIL( guiCtrl.GetGAP_MIL() );
+	const int w = ( iPadWidthMIL == 0 ) ? guiCtrl.GetPAD_MIL() : iPadWidthMIL;
+	const int X = guiCtrl.GetHalfPixelsFromMIL( w ) + guiCtrl.GetPixelsFromMIL( guiCtrl.GetGAP_MIL() );
 	const int D = (int) ( X * sqrt(0.5) );
 	QPointF pD;	// The other end of the tag
 	switch( iNbr)
