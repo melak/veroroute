@@ -33,9 +33,9 @@ public:
 	~ControlDialog();
 
 	void SetMainWindow(MainWindow* p);
-	void ClearLists();
-	void AddListItem(const int nodeId, bool bBroken, bool bFloating);
-	void SetListItems(const int nodeId);
+	void ClearList();
+	void AddListItem(const int nodeId, bool bFloating);
+	void SetListItem(const int nodeId);
 
 	void UpdateCompControls();	// Component controls
 	void UpdateControls();		// Non-component controls

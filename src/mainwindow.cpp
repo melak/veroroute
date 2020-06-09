@@ -109,20 +109,19 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	m_labelStatus->setFrameStyle(QFrame::NoFrame);
 	ui->statusBar->addPermanentWidget(m_labelStatus, 0);
 
-	m_yellowPen			= QPen(Qt::yellow, 0,					Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
-	m_backgroundPen		= QPen(Qt::white, 0,					Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
-	m_darkGreyPen		= QPen(QColor(96,96,96,255), 0,			Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
-	m_blackPen			= QPen(Qt::black, 0,					Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
-	m_whitePen			= QPen(Qt::white, 0,					Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
-	m_redPen			= QPen(Qt::red, 0,						Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
-	m_findPen			= QPen(QColor(255,128,0,255), 0,		Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
-	m_lightBluePen		= QPen(QColor(128, 128, 255, 255), 0,	Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
-	m_varPen			= QPen(Qt::black, 0,					Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
-	m_dotPen			= QPen(QColor(96,96,96,255), 0,			Qt::DotLine,   Qt::RoundCap, Qt::RoundJoin);
-	m_dashPen			= QPen(QColor(96,96,96,255), 0,			Qt::DashLine,  Qt::RoundCap, Qt::RoundJoin);
-	m_backgroundBrush	= QBrush(Qt::white,						Qt::SolidPattern);
-	m_darkBrush			= QBrush(QColor(0, 0, 0, 150),			Qt::SolidPattern);	// using alpha
-	m_varBrush			= QBrush(QColor(255,255,255,0),			Qt::SolidPattern);
+	m_backgroundPen		= QPen(Qt::white, 0,				Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+	m_darkGreyPen		= QPen(QColor(96,96,96,255), 0,		Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+	m_blackPen			= QPen(Qt::black, 0,				Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+	m_whitePen			= QPen(Qt::white, 0,				Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+	m_redPen			= QPen(Qt::red, 0,					Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+	m_findPen			= QPen(QColor(255,128,0,255), 0,	Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+	m_lightBluePen		= QPen(QColor(96, 96, 255, 255), 0,	Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+	m_varPen			= QPen(Qt::black, 0,				Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+	m_dotPen			= QPen(QColor(96,96,96,255), 0,		Qt::DotLine,   Qt::RoundCap, Qt::RoundJoin);
+	m_dashPen			= QPen(QColor(96,96,96,255), 0,		Qt::DashLine,  Qt::RoundCap, Qt::RoundJoin);
+	m_backgroundBrush	= QBrush(Qt::white,					Qt::SolidPattern);
+	m_darkBrush			= QBrush(QColor(0, 0, 0, 150),		Qt::SolidPattern);	// using alpha
+	m_varBrush			= QBrush(QColor(255,255,255,0),		Qt::SolidPattern);
 
 	QObject::connect(ui->actionNew,						SIGNAL(triggered()), this, SLOT(New()));
 	QObject::connect(ui->actionOpen,					SIGNAL(triggered()), this, SLOT(Open()));
@@ -1274,7 +1273,7 @@ void MainWindow::ListNodes(bool bRebuild)
 
 		if ( !bAutoRouting ) pBoard->CheckAllComplete();	// Slow !!!
 
-		m_controlDlg->ClearLists();
+		m_controlDlg->ClearList();
 
 		CompManager&		compMgr		= pBoard->GetCompMgr();
 		NodeInfoManager&	nodeInfoMgr	= pBoard->GetNodeInfoMgr();
@@ -1286,11 +1285,11 @@ void MainWindow::ListNodes(bool bRebuild)
 			const bool bFloating = p->GetHasFloatingComp(compMgr);
 			const bool bComplete = ( bAutoRouting ) ? ( p->GetCost() == 0 ) : p->GetComplete();
 			const bool bBroken	 = bFloating || !bComplete;
-			m_controlDlg->AddListItem(p->GetNodeId(), bBroken, bFloating);
+			if ( bBroken ) m_controlDlg->AddListItem(p->GetNodeId(), bFloating);
 		}
 		if ( !bAutoRouting) delete pBoard;	// If we made a copy of the board then delete it
 	}
-	m_controlDlg->SetListItems( GetCurrentNodeId() );	// Highlight current NodeId in the lists
+	m_controlDlg->SetListItem( GetCurrentNodeId() );	// Highlight current NodeId in the list
 }
 
 // Routing controls
@@ -1339,6 +1338,27 @@ void MainWindow::WipeTracks()	// On hitting the Wipe All button ...
 	UpdateHistory("Wipe Tracks");
 	UpdateControls();
 	RepaintWithListNodes();
+}
+
+// Node color
+void MainWindow::AutoColor(bool b)
+{
+	if ( b )
+		m_board.GetColorMgr().Unfix( GetCurrentNodeId() );
+	else
+		m_board.GetColorMgr().Fix( GetCurrentNodeId() );
+	RepaintSkipRouting();
+	UpdateControls();
+}
+void MainWindow::ChooseColor()
+{
+	ColorManager& mgr = m_board.GetColorMgr();
+	const QColor oldColor	= mgr.GetColorFromNodeId(GetCurrentNodeId(), false);
+	const QColor newColor	= QColorDialog::getColor(oldColor, this);
+	if ( newColor.isValid() && oldColor != newColor )
+		mgr.SetColor( GetCurrentNodeId(), newColor);
+	RepaintSkipRouting();
+	UpdateControls();
 }
 
 // Track controls
@@ -1468,7 +1488,7 @@ void MainWindow::ChooseTextColor()
 	if ( GetCurrentTextId() == BAD_TEXTID ) return;
 	TextRect& rect = GetCurrentTextRect();
 	QColor oldColor = QColor(rect.GetR(), rect.GetG(), rect.GetB());
-	QColor newColor	= QColorDialog::getColor(oldColor, this );
+	QColor newColor	= QColorDialog::getColor(oldColor, this);
 	if ( newColor.isValid() && oldColor != newColor )
 	{
 		int r(0), g(0), b(0);
@@ -1582,7 +1602,7 @@ void MainWindow::DefinerChooseColor()
 	if ( def.GetCurrentShapeId() == BAD_ID ) return;
 	const MyRGB& rgb		= def.GetCurrentShape().GetFillColor();
 	const QColor oldColor	= QColor(rgb.GetR(), rgb.GetG(), rgb.GetB());
-	QColor		 newColor	= QColorDialog::getColor(oldColor, this );
+	QColor		 newColor	= QColorDialog::getColor(oldColor, this);
 	if ( newColor.isValid() && oldColor != newColor )
 	{
 		int r(0), g(0), b(0);

@@ -21,6 +21,7 @@
 
 #include "AdjInfoManager.h"
 #include "MyRGB.h"
+#include <QColor>
 
 #define MYNUMCOLORS 		12
 #define MY_GREY				(MYNUMCOLORS)
@@ -46,15 +47,42 @@ public:
 	{
 		m_mapNodeIdToColorId.clear();
 		m_mapNodeIdToColorId.insert(o.m_mapNodeIdToColorId.begin(), o.m_mapNodeIdToColorId.end());
+		m_mapNodeIdToCustomColor.clear();
+		m_mapNodeIdToCustomColor.insert(o.m_mapNodeIdToCustomColor.begin(), o.m_mapNodeIdToCustomColor.end());
 		m_iSaturation		= o.m_iSaturation;
 		m_iFillSaturation	= o.m_iFillSaturation;
 		m_bReAssign			= o.m_bReAssign;
 		return *this;
 	}
-	~ColorManager()					{ m_mapNodeIdToColorId.clear(); }
+	~ColorManager()					{ m_mapNodeIdToColorId.clear(); m_mapNodeIdToCustomColor.clear(); }
 	void ReAssignColors()			{ m_bReAssign = true; }
 	void SetSaturation(int i)		{ m_iSaturation = i; }
 	void SetFillSaturation(int i)	{ m_iFillSaturation = i; }
+	void SetColor(const int& nodeId, const QColor& color)
+	{
+		if ( nodeId != BAD_NODEID ) m_mapNodeIdToCustomColor[nodeId] = color;
+	}
+	bool GetIsFixed(const int& nodeId) const
+	{
+		return m_mapNodeIdToCustomColor.find(nodeId) != m_mapNodeIdToCustomColor.end();
+	}
+	bool Fix(const int& nodeId)
+	{
+		if ( nodeId == BAD_NODEID ) return false;
+		if ( GetIsFixed(nodeId) ) return false;	// Already fixed
+		const int colorId = m_mapNodeIdToColorId[nodeId];
+		const bool bOK = colorId != BAD_COLORID;	assert(bOK);
+		if ( bOK )
+			m_mapNodeIdToCustomColor[nodeId] = GetPixmapColor(colorId, false);
+		return bOK;
+	}
+	bool Unfix(const int& nodeId)
+	{
+		auto iter = m_mapNodeIdToCustomColor.find(nodeId);
+		if ( iter == m_mapNodeIdToCustomColor.end() ) return false;
+		m_mapNodeIdToCustomColor.erase(iter);
+		return true;
+	}
 	void CalculateColors(AdjInfoManager& adjManager, ElementGrid* pBoard)	// The coloring algorithm
 	{
 		adjManager.SortByLowestNodeId();
@@ -125,33 +153,57 @@ public:
 		const auto iter = m_mapNodeIdToColorId.find(nodeId);
 		return ( iter != m_mapNodeIdToColorId.end() ) ? iter->second : BAD_COLORID;
 	}
-	void GetRGB(const int& colorId, int& R, int& G, int& B) const
+	QColor GetColorFromNodeId(const int& nodeId, bool bUseSaturation = true) const
 	{
-		if ( colorId == BAD_COLORID ) { R = G = B = 255; return; }
+		// First check if the nodeId is in the custom list
+		const auto iter = m_mapNodeIdToCustomColor.find(nodeId);
+		if ( iter != m_mapNodeIdToCustomColor.end() )
+		{
+			if ( !bUseSaturation ) return iter->second;
+			int R(0), G(0), B(0);
+			iter->second.getRgb(&R, &G, &B);
+			HandleSaturation(R, G, B);
+			return QColor(R, G, B, 255);
+		}
+		// Use auto-calculated colors
+		return GetPixmapColor(GetColorId(nodeId), bUseSaturation);
+	}
+	QColor GetPixmapColor(const int& colorId, bool bUseSaturation = true) const
+	{
+		int R(0), G(0), B(0);	// BLACK
+		if		( colorId == BAD_COLORID )	{ R = G = B = 255; }
+		else if ( colorId == MY_GREY )		{ R = G = B = 96; }
+		else if ( colorId == MY_LYR_BOT )	{ G = 128; }
+		else if ( colorId == MY_LYR_TOP )	{ G = 96; B = 192; }
+		else if	( colorId >= 0 && colorId < MYNUMCOLORS )
+		{
+			MyRGB& rgb = g_color[colorId % MYNUMCOLORS];
+			R = rgb.GetR();
+			G = rgb.GetG();
+			B = rgb.GetB();
+			if ( bUseSaturation ) HandleSaturation(R, G, B);
+		}
+		assert(colorId == MY_BLACK);
+		return QColor(R, G, B, 255);
+	}
+	void HandleSaturation(int& R, int&G, int& B) const
+	{
 		const int iA = (100 - m_iSaturation) * 255;
 		if ( m_iFillSaturation == 0 )
 		{
-			MyRGB& rgb = g_color[colorId % MYNUMCOLORS];
-			R = ( iA + m_iSaturation * rgb.GetR() ) / 100;
-			G = ( iA + m_iSaturation * rgb.GetG() ) / 100;
-			B = ( iA + m_iSaturation * rgb.GetB() ) / 100;
+			R = ( iA + m_iSaturation * R ) / 100;
+			G = ( iA + m_iSaturation * G ) / 100;
+			B = ( iA + m_iSaturation * B ) / 100;
 		}
 		else
 		{
 			R = G = B = iA / 100;
 		}
 	}
-	void GetPixmapRGB(const int& iEffColorId, int& R, int& G, int& B) const
-	{
-		if ( iEffColorId < MYNUMCOLORS ) return GetRGB(iEffColorId, R, G, B);
-		if ( iEffColorId == MY_GREY )		{ R = G = B = 96;			return; }
-		if ( iEffColorId == MY_LYR_BOT )	{ R = B = 0; G = 128;		return; }
-		if ( iEffColorId == MY_LYR_TOP )	{ R = 0; G = 96; B = 192; 	return; }
-		R = G = B = 0;	assert( iEffColorId == MY_BLACK );
-	}
 private:
-	std::unordered_map<int,int>	m_mapNodeIdToColorId;
-	int							m_iSaturation;			// 0 to 100. At 0 the colors would all fade to white.
-	int							m_iFillSaturation;		// 0 to 100. If non-zero then turn colors grey.
-	bool						m_bReAssign;
+	std::unordered_map<int,int>		m_mapNodeIdToColorId;
+	std::unordered_map<int,QColor>	m_mapNodeIdToCustomColor;
+	int								m_iSaturation;		// 0 to 100. At 0 the colors would all fade to white.
+	int								m_iFillSaturation;	// 0 to 100. If non-zero then turn colors grey.
+	bool							m_bReAssign;
 };

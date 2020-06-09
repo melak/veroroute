@@ -57,9 +57,7 @@ void MainWindow::CreatePixmapCache(const GuiControl& guiCtrl, ColorManager& colo
 	QPainter painter;
 	for (int i = 0; i < NUM_PIXMAP_COLORS; i++)
 	{
-		int R(0), G(0), B(0);
-		colorMgr.GetPixmapRGB(i, R, G, B);
-		const QColor color(R, G, B, 255);
+		const QColor color = colorMgr.GetPixmapColor(i);
 
 		m_ppPixmapPad[i] = new QPixmap(2*m_radPixmapPad, 2*m_radPixmapPad);
 		m_ppPixmapPad[i]->fill(Qt::transparent);
@@ -688,11 +686,10 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	const double	 dTextScale		= ( m_bWritePDF ) ? (48.0 / W) : (W / 24.0);	// For scaling text when zooming
 	if ( bVero && trackMode != TRACKMODE::OFF ) board.CalcSolder();	// Calculate positions of solder blobs for stripboard builds
 
-	int X(0), Y(0), L(0), R(0), T(0), B(0), cR(0), cG(0), cB(0);
+	int X(0), Y(0), L(0), R(0), T(0), B(0);
 
-	const int iGroundFillColor = ( bPCB ) ? ( layer == 0 ? MY_LYR_BOT : MY_LYR_TOP ) : MY_BLACK;
-	colorMgr.GetPixmapRGB(iGroundFillColor, cR, cG, cB);
-	const QColor groundFillColor(cR, cG, cB, 255);
+	const int		groundFillColorId	= ( bPCB ) ? ( layer == 0 ? MY_LYR_BOT : MY_LYR_TOP ) : MY_BLACK;
+	const QColor	groundFillColor		= colorMgr.GetPixmapColor(groundFillColorId);
 
 	colorMgr.SetSaturation( board.GetSaturation() );			// Must do this BEFORE making pixmaps
 	colorMgr.SetFillSaturation( board.GetFillSaturation() );	// Must do this BEFORE making pixmaps
@@ -853,7 +850,6 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			{
 				const Element*	pC				= board.Get(layer, j, i);
 				const int&		nodeId			= pC->GetNodeId();
-				const int		colorId			= colorMgr.GetColorId(nodeId);	
 				const bool		bWire			= pC->GetHasWire();
 				const bool		bWireAsVia		= bWire && bWiresAsTracks;	// true ==> draw small via pad
 				const int		iPerimeterCode	= pC->GetPerimeterCode(bDiagsOK, bMinDiags);	// 0 to 255
@@ -876,22 +872,26 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				}
 
 				// Skip places with no NodeID assigned unless they are wire ends, or pins in Mono/PCB mode
-				if ( colorId == BAD_COLORID && !bWire && !(bMonoPCB && bPad) ) continue;
+				if ( nodeId == BAD_NODEID && !bWire && !(bMonoPCB && bPad) ) continue;
 
 				// Use GetPixmapRGB for pixmaps.  It can handle MY_GREY, MY_BLACK as special cases
-				const bool		bInvalidColor	=  colorId == BAD_COLORID || ( bMonoPCB && nodeId != GetCurrentNodeId() );
-				const int		iEffColorId		= ( bInvalidColor )	? ( bPCB ? ( layer == 0 ? MY_LYR_BOT : MY_LYR_TOP ) : MY_BLACK )
+				const int	colorId				= colorMgr.GetColorId(nodeId);
+				const bool	bInvalidColor		= colorId == BAD_COLORID || ( bMonoPCB && nodeId != GetCurrentNodeId() );
+				const int	iEffColorId			= ( bInvalidColor )	? ( bPCB ? ( layer == 0 ? MY_LYR_BOT : MY_LYR_TOP ) : MY_BLACK )
 												: ( nodeId == GetCurrentNodeId() ) ? MY_GREY : ( colorId % MYNUMCOLORS );
 
-				colorMgr.GetPixmapRGB(iEffColorId, cR, cG, cB);
-				const QColor color(cR, cG, cB, 255);
+				const bool	 bAllowCustomColor	=	iEffColorId != MY_GREY		&&	iEffColorId != MY_BLACK
+												&&	iEffColorId != MY_LYR_BOT	&&	iEffColorId != MY_LYR_TOP;
+				const QColor color				= bAllowCustomColor ? colorMgr.GetColorFromNodeId(nodeId)
+																	: colorMgr.GetPixmapColor(iEffColorId);
+				const bool	 bCustomColor		= bAllowCustomColor && colorMgr.GetIsFixed(nodeId);
 
 				GetLRTB(board, 100, j, i, L, R, T, B);	// 100% size square
 				const int X((L+R)/2), Y((T+B)/2);
 				const QPointF pCentre(X,Y);
 
 				// Common special case: Draw blank wire-ends as squares (so we can easily see them)
-				if ( colorId == BAD_COLORID && bWire )
+				if ( nodeId == BAD_NODEID && bWire )
 				{
 					painter.setPen(wirePen);
 					painter.setBrush(Qt::NoBrush);
@@ -952,11 +952,29 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						painter.drawPixmap(L+C-m_radPixmapBlob, T+C-m_radPixmapBlob, *(m_ppPixmapBlob[iPerimeterCode]));
 
 						// Draw pad/via
-						if ( bVia ) painter.drawPixmap(L+C-m_radPixmapVia, T+C-m_radPixmapVia, *(m_ppPixmapVia[iEffColorId]));
-						if ( bPad )
+						if ( bCustomColor )
 						{
-							if ( bCustom )	PaintPad(board, painter, color, pCentre, iPadWidthMIL, iHoleWidthMIL);
-							else			painter.drawPixmap(L+C-m_radPixmapPad, T+C-m_radPixmapPad, *(m_ppPixmapPad[iEffColorId]));
+							if ( bVia )
+							{
+								PaintVia(board, painter, color, pCentre);
+							}
+							if ( bPad )
+							{
+								if ( bCustom )	PaintPad(board, painter, color, pCentre, iPadWidthMIL, iHoleWidthMIL);
+								else			PaintPad(board, painter, color, pCentre);
+							}
+						}
+						else
+						{
+							if ( bVia )
+							{
+								painter.drawPixmap(L+C-m_radPixmapVia, T+C-m_radPixmapVia, *(m_ppPixmapVia[iEffColorId]));
+							}
+							if ( bPad )
+							{
+								if ( bCustom )	PaintPad(board, painter, color, pCentre, iPadWidthMIL, iHoleWidthMIL);
+								else			painter.drawPixmap(L+C-m_radPixmapPad, T+C-m_radPixmapPad, *(m_ppPixmapPad[iEffColorId]));
+							}
 						}
 					}
 					else if ( iLoop == 1 )
@@ -964,8 +982,16 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						// Read flags for LT and RT so we can fill diagonal gaps produced on previous iLoop
 						const bool bUsedLT = ReadCodeBit(NBR_LT, iPerimeterCode);
 						const bool bUsedRT = ReadCodeBit(NBR_RT, iPerimeterCode);
-						if ( bUsedLT ) painter.drawPixmap(L-m_radPixmapDiag, T-m_radPixmapDiag, *(m_ppPixmapDiag[iEffColorId]));
-						if ( bUsedRT ) painter.drawPixmap(R-m_radPixmapDiag, T-m_radPixmapDiag, *(m_ppPixmapDiag[iEffColorId + NUM_PIXMAP_COLORS]));
+						if ( bCustomColor )
+						{
+							if ( bUsedLT ) PaintDiag(board, painter, color, QPointF(L,T), true);
+							if ( bUsedRT ) PaintDiag(board, painter, color, QPointF(R,T), false);
+						}
+						else
+						{
+							if ( bUsedLT ) painter.drawPixmap(L-m_radPixmapDiag, T-m_radPixmapDiag, *(m_ppPixmapDiag[iEffColorId]));
+							if ( bUsedRT ) painter.drawPixmap(R-m_radPixmapDiag, T-m_radPixmapDiag, *(m_ppPixmapDiag[iEffColorId + NUM_PIXMAP_COLORS]));
+						}
 					}
 				}
 				if ( bGroundFill )	// Draw track "blobs" and pads directly (PDF/Gerber)
@@ -1080,8 +1106,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		if ( board.GetRoutingEnabled() || GetCurrentNodeId() != BAD_NODEID )
 		{
 			painter.save();
-			m_redPen.setWidth(W / 8);	// Use red pen in PCB/Mono mode (easier to see)
-			m_yellowPen.setWidth(W / 8);
+			m_redPen.setWidth(W / 8);
 			m_backgroundPen.setWidth(0);
 			painter.setBrush(Qt::NoBrush);
 			for (int j = minRow; j <= maxRow; j++)
@@ -1103,7 +1128,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				}
 				if ( pC->GetNodeId() == GetCurrentNodeId() && pC->GetMH() == BAD_MH )
 				{
-					painter.setPen(bMonoPCB ? m_redPen : m_yellowPen);
+					painter.setPen(m_redPen);
 					painter.drawLine(L, B, R, T);		// Draw "/" (hatched) line
 				}
 			}
@@ -1353,15 +1378,13 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						if ( bColor && !bPlaced )	// Color pins of floating components (if in Color mode)
 						{
 							const int&	nodeId	= comp.GetNodeId(iPinIndex);
-							int			colorId	= colorMgr.GetColorId(nodeId);
+							const int	colorId	= ( nodeId != BAD_NODEID && nodeId == GetCurrentNodeId() )
+												? MY_GREY : colorMgr.GetColorId(nodeId);
 
-							if ( colorId != BAD_COLORID && nodeId == GetCurrentNodeId() )
-								colorId = MY_GREY;
+							const bool	bAllowCustomColor = ( colorId != MY_GREY );
+							const QColor color	= bAllowCustomColor	? colorMgr.GetColorFromNodeId(nodeId)
+																	: colorMgr.GetPixmapColor(colorId);
 
-							int cR, cG, cB;
-							colorMgr.GetPixmapRGB(colorId, cR, cG, cB);
-
-							const QColor color(cR, cG, cB, 255);
 							m_varPen.setColor(color);
 							m_varBrush.setColor(color);
 							painter.setBrush( bMonoPCB ? Qt::NoBrush : m_varBrush);	// No pin color fill in Mono/PCB mode

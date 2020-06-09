@@ -79,7 +79,6 @@ void ControlDialog::SetMainWindow(MainWindow* p)
 	QObject::connect(ui->padWidth,			SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SetCompPadWidth(int)));
 	QObject::connect(ui->holeWidth,			SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SetCompHoleWidth(int)));
 	QObject::connect(ui->brokenList,		SIGNAL(itemClicked(QListWidgetItem*)),	m_pMainWindow, SLOT(SetNodeId(QListWidgetItem*)));
-	QObject::connect(ui->floatingList,		SIGNAL(itemClicked(QListWidgetItem*)),	m_pMainWindow, SLOT(SetNodeId(QListWidgetItem*)));
 
 	QObject::connect(ui->autoRoute,			SIGNAL(toggled(bool)),		m_pMainWindow,	SLOT(EnableRouting(bool)));
 	QObject::connect(ui->autoRoute,			SIGNAL(toggled(bool)),		ui->paste,		SLOT(setEnabled(bool)));
@@ -87,6 +86,9 @@ void ControlDialog::SetMainWindow(MainWindow* p)
 	QObject::connect(ui->paste,				SIGNAL(clicked()),			m_pMainWindow,	SLOT(Paste()));
 	QObject::connect(ui->tidy,				SIGNAL(clicked()),			m_pMainWindow,	SLOT(Tidy()));
 	QObject::connect(ui->wipe,				SIGNAL(clicked()),			m_pMainWindow,	SLOT(WipeTracks()));
+
+	QObject::connect(ui->autoColor,			SIGNAL(toggled(bool)),		m_pMainWindow,	SLOT(AutoColor(bool)));
+	QObject::connect(ui->setColor,			SIGNAL(clicked()),			m_pMainWindow,	SLOT(ChooseColor()));
 }
 
 ControlDialog::~ControlDialog()
@@ -94,41 +96,36 @@ ControlDialog::~ControlDialog()
 	delete ui;
 }
 
-void ControlDialog::ClearLists()
+void ControlDialog::ClearList()
 {
-	for (int j = 0; j < 2; j++)	// Loop both lists
+	auto* pList = ui->brokenList;
+	for (int i = 0; i < pList->count(); i++)
 	{
-		auto* pList = ( j == 0 ) ? ui->brokenList : ui->floatingList;
-		for (int i = 0; i < pList->count(); i++)
-		{
-			QListWidgetItem* p = pList->takeItem(i);
-			if ( p ) delete p;
-		}
-		pList->clear();
+		QListWidgetItem* p = pList->takeItem(i);
+		if ( p ) delete p;
 	}
+	pList->clear();
 }
 
-void ControlDialog::SetListItems(const int nodeId)
+void ControlDialog::SetListItem(const int nodeId)
 {
-	for (int j = 0; j < 2; j++)	// Loop both lists
+	auto* pList = ui->brokenList;
+	bool bFound(false);
+	for (int i = 0; i < pList->count() && !bFound; i++)
 	{
-		bool bFound(false);
-		auto* pList = ( j == 0 ) ? ui->brokenList : ui->floatingList;
-		for (int i = 0; i < pList->count() && !bFound; i++)
-		{
-			bFound = ( pList->item(i)->text().toInt() == nodeId );
-			if ( bFound ) pList->setCurrentRow(i);
-		}
-		if ( !bFound && pList->count() > 0 ) pList->setCurrentRow(0, QItemSelectionModel::Clear);
+		const QString& str = pList->item(i)->text();
+		bFound = ( str.left(str.size() - 11).toInt() == nodeId );	// 11 because of " (Floating)" suffix below
+		if ( bFound ) pList->setCurrentRow(i);
 	}
-	ui->tidy->setEnabled( !ui->autoRoute->isChecked() && ui->brokenList->count() == 0 );
+	if ( !bFound && pList->count() > 0 ) pList->setCurrentRow(0, QItemSelectionModel::Clear);
+
+	ui->tidy->setEnabled( !ui->autoRoute->isChecked() && pList->count() == 0 );
 }
 
-void ControlDialog::AddListItem(const int nodeId, bool bBroken, bool bFloating)
+void ControlDialog::AddListItem(const int nodeId, bool bFloating)
 {
-	const std::string str = std::to_string(nodeId);
-	if ( bBroken   ) ui->brokenList->addItem( str.c_str() );
-	if ( bFloating ) ui->floatingList->addItem( str.c_str() );
+	const std::string str = std::to_string(nodeId) + ( bFloating ? " (Floating)" : "           " );
+	ui->brokenList->addItem( str.c_str() );
 }
 
 void ControlDialog::UpdateCompControls()	// Component controls
@@ -271,6 +268,18 @@ void ControlDialog::UpdateControls()	// Non-component controls
 	ui->saturationSlider->setValue( board.GetSaturation() );
 	ui->compSlider->setValue( board.GetCompSliderValue() );
 	ui->fillSlider->setValue( board.GetFillSaturation() );
+
+	const bool bNodeIdOK = board.GetCurrentNodeId() != BAD_NODEID;
+	ui->autoColor->setEnabled( bNodeIdOK );
+	ui->autoColor->setChecked( bNodeIdOK && !board.GetColorMgr().GetIsFixed( board.GetCurrentNodeId() ) );
+	ui->setColor->setEnabled( bNodeIdOK );
+
+	QPalette pal = ui->setColor->palette();
+	pal.setColor(QPalette::Button, board.GetColorMgr().GetColorFromNodeId( board.GetCurrentNodeId(), false ) );
+
+	ui->setColor->setAutoFillBackground(true);
+	ui->setColor->setPalette(pal);
+	ui->setColor->update();
 }
 
 void ControlDialog::wheelEvent(QWheelEvent* event)

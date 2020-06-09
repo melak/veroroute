@@ -282,6 +282,9 @@ public slots:
 	void Paste();
 	void Tidy();
 	void WipeTracks();
+	// Node color
+	void AutoColor(bool b);
+	void ChooseColor();
 	// Track controls
 	void SetTracksVeroV(bool b);
 	void SetTracksVeroH(bool b);
@@ -456,7 +459,6 @@ private:
 	QColor	GetBackgroundColor() const;	// For screen only.  PDF is always white.
 
 	// Pens
-	QPen	m_yellowPen;
 	QPen	m_backgroundPen;
 	QPen	m_darkGreyPen;
 	QPen	m_blackPen;

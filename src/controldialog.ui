@@ -178,39 +178,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Broken</string>
-   </property>
-  </widget>
-  <widget class="QListWidget" name="floatingList">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="geometry">
-    <rect>
-     <x>140</x>
-     <y>420</y>
-     <width>121</width>
-     <height>86</height>
-    </rect>
-   </property>
-   <property name="focusPolicy">
-    <enum>Qt::NoFocus</enum>
-   </property>
-   <property name="toolTip">
-    <string>Nodes on floating parts</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_4">
-   <property name="geometry">
-    <rect>
-     <x>140</x>
-     <y>400</y>
-     <width>121</width>
-     <height>24</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Floating</string>
+    <string>Broken Nodes</string>
    </property>
   </widget>
   <widget class="QPushButton" name="rotateCCW">
@@ -363,7 +331,7 @@
     <rect>
      <x>0</x>
      <y>380</y>
-     <width>81</width>
+     <width>91</width>
      <height>21</height>
     </rect>
    </property>
@@ -383,9 +351,9 @@
   <widget class="QLabel" name="label_7">
    <property name="geometry">
     <rect>
-     <x>90</x>
+     <x>100</x>
      <y>380</y>
-     <width>91</width>
+     <width>71</width>
      <height>20</height>
     </rect>
    </property>
@@ -396,7 +364,7 @@
     </font>
    </property>
    <property name="text">
-    <string>Bad Nodes</string>
+    <string>Nodes</string>
    </property>
    <property name="alignment">
     <set>Qt::AlignCenter</set>
@@ -427,9 +395,9 @@
   <widget class="Line" name="line_6">
    <property name="geometry">
     <rect>
-     <x>190</x>
+     <x>180</x>
      <y>380</y>
-     <width>81</width>
+     <width>91</width>
      <height>21</height>
     </rect>
    </property>
@@ -1358,6 +1326,60 @@
    </property>
    <property name="alignment">
     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="setColor">
+   <property name="geometry">
+    <rect>
+     <x>150</x>
+     <y>470</y>
+     <width>111</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="focusPolicy">
+    <enum>Qt::NoFocus</enum>
+   </property>
+   <property name="toolTip">
+    <string/>
+   </property>
+   <property name="text">
+    <string>Set Color</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="autoColor">
+   <property name="geometry">
+    <rect>
+     <x>150</x>
+     <y>430</y>
+     <width>111</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="mouseTracking">
+    <bool>false</bool>
+   </property>
+   <property name="focusPolicy">
+    <enum>Qt::NoFocus</enum>
+   </property>
+   <property name="toolTip">
+    <string>Auto color the node</string>
+   </property>
+   <property name="text">
+    <string>Auto-Color</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_4">
+   <property name="geometry">
+    <rect>
+     <x>150</x>
+     <y>400</y>
+     <width>111</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Selected Node</string>
    </property>
   </widget>
  </widget>
