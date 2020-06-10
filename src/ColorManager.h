@@ -21,7 +21,6 @@
 
 #include "AdjInfoManager.h"
 #include "MyRGB.h"
-#include <QColor>
 
 #define MYNUMCOLORS 		12
 #define MY_GREY				(MYNUMCOLORS)
@@ -60,7 +59,7 @@ public:
 	void SetFillSaturation(int i)	{ m_iFillSaturation = i; }
 	void SetColor(const int& nodeId, const QColor& color)
 	{
-		if ( nodeId != BAD_NODEID ) m_mapNodeIdToCustomColor[nodeId] = color;
+		if ( nodeId != BAD_NODEID ) m_mapNodeIdToCustomColor[nodeId] = MyRGB(color);
 	}
 	bool GetIsFixed(const int& nodeId) const
 	{
@@ -73,7 +72,7 @@ public:
 		const int colorId = m_mapNodeIdToColorId[nodeId];
 		const bool bOK = colorId != BAD_COLORID;	assert(bOK);
 		if ( bOK )
-			m_mapNodeIdToCustomColor[nodeId] = GetPixmapColor(colorId, false);
+			m_mapNodeIdToCustomColor[nodeId] = GetPixmapRGB(colorId, false);
 		return bOK;
 	}
 	bool Unfix(const int& nodeId)
@@ -159,32 +158,39 @@ public:
 		const auto iter = m_mapNodeIdToCustomColor.find(nodeId);
 		if ( iter != m_mapNodeIdToCustomColor.end() )
 		{
-			if ( !bUseSaturation ) return iter->second;
 			int R(0), G(0), B(0);
-			iter->second.getRgb(&R, &G, &B);
-			HandleSaturation(R, G, B);
-			return QColor(R, G, B, 255);
+			const MyRGB& rgb = iter->second;
+			rgb.GetRGB(R, G, B);
+			if ( bUseSaturation ) HandleSaturation(R, G, B);
+			return QColor(R, G, B);
 		}
 		// Use auto-calculated colors
 		return GetPixmapColor(GetColorId(nodeId), bUseSaturation);
 	}
-	QColor GetPixmapColor(const int& colorId, bool bUseSaturation = true) const
+	MyRGB GetPixmapRGB(const int& colorId, bool bUseSaturation = true) const
 	{
-		int R(0), G(0), B(0);	// BLACK
+		int R(0), G(0), B(0);
 		if		( colorId == BAD_COLORID )	{ R = G = B = 255; }
 		else if ( colorId == MY_GREY )		{ R = G = B = 96; }
 		else if ( colorId == MY_LYR_BOT )	{ G = 128; }
 		else if ( colorId == MY_LYR_TOP )	{ G = 96; B = 192; }
 		else if	( colorId >= 0 && colorId < MYNUMCOLORS )
 		{
-			MyRGB& rgb = g_color[colorId % MYNUMCOLORS];
-			R = rgb.GetR();
-			G = rgb.GetG();
-			B = rgb.GetB();
+			const MyRGB& rgb = g_color[colorId % MYNUMCOLORS];
+			rgb.GetRGB(R, G, B);
 			if ( bUseSaturation ) HandleSaturation(R, G, B);
 		}
-		assert(colorId == MY_BLACK);
-		return QColor(R, G, B, 255);
+		else
+		{
+			assert(colorId == MY_BLACK);
+		}
+		MyRGB rgb;
+		rgb.SetRGB(R, G, B);
+		return rgb;
+	}
+	QColor GetPixmapColor(const int& colorId, bool bUseSaturation = true) const
+	{
+		return GetPixmapRGB(colorId, bUseSaturation).GetQColor();
 	}
 	void HandleSaturation(int& R, int&G, int& B) const
 	{
@@ -202,7 +208,7 @@ public:
 	}
 private:
 	std::unordered_map<int,int>		m_mapNodeIdToColorId;
-	std::unordered_map<int,QColor>	m_mapNodeIdToCustomColor;
+	std::unordered_map<int,MyRGB>	m_mapNodeIdToCustomColor;
 	int								m_iSaturation;		// 0 to 100. At 0 the colors would all fade to white.
 	int								m_iFillSaturation;	// 0 to 100. If non-zero then turn colors grey.
 	bool							m_bReAssign;

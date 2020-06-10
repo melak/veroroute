@@ -1486,9 +1486,9 @@ void MainWindow::SetText(const QString& s)	{ if ( GetCurrentTextId() != BAD_TEXT
 void MainWindow::ChooseTextColor()
 {
 	if ( GetCurrentTextId() == BAD_TEXTID ) return;
-	TextRect& rect = GetCurrentTextRect();
-	QColor oldColor = QColor(rect.GetR(), rect.GetG(), rect.GetB());
-	QColor newColor	= QColorDialog::getColor(oldColor, this);
+	TextRect&	 rect		= GetCurrentTextRect();
+	const QColor oldColor	= rect.GetQColor();
+	QColor		 newColor	= QColorDialog::getColor(oldColor, this);
 	if ( newColor.isValid() && oldColor != newColor )
 	{
 		int r(0), g(0), b(0);
@@ -1600,9 +1600,8 @@ void MainWindow::DefinerChooseColor()
 {
 	auto& def = GetCompDefiner();	assert( def.GetCurrentShapeId() != BAD_ID );
 	if ( def.GetCurrentShapeId() == BAD_ID ) return;
-	const MyRGB& rgb		= def.GetCurrentShape().GetFillColor();
-	const QColor oldColor	= QColor(rgb.GetR(), rgb.GetG(), rgb.GetB());
-	QColor		 newColor	= QColorDialog::getColor(oldColor, this);
+	const QColor oldColor = def.GetCurrentShape().GetFillColor().GetQColor();
+	QColor		 newColor = QColorDialog::getColor(oldColor, this);
 	if ( newColor.isValid() && oldColor != newColor )
 	{
 		int r(0), g(0), b(0);

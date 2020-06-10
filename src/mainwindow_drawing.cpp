@@ -553,10 +553,7 @@ void MainWindow::PaintCompDefiner()	// The paint method in "component editor mod
 		const Shape& s = mapObj.second;
 
 		if ( s.GetDrawFill() )
-		{
-			const MyRGB& fillColor = s.GetFillColor();
-			m_varBrush.setColor(QColor(fillColor.GetR(),fillColor.GetG(),fillColor.GetB(),255));
-		}
+			m_varBrush.setColor( s.GetFillColor().GetQColor() );
 		const bool bCurrentShape = ( mapObj.first == def.GetCurrentShapeId() );
 		m_blackPen.setWidth( bCurrentShape ? 3 : 2 );
 
@@ -1245,8 +1242,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				GPainter painterTmp;
 				QPixmap tmpPixmap(dReqW, dReqH);
 				tmpPixmap.setDevicePixelRatio(1.0);
-				const MyRGB		msk	= comp.GetNewColor();	// We'll mask out pixels with this color at the end
-				const QColor	maskColor(msk.GetR(), msk.GetG(), msk.GetB());
+				const QColor maskColor = comp.GetNewColor().GetQColor();// We'll mask out pixels with this color at the end
 
 				if ( bFill )
 				{
@@ -1290,8 +1286,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						if ( iLoop == 1 && (s.GetDrawFill() || !s.GetDrawLine()) ) continue;
 						if ( iLoop == 0 )	// Drawing fill
 						{
-							const MyRGB& rgb	= s.GetFillColor();
-							m_varBrush.setColor( QColor(rgb.GetR(), rgb.GetG(), rgb.GetB()) );
+							m_varBrush.setColor( s.GetFillColor().GetQColor() );
 							pPainter->setBrush(m_varBrush);
 							pPainter->setPen( s.GetDrawLine() ? fillBlackPen : Qt::NoPen );
 						}
@@ -1549,7 +1544,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			font.setPointSize( rect.GetSize() );
 			painter.setFont(font);
 
-			m_varPen.setColor( QColor(rect.GetR(),rect.GetG(),rect.GetB(),255) );
+			m_varPen.setColor( rect.GetQColor() );
 			painter.setPen(m_varPen);
 			painter.setBrush(Qt::NoBrush);
 			painter.save();

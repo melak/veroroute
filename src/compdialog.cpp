@@ -143,7 +143,7 @@ void CompDialog::Update()
 		rgb = s.GetFillColor();
 	}
 	QPalette pal = ui->pushButtonRGB->palette();
-	pal.setColor(QPalette::Button, QColor(rgb.GetR(),rgb.GetG(),rgb.GetB()));
+	pal.setColor(QPalette::Button, rgb.GetQColor());
 	ui->pushButtonRGB->setAutoFillBackground(true);
 	ui->pushButtonRGB->setPalette(pal);
 	ui->pushButtonRGB->update();

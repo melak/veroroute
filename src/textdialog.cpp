@@ -61,7 +61,7 @@ void TextDialog::Update(const TextRect& rect, bool bFull)
 	ui->pushButtonJ->setChecked(rect.GetFlags() == Qt::AlignJustify);
 
 	QPalette pal = ui->pushButtonRGB->palette();
-	pal.setColor(QPalette::Button, QColor(rect.GetR(),rect.GetG(),rect.GetB()));
+	pal.setColor(QPalette::Button, rect.GetQColor());
 	ui->pushButtonRGB->setAutoFillBackground(true);
 	ui->pushButtonRGB->setPalette(pal);
 	ui->pushButtonRGB->update();

@@ -20,6 +20,7 @@
 #pragma once
 
 #include "Persist.h"
+#include <QColor>
 
 class MyRGB : public Persist
 {
@@ -31,6 +32,10 @@ public:
 		m_R = (i & 0XFF);
 	}
 	MyRGB(const MyRGB& o) { *this = o; }
+	MyRGB(const QColor& o)
+	{
+		SetRGB(o.red(), o.green(), o.blue());
+	}
 	~MyRGB() {}
 	MyRGB& operator=(const MyRGB& o)
 	{
@@ -61,9 +66,11 @@ public:
 		m_R = R; m_G = G; m_B = B;
 		return bChanged;
 	}
-	const int&	GetR() const	{ return m_R; }
-	const int&	GetG() const	{ return m_G; }
-	const int&	GetB() const	{ return m_B; }
+	void GetRGB(int& R, int& G, int& B) const
+	{
+		R = m_R; G = m_G; B = m_B;
+	}
+	QColor GetQColor() const	{ return QColor(m_R, m_G, m_B); }
 	// Persist interface functions
 	virtual void Load(DataStream& inStream) override
 	{
