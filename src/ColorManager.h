@@ -37,7 +37,7 @@ static MyRGB g_color[MYNUMCOLORS] = { MyRGB(0x3C18C8), MyRGB(0xC024F8), MyRGB(0x
 
 const int BAD_COLORID = -1;
 
-class ColorManager
+class ColorManager : public Persist, public Merge
 {
 public:
 	ColorManager() : m_iSaturation(100), m_iFillSaturation(0), m_bReAssign(true) {}
@@ -53,11 +53,27 @@ public:
 		m_bReAssign			= o.m_bReAssign;
 		return *this;
 	}
-	~ColorManager()					{ m_mapNodeIdToColorId.clear(); m_mapNodeIdToCustomColor.clear(); }
+	bool operator==(const ColorManager& o) const
+	{
+		if ( m_mapNodeIdToCustomColor.size() != o.m_mapNodeIdToCustomColor.size() ) return false;
+		for (const auto& mapObj : m_mapNodeIdToCustomColor)
+		{
+			const auto iter = o.m_mapNodeIdToCustomColor.find( mapObj.first );
+			if ( iter == o.m_mapNodeIdToCustomColor.end() ) return false;
+			if ( mapObj.second != iter->second ) return false;
+		}
+		return true;
+	}
+	bool operator!=(const ColorManager& o) const
+	{
+		return !(*this == o);
+	}
+	~ColorManager()					{ Clear(); }
+	void Clear()					{ m_mapNodeIdToColorId.clear(); m_mapNodeIdToCustomColor.clear(); ReAssignColors(); }
 	void ReAssignColors()			{ m_bReAssign = true; }
 	void SetSaturation(int i)		{ m_iSaturation = i; }
 	void SetFillSaturation(int i)	{ m_iFillSaturation = i; }
-	void SetColor(const int& nodeId, const QColor& color)
+	void SetNodeColor(const int& nodeId, const QColor& color)
 	{
 		if ( nodeId != BAD_NODEID ) m_mapNodeIdToCustomColor[nodeId] = MyRGB(color);
 	}
@@ -65,22 +81,19 @@ public:
 	{
 		return m_mapNodeIdToCustomColor.find(nodeId) != m_mapNodeIdToCustomColor.end();
 	}
-	bool Fix(const int& nodeId)
+	void Fix(const int& nodeId)
 	{
-		if ( nodeId == BAD_NODEID ) return false;
-		if ( GetIsFixed(nodeId) ) return false;	// Already fixed
+		if ( nodeId == BAD_NODEID || GetIsFixed(nodeId) ) return;	// Already fixed
 		const int colorId = m_mapNodeIdToColorId[nodeId];
 		const bool bOK = colorId != BAD_COLORID;	assert(bOK);
 		if ( bOK )
 			m_mapNodeIdToCustomColor[nodeId] = GetPixmapRGB(colorId, false);
-		return bOK;
 	}
-	bool Unfix(const int& nodeId)
+	void Unfix(const int& nodeId)
 	{
 		auto iter = m_mapNodeIdToCustomColor.find(nodeId);
-		if ( iter == m_mapNodeIdToCustomColor.end() ) return false;
-		m_mapNodeIdToCustomColor.erase(iter);
-		return true;
+		if ( iter != m_mapNodeIdToCustomColor.end() )
+			m_mapNodeIdToCustomColor.erase(iter);
 	}
 	void CalculateColors(AdjInfoManager& adjManager, ElementGrid* pBoard)	// The coloring algorithm
 	{
@@ -204,6 +217,49 @@ public:
 		else
 		{
 			R = G = B = iA / 100;
+		}
+	}
+	// Merge interface functions
+	virtual void UpdateMergeOffsets(MergeOffsets& o) override
+	{
+		for (auto& mapObj : m_mapNodeIdToCustomColor)
+			if ( mapObj.first != BAD_NODEID ) o.deltaNodeId = std::max(o.deltaNodeId, mapObj.first  + 1);
+	}
+	virtual void ApplyMergeOffsets(const MergeOffsets& o) override
+	{
+		std::unordered_map<int,MyRGB> tmp;
+		for (auto& mapObj : m_mapNodeIdToCustomColor)
+			tmp[mapObj.first + o.deltaNodeId] = mapObj.second;
+		m_mapNodeIdToCustomColor.clear();
+		m_mapNodeIdToCustomColor.insert(tmp.begin(), tmp.end());
+	}
+	void Merge(const ColorManager& src)
+	{
+		m_mapNodeIdToCustomColor.insert(src.m_mapNodeIdToCustomColor.begin(), src.m_mapNodeIdToCustomColor.end());
+	}
+	// Persist interface functions
+	virtual void Load(DataStream& inStream) override
+	{
+		m_mapNodeIdToCustomColor.clear();
+		unsigned int numNodeIds(0);
+		inStream.Load(numNodeIds);
+		for (unsigned int i = 0; i < numNodeIds; i++)
+		{
+			int iNodeId;
+			MyRGB rgb;
+			inStream.Load(iNodeId);
+			rgb.Load(inStream);
+			m_mapNodeIdToCustomColor[iNodeId] = rgb;
+		}
+	}
+	virtual void Save(DataStream& outStream) override
+	{
+		const unsigned int numNodeIds = static_cast<unsigned int>( m_mapNodeIdToCustomColor.size() );
+		outStream.Save(numNodeIds);
+		for (auto& mapObj : m_mapNodeIdToCustomColor)
+		{
+			outStream.Save(mapObj.first);
+			mapObj.second.Save(outStream);
 		}
 	}
 private:

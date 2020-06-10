@@ -284,7 +284,7 @@ public slots:
 	void WipeTracks();
 	// Node color
 	void AutoColor(bool b);
-	void ChooseColor();
+	void SelectNodeColor();
 	// Track controls
 	void SetTracksVeroV(bool b);
 	void SetTracksVeroH(bool b);

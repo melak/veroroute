@@ -116,7 +116,8 @@ public:
 			&& m_groupMgr		== o.m_groupMgr
 			&& m_rectMgr		== o.m_rectMgr
 			&& m_textMgr		== o.m_textMgr
-			&& m_compDefiner	== o.m_compDefiner;
+			&& m_compDefiner	== o.m_compDefiner
+			&& m_colorMgr		== o.m_colorMgr;
 	}
 	bool operator!=(const Board& o) const
 	{
@@ -136,7 +137,7 @@ public:
 		m_rectMgr.Clear();
 		m_textMgr.Clear();
 		m_compDefiner.Clear();
-		m_colorMgr.ReAssignColors();
+		m_colorMgr.Clear();
 		GuiControl::Clear();	// Clear() base class
 	}
 
@@ -472,7 +473,12 @@ public:
 	void				SetInfoStr(const std::string& str)	{ m_infoStr = str; }
 	const std::string&	GetInfoStr() const	{ return m_infoStr; }
 	void				CalculateColors()	{ m_colorMgr.CalculateColors(m_adjInfoMgr, this); }
-	int					GetNewNodeId()		{ return m_nodeInfoMgr.GetNewNodeId(m_adjInfoMgr); }
+	int					GetNewNodeId()
+	{
+		const int nodeId = m_nodeInfoMgr.GetNewNodeId(m_adjInfoMgr);
+		m_colorMgr.Unfix(nodeId);	// Ensure auto-color is used for new nodeId.
+		return nodeId;
+	}
 	CompManager&		GetCompMgr()		{ return m_compMgr; }
 	NodeInfoManager&	GetNodeInfoMgr()	{ return m_nodeInfoMgr; }
 	GroupManager&		GetGroupMgr()		{ return m_groupMgr; }
@@ -500,6 +506,7 @@ public:
 		m_compMgr.UpdateMergeOffsets(o);
 		m_groupMgr.UpdateMergeOffsets(o);
 		m_textMgr.UpdateMergeOffsets(o);
+		m_colorMgr.UpdateMergeOffsets(o);
 	}
 	virtual void ApplyMergeOffsets(const MergeOffsets& o) override	// Called on the source board
 	{
@@ -508,6 +515,7 @@ public:
 		m_compMgr.ApplyMergeOffsets(o);
 		m_groupMgr.ApplyMergeOffsets(o);
 		m_textMgr.ApplyMergeOffsets(o);
+		m_colorMgr.ApplyMergeOffsets(o);
 	}
 	void Merge(Board& src)
 	{
@@ -550,6 +558,9 @@ public:
 
 		// Merge the text label
 		m_textMgr.Merge(src.m_textMgr);
+
+		// Merge the colors
+		m_colorMgr.Merge(src.m_colorMgr);
 
 		Crop();	// Final crop (with default margin)
 	}
@@ -595,6 +606,9 @@ public:
 		if ( inStream.GetVersion() >= VRT_VERSION_23 )
 			m_compDefiner.Load(inStream);	// Call Load() on component definer
 
+		if ( inStream.GetVersion() >= VRT_VERSION_41 )
+			m_colorMgr.Load(inStream);		// Call Load() on color manager
+
 		RebuildAdjacencies();
 	}
 
@@ -609,6 +623,7 @@ public:
 		m_rectMgr.Save(outStream);		// Call Save() on rect manager			// Added in VRT_VERSION_10
 		m_textMgr.Save(outStream);		// Call Save() on text manager			// Added in VRT_VERSION_14
 		m_compDefiner.Save(outStream);	// Call Save() on component definer		// Added in VRT_VERSION_23
+		m_colorMgr.Save(outStream);		// Call Save() on color manager			// Added in VRT_VERSION_41
 	}
 private:
 	void FixLegacyWires()

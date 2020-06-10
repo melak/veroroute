@@ -1347,18 +1347,23 @@ void MainWindow::AutoColor(bool b)
 		m_board.GetColorMgr().Unfix( GetCurrentNodeId() );
 	else
 		m_board.GetColorMgr().Fix( GetCurrentNodeId() );
-	RepaintSkipRouting();
+	UpdateHistory(b ? "Enable Auto-Color" : "Disable Auto-Color");
 	UpdateControls();
+	RepaintSkipRouting();
 }
-void MainWindow::ChooseColor()
+void MainWindow::SelectNodeColor()
 {
 	ColorManager& mgr = m_board.GetColorMgr();
 	const QColor oldColor	= mgr.GetColorFromNodeId(GetCurrentNodeId(), false);
 	const QColor newColor	= QColorDialog::getColor(oldColor, this);
 	if ( newColor.isValid() && oldColor != newColor )
-		mgr.SetColor( GetCurrentNodeId(), newColor);
-	RepaintSkipRouting();
-	UpdateControls();
+	{
+		mgr.SetNodeColor(GetCurrentNodeId(), newColor);
+		SetCurrentNodeId(BAD_NODEID);	// Unselect nodeId so we can see the color in the view
+		UpdateHistory("Set Node Color");
+		UpdateControls();
+		RepaintSkipRouting();
+	}
 }
 
 // Track controls

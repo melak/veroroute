@@ -88,7 +88,7 @@ void ControlDialog::SetMainWindow(MainWindow* p)
 	QObject::connect(ui->wipe,				SIGNAL(clicked()),			m_pMainWindow,	SLOT(WipeTracks()));
 
 	QObject::connect(ui->autoColor,			SIGNAL(toggled(bool)),		m_pMainWindow,	SLOT(AutoColor(bool)));
-	QObject::connect(ui->setColor,			SIGNAL(clicked()),			m_pMainWindow,	SLOT(ChooseColor()));
+	QObject::connect(ui->setColor,			SIGNAL(clicked()),			m_pMainWindow,	SLOT(SelectNodeColor()));
 }
 
 ControlDialog::~ControlDialog()
@@ -270,12 +270,12 @@ void ControlDialog::UpdateControls()	// Non-component controls
 	ui->fillSlider->setValue( board.GetFillSaturation() );
 
 	const bool bNodeIdOK = board.GetCurrentNodeId() != BAD_NODEID;
-	ui->autoColor->setEnabled( bNodeIdOK );
+	ui->autoColor->setEnabled( bColor && bNodeIdOK );
+	ui->setColor->setEnabled( bColor && bNodeIdOK );
 	ui->autoColor->setChecked( bNodeIdOK && !board.GetColorMgr().GetIsFixed( board.GetCurrentNodeId() ) );
-	ui->setColor->setEnabled( bNodeIdOK );
 
 	QPalette pal = ui->setColor->palette();
-	pal.setColor(QPalette::Button, board.GetColorMgr().GetColorFromNodeId( board.GetCurrentNodeId(), false ) );
+	pal.setColor(QPalette::Button, bColor ? board.GetColorMgr().GetColorFromNodeId( board.GetCurrentNodeId(), false ) : Qt::black);
 
 	ui->setColor->setAutoFillBackground(true);
 	ui->setColor->setPalette(pal);
