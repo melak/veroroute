@@ -1290,6 +1290,18 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 							pPainter->setBrush(m_varBrush);
 							pPainter->setPen( s.GetDrawLine() ? fillBlackPen : Qt::NoPen );
 						}
+						else if ( bColor && !bFill && bWire )	// If Fill slider if fully left in Color mode, draw wire in color
+						{
+							const int nodeId = comp.GetNodeId(0);
+							if ( nodeId != BAD_NODEID )
+							{
+								const QColor color = ( nodeId == GetCurrentNodeId() ) ? colorMgr.GetPixmapColor(MY_GREY)
+																					  : colorMgr.GetColorFromNodeId(nodeId);
+								m_varBrush.setColor( color );
+								pPainter->setBrush(m_varBrush);
+								pPainter->setPen( s.GetDrawLine() ? fillBlackPen : Qt::NoPen );
+							}
+						}
 
 						pPainter->save();
 						pPainter->translate( s.GetCX() * W, s.GetCY() * W );	// Translate to shape centre
@@ -1372,14 +1384,10 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 						if ( bColor && !bPlaced )	// Color pins of floating components (if in Color mode)
 						{
-							const int&	nodeId	= comp.GetNodeId(iPinIndex);
-							const int	colorId	= ( nodeId != BAD_NODEID && nodeId == GetCurrentNodeId() )
-												? MY_GREY : colorMgr.GetColorId(nodeId);
-
-							const bool	bAllowCustomColor = ( colorId != MY_GREY );
-							const QColor color	= bAllowCustomColor	? colorMgr.GetColorFromNodeId(nodeId)
-																	: colorMgr.GetPixmapColor(colorId);
-
+							const int&	 nodeId			= comp.GetNodeId(iPinIndex);
+							const bool	 bCurrentNodeId	= nodeId != BAD_NODEID && nodeId == GetCurrentNodeId();
+							const QColor color			= bCurrentNodeId ? colorMgr.GetPixmapColor(MY_GREY)
+																		 : colorMgr.GetColorFromNodeId(nodeId);
 							m_varPen.setColor(color);
 							m_varBrush.setColor(color);
 							painter.setBrush( bMonoPCB ? Qt::NoBrush : m_varBrush);	// No pin color fill in Mono/PCB mode
