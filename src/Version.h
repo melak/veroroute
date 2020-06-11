@@ -241,7 +241,8 @@ static const char* szVEROROUTE_VERSION =
 //"1.94";	// Bug fix: When ground-filling with no specified nodeId, do not draw thermal relief tags to unassigned pins.
 			// New feature: Find parts in layout by Name or Value.
 			// Improvement: Made Rendering Options dialog better handle 11pt font.
-  "1.95";	// Bug fix: Thermal relief tags not calculated properly for pads with custom size.
+//"1.95";	// Bug fix: Thermal relief tags not calculated properly for pads with custom size.
 			// New feature: Allow user to specify a color for any NodeID.
 			// Improvement: Show info on Bad/Floating nodes in a single list.
 			// For consistency between view types, draw hashed lines for broken connections in red instead of yellow.
+  "1.96";	// New feature: In Color mode, color each wire according to its NodeId.
