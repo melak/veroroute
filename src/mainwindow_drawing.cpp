@@ -714,7 +714,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	{
 		pdfWriter = new QPdfWriter(m_pdfFileName);
 		pdfWriter->setCreator("VeroRoute");
-		pdfWriter->setPageSize(QPagedPaintDevice::A4);
+		pdfWriter->setPageSize(QPageSize(QPageSize::A4));
 		pdfWriter->setPageOrientation(QPageLayout::Landscape);
 		pdfWriter->setResolution(1200);
 		painter.begin(pdfWriter);	// Paint to PDF file
