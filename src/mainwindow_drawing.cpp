@@ -31,6 +31,8 @@ void MainWindow::DestroyPixmapCache()
 	delete[] m_ppPixmapVia;		m_ppPixmapVia	= nullptr;
 	delete[] m_ppPixmapDiag;	m_ppPixmapDiag	= nullptr;
 	delete[] m_ppPixmapBlob;	m_ppPixmapBlob	= nullptr;
+	delete   m_pPixmapDiagLT;	m_pPixmapDiagLT = nullptr;
+	delete   m_pPixmapDiagRT;	m_pPixmapDiagRT = nullptr;
 }
 
 void MainWindow::CreatePixmapCache(const GuiControl& guiCtrl, ColorManager& colorMgr)
@@ -53,6 +55,11 @@ void MainWindow::CreatePixmapCache(const GuiControl& guiCtrl, ColorManager& colo
 	m_ppPixmapVia	= new QPixmap*[NUM_PIXMAP_COLORS];
 	m_ppPixmapDiag	= new QPixmap*[2 * NUM_PIXMAP_COLORS];
 	m_ppPixmapBlob	= new QPixmap*[256];
+
+	m_pPixmapDiagLT = new QPixmap(2*m_radPixmapDiag, 2*m_radPixmapDiag);
+	m_pPixmapDiagLT->fill(Qt::transparent);
+	m_pPixmapDiagRT	= new QPixmap(2*m_radPixmapDiag, 2*m_radPixmapDiag);
+	m_pPixmapDiagRT->fill(Qt::transparent);
 
 	QPainter painter;
 	for (int i = 0; i < NUM_PIXMAP_COLORS; i++)
@@ -979,15 +986,28 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						// Read flags for LT and RT so we can fill diagonal gaps produced on previous iLoop
 						const bool bUsedLT = ReadCodeBit(NBR_LT, iPerimeterCode);
 						const bool bUsedRT = ReadCodeBit(NBR_RT, iPerimeterCode);
-						if ( bCustomColor )
+						if ( bUsedLT || bUsedRT )
 						{
-							if ( bUsedLT ) PaintDiag(board, painter, color, QPointF(L,T), true);
-							if ( bUsedRT ) PaintDiag(board, painter, color, QPointF(R,T), false);
-						}
-						else
-						{
-							if ( bUsedLT ) painter.drawPixmap(L-m_radPixmapDiag, T-m_radPixmapDiag, *(m_ppPixmapDiag[iEffColorId]));
-							if ( bUsedRT ) painter.drawPixmap(R-m_radPixmapDiag, T-m_radPixmapDiag, *(m_ppPixmapDiag[iEffColorId + NUM_PIXMAP_COLORS]));
+							QPixmap* pLT = bCustomColor ? m_pPixmapDiagLT : m_ppPixmapDiag[iEffColorId];
+							QPixmap* pRT = bCustomColor ? m_pPixmapDiagRT : m_ppPixmapDiag[iEffColorId + NUM_PIXMAP_COLORS];
+							if ( bCustomColor )
+							{
+								QPainter painterTmp;
+								if ( bUsedLT )
+								{
+									painterTmp.begin(m_pPixmapDiagLT);
+									PaintDiag(board, painterTmp, color, QPointF(m_radPixmapDiag, m_radPixmapDiag), true);
+									painterTmp.end();
+								}
+								if ( bUsedRT )
+								{
+									painterTmp.begin(m_pPixmapDiagRT);
+									PaintDiag(board, painterTmp, color, QPointF(m_radPixmapDiag, m_radPixmapDiag), false);
+									painterTmp.end();
+								}
+							}
+							if ( bUsedLT ) painter.drawPixmap(L-m_radPixmapDiag, T-m_radPixmapDiag, *pLT);
+							if ( bUsedRT ) painter.drawPixmap(R-m_radPixmapDiag, T-m_radPixmapDiag, *pRT);
 						}
 					}
 				}
