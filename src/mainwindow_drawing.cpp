@@ -676,8 +676,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	const bool		 bPCB			= trackMode == TRACKMODE::PCB;
 	const bool		 bMonoPCB		= bMono || bPCB;
 	const bool		 bGroundFill	= !bVero && bMonoPCB && board.GetGroundFill();
-	const bool		 bPixmapCache	= !bVero && !bPCB && !bGroundFill && !m_bWritePDF;
-	const bool		 bDirect		= !bVero && !bPixmapCache && !bGroundFill;
+	const bool		 bPixmapCache	= !bVero && !bPCB && !bGroundFill && !m_bWritePDF;	// true ==> Faster rendering (Mono/Color modes)
+	const bool		 bDirect		= !bVero && !bPixmapCache && !bGroundFill;			// true ==> Draw track "blobs" and pads directly (PDF/Gerber)
+	const bool		 bExtraTags		= false;											// true ==> Add extra thermal relief tags
 	const int&		 layer			= board.GetCurrentLayer();
 	const int&		 groundNodeId	= ( layer == 0 ) ? board.GetGroundNodeId0() :  board.GetGroundNodeId1();
 	const bool		 bWiresAsTracks	= m_bWriteGerber && m_bTwoLayerGerber && board.GetLyrs() == 1;	// true ==> Convert wires to tracks on the top layer
@@ -1025,7 +1026,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						PaintBlob(board, painter, color, pCentre, iPerimeterCode);							// Draw track blob
 						if ( bVia ) PaintVia(board, painter, color, pCentre);								// Draw via same color as track
 						if ( bPad ) PaintPad(board, painter, color, pCentre, iPadWidthMIL, iHoleWidthMIL);	// Draw pad same color as track
-						if ( bPad && nodeId == groundNodeId && nodeId != BAD_NODEID )						// Draw thermal relief tags
+						if ( bExtraTags && bPad && nodeId == groundNodeId && nodeId != BAD_NODEID )			// Draw extra thermal relief tags
 						{
 							int iCode(iPerimeterCode);		// Take a copy of the perimeter code
 							for (int iDiag = 0, iDiagMax = ( bDiagsOK ) ? 2 : 1; iDiag < iDiagMax; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
