@@ -316,7 +316,7 @@ bool Board::ImportOrcad(const TemplateManager& templateMgr, const std::string& f
 			std::vector<std::string> strList;
 
 			StringHelper::GetSubStrings(str, strList);	// Break str into space separated list
-			const size_t numSubStrings =  strList.size();
+			const size_t numSubStrings = strList.size();
 
 			if ( numSubStrings < 4 || numSubStrings > 5 )
 			{

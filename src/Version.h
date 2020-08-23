@@ -245,4 +245,6 @@ static const char* szVEROROUTE_VERSION =
 			// New feature: Allow user to specify a color for any NodeID.
 			// Improvement: Show info on Bad/Floating nodes in a single list.
 			// For consistency between view types, draw hashed lines for broken connections in red instead of yellow.
-  "1.96";	// New feature: In Color mode, color each wire according to its NodeId.
+//"1.96";	// New feature: In Color mode, color each wire according to its NodeId.
+  "1.97";	// Bug fix: In Color mode, diagonal track portions were drawn too long if using custom track color.
+			// Disabled code for drawing extra thermal relief tags (so a filled PCB will be easier to solder).

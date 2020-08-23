@@ -188,9 +188,9 @@ void GStream::MakeApertures()	// Make "pens" for current stream
 		case GFILE::GBS:
 		case GFILE::GTS:
 			for (auto& pad : pads)
-				m_ePenList.push_back( GPenInfo(GPEN::PAD_MSK, pad + 2 * msk, code++, " is slightly larger than a pad", pad != padDefault) );
+				m_ePenList.push_back( GPenInfo(GPEN::PAD_MSK, pad + 2 * msk, code++, " is for pads", pad != padDefault) );
 			if ( m_bVias )
-				m_ePenList.push_back( GPenInfo(GPEN::VIA_MSK, via + 2 * msk, code++, " is slightly larger than a via-pad") );
+				m_ePenList.push_back( GPenInfo(GPEN::VIA_MSK, via + 2 * msk, code++, " is for via-pads") );
 			break;
 		case GFILE::GTO:
 		case GFILE::GBO:

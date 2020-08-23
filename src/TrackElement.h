@@ -40,7 +40,7 @@ const int	NBR_X(8);	// Index for the neighbour element in the layer above/below
 
 static int	Opposite(int NBR)	// Helper to get opposite neighbour index
 {
-	return ( NBR == NBR_X ) ? NBR_X : (  ( NBR + 4 ) % 8 );
+	return ( NBR == NBR_X ) ? NBR_X : ( ( NBR + 4 ) % 8 );
 }
 
 // Functions for mapping NBR indices to "code bits" and manipulating them
