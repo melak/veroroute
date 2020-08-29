@@ -32,6 +32,7 @@ void Board::DestroyComponent(Component& comp)	// Destroys a component on the boa
 int Board::CreateComponent(int iRow, int iCol, const COMP& eType, const Component* pComp)
 {
 	assert( pComp == nullptr || pComp->GetType() == eType );	// Sanity check
+	assert( eType != COMP::INVALID );
 
 	// Try and produce a simple unique Name for the new part if possible
 	char buffer[256] = {'\0'};
@@ -68,6 +69,7 @@ int Board::CreateComponent(int iRow, int iCol, const COMP& eType, const Componen
 int Board::AddComponent(int iRow, int iCol, const Component& tmp, bool bDoPlace)
 {
 	// Adds a new component to the board, and returns its compId
+	assert( tmp.GetType() != COMP::INVALID );
 
 	const int compId = m_compMgr.CreateComp(tmp, GetUsePCBshapes() );	// CompMgr makes a copy of tmp and returns its compId
 	if ( compId == INT_MAX ) return BAD_COMPID;		// Reached component limit !!!
@@ -1101,6 +1103,32 @@ void Board::RotateComps(const std::list<int>& compIds, const bool& bCW)	// Rotat
 			PutDown( m_compMgr.GetComponentById( compId ) );
 		PlaceFloaters();	// See if we can now place floating components down
 	}
+}
+
+void Board::FixCorruption()
+{
+	// The following should not really be necessary, but if we have a corrupt state
+	// we should at least allow the user to try fix the board so it can continue to be used.
+
+	FloatAllComps();	// Float all components
+
+	// Destroy any components that have an invalid component type
+	m_compMgr.DestroyBadComponents();
+
+	// Ensure there are no component related effects on the board elements
+	for (int i  = 0, iSize = GetSize(); i < iSize; i++)
+	{
+		Element* p = GetAt(i);
+		p->SetCompId(BAD_COMPID);
+		p->SetCompId2(BAD_COMPID);
+		p->SetPinIndex(BAD_PININDEX);
+		p->SetPinIndex2(BAD_PININDEX);
+		p->SetSurface(SURFACE_FREE);
+		p->SetHoleUse(HOLE_FREE);
+		p->SetIsMark(false);
+	}
+
+	PlaceFloaters();	// Unfloat components
 }
 
 Rect Board::GetFootprintBounds(const std::list<int>& compIds)

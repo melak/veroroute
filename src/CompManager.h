@@ -114,6 +114,15 @@ public:
 		else
 			assert(0);	// Should never hit this
 	}
+	void DestroyBadComponents()	// Helper to fix corrupted boards
+	{
+		std::set<int> badCompIds;
+		for (const auto& mapObj : m_mapIdToComp)
+			if ( mapObj.second.GetType() == COMP::INVALID )
+				badCompIds.insert(mapObj.first);
+		for (auto& compId : badCompIds)
+			DestroyComp( GetComponentById(compId) );
+	}
 	bool GetIsEmpty() const
 	{
 		return m_mapIdToComp.empty() && m_trax.GetSize() == 0;

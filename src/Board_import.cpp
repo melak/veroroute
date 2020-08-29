@@ -172,6 +172,7 @@ bool Board::ImportTango(const TemplateManager& templateMgr, const std::string& f
 					}
 					else
 					{
+						assert( eType != COMP::INVALID );
 						nodeList.resize(numPins, BAD_NODEID);
 						Component tmp(nameStr, valueStr, eType, nodeList);
 						if ( nLength > 0 )
@@ -430,6 +431,7 @@ bool Board::ImportOrcad(const TemplateManager& templateMgr, const std::string& f
 			}
 			else
 			{
+				assert( eType != COMP::INVALID );
 				nodeList.resize(numPins, BAD_NODEID);
 				Component tmp(nameStr, valueStr, eType, nodeList);
 				if ( nLength > 0 )

@@ -188,21 +188,40 @@ public:
 		m_pinAligns.clear();
 		m_shapes.clear();
 	}
-	void SetId(const int& i)										{ m_id = i; }
-	void SetNameStr(const std::string& s)							{ m_nameStr = s; }
-	void SetValueStr(const std::string& s)							{ m_valueStr = s; }
-	void SetPrefixStr(const std::string& s)							{ m_prefixStr = s; }
-	void SetTypeStr(const std::string& s)							{ m_typeStr = s; }
-	void SetImportStr(const std::string& s)							{ m_importStr = s; }
-	void SetNodeId(const size_t& iPinIndex, const int& i)			{ m_nodeIdPins[iPinIndex] = i; }
+	void SetId(const int& i)					{ m_id = i; }
+	void SetNameStr(const std::string& s)		{ m_nameStr = s; }
+	void SetValueStr(const std::string& s)		{ m_valueStr = s; }
+	void SetPrefixStr(const std::string& s)		{ m_prefixStr = s; }
+	void SetTypeStr(const std::string& s)		{ m_typeStr = s; }
+	void SetImportStr(const std::string& s)		{ m_importStr = s; }
+	void SetNodeId(const size_t& iPinIndex, const int& i)
+	{
+		if ( iPinIndex < m_nodeIdPins.size() ) m_nodeIdPins[iPinIndex] = i;
+	}
 	void SetOrigId(const int& lyr, const size_t& iPinIndex, const int& i)
 	{
 		assert( lyr == 0 || lyr == 1 );
-		if ( lyr == 0 ) m_origIdPins1[iPinIndex] = i; else m_origIdPins2[iPinIndex] = i;
+		if ( lyr == 0 )
+		{
+			if ( iPinIndex < m_origIdPins1.size() ) m_origIdPins1[iPinIndex] = i;
+		}
+		else
+		{
+			if ( iPinIndex < m_origIdPins2.size() ) m_origIdPins2[iPinIndex] = i;
+		}
 	}
-	void SetPinLabel(const size_t& iPinIndex, const std::string& s)	{ m_pinLabels[iPinIndex] = s; }
-	void SetPinAlign(const size_t& iPinIndex, const int& i)			{ m_pinAligns[iPinIndex] = i; }
-	void SetShape(const size_t& iShapeIndex, const Shape& o)		{ m_shapes[iShapeIndex] = o; }
+	void SetPinLabel(const size_t& iPinIndex, const std::string& s)
+	{
+		if ( iPinIndex < m_pinLabels.size() ) m_pinLabels[iPinIndex] = s;
+	}
+	void SetPinAlign(const size_t& iPinIndex, const int& i)
+	{
+		if ( iPinIndex < m_pinAligns.size() ) m_pinAligns[iPinIndex] = i;
+	}
+	void SetShape(const size_t& iShapeIndex, const Shape& o)
+	{
+		if ( iShapeIndex < m_shapes.size() ) m_shapes[iShapeIndex] = o;
+	}
 	void CopyPinLabels(const Component& o)
 	{
 		assert( m_pinLabels.size() == o.m_pinLabels.size() );
@@ -228,51 +247,69 @@ public:
 	{
 		m_shapes.clear();	m_shapes.resize(numShapes, Shape());
 	}
-	void SetLyr(const int& i)										{ m_lyr = i; }
-	void SetRow(const int& i)										{ m_row = i; }
-	void SetCol(const int& i)										{ m_col = i; }
-//	void SetLabelOffsetRow(const int& i)							{ m_iLabelOffsetRow = i; }
-//	void SetLabelOffsetCol(const int& i)							{ m_iLabelOffsetCol = i; }
-	void SetDirection(const char& d)								{ m_direction = d; }
-	void SetIsPlaced(const bool& b)									{ m_bIsPlaced = b; }
-	void SetPinFlags(const uchar& i)								{ m_iPinFlags = i; }
-	void SetPadWidth(const int& i)									{ m_iPadWidth = i; }
-	void SetHoleWidth(const int& i)									{ m_iHoleWidth = i; }
-	void AddOne(const Shape& s)										{ m_shapes.push_back(s); }
+	void SetLyr(const int& i)					{ m_lyr = i; }
+	void SetRow(const int& i)					{ m_row = i; }
+	void SetCol(const int& i)					{ m_col = i; }
+//	void SetLabelOffsetRow(const int& i)		{ m_iLabelOffsetRow = i; }
+//	void SetLabelOffsetCol(const int& i)		{ m_iLabelOffsetCol = i; }
+	void SetDirection(const char& d)			{ m_direction = d; }
+	void SetIsPlaced(const bool& b)				{ m_bIsPlaced = b; }
+	void SetPinFlags(const uchar& i)			{ m_iPinFlags = i; }
+	void SetPadWidth(const int& i)				{ m_iPadWidth = i; }
+	void SetHoleWidth(const int& i)				{ m_iHoleWidth = i; }
+	void AddOne(const Shape& s)					{ m_shapes.push_back(s); }
 	void AddTwo(const Shape& s)	// Adds the shape twice.  Once with fill only, and once with line only
 	{
 		Shape tmp(s);
 		tmp.SetDrawFill(true);	tmp.SetDrawLine(false);	m_shapes.push_back(tmp);
 		tmp.SetDrawFill(false);	tmp.SetDrawLine(true);	m_shapes.push_back(tmp);
 	}
-	bool				GetIsTemplate() const						{ return GetId() == BAD_COMPID; }
-	const int&			GetId() const								{ return m_id; }
-	const std::string&	GetNameStr() const							{ return m_nameStr; }
-	const std::string&	GetValueStr() const							{ return m_valueStr; }
-	const std::string&	GetPrefixStr() const						{ return m_prefixStr; }
-	const std::string&	GetTypeStr() const							{ return m_typeStr; }
-	const std::string&	GetImportStr() const						{ return m_importStr; }
-	size_t				GetNumPins() const							{ return m_nodeIdPins.size(); }
-	const int&			GetNodeId(const size_t& iPinIndex) const	{ return m_nodeIdPins[iPinIndex]; }
+	bool				GetIsTemplate() const	{ return GetId() == BAD_COMPID; }
+	const int&			GetId() const			{ return m_id; }
+	const std::string&	GetNameStr() const		{ return m_nameStr; }
+	const std::string&	GetValueStr() const		{ return m_valueStr; }
+	const std::string&	GetPrefixStr() const	{ return m_prefixStr; }
+	const std::string&	GetTypeStr() const		{ return m_typeStr; }
+	const std::string&	GetImportStr() const	{ return m_importStr; }
+	size_t				GetNumPins() const		{ return m_nodeIdPins.size(); }
+	size_t				GetNumShapes() const	{ return m_shapes.size(); }
+	const int&			GetNodeId(const size_t& iPinIndex) const
+	{
+		return ( iPinIndex < m_nodeIdPins.size() ) ? m_nodeIdPins[iPinIndex] : BAD_NODEID;
+	}
 	const int&			GetOrigId(const int& lyr, const size_t& iPinIndex) const
 	{
-		return ( lyr == 0 ) ? m_origIdPins1[iPinIndex] : m_origIdPins2[iPinIndex];
+		if ( lyr == 0 )
+			return ( iPinIndex < m_origIdPins1.size() ) ? m_origIdPins1[iPinIndex] : BAD_NODEID;
+		else
+			return ( iPinIndex < m_origIdPins2.size() ) ? m_origIdPins2[iPinIndex] : BAD_NODEID;
 	}
-	const std::string&	GetPinLabel(const size_t& iPinIndex) const	{ return m_pinLabels[iPinIndex]; }
-	const int&			GetPinAlign(const size_t& iPinIndex) const	{ return m_pinAligns[iPinIndex]; }
-	size_t				GetNumShapes() const						{ return m_shapes.size(); }
-	const Shape&		GetShape(const size_t& iShapeIndex) const	{ return m_shapes[iShapeIndex]; }
-	const int&			GetLyr() const								{ return m_lyr; }
-	const int&			GetRow() const								{ return m_row; }
-	const int&			GetCol() const								{ return m_col; }
-//	const int&			GetLabelOffsetRow() const					{ return m_iLabelOffsetRow; }
-//	const int&			GetLabelOffsetCol() const					{ return m_iLabelOffsetCol; }
-	const char&			GetDirection() const						{ return m_direction; }
-	const bool&			GetIsPlaced() const							{ return m_bIsPlaced; }
-	const uchar&		GetPinFlags() const							{ return m_iPinFlags; }
-	const int&			GetPadWidth() const							{ return m_iPadWidth; }
-	const int&			GetHoleWidth() const						{ return m_iHoleWidth; }
-	const std::vector<Shape>&	GetShapes() const					{ return m_shapes; }
+	const std::string&	GetPinLabel(const size_t& iPinIndex) const
+	{
+		static const std::string emptyStr("");
+		return ( iPinIndex < m_pinLabels.size() ) ? m_pinLabels[iPinIndex] : emptyStr;
+	}
+	const int&			GetPinAlign(const size_t& iPinIndex) const
+	{
+		static int defaultAlign = Qt::AlignHCenter;
+		return ( iPinIndex < m_pinAligns.size() ) ? m_pinAligns[iPinIndex] : defaultAlign;
+	}
+	const Shape&		GetShape(const size_t& iShapeIndex) const
+	{
+		static Shape	defaultShape;
+		return ( iShapeIndex < m_shapes.size() ) ? m_shapes[iShapeIndex] : defaultShape;
+	}
+	const int&			GetLyr() const			{ return m_lyr; }
+	const int&			GetRow() const			{ return m_row; }
+	const int&			GetCol() const			{ return m_col; }
+//	const int&			GetLabelOffsetRow() const	{ return m_iLabelOffsetRow; }
+//	const int&			GetLabelOffsetCol() const	{ return m_iLabelOffsetCol; }
+	const char&			GetDirection() const	{ return m_direction; }
+	const bool&			GetIsPlaced() const		{ return m_bIsPlaced; }
+	const uchar&		GetPinFlags() const		{ return m_iPinFlags; }
+	const int&			GetPadWidth() const		{ return m_iPadWidth; }
+	const int&			GetHoleWidth() const	{ return m_iHoleWidth; }
+	const std::vector<Shape>& GetShapes() const	{ return m_shapes; }
 
 	// Helpers for labels
 	void SetDefaultLabelOffsets();

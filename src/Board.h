@@ -441,6 +441,7 @@ public:
 	bool TakeOff(Component& comp);
 	void FloatAllComps();				// Float all components (i.e. take them off the board)
 	void PlaceFloaters();				// Try to place down all the floating components
+	void FixCorruption();
 
 	// GUI helpers for manipulating user-selected components
 	void SelectAllComps(bool bRestrictToRects);

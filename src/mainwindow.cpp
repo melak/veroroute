@@ -134,6 +134,7 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	QObject::connect(ui->actionWrite_PNG,				SIGNAL(triggered()), this, SLOT(WritePNG()));
 	QObject::connect(ui->actionWrite_Gerber,			SIGNAL(triggered()), this, SLOT(WriteGerber()));
 	QObject::connect(ui->actionWrite_Gerber2,			SIGNAL(triggered()), this, SLOT(WriteGerber2()));
+	QObject::connect(ui->actionFixCorruption,			SIGNAL(triggered()), this, SLOT(FixCorruption()));
 	QObject::connect(ui->actionClearRecent,				SIGNAL(triggered()), this, SLOT(ClearRecentFiles()));
 	QObject::connect(ui->actionQuit,					SIGNAL(triggered()), this, SLOT(Quit()));
 	QObject::connect(ui->actionZoom_In,					SIGNAL(triggered()), this, SLOT(ZoomIn()));
@@ -1336,6 +1337,14 @@ void MainWindow::WipeTracks()	// On hitting the Wipe All button ...
 	m_board.WipeTracks();
 	m_board.SetRoutingEnabled(false);
 	UpdateHistory("Wipe Tracks");
+	UpdateControls();
+	RepaintWithListNodes();
+}
+
+void MainWindow::FixCorruption()
+{
+	m_board.FixCorruption();
+	UpdateHistory("Fix corrupted layout");
 	UpdateControls();
 	RepaintWithListNodes();
 }
