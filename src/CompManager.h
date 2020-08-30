@@ -114,14 +114,20 @@ public:
 		else
 			assert(0);	// Should never hit this
 	}
-	void DestroyBadComponents()	// Helper to fix corrupted boards
+	size_t DestroyBadComponents()	// Helper to fix corrupted boards
 	{
 		std::set<int> badCompIds;
 		for (const auto& mapObj : m_mapIdToComp)
-			if ( mapObj.second.GetType() == COMP::INVALID )
+		{
+			const Component& comp = mapObj.second;
+			assert( !comp.GetIsPlaced() );	// Sanity check. All components should be floated
+			if ( comp.GetType() == COMP::INVALID )
 				badCompIds.insert(mapObj.first);
+		}
+		const size_t numBadComps = badCompIds.size();
 		for (auto& compId : badCompIds)
 			DestroyComp( GetComponentById(compId) );
+		return numBadComps;
 	}
 	bool GetIsEmpty() const
 	{

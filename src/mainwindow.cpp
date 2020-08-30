@@ -1049,18 +1049,18 @@ void MainWindow::HandleNetworkReply(QNetworkReply* pReply)
 
 	if ( pReply->error() == QNetworkReply::UnknownNetworkError )
 	{
-		QMessageBox::information(this, "Check failed", "There was a network error.\nRead the file OpenSSL.txt provided with VeroRoute.");
+		QMessageBox::information(this, tr("Check failed"), tr("There was a network error.\nRead the file OpenSSL.txt provided with VeroRoute."));
 		return;
 	}
 	else if ( pReply->error() != QNetworkReply::NoError )
 	{
-		QMessageBox::information(this, "Check failed", "There was a network error.");
+		QMessageBox::information(this, tr("Check failed"), tr("There was a network error."));
 		return;
 	}
 	const QString contentType = pReply->header(QNetworkRequest::ContentTypeHeader).toString();
 	if ( !contentType.contains("charset=utf-8") )
 	{
-		QMessageBox::information(this, "Check failed", "Unsupported character set.");
+		QMessageBox::information(this, tr("Check failed"), tr("Unsupported character set."));
 		return; // Content charsets other than utf-8 are not implemented yet
 	}
 	const QString		qstrHtml	= QString::fromUtf8(pReply->readAll());
@@ -1068,7 +1068,7 @@ void MainWindow::HandleNetworkReply(QNetworkReply* pReply)
 	const auto			pos			= strHtml.find("Version ");	// Search for the text "Version " on the page
 	if ( pos == std::string::npos )
 	{
-		QMessageBox::information(this, "Check failed", "Could not find Version number on Sourceforge.");
+		QMessageBox::information(this, tr("Check failed"), tr("Could not find Version number on Sourceforge."));
 		return;
 	}
 
@@ -1083,11 +1083,11 @@ void MainWindow::HandleNetworkReply(QNetworkReply* pReply)
 	sprintf(bufferOther, "A new version is available!\nV%s can be downloaded from\nhttps://sourceforge.net/projects/veroroute/files/", versionStr.c_str());
 
 	if ( dSiteVersion > dThisVersion )
-		QMessageBox::information(this, bufferThis, bufferOther);
+		QMessageBox::information(this, tr(bufferThis), tr(bufferOther));
 	else if ( dSiteVersion == dThisVersion )
-		QMessageBox::information(this, bufferThis, "You have the latest version.");
+		QMessageBox::information(this, tr(bufferThis), tr("You have the latest version."));
 	else
-		QMessageBox::information(this, bufferThis, "You have a newer version than Sourceforge.");
+		QMessageBox::information(this, tr(bufferThis), tr("You have a newer version than Sourceforge."));
 }
 
 // View controls (Update history BEFORE calling UpdateControls() since that triggers more history writes)
@@ -1343,10 +1343,25 @@ void MainWindow::WipeTracks()	// On hitting the Wipe All button ...
 
 void MainWindow::FixCorruption()
 {
-	m_board.FixCorruption();
-	UpdateHistory("Fix corrupted layout");
-	UpdateControls();
-	RepaintWithListNodes();
+	size_t nBadComps(0), nBadPoints(0);
+	m_board.FixCorruption(nBadComps, nBadPoints);
+
+	if ( nBadComps == 0 && nBadPoints == 0 )
+	{
+		QMessageBox::information(this, tr("Information"), tr("No corruption found"));
+	}
+	else
+	{
+		char buffer[64] = {'\0'};
+		sprintf(buffer, "%zu bad part%s destroyed.  %zu bad grid point%s fixed.",
+				nBadComps,  nBadComps  == 1 ? "" : "s",
+				nBadPoints, nBadPoints == 1 ? "" : "s");
+		QMessageBox::information(this, tr("Information"), tr(buffer));
+
+		UpdateHistory("Fix corrupted layout");
+		UpdateControls();
+		RepaintWithListNodes();
+	}
 }
 
 // Node color

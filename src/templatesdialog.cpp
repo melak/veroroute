@@ -262,7 +262,7 @@ void TemplatesDialog::AddTemplatesFromBoard(Board& board, bool bAllComps, bool b
 	{
 		char buffer[64] = {'\0'};
 		sprintf(buffer, "No parts are currently selected in the main view.");
-		QMessageBox::information(this, "Information", tr(buffer));
+		QMessageBox::information(this, tr("Information"), tr(buffer));
 		return;
 	}
 	
@@ -280,7 +280,7 @@ void TemplatesDialog::AddTemplatesFromBoard(Board& board, bool bAllComps, bool b
 	{
 		char buffer[64] = {'\0'};
 		sprintf(buffer, "%d new templates added.", nCount);
-		QMessageBox::information(this, "Information", tr(buffer));
+		QMessageBox::information(this, tr("Information"), tr(buffer));
 	}
 }
 
