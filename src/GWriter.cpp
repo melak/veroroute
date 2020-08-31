@@ -507,7 +507,7 @@ void GStream::GetQPolygon(const QPolygonF& in, QPolygon& out) const
 {
 	out.clear();
 	out.resize( in.size() );
-	for (auto i = 0; i < in.size(); i++) GetQPoint(in[i], out[i]);
+	for (int i = 0, iSize = in.size(); i < iSize; i++) GetQPoint(in[i], out[i]);
 }
 
 // Wrapper for handling a set of Gerber files

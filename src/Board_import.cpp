@@ -536,8 +536,7 @@ bool Board::BreakComponentIntoPads(Component& comp)
 	if ( eType == COMP::MARK || eType == COMP::PAD || eType == COMP::WIRE ) return false;	// Not real components
 	if ( !comp.GetIsPlaced() ) return false;	// Can't break a floating component
 
-	std::vector<int> nodeList;	// Re-used for each new pad
-	nodeList.resize(1, BAD_NODEID);
+	std::vector<int> nodeList = { BAD_NODEID };	// Re-used for each new pad
 
 	const size_t numPins = comp.GetNumPins();
 	for (size_t iPinIndex = 0; iPinIndex < numPins; iPinIndex++)	// Loop component pins

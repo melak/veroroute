@@ -601,7 +601,6 @@ static std::string GetDefaultPinLabel(size_t iPinIndex)
 	return buffer;
 }
 
-
 static int GetDefaultPinAlign(size_t iPinIndex, size_t iNumPins, const COMP& eType)
 {
 	switch( eType )

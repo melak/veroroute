@@ -74,7 +74,7 @@ public:
 	size_t	GetSize() const			{ return m_list.size(); }
 	Rect&	GetCurrent() const		{ return m_current; }
 	Rect&	GetBounding() const		{ return m_bounding; }
-	Rect&	GetAt(size_t i)			{ return m_list[i]; }
+//	Rect&	GetAt(size_t i)			{ return m_list[i]; }
 	bool ContainsPoint(int row, int col) const
 	{
 		if ( m_current.ContainsPoint(row, col) ) return true;		// Check current before the list
