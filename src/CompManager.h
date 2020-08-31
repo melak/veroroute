@@ -114,7 +114,7 @@ public:
 		else
 			assert(0);	// Should never hit this
 	}
-	size_t DestroyBadComponents()	// Helper to fix corrupted boards
+	int DestroyBadComponents()	// Helper to fix corrupted boards
 	{
 		std::set<int> badCompIds;
 		for (const auto& mapObj : m_mapIdToComp)
@@ -124,7 +124,7 @@ public:
 			if ( comp.GetType() == COMP::INVALID )
 				badCompIds.insert(mapObj.first);
 		}
-		const size_t numBadComps = badCompIds.size();
+		const int numBadComps = (int) ( badCompIds.size() );
 		for (auto& compId : badCompIds)
 			DestroyComp( GetComponentById(compId) );
 		return numBadComps;

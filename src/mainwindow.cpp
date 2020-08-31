@@ -1343,7 +1343,7 @@ void MainWindow::WipeTracks()	// On hitting the Wipe All button ...
 
 void MainWindow::FixCorruption()
 {
-	size_t nBadComps(0), nBadPoints(0);
+	int nBadComps(0), nBadPoints(0);
 	m_board.FixCorruption(nBadComps, nBadPoints);
 
 	if ( nBadComps == 0 && nBadPoints == 0 )
@@ -1353,7 +1353,7 @@ void MainWindow::FixCorruption()
 	else
 	{
 		char buffer[64] = {'\0'};
-		sprintf(buffer, "%zu bad part%s destroyed.  %zu bad grid point%s fixed.",
+		sprintf(buffer, "%d bad part%s destroyed.  %d bad grid point%s fixed.",
 				nBadComps,  nBadComps  == 1 ? "" : "s",
 				nBadPoints, nBadPoints == 1 ? "" : "s");
 		QMessageBox::information(this, tr("Information"), tr(buffer));
