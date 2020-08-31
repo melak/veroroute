@@ -246,5 +246,7 @@ static const char* szVEROROUTE_VERSION =
 			// Improvement: Show info on Bad/Floating nodes in a single list.
 			// For consistency between view types, draw hashed lines for broken connections in red instead of yellow.
 //"1.96";	// New feature: In Color mode, color each wire according to its NodeId.
-  "1.97";	// Bug fix: In Color mode, diagonal track portions were drawn too long if using custom track color.
+//"1.97";	// Bug fix: In Color mode, diagonal track portions were drawn too long if using custom track color.
 			// Disabled code for drawing extra thermal relief tags (so a filled PCB will be easier to solder).
+  "1.98";	// Put in extra checks to stop potential crashes arising from a corrupted layout.
+			// Added file menu option to fix a corrupted layout.
