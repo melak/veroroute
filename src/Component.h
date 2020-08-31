@@ -275,14 +275,16 @@ public:
 	size_t				GetNumShapes() const	{ return m_shapes.size(); }
 	const int&			GetNodeId(const size_t& iPinIndex) const
 	{
-		return ( iPinIndex < m_nodeIdPins.size() ) ? m_nodeIdPins[iPinIndex] : BAD_NODEID;
+		static int badNodeId(BAD_NODEID);
+		return ( iPinIndex < m_nodeIdPins.size() ) ? m_nodeIdPins[iPinIndex] : badNodeId;
 	}
 	const int&			GetOrigId(const int& lyr, const size_t& iPinIndex) const
 	{
+		static int badNodeId(BAD_NODEID);
 		if ( lyr == 0 )
-			return ( iPinIndex < m_origIdPins1.size() ) ? m_origIdPins1[iPinIndex] : BAD_NODEID;
+			return ( iPinIndex < m_origIdPins1.size() ) ? m_origIdPins1[iPinIndex] : badNodeId;
 		else
-			return ( iPinIndex < m_origIdPins2.size() ) ? m_origIdPins2[iPinIndex] : BAD_NODEID;
+			return ( iPinIndex < m_origIdPins2.size() ) ? m_origIdPins2[iPinIndex] : badNodeId;
 	}
 	const std::string&	GetPinLabel(const size_t& iPinIndex) const
 	{
@@ -291,7 +293,7 @@ public:
 	}
 	const int&			GetPinAlign(const size_t& iPinIndex) const
 	{
-		static int defaultAlign = Qt::AlignHCenter;
+		static int defaultAlign(Qt::AlignHCenter);
 		return ( iPinIndex < m_pinAligns.size() ) ? m_pinAligns[iPinIndex] : defaultAlign;
 	}
 	const Shape&		GetShape(const size_t& iShapeIndex) const
