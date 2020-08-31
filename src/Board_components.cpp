@@ -1110,10 +1110,18 @@ void Board::FixCorruption(int& nBadComps, int& nBadPoints)
 	// The following should not really be necessary, but if we have a corrupt state
 	// we should at least allow the user to try fix the board so it can continue to be used.
 
-	FloatAllComps();	// Float all components
-
 	// Destroy any components that have an invalid component type
-	nBadComps = m_compMgr.DestroyBadComponents();
+	std::set<int> badCompIds;
+	m_compMgr.GetBadCompIds(badCompIds);
+	nBadComps = (int) ( badCompIds.size() );
+
+	for (auto& compId : badCompIds)
+	{
+		Component& comp = m_compMgr.GetComponentById(compId);
+		DestroyComponent(comp);
+	}
+
+	FloatAllComps();	// Float all components
 
 	// Ensure there are no component related effects on the board elements
 	nBadPoints = 0;

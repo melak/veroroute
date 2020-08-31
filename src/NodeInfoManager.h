@@ -53,13 +53,8 @@ public:
 	void RemoveComp(const Component& comp)	// Call this before destroying a comp, or calling comp.SetNodeId()
 	{
 		if ( !comp.GetIsTrueComp() ) return;
-		for (size_t n = 0, N = comp.GetNumPins(); n < N; n++)	// Loop pins on the component
-		{
-			const int& nodeId = comp.GetNodeId(n);
-			// Find the relevant list member for the nodeId and remove the comp from it
-			for (auto& pNodeInfo : m_list)
-				if ( pNodeInfo->GetNodeId() == nodeId ) { pNodeInfo->RemoveComp(comp); break; }
-		}
+		for (NodeInfo* pNodeInfo : m_list)
+			if ( pNodeInfo ) pNodeInfo->RemoveComp(comp);
 	}
 	int GetNewNodeId(const AdjInfoManager& m_adjInfoManager)	// Returns lowest nodeId not used by a component or the board
 	{

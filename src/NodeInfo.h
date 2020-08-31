@@ -69,8 +69,7 @@ public:
 	void RemoveComp(const Component& comp)
 	{
 		assert( comp.GetIsTrueComp() );	// A true component has pins and "owns" the nodeIds on them
-		if ( !comp.GetHasNodeId(m_nodeId) ) return;	// No such NodeId on component
-		auto iter = std::find(m_compIds.begin(), m_compIds.end(), comp.GetId() );
+		auto iter = std::find(m_compIds.begin(), m_compIds.end(), comp.GetId());
 		if ( iter == m_compIds.end() ) return;		// compId not in the list
 		*iter = m_compIds.back();					// Swap with last item ...
 		m_compIds.pop_back();						// ... then erase it
