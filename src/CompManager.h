@@ -40,7 +40,7 @@ public:
 	CompManager& operator=(const CompManager& o)
 	{
 		Clear();
-		for (const auto& mapObj : o.m_mapIdToComp) m_mapIdToComp[ mapObj.second.GetId() ] = mapObj.second;
+		for (const auto& mapObj : o.m_mapIdToComp) m_mapIdToComp[ mapObj.first ] = mapObj.second;
 		m_trax = o.m_trax;
 		// Don't copy m_mapWireToShift (it's just a helper)
 		// Don't copy m_foundId        (it's just a helper)

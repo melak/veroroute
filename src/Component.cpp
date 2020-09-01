@@ -96,7 +96,8 @@ void Component::SetDefaultPinFlags()
 		case COMP::TRIM_3362Z:
 		case COMP::CRYSTAL:	assert( GetPinFlags() == iCustomFlag );	return SetPinFlags(iCustomFlag);
 		case COMP::CUSTOM:
-		case COMP::TRACKS:		return;
+		case COMP::TRACKS:
+		case COMP::INVALID:		return;
 		default:	assert(0);	return;	// Unhandled eType
 	}
 }
@@ -302,6 +303,7 @@ void Component::SetDefaultShapes(const bool& bUsePCBshapes)
 			}
 			break;
 		}
+		case COMP::INVALID:	break;
 		default:	assert(0);	// Unhandled eType
 	}
 	std::sort(m_shapes.begin(), m_shapes.end());	// Sort shapes so fills are rendered before lines
@@ -385,6 +387,7 @@ void Component::SetDefaultColor()
 		case COMP::STRIP_100:				return SetFillColor(MyRGB(0xFFFFDF));
 		case COMP::BLOCK_100:				return SetFillColor(MyRGB(0xFFFFDF));
 		case COMP::BLOCK_200:				return SetFillColor(MyRGB(0xFFFFDF));
+		case COMP::INVALID:					return;
 		default:	assert(0);	// Unhandled eType
 	}
 }

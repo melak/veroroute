@@ -590,6 +590,7 @@ static std::string GetMakeInstructions(const COMP& eType, int& rows, int& cols)
 		case COMP::RELAY_DIP_8PIN		: rows = 4; cols = 7;  return "87+++65++++++++++++++12+++34";
 		case COMP::FUSE_HOLDER			: rows = 3; cols = 10; return "++++++++++1++++++++2++++++++++";
 		case COMP::CUSTOM				: rows = 1; cols = 1;  return ".";
+		case COMP::INVALID				: rows = 0; cols = 0;  return "";
 		default:	assert(0);			  rows = 0; cols = 0;  return "";	// Unhandled eType
 	}
 }
@@ -737,7 +738,6 @@ static int GetMaxNumPins(const COMP& eType)
 		case COMP::SWITCH_ST:
 		case COMP::SWITCH_ST_DIP:	return 254;
 		case COMP::SWITCH_DT:		return 255;	// We're limited to (0 <= pinIndex <= 254)
-
 		default:					return GetDefaultNumPins(eType);
 	}
 }
