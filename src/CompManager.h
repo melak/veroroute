@@ -75,8 +75,14 @@ public:
 	Component& GetComponentById(const int& compId)
 	{
 		if ( compId == TRAX_COMPID ) return m_trax;
-		assert( GetComponentExists(compId) );
-		return m_mapIdToComp[compId];
+
+		auto iter = m_mapIdToComp.find(compId);
+		if ( iter != m_mapIdToComp.end() ) return iter->second;
+
+		assert(0);	// Should not really get here !!!
+		Component& comp = m_mapIdToComp[compId];	// This creates a blank component and puts it in the map
+		comp.SetId(compId);	// Even a blank component should have the correct compId
+		return comp;
 	}
 	const std::unordered_map<int, Component>& GetMapIdToComp() const
 	{
@@ -326,6 +332,7 @@ public:
 				}
 				comp.SetNameStr(nameStr);
 			}
+			assert( !GetComponentExists(comp.GetId()) );	// Must have unique component IDs
 			m_mapIdToComp[ comp.GetId() ] = comp;
 		}
 		m_trax = o.m_trax;	// Replace m_trax with the one in 'o'
