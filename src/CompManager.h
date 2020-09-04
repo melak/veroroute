@@ -79,7 +79,7 @@ public:
 		auto iter = m_mapIdToComp.find(compId);
 		if ( iter != m_mapIdToComp.end() ) return iter->second;
 
-		assert(0);	// Should not really get here !!!
+		// Should not really get here!!!  Use assert() to check the returned component type is valid.
 		Component& comp = m_mapIdToComp[compId];	// This creates a blank component and puts it in the map
 		comp.SetId(compId);	// Even a blank component should have the correct compId
 		return comp;

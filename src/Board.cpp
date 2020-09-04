@@ -143,6 +143,7 @@ double Board::GetMIN_SEPARATION()	// Minimum separation (in mil) between a pad o
 		if ( bPadA )
 		{
 			const Component& comp = m_compMgr.GetComponentById( pA->GetCompId() );
+			assert( comp.GetType() != COMP::INVALID );
 			iA = comp.GetCustomPads() ? comp.GetPadWidth() : GetPAD_MIL();
 		}
 		else if ( bViaA )	iA = GetVIAPAD_MIL();
@@ -169,6 +170,7 @@ double Board::GetMIN_SEPARATION()	// Minimum separation (in mil) between a pad o
 				if ( bPadB )
 				{
 					const Component& comp = m_compMgr.GetComponentById( pB->GetCompId() );
+					assert( comp.GetType() != COMP::INVALID );
 					iB = comp.GetCustomPads() ? comp.GetPadWidth() : GetPAD_MIL();
 				}
 				else if ( bViaB )	iB = GetVIAPAD_MIL();
@@ -257,7 +259,8 @@ bool Board::SetNodeIdByUser(const int& lyr, const int& row, const int& col, cons
 
 		const size_t	pinIndex	= p->GetPinIndex();
 		const int&		compId		= p->GetCompId();
-		Component&		comp		= m_compMgr.GetComponentById(compId);
+		Component&		comp		= m_compMgr.GetComponentById( compId );
+		assert( comp.GetType() != COMP::INVALID );
 		assert( comp.GetType() != COMP::WIRE );	// Sanity check
 
 		if ( nodeId != BAD_NODEID && nodeId != comp.GetNodeId(pinIndex) ) return false;	// Can't set a bad origId
@@ -279,7 +282,8 @@ bool Board::SetNodeIdByUser(const int& lyr, const int& row, const int& col, cons
 		int		compId;
 		p->GetSlotInfo(p->GetUsedSlot(), pinIndex, compId);
 
-		const Component& comp	= m_compMgr.GetComponentById(compId);	assert( comp.GetType() == COMP::WIRE );
+		const Component& comp	= m_compMgr.GetComponentById( compId );
+		assert( comp.GetType() == COMP::WIRE );	// Sanity check
 		const int		 origId	= comp.GetOrigId(lyr, pinIndex);
 
 		if ( nodeId == p->GetNodeId() && origId == nodeId && p->ReadFlagBits(USERSET) )
@@ -338,7 +342,8 @@ bool Board::SetNodeIdByUser(const int& lyr, const int& row, const int& col, cons
 		{
 			const size_t	pinIndex	= p->GetPinIndex();
 			const int&		compId		= p->GetCompId();
-			Component&		comp		= m_compMgr.GetComponentById(compId);
+			Component&		comp		= m_compMgr.GetComponentById( compId );
+			assert( comp.GetType() != COMP::INVALID );
 			assert( bPaintPins && comp.GetType() != COMP::WIRE );	// Sanity check
 
 			// Need to do (RemoveComp/ SetNodeId/ AddComp) to ensure m_nodeInfoMgr is updated OK
@@ -368,7 +373,8 @@ void Board::FloodNodeId(const int& nodeId)
 			int compId;
 			p->GetSlotInfo(p->GetUsedSlot(), pinIndex, compId);
 
-			const Component& comp	= m_compMgr.GetComponentById(compId); assert( comp.GetType() == COMP::WIRE );
+			const Component& comp	= m_compMgr.GetComponentById( compId );
+			assert( comp.GetType() == COMP::WIRE );	// Sanity check
 			const int		 origId	= comp.GetOrigId(lyr, pinIndex);
 
 			if ( origId != p->GetNodeId() || !p->ReadFlagBits(USERSET) ) continue; // Don't paint directly if it wasn't painted directly in the first place
@@ -493,14 +499,18 @@ void Board::SetSolder(const int& nodeId, const int& col, const bool& bVertical)
 
 			if ( pC->GetHasPin() )
 			{
-				if ( !pC->GetHasWire() && m_compMgr.GetComponentById(pC->GetCompId()).GetType() == COMP::PAD )
+				const Component& comp = m_compMgr.GetComponentById( pC->GetCompId() );
+				assert( comp.GetType() != COMP::INVALID );
+				if ( !pC->GetHasWire() && comp.GetType() == COMP::PAD )
 					rowPads++;
 				else
 					rowPins++;
 			}
 			if ( pR->GetHasPin() )
 			{
-				if ( !pR->GetHasWire() && m_compMgr.GetComponentById(pR->GetCompId()).GetType() == COMP::PAD )
+				const Component& comp = m_compMgr.GetComponentById( pR->GetCompId() );
+				assert( comp.GetType() != COMP::INVALID );
+				if ( !pR->GetHasWire() && comp.GetType() == COMP::PAD )
 					rowPads++;
 				else
 					rowPins++;

@@ -225,7 +225,10 @@ bool Board::ImportTango(const TemplateManager& templateMgr, const std::string& f
 
 					if ( bOK )
 					{
-						bOK = iPinIndex < m_compMgr.GetComponentById(compId).GetNumPins();
+						const Component& comp = m_compMgr.GetComponentById( compId );
+						assert( comp.GetType() != COMP::INVALID );
+
+						bOK = iPinIndex < comp.GetNumPins();
 						if ( !bOK ) errorStr = "Net section: " + netStr + "\nLine has invalid pin number: " + str;
 					}
 					if ( bOK )
@@ -246,7 +249,12 @@ bool Board::ImportTango(const TemplateManager& templateMgr, const std::string& f
 	// Break the SIPS representing off-board parts into PADs
 	if ( bOK )
 		for (const auto& nameStr : offBoard)
-			BreakComponentIntoPads( m_compMgr.GetComponentById( m_compMgr.GetComponentIdFromName(nameStr) ) );
+		{
+			const int	compId	= m_compMgr.GetComponentIdFromName( nameStr );
+			Component&	comp	= m_compMgr.GetComponentById( compId );
+			assert( comp.GetType() != COMP::INVALID );
+			BreakComponentIntoPads(comp);
+		}
 
 	return bOK;
 }
@@ -494,7 +502,7 @@ bool Board::ImportOrcad(const TemplateManager& templateMgr, const std::string& f
 
 			// Paint the component pin using SetNodeIdByUser
 			const size_t	iPinIndex	= atoi(pinStr.c_str()) - 1;
-			const int		compId		= m_compMgr.GetComponentIdFromName(nameStr);
+			const int		compId		= m_compMgr.GetComponentIdFromName( nameStr );
 
 			bOK = compId != BAD_COMPID;
 			if ( !bOK )
@@ -502,7 +510,11 @@ bool Board::ImportOrcad(const TemplateManager& templateMgr, const std::string& f
 				errorStr = "Internal error: VeroRoute lost the component ID";
 				break;
 			}
-			bOK = iPinIndex < m_compMgr.GetComponentById(compId).GetNumPins();
+
+			const Component& comp = m_compMgr.GetComponentById( compId );
+			assert( comp.GetType() != COMP::INVALID );
+
+			bOK = iPinIndex < comp.GetNumPins();
 			if ( !bOK )
 			{
 				errorStr = "Part: " + nameStr + "\nLine has invalid pin number: " + str;
@@ -524,7 +536,12 @@ bool Board::ImportOrcad(const TemplateManager& templateMgr, const std::string& f
 	// Break the SIPS representing off-board parts into PADs
 	if ( bOK )
 		for (const auto& nameStr : offBoard)
-			BreakComponentIntoPads( m_compMgr.GetComponentById( m_compMgr.GetComponentIdFromName(nameStr) ) );
+		{
+			const int	compId	= m_compMgr.GetComponentIdFromName( nameStr );
+			Component&	comp	= m_compMgr.GetComponentById( compId );
+			assert( comp.GetType() != COMP::INVALID );
+			BreakComponentIntoPads(comp);
+		}
 
 	return bOK;
 }

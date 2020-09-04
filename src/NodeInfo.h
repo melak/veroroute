@@ -84,6 +84,7 @@ public:
 		for (size_t i = 0, iSize = GetNumComps(); i < iSize; i++)
 		{
 			const Component& comp = compMgr.GetComponentById( GetCompId(i) );
+			assert( comp.GetType() != COMP::INVALID );
 			assert( comp.GetIsTrueComp() );
 			if ( !comp.GetIsPlaced() ) return true;
 		}
@@ -97,6 +98,7 @@ public:
 		for (size_t i = 0, iSize = GetNumComps(); i < iSize; i++)	// Loop all comps with the nodeId
 		{
 			const Component& comp = compMgr.GetComponentById( GetCompId(i) );
+			assert( comp.GetType() != COMP::INVALID );
 			if ( bIgnoreFloating && !comp.GetIsPlaced() ) continue;	// Skip floating components if needed
 
 			// Loop footprint and find the relevant pin locations

@@ -74,7 +74,8 @@ int Board::AddComponent(int iRow, int iCol, const Component& tmp, bool bDoPlace)
 	const int compId = m_compMgr.CreateComp(tmp, GetUsePCBshapes() );	// CompMgr makes a copy of tmp and returns its compId
 	if ( compId == INT_MAX ) return BAD_COMPID;		// Reached component limit !!!
 
-	Component& comp = m_compMgr.GetComponentById(compId);
+	Component& comp = m_compMgr.GetComponentById( compId );
+	assert( comp.GetType() != COMP::INVALID );
 
 	m_nodeInfoMgr.AddComp(comp);
 
@@ -654,6 +655,7 @@ bool Board::TakeOff(Component& comp)
 						if ( iPinIndex == BAD_PININDEX ) continue;
 						assert( tmpCompId != BAD_COMPID );
 						Component& comp = m_compMgr.GetComponentById( tmpCompId );
+						assert( comp.GetType() != COMP::INVALID );
 						comp.SetNodeId(iPinIndex, BAD_NODEID);
 					}
 					// ... and on the corresponding board points
@@ -754,13 +756,14 @@ void Board::SelectAllComps(bool bRestrictToRects)
 bool Board::ConfirmDestroyUserComps()	// returns false if user-group is empty or has only wires and markers
 {
 	std::list<int> userCompIds;
-	m_groupMgr.GetGroupCompIds(USER_GROUPID, userCompIds);
+	m_groupMgr.GetUserCompIds(userCompIds);
 	for (const auto& compId : userCompIds)
 	{
 		switch( m_compMgr.GetComponentById(compId).GetType() )
 		{
 			case COMP::WIRE:
 			case COMP::MARK:	continue;
+			case COMP::INVALID:	assert(0);
 			default:			return true;
 		}
 	}
@@ -771,8 +774,13 @@ void Board::DestroyUserComps()	// Destroy components in the user-group
 {
 	WipeAutoSetPoints();
 	std::list<int> userCompIds;
-	m_groupMgr.GetGroupCompIds(USER_GROUPID, userCompIds);
-	for (const auto& compId : userCompIds) DestroyComponent( m_compMgr.GetComponentById(compId) );
+	m_groupMgr.GetUserCompIds(userCompIds);
+	for (const auto& compId : userCompIds)
+	{
+		Component& comp = m_compMgr.GetComponentById(compId);
+		assert( comp.GetType() != COMP::INVALID );
+		DestroyComponent( comp );
+	}
 	assert( m_groupMgr.GetNumUserComps() == 0 );	// User group should be empty now
 	SetCurrentCompId(BAD_COMPID);
 	PlaceFloaters();		// See if we can now place floating components down
@@ -886,7 +894,7 @@ void Board::ChangeTypeUserComp(const COMP& eType)
 void Board::CopyUserComps()	// Make a blank copy of the user-group components and float them
 {
 	std::list<int> userCompIds;
-	m_groupMgr.GetGroupCompIds(USER_GROUPID, userCompIds);
+	m_groupMgr.GetUserCompIds(userCompIds);
 
 	CopyComps(userCompIds);
 }
@@ -897,7 +905,7 @@ bool Board::MoveUserComps(const int& deltaRow, const int& deltaCol)	// Move user
 	if ( GetDisableMove() ) return false;
 
 	std::list<int> userCompIds;
-	m_groupMgr.GetGroupCompIds(USER_GROUPID, userCompIds);
+	m_groupMgr.GetUserCompIds(userCompIds);
 
 	return MoveComps(userCompIds, deltaRow, deltaCol);
 }
@@ -905,7 +913,7 @@ bool Board::MoveUserComps(const int& deltaRow, const int& deltaCol)	// Move user
 void Board::RotateUserComps(const bool& bCW)	// Rotate the selected components
 {
 	std::list<int> userCompIds;
-	m_groupMgr.GetGroupCompIds(USER_GROUPID, userCompIds);
+	m_groupMgr.GetUserCompIds(userCompIds);
 
 	RotateComps(userCompIds, bCW);
 }
@@ -920,6 +928,7 @@ void Board::CopyComps(const std::list<int>& compIds)	// Make a blank copy of the
 	for (auto& compId : compIds)
 	{
 		const Component&	comp		= m_compMgr.GetComponentById( compId );
+		assert( comp.GetType() != COMP::INVALID );
 		const int			newCompId	= CreateComponent(-1, -1, comp.GetType(), &comp);	// Create blank copy of the component and get its compId
 		if ( newCompId == BAD_COMPID ) break;	// Reached component limit
 		if ( bMakeNewGroup ) m_groupMgr.Add(newGroupId, newCompId);
@@ -981,6 +990,7 @@ bool Board::MoveComps(const std::list<int>& compIds, const int& deltaRow, const 
 	for (auto& compId : compIds)
 	{
 		Component& comp = m_compMgr.GetComponentById( compId );
+		assert( comp.GetType() != COMP::INVALID );
 		int newRow = comp.GetRow() + deltaRow;
 		int newCol = comp.GetCol() + deltaCol;
 		MakeToroid(newRow, newCol);	// Make co-ordinates wrap around at grid edges
@@ -1006,7 +1016,11 @@ bool Board::MoveComps(const std::list<int>& compIds, const int& deltaRow, const 
 	if ( trax.GetSize() == 0 || trax.GetIsPlaced() )
 	{
 		for (auto& compId : compIds)
-			PutDown( m_compMgr.GetComponentById( compId ) );
+		{
+			Component& comp = m_compMgr.GetComponentById( compId );
+			assert( comp.GetType() != COMP::INVALID );
+			PutDown(comp);
+		}
 		PlaceFloaters();	// See if we can now place floating components down
 	}
 	return bPanned;
@@ -1054,6 +1068,7 @@ void Board::RotateComps(const std::list<int>& compIds, const bool& bCW)	// Rotat
 	for (auto& compId : compIds)
 	{
 		Component& comp	= m_compMgr.GetComponentById( compId );
+		assert( comp.GetType() != COMP::INVALID );
 		TakeOff(comp);
 
 		int newRow(newCentreRow), newCol(newCentreCol);	// Start with the new group centre
@@ -1100,7 +1115,11 @@ void Board::RotateComps(const std::list<int>& compIds, const bool& bCW)	// Rotat
 	if ( trax.GetSize() == 0 || trax.GetIsPlaced() )
 	{
 		for (auto& compId : compIds)
-			PutDown( m_compMgr.GetComponentById( compId ) );
+		{
+			Component& comp = m_compMgr.GetComponentById( compId );
+			assert( comp.GetType() != COMP::INVALID );
+			PutDown(comp);
+		}
 		PlaceFloaters();	// See if we can now place floating components down
 	}
 }
@@ -1117,7 +1136,7 @@ void Board::FixCorruption(int& nBadComps, int& nBadPoints)
 
 	for (auto& compId : badCompIds)
 	{
-		Component& comp = m_compMgr.GetComponentById(compId);
+		Component& comp = m_compMgr.GetComponentById( compId );
 		DestroyComponent(comp);
 	}
 
@@ -1157,6 +1176,7 @@ Rect Board::GetFootprintBounds(const std::list<int>& compIds)
 	for (auto& compId : compIds)
 	{
 		const Component& comp	= m_compMgr.GetComponentById( compId );
+		assert( comp.GetType() != COMP::INVALID );
 		bounding |= comp.GetFootprintRect();
 	}
 	const Component& trax = m_compMgr.GetTrax();

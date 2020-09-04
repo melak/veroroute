@@ -867,7 +867,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				if ( bPad && !bWire )
 				{
 					const int		 compId	= pC->GetCompId(); assert(compId != BAD_COMPID);
-					const Component& comp	= compMgr.GetComponentById(compId);
+					const Component& comp	= compMgr.GetComponentById( compId );
+					assert( comp.GetType() != COMP::INVALID );
 					bCustom = comp.GetCustomPads();
 					if ( bCustom )
 					{

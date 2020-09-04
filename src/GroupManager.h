@@ -194,11 +194,11 @@ public:
 			outStream.Save(o.second);
 		}
 	}
-	void GetGroupCompIds(const int& groupId, std::list<int>& compIds) const	// Get a copy of the component IDs for a group
+	void GetUserCompIds(std::list<int>& userCompIds) const	// Get a copy of the component IDs for the user group
 	{
-		compIds.clear();
-		for (auto iter = m_list.begin(); iter != m_list.end() && iter->first <= groupId; ++iter)
-			if ( iter->first == groupId ) compIds.push_back(iter->second);
+		userCompIds.clear();
+		for (auto iter = m_list.begin(); iter != m_list.end() && iter->first == USER_GROUPID; ++iter)
+			userCompIds.push_back(iter->second);
 	}
 private:
 	int  GetSiblingGroupId(const int& compId) const	// Get highest groupId that the comp belongs to

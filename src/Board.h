@@ -387,7 +387,9 @@ public:
 	Component& GetUserComponent()	// The currently selected component
 	{
 		assert( m_groupMgr.GetNumUserComps() == 1 );	// Should only have one component selected
-		return m_compMgr.GetComponentById( m_groupMgr.GetUserCompId() );
+		Component& comp = m_compMgr.GetComponentById( m_groupMgr.GetUserCompId() );
+		assert( comp.GetType() != COMP::INVALID );
+		return comp;
 	}
 
 	// Methods to get objects at a grid location
