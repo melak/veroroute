@@ -248,5 +248,6 @@ static const char* szVEROROUTE_VERSION =
 //"1.96";	// New feature: In Color mode, color each wire according to its NodeId.
 //"1.97";	// Bug fix: In Color mode, diagonal track portions were drawn too long if using custom track color.
 			// Disabled code for drawing extra thermal relief tags (so a filled PCB will be easier to solder).
-  "1.98";	// Put in extra checks to stop potential crashes arising from a corrupted layout.
+//"1.98";	// Put in extra checks to stop potential crashes arising from a corrupted layout.
 			// Added file menu option to fix a corrupted layout.
+  "1.99";	// Code changes to help prevent layout from becoming corrupted.
