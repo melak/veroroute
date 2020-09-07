@@ -387,6 +387,7 @@ public:
 	Component& GetUserComponent()	// The currently selected component
 	{
 		assert( m_groupMgr.GetNumUserComps() == 1 );	// Should only have one component selected
+		assert( m_groupMgr.GetUserCompId() != BAD_COMPID );
 		Component& comp = m_compMgr.GetComponentById( m_groupMgr.GetUserCompId() );
 		assert( comp.GetType() != COMP::INVALID );
 		return comp;

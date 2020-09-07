@@ -727,6 +727,7 @@ void Board::PasteTracks(bool bTidy)
 			if ( pW == nullptr ) continue;
 
 			p->GetSlotInfo(iSlot, iPinIndex, tmpCompId);
+			assert( tmpCompId != BAD_COMPID );
 			Component& comp = m_compMgr.GetComponentById( tmpCompId );
 			assert( comp.GetType() != COMP::INVALID );
 			for (size_t i = 0, iSize = comp.GetNumPins(); i < iSize; i++)

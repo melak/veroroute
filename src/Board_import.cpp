@@ -225,6 +225,7 @@ bool Board::ImportTango(const TemplateManager& templateMgr, const std::string& f
 
 					if ( bOK )
 					{
+						assert( compId != BAD_COMPID );
 						const Component& comp = m_compMgr.GetComponentById( compId );
 						assert( comp.GetType() != COMP::INVALID );
 
@@ -251,6 +252,7 @@ bool Board::ImportTango(const TemplateManager& templateMgr, const std::string& f
 		for (const auto& nameStr : offBoard)
 		{
 			const int	compId	= m_compMgr.GetComponentIdFromName( nameStr );
+			assert( compId != BAD_COMPID );
 			Component&	comp	= m_compMgr.GetComponentById( compId );
 			assert( comp.GetType() != COMP::INVALID );
 			BreakComponentIntoPads(comp);
@@ -511,6 +513,7 @@ bool Board::ImportOrcad(const TemplateManager& templateMgr, const std::string& f
 				break;
 			}
 
+			assert( compId != BAD_COMPID );
 			const Component& comp = m_compMgr.GetComponentById( compId );
 			assert( comp.GetType() != COMP::INVALID );
 
@@ -538,6 +541,7 @@ bool Board::ImportOrcad(const TemplateManager& templateMgr, const std::string& f
 		for (const auto& nameStr : offBoard)
 		{
 			const int	compId	= m_compMgr.GetComponentIdFromName( nameStr );
+			assert( compId != BAD_COMPID );
 			Component&	comp	= m_compMgr.GetComponentById( compId );
 			assert( comp.GetType() != COMP::INVALID );
 			BreakComponentIntoPads(comp);

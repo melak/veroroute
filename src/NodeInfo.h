@@ -83,6 +83,7 @@ public:
 	{
 		for (size_t i = 0, iSize = GetNumComps(); i < iSize; i++)
 		{
+			assert( GetCompId(i) != BAD_COMPID );
 			const Component& comp = compMgr.GetComponentById( GetCompId(i) );
 			assert( comp.GetType() != COMP::INVALID );
 			assert( comp.GetIsTrueComp() );
@@ -97,6 +98,7 @@ public:
 		bool bHavePins(false);	// Remains false if no component pins have the nodeId
 		for (size_t i = 0, iSize = GetNumComps(); i < iSize; i++)	// Loop all comps with the nodeId
 		{
+			assert( GetCompId(i) != BAD_COMPID );
 			const Component& comp = compMgr.GetComponentById( GetCompId(i) );
 			assert( comp.GetType() != COMP::INVALID );
 			if ( bIgnoreFloating && !comp.GetIsPlaced() ) continue;	// Skip floating components if needed

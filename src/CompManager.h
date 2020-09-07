@@ -74,6 +74,7 @@ public:
 	}
 	Component& GetComponentById(const int& compId)
 	{
+		assert( compId != BAD_COMPID );
 		if ( compId == TRAX_COMPID ) return m_trax;
 
 		auto iter = m_mapIdToComp.find(compId);
