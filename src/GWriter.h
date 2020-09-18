@@ -26,8 +26,8 @@ class QPolygonF;
 class Board;
 class GStream;
 
-enum class	GPOLARITY	{UNKNOWN = 0, DARK, CLEAR};
-enum class	GFILE		{GKO = 0, GBL, GBS, GBO, GTL, GTS, GTO, DRL};
+enum class	GPOLARITY	{ UNKNOWN = 0, DARK, CLEAR };
+enum class	GFILE		{ GKO = 0, GBL, GBS, GBO, GTL, GTS, GTO, DRL };
 const int	NUM_STREAMS	= 8;
 
 struct GPenInfo

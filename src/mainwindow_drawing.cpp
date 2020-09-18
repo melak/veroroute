@@ -707,7 +707,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	std::vector<const Component*> sortedComps;
 	if ( compMode != COMPSMODE::OFF || bMonoPCB )
 	{
-		compMgr.CalculateWireShifts();			// Work out shifts for overlaid wires
+		compMgr.CalculateWireInfo();			// Work out shifts for overlaid wires and flag crossing wires
 		compMgr.GetSortedComps(sortedComps);	// Sorted so floating and "plug" components get rendered last
 	}
 
@@ -1071,7 +1071,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				{
 					const Component& comp = *pComp;
 					if ( comp.GetType() != COMP::WIRE || !comp.GetIsPlaced() ) continue;	// Only want placed wires
-					if ( compMgr.GetWireShift( &comp ) != 0 ) continue;	//TODO Probably not a good enough check since wires may cross yet have no shift
+					if ( !compMgr.GetWireCanBeTrack(&comp) ) continue;
 
 					QPolygonF polygon;
 					GetXY(board, comp.GetRow(), comp.GetCol(), X, Y);
@@ -1213,7 +1213,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			const bool		 bPlaced		= comp.GetIsPlaced();
 			if ( bPCB && bMark )	continue;	// Don't show markers in PCB mode
 			if ( m_bWriteGerber && !bPlaced ) continue;	// Don't write floating components to Gerber
-			if ( bWiresAsTracks && bWire && compMgr.GetWireShift(&comp) == 0 ) continue;	//TODO Probably not a good enough check since wires may cross yet have no shift
+			if ( bWiresAsTracks && bWire && compMgr.GetWireCanBeTrack(&comp) ) continue;
 			const bool 		 bFound			= compMgr.GetFound( comp.GetId() );
 			const bool		 bPinLabels		= !bMonoPCB && (comp.GetPinFlags() & PIN_LABELS) > 0 && board.GetShowPinLabels();
 			const bool		 bRectPins		= !bMonoPCB && (comp.GetPinFlags() & PIN_RECT) > 0;

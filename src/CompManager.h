@@ -23,6 +23,30 @@
 
 // Manager class for components on the board
 
+// Quicker to use struct than a std::pair
+struct WireInfo
+{
+	WireInfo(int iShift = 0, bool bCross = false) : m_iShift(iShift), m_bCross(bCross) {}
+	WireInfo(const WireInfo& o) { *this = o; }
+	WireInfo& operator=(const WireInfo& o)
+	{
+		m_iShift = o.m_iShift;
+		m_bCross = o.m_bCross;
+		return *this;
+	}
+	bool operator==(const WireInfo& o)
+	{
+		return m_iShift == o.m_iShift
+			&& m_bCross == o.m_bCross;
+	}
+	bool operator!=(const WireInfo& o)
+	{
+		return !(*this == o);
+	}
+	int		m_iShift;	// For drawing overlaid wires
+	bool	m_bCross;	// true ==> crosses another wire
+};
+
 class CompManager : public Persist, public Merge
 {
 	friend class Board;
@@ -33,7 +57,7 @@ public:
 	void Clear()
 	{
 		m_mapIdToComp.clear();
-		m_mapWireToShift.clear();
+		m_mapWireToInfo.clear();
 		m_foundId.clear();
 		ClearTrax();
 	}
@@ -42,8 +66,8 @@ public:
 		Clear();
 		for (const auto& mapObj : o.m_mapIdToComp) m_mapIdToComp[ mapObj.first ] = mapObj.second;
 		m_trax = o.m_trax;
-		// Don't copy m_mapWireToShift (it's just a helper)
-		// Don't copy m_foundId        (it's just a helper)
+		// Don't copy m_mapWireToInfo (it's just a helper)
+		// Don't copy m_foundId       (it's just a helper)
 		return *this;
 	}
 	bool operator==(const CompManager& o) const	// Compare persisted info
@@ -175,9 +199,9 @@ public:
 			if ( iterFind == o.end() ) o.push_back( iWidth );
 		}
 	}
-	void CalculateWireShifts()
+	void CalculateWireInfo()	// Calculate wire shifts and crossing flags
 	{
-		m_mapWireToShift.clear();
+		m_mapWireToInfo.clear();
 
 		std::vector<const Component*> wiresH, wiresV;	// Lists of placed wires in H and V directions
 		for (const auto& mapObj : m_mapIdToComp)
@@ -199,29 +223,29 @@ public:
 		{
 			if ( pPrev == nullptr || p->GetRow() != pPrev->GetRow() )	// Reset all if new row
 			{
-				m_mapWireToShift[p] = 0;
+				m_mapWireToInfo[p].m_iShift = 0;
 				pLast = nullptr;
 			}
 			else if ( p->GetCol() == pLast->GetLastCol() )		// If touches pLast ...
-				m_mapWireToShift[p] = m_mapWireToShift[pLast];	// ... give same shift as pLast
+				m_mapWireToInfo[p].m_iShift = m_mapWireToInfo[pLast].m_iShift;	// ... give same shift as pLast
 			else if ( p->GetCol() > pLast->GetLastCol() )		// If beyond pLast ...
-				m_mapWireToShift[p] = 0;						// ... set zero shift
+				m_mapWireToInfo[p].m_iShift = 0;				// ... set zero shift
 			else if ( p->GetCol() < pPrev->GetLastCol() )		// If overlap pPrev ...
 			{
-				if ( m_mapWireToShift[pPrev] == 0 )				// ... shift pPrev if necessary
+				if ( m_mapWireToInfo[pPrev].m_iShift == 0 )		// ... shift pPrev if necessary
 				{
-					m_mapWireToShift[pPrev] = -1;
+					m_mapWireToInfo[pPrev].m_iShift = -1;
 					for (int j = i - 2; j >= 0; j--)			// ... and also back along its chain
 					{
 						if ( wiresH[j]->GetRow()	 != wiresH[j+1]->GetRow() ||
 							 wiresH[j]->GetLastCol() != wiresH[j+1]->GetCol() ) break;
-						m_mapWireToShift[ wiresH[j] ] = -1;
+						m_mapWireToInfo[ wiresH[j] ].m_iShift = -1;
 					}
 				}
-				m_mapWireToShift[p] = -m_mapWireToShift[pPrev];	// ... give this opposite shift to pPrev
+				m_mapWireToInfo[p].m_iShift = -m_mapWireToInfo[pPrev].m_iShift;	// ... give this opposite shift to pPrev
 			}
 			else												// If no overlap ...
-				m_mapWireToShift[p] = m_mapWireToShift[pPrev];	// ... give this same shift as pPrev
+				m_mapWireToInfo[p].m_iShift = m_mapWireToInfo[pPrev].m_iShift;	// ... give this same shift as pPrev
 			pPrev = p;
 			if ( pLast == nullptr || p->GetLastCol() > pLast->GetLastCol() )
 				pLast = p;
@@ -233,37 +257,51 @@ public:
 		{
 			if ( pPrev == nullptr || p->GetCol() != pPrev->GetCol() )	// Reset all if new col
 			{
-				m_mapWireToShift[p] = 0;
+				m_mapWireToInfo[p].m_iShift = 0;
 				pLast = nullptr;
 			}
 			else if ( p->GetRow() == pLast->GetLastRow() )		// If touches pLast ...
-				m_mapWireToShift[p] = m_mapWireToShift[pLast];	// ... give same shift as pLast
+				m_mapWireToInfo[p].m_iShift = m_mapWireToInfo[pLast].m_iShift;	// ... give same shift as pLast
 			else if ( p->GetRow() > pLast->GetLastRow() )		// If beyond pLast ...
-				m_mapWireToShift[p] = 0;						// ... set zero shift
+				m_mapWireToInfo[p].m_iShift = 0;				// ... set zero shift
 			else if ( p->GetRow() < pPrev->GetLastRow() )		// If overlap pPrev ...
 			{
-				if ( m_mapWireToShift[pPrev] == 0 )				// ... shift pPrev if necessary
-					m_mapWireToShift[pPrev] = -1;
+				if ( m_mapWireToInfo[pPrev].m_iShift == 0 )		// ... shift pPrev if necessary
+					m_mapWireToInfo[pPrev].m_iShift = -1;
 				for (int j = i - 2; j >= 0; j--)				// ... and also back along its chain
 				{
 					if ( wiresV[j]->GetCol()	 != wiresV[j+1]->GetCol() ||
 						 wiresV[j]->GetLastRow() != wiresV[j+1]->GetRow() ) break;
-					m_mapWireToShift[ wiresV[j] ] = -1;
+					m_mapWireToInfo[ wiresV[j] ].m_iShift = -1;
 				}
-				m_mapWireToShift[p] = -m_mapWireToShift[pPrev];	// ... give this opposite shift to pPrev
+				m_mapWireToInfo[p].m_iShift = -m_mapWireToInfo[pPrev].m_iShift;	// ... give this opposite shift to pPrev
 			}
 			else												// If no overlap ...
-				m_mapWireToShift[p] = m_mapWireToShift[pPrev];	// ... give this same shift as pPrev
+				m_mapWireToInfo[p].m_iShift = m_mapWireToInfo[pPrev].m_iShift;	// ... give this same shift as pPrev
 			pPrev = p;
 			if ( pLast == nullptr || p->GetLastRow() > pLast->GetLastRow() )
 				pLast = p;
 			i++;
 		}
+
+		for (auto& pH : wiresH)
+			for (auto& pV : wiresV)
+				if ( pH->GetRow() > pV->GetRow() &&
+					 pH->GetRow() < pV->GetLastRow() &&
+					 pV->GetCol() > pH->GetCol() &&
+					 pV->GetCol() < pH->GetLastCol() )
+					m_mapWireToInfo[pH].m_bCross = m_mapWireToInfo[pV].m_bCross = true;
 	}
 	int GetWireShift(const Component* pWire) const
 	{
-		auto iter = m_mapWireToShift.find( pWire );
-		return ( iter != m_mapWireToShift.end() ) ? iter->second : 0;
+		auto iter = m_mapWireToInfo.find( pWire );
+		return ( iter != m_mapWireToInfo.end() ) ? iter->second.m_iShift : 0;
+	}
+	bool GetWireCanBeTrack(const Component* pWire) const	// true ==> wire can be turned into a top-surface track
+	{
+		assert( pWire->getType == COMP::WIRE && pWire->GetIsPlaced() );	// Should have already checked for this
+		auto iter = m_mapWireToInfo.find( pWire );
+		return ( iter != m_mapWireToInfo.end() ) ? ( iter->second.m_iShift == 0  && !iter->second.m_bCross ) : false;
 	}
 	void CustomPCBshapes(const bool bUsePCBshapes)
 	{
@@ -404,9 +442,9 @@ private:
 		}
 	};
 private:
-	std::unordered_map<int, Component>			m_mapIdToComp;		// The components (indexed by compId)
-	Component									m_trax;				// The "trax" component
+	std::unordered_map<int, Component>				m_mapIdToComp;		// The components (indexed by compId)
+	Component										m_trax;				// The "trax" component
 	// Helpers. Don't persist.
-	std::unordered_map<const Component*, int>	m_mapWireToShift;	// For stacking wires
-	std::set<int>								m_foundId;			// Set of compId's produced by Find()
+	std::unordered_map<const Component*, WireInfo>	m_mapWireToInfo;	// For handling overlaid / crossing wires
+	std::set<int>									m_foundId;			// Set of compId's produced by Find()
 };

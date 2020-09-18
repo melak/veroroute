@@ -23,7 +23,7 @@
 
 // Class to describe a simple shape (e.g. for drawing component outlines)
 
-enum class SHAPE { LINE = 0, RECT, ROUNDED_RECT, ELLIPSE, ARC, CHORD};
+enum class SHAPE { LINE = 0, RECT, ROUNDED_RECT, ELLIPSE, ARC, CHORD };
 
 static std::map<SHAPE, std::string>	mapShapeToStr;	// Mapping of SHAPE enum to strings
 
@@ -95,7 +95,7 @@ public:
 	bool operator<(const Shape& o) const	// For determining render order
 	{
 		if ( m_bDrawLine	!= o.m_bDrawLine )	return !m_bDrawLine;	// Prefer no line
-		if ( m_bDrawFill	!= o.m_bDrawFill )	return m_bDrawFill;	// Prefer fill
+		if ( m_bDrawFill	!= o.m_bDrawFill )	return m_bDrawFill;		// Prefer fill
 		if ( m_lineColor	!= o.m_lineColor )	return m_lineColor < o.m_lineColor;
 		if ( m_fillColor	!= o.m_fillColor )	return m_fillColor < o.m_fillColor;
 		if ( m_type			!= o.m_type )		return static_cast<int>(m_type) < static_cast<int>(o.m_type);
@@ -128,10 +128,10 @@ public:
 		m_a1 = a1;	m_a2 = a2;	m_a3 = a3;
 	}
 
-	void SetCX(const double& d)		{ Move(0, d - GetCX()); }
-	void SetCY(const double& d)		{ Move(d - GetCY(), 0); }
-	void SetDX(const double& d)		{ Expand( d - GetDX(), 0 ); }
-	void SetDY(const double& d)		{ Expand( 0, d - GetDY() ); }
+	void SetCX(const double& d)	{ Move(0, d - GetCX()); }
+	void SetCY(const double& d)	{ Move(d - GetCY(), 0); }
+	void SetDX(const double& d)	{ Expand( d - GetDX(), 0 ); }
+	void SetDY(const double& d)	{ Expand( 0, d - GetDY() ); }
 	void Move(const double& dDown, const double& dRight)
 	{
 		m_x1 += dRight;		m_x2 += dRight;

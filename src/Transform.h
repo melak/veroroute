@@ -24,7 +24,7 @@
 
 // Class to transform a QPointF (i.e. translate/rotate it w.r.t. the origin)
 
-enum class TRANSFORM {NONE = 0, SCALE, TRANSLATE, ROTATE};
+enum class TRANSFORM { NONE = 0, SCALE, TRANSLATE, ROTATE };
 
 struct Transform
 {

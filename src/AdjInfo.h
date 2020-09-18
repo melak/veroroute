@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "CompElement.h"	// For BAD_NODEID
+#include "TrackElement.h"	// For BAD_NODEID
 
 // Class to record the adjacency info for a NodeId on the board (NOT floating components).
 // Every board element has 8 adjacent elements regardless of whether diagonals are allowed.
