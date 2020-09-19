@@ -1132,7 +1132,7 @@ void Board::RotateComps(const std::list<int>& compIds, const bool& bCW)	// Rotat
 	}
 }
 
-void Board::FixCorruption(int& nBadComps, int& nBadPoints)
+void Board::FixCorruption()
 {
 	// The following should not really be necessary, but if we have a corrupt state
 	// we should at least allow the user to try fix the board so it can continue to be used.
@@ -1140,7 +1140,6 @@ void Board::FixCorruption(int& nBadComps, int& nBadPoints)
 	// Destroy any components that have an invalid component type
 	std::set<int> badCompIds;
 	m_compMgr.GetBadCompIds(badCompIds);
-	nBadComps = (int) ( badCompIds.size() );
 
 	for (auto& compId : badCompIds)
 	{
@@ -1152,7 +1151,6 @@ void Board::FixCorruption(int& nBadComps, int& nBadPoints)
 	FloatAllComps();	// Float all components
 
 	// Ensure there are no component related effects on the board elements
-	nBadPoints = 0;
 	for (int i = 0, iSize = GetSize(); i < iSize; i++)
 	{
 		Element* p = GetAt(i);
@@ -1172,7 +1170,6 @@ void Board::FixCorruption(int& nBadComps, int& nBadPoints)
 			p->SetSurface(SURFACE_FREE);
 			p->SetHoleUse(HOLE_FREE);
 			p->SetIsMark(false);
-			nBadPoints++;
 		}
 	}
 

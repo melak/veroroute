@@ -76,8 +76,6 @@
     <addaction name="actionWrite_Gerber"/>
     <addaction name="actionWrite_Gerber2"/>
     <addaction name="separator"/>
-    <addaction name="actionFixCorruption"/>
-    <addaction name="separator"/>
     <addaction name="actionClearRecent"/>
     <addaction name="separator"/>
     <addaction name="actionQuit"/>
@@ -1158,11 +1156,6 @@
   <action name="actionWrite_Gerber2">
    <property name="text">
     <string>Export as Gerber (2-Layer)</string>
-   </property>
-  </action>
-  <action name="actionFixCorruption">
-   <property name="text">
-    <string>Fix corrupted layout</string>
    </property>
   </action>
   <action name="actionClearRecent">

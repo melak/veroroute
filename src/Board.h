@@ -444,7 +444,7 @@ public:
 	bool TakeOff(Component& comp);
 	void FloatAllComps();				// Float all components (i.e. take them off the board)
 	void PlaceFloaters();				// Try to place down all the floating components
-	void FixCorruption(int& nBadComps, int& nBadPoints);
+	void FixCorruption();
 
 	// GUI helpers for manipulating user-selected components
 	void SelectAllComps(bool bRestrictToRects);
@@ -614,6 +614,9 @@ public:
 			m_colorMgr.Load(inStream);		// Call Load() on color manager
 
 		RebuildAdjacencies();
+
+		if ( inStream.GetVersion() < VRT_VERSION_42 )
+			FixCorruption();
 	}
 
 	virtual void Save(DataStream& outStream) override

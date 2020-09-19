@@ -26,7 +26,7 @@
 // Quicker to use struct than a std::pair
 struct WireInfo
 {
-	WireInfo(int iShift = 0, bool bCross = false) : m_iShift(iShift), m_bCross(bCross) {}
+	WireInfo() {}
 	WireInfo(const WireInfo& o) { *this = o; }
 	WireInfo& operator=(const WireInfo& o)
 	{
@@ -43,8 +43,8 @@ struct WireInfo
 	{
 		return !(*this == o);
 	}
-	int		m_iShift;	// For drawing overlaid wires
-	bool	m_bCross;	// true ==> crosses another wire
+	int		m_iShift = 0;		// For drawing overlaid wires
+	bool	m_bCross = false;	// true ==> crosses another wire
 };
 
 class CompManager : public Persist, public Merge

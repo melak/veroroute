@@ -134,7 +134,6 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	QObject::connect(ui->actionWrite_PNG,				SIGNAL(triggered()), this, SLOT(WritePNG()));
 	QObject::connect(ui->actionWrite_Gerber,			SIGNAL(triggered()), this, SLOT(WriteGerber()));
 	QObject::connect(ui->actionWrite_Gerber2,			SIGNAL(triggered()), this, SLOT(WriteGerber2()));
-	QObject::connect(ui->actionFixCorruption,			SIGNAL(triggered()), this, SLOT(FixCorruption()));
 	QObject::connect(ui->actionClearRecent,				SIGNAL(triggered()), this, SLOT(ClearRecentFiles()));
 	QObject::connect(ui->actionQuit,					SIGNAL(triggered()), this, SLOT(Quit()));
 	QObject::connect(ui->actionZoom_In,					SIGNAL(triggered()), this, SLOT(ZoomIn()));
@@ -1339,29 +1338,6 @@ void MainWindow::WipeTracks()	// On hitting the Wipe All button ...
 	UpdateHistory("Wipe Tracks");
 	UpdateControls();
 	RepaintWithListNodes();
-}
-
-void MainWindow::FixCorruption()
-{
-	int nBadComps(0), nBadPoints(0);
-	m_board.FixCorruption(nBadComps, nBadPoints);
-
-	if ( nBadComps == 0 && nBadPoints == 0 )
-	{
-		QMessageBox::information(this, tr("Information"), tr("No corruption found"));
-	}
-	else
-	{
-		char buffer[64] = {'\0'};
-		sprintf(buffer, "%d bad part%s destroyed.  %d bad grid point%s fixed.",
-				nBadComps,  nBadComps  == 1 ? "" : "s",
-				nBadPoints, nBadPoints == 1 ? "" : "s");
-		QMessageBox::information(this, tr("Information"), tr(buffer));
-
-		UpdateHistory("Fix corrupted layout");
-		UpdateControls();
-		RepaintWithListNodes();
-	}
 }
 
 // Node color
