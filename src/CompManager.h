@@ -31,20 +31,20 @@ struct WireInfo
 	WireInfo& operator=(const WireInfo& o)
 	{
 		m_iShift = o.m_iShift;
-		m_bCross = o.m_bCross;
+		m_iCross = o.m_iCross;
 		return *this;
 	}
 	bool operator==(const WireInfo& o)
 	{
 		return m_iShift == o.m_iShift
-			&& m_bCross == o.m_bCross;
+			&& m_iCross == o.m_iCross;
 	}
 	bool operator!=(const WireInfo& o)
 	{
 		return !(*this == o);
 	}
-	int		m_iShift = 0;		// For drawing overlaid wires
-	bool	m_bCross = false;	// true ==> crosses another wire
+	int	m_iShift = 0;	// For drawing overlaid wires
+	int	m_iCross = 0;	// Number of crossing wires
 };
 
 class CompManager : public Persist, public Merge
@@ -290,7 +290,16 @@ public:
 					 pH->GetRow() < pV->GetLastRow() &&
 					 pV->GetCol() > pH->GetCol() &&
 					 pV->GetCol() < pH->GetLastCol() )
-					m_mapWireToInfo[pH].m_bCross = m_mapWireToInfo[pV].m_bCross = true;
+				{
+					auto& infoH = m_mapWireToInfo[pH];
+					auto& infoV = m_mapWireToInfo[pV];
+					// If one wire is overlaid (i.e. shifted) but the other is not then don't consider this a cross.
+					// The point being that we could still convert the other wire to a track.
+					if ( ( infoH.m_iShift == 0 && infoV.m_iShift != 0 ) ||
+						 ( infoV.m_iShift == 0 && infoH.m_iShift != 0 ) )continue;
+					infoH.m_iCross++;
+					infoV.m_iCross++;
+				};
 	}
 	int GetWireShift(const Component* pWire) const
 	{
@@ -300,8 +309,10 @@ public:
 	bool GetWireCanBeTrack(const Component* pWire) const	// true ==> wire can be turned into a top-surface track
 	{
 		assert( pWire->getType == COMP::WIRE && pWire->GetIsPlaced() );	// Should have already checked for this
+		// Wire must be non-stacked, and either horizontal or not crossing another
 		auto iter = m_mapWireToInfo.find( pWire );
-		return ( iter != m_mapWireToInfo.end() ) ? ( iter->second.m_iShift == 0  && !iter->second.m_bCross ) : false;
+		const bool bH = pWire->GetDirection() == 'W' || pWire->GetDirection() == 'E';
+		return ( iter != m_mapWireToInfo.end() ) ? ( iter->second.m_iShift == 0  && (bH || iter->second.m_iCross == 0) ) : false;
 	}
 	void CustomPCBshapes(const bool bUsePCBshapes)
 	{
