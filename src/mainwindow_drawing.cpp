@@ -367,17 +367,23 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 	brush.setColor(color);
 
 	// Draw
-	if ( N == 0 )	// Isolated node
+	if ( N == 0 )	// Isolated node (no longer drawn as pad)
 	{
 		if ( m_bWriteGerber )
 		{
 			assert( polygon.size() == 1 );
-			m_gWriter.GetStream(GFILE::GTL).AddTrack(polygon, bGap ? GPEN::PAD_GAP : GPEN::PAD);	// Top    copper layer
-			m_gWriter.GetStream(GFILE::GBL).AddTrack(polygon, bGap ? GPEN::PAD_GAP : GPEN::PAD);	// Bottom copper layer
+
+			auto& osT = m_gWriter.GetStream(GFILE::GTL);	// Top    copper layer
+			auto& osB = m_gWriter.GetStream(GFILE::GBL);	// Bottom copper layer
+			const GPEN ePen		= bGap ? GPEN::TRK_GAP : GPEN::TRK;
+
+			if ( m_board.GetLyrs() > 1 )
+				osT.AddTrack(polygon, ePen);
+			osB.AddTrack(polygon, ePen);
 		}
 		else
 		{
-			pen.setWidth(trackWidth);	// No longer drawn as a pad
+			pen.setWidth(trackWidth);
 			painter.setPen(pen);
 			painter.drawPoint(pC);
 		}
