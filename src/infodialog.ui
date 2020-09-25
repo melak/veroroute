@@ -54,7 +54,7 @@
     </rect>
    </property>
    <property name="focusPolicy">
-    <enum>Qt::NoFocus</enum>
+    <enum>Qt::TabFocus</enum>
    </property>
    <property name="text">
     <string>Previous</string>
@@ -70,7 +70,7 @@
     </rect>
    </property>
    <property name="focusPolicy">
-    <enum>Qt::NoFocus</enum>
+    <enum>Qt::TabFocus</enum>
    </property>
    <property name="text">
     <string>Next</string>
@@ -86,13 +86,18 @@
     </rect>
    </property>
    <property name="focusPolicy">
-    <enum>Qt::NoFocus</enum>
+    <enum>Qt::TabFocus</enum>
    </property>
    <property name="text">
     <string>Reload</string>
    </property>
   </widget>
  </widget>
+ <tabstops>
+  <tabstop>next</tabstop>
+  <tabstop>prev</tabstop>
+  <tabstop>reload</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

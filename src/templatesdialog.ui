@@ -43,6 +43,9 @@
    <property name="toolTip">
     <string>Double click on a part to add it to the circuit</string>
    </property>
+   <property name="tabKeyNavigation">
+    <bool>false</bool>
+   </property>
   </widget>
   <widget class="QPushButton" name="pushButton">
    <property name="geometry">
@@ -54,7 +57,7 @@
     </rect>
    </property>
    <property name="focusPolicy">
-    <enum>Qt::NoFocus</enum>
+    <enum>Qt::TabFocus</enum>
    </property>
    <property name="toolTip">
     <string>Update the templates with the selected parts from the current circuit.</string>
@@ -73,7 +76,7 @@
     </rect>
    </property>
    <property name="focusPolicy">
-    <enum>Qt::NoFocus</enum>
+    <enum>Qt::TabFocus</enum>
    </property>
    <property name="toolTip">
     <string>Deletes the selected template.  There is no undo option.</string>
@@ -96,6 +99,9 @@
    </property>
    <property name="toolTip">
     <string>Double click on a part to add it to the circuit</string>
+   </property>
+   <property name="tabKeyNavigation">
+    <bool>false</bool>
    </property>
   </widget>
   <widget class="QLabel" name="label">
@@ -140,7 +146,7 @@
     </rect>
    </property>
    <property name="focusPolicy">
-    <enum>Qt::NoFocus</enum>
+    <enum>Qt::TabFocus</enum>
    </property>
    <property name="toolTip">
     <string>Update the templates with parts from a VRT file</string>
@@ -159,7 +165,7 @@
     </rect>
    </property>
    <property name="focusPolicy">
-    <enum>Qt::NoFocus</enum>
+    <enum>Qt::TabFocus</enum>
    </property>
    <property name="toolTip">
     <string>Save all templates to a VRT file</string>
@@ -169,6 +175,14 @@
    </property>
   </widget>
  </widget>
+ <tabstops>
+  <tabstop>tableWidget_2</tabstop>
+  <tabstop>pushButton</tabstop>
+  <tabstop>pushButton_3</tabstop>
+  <tabstop>pushButton_4</tabstop>
+  <tabstop>pushButton_2</tabstop>
+  <tabstop>tableWidget</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

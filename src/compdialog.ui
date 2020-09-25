@@ -38,7 +38,7 @@
     <bool>true</bool>
    </property>
    <property name="focusPolicy">
-    <enum>Qt::ClickFocus</enum>
+    <enum>Qt::StrongFocus</enum>
    </property>
   </widget>
   <widget class="QLineEdit" name="lineEdit_Type">
@@ -54,7 +54,7 @@
     <bool>true</bool>
    </property>
    <property name="focusPolicy">
-    <enum>Qt::ClickFocus</enum>
+    <enum>Qt::StrongFocus</enum>
    </property>
   </widget>
   <widget class="QLineEdit" name="lineEdit_Value">
@@ -70,7 +70,7 @@
     <bool>true</bool>
    </property>
    <property name="focusPolicy">
-    <enum>Qt::ClickFocus</enum>
+    <enum>Qt::StrongFocus</enum>
    </property>
   </widget>
   <widget class="QLineEdit" name="lineEdit_Import">
@@ -86,7 +86,7 @@
     <bool>true</bool>
    </property>
    <property name="focusPolicy">
-    <enum>Qt::ClickFocus</enum>
+    <enum>Qt::StrongFocus</enum>
    </property>
   </widget>
   <widget class="QLabel" name="label_Prefix">
@@ -150,6 +150,9 @@
      <height>27</height>
     </rect>
    </property>
+   <property name="focusPolicy">
+    <enum>Qt::TabFocus</enum>
+   </property>
    <property name="text">
     <string>Add To Part Templates</string>
    </property>
@@ -183,7 +186,7 @@
     <bool>false</bool>
    </property>
    <property name="focusPolicy">
-    <enum>Qt::NoFocus</enum>
+    <enum>Qt::TabFocus</enum>
    </property>
    <property name="text">
     <string>Labels</string>
@@ -233,7 +236,7 @@
     </rect>
    </property>
    <property name="focusPolicy">
-    <enum>Qt::ClickFocus</enum>
+    <enum>Qt::StrongFocus</enum>
    </property>
    <property name="minimum">
     <number>1</number>
@@ -287,7 +290,7 @@
     </rect>
    </property>
    <property name="focusPolicy">
-    <enum>Qt::ClickFocus</enum>
+    <enum>Qt::StrongFocus</enum>
    </property>
    <property name="minimum">
     <number>1</number>
@@ -384,6 +387,9 @@
      <height>27</height>
     </rect>
    </property>
+   <property name="focusPolicy">
+    <enum>Qt::TabFocus</enum>
+   </property>
    <property name="toolTip">
     <string>Choose fill color</string>
    </property>
@@ -467,6 +473,9 @@
      <height>27</height>
     </rect>
    </property>
+   <property name="focusPolicy">
+    <enum>Qt::TabFocus</enum>
+   </property>
    <property name="toolTip">
     <string>Fill shape with color</string>
    </property>
@@ -498,6 +507,9 @@
      <width>51</width>
      <height>27</height>
     </rect>
+   </property>
+   <property name="focusPolicy">
+    <enum>Qt::TabFocus</enum>
    </property>
    <property name="toolTip">
     <string>Draw shape outline (black)</string>
@@ -871,6 +883,9 @@
      <height>27</height>
     </rect>
    </property>
+   <property name="focusPolicy">
+    <enum>Qt::TabFocus</enum>
+   </property>
    <property name="toolTip">
     <string>Move shape towards front</string>
    </property>
@@ -887,6 +902,9 @@
      <height>27</height>
     </rect>
    </property>
+   <property name="focusPolicy">
+    <enum>Qt::TabFocus</enum>
+   </property>
    <property name="toolTip">
     <string>Move shape towards back</string>
    </property>
@@ -895,6 +913,31 @@
    </property>
   </widget>
  </widget>
+ <tabstops>
+  <tabstop>lineEdit_Type</tabstop>
+  <tabstop>lineEdit_Value</tabstop>
+  <tabstop>lineEdit_Prefix</tabstop>
+  <tabstop>lineEdit_Import</tabstop>
+  <tabstop>comboBox_PinShape</tabstop>
+  <tabstop>checkBox_PinLabels</tabstop>
+  <tabstop>spinBox_Width</tabstop>
+  <tabstop>spinBox_Height</tabstop>
+  <tabstop>spinBox_PinNumber</tabstop>
+  <tabstop>checkBox_Line</tabstop>
+  <tabstop>checkBox_Fill</tabstop>
+  <tabstop>pushButtonU</tabstop>
+  <tabstop>pushButtonD</tabstop>
+  <tabstop>comboBox_Shape</tabstop>
+  <tabstop>pushButtonRGB</tabstop>
+  <tabstop>doubleSpinBox_CX</tabstop>
+  <tabstop>doubleSpinBox_CY</tabstop>
+  <tabstop>doubleSpinBox_DX</tabstop>
+  <tabstop>doubleSpinBox_DY</tabstop>
+  <tabstop>doubleSpinBox_A1</tabstop>
+  <tabstop>doubleSpinBox_A2</tabstop>
+  <tabstop>doubleSpinBox_A3</tabstop>
+  <tabstop>pushButton_Build</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

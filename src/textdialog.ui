@@ -41,7 +41,7 @@
     </sizepolicy>
    </property>
    <property name="focusPolicy">
-    <enum>Qt::ClickFocus</enum>
+    <enum>Qt::StrongFocus</enum>
    </property>
   </widget>
   <widget class="QSpinBox" name="spinBox">
@@ -75,6 +75,9 @@
      <height>27</height>
     </rect>
    </property>
+   <property name="focusPolicy">
+    <enum>Qt::TabFocus</enum>
+   </property>
    <property name="toolTip">
     <string>Align left</string>
    </property>
@@ -103,6 +106,9 @@
      <width>31</width>
      <height>27</height>
     </rect>
+   </property>
+   <property name="focusPolicy">
+    <enum>Qt::TabFocus</enum>
    </property>
    <property name="toolTip">
     <string>Align centre</string>
@@ -133,6 +139,9 @@
      <height>27</height>
     </rect>
    </property>
+   <property name="focusPolicy">
+    <enum>Qt::TabFocus</enum>
+   </property>
    <property name="toolTip">
     <string>Align right</string>
    </property>
@@ -161,6 +170,9 @@
      <width>31</width>
      <height>27</height>
     </rect>
+   </property>
+   <property name="focusPolicy">
+    <enum>Qt::TabFocus</enum>
    </property>
    <property name="toolTip">
     <string>Align justified</string>
@@ -207,6 +219,9 @@
      <height>27</height>
     </rect>
    </property>
+   <property name="focusPolicy">
+    <enum>Qt::TabFocus</enum>
+   </property>
    <property name="toolTip">
     <string>Bold</string>
    </property>
@@ -235,6 +250,9 @@
      <width>31</width>
      <height>27</height>
     </rect>
+   </property>
+   <property name="focusPolicy">
+    <enum>Qt::TabFocus</enum>
    </property>
    <property name="toolTip">
     <string>Italic</string>
@@ -265,6 +283,9 @@
      <height>27</height>
     </rect>
    </property>
+   <property name="focusPolicy">
+    <enum>Qt::TabFocus</enum>
+   </property>
    <property name="toolTip">
     <string>Underline</string>
    </property>
@@ -294,11 +315,26 @@
      <height>27</height>
     </rect>
    </property>
+   <property name="focusPolicy">
+    <enum>Qt::TabFocus</enum>
+   </property>
    <property name="text">
     <string>RGB</string>
    </property>
   </widget>
  </widget>
+ <tabstops>
+  <tabstop>plainTextEdit</tabstop>
+  <tabstop>pushButtonB</tabstop>
+  <tabstop>pushButtonI</tabstop>
+  <tabstop>pushButtonU</tabstop>
+  <tabstop>pushButtonRGB</tabstop>
+  <tabstop>pushButtonL</tabstop>
+  <tabstop>pushButtonC</tabstop>
+  <tabstop>pushButtonR</tabstop>
+  <tabstop>pushButtonJ</tabstop>
+  <tabstop>spinBox</tabstop>
+ </tabstops>
  <resources>
   <include location="veroroute.qrc"/>
  </resources>

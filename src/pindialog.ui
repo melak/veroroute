@@ -35,10 +35,16 @@
     </rect>
    </property>
    <property name="focusPolicy">
-    <enum>Qt::NoFocus</enum>
+    <enum>Qt::StrongFocus</enum>
+   </property>
+   <property name="tabKeyNavigation">
+    <bool>true</bool>
    </property>
   </widget>
  </widget>
+ <tabstops>
+  <tabstop>tableWidget</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
