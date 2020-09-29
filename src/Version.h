@@ -250,4 +250,10 @@ static const char* szVEROROUTE_VERSION =
 			// Disabled code for drawing extra thermal relief tags (so a filled PCB will be easier to solder).
 //"1.98";	// Put in extra checks to stop potential crashes arising from a corrupted layout.
 			// Added file menu option to fix a corrupted layout.
-  "1.99";	// Code changes to help prevent layout from becoming corrupted.
+//"1.99";	// Code changes to help prevent layout from becoming corrupted.
+  "2.00";	// Bug fix: Poor-man's 2-layer Gerber export was not handling crossing wires.
+			// Bug fix: Isolated nodes were rendered to Gerber with pad-width instead of track-width.
+			// Bug fix: Isolated nodes were rendered to top layer for poor-man's 2-layer Gerber export.
+			// Improvement: Allow TAB to change focus of dialog controls.
+			// Improvement: Reworked some icons that did not work well with dark themes.
+			// Removed menu item to fix corruption.  Old corrupted VRTS are now auto-fixed on load.
