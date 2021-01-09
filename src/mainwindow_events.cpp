@@ -58,9 +58,12 @@ void MainWindow::GetRowCol(const QPoint& currentPoint, const int rows, const int
 
 void MainWindow::wheelEvent(QWheelEvent* event)
 {
+	//TODO QWheelEvent::pos() has been deprecated in newer Qt versions.
+	//	To avoid a build warning, use event->position() instead as follows:
+	//	m_mousePos = QPoint((int)event->position().x(), (int)event->position().y());
 	m_mousePos = event->pos();
-	if ( GetShiftKeyDown() ) return;		// Ignore wheel events while trying to group components
-	const bool bBack = ( event->delta() < 0 );
+	if ( GetShiftKeyDown() ) return;	// Ignore wheel events while trying to group components
+	const bool bBack = ( event->angleDelta().y() < 0 );
 	if ( GetCtrlKeyDown() )
 	{
 		if ( bBack ) ZoomOut(); else ZoomIn();
