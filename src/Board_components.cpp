@@ -501,9 +501,22 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 		{
 			for (auto& o : wireList)
 			{
-				Element* p = const_cast<Element*> (o.first);
-				if ( p == pA || p == pB ) continue;	// Can skip pA and pB (we've done these already)
-				SetNodeId(p, wireNodeId, bAllLyrs); SetFlagBits(p, iFlag & (USERSET|AUTOSET|VEROSET), bAllLyrs);
+				Element* pW = const_cast<Element*> (o.first);
+				// Set the nodeId's on the wire components ...
+				for (int iSlot = 0; iSlot < 2; iSlot++)
+				{
+					size_t	iPinIndex;
+					int		tmpCompId;
+					pW->GetSlotInfo(iSlot, iPinIndex, tmpCompId);
+					if ( iPinIndex == BAD_PININDEX ) continue;
+					assert( tmpCompId == BAD_COMPID );
+					Component& comp = m_compMgr.GetComponentById( tmpCompId );
+					assert( comp.GetType() == COMP::WIRE );
+					comp.SetNodeId(iPinIndex, wireNodeId);
+				}
+				// ... and on the corresponding board points
+				SetNodeId(pW, wireNodeId, bAllLyrs);
+				SetFlagBits(pW, iFlag & (USERSET|AUTOSET|VEROSET), bAllLyrs);
 			}
 		}
 	}
@@ -656,7 +669,7 @@ bool Board::TakeOff(Component& comp)
 						if ( iPinIndex == BAD_PININDEX ) continue;
 						assert( tmpCompId != BAD_COMPID );
 						Component& comp = m_compMgr.GetComponentById( tmpCompId );
-						assert( comp.GetType() != COMP::INVALID );
+						assert( comp.GetType() == COMP::WIRE );
 						comp.SetNodeId(iPinIndex, BAD_NODEID);
 					}
 					// ... and on the corresponding board points
