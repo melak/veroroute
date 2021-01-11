@@ -402,9 +402,9 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 
 				const bool bAllLyrs(false);
 				if ( bExistingNodeId )						// If the board already had the NodeId ...
-					SetFlagBits(pGrid, RECTSET, bAllLyrs);	// ... set RECTSET on the board, so TakeOff() doesn't wipe the point
+					MarkFlagBits(pGrid, RECTSET, bAllLyrs);	// ... set RECTSET on the board, so TakeOff() doesn't wipe the point
 				else
-					ClearFlagBits(pGrid, RECTSET, bAllLyrs);
+					WipeFlagBits(pGrid, RECTSET, bAllLyrs);
 
 				// Fix up crossing diagonals
 				if ( bDiagsOK && j > 0 && i > 0 && pComp->GetUsed(iTraxNbrLT) != pGrid->GetUsed(NBR_LT) )
@@ -467,8 +467,8 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 				{
 					const bool bAllLyrs = pGrid->GetHasPin();	assert( bAllLyrs );
 					SetNodeId(pGrid, iCompNodeId, bAllLyrs);
-					ClearFlagBits(pGrid, AUTOSET|VEROSET, bAllLyrs);
-					SetFlagBits(pGrid, USERSET, bAllLyrs);
+					WipeFlagBits(pGrid, AUTOSET|VEROSET, bAllLyrs);
+					MarkFlagBits(pGrid, USERSET, bAllLyrs);
 				}
 			}
 		}
@@ -483,41 +483,33 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 		pA->SetW(iSlotA, pB);	// Link wire ends
 		pB->SetW(iSlotB, pA);	// Link wire ends
 
-		// Write nodeIds & flags
-		const bool bAllLyrs(true);
-		SetNodeId(pA, wireNodeId, bAllLyrs); SetFlagBits(pA, pB->GetFlag() & (USERSET|AUTOSET|VEROSET), bAllLyrs);
-		SetNodeId(pB, wireNodeId, bAllLyrs); SetFlagBits(pB, pA->GetFlag() & (USERSET|AUTOSET|VEROSET), bAllLyrs);
-
-		const char& iFlag = pA->GetFlag();
-
-		comp.SetNodeId(0, wireNodeId);
-		comp.SetNodeId(1, wireNodeId);
+		// Take logical OR of flags on wire ends, ignoring the RECTSET bit
+		const char iWireFlag = ( pA->GetFlag() | pB->GetFlag() ) & (USERSET|AUTOSET|VEROSET);
 
 		WIRELIST wireList;	// Helper for chains of wires
 
 		// Handle all connected wires.  (We just need the wirelist on one end, so use pA)
 		pA->GetWireList(wireList);	// Get list containing pA and its wired points
-		if ( wireList.size() > 2 )
+
+		for (auto& o : wireList)
 		{
-			for (auto& o : wireList)
+			Element* pW = const_cast<Element*> (o.first);
+			// Set the nodeId's on the wire components ...
+			for (int iSlot = 0; iSlot < 2; iSlot++)
 			{
-				Element* pW = const_cast<Element*> (o.first);
-				// Set the nodeId's on the wire components ...
-				for (int iSlot = 0; iSlot < 2; iSlot++)
-				{
-					size_t	iPinIndex;
-					int		tmpCompId;
-					pW->GetSlotInfo(iSlot, iPinIndex, tmpCompId);
-					if ( iPinIndex == BAD_PININDEX ) continue;
-					assert( tmpCompId == BAD_COMPID );
-					Component& comp = m_compMgr.GetComponentById( tmpCompId );
-					assert( comp.GetType() == COMP::WIRE );
-					comp.SetNodeId(iPinIndex, wireNodeId);
-				}
-				// ... and on the corresponding board points
-				SetNodeId(pW, wireNodeId, bAllLyrs);
-				SetFlagBits(pW, iFlag & (USERSET|AUTOSET|VEROSET), bAllLyrs);
+				size_t	iPinIndex;
+				int		tmpCompId;
+				pW->GetSlotInfo(iSlot, iPinIndex, tmpCompId);
+				if ( iPinIndex == BAD_PININDEX ) continue;
+				assert( tmpCompId == BAD_COMPID );
+				Component& comp = m_compMgr.GetComponentById( tmpCompId );
+				assert( comp.GetType() == COMP::WIRE );
+				comp.SetNodeId(iPinIndex, wireNodeId);
 			}
+			// ... and on the corresponding board points
+			const bool bAllLyrs(true);
+			SetNodeId(pW, wireNodeId, bAllLyrs);
+			MarkFlagBits(pW, iWireFlag, bAllLyrs);
 		}
 	}
 	comp.SetIsPlaced(true);	
@@ -577,7 +569,7 @@ bool Board::TakeOff(Component& comp)
 				if ( pComp->GetNodeId() == BAD_NODEID ) continue;	// Skip blank areas of the trax comp
 				if ( !pGrid->ReadFlagBits(RECTSET) && ( !pGrid->GetHasPin() || pGrid->GetHasWire() ) )
 					SetNodeIdByUser(lyr, jRow, iCol, BAD_NODEID, false);	// false ==> don't paint pins
-				ClearFlagBits(pGrid, RECTSET, bAllLyrs);
+				WipeFlagBits(pGrid, RECTSET, bAllLyrs);
 			}
 			else
 			{
@@ -616,8 +608,8 @@ bool Board::TakeOff(Component& comp)
 						if ( p == nullptr ) continue;
 						const bool bAllLyrs = false;
 						SetNodeId(p, origId[lyr], bAllLyrs);	// Restore grid element to original nodeId
-						ClearFlagBits(p, AUTOSET|VEROSET, bAllLyrs);
-						SetFlagBits(p, USERSET, bAllLyrs);
+						WipeFlagBits(p, AUTOSET|VEROSET, bAllLyrs);
+						MarkFlagBits(p, USERSET, bAllLyrs);
 					}
 				}
 			}
@@ -674,8 +666,8 @@ bool Board::TakeOff(Component& comp)
 					}
 					// ... and on the corresponding board points
 					SetNodeId(pW, BAD_NODEID, bAllLyrs);
-					ClearFlagBits(pW, AUTOSET|VEROSET, bAllLyrs);
-					SetFlagBits(pW, USERSET, bAllLyrs);
+					WipeFlagBits(pW, AUTOSET|VEROSET, bAllLyrs);
+					MarkFlagBits(pW, USERSET, bAllLyrs);
 				}
 			}
 		}
@@ -688,8 +680,8 @@ bool Board::TakeOff(Component& comp)
 				Element* p = ( lyr == 0 ) ? pA : pA->GetNbr(NBR_X);
 				if ( p == nullptr ) continue;
 				SetNodeId(p, iOrigIdA[lyr], bAllLyrs);	// Restore grid element to original nodeId
-				ClearFlagBits(p, AUTOSET|VEROSET, bAllLyrs);
-				SetFlagBits(p, USERSET, bAllLyrs);
+				WipeFlagBits(p, AUTOSET|VEROSET, bAllLyrs);
+				MarkFlagBits(p, USERSET, bAllLyrs);
 			}
 		}
 		if ( !pB->GetHasWire() )	// If we've taken off the last wire at the location
@@ -700,8 +692,8 @@ bool Board::TakeOff(Component& comp)
 				Element* p = ( lyr == 0 ) ? pB : pB->GetNbr(NBR_X);
 				if ( p == nullptr ) continue;
 				SetNodeId(p, iOrigIdB[lyr], bAllLyrs);	// Restore grid element to original nodeId
-				ClearFlagBits(p, AUTOSET|VEROSET, bAllLyrs);
-				SetFlagBits(p, USERSET, bAllLyrs);
+				WipeFlagBits(p, AUTOSET|VEROSET, bAllLyrs);
+				MarkFlagBits(p, USERSET, bAllLyrs);
 			}
 		}
 	}

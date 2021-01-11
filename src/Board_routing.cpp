@@ -63,15 +63,15 @@ void Board::WipeAutoSetPoints(int nodeId)
 			{
 				Element* pW = const_cast<Element*> (o.first);
 				if ( bWipe ) SetNodeId(pW, BAD_NODEID, bAllLyrs);
-				ClearFlagBits(pW, AUTOSET, bAllLyrs);
-				SetFlagBits(pW, USERSET, bAllLyrs);
+				WipeFlagBits(pW, AUTOSET, bAllLyrs);
+				MarkFlagBits(pW, USERSET, bAllLyrs);
 			}
 		}
 		else
 		{
 			if ( bWipe ) SetNodeId(p, BAD_NODEID, bAllLyrs);
-			ClearFlagBits(p, AUTOSET, bAllLyrs);
-			SetFlagBits(p, USERSET, bAllLyrs);
+			WipeFlagBits(p, AUTOSET, bAllLyrs);
+			MarkFlagBits(p, USERSET, bAllLyrs);
 		}
 	}
 }
@@ -436,7 +436,9 @@ void Board::Backtrace(Element* pEnd, const int& nodeId)
 		{
 			if ( p->GetNodeId() == BAD_NODEID )	// Set NodeId if not set yet.
 			{
-				SetNodeId(p, nodeId, bAllLyrs); ClearFlagBits(p, USERSET, bAllLyrs); SetFlagBits(p, AUTOSET, bAllLyrs);
+				SetNodeId(p, nodeId, bAllLyrs);
+				WipeFlagBits(p, USERSET, bAllLyrs);
+				MarkFlagBits(p, AUTOSET, bAllLyrs);
 				if ( bWire )
 				{
 					p->GetWireList(wireList);	// Get list of p and its wired points
@@ -444,14 +446,16 @@ void Board::Backtrace(Element* pEnd, const int& nodeId)
 					{
 						Element* pW = const_cast<Element*> (o.first);
 						if ( pW == p ) continue;	// Skip p
-						SetNodeId(pW, nodeId, bAllLyrs); ClearFlagBits(pW, USERSET, bAllLyrs); SetFlagBits(pW, AUTOSET, bAllLyrs);
+						SetNodeId(pW, nodeId, bAllLyrs);
+						WipeFlagBits(pW, USERSET, bAllLyrs);
+						MarkFlagBits(pW, AUTOSET, bAllLyrs);
 					}
 				}
 			}
 			else if ( p->ReadFlagBits(USERSET) )
 			{
 				assert( p->GetNodeId() == nodeId );
-				SetFlagBits(p, AUTOSET, bAllLyrs);
+				MarkFlagBits(p, AUTOSET, bAllLyrs);
 				if ( bWire )
 				{
 					p->GetWireList(wireList);	// Get list of p and its wired points
@@ -459,7 +463,7 @@ void Board::Backtrace(Element* pEnd, const int& nodeId)
 					{
 						Element* pW = const_cast<Element*> (o.first);
 						if ( pW == p ) continue;	// Skip p
-						SetFlagBits(pW, AUTOSET, bAllLyrs);
+						MarkFlagBits(pW, AUTOSET, bAllLyrs);
 					}
 				}
 			}
@@ -716,7 +720,9 @@ void Board::PasteTracks(bool bTidy)
 			}
 		}
 
-		ClearFlagBits(p, AUTOSET|VEROSET, bAllLyrs); SetFlagBits(p, USERSET, bAllLyrs);	// Don't do this on pW, or the tidy option will wipe wires !!!
+		// Don't do this on pW, or the tidy option will wipe wires !!!	//TODO ??? Bad comment ???
+		WipeFlagBits(p, AUTOSET|VEROSET, bAllLyrs);
+		MarkFlagBits(p, USERSET, bAllLyrs);
 
 		// For wires, the "Paste" operation either paints the board at the wire-ends or wipes it.
 		// Fix-up the nodeId info on any wire components ...
@@ -760,8 +766,8 @@ void Board::WipeTracks()
 
 			SetNodeId(p, BAD_NODEID, bAllLyrs);
 			p->SetSurface(SURFACE_FREE);
-			ClearFlagBits(p, AUTOSET|VEROSET|RECTSET, bAllLyrs);
-			SetFlagBits(p, USERSET, bAllLyrs);
+			WipeFlagBits(p, AUTOSET|VEROSET|RECTSET, bAllLyrs);
+			MarkFlagBits(p, USERSET, bAllLyrs);
 		}
 		m_compMgr.ClearTrax();
 		m_rectMgr.Clear();
@@ -778,8 +784,8 @@ void Board::WipeTracks()
 			assert( !p->GetHasPin() && !p->GetIsHole() && !p->GetHasComp() );	// Sanity check
 			SetNodeId(p, BAD_NODEID, bAllLyrs);
 			p->SetSurface(SURFACE_FREE);
-			ClearFlagBits(p, AUTOSET|VEROSET, bAllLyrs);
-			SetFlagBits(p, USERSET, bAllLyrs);
+			WipeFlagBits(p, AUTOSET|VEROSET, bAllLyrs);
+			MarkFlagBits(p, USERSET, bAllLyrs);
 		}
 	}
 	PlaceFloaters();	// Unfloat components

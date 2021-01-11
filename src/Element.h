@@ -261,13 +261,13 @@ public:
 		ToggleCodeBit(Opposite(iNbr), m_pNbr[iNbr]->m_iCode);	// Keep consistent with nbr
 		// Toggles are only done by the user so set the flag accordingly
 		Element* pNbr = GetNbr(iNbr);
-		ClearFlagBits(AUTOSET|VEROSET);			SetFlagBits(USERSET);
-		pNbr->ClearFlagBits(AUTOSET|VEROSET);	pNbr->SetFlagBits(USERSET);
+		WipeFlagBits(AUTOSET|VEROSET);			MarkFlagBits(USERSET);
+		pNbr->WipeFlagBits(AUTOSET|VEROSET);	pNbr->MarkFlagBits(USERSET);
 		// Handle wire ends
-		Element* pW = GetW(0);	if ( pW ) { pW->ClearFlagBits(AUTOSET|VEROSET);	pW->SetFlagBits(USERSET); }
-		pW = GetW(1);			if ( pW ) { pW->ClearFlagBits(AUTOSET|VEROSET);	pW->SetFlagBits(USERSET); }
-		pW = pNbr->GetW(0);		if ( pW ) { pW->ClearFlagBits(AUTOSET|VEROSET);	pW->SetFlagBits(USERSET); }
-		pW = pNbr->GetW(1);		if ( pW ) { pW->ClearFlagBits(AUTOSET|VEROSET);	pW->SetFlagBits(USERSET); }
+		Element* pW = GetW(0);	if ( pW ) { pW->WipeFlagBits(AUTOSET|VEROSET);	pW->MarkFlagBits(USERSET); }
+		pW = GetW(1);			if ( pW ) { pW->WipeFlagBits(AUTOSET|VEROSET);	pW->MarkFlagBits(USERSET); }
+		pW = pNbr->GetW(0);		if ( pW ) { pW->WipeFlagBits(AUTOSET|VEROSET);	pW->MarkFlagBits(USERSET); }
+		pW = pNbr->GetW(1);		if ( pW ) { pW->WipeFlagBits(AUTOSET|VEROSET);	pW->MarkFlagBits(USERSET); }
 	}
 	bool SwapDiagLinks()
 	{

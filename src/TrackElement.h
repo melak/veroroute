@@ -125,8 +125,8 @@ public:
 
 	// Flag Helpers
 	bool ReadFlagBits(const char& i) const	{ return ( m_flag & i ) != 0; }
-	void SetFlagBits(const char& i)			{ m_flag |=  i; }
-	void ClearFlagBits(const char& i)		{ m_flag &= ~i; }
+	void MarkFlagBits(const char& i)		{ m_flag |=  i; }
+	void WipeFlagBits(const char& i)		{ m_flag &= ~i; }
 
 	// Merge interface functions
 	virtual void UpdateMergeOffsets(MergeOffsets& o) override

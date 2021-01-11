@@ -232,24 +232,24 @@ void Board::SetNodeId(Element* p, const int& nodeId, const bool bAllLyrs)	// Hel
 	}
 }
 
-void Board::ClearFlagBits(Element* p, const char& i, const bool bAllLyrs)
+void Board::WipeFlagBits(Element* p, const char& i, const bool bAllLyrs)
 {
 	// For all layers case, always write base layer first
 	Element* q	= bAllLyrs ? p->GetNbr(NBR_X) : nullptr;
 	Element* p1	= std::min(p, q);
 	Element* p2	= std::max(p, q);
-	if ( p1 ) p1->ClearFlagBits(i);
-	if ( p2 ) p2->ClearFlagBits(i);
+	if ( p1 ) p1->WipeFlagBits(i);
+	if ( p2 ) p2->WipeFlagBits(i);
 }
 
-void Board::SetFlagBits(Element* p, const char& i, const bool bAllLyrs)
+void Board::MarkFlagBits(Element* p, const char& i, const bool bAllLyrs)
 {
 	// For all layers case, always write base layer first
 	Element* q	= bAllLyrs ? p->GetNbr(NBR_X) : nullptr;
 	Element* p1	= std::min(p, q);
 	Element* p2	= std::max(p, q);
-	if ( p1 ) p1->SetFlagBits(i);
-	if ( p2 ) p2->SetFlagBits(i);
+	if ( p1 ) p1->MarkFlagBits(i);
+	if ( p2 ) p2->MarkFlagBits(i);
 }
 
 bool Board::SetNodeIdByUser(const int& lyr, const int& row, const int& col, const int& nodeId, const bool& bPaintPins)
@@ -315,8 +315,8 @@ bool Board::SetNodeIdByUser(const int& lyr, const int& row, const int& col, cons
 		Element* pW = const_cast<Element*> (o.first);
 		const bool bAllLyrs = pW->GetHasPin();
 		SetNodeId(pW, nodeId, bAllLyrs);
-		ClearFlagBits(pW, AUTOSET|VEROSET, bAllLyrs);
-		SetFlagBits(pW, USERSET, bAllLyrs);
+		WipeFlagBits(pW, AUTOSET|VEROSET, bAllLyrs);
+		MarkFlagBits(pW, USERSET, bAllLyrs);
 	}
 
 	// Set the nodeId at the component pin
@@ -469,8 +469,8 @@ void Board::AutoFillVero()
 				SetNodeId(pC, nodeIdTop, bAllLyrs);
 			else
 				SetNodeId(pC, nodeIdBot, bAllLyrs);
-			ClearFlagBits(pC, USERSET|AUTOSET, bAllLyrs);
-			SetFlagBits(pC, VEROSET, bAllLyrs);
+			WipeFlagBits(pC, USERSET|AUTOSET, bAllLyrs);
+			MarkFlagBits(pC, VEROSET, bAllLyrs);
 
 			nodeIdTop = pC->GetNodeId(); lenTop = 1;	// Start top count
 		}

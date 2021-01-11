@@ -406,8 +406,8 @@ public:
 
 	// Methods to paint/unpaint nodeIds
 	void SetNodeId(Element* p, const int& nodeId, const bool bAllLyrs);	// Helper to make sure we do UpdateCounts() before painting an element
-	void ClearFlagBits(Element* p, const char& i, const bool bAllLyrs);
-	void SetFlagBits(Element* p, const char& i, const bool bAllLyrs);
+	void WipeFlagBits(Element* p, const char& i, const bool bAllLyrs);
+	void MarkFlagBits(Element* p, const char& i, const bool bAllLyrs);
 	bool SetNodeIdByUser(const int& lyr, const int& row, const int& col, const int& nodeId, const bool& bPaintPins);
 	void FloodNodeId(const int& nodeId);
 	void AutoFillVero();

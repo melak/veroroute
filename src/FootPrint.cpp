@@ -96,7 +96,7 @@ void FootPrint::BuildTrax(CompManager* pCompMgr, const RectManager& rectMgr, con
 			}
 			pTarget->SetNodeId(iNodeId);
 			pTarget->SetCode(pSource->GetCode());	// Note: This is wrong at boundaries
-			pTarget->SetFlagBits(RECTSET);
+			pTarget->MarkFlagBits(RECTSET);
 		}
 	}
 }
