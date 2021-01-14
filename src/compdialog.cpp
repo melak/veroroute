@@ -67,6 +67,9 @@ void CompDialog::SetMainWindow(MainWindow* p)
 	QObject::connect(ui->spinBox_Height,	SIGNAL(valueChanged(int)),					m_pMainWindow,	SLOT(DefinerHeightChanged(int)));
 	QObject::connect(ui->comboBox_PinShape,	SIGNAL(currentIndexChanged(const QString&)),m_pMainWindow,	SLOT(DefinerSetPinShapeType(const QString&)));
 	QObject::connect(ui->checkBox_PinLabels,SIGNAL(toggled(bool)),						m_pMainWindow,	SLOT(DefinerToggledPinLabels(bool)));
+	QObject::connect(ui->custom,			SIGNAL(toggled(bool)),						m_pMainWindow,	SLOT(DefinerToggledCustomFlag(bool)));
+	QObject::connect(ui->padWidth,			SIGNAL(valueChanged(int)),					m_pMainWindow,	SLOT(DefinerPadWidthChanged(int)));
+	QObject::connect(ui->holeWidth,			SIGNAL(valueChanged(int)),					m_pMainWindow,	SLOT(DefinerHoleWidthChanged(int)));
 	QObject::connect(ui->spinBox_PinNumber,	SIGNAL(valueChanged(int)),					m_pMainWindow,	SLOT(DefinerSetPinNumber(int)));
 	QObject::connect(ui->pushButtonRGB,		SIGNAL(clicked()),							m_pMainWindow,	SLOT(DefinerChooseColor()));
 	QObject::connect(ui->pushButtonU,		SIGNAL(clicked()),							m_pMainWindow,	SLOT(DefinerRaise()));
@@ -121,6 +124,10 @@ void CompDialog::Update()
 	ui->comboBox_PinShape->setCurrentIndex( ( (def.GetPinFlags() & PIN_RECT) > 0 ) ? 1 : 0 );
 	ui->checkBox_PinLabels->setChecked( def.GetPinFlags() & PIN_LABELS );
 
+	ui->custom->setChecked( def.GetPinFlags() & PIN_CUSTOM );
+	ui->padWidth->setValue( def.GetPadWidth() );
+	ui->holeWidth->setValue( def.GetHoleWidth() );
+
 	if ( bValidPinId )
 	{
 		const Pin& pin = def.GetCurrentPin();
@@ -156,6 +163,21 @@ void CompDialog::EnableControls()	// Enable/disable controls
 	const bool		bValidPinId			= BAD_ID != def.GetCurrentPinId();
 	const bool		bValidShapeId		= BAD_ID != def.GetCurrentShapeId();
 	const bool		bValidDefinition	= def.GetIsValid();
+	const bool		bCustom				= def.GetPinFlags() & PIN_CUSTOM;
+	if ( bCustom )
+	{
+		ui->padWidth->show();
+		ui->holeWidth->show();
+		ui->label_pad->show();
+		ui->label_hole->show();
+	}
+	else
+	{
+		ui->padWidth->hide();
+		ui->holeWidth->hide();
+		ui->label_pad->hide();
+		ui->label_hole->hide();
+	}
 
 	bool bAngle(false);	// true ==> show angle controls
 	bool bFill(false);	// true ==> allow fill option on shapr

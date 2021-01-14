@@ -382,8 +382,8 @@ private:
 	int						m_currentShapeId;	// Current selected shape
 	// Component description
 	uchar					m_iPinFlags;		// 1 ==> PIN_RECT, 2 ==> PIN_LABELS, 4 ==> PIN_CUSTOM
-	int						m_iPadWidth;		// Used if the PIN_CUSTOM flag is set	//TODO Add to component editor dialog
-	int						m_iHoleWidth;		// Used if the PIN_CUSTOM flag is set	//TODO Add to component editor dialog
+	int						m_iPadWidth;		// Used if the PIN_CUSTOM flag is set
+	int						m_iHoleWidth;		// Used if the PIN_CUSTOM flag is set
 	std::string				m_valueStr;			// Value label (e.g. "MN3004")
 	std::string				m_prefixStr;		// Prefix string (e.g. "IC")
 	std::string				m_typeStr;			// Component type (e.g. "BBD")

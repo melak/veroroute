@@ -342,8 +342,11 @@ public slots:
 	void DefinerSetImportStr(const QString& str);
 	void DefinerWidthChanged(int i);
 	void DefinerHeightChanged(int i);
+	void DefinerPadWidthChanged(int i);
+	void DefinerHoleWidthChanged(int i);
 	void DefinerSetPinShapeType(const QString& str);
 	void DefinerToggledPinLabels(bool b);
+	void DefinerToggledCustomFlag(bool b);
 	void DefinerToggleShapeLine(bool b);
 	void DefinerToggleShapeFill(bool b);
 	void DefinerSetPinNumber(int i);

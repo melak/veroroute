@@ -720,7 +720,7 @@ void Board::PasteTracks(bool bTidy)
 			}
 		}
 
-		// Don't do this on pW, or the tidy option will wipe wires !!!	//TODO ??? Bad comment ???
+		// Make the point USERSET
 		WipeFlagBits(p, AUTOSET|VEROSET, bAllLyrs);
 		MarkFlagBits(p, USERSET, bAllLyrs);
 

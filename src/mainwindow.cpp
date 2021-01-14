@@ -1523,6 +1523,20 @@ void MainWindow::DefinerToggledPinLabels(bool b)
 		EnableCompDialogControls();
 	}
 }
+void MainWindow::DefinerToggledCustomFlag(bool b)
+{
+	CompDefiner& compDefiner = GetCompDefiner();
+	bool bChanged(false);
+	if ( b )
+		bChanged = compDefiner.SetPinFlags( compDefiner.GetPinFlags() | PIN_CUSTOM );
+	else
+		bChanged = compDefiner.SetPinFlags( compDefiner.GetPinFlags() & ~PIN_CUSTOM );
+	if ( bChanged )
+	{
+		UpdateHistory("Toggle custom pad/hole size");
+		EnableCompDialogControls();
+	}
+}
 void MainWindow::DefinerToggleShapeLine(bool b)
 {
 	const bool bChanged = GetCompDefiner().SetLine(b);
@@ -1543,17 +1557,19 @@ void MainWindow::DefinerToggleShapeFill(bool b)
 		RepaintSkipRouting();
 	}
 }
-void MainWindow::DefinerWidthChanged(int i)	{ if ( GetCompDefiner().SetWidth(i)		) { UpdateHistory("Action"); EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
-void MainWindow::DefinerHeightChanged(int i){ if ( GetCompDefiner().SetHeight(i)	) { UpdateHistory("Action"); EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
-void MainWindow::DefinerSetPinNumber(int i)	{ if ( GetCompDefiner().SetPinNumber(i)	) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
-void MainWindow::DefinerIncPinNumber(bool b){ if ( GetCompDefiner().IncPinNumber(b)	) { UpdateHistory("Action"); UpdateCompDialog();		 RepaintSkipRouting(); } }	// Called using mouse wheel in view
-void MainWindow::DefinerSetCX(double d)		{ if ( GetCompDefiner().SetCX(d)		) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
-void MainWindow::DefinerSetCY(double d)		{ if ( GetCompDefiner().SetCY(-d)		) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }	// Control assumes CY goes up
-void MainWindow::DefinerSetDX(double d)		{ if ( GetCompDefiner().SetDX(d)		) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
-void MainWindow::DefinerSetDY(double d)		{ if ( GetCompDefiner().SetDY(d)		) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
-void MainWindow::DefinerSetA1(double d)		{ if ( GetCompDefiner().SetA1(d)		) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
-void MainWindow::DefinerSetA2(double d)		{ if ( GetCompDefiner().SetA2(d)		) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
-void MainWindow::DefinerSetA3(double d)		{ if ( GetCompDefiner().SetA3(d)		) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
+void MainWindow::DefinerWidthChanged(int i)		{ if ( GetCompDefiner().SetWidth(i)		) { UpdateHistory("Action"); EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
+void MainWindow::DefinerHeightChanged(int i)	{ if ( GetCompDefiner().SetHeight(i)	) { UpdateHistory("Action"); EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
+void MainWindow::DefinerPadWidthChanged(int i)	{ if ( GetCompDefiner().SetPadWidth(i)	) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
+void MainWindow::DefinerHoleWidthChanged(int i)	{ if ( GetCompDefiner().SetHoleWidth(i)	) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
+void MainWindow::DefinerSetPinNumber(int i)		{ if ( GetCompDefiner().SetPinNumber(i)	) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
+void MainWindow::DefinerIncPinNumber(bool b)	{ if ( GetCompDefiner().IncPinNumber(b)	) { UpdateHistory("Action"); UpdateCompDialog();		 RepaintSkipRouting(); } }	// Called using mouse wheel in view
+void MainWindow::DefinerSetCX(double d)			{ if ( GetCompDefiner().SetCX(d)		) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
+void MainWindow::DefinerSetCY(double d)			{ if ( GetCompDefiner().SetCY(-d)		) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }	// Control assumes CY goes up
+void MainWindow::DefinerSetDX(double d)			{ if ( GetCompDefiner().SetDX(d)		) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
+void MainWindow::DefinerSetDY(double d)			{ if ( GetCompDefiner().SetDY(d)		) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
+void MainWindow::DefinerSetA1(double d)			{ if ( GetCompDefiner().SetA1(d)		) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
+void MainWindow::DefinerSetA2(double d)			{ if ( GetCompDefiner().SetA2(d)		) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
+void MainWindow::DefinerSetA3(double d)			{ if ( GetCompDefiner().SetA3(d)		) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
 void MainWindow::DefinerBuild()
 {
 	assert( GetCompDefiner().GetIsValid() );
