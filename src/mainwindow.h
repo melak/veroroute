@@ -201,6 +201,8 @@ public slots:
 	void AddSwitchST()			{ AddPart(COMP::SWITCH_ST); }
 	void AddSwitchDT()			{ AddPart(COMP::SWITCH_DT); }
 	void AddSwitchST_DIP()		{ AddPart(COMP::SWITCH_ST_DIP); }
+	void AddVeroNumbers()		{ AddPart(COMP::VERO_NUMBER); }
+	void AddVeroLetters()		{ AddPart(COMP::VERO_LETTER); }
 	void AddTextBox()
 	{
 		SetCurrentTextId(BAD_TEXTID);

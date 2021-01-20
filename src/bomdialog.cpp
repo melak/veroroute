@@ -60,9 +60,11 @@ void BomDialog::Update()
 		const Component& comp = mapObj.second;
 		switch( comp.GetType() )
 		{
+			case COMP::VERO_NUMBER:
+			case COMP::VERO_LETTER:
 			case COMP::MARK:
 			case COMP::PAD:
-			case COMP::WIRE:	break;	// Not true components
+			case COMP::WIRE:	break;	// Not true components for BOM
 			default:			pComps.push_back(&comp);
 		}
 	}

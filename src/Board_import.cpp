@@ -123,7 +123,7 @@ bool Board::ImportTango(const TemplateManager& templateMgr, const std::string& f
 				const COMP eType = GetTypeFromImportStr(typeStrCut);
 				if ( bOK )
 				{
-					bOK = ( eType != COMP::CUSTOM && eType != COMP::TRACKS && eType != COMP::INVALID );
+					bOK = ( eType != COMP::CUSTOM && eType != COMP::TRACKS && eType != COMP::VERO_NUMBER && eType != COMP::VERO_LETTER && eType != COMP::INVALID );
 					if ( !bOK )	// Search template manager
 						bOK = bCustom = templateMgr.GetFromImportStr(typeStrCut, custom);
 					if ( !bOK ) errorStr = "Part section: " + nameStr + "\nVeroRoute does not support the part type: " + typeStr;
@@ -385,7 +385,7 @@ bool Board::ImportOrcad(const TemplateManager& templateMgr, const std::string& f
 
 			const COMP eType = GetTypeFromImportStr(typeStrCut);
 
-			bOK = ( eType != COMP::CUSTOM && eType != COMP::TRACKS && eType != COMP::INVALID );
+			bOK = ( eType != COMP::CUSTOM && eType != COMP::TRACKS && eType != COMP::VERO_NUMBER && eType != COMP::VERO_LETTER && eType != COMP::INVALID );
 			if ( !bOK )	// Search template manager
 				bOK = bCustom = templateMgr.GetFromImportStr(typeStrCut, custom);
 			if ( !bOK )
@@ -554,7 +554,7 @@ bool Board::ImportOrcad(const TemplateManager& templateMgr, const std::string& f
 bool Board::BreakComponentIntoPads(Component& comp)
 {
 	const COMP& eType = comp.GetType();
-	if ( eType == COMP::MARK || eType == COMP::PAD || eType == COMP::WIRE ) return false;	// Not real components
+	if ( eType == COMP::MARK || eType == COMP::PAD || eType == COMP::WIRE || eType == COMP::VERO_NUMBER || eType == COMP::VERO_LETTER ) return false;	// Not real components
 	if ( !comp.GetIsPlaced() ) return false;	// Can't break a floating component
 
 	std::vector<int> nodeList = { BAD_NODEID };	// Re-used for each new pad

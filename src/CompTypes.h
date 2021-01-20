@@ -94,6 +94,8 @@ enum class COMP {	INVALID					=   -1,
 					RELAY_DIP_4PIN			= 4050,
 					RELAY_DIP_8PIN			= 4052,
 					FUSE_HOLDER				= 5000,
+					VERO_NUMBER				= 10000,	// Not a real component. Used for labeling vero-boards
+					VERO_LETTER				= 10001,	// Not a real component. Used for labeling vero-boards
 					CUSTOM					= 100000,	// A user-defined component
 					TRACKS					= 1000000	// A track pattern
 				};
@@ -174,6 +176,8 @@ static int GetListOrder(const COMP& eType)	// For dialogs/menus.  Lower number =
 		case COMP::RELAY_DIP_8PIN:		return 17;
 		case COMP::FUSE_HOLDER:			return 18;
 		case COMP::MARK:				return 100;
+		case COMP::VERO_NUMBER:			return 200;
+		case COMP::VERO_LETTER:			return 201;
 		default:						return 1000;	// Unhandled eType
 	}
 }
@@ -277,6 +281,8 @@ static void InitMapsCompTypeToStr()
 	UpdateMaps(COMP::RELAY_DIP_4PIN,		"DIP 4-pin",					"RELAY_DIP_4PIN");
 	UpdateMaps(COMP::RELAY_DIP_8PIN,		"DIP 8-pin",					"RELAY_DIP_8PIN");
 	UpdateMaps(COMP::FUSE_HOLDER,			"Fuse Holder",					"FUSE_HOLDER");
+	UpdateMaps(COMP::VERO_NUMBER,			"Vero Numbers",					"");	// No import string
+	UpdateMaps(COMP::VERO_LETTER,			"Vero Letters",					"");	// No import string
 	UpdateMaps(COMP::CUSTOM,				"Custom",						"");	// No import string (user-defined shapes have their own strings)
 	UpdateMaps(COMP::TRACKS,				"Tracks",						"");	// No import string
 }
@@ -453,6 +459,8 @@ static std::string GetDefaultPrefixStr(const COMP& eType)	// Prefix for name on 
 		case COMP::RELAY_DIP_8PIN:		return "SW";
 		case COMP::FUSE_HOLDER:			return "F";
 		case COMP::CUSTOM:				return "";
+		case COMP::VERO_NUMBER:			return "Vero Numbers";
+		case COMP::VERO_LETTER:			return "Vero Letters";
 		default:						return "INVALID";	// Unhandled eType
 	}
 }
@@ -589,6 +597,8 @@ static std::string GetMakeInstructions(const COMP& eType, int& rows, int& cols)
 		case COMP::RELAY_DIP_4PIN		: rows = 4; cols = 7;  return "4+++++3+++++++++++++++1+++2+";
 		case COMP::RELAY_DIP_8PIN		: rows = 4; cols = 7;  return "87+++65++++++++++++++12+++34";
 		case COMP::FUSE_HOLDER			: rows = 3; cols = 10; return "++++++++++1++++++++2++++++++++";
+		case COMP::VERO_NUMBER			: rows = 1; cols = 10; return "..........";
+		case COMP::VERO_LETTER			: rows = 1; cols = 10; return "..........";
 		case COMP::CUSTOM				: rows = 1; cols = 1;  return ".";
 		case COMP::INVALID				: rows = 0; cols = 0;  return "";
 		default:	assert(0);			  rows = 0; cols = 0;  return "";	// Unhandled eType
@@ -707,6 +717,8 @@ static int GetDefaultNumPins(const COMP& eType)
 		case COMP::RELAY_DIP_4PIN:		return 4;
 		case COMP::RELAY_DIP_8PIN:		return 8;
 		case COMP::FUSE_HOLDER:			return 2;
+		case COMP::VERO_NUMBER:			return 0;
+		case COMP::VERO_LETTER:			return 0;
 		case COMP::CUSTOM:				return 0;
 		default:						return 0;	// Unhandled eType
 	}
@@ -770,6 +782,8 @@ static int GetMinLength(const COMP& eType)	// For stretchable components
 		case COMP::SWITCH_ST:		return GetMinNumPins(eType) / 2;
 		case COMP::SWITCH_DT:		return GetMinNumPins(eType) / 3;
 		case COMP::SWITCH_ST_DIP:	return GetMinNumPins(eType) / 2;
+		case COMP::VERO_NUMBER:		return 1;
+		case COMP::VERO_LETTER:		return 1;
 		default:	assert(0);		return 1;	// Non-stretchable component
 	}
 }
@@ -792,6 +806,8 @@ static int GetMaxLength(const COMP& eType)	// For stretchable components
 		case COMP::SWITCH_ST:		return GetMaxNumPins(eType) - 1;
 		case COMP::SWITCH_DT:		return 2 * GetMaxNumPins(eType) / 3 - 1;
 		case COMP::SWITCH_ST_DIP:	return GetMaxNumPins(eType) / 2;
+		case COMP::VERO_NUMBER:		return 255;
+		case COMP::VERO_LETTER:		return 255;
 		default:	assert(0);		return 1;	// Non-stretchable component
 	}
 }

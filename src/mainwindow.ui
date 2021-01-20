@@ -168,6 +168,9 @@
     <addaction name="actionMarker"/>
     <addaction name="separator"/>
     <addaction name="actionTextBox"/>
+    <addaction name="separator"/>
+    <addaction name="actionVeroNumbers"/>
+    <addaction name="actionVeroLetters"/>
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
@@ -1217,6 +1220,16 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+F</string>
+   </property>
+  </action>
+  <action name="actionVeroNumbers">
+   <property name="text">
+    <string>Vero Numbers</string>
+   </property>
+  </action>
+  <action name="actionVeroLetters">
+   <property name="text">
+    <string>Vero Letters</string>
    </property>
   </action>
  </widget>

@@ -581,7 +581,7 @@ bool Board::GetDisableCompText()
 	if ( ( GetGroupMgr().GetNumUserComps() != 1 ) || ( GetCompMode() == COMPSMODE::OFF || GetCompMode() == COMPSMODE::OUTLINE ) ) return true;
 	const Component& comp	= GetUserComponent();
 	const COMP&		 eType	= comp.GetType();
-	return ( eType == COMP::WIRE || eType == COMP::MARK );	// No labels for wires and markers
+	return ( eType == COMP::WIRE || eType == COMP::MARK || eType == COMP::VERO_NUMBER || eType == COMP::VERO_LETTER );	// No labels for wires/markers/vero-labels
 }
 
 bool Board::GetDisableMove()

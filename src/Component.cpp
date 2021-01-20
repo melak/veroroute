@@ -95,6 +95,8 @@ void Component::SetDefaultPinFlags()
 		case COMP::TRIM_3362X:
 		case COMP::TRIM_3362Z:
 		case COMP::CRYSTAL:	assert( GetPinFlags() == iCustomFlag );	return SetPinFlags(iCustomFlag);
+		case COMP::VERO_NUMBER:
+		case COMP::VERO_LETTER:
 		case COMP::CUSTOM:
 		case COMP::TRACKS:
 		case COMP::INVALID:		return;
@@ -106,6 +108,8 @@ void Component::SetDefaultShapes(const bool& bUsePCBshapes)
 {
 	switch( GetType() )
 	{
+		case COMP::VERO_NUMBER:
+		case COMP::VERO_LETTER:
 		case COMP::CUSTOM:
 		case COMP::TRACKS:	return;
 		default:			m_shapes.clear();
@@ -314,6 +318,8 @@ void Component::SetDefaultColor()
 {
 	switch( GetType() )
 	{
+		case COMP::VERO_NUMBER:
+		case COMP::VERO_LETTER:
 		case COMP::CUSTOM:
 		case COMP::TRACKS:
 		case COMP::MARK:					return;

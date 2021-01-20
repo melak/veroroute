@@ -328,8 +328,9 @@ public:
 		if ( str.empty() ) return;
 		for (auto& mapObj : m_mapIdToComp)
 		{
-			Component& comp = mapObj.second;
-			if ( comp.GetType() == COMP::WIRE || comp.GetType() == COMP::MARK ) continue;
+			Component&	comp	= mapObj.second;
+			const COMP&	eType	= comp.GetType();
+			if ( eType == COMP::WIRE || eType == COMP::MARK || eType == COMP::VERO_NUMBER || eType == COMP::VERO_LETTER ) continue;
 			const std::string& compStr = bUseName ? comp.GetNameStr() : comp.GetValueStr();
 			const bool bFound = bExact ? ( compStr == str )
 									   : ( compStr.find(str) != std::string::npos );

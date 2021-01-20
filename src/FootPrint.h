@@ -56,6 +56,8 @@ public:
 	{
 		switch( m_type )
 		{
+			case COMP::VERO_NUMBER:
+			case COMP::VERO_LETTER:
 			case COMP::WIRE:
 			case COMP::DIODE:
 			case COMP::RESISTOR:
@@ -95,6 +97,10 @@ public:
 
 		switch( m_type )
 		{
+			case COMP::VERO_NUMBER:
+			case COMP::VERO_LETTER:
+				StretchComplex(m_type, bGrow);
+				return SetupOccupancies();
 			case COMP::WIRE:
 			case COMP::DIODE:
 			case COMP::RESISTOR:

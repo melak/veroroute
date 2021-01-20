@@ -202,6 +202,8 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	QObject::connect(ui->actionSwitchDT,				SIGNAL(triggered()), this, SLOT(AddSwitchDT()));
 	QObject::connect(ui->actionSwitchST_DIP,			SIGNAL(triggered()), this, SLOT(AddSwitchST_DIP()));
 	QObject::connect(ui->actionTextBox,					SIGNAL(triggered()), this, SLOT(AddTextBox()));
+	QObject::connect(ui->actionVeroNumbers,				SIGNAL(triggered()), this, SLOT(AddVeroNumbers()));
+	QObject::connect(ui->actionVeroLetters,				SIGNAL(triggered()), this, SLOT(AddVeroLetters()));
 	QObject::connect(ui->actionRenderingDlg,			SIGNAL(triggered()), this, SLOT(ShowRenderingDialog()));
 	QObject::connect(ui->actionWireDlg,					SIGNAL(triggered()), this, SLOT(ShowWireDialog()));
 	QObject::connect(ui->actionControlDlg,				SIGNAL(triggered()), this, SLOT(ShowControlDialog()));

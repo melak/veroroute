@@ -458,6 +458,8 @@ public:
 	{
 		switch( GetType() )
 		{
+			case COMP::VERO_NUMBER:
+			case COMP::VERO_LETTER:
 			case COMP::MARK:
 			case COMP::WIRE:
 			case COMP::TRACKS:	return false;

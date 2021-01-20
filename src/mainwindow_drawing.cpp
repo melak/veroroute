@@ -711,11 +711,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 	// Pre-process component list for rendering
 	std::vector<const Component*> sortedComps;
-	if ( compMode != COMPSMODE::OFF || bMonoPCB )
-	{
-		compMgr.CalculateWireInfo();			// Work out shifts for overlaid wires and flag crossing wires
-		compMgr.GetSortedComps(sortedComps);	// Sorted so floating and "plug" components get rendered last
-	}
+	compMgr.CalculateWireInfo();			// Work out shifts for overlaid wires and flag crossing wires
+	compMgr.GetSortedComps(sortedComps);	// Sorted so floating and "plug" components get rendered last
 
 	// Get bounds to minimise looping
 	int minRow, minCol, maxRow, maxCol;
@@ -1216,8 +1213,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			const char&		 compDirection	= comp.GetDirection();
 			const bool		 bMark			= compType == COMP::MARK;
 			const bool		 bWire			= compType == COMP::WIRE;
+			const bool		 bVeroLabel		= compType == COMP::VERO_NUMBER || compType == COMP::VERO_LETTER;
 			const bool		 bPlaced		= comp.GetIsPlaced();
-			if ( bPCB && bMark )	continue;	// Don't show markers in PCB mode
+			if ( bPCB && (bMark || bVeroLabel) )	continue;	// Don't show markers and vero-lables in PCB mode
 			if ( m_bWriteGerber && !bPlaced ) continue;	// Don't write floating components to Gerber
 			if ( bWiresAsTracks && bWire && compMgr.GetWireCanBeTrack(&comp) ) continue;
 			const bool 		 bFound			= compMgr.GetFound( comp.GetId() );
@@ -1491,7 +1489,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			// End draw component pins -----------------------------------------------------------
 
 			// Begin draw component text ---------------------------------------------------------
-			if ( compMode != COMPSMODE::OFF && !bMark && !bWire )
+			if ( compMode != COMPSMODE::OFF && !bMark && !bWire && !bVeroLabel )
 			{
 				painter.save();
 
@@ -1559,6 +1557,75 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					painter.drawRect(L,T,R-L,B-T);
 				}
 		}
+	}
+
+	// Draw vero labels ==========================================================================
+	if ( !bPCB )
+	{
+		painter.save();
+
+		QFont labelsFont = painter.font();	// Copy of current font
+		labelsFont.setPointSize( m_board.GetTextSizeComp() );
+		painter.setFont(labelsFont);
+
+		painter.setBrush(Qt::NoBrush);
+		penPlaced.setWidth(0);
+		m_redPen.setWidth(0);
+
+		for (const auto& pComp : sortedComps)	// Iterate sorted components
+		{
+			const Component& comp			= *pComp;
+			const COMP&		 compType		= comp.GetType();
+			const bool		 bVeroNumber	= compType == COMP::VERO_NUMBER;
+			const bool		 bVeroLetter	= compType == COMP::VERO_LETTER;
+			if ( !(bVeroNumber || bVeroLetter) ) continue;
+			const char&		 compDirection	= comp.GetDirection();
+			const bool		 bPlaced		= comp.GetIsPlaced();	// Only unplaced when a label is created by copying another ("V" key)
+			const int		 jComp			= comp.GetRow();
+			const int		 iComp			= comp.GetCol();
+
+			int index(0), length(comp.GetSize());
+			for (int jj = 0; jj < comp.GetCompRows(); jj++)
+			for (int ii = 0; ii < comp.GetCompCols(); ii++, index++)
+			{
+				const int j = jComp + jj;
+				const int i = iComp + ii;
+
+				GetLRTB(board, 100, j, i, L, R, T, B);
+
+				painter.save();
+				painter.translate((L+R)/2, (T+B)/2);
+
+				// Set text orientation, and forward/reverse number order
+				int iNumber = index + 1;	// Increasing numbers by default
+				switch( compDirection )
+				{
+					case 'W':	painter.rotate(270);			break;
+					case 'E':	painter.rotate(270);
+								iNumber = 1 + length - iNumber;	break;	// Reverse number order
+					case 'S':	iNumber = 1 + length - iNumber;	break;	// Reverse number order
+				}
+
+				std::string label("");
+				if ( bVeroNumber )	// Numbers go: 1,2,3 etc
+					label = std::to_string(iNumber);
+				else				// Letters go: A,B,...,Y,Z,AA,AB,...,AY,AZ,BA,BB, ... etc
+				{
+					if ( iNumber > 26 ) label += ( char('A') + (iNumber-1)/26 - 1);
+					label += ( char('A') + (iNumber-1)%26 );
+				}
+
+				// We always want the vero labels to appear non-mirrored
+				if ( board.GetFlipH() )	painter.scale(-1, 1);	// Mirror L-R
+				if ( board.GetFlipV() )	painter.scale(1, -1);	// Mirror T-B
+
+				painter.scale(dTextScale, dTextScale);
+				painter.setPen(bPlaced ? penPlaced : m_redPen);
+				painter.drawText(0,0,0,0, Qt::TextDontClip | Qt::AlignVCenter | Qt::AlignHCenter, label.c_str());
+				painter.restore();
+			}
+		}
+		painter.restore();
 	}
 
 	// Draw User-defined labels ==================================================================

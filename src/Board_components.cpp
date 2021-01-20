@@ -759,7 +759,7 @@ void Board::SelectAllComps(bool bRestrictToRects)
 	SetCurrentTextId(BAD_TEXTID);
 }
 
-bool Board::ConfirmDestroyUserComps()	// returns false if user-group is empty or has only wires and markers
+bool Board::ConfirmDestroyUserComps()	// returns false if user-group is empty or has only wires/markers/vero-labels
 {
 	std::list<int> userCompIds;
 	m_groupMgr.GetUserCompIds(userCompIds);
@@ -768,6 +768,8 @@ bool Board::ConfirmDestroyUserComps()	// returns false if user-group is empty or
 		assert( compId != BAD_COMPID );
 		switch( m_compMgr.GetComponentById( compId ).GetType() )
 		{
+			case COMP::VERO_NUMBER:
+			case COMP::VERO_LETTER:
 			case COMP::WIRE:
 			case COMP::MARK:	continue;
 			case COMP::INVALID:	assert(0);

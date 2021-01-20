@@ -67,8 +67,10 @@ public:
 		std::string nameStr(""), valueStr("");
 		for (auto& eType : GetListCompTypes())
 		{
-			if ( eType == COMP::TRACKS ) continue;	// Not a real component
-			if ( eType == COMP::CUSTOM ) continue;	// Don't show custom components in the left pane
+			if ( eType == COMP::TRACKS ) continue;		// Not a real component
+			if ( eType == COMP::VERO_NUMBER ) continue;	// Not a real component
+			if ( eType == COMP::VERO_LETTER ) continue;	// Not a real component
+			if ( eType == COMP::CUSTOM ) continue;		// Don't show custom components in the left pane
 			const size_t numPins = GetDefaultNumPins(eType);
 			std::vector<int> nodeList;
 			nodeList.resize(numPins, BAD_NODEID);
