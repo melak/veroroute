@@ -190,6 +190,7 @@
     <addaction name="actionToggleFlipH"/>
     <addaction name="actionToggleFlipV"/>
     <addaction name="separator"/>
+    <addaction name="actionToggleSolder"/>
    </widget>
    <widget class="QMenu" name="menuWindow">
     <property name="title">
@@ -519,6 +520,14 @@
    </property>
    <property name="autoRepeat">
     <bool>false</bool>
+   </property>
+  </action>
+  <action name="actionToggleSolder">
+   <property name="text">
+    <string>Toggle Solder</string>
+   </property>
+   <property name="toolTip">
+    <string>Show solder bridges in Vero mode (On/Off)</string>
    </property>
   </action>
   <action name="actionToggleGrid">
@@ -894,6 +903,22 @@
     <string>Add Text Box</string>
    </property>
   </action>
+  <action name="actionVeroNumbers">
+   <property name="text">
+    <string>Vero Numbers</string>
+   </property>
+   <property name="toolTip">
+    <string>Add line of numbers as Veroboard labels</string>
+   </property>
+  </action>
+  <action name="actionVeroLetters">
+   <property name="text">
+    <string>Vero Letters</string>
+   </property>
+   <property name="toolTip">
+    <string>Add line of letters as Veroboard labels</string>
+   </property>
+  </action>
   <action name="actionTO39">
    <property name="text">
     <string>TO-39</string>
@@ -1220,16 +1245,6 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+F</string>
-   </property>
-  </action>
-  <action name="actionVeroNumbers">
-   <property name="text">
-    <string>Vero Numbers</string>
-   </property>
-  </action>
-  <action name="actionVeroLetters">
-   <property name="text">
-    <string>Vero Letters</string>
    </property>
   </action>
  </widget>

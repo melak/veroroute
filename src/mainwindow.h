@@ -141,6 +141,7 @@ public slots:
 	void ToggleFlipH();
 	void ToggleFlipV();
 	void TogglePinLabels();
+	void ToggleSolder();
 	// Toolbar items
 	void VeroV();
 	void VeroH();
@@ -296,6 +297,7 @@ public slots:
 	void SetDiagonalsOff(bool b);
 	void SetDiagonalsMin(bool b);
 	void SetDiagonalsMax(bool b);
+	// Rendering options
 	void SetTrackWidth(int i);
 	void SetHoleWidth(int i);
 	void SetPadWidth(int i);
@@ -305,12 +307,12 @@ public slots:
 	void SetEdgeWidth(int i);
 	void SetViaPadWidth(int i);
 	void SetViaHoleWidth(int i);
-	// Rendering options
 	void SetTextSizeComp(int i);
 	void SetTextSizePins(int i);
 	void SetTargetRows(int i);
 	void SetTargetCols(int i);
 	void SetShowTarget(bool b);
+	void SetShowSolder(bool b);
 	void SetAntialiasOff(bool b);
 	void SetAntialiasOn(bool b);
 	void SetAntialiasHigh(bool b);

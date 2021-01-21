@@ -1160,7 +1160,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	}
 
 	// Draw solder ===============================================================================
-	if ( !bPCB && bVero && trackMode != TRACKMODE::OFF )
+	if ( ( bColor || bMono ) && bVero && m_board.GetShowSolder() )
 	{
 		const bool bVertical = board.GetVerticalStrips();
 		painter.save();
