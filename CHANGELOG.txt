@@ -259,3 +259,7 @@ V2.00  Bug fix: Poor-man's 2-layer Gerber export was not handling crossing wires
        Improvement: Allow TAB to change focus of dialog controls.
        Improvement: Reworked some icons that did not work well with dark themes.
        Removed menu item to fix corruption.  Old corrupted VRTS are now auto-fixed on load.
+V2.01  Bug fix: Chains of wires sharing holes sometimes not colored completely.
+       Added ability to define custom pad/hole size in component editor.
+       Added ability to add veroboard labels (numbers or letters).
+       Improved algorithm for solder bridges.  Don't show a solder bridge if a wire is already doing that job.

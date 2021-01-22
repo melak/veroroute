@@ -251,9 +251,13 @@ static const char* szVEROROUTE_VERSION =
 //"1.98";	// Put in extra checks to stop potential crashes arising from a corrupted layout.
 			// Added file menu option to fix a corrupted layout.
 //"1.99";	// Code changes to help prevent layout from becoming corrupted.
-  "2.00";	// Bug fix: Poor-man's 2-layer Gerber export was not handling crossing wires.
+//"2.00";	// Bug fix: Poor-man's 2-layer Gerber export was not handling crossing wires.
 			// Bug fix: Isolated nodes were rendered to Gerber with pad-width instead of track-width.
 			// Bug fix: Isolated nodes were rendered to top layer for poor-man's 2-layer Gerber export.
 			// Improvement: Allow TAB to change focus of dialog controls.
 			// Improvement: Reworked some icons that did not work well with dark themes.
 			// Removed menu item to fix corruption.  Old corrupted VRTS are now auto-fixed on load.
+  "2.01";	// Bug fix: Chains of wires sharing holes sometimes not colored completely.
+			// Added ability to define custom pad/hole size in component editor.
+			// Added ability to add veroboard labels (numbers or letters).
+			// Improved algorithm for solder bridges.  Don't show a solder bridge if a wire is already doing that job.
