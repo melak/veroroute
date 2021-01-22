@@ -560,10 +560,31 @@ void Board::SetSolder(const int& nodeId, const int& col, const bool& bVertical)
 		{
 			if ( bestRow != -1 )
 			{
-				if ( bVertical )
-					Get(lyr, bestRow, col)->SetSolderR(true);
-				else
-					Get(lyr, col, bestRow)->SetSolderR(true);
+				// Finally check that there isn't a wire joining the strips
+				bool bHaveWire(false);	// Set true if a wire joins the strips
+				for (int r = bestRow; r >= 0 && !bHaveWire; r--)		// Search one way ...
+				{
+					const Element*	pC	= bVertical ? Get(lyr, r, col)		: Get(lyr, col,   r);
+					if ( pC->GetNodeId() != nodeId ) break;
+					const Element*	pR	= bVertical ? Get(lyr, r, col+1)	: Get(lyr, col+1, r);
+					if ( pR->GetNodeId() != nodeId ) break;
+					bHaveWire = ( pC->GetW(0) == pR || pC->GetW(1) == pR );
+				}
+				for (int r = bestRow; r < rowMax && !bHaveWire; r++)	// ... and the other
+				{
+					const Element*	pC	= bVertical ? Get(lyr, r, col)		: Get(lyr, col,   r);
+					if ( pC->GetNodeId() != nodeId ) break;
+					const Element*	pR	= bVertical ? Get(lyr, r, col+1)	: Get(lyr, col+1, r);
+					if ( pR->GetNodeId() != nodeId ) break;
+					bHaveWire = ( pC->GetW(0) == pR || pC->GetW(1) == pR );
+				}
+				if ( !bHaveWire )
+				{
+					if ( bVertical )
+						Get(lyr, bestRow, col)->SetSolderR(true);
+					else
+						Get(lyr, col, bestRow)->SetSolderR(true);
+				}
 			}
 			bestRow		= -1;		// Reset
 			bestRowPins	= -INT_MAX;	// Reset

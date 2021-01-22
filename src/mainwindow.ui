@@ -190,7 +190,6 @@
     <addaction name="actionToggleFlipH"/>
     <addaction name="actionToggleFlipV"/>
     <addaction name="separator"/>
-    <addaction name="actionToggleSolder"/>
    </widget>
    <widget class="QMenu" name="menuWindow">
     <property name="title">
@@ -520,14 +519,6 @@
    </property>
    <property name="autoRepeat">
     <bool>false</bool>
-   </property>
-  </action>
-  <action name="actionToggleSolder">
-   <property name="text">
-    <string>Toggle Solder</string>
-   </property>
-   <property name="toolTip">
-    <string>Show solder bridges in Vero mode (On/Off)</string>
    </property>
   </action>
   <action name="actionToggleGrid">

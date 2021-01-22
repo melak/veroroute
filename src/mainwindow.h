@@ -141,7 +141,6 @@ public slots:
 	void ToggleFlipH();
 	void ToggleFlipV();
 	void TogglePinLabels();
-	void ToggleSolder();
 	// Toolbar items
 	void VeroV();
 	void VeroH();
@@ -312,7 +311,6 @@ public slots:
 	void SetTargetRows(int i);
 	void SetTargetCols(int i);
 	void SetShowTarget(bool b);
-	void SetShowSolder(bool b);
 	void SetAntialiasOff(bool b);
 	void SetAntialiasOn(bool b);
 	void SetAntialiasHigh(bool b);

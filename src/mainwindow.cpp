@@ -144,7 +144,6 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	QObject::connect(ui->actionToggleFlipH,				SIGNAL(triggered()), this, SLOT(ToggleFlipH()));
 	QObject::connect(ui->actionToggleFlipV,				SIGNAL(triggered()), this, SLOT(ToggleFlipV()));
 	QObject::connect(ui->actionTogglePinLabels,			SIGNAL(triggered()), this, SLOT(TogglePinLabels()));
-	QObject::connect(ui->actionToggleSolder,			SIGNAL(triggered()), this, SLOT(ToggleSolder()));
 	QObject::connect(ui->actionVeroV,					SIGNAL(triggered()), this, SLOT(VeroV()));
 	QObject::connect(ui->actionVeroH,					SIGNAL(triggered()), this, SLOT(VeroH()));
 	QObject::connect(ui->actionFat,						SIGNAL(triggered()), this, SLOT(Fat()));
@@ -1120,7 +1119,6 @@ void MainWindow::ToggleText()			{ SetShowText( !m_board.GetShowText() ); if ( !m
 void MainWindow::ToggleFlipH()			{ SetFlipH( !m_board.GetFlipH() ); }
 void MainWindow::ToggleFlipV()			{ SetFlipV( !m_board.GetFlipV() ); }
 void MainWindow::TogglePinLabels()		{ SetShowPinLabels( !m_board.GetShowPinLabels() ); }
-void MainWindow::ToggleSolder()			{ SetShowSolder( !m_board.GetShowSolder() ); }
 
 // Toolbar items
 void MainWindow::VeroV()				{ SetTracksVeroV(true); }
@@ -1468,7 +1466,6 @@ void MainWindow::SetTextSizePins(int i)		{ if ( m_board.SetTextSizePins(i) )		  
 void MainWindow::SetTargetRows(int i)		{ if ( m_board.SetTargetRows(i) )		  { UpdateHistory("Target board height change");	RepaintSkipRouting(); } }
 void MainWindow::SetTargetCols(int i)		{ if ( m_board.SetTargetCols(i) )		  { UpdateHistory("Target board width change");		RepaintSkipRouting(); } }
 void MainWindow::SetShowTarget(bool b)		{ if ( m_board.SetShowTarget(b) )		  { UpdateHistory("Target board on/off");			RepaintSkipRouting(); } }
-void MainWindow::SetShowSolder(bool b)		{ if ( m_board.SetShowSolder(b) )		  { UpdateHistory("Toggle solder bridges");	UpdateControls();	RepaintSkipRouting(); } }
 void MainWindow::SetAntialiasOff(bool b)	{ if ( b && m_board.SetRenderQuality(0) ) { UpdateHistory("Anti-alias off");  DestroyPixmapCache(); RepaintSkipRouting(); } }
 void MainWindow::SetAntialiasOn(bool b)		{ if ( b && m_board.SetRenderQuality(1) ) { UpdateHistory("Anti-alias on");   DestroyPixmapCache(); RepaintSkipRouting(); } }
 void MainWindow::SetAntialiasHigh(bool b)	{ if ( b && m_board.SetRenderQuality(2) ) { UpdateHistory("Anti-alias high"); DestroyPixmapCache(); RepaintSkipRouting(); } }
@@ -1764,15 +1761,12 @@ void MainWindow::UpdateControls()
 	ui->actionToggleFlipV->setEnabled( !bCompEdit );
 	const bool bPinLabels = m_board.GetCompMode() != COMPSMODE::OFF && ( bNoTracks || bColor );
 	ui->actionTogglePinLabels->setEnabled( bPinLabels );
-	ui->actionToggleSolder->setEnabled( ( bVeroV || bVeroH ) && ( bMono || bColor ) );
 
 	ui->actionToggleGrid->setChecked( m_board.GetShowGrid() && !bPCB );
 	ui->actionToggleText->setChecked( m_board.GetShowText() && !bCompEdit && !bPCB );
 	ui->actionToggleFlipH->setChecked( m_board.GetFlipH()   && !bCompEdit );
 	ui->actionToggleFlipV->setChecked( m_board.GetFlipV()   && !bCompEdit );
 	ui->actionTogglePinLabels->setChecked( m_board.GetShowPinLabels() && bPinLabels );
-	ui->actionToggleSolder->setChecked( m_board.GetShowSolder() &&  ( bVeroV || bVeroH ) && ( bMono || bColor ) );
-	ui->actionToggleSolder->setText( m_board.GetShowSolder() ? QString("Hide solder bridges") : QString("Show solder bridges") );
 
 	ui->actionPinDlg->setEnabled( !bCompEdit );
 	ui->actionControlDlg->setEnabled( !bCompEdit );
