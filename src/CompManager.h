@@ -308,7 +308,7 @@ public:
 	}
 	bool GetWireCanBeTrack(const Component* pWire) const	// true ==> wire can be turned into a top-surface track
 	{
-		assert( pWire->getType == COMP::WIRE && pWire->GetIsPlaced() );	// Should have already checked for this
+		assert( pWire->GetType() == COMP::WIRE && pWire->GetIsPlaced() );	// Should have already checked for this
 		// Wire must be non-stacked, and either horizontal or not crossing another
 		auto iter = m_mapWireToInfo.find( pWire );
 		const bool bH = pWire->GetDirection() == 'W' || pWire->GetDirection() == 'E';

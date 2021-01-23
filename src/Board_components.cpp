@@ -271,7 +271,7 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 
 					// Check bottom grid
 					const int& nodeId		= pGrid->GetNodeId();		// Read nodeID on board
-					const int& iCompNodeId	= comp.GetNodeId(pinIndex);	// Read component nodeiD
+					const int& iCompNodeId	= comp.GetNodeId(pinIndex);	// Read component nodeID
 
 					if ( bWire )	// Wires have no NodeId. Need matching IDs on both ends
 						assert( iCompNodeId == BAD_NODEID );	// Shouldn't have an ID yet
@@ -501,7 +501,7 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 				int		tmpCompId;
 				pW->GetSlotInfo(iSlot, iPinIndex, tmpCompId);
 				if ( iPinIndex == BAD_PININDEX ) continue;
-				assert( tmpCompId == BAD_COMPID );
+				assert( tmpCompId != BAD_COMPID );
 				Component& comp = m_compMgr.GetComponentById( tmpCompId );
 				assert( comp.GetType() == COMP::WIRE );
 				comp.SetNodeId(iPinIndex, wireNodeId);
