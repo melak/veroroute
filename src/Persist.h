@@ -85,3 +85,23 @@ struct Persist
 	virtual void Save(DataStream&) = 0;
 };
 
+
+
+// A helper struct to allow 2 Board objects to be merged without conflicts.
+
+struct MergeOffsets
+{
+	int deltaNodeId 	= 0;
+	int deltaCompId 	= 0;
+	int deltaGroupId	= 0;
+	int deltaLyr		= 0;
+	int deltaRow	 	= 0;
+	int deltaCol 		= 0;
+};
+
+// The interface definition for handling merge offsets
+struct Merge
+{
+	virtual	void UpdateMergeOffsets(MergeOffsets&) = 0;
+	virtual void ApplyMergeOffsets(const MergeOffsets&) = 0;
+};
