@@ -499,8 +499,8 @@ void Board::CalcSolder()	// Work out locations of solder blobs to join veroboard
 void Board::SetSolder(const int& nodeId, const int& col, const bool& bVertical)
 {
 	// Sets elements of bSolderR to indicate solder blob between col and col+1
-	if (  bVertical && col == GetCols()-1 ) return;
-	if ( !bVertical && col == GetRows()-1 ) return;
+	const int colMax = ( bVertical ) ? GetCols() : GetRows();
+	if ( col == colMax-1 ) return;
 
 	assert( nodeId != BAD_NODEID );
 	int bestRow(-1), bestRowPins(-INT_MAX), bestRowPads(INT_MAX);

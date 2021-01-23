@@ -62,7 +62,7 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	const std::string iconStr = m_tutorialsPathStr + "/veroroute.png";
 	setWindowIcon(QIcon( iconStr.c_str() ));
 
-	// Create the scrollable area and make it occuoy the main window area
+	// Create the scrollable area and make it occupy the main window area
 	m_label			= new QLabel(this);
 	m_scrollArea	= new MyScrollArea(this);
 	m_label->setBackgroundRole(QPalette::Base);
