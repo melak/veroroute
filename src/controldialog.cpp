@@ -243,6 +243,7 @@ void ControlDialog::UpdateControls()	// Non-component controls
 	Board& board = m_pMainWindow->m_board;
 
 	const bool bCompEdit	= board.GetCompEdit();
+	const bool bNoTracks	= board.GetTrackMode() == TRACKMODE::OFF;
 	const bool bColor		= board.GetTrackMode() == TRACKMODE::COLOR;
 	const bool bComps		= board.GetCompMode()  != COMPSMODE::OFF;
 
@@ -251,7 +252,7 @@ void ControlDialog::UpdateControls()	// Non-component controls
 	ui->margin->setValue( board.GetCropMargin() );
 
 	ui->label_saturation->setEnabled( !bCompEdit && bColor );
-	ui->label_fill->setEnabled( !bCompEdit && bComps && bColor );
+	ui->label_fill->setEnabled( !bCompEdit && bComps && ( bColor || bNoTracks) );
 
 	ui->autoRoute->setChecked( board.GetRoutingEnabled() );
 	ui->autoRoute->setDisabled( bCompEdit );
@@ -263,7 +264,7 @@ void ControlDialog::UpdateControls()	// Non-component controls
 	ui->trackSlider->setEnabled( !bCompEdit );
 	ui->saturationSlider->setEnabled( !bCompEdit && bColor );
 	ui->compSlider->setEnabled( !bCompEdit );
-	ui->fillSlider->setEnabled( !bCompEdit && bComps && bColor );
+	ui->fillSlider->setEnabled( !bCompEdit && bComps && ( bColor || bNoTracks) );
 	ui->trackSlider->setValue( board.GetTrackSliderValue() );
 	ui->saturationSlider->setValue( board.GetSaturation() );
 	ui->compSlider->setValue( board.GetCompSliderValue() );
