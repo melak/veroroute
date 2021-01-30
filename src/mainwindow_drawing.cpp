@@ -835,7 +835,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		const bool	bGreyPads	= bPCB && !m_bWriteGerber;
 		const int	numLoops	= ( ( bPixmapCache || bGroundFill ) ? 2 : 1 ) + ( bGreyPads ? 1 : 0);
 		// bGroundFill		==> 1st pass draws fat tracks in white, 2nd pass draws tracks
-		// bPixmapCache		==> 1st pass draws the pixmaps,			2nd pass fixes up diagonals
+		// bPixmapCache		==> 1st pass draws the pixmaps,			2nd pass draws custom sized pads and fixes up diagonals
 		// bGreyPads		==> A final pass will draw the pads in grey
 		for (int iLoop = 0; iLoop < numLoops; iLoop++)
 		{
@@ -865,16 +865,16 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				const bool		bPad			= pC->GetHasPin() && !bWireAsVia;
 				assert( !(bVia && bPad) );	// Can't be both a via and a regular pad
 
-				bool bCustom(false);
-				int iPadWidthMIL(0), iHoleWidthMIL(0);	// 0 ==> Not a custom value
+				bool bCustomSize(false);
+				int iPadWidthMIL(0), iHoleWidthMIL(0);	// 0 ==> Not a custom size value
 				if ( bPad && !bWire )
 				{
 					const int		 compId	= pC->GetCompId();
 					assert( compId != BAD_COMPID );
 					const Component& comp	= compMgr.GetComponentById( compId );
 					assert( comp.GetType() != COMP::INVALID );
-					bCustom = comp.GetCustomPads();
-					if ( bCustom )
+					bCustomSize = comp.GetCustomPads();
+					if ( bCustomSize )
 					{
 						iPadWidthMIL	= comp.GetPadWidth();
 						iHoleWidthMIL	= comp.GetHoleWidth();
@@ -965,31 +965,25 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						if ( bCustomColor )
 						{
 							if ( bVia )
-							{
 								PaintVia(board, painter, color, pCentre);
-							}
-							if ( bPad )
-							{
-								if ( bCustom )	PaintPad(board, painter, color, pCentre, iPadWidthMIL, iHoleWidthMIL);
-								else			PaintPad(board, painter, color, pCentre);
-							}
+							if ( bPad && !bCustomSize )	// Standard size pad. Custom size pads are rendered in next loop
+								PaintPad(board, painter, color, pCentre);
 						}
-						else
+						else	// Non-custom color means we can use a cached pixmap
 						{
 							if ( bVia )
-							{
 								painter.drawPixmap(L+C-m_radPixmapVia, T+C-m_radPixmapVia, *(m_ppPixmapVia[iEffColorId]));
-							}
-							if ( bPad )
-							{
-								if ( bCustom )	PaintPad(board, painter, color, pCentre, iPadWidthMIL, iHoleWidthMIL);
-								else			painter.drawPixmap(L+C-m_radPixmapPad, T+C-m_radPixmapPad, *(m_ppPixmapPad[iEffColorId]));
-							}
+							if ( bPad && !bCustomSize )	// Standard size pad. Custom size pads are rendered in next loop
+								painter.drawPixmap(L+C-m_radPixmapPad, T+C-m_radPixmapPad, *(m_ppPixmapPad[iEffColorId]));
 						}
 					}
 					else if ( iLoop == 1 )
 					{
 						// Read flags for LT and RT so we can fill diagonal gaps produced on previous iLoop
+
+						if ( bPad && bCustomSize )	// Custom size pad
+							PaintPad(board, painter, color, pCentre, iPadWidthMIL, iHoleWidthMIL);
+
 						const bool bUsedLT = ReadCodeBit(NBR_LT, iPerimeterCode);
 						const bool bUsedRT = ReadCodeBit(NBR_RT, iPerimeterCode);
 						if ( bUsedLT || bUsedRT )
@@ -1224,9 +1218,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			const bool		 bHighlightComp	= board.GetGroupMgr().GetIsUserComp( comp.GetId() );
 			const int		 jComp			= comp.GetRow();
 			const int		 iComp			= comp.GetCol();
-			const bool		 bCustom		= comp.GetCustomPads();
-			const int		 iPadWidthMIL	= bCustom ? comp.GetPadWidth()  : board.GetPAD_MIL();
-			const int		 iHoleWidthMIL	= bCustom ? comp.GetHoleWidth() : board.GetHOLE_MIL();
+			const bool		 bCustomSize	= comp.GetCustomPads();
+			const int		 iPadWidthMIL	= bCustomSize ? comp.GetPadWidth()  : board.GetPAD_MIL();
+			const int		 iHoleWidthMIL	= bCustomSize ? comp.GetHoleWidth() : board.GetHOLE_MIL();
 
 			// Begin draw component fill + outline -----------------------------------------------
 			if ( compMode != COMPSMODE::OFF && !comp.GetShapes().empty() )
