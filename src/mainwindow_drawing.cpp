@@ -833,9 +833,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	{
 		painter.save();
 		const bool	bGreyPads	= bPCB && !m_bWriteGerber;
-		const int	numLoops	= ( ( bPixmapCache || bGroundFill ) ? 2 : 1 ) + ( bGreyPads ? 1 : 0);
+		const int	numLoops	= ( bPixmapCache ? 3 : ( bGroundFill ? 2 : 1 ) ) + ( bGreyPads ? 1 : 0);
 		// bGroundFill		==> 1st pass draws fat tracks in white, 2nd pass draws tracks
-		// bPixmapCache		==> 1st pass draws the pixmaps,			2nd pass draws custom sized pads and fixes up diagonals
+		// bPixmapCache		==> 1st pass draws the pixmaps,			2nd pass fixes up diagonals,  3rd pass draws custom sized pads
 		// bGreyPads		==> A final pass will draw the pads in grey
 		for (int iLoop = 0; iLoop < numLoops; iLoop++)
 		{
@@ -966,7 +966,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						{
 							if ( bVia )
 								PaintVia(board, painter, color, pCentre);
-							if ( bPad && !bCustomSize )	// Standard size pad. Custom size pads are rendered in next loop
+							if ( bPad && !bCustomSize )	// Standard size pad. Custom size pads are rendered on last loop
 								PaintPad(board, painter, color, pCentre);
 						}
 						else	// Non-custom color means we can use a cached pixmap
@@ -980,10 +980,6 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					else if ( iLoop == 1 )
 					{
 						// Read flags for LT and RT so we can fill diagonal gaps produced on previous iLoop
-
-						if ( bPad && bCustomSize )	// Custom size pad
-							PaintPad(board, painter, color, pCentre, iPadWidthMIL, iHoleWidthMIL);
-
 						const bool bUsedLT = ReadCodeBit(NBR_LT, iPerimeterCode);
 						const bool bUsedRT = ReadCodeBit(NBR_RT, iPerimeterCode);
 						if ( bUsedLT || bUsedRT )
@@ -1009,6 +1005,11 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 							if ( bUsedLT ) painter.drawPixmap(L-m_radPixmapDiag, T-m_radPixmapDiag, *pLT);
 							if ( bUsedRT ) painter.drawPixmap(R-m_radPixmapDiag, T-m_radPixmapDiag, *pRT);
 						}
+					}
+					else
+					{
+						if ( bPad && bCustomSize )	// Custom size pad
+							PaintPad(board, painter, color, pCentre, iPadWidthMIL, iHoleWidthMIL);
 					}
 				}
 				if ( bGroundFill )	// Draw track "blobs" and pads directly (PDF/Gerber)
