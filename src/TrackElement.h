@@ -48,6 +48,7 @@ static bool ReadCodeBit(const int& NBR, const int& iCode)	{ return ( iCode & (1<
 static void SetCodeBit(const int& NBR, int& iCode)			{ iCode |=  (1<<NBR); }
 static void ClearCodeBit(const int& NBR, int& iCode)		{ iCode &= ~(1<<NBR); }
 static void ToggleCodeBit(const int& NBR, int& iCode)		{ iCode ^=  (1<<NBR); }
+const int CODEBITS_HV  = 0x55;	// All H/V neighbours in same layer
 const int CODEBITS_LYR = 0xFF;	// All neighbours in same layer
 const int CODEBITS_ALL = 0x1FF;	// All neighbours in same layer + the neighbour in the layer above/below
 
