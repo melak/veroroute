@@ -121,9 +121,12 @@ double Board::GetMIN_SEPARATION()	// Minimum separation (in mil) between a pad o
 	// Following code applies to proper 2-layer routing.
 	// So wires have regular pad sizes, and are not converted to tracks on the top layer using a via.
 
-	const bool	bDiagsOK	= GetDiagsMode() != DIAGSMODE::OFF;
-	const bool	bMinDiags	= GetDiagsMode() == DIAGSMODE::MIN;
-	const bool&	bFatTracks	= GetFatTracks();
+	const bool		bDiagsOK	= GetDiagsMode() != DIAGSMODE::OFF;
+	const bool		bMinDiags	= GetDiagsMode() == DIAGSMODE::MIN;
+	const bool&		bFatTracks	= GetFatTracks();
+	const double	dDiagonal	= 100.0 * sqrt(2.0);
+	const int		iMaxPad		= 1;	// 1 ==> Max pad size supported by VeroRoute = 100 mil
+	//TODO Increase iMaxPad to 2 if maximum allowed pad size is increased to 200 mil in future
 
 	// Get bounds to minimise looping
 	int minRow, minCol, maxRow, maxCol;
@@ -155,54 +158,50 @@ double Board::GetMIN_SEPARATION()	// Minimum separation (in mil) between a pad o
 			iA = bFatA ? GetPAD_MIL() : GetTRACK_MIL();	// Fat H/V track section is as wide as pad
 		}
 
-		for (int iDiag = 0, iDiagMax = bDiagsOK ? 2 : 1; iDiag < iDiagMax; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
+		// Only need to loop half the directions in the following loop (the i,j scan takes care of the other half)
+		for (int jj = std::max(minRow,j-iMaxPad); jj <= j; jj++)
+		for (int ii = std::max(minCol,i-iMaxPad), iiMax = std::min(maxCol,i+iMaxPad); ii <= iiMax; ii++)
 		{
-			const bool		bDiag	= ( iDiag == 1 );
-			const double	D		= bDiag ? ( 100.0 * sqrt(2.0) ) : 100.0;	// Distance to diagonal/HV nbr
-			const double	d		= D * 0.5;	// Only used when bDiag is true
-			// Only need to loop half the directions in the following loop (the i,j scan takes care of the other half)
-			for (int iNbr = iDiag; iNbr < 4; iNbr += 2)	// Even/Odd iNbr ==> Non-diagonal/Diagonal
+			if ( jj == j && ii == i ) continue;	// Skip pA
+			const Element*	pB		= Get(k, jj, ii);
+			const int&		nodeIdB	= pB->GetNodeId();
+			if ( nodeIdB == BAD_NODEID || nodeIdB == nodeIdA ) continue;
+
+			int iB(0);
+			if ( pB->GetHasWire() )		iB = GetPAD_MIL();	// No custom pad size for wires
+			else if ( pB->GetHasPin() )
 			{
-				if ( !ReadCodeBit(iNbr, pA->GetRoutable()) ) continue;
-
-				const Element*	pB		= pA->GetNbr(iNbr);
-				const int&		nodeIdB	= pB->GetNodeId();
-				if ( nodeIdB == BAD_NODEID || nodeIdB == nodeIdA ) continue;
-
-				int iB(0);
-				if ( pB->GetHasWire() )		iB = GetPAD_MIL();	// No custom pad size for wires
-				else if ( pB->GetHasPin() )
-				{
-					assert( pB->GetCompId() != BAD_COMPID );	// Non-wire part must use slot 0
-					const Component& comp	= m_compMgr.GetComponentById( pB->GetCompId() );
-					assert( comp.GetType() != COMP::INVALID );
-					iB = comp.GetCustomPads() ? comp.GetPadWidth() : GetPAD_MIL();
-				}
-				else if ( pB->GetIsVia() )	iB = GetVIAPAD_MIL();
-				else
-				{
-					const int	iPerimeterCodeB = pB->GetPerimeterCode(bDiagsOK, bMinDiags);	// 0 to 255
-					const bool	bFatB			= bFatTracks && ( ( iPerimeterCodeB & CODEBITS_HV ) > 0 );
-					iB = bFatB ? GetPAD_MIL() : GetTRACK_MIL();	// Fat H/V track section is as wide as pad
-				}
-
-				dMin = std::min(dMin, D - 0.5 * ( iA + iB ));
+				assert( pB->GetCompId() != BAD_COMPID );	// Non-wire part must use slot 0
+				const Component& comp	= m_compMgr.GetComponentById( pB->GetCompId() );
+				assert( comp.GetType() != COMP::INVALID );
+				iB = comp.GetCustomPads() ? comp.GetPadWidth() : GetPAD_MIL();
 			}
-			if ( bDiag )
+			else if ( pB->GetIsVia() )	iB = GetVIAPAD_MIL();
+			else
 			{
-				// Now consider connections between pA's non-diagonal nbrs (i.e. "adjacent diagonals")
-				bool bAdjDiag(false);
-				for (int iNbr = 0; iNbr < 8 && !bAdjDiag; iNbr += 2)	// Loop all non-diagonal nbrs
-				{
-					const Element*	pC		= pA->GetNbr(iNbr);
-					const int&		nodeIdC	= pC->GetNodeId();
-					if ( nodeIdC == BAD_NODEID || nodeIdC == nodeIdA ) continue;
-					const int iPerimeterCodeC = pC->GetPerimeterCode(bDiagsOK, bMinDiags);	// 0 to 255
-					// (iNbr+3)%8   NBR_L ==> NBR_RT,  NBR_T ==> NBR_RB, NBR_R ==> NBR_LB,  NBR_B ==> NBR_LT
-					bAdjDiag = ReadCodeBit((iNbr+3) % 8, iPerimeterCodeC);
-				}
-				if ( bAdjDiag ) dMin = std::min(dMin, d - 0.5 * ( iA + GetTRACK_MIL() ));
+				const int	iPerimeterCodeB = pB->GetPerimeterCode(bDiagsOK, bMinDiags);	// 0 to 255
+				const bool	bFatB			= bFatTracks && ( ( iPerimeterCodeB & CODEBITS_HV ) > 0 );
+				iB = bFatB ? GetPAD_MIL() : GetTRACK_MIL();	// Fat H/V track section is as wide as pad
 			}
+
+			const double D = 100.0 * sqrt((jj-j)*(jj-j) + (ii-i)*(ii-i));	// Distance between centres of pA and pB
+			dMin = std::min(dMin, D - 0.5 * ( iA + iB ));
+		}
+
+		if ( bDiagsOK )
+		{
+			// Now consider connections between pA's non-diagonal nbrs (i.e. "adjacent diagonals")
+			bool bAdjDiag(false);
+			for (int iNbr = 0; iNbr < 8 && !bAdjDiag; iNbr += 2)	// Loop all non-diagonal nbrs
+			{
+				const Element*	pC		= pA->GetNbr(iNbr);
+				const int&		nodeIdC	= pC->GetNodeId();
+				if ( nodeIdC == BAD_NODEID || nodeIdC == nodeIdA ) continue;
+				const int iPerimeterCodeC = pC->GetPerimeterCode(bDiagsOK, bMinDiags);	// 0 to 255
+				// (iNbr+3)%8   NBR_L ==> NBR_RT,  NBR_T ==> NBR_RB, NBR_R ==> NBR_LB,  NBR_B ==> NBR_LT
+				bAdjDiag = ReadCodeBit((iNbr+3) % 8, iPerimeterCodeC);
+			}
+			if ( bAdjDiag ) dMin = std::min(dMin, 0.5 * ( dDiagonal - iA - GetTRACK_MIL() ));
 		}
 	}
 	return std::max(0.0, dMin);
