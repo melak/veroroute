@@ -43,4 +43,5 @@ const int VRT_VERSION_40 = 40;	// Allow 50 mil holes, and fix bug with non-wire 
 const int VRT_VERSION_41 = 41;	// Allow user-specified colors for nodes
 const int VRT_VERSION_42 = 42;	// Auto-fix corruption of old VRTs on load
 const int VRT_VERSION_43 = 43;	// Added vero numbers and vero letters
-const int VRT_VERSION_CURRENT = VRT_VERSION_43;
+const int VRT_VERSION_44 = 44;	// Added option to show close tracks
+const int VRT_VERSION_CURRENT = VRT_VERSION_44;

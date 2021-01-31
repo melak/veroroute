@@ -1466,6 +1466,7 @@ void MainWindow::SetTextSizePins(int i)		{ if ( m_board.SetTextSizePins(i) )		  
 void MainWindow::SetTargetRows(int i)		{ if ( m_board.SetTargetRows(i) )		  { UpdateHistory("Target board height change");	RepaintSkipRouting(); } }
 void MainWindow::SetTargetCols(int i)		{ if ( m_board.SetTargetCols(i) )		  { UpdateHistory("Target board width change");		RepaintSkipRouting(); } }
 void MainWindow::SetShowTarget(bool b)		{ if ( m_board.SetShowTarget(b) )		  { UpdateHistory("Target board on/off");			RepaintSkipRouting(); } }
+void MainWindow::SetShowCloseTracks(bool b)	{ if ( m_board.SetShowCloseTracks(b) )	  { UpdateHistory("Show closest tracks on/off");	UpdateControls();	RepaintSkipRouting(); } }
 void MainWindow::SetAntialiasOff(bool b)	{ if ( b && m_board.SetRenderQuality(0) ) { UpdateHistory("Anti-alias off");  DestroyPixmapCache(); RepaintSkipRouting(); } }
 void MainWindow::SetAntialiasOn(bool b)		{ if ( b && m_board.SetRenderQuality(1) ) { UpdateHistory("Anti-alias on");   DestroyPixmapCache(); RepaintSkipRouting(); } }
 void MainWindow::SetAntialiasHigh(bool b)	{ if ( b && m_board.SetRenderQuality(2) ) { UpdateHistory("Anti-alias high"); DestroyPixmapCache(); RepaintSkipRouting(); } }

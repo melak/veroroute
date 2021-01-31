@@ -46,6 +46,7 @@ RenderingDialog::RenderingDialog(MainWindow* parent)
 	QObject::connect(ui->edgeWidth,		SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetEdgeWidth(int)));
 	QObject::connect(ui->viapadWidth,	SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetViaPadWidth(int)));
 	QObject::connect(ui->viaholeWidth,	SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetViaHoleWidth(int)));
+	QObject::connect(ui->closeTracks,	SIGNAL(toggled(bool)),		m_pMainWindow, SLOT(SetShowCloseTracks(bool)));
 }
 
 RenderingDialog::~RenderingDialog()
@@ -56,6 +57,10 @@ RenderingDialog::~RenderingDialog()
 void RenderingDialog::UpdateControls()
 {
 	Board& board = m_pMainWindow->m_board;
+
+	// First do the separation calculations
+	double minTrk, minGnd;
+	board.GetSeparations(minTrk, minGnd);
 
 	ui->comptext->setValue( board.GetTextSizeComp() );
 	ui->comppins->setValue( board.GetTextSizePins() );
@@ -77,6 +82,7 @@ void RenderingDialog::UpdateControls()
 	const bool bGndFill			= board.GetGroundFill();
 	const bool bVero			= board.GetVeroTracks();
 	const bool bVias			= board.GetViasEnabled();
+	const bool bCloseTrackInfo	= board.GetHaveWarnPoints();
 
 	ui->groupBox_target->setDisabled(	bCompEdit );
 	ui->comptext->setDisabled(			bCompEdit );
@@ -100,6 +106,11 @@ void RenderingDialog::UpdateControls()
 	ui->label_gap->setDisabled(			bCompEdit || bVero || !bMonoPCB || !bGndFill );
 	ui->label_info->setDisabled(		bCompEdit || bVero );
 	ui->label_info_2->setDisabled(		bCompEdit || bVero || !bMonoPCB || !bGndFill );
+	ui->closeTracks->setDisabled(		bCompEdit || bVero || !bCloseTrackInfo );
+	if ( bCompEdit || bVero || !bCloseTrackInfo )
+		ui->closeTracks->hide();
+	else
+		ui->closeTracks->show();
 
 	ui->padWidth->setValue(		board.GetPAD_MIL()		);
 	ui->trackWidth->setValue(	board.GetTRACK_MIL()	);
@@ -111,23 +122,23 @@ void RenderingDialog::UpdateControls()
 	ui->viapadWidth->setValue(	board.GetVIAPAD_MIL()	);
 	ui->viaholeWidth->setValue(	board.GetVIAHOLE_MIL()	);
 
-	const double minTrk = board.GetMIN_TRACK_SEPARATION_MIL();
-	const double minGnd = board.GetMIN_GROUNDFILL_MIL();
 	const int minTrkMil = (int)minTrk;
 	const int minTrkRem = (int)(100.0 * (minTrk - minTrkMil) );
 	const int minGndMil = (int)minGnd;
 	const int minGndRem = (int)(100.0 * (minGnd - minGndMil) );
 
-	const std::string str = "Current minimum track separation = "
+	const std::string str = "Current min track separation = "
 						  + std::to_string(minTrkMil) + "." + std::to_string(minTrkRem) + " mil";
 	ui->label_info->setText( QString::fromStdString(str) );
 
-	std::string str2 = "Current minimum ground-fill width = ";
+	std::string str2 = "Current min ground-fill width = ";
 	if ( bGndFill )
 		str2 += std::to_string(minGndMil) + "." + std::to_string(minGndRem) + " mil";
 	else
 		str2 += "n/a";
 	ui->label_info_2->setText( QString::fromStdString(str2) );
+
+	ui->closeTracks->setChecked( board.GetShowCloseTracks() );
 }
 
 void RenderingDialog::keyPressEvent(QKeyEvent* event)

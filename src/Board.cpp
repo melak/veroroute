@@ -102,19 +102,19 @@ void Board::GetHoleWidths_MIL(std::list<int>& o, int& iDefaultWidth) const
 	iDefaultWidth = GetHOLE_MIL();
 	m_compMgr.GetHoleWidths(o, iDefaultWidth);
 }
-double Board::GetMIN_TRACK_SEPARATION_MIL()	// Minimum track separation in mil
+void Board::GetSeparations(double& minTrackSeparation_mil, double& minGroundFill_mil)
 {
+	// Calc minimum track separation in mil
 	const double dMinSep	= GetMIN_SEPARATION();	// Min separation without ground fill
 	const double dGap		= GetGroundFill() ? GetGAP_MIL() : 100.0;
-	return std::min(dGap, dMinSep);
-}
-double Board::GetMIN_GROUNDFILL_MIL()	// Minimum ground-fill width in mil
-{
-	// To have a ground fill with no isolated islands this must be > 0 (and probably at least 8 mil)
-	if ( !GetGroundFill() ) return 100.0;
-	const double dMinSep	= GetMIN_SEPARATION();	// Min separation without ground fill
-	const double dDblGap	= GetGAP_MIL() * 2.0;
-	return std::max(0.0, dMinSep - dDblGap);
+	minTrackSeparation_mil	= std::min(dGap, dMinSep);
+	// Calc minimum ground-fill width in mil
+	// To have a ground fill with no isolated islands, this must be > 0 (and probably at least 8 mil)
+	minGroundFill_mil		= GetGroundFill() ? std::max(0.0, dMinSep - dGap * 2.0) : 100.0;
+
+	// If the minimum track separation is determined by the gap,
+	// then all locations have min separation, so don't show warning points in the view
+	if ( minTrackSeparation_mil == dGap ) ClearWarnPoints();
 }
 double Board::GetMIN_SEPARATION()	// Minimum separation (in mil) between a pad or track without ground fill
 {
@@ -132,7 +132,8 @@ double Board::GetMIN_SEPARATION()	// Minimum separation (in mil) between a pad o
 	int minRow, minCol, maxRow, maxCol;
 	GetBounds(minRow, minCol, maxRow, maxCol);
 
-	double dMin(100.0);
+	double dMin(100.0);	// Only care about separations less than 100 mil
+	ClearWarnPoints();	// Wipe list of warning locations on both layers
 	for (int k = 0, kMax = GetLyrs(); k < kMax; k++)	// Check all layers
 	for (int j = minRow; j <= maxRow; j++)
 	for (int i = minCol; i <= maxCol; i++)
@@ -185,7 +186,10 @@ double Board::GetMIN_SEPARATION()	// Minimum separation (in mil) between a pad o
 			}
 
 			const double D = 100.0 * sqrt((jj-j)*(jj-j) + (ii-i)*(ii-i));	// Distance between centres of pA and pB
-			dMin = std::min(dMin, D - 0.5 * ( iA + iB ));
+			const double d = D - 0.5 * ( iA + iB );
+			if ( d > dMin ) continue;
+			if ( d < dMin ) { dMin = d;	ClearWarnPoints(); }
+			m_warnPoints[k].push_back( QPointF(0.5*(jj + j), 0.5*(ii + i)) );	// Approximate location is good enough
 		}
 
 		if ( bDiagsOK )
@@ -193,8 +197,7 @@ double Board::GetMIN_SEPARATION()	// Minimum separation (in mil) between a pad o
 			for (int N = 0; N < nRings; N++)
 			{
 				// Look for orthogonal (not radial) diagonal track portions in ring N
-				bool bAdjDiag(false);
-				for (int iNbr = 0; iNbr < 8 && !bAdjDiag; iNbr += 2)	// Loop all non-diagonal nbrs
+				for (int iNbr = 0; iNbr < 8; iNbr += 2)	// Loop all non-diagonal nbrs
 				{
 					const Element*	pC		= pA->GetNbr(iNbr);	// Move L/T/R/B relative to A to a point in ring 0
 					for (int nn = 0; nn < N; nn++)
@@ -203,9 +206,20 @@ double Board::GetMIN_SEPARATION()	// Minimum separation (in mil) between a pad o
 					if ( nodeIdC == BAD_NODEID || nodeIdC == nodeIdA ) continue;
 					const int iPerimeterCodeC = pC->GetPerimeterCode(bDiagsOK, bMinDiags);	// 0 to 255
 					// .. then check for track in direction RT/RB/LB/LT
-					bAdjDiag = ReadCodeBit((iNbr+3) % 8, iPerimeterCodeC);
+					if ( ReadCodeBit((iNbr+3) % 8, iPerimeterCodeC) )
+					{
+						const double d = 0.5 * ( (1 + 2 * N) * dDiagonal - iA - GetTRACK_MIL() );
+						if ( d > dMin ) continue;
+						if ( d < dMin ) { dMin = d;	ClearWarnPoints();  }
+						switch( iNbr )
+						{
+							case 0:	m_warnPoints[k].push_back( QPointF(-0.35355*(1+N)+j, -0.35355*(1+N)+i) );	break;
+							case 2:	m_warnPoints[k].push_back( QPointF(-0.35355*(1+N)+j,  0.35355*(1+N)+i) );	break;
+							case 4:	m_warnPoints[k].push_back( QPointF( 0.35355*(1+N)+j,  0.35355*(1+N)+i) );	break;
+							case 6:	m_warnPoints[k].push_back( QPointF( 0.35355*(1+N)+j, -0.35355*(1+N)+i) );	break;
+						}
+					}
 				}
-				if ( bAdjDiag ) dMin = std::min(dMin, 0.5 * ( (1 + 2 * N) * dDiagonal - iA - GetTRACK_MIL() ));
 			}
 		}
 	}

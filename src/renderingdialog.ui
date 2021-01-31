@@ -578,7 +578,7 @@
      <rect>
       <x>10</x>
       <y>120</y>
-      <width>311</width>
+      <width>251</width>
       <height>24</height>
      </rect>
     </property>
@@ -617,6 +617,28 @@
     </property>
     <property name="alignment">
      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="closeTracks">
+    <property name="geometry">
+     <rect>
+      <x>260</x>
+      <y>120</y>
+      <width>111</width>
+      <height>24</height>
+     </rect>
+    </property>
+    <property name="mouseTracking">
+     <bool>false</bool>
+    </property>
+    <property name="focusPolicy">
+     <enum>Qt::TabFocus</enum>
+    </property>
+    <property name="toolTip">
+     <string>Show closest track areas in view</string>
+    </property>
+    <property name="text">
+     <string>Show</string>
     </property>
    </widget>
   </widget>
@@ -772,6 +794,7 @@
   <tabstop>viapadWidth</tabstop>
   <tabstop>viaholeWidth</tabstop>
   <tabstop>gapWidth</tabstop>
+  <tabstop>closeTracks</tabstop>
   <tabstop>maskWidth</tabstop>
   <tabstop>silkWidth</tabstop>
   <tabstop>edgeWidth</tabstop>

@@ -25,6 +25,7 @@
 #include "GroupManager.h"
 #include "ColorManager.h"
 #include "TextManager.h"
+#include <QPointF>
 
 class MyScrollArea;
 
@@ -400,8 +401,7 @@ public:
 	// Methods to handle variable pad/hole and PCB tolerances
 	void	GetPadWidths_MIL(std::list<int>& o, int& iDefaultWidth) const;
 	void	GetHoleWidths_MIL(std::list<int>& o, int& iDefaultWidth) const;
-	double	GetMIN_TRACK_SEPARATION_MIL();	// Minimum guaranteed track separation in mil
-	double	GetMIN_GROUNDFILL_MIL();		// Minimum guaranteed ground-fill width in mil
+	void	GetSeparations(double& minTrackSeparation_mil, double& minGroundFill_mil);
 	double	GetMIN_SEPARATION();			// Minimum possible separation (in mil) between a pad or track without ground fill
 
 	// Methods to paint/unpaint nodeIds
@@ -494,6 +494,11 @@ public:
 	int	 GetCurrentShapeId() const			{ return m_compDefiner.GetCurrentShapeId(); }
 	bool SetCurrentPinId(const int& i)		{ return m_compDefiner.SetCurrentPinId(i); }
 	bool SetCurrentShapeId(const int& i)	{ return m_compDefiner.SetCurrentShapeId(i); }
+
+	// Helpers for locations of close tracks
+	std::list<QPointF>& GetWarnPoints(int iLayer)	{ return m_warnPoints[iLayer]; }
+	void ClearWarnPoints()							{ m_warnPoints[0].clear(); m_warnPoints[1].clear(); }
+	bool GetHaveWarnPoints() const					{ return !m_warnPoints[0].empty() || !m_warnPoints[1].empty(); }
 
 	// Import Protel V1 / Tango netlist (exported from TinyCAD / gEDA)
 	bool ImportTango(const TemplateManager& templateMgr, const std::string& filename, std::string& errorStr);
@@ -675,7 +680,10 @@ private:
 	TextManager				m_textMgr;		// Handles the set of user-defined text labels
 	ColorManager			m_colorMgr;		// Handles color assignment to nodeIds
 
-	// Routing algorithm // Don't persist or copy
+	// Track warnings		// Don't persist or copy
+	std::list<QPointF>		m_warnPoints[2];// For showing locations with min track separation on the 2 layers
+
+	// Routing algorithm	// Don't persist or copy
 	std::vector<Element*>	m_targetPins;	// Set of pins to route.
 	std::vector<Element*>	m_tmpVec;		// The set of visited points.
 	size_t					m_tmpVecSize;	// The number of visited points.

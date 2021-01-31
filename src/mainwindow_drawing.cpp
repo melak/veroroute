@@ -1661,6 +1661,21 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		}
 	}
 
+	// Draw places of min track separation =======================================================
+	if ( !m_bWriteGerber && !bVero && trackMode != TRACKMODE::OFF && m_board.GetShowCloseTracks() )
+	{
+		painter.save();
+		m_redPen.setWidth(W / 16);
+		painter.setPen(m_redPen);
+		painter.setBrush(Qt::NoBrush);
+		for (auto& o : m_board.GetWarnPoints(layer))
+		{
+			GetXY(board, o.rx(), o.ry(), X, Y);
+			painter.drawEllipse(X-(C>>1),Y-(C>>1),C,C);
+		}
+		painter.restore();
+	}
+
 	if ( m_bWriteGerber )
 		m_gWriter.GetStream(GFILE::GTO).DrawBuffers();	// Top silk layer
 
