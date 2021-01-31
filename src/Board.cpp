@@ -125,8 +125,8 @@ double Board::GetMIN_SEPARATION()	// Minimum separation (in mil) between a pad o
 	const bool		bMinDiags	= GetDiagsMode() == DIAGSMODE::MIN;
 	const bool&		bFatTracks	= GetFatTracks() && !GetCurvedTracks();
 	const double	dDiagonal	= 100.0 * sqrt(2.0);
-	const int		iMaxPad		= 1;	// 1 ==> Max pad size supported by VeroRoute = 100 mil
-	//TODO Increase iMaxPad to 2 if maximum allowed pad size is increased to 200 mil in future
+	const int		nRings		= 1;	// 1 ==> Max pad size supported by VeroRoute = 100 mil
+	//TODO Increase nRings to 2 if maximum allowed pad size is increased to 200 mil in future
 
 	// Get bounds to minimise looping
 	int minRow, minCol, maxRow, maxCol;
@@ -159,8 +159,8 @@ double Board::GetMIN_SEPARATION()	// Minimum separation (in mil) between a pad o
 		}
 
 		// Only need to loop half the directions in the following loop (the i,j scan takes care of the other half)
-		for (int jj = std::max(minRow,j-iMaxPad); jj <= j; jj++)
-		for (int ii = std::max(minCol,i-iMaxPad), iiMax = std::min(maxCol,i+iMaxPad); ii <= iiMax; ii++)
+		for (int jj = std::max(minRow,j-nRings); jj <= j; jj++)
+		for (int ii = std::max(minCol,i-nRings), iiMax = std::min(maxCol,i+nRings); ii <= iiMax; ii++)
 		{
 			if ( jj == j && ii == i ) continue;	// Skip pA
 			const Element*	pB		= Get(k, jj, ii);
@@ -190,18 +190,23 @@ double Board::GetMIN_SEPARATION()	// Minimum separation (in mil) between a pad o
 
 		if ( bDiagsOK )
 		{
-			// Now consider connections between pA's non-diagonal nbrs (i.e. "adjacent diagonals")
-			bool bAdjDiag(false);
-			for (int iNbr = 0; iNbr < 8 && !bAdjDiag; iNbr += 2)	// Loop all non-diagonal nbrs
+			for (int N = 0; N < nRings; N++)
 			{
-				const Element*	pC		= pA->GetNbr(iNbr);
-				const int&		nodeIdC	= pC->GetNodeId();
-				if ( nodeIdC == BAD_NODEID || nodeIdC == nodeIdA ) continue;
-				const int iPerimeterCodeC = pC->GetPerimeterCode(bDiagsOK, bMinDiags);	// 0 to 255
-				// (iNbr+3)%8   NBR_L ==> NBR_RT,  NBR_T ==> NBR_RB, NBR_R ==> NBR_LB,  NBR_B ==> NBR_LT
-				bAdjDiag = ReadCodeBit((iNbr+3) % 8, iPerimeterCodeC);
+				// Look for orthogonal (not radial) diagonal track portions in ring N
+				bool bAdjDiag(false);
+				for (int iNbr = 0; iNbr < 8 && !bAdjDiag; iNbr += 2)	// Loop all non-diagonal nbrs
+				{
+					const Element*	pC		= pA->GetNbr(iNbr);	// Move L/T/R/B relative to A to a point in ring 0
+					for (int nn = 0; nn < N; nn++)
+						pC = pC->GetNbr((iNbr+1) %8);			// ... then slide outwards LT/RT/RB/LB to a point in ring N
+					const int&		nodeIdC	= pC->GetNodeId();
+					if ( nodeIdC == BAD_NODEID || nodeIdC == nodeIdA ) continue;
+					const int iPerimeterCodeC = pC->GetPerimeterCode(bDiagsOK, bMinDiags);	// 0 to 255
+					// .. then check for track in direction RT/RB/LB/LT
+					bAdjDiag = ReadCodeBit((iNbr+3) % 8, iPerimeterCodeC);
+				}
+				if ( bAdjDiag ) dMin = std::min(dMin, 0.5 * ( (1 + 2 * N) * dDiagonal - iA - GetTRACK_MIL() ));
 			}
-			if ( bAdjDiag ) dMin = std::min(dMin, 0.5 * ( dDiagonal - iA - GetTRACK_MIL() ));
 		}
 	}
 	return std::max(0.0, dMin);
