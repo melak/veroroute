@@ -123,7 +123,7 @@ double Board::GetMIN_SEPARATION()	// Minimum separation (in mil) between a pad o
 
 	const bool		bDiagsOK	= GetDiagsMode() != DIAGSMODE::OFF;
 	const bool		bMinDiags	= GetDiagsMode() == DIAGSMODE::MIN;
-	const bool&		bFatTracks	= GetFatTracks();
+	const bool&		bFatTracks	= GetFatTracks() && !GetCurvedTracks();
 	const double	dDiagonal	= 100.0 * sqrt(2.0);
 	const int		iMaxPad		= 1;	// 1 ==> Max pad size supported by VeroRoute = 100 mil
 	//TODO Increase iMaxPad to 2 if maximum allowed pad size is increased to 200 mil in future
