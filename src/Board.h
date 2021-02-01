@@ -344,6 +344,10 @@ public:
 				PutDown(comp);
 			}
 		}
+
+		// Move any warning points
+		for (auto& o : m_warnPoints[0])	o += QPointF(iDown, iRight);
+		for (auto& o : m_warnPoints[1])	o += QPointF(iDown, iRight);
 	}
 
 	bool GetBounds(int& minRow, int& minCol, int& maxRow, int& maxCol) const
