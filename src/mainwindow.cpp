@@ -114,7 +114,7 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	m_blackPen			= QPen(Qt::black, 0,				Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 	m_whitePen			= QPen(Qt::white, 0,				Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 	m_redPen			= QPen(Qt::red, 0,					Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
-	m_findPen			= QPen(QColor(255,128,0,255), 0,	Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+	m_orangePen			= QPen(QColor(255,128,0,255), 0,	Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 	m_lightBluePen		= QPen(QColor(96, 96, 255, 255), 0,	Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 	m_varPen			= QPen(Qt::black, 0,				Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 	m_dotPen			= QPen(QColor(96,96,96,255), 0,		Qt::DotLine,   Qt::RoundCap, Qt::RoundJoin);

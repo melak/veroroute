@@ -1229,7 +1229,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				// Set pen width.  Selected component shown thicker than normal components
 
 				if ( bFound )
-					m_findPen.setWidth(4);// Make found components stand out
+					m_orangePen.setWidth(4);// Make found components stand out
 				else if ( bPlaced )
 				{
 					if ( bPCB )	// Use floating point pen width to better match Gerber output
@@ -1242,7 +1242,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				else
 					m_redPen.setWidth(4);	// Make floating components stand out in red
 
-				QPen& linePen = bFound ? m_findPen : bPlaced ? penPlaced : m_redPen;
+				QPen& linePen = bFound ? m_orangePen : bPlaced ? penPlaced : m_redPen;
 				painter.setPen(linePen);
 				painter.setBrush(Qt::NoBrush);
 
@@ -1377,10 +1377,10 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				else
 				{
 					penPlaced.setWidth(0);		// For pin labels
-					m_findPen.setWidth(0);		// For pin labels and pins
+					m_orangePen.setWidth(0);		// For pin labels and pins
 					m_redPen.setWidth(0);		// For pin labels and pins
 					m_darkGreyPen.setWidth(0);	// For pins
-					painter.setPen(bFound ? m_findPen : bPlaced ? m_darkGreyPen : m_redPen);
+					painter.setPen(bFound ? m_orangePen : bPlaced ? m_darkGreyPen : m_redPen);
 				}
 				painter.setBrush(Qt::NoBrush);
 
@@ -1451,7 +1451,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 							iFlag |= ( Qt::TextDontClip | Qt::AlignVCenter );
 
 							painter.scale(dTextScale, dTextScale);
-							painter.setPen(bFound ? m_findPen : bPlaced ? penPlaced : m_redPen);
+							painter.setPen(bFound ? m_orangePen : bPlaced ? penPlaced : m_redPen);
 							painter.drawText(0,0,0,0, iFlag, comp.GetPinLabel(iPinIndex).c_str());
 							painter.restore();
 						}
@@ -1503,9 +1503,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				// Use floating point pen width to better match Gerber output.
 				// Scale the pen width down to compensate for painter.scale() scaling things up in the loop below.
 				const double dPenWidth = ( bPCB ) ? board.GetSilkWidth() / dCopyTextScale : 0;
-				m_findPen.setWidthF(dPenWidth);	// Use colored text for found components
-				m_redPen.setWidthF(dPenWidth);	// Use red text for floating components
-				penPlaced.setWidthF(dPenWidth);	// Use this for placed components
+				m_orangePen.setWidthF(dPenWidth);	// Use colored text for found components
+				m_redPen.setWidthF(dPenWidth);		// Use red text for floating components
+				penPlaced.setWidthF(dPenWidth);		// Use this for placed components
 
 				GetXY(board, comp, X, Y);	// Get footprint centre
 
@@ -1523,7 +1523,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 										   ( compMode == COMPSMODE::VALUE ) ? comp.GetValueStr() : "";
 
 				painter.scale(dCopyTextScale, dCopyTextScale);
-				painter.setPen(bFound ? m_findPen : bPlaced ? penPlaced : m_redPen);
+				painter.setPen(bFound ? m_orangePen : bPlaced ? penPlaced : m_redPen);
 				painter.drawText(0,0,0,0, Qt::AlignCenter | Qt::TextDontClip, myStr.c_str(), bPCB);
 				painter.restore();
 			}
@@ -1665,13 +1665,13 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	if ( !m_bWriteGerber && !bVero && trackMode != TRACKMODE::OFF && m_board.GetShowCloseTracks() )
 	{
 		painter.save();
-		m_redPen.setWidth(W / 16);
-		painter.setPen(m_redPen);
+		m_orangePen.setWidth(3);
+		painter.setPen(m_orangePen);
 		painter.setBrush(Qt::NoBrush);
 		for (auto& o : m_board.GetWarnPoints(layer))
 		{
 			GetXY(board, o.rx(), o.ry(), X, Y);
-			painter.drawEllipse(X-(C>>1),Y-(C>>1),C,C);
+			painter.drawEllipse(X-C/2, Y-C/2, C, C);
 		}
 		painter.restore();
 	}

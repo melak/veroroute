@@ -470,7 +470,7 @@ private:
 	QPen	m_blackPen;
 	QPen	m_whitePen;
 	QPen	m_redPen;
-	QPen	m_findPen;
+	QPen	m_orangePen;
 	QPen	m_lightBluePen;
 	QPen	m_varPen;
 	QPen	m_dotPen;
