@@ -257,7 +257,17 @@ static const char* szVEROROUTE_VERSION =
 			// Improvement: Allow TAB to change focus of dialog controls.
 			// Improvement: Reworked some icons that did not work well with dark themes.
 			// Removed menu item to fix corruption.  Old corrupted VRTS are now auto-fixed on load.
-  "2.01";	// Bug fix: Chains of wires sharing holes sometimes not colored completely.
+//"2.01";	// Bug fix: Chains of wires sharing holes sometimes not colored completely.
 			// Added ability to define custom pad/hole size in component editor.
 			// Added ability to add veroboard labels (numbers or letters).
 			// Improved algorithm for solder bridges.  Don't show a solder bridge if a wire is already doing that job.
+  "2.02";	// Bug fix: Fill slider should be enabled when track slider is set to Off.
+			// Bug fix: Calculation of minimum track separation was not correct when using fat tracks style.
+			// Bug fix: Changed render order in Color/Mono mode to fix issues with how custom sizes pads are drawn.
+			// Track width changes:  Minimum allowed track widths lowered to 4 mil.
+			//                       Minimum allowed via hole lowered to 8 mil.
+			//                       Minimum allowed via pad lowered to 16 mil.
+			//                       Maximum custom pad size increased to 130 mil.
+			//                       Maximum custom hole size increased to 100 mil.
+			// New feature:  Add ability to show locations of minimum track separation.
+			// Updated tutorials.
