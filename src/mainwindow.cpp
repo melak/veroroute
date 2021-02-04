@@ -1191,6 +1191,7 @@ void MainWindow::SetCompPadWidth(const int& i)
 	Component& comp = m_board.GetUserComponent();
 	if ( i == comp.GetPadWidth() ) return;	// No change
 	comp.SetPadWidth(i);
+	if ( comp.GetHoleWidth() > i-8 ) comp.SetHoleWidth( i-8 );	// 8 ==> minimum annular ring = 4 mil
 	UpdateHistory("Change custom pad size");
 	UpdateControls();
 	RepaintWithListNodes();
@@ -1202,6 +1203,7 @@ void MainWindow::SetCompHoleWidth(const int& i)
 	Component& comp = m_board.GetUserComponent();
 	if ( i == comp.GetHoleWidth() ) return;	// No change
 	comp.SetHoleWidth(i);
+	if ( comp.GetPadWidth() < i+8 ) comp.SetPadWidth( i+8 );	// 8 ==> minimum annular ring = 4 mil
 	UpdateHistory("Change i hole size");
 	UpdateControls();
 	RepaintWithListNodes();
@@ -1460,7 +1462,7 @@ void MainWindow::SetMaskWidth(int i)		{ if ( m_board.SetMASK_MIL(i)  ) { UpdateH
 void MainWindow::SetSilkWidth(int i)		{ if ( m_board.SetSILK_MIL(i)  ) { UpdateHistory("Silkscreen line width change");	UpdateControls();	RepaintSkipRouting(); } }
 void MainWindow::SetEdgeWidth(int i)		{ if ( m_board.SetEDGE_MIL(i)  ) { UpdateHistory("Board edge margin change");		UpdateControls();	RepaintSkipRouting(); } }
 void MainWindow::SetViaPadWidth(int i)		{ if ( m_board.SetVIAPAD_MIL(i)) { UpdateHistory("Via pad width change");			UpdateControls();	DestroyPixmapCache();	RepaintSkipRouting(); } }
-void MainWindow::SetViaHoleWidth(int i)		{ if ( m_board.SetVIAHOLE_MIL(i)){ UpdateHistory("Via hole width change");			UpdateControls();	RepaintSkipRouting(); } }
+void MainWindow::SetViaHoleWidth(int i)		{ if ( m_board.SetVIAHOLE_MIL(i)){ UpdateHistory("Via hole width change");			UpdateControls();	DestroyPixmapCache();	RepaintSkipRouting(); } }
 void MainWindow::SetTextSizeComp(int i)		{ if ( m_board.SetTextSizeComp(i) )		  { UpdateHistory("Text size change (component)");	RepaintSkipRouting(); } }
 void MainWindow::SetTextSizePins(int i)		{ if ( m_board.SetTextSizePins(i) )		  { UpdateHistory("Text size change (pins)");		RepaintSkipRouting(); } }
 void MainWindow::SetTargetRows(int i)		{ if ( m_board.SetTargetRows(i) )		  { UpdateHistory("Target board height change");	RepaintSkipRouting(); } }
@@ -1562,8 +1564,8 @@ void MainWindow::DefinerToggleShapeFill(bool b)
 }
 void MainWindow::DefinerWidthChanged(int i)		{ if ( GetCompDefiner().SetWidth(i)		) { UpdateHistory("Action"); EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
 void MainWindow::DefinerHeightChanged(int i)	{ if ( GetCompDefiner().SetHeight(i)	) { UpdateHistory("Action"); EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
-void MainWindow::DefinerPadWidthChanged(int i)	{ if ( GetCompDefiner().SetPadWidth(i)	) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
-void MainWindow::DefinerHoleWidthChanged(int i)	{ if ( GetCompDefiner().SetHoleWidth(i)	) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
+void MainWindow::DefinerPadWidthChanged(int i)	{ if ( GetCompDefiner().SetPadWidth(i)	) { UpdateHistory("Action"); EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
+void MainWindow::DefinerHoleWidthChanged(int i)	{ if ( GetCompDefiner().SetHoleWidth(i)	) { UpdateHistory("Action"); EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
 void MainWindow::DefinerSetPinNumber(int i)		{ if ( GetCompDefiner().SetPinNumber(i)	) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
 void MainWindow::DefinerIncPinNumber(bool b)	{ if ( GetCompDefiner().IncPinNumber(b)	) { UpdateHistory("Action"); UpdateCompDialog();		 RepaintSkipRouting(); } }	// Called using mouse wheel in view
 void MainWindow::DefinerSetCX(double d)			{ if ( GetCompDefiner().SetCX(d)		) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }

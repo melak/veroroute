@@ -140,7 +140,7 @@ double Board::GetMIN_SEPARATION()	// Minimum separation (in mil) between a pad o
 	{
 		const Element*	pA				= Get(k, j, i);
 		const int&		nodeIdA			= pA->GetNodeId();
-		if ( nodeIdA == BAD_NODEID ) continue;
+		if ( nodeIdA == BAD_NODEID && !pA->GetHasPin() ) continue;
 
 		int iA(0);
 		if ( pA->GetHasWire() )		iA = GetPAD_MIL();	// No custom pad size for wires
@@ -166,7 +166,8 @@ double Board::GetMIN_SEPARATION()	// Minimum separation (in mil) between a pad o
 			if ( jj == j && ii == i ) continue;	// Skip pA
 			const Element*	pB		= Get(k, jj, ii);
 			const int&		nodeIdB	= pB->GetNodeId();
-			if ( nodeIdB == BAD_NODEID || nodeIdB == nodeIdA ) continue;
+			if ( nodeIdB == BAD_NODEID && !pB->GetHasPin() ) continue;
+			if ( nodeIdB == nodeIdA ) continue;
 
 			int iB(0);
 			if ( pB->GetHasWire() )		iB = GetPAD_MIL();	// No custom pad size for wires

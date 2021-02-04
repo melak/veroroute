@@ -119,8 +119,14 @@ public:
 	bool SetCurrentPinId(const int& i)		{ const bool bChanged = ( m_currentPinId	!= i );	m_currentPinId		= i; return bChanged; }
 	bool SetCurrentShapeId(const int& i)	{ const bool bChanged = ( m_currentShapeId	!= i );	m_currentShapeId	= i; return bChanged; }
 	bool SetPinFlags(const uchar& i)		{ const bool bChanged = ( m_iPinFlags		!= i );	m_iPinFlags			= i; return bChanged; }
-	bool SetPadWidth(const int& i)			{ const bool bChanged = ( m_iPadWidth		!= i );	m_iPadWidth			= i; return bChanged; }
-	bool SetHoleWidth(const int& i)			{ const bool bChanged = ( m_iHoleWidth		!= i );	m_iHoleWidth		= i; return bChanged; }
+	bool SetPadWidth(const int& i)			{ const bool bChanged = ( m_iPadWidth		!= i );	m_iPadWidth			= i;
+											  if ( bChanged && GetHoleWidth() > i-8 ) SetHoleWidth( i-8 );	// 8 ==> minimum annular ring = 4 mil
+											  return bChanged;
+											}
+	bool SetHoleWidth(const int& i)			{ const bool bChanged = ( m_iHoleWidth		!= i );	m_iHoleWidth		= i;
+											  if ( bChanged && GetPadWidth() < i+8 ) SetPadWidth( i+8 );	// 8 ==> minimum annular ring = 4 mil
+											  return bChanged;
+											}
 	bool SetValueStr(const std::string& s)	{ const bool bChanged = ( m_valueStr		!= s );	m_valueStr			= s; return bChanged; }
 	bool SetPrefixStr(const std::string& s)	{ const bool bChanged = ( m_prefixStr		!= s );	m_prefixStr			= s; return bChanged; }
 	bool SetTypeStr(const std::string& s)	{ const bool bChanged = ( m_typeStr			!= s );	m_typeStr			= s; return bChanged; }

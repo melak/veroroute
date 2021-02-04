@@ -299,7 +299,7 @@
     <property name="geometry">
      <rect>
       <x>70</x>
-      <y>90</y>
+      <y>60</y>
       <width>61</width>
       <height>24</height>
      </rect>
@@ -365,7 +365,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>60</y>
+      <y>90</y>
       <width>61</width>
       <height>24</height>
      </rect>
@@ -381,7 +381,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>90</y>
+      <y>60</y>
       <width>61</width>
       <height>24</height>
      </rect>
@@ -397,7 +397,7 @@
     <property name="geometry">
      <rect>
       <x>70</x>
-      <y>60</y>
+      <y>90</y>
       <width>61</width>
       <height>24</height>
      </rect>
@@ -406,7 +406,7 @@
      <string>Track width (1 mil = 0.001 inches)</string>
     </property>
     <property name="minimum">
-     <number>12</number>
+     <number>4</number>
     </property>
     <property name="maximum">
      <number>50</number>
@@ -428,7 +428,7 @@
      </rect>
     </property>
     <property name="toolTip">
-     <string>Track width (1 mil = 0.001 inches)</string>
+     <string>Gap width for ground-fills  (1 mil = 0.001 inches)</string>
     </property>
     <property name="minimum">
      <number>5</number>
@@ -485,10 +485,10 @@
      </rect>
     </property>
     <property name="toolTip">
-     <string>Board edge margin (1 mil = 0.001 inches)</string>
+     <string>Via pad width (1 mil = 0.001 inches)</string>
     </property>
     <property name="minimum">
-     <number>50</number>
+     <number>16</number>
     </property>
     <property name="maximum">
      <number>80</number>
@@ -510,10 +510,10 @@
      </rect>
     </property>
     <property name="toolTip">
-     <string>Board edge margin (1 mil = 0.001 inches)</string>
+     <string>Via hole width (1 mil = 0.001 inches)</string>
     </property>
     <property name="minimum">
-     <number>20</number>
+     <number>8</number>
     </property>
     <property name="maximum">
      <number>40</number>

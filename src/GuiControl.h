@@ -358,15 +358,24 @@ public:
 	bool SetCompMode(const COMPSMODE& e)	{ const bool bChanged = m_iCompMode			!= e; m_iCompMode		= e; return bChanged; }
 	bool SetHoleType(const HOLETYPE& e)		{ const bool bChanged = m_iHoleType			!= e; m_iHoleType		= e; return bChanged; }
 	bool SetGRIDPIXELS(const int& i)		{ const bool bChanged = m_GRIDPIXELS		!= i; m_GRIDPIXELS		= i; return bChanged; }
-	bool SetPAD_MIL(const int& i)			{ const bool bChanged = m_PAD_MIL			!= i; m_PAD_MIL			= i; return bChanged; }
+	bool SetPAD_MIL(const int& i)			{ const bool bChanged = m_PAD_MIL			!= i; m_PAD_MIL			= i;
+											  if ( bChanged && GetHOLE_MIL() > i-8 ) SetHOLE_MIL( i-8 );		// 8 ==> minimum annular ring = 4 mil
+											  return bChanged; }
 	bool SetTRACK_MIL(const int& i)			{ const bool bChanged = m_TRACK_MIL			!= i; m_TRACK_MIL		= i; return bChanged; }
-	bool SetHOLE_MIL(const int& i)			{ const bool bChanged = m_HOLE_MIL			!= i; m_HOLE_MIL		= i; return bChanged; }
+	bool SetHOLE_MIL(const int& i)			{ const bool bChanged = m_HOLE_MIL			!= i; m_HOLE_MIL		= i;
+											  if ( bChanged && GetPAD_MIL() < i+8 ) SetPAD_MIL( i+8 );			// 8 ==> minimum annular ring = 4 mil
+											  return bChanged; }
 	bool SetGAP_MIL(const int& i)			{ const bool bChanged = m_GAP_MIL			!= i; m_GAP_MIL			= i; return bChanged; }
 	bool SetMASK_MIL(const int& i)			{ const bool bChanged = m_MASK_MIL			!= i; m_MASK_MIL		= i; return bChanged; }
 	bool SetSILK_MIL(const int& i)			{ const bool bChanged = m_SILK_MIL			!= i; m_SILK_MIL		= i; return bChanged; }
 	bool SetEDGE_MIL(const int& i)			{ const bool bChanged = m_EDGE_MIL			!= i; m_EDGE_MIL		= i; return bChanged; }
-	bool SetVIAPAD_MIL(const int& i)		{ const bool bChanged = m_VIAPAD_MIL		!= i; m_VIAPAD_MIL		= i; return bChanged; }
-	bool SetVIAHOLE_MIL(const int& i)		{ const bool bChanged = m_VIAHOLE_MIL		!= i; m_VIAHOLE_MIL		= i; return bChanged; }
+	bool SetVIAPAD_MIL(const int& i)		{ const bool bChanged = m_VIAPAD_MIL		!= i; m_VIAPAD_MIL		= i;
+											  if ( bChanged && GetVIAHOLE_MIL() > i-8 ) SetVIAHOLE_MIL( i-8 );	// 8 ==> minimum annular ring = 4 mil
+											  return bChanged;
+											}
+	bool SetVIAHOLE_MIL(const int& i)		{ const bool bChanged = m_VIAHOLE_MIL		!= i; m_VIAHOLE_MIL		= i;
+											  if ( bChanged && GetVIAPAD_MIL() < i+8 ) SetVIAPAD_MIL( i+8 );	// 8 ==> minimum annular ring = 4 mil
+											  return bChanged; }
 	bool SetRenderQuality(const int& i)		{ const bool bChanged = m_iRenderQuality	!= i; m_iRenderQuality	= i; return bChanged; }
 	bool SetSaturation(const int& i)		{ const bool bChanged = m_iSaturation		!= i; m_iSaturation		= i; return bChanged; }
 	bool SetFillSaturation(const int& i)	{ const bool bChanged = m_iFillSaturation	!= i; m_iFillSaturation	= i; return bChanged; }

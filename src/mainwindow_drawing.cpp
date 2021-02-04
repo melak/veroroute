@@ -1223,6 +1223,131 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			const int		 iPadWidthMIL	= bCustomSize ? comp.GetPadWidth()  : board.GetPAD_MIL();
 			const int		 iHoleWidthMIL	= bCustomSize ? comp.GetHoleWidth() : board.GetHOLE_MIL();
 
+			// Begin draw component pins ---------------------------------------------------------
+			if ( !m_bWriteGerber && ( compMode != COMPSMODE::OFF || ( bMonoPCB && bPlaced ) ) )
+			{
+				if ( bWire && comp.GetNodeId(0) == BAD_NODEID )	continue;	// Skip blank wires
+
+				painter.save();
+
+				QFont pinsFont = painter.font();	// Copy of current font
+				pinsFont.setPointSize( m_board.GetTextSizePins() );
+				painter.setFont(pinsFont);
+
+				if ( bMonoPCB && bPlaced )
+				{
+					m_backgroundPen.setWidth( board.GetPixelsFromMIL(iHoleWidthMIL) );
+					painter.setPen(m_backgroundPen);
+				}
+				else
+				{
+					penPlaced.setWidth(0);		// For pin labels
+					m_orangePen.setWidth(0);		// For pin labels and pins
+					m_redPen.setWidth(0);		// For pin labels and pins
+					m_darkGreyPen.setWidth(0);	// For pins
+					painter.setPen(bFound ? m_orangePen : bPlaced ? m_darkGreyPen : m_redPen);
+				}
+				painter.setBrush(Qt::NoBrush);
+
+				if ( bMark )	// Markers are a special case since they don't actually have a pin !!!
+				{
+					// Only draw markers as holes in ground fill MONO mode and only in places with no track
+					if ( bMono && bGroundFill && board.Get(layer, jComp, iComp)->GetNodeId() == BAD_NODEID )
+					{
+						GetLRTB(board, 100, jComp, iComp, L, R, T, B);	// 100% size square
+						painter.drawPoint((L+R)/2, (T+B)/2);			// A pin is drawn with a circle
+					}
+				}
+				else			// Regular components/pads/wires ...
+				{
+					for (int jj = 0; jj < comp.GetCompRows(); jj++)
+					for (int ii = 0; ii < comp.GetCompCols(); ii++)
+					{
+						const int j = jComp + jj;
+						const int i = iComp + ii;
+
+						const size_t iPinIndex = comp.GetCompElement(jj,ii)->GetPinIndex();
+						if ( iPinIndex == BAD_PININDEX ) continue;
+
+						if ( bColor && !bPlaced )	// Color pins of floating components (if in Color mode)
+						{
+							const int&	 nodeId			= comp.GetNodeId(iPinIndex);
+							const bool	 bCurrentNodeId	= nodeId != BAD_NODEID && nodeId == GetCurrentNodeId();
+							const QColor color			= bCurrentNodeId ? colorMgr.GetPixmapColor(MY_GREY)
+																		 : colorMgr.GetColorFromNodeId(nodeId);
+							m_varPen.setColor(color);
+							m_varBrush.setColor(color);
+							painter.setBrush( bMonoPCB ? Qt::NoBrush : m_varBrush);	// No pin color fill in Mono/PCB mode
+						}
+
+						const int iPinSizeMIL = ( !bColor || bPlaced ) ? iHoleWidthMIL : std::min(3*iHoleWidthMIL/2, iPadWidthMIL);
+						GetLRTB(board, iPinSizeMIL, j, i, L, R, T, B);
+
+						// Stop pins vanishing if zoomed too far out
+						if ( L == R ) { L--, R++; }
+						if ( T == B ) { T--, B++; }
+
+						if ( bPinLabels )	// Write pin labels
+						{
+							painter.save();
+							painter.translate((L+R)/2, (T+B)/2);
+
+							// Set text orientation
+							switch( compDirection )
+							{
+								case 'W':
+								case 'E':	painter.rotate(270);	break;
+							}
+
+							// Handle L/R pin label alignment
+							int iFlag = comp.GetPinAlign(iPinIndex);
+							if ( iFlag == Qt::AlignLeft || iFlag == Qt::AlignRight )
+							{
+								const bool bLeft = ( iFlag == Qt::AlignLeft );
+								switch( compDirection )
+								{
+									case 'E':
+									case 'S':	iFlag = bLeft ? Qt::AlignRight : Qt::AlignLeft;	// Swap align L/R
+												painter.translate(bLeft ? C/2 : -C/2, 0);
+												break;
+									default:	painter.translate(bLeft ? -C/2 : C/2, 0);
+								}
+							}
+							iFlag |= ( Qt::TextDontClip | Qt::AlignVCenter );
+
+							painter.scale(dTextScale, dTextScale);
+							painter.setPen(bFound ? m_orangePen : bPlaced ? penPlaced : m_redPen);
+							painter.drawText(0,0,0,0, iFlag, comp.GetPinLabel(iPinIndex).c_str());
+							painter.restore();
+						}
+						else if ( bRectPins )	// Draw switch pins as rectangles
+						{
+							const int d = board.GetHalfPixelsFromMIL( iPinSizeMIL );
+							switch( compDirection )
+							{
+								case 'W':
+								case 'E':	L -= d; R += d;	break;
+								case 'N':
+								case 'S':	T -= d; B += d;	break;
+							}
+							painter.drawRect(L, T, R-L, B-T);
+						}
+						else	// A regular pin is drawn as a circle
+						{
+							if ( bMonoPCB && bPlaced )
+							{
+								GetLRTB(board, 100, j, i, L, R, T, B);	// 100% size square
+								painter.drawPoint((L+R)/2, (T+B)/2);
+							}
+							else
+								painter.drawEllipse(L, T, R-L, B-T);
+						}
+					}
+				}
+				painter.restore();
+			}
+			// End draw component pins -----------------------------------------------------------
+
 			// Begin draw component fill + outline -----------------------------------------------
 			if ( compMode != COMPSMODE::OFF && !comp.GetShapes().empty() )
 			{
@@ -1357,131 +1482,6 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				}
 			}
 			// End draw component fill + outline -------------------------------------------------
-
-			// Begin draw component pins ---------------------------------------------------------
-			if ( !m_bWriteGerber && ( compMode != COMPSMODE::OFF || ( bMonoPCB && bPlaced ) ) )
-			{
-				if ( bWire && comp.GetNodeId(0) == BAD_NODEID )	continue;	// Skip blank wires
-
-				painter.save();
-
-				QFont pinsFont = painter.font();	// Copy of current font
-				pinsFont.setPointSize( m_board.GetTextSizePins() );
-				painter.setFont(pinsFont);
-
-				if ( bMonoPCB && bPlaced )
-				{
-					m_backgroundPen.setWidth( board.GetPixelsFromMIL(iHoleWidthMIL) );
-					painter.setPen(m_backgroundPen);
-				}
-				else
-				{
-					penPlaced.setWidth(0);		// For pin labels
-					m_orangePen.setWidth(0);		// For pin labels and pins
-					m_redPen.setWidth(0);		// For pin labels and pins
-					m_darkGreyPen.setWidth(0);	// For pins
-					painter.setPen(bFound ? m_orangePen : bPlaced ? m_darkGreyPen : m_redPen);
-				}
-				painter.setBrush(Qt::NoBrush);
-
-				if ( bMark )	// Markers are a special case since they don't actually have a pin !!!
-				{
-					// Only draw markers as holes in ground fill MONO mode and only in places with no track
-					if ( bMono && bGroundFill && board.Get(layer, jComp, iComp)->GetNodeId() == BAD_NODEID )
-					{
-						GetLRTB(board, 100, jComp, iComp, L, R, T, B);	// 100% size square
-						painter.drawPoint((L+R)/2, (T+B)/2);			// A pin is drawn with a circle
-					}
-				}
-				else			// Regular components/pads/wires ...
-				{
-					for (int jj = 0; jj < comp.GetCompRows(); jj++)
-					for (int ii = 0; ii < comp.GetCompCols(); ii++)
-					{
-						const int j = jComp + jj;
-						const int i = iComp + ii;
-
-						const size_t iPinIndex = comp.GetCompElement(jj,ii)->GetPinIndex();
-						if ( iPinIndex == BAD_PININDEX ) continue;
-
-						if ( bColor && !bPlaced )	// Color pins of floating components (if in Color mode)
-						{
-							const int&	 nodeId			= comp.GetNodeId(iPinIndex);
-							const bool	 bCurrentNodeId	= nodeId != BAD_NODEID && nodeId == GetCurrentNodeId();
-							const QColor color			= bCurrentNodeId ? colorMgr.GetPixmapColor(MY_GREY)
-																		 : colorMgr.GetColorFromNodeId(nodeId);
-							m_varPen.setColor(color);
-							m_varBrush.setColor(color);
-							painter.setBrush( bMonoPCB ? Qt::NoBrush : m_varBrush);	// No pin color fill in Mono/PCB mode
-						}
-
-						const int iPinSizeMIL = ( !bColor || bPlaced ) ? iHoleWidthMIL : std::min(3*iHoleWidthMIL/2, iPadWidthMIL);
-						GetLRTB(board, iPinSizeMIL, j, i, L, R, T, B);
-
-						// Stop pins vanishing if zoomed too far out
-						if ( L == R ) { L--, R++; }
-						if ( T == B ) { T--, B++; }
-
-						if ( bPinLabels )	// Write pin labels
-						{
-							painter.save();
-							painter.translate((L+R)/2, (T+B)/2);
-
-							// Set text orientation
-							switch( compDirection )
-							{
-								case 'W':
-								case 'E':	painter.rotate(270);	break;
-							}
-
-							// Handle L/R pin label alignment
-							int iFlag = comp.GetPinAlign(iPinIndex);
-							if ( iFlag == Qt::AlignLeft || iFlag == Qt::AlignRight )
-							{
-								const bool bLeft = ( iFlag == Qt::AlignLeft );
-								switch( compDirection )
-								{
-									case 'E':
-									case 'S':	iFlag = bLeft ? Qt::AlignRight : Qt::AlignLeft;	// Swap align L/R
-												painter.translate(bLeft ? C/2 : -C/2, 0);
-												break;
-									default:	painter.translate(bLeft ? -C/2 : C/2, 0);
-								}
-							}
-							iFlag |= ( Qt::TextDontClip | Qt::AlignVCenter );
-
-							painter.scale(dTextScale, dTextScale);
-							painter.setPen(bFound ? m_orangePen : bPlaced ? penPlaced : m_redPen);
-							painter.drawText(0,0,0,0, iFlag, comp.GetPinLabel(iPinIndex).c_str());
-							painter.restore();
-						}
-						else if ( bRectPins )	// Draw switch pins as rectangles
-						{
-							const int d = board.GetHalfPixelsFromMIL( iPinSizeMIL );
-							switch( compDirection )
-							{
-								case 'W':
-								case 'E':	L -= d; R += d;	break;
-								case 'N':
-								case 'S':	T -= d; B += d;	break;
-							}
-							painter.drawRect(L, T, R-L, B-T);
-						}
-						else	// A regular pin is drawn as a circle
-						{
-							if ( bMonoPCB && bPlaced )
-							{
-								GetLRTB(board, 100, j, i, L, R, T, B);	// 100% size square
-								painter.drawPoint((L+R)/2, (T+B)/2);
-							}
-							else 
-								painter.drawEllipse(L, T, R-L, B-T);
-						}
-					}
-				}
-				painter.restore();
-			}
-			// End draw component pins -----------------------------------------------------------
 
 			// Begin draw component text ---------------------------------------------------------
 			if ( compMode != COMPSMODE::OFF && !bMark && !bWire && !bVeroLabel )
@@ -1671,7 +1671,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		for (auto& o : m_board.GetWarnPoints(layer))
 		{
 			GetXY(board, o.rx(), o.ry(), X, Y);
-			painter.drawEllipse(X-C/2, Y-C/2, C, C);
+			painter.drawRect(X-C/2, Y-C/2, C, C);
 		}
 		painter.restore();
 	}
