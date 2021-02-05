@@ -125,8 +125,12 @@ double Board::GetMIN_SEPARATION()	// Minimum separation (in mil) between a pad o
 	const bool		bMinDiags	= GetDiagsMode() == DIAGSMODE::MIN;
 	const bool&		bFatTracks	= GetFatTracks() && !GetCurvedTracks();
 	const double	dDiagonal	= 100.0 * sqrt(2.0);
-	const int		nRings		= 1;	// 1 ==> Max pad size supported by VeroRoute = 100 mil
-	//TODO Increase nRings to 2 if maximum allowed pad size is increased to 200 mil in future
+	const int		nRings		= 2;	// 2 ==> Max pad size supported by VeroRoute could be up to 200 mil
+	//TODO Need to refine the check below to deal with nRings = 2 if pad size increases beyong 130.
+	//     The "knight move" squares on the second ring are not quite right because the
+	//     angle in question is not orthogonal to either the horizontal, vertical, or diagonal tracks.
+	//     Curved tracks don't help either.  As it stands, the current calculation will be too strict
+	//     for some track styles.
 
 	// Get bounds to minimise looping
 	int minRow, minCol, maxRow, maxCol;
@@ -225,6 +229,48 @@ double Board::GetMIN_SEPARATION()	// Minimum separation (in mil) between a pad o
 		}
 	}
 	return std::max(0.0, dMin);
+}
+
+void Board::GetGroundFillBounds(int& L, int& R, int& T, int& B)
+{
+	const int&	W = GetGRIDPIXELS();	// Square width in pixels
+	const int	C = W >> 1;				// Half square width in pixels
+
+	int deltaL(0), deltaR(0), deltaT(0), deltaB(0);	// Maximum pad protrusions (in pixels) at edge of grid
+
+	int minRow(0), minCol(0), maxRow(GetRows()-1), maxCol(GetCols()-1);
+	// Loop points on edge of grid
+	for (int j = minRow; j <= maxRow; j++)
+	{
+		const int iStep = ( j == minRow || j == maxRow ) ? 1 : (maxCol - minCol);
+		for (int i = minCol; i <= maxCol; i += iStep)
+		{
+			const Element* p = Get(0, j, i);	// Sufficient to check layer 0 when looking for pins
+			if ( !p->GetHasPin() ) continue;
+
+			int compId = p->GetCompId();
+			if ( compId == BAD_COMPID ) compId = p->GetCompId2();	// Not in first slot, so must be a wire in the second slot
+			assert( compId != BAD_COMPID );
+			if ( compId == BAD_COMPID ) continue;
+
+			Component&	comp	= m_compMgr.GetComponentById( compId );
+			if ( !comp.GetCustomPads() ) continue;	// Only custom pads can be bigger than 100 mil
+
+			const int w			= comp.GetPadWidth();
+			const int padWidth	= GetHalfPixelsFromMIL( w ) + 1;	// +1 for back compatibility (i.e. max pad size was 98)
+			const int delta		= padWidth - C;		// The protrusion
+			if ( delta <= 0 ) continue;
+
+			if ( i == minCol ) deltaL = std::max(deltaL, delta);
+			if ( i == maxCol ) deltaR = std::max(deltaR, delta);
+			if ( j == minRow ) deltaT = std::max(deltaT, delta);
+			if ( j == maxRow ) deltaB = std::max(deltaB, delta);
+		}
+	}
+	L = 0 - deltaL;
+	T = 0 - deltaT;
+	R = W * GetCols() + deltaR;
+	B = W * GetRows() + deltaB;
 }
 
 // Methods to paint/unpaint nodeIds

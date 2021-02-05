@@ -342,7 +342,7 @@ void MainWindow::ResetView(bool bTutorial)
 	m_mousePos = QPoint(0,0);
 	m_bMouseClick	= m_bLeftClick	= m_bRightClick = m_bCtrlKeyDown  = m_bShiftKeyDown	=false;
 	m_bPaintPins	= m_bPaintBoard	= m_bPaintFlood = m_bDefiningRect = m_bResizingText	= m_bWritePDF = m_bWriteGerber = m_bTwoLayerGerber = false;
-	m_XGRIDOFFSET	= m_YGRIDOFFSET	= 0;
+	m_XGRIDOFFSET	= m_YGRIDOFFSET	= m_XCORRECTION = m_YCORRECTION = 0;
 
 	// Try to set m_gridRow, m_gridCol to match the current NodeId in the board
 	m_gridRow = m_gridCol = 0;

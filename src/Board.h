@@ -361,7 +361,7 @@ public:
 		for (int j = 0; j < numRows; j++)
 		for (int i = 0; i < numCols; i++)
 		{
-			if ( Get(k,j,i)->GetNodeId() == BAD_NODEID ) continue;
+			if ( Get(k,j,i)->GetNodeId() == BAD_NODEID && !Get(k,j,i)->GetHasPin() ) continue;
 			minRow = std::min(minRow, j);	maxRow = std::max(maxRow, j);
 			minCol = std::min(minCol, i);	maxCol = std::max(maxCol, i);
 			bOK = true;
@@ -407,6 +407,7 @@ public:
 	void	GetHoleWidths_MIL(std::list<int>& o, int& iDefaultWidth) const;
 	void	GetSeparations(double& minTrackSeparation_mil, double& minGroundFill_mil);
 	double	GetMIN_SEPARATION();			// Minimum possible separation (in mil) between a pad or track without ground fill
+	void	GetGroundFillBounds(int& L, int& R, int& T, int& B);
 
 	// Methods to paint/unpaint nodeIds
 	void SetNodeId(Element* p, const int& nodeId, const bool bAllLyrs);	// Helper to make sure we do UpdateCounts() before painting an element

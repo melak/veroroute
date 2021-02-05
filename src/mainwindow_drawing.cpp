@@ -537,6 +537,7 @@ void MainWindow::PaintCompDefiner()	// The paint method in "component editor mod
 
 	SetQuality(painter);
 
+	m_XCORRECTION = m_YCORRECTION = 0;
 	painter.fillRect(m_XGRIDOFFSET, m_YGRIDOFFSET, reqWidth, reqHeight, Qt::white);
 
 	m_blackPen.setWidth(0);
@@ -718,6 +719,14 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	int minRow, minCol, maxRow, maxCol;
 	board.GetBounds(minRow, minCol, maxRow, maxCol);
 
+	int gndL, gndR, gndT, gndB;
+	board.GetGroundFillBounds(gndL, gndR, gndT, gndB);
+	const int reqWidth  = (gndR - gndL);
+	const int reqHeight = (gndB - gndT);
+
+	m_XCORRECTION = -gndL;
+	m_YCORRECTION = -gndT;
+
 	GPainter painter;	// Works like QPainter unless you give it a GStream for Gerber
 
 	QPdfWriter* pdfWriter = nullptr;
@@ -740,8 +749,6 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	}
 	else
 	{
-		const int reqWidth  = W * board.GetCols();
-		const int reqHeight = W * board.GetRows();
 		if ( m_mainPixmap.width() != reqWidth || m_mainPixmap.height() != reqHeight )
 		{
 			m_mainPixmap = QPixmap(reqWidth, reqHeight);
@@ -755,12 +762,12 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 	if ( board.GetFlipH() )
 	{
-		painter.translate(2*m_XGRIDOFFSET + W * board.GetCols(), 0);
+		painter.translate(2*m_XGRIDOFFSET + reqWidth, 0);
 		painter.scale(-1, 1);	// Mirror L-R
 	}
 	if ( board.GetFlipV() )
 	{
-		painter.translate(0, 2*m_YGRIDOFFSET + W * board.GetRows());
+		painter.translate(0, 2*m_YGRIDOFFSET + reqHeight);
 		painter.scale(1, -1);	// Mirror T-B
 	}
 
@@ -778,7 +785,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	{
 		// Grow board outline to guarantee separation from tracks and ground
 		const double dEdge = board.GetEdgeWidth();
-		const double R(W * board.GetCols()), B(W * board.GetRows());
+		const double R(reqWidth), B(reqHeight);
 		const int& X = m_XGRIDOFFSET; const int& Y = m_YGRIDOFFSET;
 		gndPoly << QPointF(X,     Y);		edge << QPointF(X	  - dEdge, Y	 - dEdge);
 		gndPoly << QPointF(X + R, Y);		edge << QPointF(X + R + dEdge, Y	 - dEdge);
@@ -792,14 +799,10 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	}
 	else
 	{
-		painter.fillRect(m_XGRIDOFFSET, m_YGRIDOFFSET, W * board.GetCols(), W * board.GetRows(), bGroundFill ? groundFillColor : backgroundColor);
+		painter.fillRect(m_XGRIDOFFSET, m_YGRIDOFFSET, reqWidth, reqHeight, bGroundFill ? groundFillColor : backgroundColor);
 	}
 
 	// Draw rect around whole board area =========================================================
-	int dummy;
-	GetLRTB(board, 110, 0, 0, L, dummy, T, dummy);	// 110% size square
-	GetLRTB(board, 110, board.GetRows()-1, board.GetCols()-1, dummy, R, dummy, B);	// 110% size square
-
 	if ( m_bWriteGerber )
 	{
 		m_gWriter.GetStream(GFILE::GKO).DrawLoop(edge, GPEN::GKO);	// Board outline layer
@@ -811,7 +814,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		m_whitePen.setWidth(iPenWidth);
 		painter.setPen(GetBackgroundColor() == Qt::black ? m_whitePen : m_blackPen);
 		painter.setBrush(Qt::NoBrush);
-		painter.drawRect(L, T, R-L, B-T);
+
+		const int dEdge = (int) board.GetEdgeWidth();
+		painter.drawRect(m_XGRIDOFFSET - dEdge, m_YGRIDOFFSET - dEdge, reqWidth + (dEdge<<1), reqHeight + (dEdge<<1));
 	}
 
 	// Draw grid points ==========================================================================
@@ -1701,8 +1706,8 @@ void MainWindow::GetXY(const GuiControl& guiCtrl, double row, double col, int& X
 	// Takes a point in the Board and returns coordinates in the drawn image.
 	const int& W = guiCtrl.GetGRIDPIXELS();	// Square width in pixels
 	const int  C = W >> 1;					// Half square width in pixels
-	X = m_XGRIDOFFSET + C + col * W;
-	Y = m_YGRIDOFFSET + C + row * W;
+	X = m_XGRIDOFFSET + m_XCORRECTION + C + col * W;
+	Y = m_YGRIDOFFSET + m_YCORRECTION + C + row * W;
 }
 
 void MainWindow::GetLRTB(const GuiControl& guiCtrl, double percent, double row, double col, int& L, int& R, int& T, int& B) const
