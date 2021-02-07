@@ -122,7 +122,6 @@ double Board::GetMIN_SEPARATION()	// Minimum separation (in mil) between a pad o
 	// So wires have regular pad sizes, and are not converted to tracks on the top layer using a via.
 
 	const bool		bDiagsOK	= GetDiagsMode() != DIAGSMODE::OFF;
-	const bool		bMinDiags	= GetDiagsMode() == DIAGSMODE::MIN;
 	const bool&		bFatTracks	= GetFatTracks() && !GetCurvedTracks();
 	const double	dDiagonal	= 100.0 * sqrt(2.0);
 	const int		nRings		= 2;	// 2 ==> Max pad size supported by VeroRoute could be up to 200 mil
@@ -158,7 +157,7 @@ double Board::GetMIN_SEPARATION()	// Minimum separation (in mil) between a pad o
 		else if ( pA->GetIsVia() )	iA = GetVIAPAD_MIL();
 		else
 		{
-			const int	iPerimeterCodeA = pA->GetPerimeterCode(bDiagsOK, bMinDiags);	// 0 to 255
+			const int	iPerimeterCodeA = GetPerimeterCode(pA);	// 0 to 255
 			const bool	bFatA			= bFatTracks && ( ( iPerimeterCodeA & CODEBITS_HV ) > 0 );
 			iA = bFatA ? GetPAD_MIL() : GetTRACK_MIL();	// Fat H/V track section is as wide as pad
 		}
@@ -185,7 +184,7 @@ double Board::GetMIN_SEPARATION()	// Minimum separation (in mil) between a pad o
 			else if ( pB->GetIsVia() )	iB = GetVIAPAD_MIL();
 			else
 			{
-				const int	iPerimeterCodeB = pB->GetPerimeterCode(bDiagsOK, bMinDiags);	// 0 to 255
+				const int	iPerimeterCodeB = GetPerimeterCode(pB);	// 0 to 255
 				const bool	bFatB			= bFatTracks && ( ( iPerimeterCodeB & CODEBITS_HV ) > 0 );
 				iB = bFatB ? GetPAD_MIL() : GetTRACK_MIL();	// Fat H/V track section is as wide as pad
 			}
@@ -209,7 +208,7 @@ double Board::GetMIN_SEPARATION()	// Minimum separation (in mil) between a pad o
 						pC = pC->GetNbr((iNbr+1) %8);			// ... then slide outwards LT/RT/RB/LB to a point in ring N
 					const int&		nodeIdC	= pC->GetNodeId();
 					if ( nodeIdC == BAD_NODEID || nodeIdC == nodeIdA ) continue;
-					const int iPerimeterCodeC = pC->GetPerimeterCode(bDiagsOK, bMinDiags);	// 0 to 255
+					const int iPerimeterCodeC = GetPerimeterCode(pC);	// 0 to 255
 					// .. then check for track in direction RT/RB/LB/LT
 					if ( ReadCodeBit((iNbr+3) % 8, iPerimeterCodeC) )
 					{

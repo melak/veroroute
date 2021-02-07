@@ -92,6 +92,7 @@ public:
 	const bool&	GetPaintPins() const	{ return m_bPaintPins;		}
 	const bool&	GetPaintBoard() const	{ return m_bPaintBoard;		}
 	const bool&	GetPaintFlood() const	{ return m_bPaintFlood;		}
+	const bool&	GetPaintLyrPref() const	{ return m_bPaintLyrPref;	}
 	const bool&	GetDefiningRect() const	{ return m_bDefiningRect;	}
 	const bool&	GetResizingText() const	{ return m_bResizingText;	}
 	void		SetCtrlKeyDown(bool b)	{ m_bCtrlKeyDown	= b; }
@@ -99,6 +100,7 @@ public:
 	void		SetPaintPins(bool b)	{ m_bPaintPins		= b; }
 	void		SetPaintBoard(bool b)	{ m_bPaintBoard		= b; }
 	void		SetPaintFlood(bool b)	{ m_bPaintFlood		= b; }
+	void		SetPaintLyrPref(bool b)	{ m_bPaintLyrPref	= b; }
 	void		SetDefiningRect(bool b)	{ m_bDefiningRect	= b; }
 	void		SetResizingText(bool b)	{ m_bResizingText	= b; }
 protected:
@@ -377,7 +379,7 @@ private:
 	void DestroyPixmapCache();
 	void CreatePixmapCache(const GuiControl& guiCtrl, ColorManager& colorManager);
 	void PaintViaGrey(const GuiControl& guiCtrl, QPainter& painter, const QPointF& pC);
-	void PaintPadGrey(const GuiControl& guiCtrl, QPainter& painter, const QPointF& pC, const int& iPadWidthMIL = 0);
+	void PaintPadGrey(const GuiControl& guiCtrl, QPainter& painter, QPen& pen, const QPointF& pC, const int& iPadWidthMIL = 0);
 	void PaintVia(const GuiControl& guiCtrl, QPainter& painter,  const QColor& color, const QPointF& pC, const bool& bGap = false);	// Helper
 	void PaintPad(const GuiControl& guiCtrl, QPainter& painter,  const QColor& color, const QPointF& pC, const int& iPadWidthMIL = 0, const int& iHoleWidth_MIL = 0, const bool& bGap = false);	// Helper
 	void PaintTag(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, const int& iPadWidthMIL, const int& iNbr, const int& iLyr);
@@ -536,6 +538,7 @@ private:
 	bool		m_bPaintPins;			// true ==> allow paint the component pins (and the board)
 	bool		m_bPaintBoard;			// true ==> allow paint the board only (not the component pins)
 	bool		m_bPaintFlood;			// true ==> allow flood-fill all connected tracks & pins
+	bool		m_bPaintLyrPref;		// true ==> allow paint layer preference to pins
 	bool		m_bDefiningRect;		// true ==> user is defining a rectangle
 	bool		m_bResizingText;		// true ==> user is resizing a text rectangle
 	bool		m_bWritePDF;			// true ==> draw to PDF file instead of screen

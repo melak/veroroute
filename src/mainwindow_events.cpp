@@ -199,7 +199,7 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 	// Cursor modification
 	if ( GetCtrlKeyDown() )
 		centralWidget()->setCursor(Qt::ClosedHandCursor);
-	else if ( GetPaintPins() || GetPaintBoard() || GetPaintFlood() )
+	else if ( GetPaintPins() || GetPaintBoard() || GetPaintFlood() || GetPaintLyrPref() )
 		centralWidget()->setCursor(Qt::CrossCursor);
 	else if ( GetResizingText() )
 		centralWidget()->setCursor(Qt::SizeFDiagCursor);
@@ -214,39 +214,57 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 	if ( GetCurrentTextId() != BAD_TEXTID )
 		return RepaintWithRouting();	// Don't modify nodeId or paint if editing text
 
-	if ( GetPaintPins() || GetPaintBoard() || GetPaintFlood() )
+	if ( GetPaintPins() || GetPaintBoard() || GetPaintFlood() || GetPaintLyrPref() )
 	{
 		if ( m_bLeftClick )		// Paint
 		{
-			if ( GetCurrentNodeId() == BAD_NODEID )	// If trying to left-click paint an BAD_NODEID ...
-				SetCurrentNodeId( m_board.GetNewNodeId() ); // ... use a new NodeId instead
-
-			m_board.GetColorMgr().ReAssignColors();	// Forces colors to be worked out again
-			if ( GetPaintFlood() )
+			if ( GetPaintLyrPref() )
 			{
-				assert( GetCurrentNodeId() != BAD_NODEID );
-				assert( !m_board.GetRoutingEnabled() );	// Sanity check
-
-				const int tmp = GetCurrentNodeId();	// Need to temporarily change current nodeId for HandleRouting()
-				SetCurrentNodeId( m_board.Get(layer, m_gridRow, m_gridCol)->GetNodeId() );
-				HandleRouting();		// Work out MH distances for the flood
-				SetCurrentNodeId(tmp);	// Restore current nodeId
-
-				m_board.FloodNodeId( GetCurrentNodeId() );
-				mouseActionString = "Paint (flood)";
-			}
-			else
-			{
-				const bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, GetCurrentNodeId(), GetPaintPins());
+				const bool bChanged = m_board.ToggleLyrPref(layer, m_gridRow, m_gridCol, false);	// false ==> toggle
 				if ( !bChanged ) return;
-				mouseActionString = "Paint";
+				mouseActionString = "Toggle pin layer preference";
+			}
+			else 
+			{
+				if ( GetCurrentNodeId() == BAD_NODEID )	// If trying to left-click paint an BAD_NODEID ...
+					SetCurrentNodeId( m_board.GetNewNodeId() ); // ... use a new NodeId instead
+
+				m_board.GetColorMgr().ReAssignColors();	// Forces colors to be worked out again
+				if ( GetPaintFlood() )
+				{
+					assert( GetCurrentNodeId() != BAD_NODEID );
+					assert( !m_board.GetRoutingEnabled() );	// Sanity check
+
+					const int tmp = GetCurrentNodeId();	// Need to temporarily change current nodeId for HandleRouting()
+					SetCurrentNodeId( m_board.Get(layer, m_gridRow, m_gridCol)->GetNodeId() );
+					HandleRouting();		// Work out MH distances for the flood
+					SetCurrentNodeId(tmp);	// Restore current nodeId
+
+					m_board.FloodNodeId( GetCurrentNodeId() );
+					mouseActionString = "Paint (flood)";
+				}
+				else
+				{
+					const bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, GetCurrentNodeId(), GetPaintPins());
+					if ( !bChanged ) return;
+					mouseActionString = "Paint";
+				}
 			}
 		}
 		if ( m_bRightClick )	// Unpaint (i.e. erase)
 		{
-			const bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, BAD_NODEID, GetPaintPins());
-			if ( !bChanged ) return;
-			mouseActionString = "Erase";
+			if ( GetPaintLyrPref() )
+			{
+				const bool bChanged = m_board.ToggleLyrPref(layer, m_gridRow, m_gridCol, true);	// true ==> reset
+				if ( !bChanged ) return;
+				mouseActionString = "Clear pin layer preference";
+			}
+			else
+			{
+				const bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, BAD_NODEID, GetPaintPins());
+				if ( !bChanged ) return;
+				mouseActionString = "Erase";
+			}
 		}
 	}
 	else	// Set/Unset current nodeId from board
@@ -307,8 +325,8 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 	const int&			W			= m_board.GetGRIDPIXELS();
 	const int&			layer		= m_board.GetCurrentLayer();
 
-	if ( GetPaintPins() || GetPaintFlood() ) return;// Ignore mouse move while painting pins or flooding
-	if ( GetShiftKeyDown() ) return;				// Ignore mouse move while trying to group components
+	if ( GetPaintPins() || GetPaintFlood() || GetPaintLyrPref() ) return;	// Ignore mouse move while painting pins or flooding
+	if ( GetShiftKeyDown() ) return;										// Ignore mouse move while trying to group components
 
 	if ( m_board.GetCompEdit() && GetCurrentShapeId() != BAD_ID && m_bMouseClick )
 		centralWidget()->setCursor(Qt::ClosedHandCursor);
@@ -497,7 +515,7 @@ void MainWindow::mouseReleaseEvent(QMouseEvent* event)
 		ShowCurrentRectSize();
 		return RepaintSkipRouting();
 	}
-	if ( GetPaintPins() || GetPaintBoard() || GetPaintFlood() )
+	if ( GetPaintPins() || GetPaintBoard() || GetPaintFlood() || GetPaintLyrPref() )
 		centralWidget()->setCursor(Qt::CrossCursor);
 	else
 		centralWidget()->setCursor(Qt::OpenHandCursor);
@@ -587,13 +605,15 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
 		// Only one flag for paint-board/paint-pins/paint-flood must be true
 		switch( event->key() )
 		{
-			case Qt::Key_P:		if ( trackMode == TRACKMODE::OFF || compMode == COMPSMODE::OFF || GetPaintBoard() || GetPaintFlood() ) return;
+			case Qt::Key_P:		if ( trackMode == TRACKMODE::OFF || compMode == COMPSMODE::OFF || GetPaintBoard() || GetPaintFlood() || GetPaintLyrPref() ) return;
 								SetPaintPins(true);		centralWidget()->setCursor(Qt::CrossCursor); break;
-			case Qt::Key_Space:	if ( trackMode == TRACKMODE::OFF || GetPaintPins() || GetPaintFlood() ) return;
+			case Qt::Key_Space:	if ( trackMode == TRACKMODE::OFF || GetPaintPins() || GetPaintFlood() || GetPaintLyrPref() ) return;
 								SetPaintBoard(true);	centralWidget()->setCursor(Qt::CrossCursor); break;
-			case Qt::Key_F:		if ( trackMode == TRACKMODE::OFF || compMode == COMPSMODE::OFF || GetPaintBoard() || GetPaintPins() ) return;
+			case Qt::Key_F:		if ( trackMode == TRACKMODE::OFF || compMode == COMPSMODE::OFF || GetPaintBoard() || GetPaintPins() || GetPaintLyrPref() ) return;
 								if ( m_board.GetRoutingEnabled() ) return;
 								SetPaintFlood(true);	centralWidget()->setCursor(Qt::CrossCursor); break;
+			case Qt::Key_T:		if ( trackMode != TRACKMODE::PCB || m_board.GetLyrs() == 1 || GetPaintBoard() || GetPaintPins() || GetPaintFlood() ) return;
+								SetPaintLyrPref(true);	centralWidget()->setCursor(Qt::CrossCursor); break;
 			case Qt::Key_W:		WipeTracks();	break;
 		}
 	}
@@ -623,6 +643,7 @@ void MainWindow::keyReleaseEvent(QKeyEvent* event)
 			case Qt::Key_R:		SetDefiningRect(false);	break;
 			case Qt::Key_P:		SetPaintPins(false);	break;
 			case Qt::Key_F:		SetPaintFlood(false);	break;
+			case Qt::Key_T:		SetPaintLyrPref(false);	break;
 			case Qt::Key_Space:	SetPaintBoard(false);	break;
 		}
 		if ( GetCurrentTextId() != BAD_TEXTID && m_bMouseClick )

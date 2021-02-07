@@ -176,6 +176,76 @@ public:
 		}
 	}
 
+	bool ToggleLyrPref(int iLyr, int iRow, int iCol, bool bReset)
+	{
+		Element* p = Get(iLyr, iRow, iCol);
+		if ( !p->GetHasPin() || p->GetHasWire() ) return false;	// Want pins only.  Hole sharing wires could contradict each other, so ignore them
+
+		const int&	compId		= p->GetCompId();
+		const int	pinIndex	= p->GetPinIndex();
+		assert(compID != BAD_COMPID && pinIndex != BAD_PININDEX);
+
+		Component& comp = m_compMgr.GetComponentById(compId);
+
+		const uchar oldPref = comp.GetLayerPref(pinIndex);
+		uchar		newPref(LAYER_X);
+		if ( !bReset)
+		{
+			switch( comp.GetLayerPref(pinIndex) )
+			{
+				case LAYER_X:	newPref = ( iLyr == 0 ) ? LAYER_B : LAYER_T;	break;
+				case LAYER_B:	newPref = LAYER_T;	break;
+				case LAYER_T:	newPref = LAYER_B;	break;
+			}
+		}
+		const bool bChanged = ( newPref != oldPref );
+		if ( bChanged ) comp.SetLayerPref(pinIndex, newPref);
+		return bChanged;
+	}
+
+	int GetPerimeterCode(const Element* p)	// Helper for the GUI "blobs"
+	{
+		const bool		bDiagsOK	= GetDiagsMode() != DIAGSMODE::OFF;
+		const bool		bMinDiags	= GetDiagsMode() == DIAGSMODE::MIN;
+
+		int iCode = p->GetPerimeterCode(bDiagsOK, bMinDiags);	// 0 to 255
+
+		// Now modify perimeter code to handle pin layer preferences
+
+		if ( !p->GetHasPin() || p->GetHasWire() ) return iCode;
+
+		const int&	compId			= p->GetCompId();
+		const int	pinIndex		= p->GetPinIndex();
+		assert(compId != BAD_COMPID && pinIndex != BAD_PININDEX);
+		const int	iLayerPrefP		= m_compMgr.GetComponentById(compId).GetLayerPref(pinIndex);
+		const bool	bBottomLayer	= p->IsLayer0();	// true ==> p is on bottom layer
+
+		for (int iNbr = 0, iStep = bDiagsOK ? 1 : 2; iNbr < 8; iNbr += iStep)
+		{
+			if ( !ReadCodeBit(iNbr, iCode) ) continue;
+
+			const Element* q = p->GetNbr(iNbr);
+			if ( !q->GetHasPin() || q->GetHasWire() ) continue;
+
+			const int&	compId		= q->GetCompId();
+			const int	pinIndex	= q->GetPinIndex();
+			assert(compId != BAD_COMPID && pinIndex != BAD_PININDEX);
+
+			const int iLayerPrefQ	= m_compMgr.GetComponentById(compId).GetLayerPref(pinIndex);
+
+			bool bOK(true);
+			if ( bBottomLayer )
+				bOK = ( iLayerPrefP == LAYER_B ) || ( iLayerPrefQ == LAYER_B ) ||
+					  ( iLayerPrefP == LAYER_X && iLayerPrefQ == LAYER_X );
+			else
+				bOK = ( iLayerPrefP == LAYER_T ) || ( iLayerPrefQ == LAYER_T )||
+					  ( iLayerPrefP == LAYER_X && iLayerPrefQ == LAYER_X );
+
+			if ( !bOK ) ClearCodeBit(iNbr, iCode);
+		}
+		return iCode;
+	}
+
 	void GlueWires()	// Set pointers between wired grid elements
 	{
 		for (const auto& mapObj : m_compMgr.GetMapIdToComp())	// Iterate components

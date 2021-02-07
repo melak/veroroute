@@ -23,6 +23,16 @@
 #include "RectManager.h"
 #include "CompDefiner.h"
 
+
+// For 2-layer boards, the following says which is the prefered layer for a pin to make connections.
+// This only affects rendered connections between adjacent pins..
+// It does not affect connectivity or routing.
+// The joint preference of adjacent pins determines which layers will show the connection.
+const uchar	LAYER_X = 0;	// No preference
+const uchar	LAYER_B	= 1;	// Prefer bottom layer
+const uchar	LAYER_T	= 2;	// Prefer top layer
+
+
 class CompManager;
 
 // Class to describe a component.
@@ -48,6 +58,7 @@ public:
 		m_nodeIdPins.clear();
 		m_origIdPins1.clear();
 		m_origIdPins2.clear();
+		m_layerPrefs.clear();
 		m_pinLabels.clear();
 		m_pinAligns.clear();
 		m_shapes.clear();
@@ -131,6 +142,7 @@ public:
 		std::copy(o.m_nodeIdPins.begin(),	o.m_nodeIdPins.end(),	m_nodeIdPins.begin());
 		std::copy(o.m_origIdPins1.begin(),	o.m_origIdPins1.end(),	m_origIdPins1.begin());
 		std::copy(o.m_origIdPins2.begin(),	o.m_origIdPins2.end(),	m_origIdPins2.begin());
+		std::copy(o.m_layerPrefs.begin(),	o.m_layerPrefs.end(),	m_layerPrefs.begin());
 		std::copy(o.m_pinLabels.begin(),	o.m_pinLabels.end(),	m_pinLabels.begin());
 		std::copy(o.m_pinAligns.begin(),	o.m_pinAligns.end(),	m_pinAligns.begin());
 		CopyShapes( o );
@@ -141,6 +153,7 @@ public:
 		for (auto& o : m_nodeIdPins)  o = BAD_NODEID;
 		for (auto& o : m_origIdPins1) o = BAD_NODEID;
 		for (auto& o : m_origIdPins2) o = BAD_NODEID;
+		for (auto& o : m_layerPrefs)  o = LAYER_X;
 	}
 	bool IsEqual(const Component& o) const	// Compare persisted info
 	{
@@ -168,6 +181,7 @@ public:
 			bOK =  m_nodeIdPins[i]	== o.m_nodeIdPins[i]
 				&& m_origIdPins1[i]	== o.m_origIdPins1[i]
 				&& m_origIdPins2[i] == o.m_origIdPins2[i]
+				&& m_layerPrefs[i]	== o.m_layerPrefs[i]
 				&& m_pinLabels[i]	== o.m_pinLabels[i]
 				&& m_pinAligns[i]	== o.m_pinAligns[i];
 		}
@@ -184,6 +198,7 @@ public:
 		m_nodeIdPins.clear();
 		m_origIdPins1.clear();
 		m_origIdPins2.clear();
+		m_layerPrefs.clear();
 		m_pinLabels.clear();
 		m_pinAligns.clear();
 		m_shapes.clear();
@@ -209,6 +224,10 @@ public:
 		{
 			if ( iPinIndex < m_origIdPins2.size() ) m_origIdPins2[iPinIndex] = i;
 		}
+	}
+	void SetLayerPref(const size_t& iPinIndex, const uchar& iPref)
+	{
+		if ( iPinIndex < m_layerPrefs.size() ) m_layerPrefs[iPinIndex] = iPref;
 	}
 	void SetPinLabel(const size_t& iPinIndex, const std::string& s)
 	{
@@ -239,6 +258,7 @@ public:
 		m_nodeIdPins.clear();	m_nodeIdPins.resize(numPins, BAD_NODEID);
 		m_origIdPins1.clear();	m_origIdPins1.resize(numPins, BAD_NODEID);
 		m_origIdPins2.clear();	m_origIdPins2.resize(numPins, BAD_NODEID);
+		m_layerPrefs.clear();	m_layerPrefs.resize(numPins, LAYER_X);
 		m_pinLabels.clear();	m_pinLabels.resize(numPins, "");
 		m_pinAligns.clear();	m_pinAligns.resize(numPins, Qt::AlignHCenter);
 		SetDefaultPinLabels();
@@ -285,6 +305,11 @@ public:
 			return ( iPinIndex < m_origIdPins1.size() ) ? m_origIdPins1[iPinIndex] : badNodeId;
 		else
 			return ( iPinIndex < m_origIdPins2.size() ) ? m_origIdPins2[iPinIndex] : badNodeId;
+	}
+	const uchar&		GetLayerPref(const size_t& iPinIndex) const
+	{
+		static const uchar noPref(LAYER_X);
+		return ( iPinIndex < m_layerPrefs.size() ) ? m_layerPrefs[iPinIndex] : noPref;
 	}
 	const std::string&	GetPinLabel(const size_t& iPinIndex) const
 	{
@@ -573,6 +598,8 @@ public:
 			inStream.Load(m_origIdPins1[i]);
 			if ( inStream.GetVersion() >= VRT_VERSION_34 )
 				inStream.Load(m_origIdPins2[i]);	// Added in VRT_VERSION_34
+			if ( inStream.GetVersion() >= VRT_VERSION_45 )
+				inStream.Load(m_layerPrefs[i]);		// Added in VRT_VERSION_45
 			if ( inStream.GetVersion() >= VRT_VERSION_7 )
 				inStream.Load(m_pinLabels[i]);		// Added in VRT_VERSION_7
 			if ( inStream.GetVersion() >= VRT_VERSION_30 )
@@ -619,6 +646,7 @@ public:
 			outStream.Save(m_nodeIdPins[i]);
 			outStream.Save(m_origIdPins1[i]);
 			outStream.Save(m_origIdPins2[i]);	// Added in VRT_VERSION_34
+			outStream.Save(m_layerPrefs[i]);	// Added in VRT_VERSION_45
 			outStream.Save(m_pinLabels[i]);		// Added in VRT_VERSION_7
 			outStream.Save(m_pinAligns[i]);		// Added in VRT_VERSION_30
 		}
@@ -637,6 +665,7 @@ private:
 	std::vector<int>			m_nodeIdPins;		// NodeIds of the pins
 	std::vector<int>			m_origIdPins1;		// NodeIds under the pins BEFORE placement (1st layer)
 	std::vector<int>			m_origIdPins2;		// NodeIds under the pins BEFORE placement (2nd Layer)
+	std::vector<uchar>			m_layerPrefs;		// Prefered layers of the pins
 	std::vector<std::string>	m_pinLabels;		// Pin labels
 	std::vector<int>			m_pinAligns;		// Pin label alignments (Qt::AlignLeft,Qt::AlignRight,Qt::AlignHCenter)
 	std::vector<Shape>			m_shapes;			// For rendering components. Coordinates are RELATIVE to footprint centre.

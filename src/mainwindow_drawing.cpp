@@ -121,13 +121,12 @@ void MainWindow::PaintViaGrey(const GuiControl& guiCtrl, QPainter& painter, cons
 	painter.drawPoint(pC);
 }
 
-void MainWindow::PaintPadGrey(const GuiControl& guiCtrl, QPainter& painter, const QPointF& pC, const int& iPadWidthMIL)
+void MainWindow::PaintPadGrey(const GuiControl& guiCtrl, QPainter& painter, QPen& pen, const QPointF& pC, const int& iPadWidthMIL)
 {
 	assert(!m_bWriteGerber);
 
 	const int w		= ( iPadWidthMIL == 0 ) ? guiCtrl.GetPAD_MIL() : iPadWidthMIL;
 	const int width	= guiCtrl.GetHalfPixelsFromMIL( w ) << 1;
-	static QPen	pen(QColor(200,200,200,255), 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 	pen.setWidth(width);
 	painter.setPen(pen);
 	painter.setBrush(Qt::NoBrush);
@@ -677,7 +676,6 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	const COMPSMODE& compMode		= board.GetCompMode();
 	const bool&		 bVero			= board.GetVeroTracks();
 	const bool		 bDiagsOK		= ( board.GetDiagsMode() != DIAGSMODE::OFF );
-	const bool		 bMinDiags		= ( board.GetDiagsMode() == DIAGSMODE::MIN );
 	const bool		 bColor			= trackMode == TRACKMODE::COLOR;
 	const bool		 bMono			= trackMode == TRACKMODE::MONO;
 	const bool		 bPCB			= trackMode == TRACKMODE::PCB;
@@ -702,6 +700,10 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 	const int		groundFillColorId	= ( bPCB ) ? ( layer == 0 ? MY_LYR_BOT : MY_LYR_TOP ) : MY_BLACK;
 	const QColor	groundFillColor		= colorMgr.GetPixmapColor(groundFillColorId);
+
+	QPen penGry(QColor(200,200,200,255), 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+	QPen penTop(penGry);	penTop.setColor( colorMgr.GetPixmapColor(MY_LYR_TOP) );
+	QPen penBot(penGry);	penBot.setColor( colorMgr.GetPixmapColor(MY_LYR_BOT) );
 
 	colorMgr.SetSaturation( board.GetSaturation() );			// Must do this BEFORE making pixmaps
 	colorMgr.SetFillSaturation( board.GetFillSaturation() );	// Must do this BEFORE making pixmaps
@@ -865,19 +867,29 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				const int&		nodeId			= pC->GetNodeId();
 				const bool		bWire			= pC->GetHasWire();
 				const bool		bWireAsVia		= bWire && bWiresAsTracks;	// true ==> draw small via pad
-				const int		iPerimeterCode	= pC->GetPerimeterCode(bDiagsOK, bMinDiags);	// 0 to 255
+				const int		iPerimeterCode	= board.GetPerimeterCode(pC);	// 0 to 255
 				const bool		bVia			= pC->GetIsVia()  ||  bWireAsVia;
 				const bool		bPad			= pC->GetHasPin() && !bWireAsVia;
 				assert( !(bVia && bPad) );	// Can't be both a via and a regular pad
 
-				bool bCustomSize(false);
-				int iPadWidthMIL(0), iHoleWidthMIL(0);	// 0 ==> Not a custom size value
+				bool	bCustomSize(false);
+				int		iPadWidthMIL(0), iHoleWidthMIL(0);	// 0 ==> Not a custom size value
+				uchar	layerPref(LAYER_X);
+
 				if ( bPad && !bWire )
 				{
 					const int		 compId	= pC->GetCompId();
 					assert( compId != BAD_COMPID );
 					const Component& comp	= compMgr.GetComponentById( compId );
 					assert( comp.GetType() != COMP::INVALID );
+					if ( board.GetLyrs() == 2 )
+					{
+						const size_t	 pinIndex	= pC->GetPinIndex();
+						assert( pinIndex != BAD_PININDEX );
+						if ( nodeId != BAD_NODEID )
+							layerPref	= comp.GetLayerPref(pinIndex);
+					}
+
 					bCustomSize = comp.GetCustomPads();
 					if ( bCustomSize )
 					{
@@ -885,6 +897,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						iHoleWidthMIL	= comp.GetHoleWidth();
 					}
 				}
+				QPen& greyPen = ( layerPref == LAYER_X ) ? penGry :
+								( layerPref == LAYER_T ) ? penTop : penBot;
 
 				// Skip places with no NodeID assigned unless they are wire ends, or pins in Mono/PCB mode
 				if ( nodeId == BAD_NODEID && !bWire && !(bMonoPCB && bPad) ) continue;
@@ -1049,8 +1063,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					}
 					else if ( bDrawGrey )
 					{
-						if ( bVia ) PaintViaGrey(board, painter, pCentre);					// Draw grey via
-						if ( bPad ) PaintPadGrey(board, painter, pCentre, iPadWidthMIL);	// Draw grey pad
+						if ( bVia ) PaintViaGrey(board, painter, pCentre);							// Draw grey via
+						if ( bPad ) PaintPadGrey(board, painter, greyPen, pCentre, iPadWidthMIL);	// Draw "grey" pad
 					}
 				}
 				if ( bDirect )	// Draw track "blobs" and pads directly (PDF/Gerber)
@@ -1063,8 +1077,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					}
 					else if ( bDrawGrey )
 					{
-						if ( bVia ) PaintViaGrey(board, painter, pCentre);					// Draw grey via
-						if ( bPad ) PaintPadGrey(board, painter, pCentre, iPadWidthMIL);	// Draw grey pad
+						if ( bVia ) PaintViaGrey(board, painter, pCentre);							// Draw grey via
+						if ( bPad ) PaintPadGrey(board, painter, greyPen, pCentre, iPadWidthMIL);	// Draw "grey" pad
 					}
 				}
 			}
@@ -1227,12 +1241,11 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			const bool		 bCustomSize	= comp.GetCustomPads();
 			const int		 iPadWidthMIL	= bCustomSize ? comp.GetPadWidth()  : board.GetPAD_MIL();
 			const int		 iHoleWidthMIL	= bCustomSize ? comp.GetHoleWidth() : board.GetHOLE_MIL();
+			const bool		 blankWire		= bWire && comp.GetNodeId(0) == BAD_NODEID;
 
 			// Begin draw component pins ---------------------------------------------------------
-			if ( !m_bWriteGerber && ( compMode != COMPSMODE::OFF || ( bMonoPCB && bPlaced ) ) )
+			if ( !m_bWriteGerber && !blankWire && ( compMode != COMPSMODE::OFF || ( bMonoPCB && bPlaced ) ) ) 	// Skip blank wires
 			{
-				if ( bWire && comp.GetNodeId(0) == BAD_NODEID )	continue;	// Skip blank wires
-
 				painter.save();
 
 				QFont pinsFont = painter.font();	// Copy of current font
@@ -1247,7 +1260,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				else
 				{
 					penPlaced.setWidth(0);		// For pin labels
-					m_orangePen.setWidth(0);		// For pin labels and pins
+					m_orangePen.setWidth(0);	// For pin labels and pins
 					m_redPen.setWidth(0);		// For pin labels and pins
 					m_darkGreyPen.setWidth(0);	// For pins
 					painter.setPen(bFound ? m_orangePen : bPlaced ? m_darkGreyPen : m_redPen);

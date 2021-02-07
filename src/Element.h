@@ -34,9 +34,9 @@
 // each Element knows what it can be connected to without having
 // to go through the parent Grid object.
 
-const int			TRAX_COMPID = -2;		// The component manager member m_trax has this ID
-const int			BAD_COMPID  = -1;		// Invalid component ID
-const unsigned int	BAD_ROUTEID = UINT_MAX;	// Invalid route (i.e. track section) ID
+const int			TRAX_COMPID	= -2;		// The component manager member m_trax has this ID
+const int			BAD_COMPID	= -1;		// Invalid component ID
+const unsigned int	BAD_ROUTEID	= UINT_MAX;	// Invalid route (i.e. track section) ID
 const unsigned int	BAD_MH		= UINT_MAX;	// "Infinite" MH distance
 
 class Element;
