@@ -181,8 +181,8 @@ public:
 		Element* p = Get(iLyr, iRow, iCol);
 		if ( !p->GetHasPin() || p->GetHasWire() ) return false;	// Want pins only.  Hole sharing wires could contradict each other, so ignore them
 
-		const int&	compId		= p->GetCompId();
-		const int	pinIndex	= p->GetPinIndex();
+		const int&		compId		= p->GetCompId();
+		const size_t	pinIndex	= p->GetPinIndex();
 		assert(compID != BAD_COMPID && pinIndex != BAD_PININDEX);
 
 		Component& comp = m_compMgr.GetComponentById(compId);
@@ -214,8 +214,8 @@ public:
 
 		if ( !p->GetHasPin() || p->GetHasWire() ) return iCode;
 
-		const int&	compId			= p->GetCompId();
-		const int	pinIndex		= p->GetPinIndex();
+		const int&		compId		= p->GetCompId();
+		const size_t	pinIndex	= p->GetPinIndex();
 		assert(compId != BAD_COMPID && pinIndex != BAD_PININDEX);
 		const int	iLayerPrefP		= m_compMgr.GetComponentById(compId).GetLayerPref(pinIndex);
 		const bool	bBottomLayer	= p->IsLayer0();	// true ==> p is on bottom layer
@@ -227,8 +227,8 @@ public:
 			const Element* q = p->GetNbr(iNbr);
 			if ( !q->GetHasPin() || q->GetHasWire() ) continue;
 
-			const int&	compId		= q->GetCompId();
-			const int	pinIndex	= q->GetPinIndex();
+			const int&		compId		= q->GetCompId();
+			const size_t	pinIndex	= q->GetPinIndex();
 			assert(compId != BAD_COMPID && pinIndex != BAD_PININDEX);
 
 			const int iLayerPrefQ	= m_compMgr.GetComponentById(compId).GetLayerPref(pinIndex);

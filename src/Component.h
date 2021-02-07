@@ -308,7 +308,7 @@ public:
 	}
 	const uchar&		GetLayerPref(const size_t& iPinIndex) const
 	{
-		static const uchar noPref(LAYER_X);
+		static uchar noPref(LAYER_X);
 		return ( iPinIndex < m_layerPrefs.size() ) ? m_layerPrefs[iPinIndex] : noPref;
 	}
 	const std::string&	GetPinLabel(const size_t& iPinIndex) const
