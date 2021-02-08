@@ -79,12 +79,28 @@ bool InfoDialog::GetIsModified()
 
 void InfoDialog::keyPressEvent(QKeyEvent* event)
 {
+	// In tutorial mode, forward event to main window (apart from special cases)
+	bool bForwardToMainWindow = ui->plainTextEdit->isReadOnly();
+	switch( event->key() )
+	{
+		case Qt::Key_Tab:
+		case Qt::Key_N:
+		case Qt::Key_O:
+		case Qt::Key_M:
+		case Qt::Key_S:
+		case Qt::Key_Q:		bForwardToMainWindow = false;
+	}
+	if ( bForwardToMainWindow )
+		return m_pMainWindow->keyPressEvent(event);
 	m_pMainWindow->specialKeyPressEvent(event);
 	QDialog::keyPressEvent(event);
 }
 
 void InfoDialog::keyReleaseEvent(QKeyEvent* event)
 {
+	// In tutorial mode, forward event to main window
+	if ( ui->plainTextEdit->isReadOnly() )
+		return m_pMainWindow->keyReleaseEvent(event);
 	m_pMainWindow->commonKeyReleaseEvent(event);
 	QDialog::keyReleaseEvent(event);
 }

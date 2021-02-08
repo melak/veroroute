@@ -149,7 +149,7 @@ double Board::GetMIN_SEPARATION()	// Minimum separation (in mil) between a pad o
 		if ( pA->GetHasWire() )		iA = GetPAD_MIL();	// No custom pad size for wires
 		else if ( pA->GetHasPin() )
 		{
-			assert( pA->GetCompId() != BAD_COMPID );	// Non-wire part must use slot 0
+			// Non-wire part must use slot 0
 			const Component& comp	= m_compMgr.GetComponentById( pA->GetCompId() );
 			assert( comp.GetType() != COMP::INVALID );
 			iA = comp.GetCustomPads() ? comp.GetPadWidth() : GetPAD_MIL();
@@ -176,7 +176,7 @@ double Board::GetMIN_SEPARATION()	// Minimum separation (in mil) between a pad o
 			if ( pB->GetHasWire() )		iB = GetPAD_MIL();	// No custom pad size for wires
 			else if ( pB->GetHasPin() )
 			{
-				assert( pB->GetCompId() != BAD_COMPID );	// Non-wire part must use slot 0
+				// Non-wire part must use slot 0
 				const Component& comp	= m_compMgr.GetComponentById( pB->GetCompId() );
 				assert( comp.GetType() != COMP::INVALID );
 				iB = comp.GetCustomPads() ? comp.GetPadWidth() : GetPAD_MIL();
@@ -333,7 +333,6 @@ bool Board::SetNodeIdByUser(const int& lyr, const int& row, const int& col, cons
 
 		const size_t	pinIndex	= p->GetPinIndex();
 		const int&		compId		= p->GetCompId();
-		assert( compId != BAD_COMPID );
 		Component&		comp		= m_compMgr.GetComponentById( compId );
 		assert( comp.GetType() != COMP::INVALID );
 		assert( comp.GetType() != COMP::WIRE );	// Sanity check
@@ -357,7 +356,6 @@ bool Board::SetNodeIdByUser(const int& lyr, const int& row, const int& col, cons
 		int		compId;
 		p->GetSlotInfo(p->GetUsedSlot(), pinIndex, compId);
 
-		assert( compId != BAD_COMPID );
 		const Component& comp	= m_compMgr.GetComponentById( compId );
 		assert( comp.GetType() == COMP::WIRE );	// Sanity check
 		const int		 origId	= comp.GetOrigId(lyr, pinIndex);
@@ -399,7 +397,6 @@ bool Board::SetNodeIdByUser(const int& lyr, const int& row, const int& col, cons
 
 					if ( pW == nullptr ) continue;
 
-					assert( compId != BAD_COMPID );
 					Component& comp = m_compMgr.GetComponentById( compId );
 					assert( comp.GetType() == COMP::WIRE );	// Sanity check
 					const size_t otherPinIndex = ( pinIndex == 0 ) ? 1 : 0;
@@ -419,7 +416,6 @@ bool Board::SetNodeIdByUser(const int& lyr, const int& row, const int& col, cons
 		{
 			const size_t	pinIndex	= p->GetPinIndex();
 			const int&		compId		= p->GetCompId();
-			assert( compId != BAD_COMPID );
 			Component&		comp		= m_compMgr.GetComponentById( compId );
 			assert( comp.GetType() != COMP::INVALID );
 			assert( bPaintPins && comp.GetType() != COMP::WIRE );	// Sanity check
@@ -451,7 +447,6 @@ void Board::FloodNodeId(const int& nodeId)
 			int compId;
 			p->GetSlotInfo(p->GetUsedSlot(), pinIndex, compId);
 
-			assert( compId != BAD_COMPID );
 			const Component& comp	= m_compMgr.GetComponentById( compId );
 			assert( comp.GetType() == COMP::WIRE );	// Sanity check
 			const int		 origId	= comp.GetOrigId(lyr, pinIndex);
@@ -582,7 +577,6 @@ void Board::SetSolder(const int& nodeId, const int& col, const bool& bVertical)
 					rowPins++;
 				else
 				{
-					assert( pC->GetCompId() != BAD_COMPID );
 					const Component& comp = m_compMgr.GetComponentById( pC->GetCompId() );
 					assert( comp.GetType() != COMP::INVALID );
 					if ( comp.GetType() == COMP::PAD )
@@ -597,7 +591,6 @@ void Board::SetSolder(const int& nodeId, const int& col, const bool& bVertical)
 					rowPins++;
 				else
 				{
-					assert( pR->GetCompId() != BAD_COMPID );
 					const Component& comp = m_compMgr.GetComponentById( pR->GetCompId() );
 					assert( comp.GetType() != COMP::INVALID );
 					if ( comp.GetType() == COMP::PAD )

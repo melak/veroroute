@@ -74,7 +74,6 @@ int Board::AddComponent(int iRow, int iCol, const Component& tmp, bool bDoPlace)
 	const int compId = m_compMgr.CreateComp(tmp, GetUsePCBshapes() );	// CompMgr makes a copy of tmp and returns its compId
 	if ( compId == INT_MAX ) return BAD_COMPID;		// Reached component limit !!!
 
-	assert( compId != BAD_COMPID );
 	Component& comp = m_compMgr.GetComponentById( compId );
 	assert( comp.GetType() != COMP::INVALID );
 
@@ -501,7 +500,6 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 				int		tmpCompId;
 				pW->GetSlotInfo(iSlot, iPinIndex, tmpCompId);
 				if ( iPinIndex == BAD_PININDEX ) continue;
-				assert( tmpCompId != BAD_COMPID );
 				Component& comp = m_compMgr.GetComponentById( tmpCompId );
 				assert( comp.GetType() == COMP::WIRE );
 				comp.SetNodeId(iPinIndex, wireNodeId);
@@ -638,7 +636,6 @@ bool Board::TakeOff(Component& comp)
 				{
 					pW->GetSlotInfo(iSlot, iPinIndex, tmpCompId);
 					if ( iPinIndex == BAD_PININDEX ) continue;
-					assert( tmpCompId != BAD_COMPID );
 					const Component& comp = m_compMgr.GetComponentById( tmpCompId );
 					assert( comp.GetType() == COMP::WIRE );
 					origId0 = comp.GetOrigId(0, iPinIndex);
@@ -659,7 +656,6 @@ bool Board::TakeOff(Component& comp)
 					{
 						pW->GetSlotInfo(iSlot, iPinIndex, tmpCompId);
 						if ( iPinIndex == BAD_PININDEX ) continue;
-						assert( tmpCompId != BAD_COMPID );
 						Component& comp = m_compMgr.GetComponentById( tmpCompId );
 						assert( comp.GetType() == COMP::WIRE );
 						comp.SetNodeId(iPinIndex, BAD_NODEID);
@@ -765,7 +761,6 @@ bool Board::ConfirmDestroyUserComps()	// returns false if user-group is empty or
 	m_groupMgr.GetUserCompIds(userCompIds);
 	for (const auto& compId : userCompIds)
 	{
-		assert( compId != BAD_COMPID );
 		switch( m_compMgr.GetComponentById( compId ).GetType() )
 		{
 			case COMP::VERO_NUMBER:
@@ -786,7 +781,6 @@ void Board::DestroyUserComps()	// Destroy components in the user-group
 	m_groupMgr.GetUserCompIds(userCompIds);
 	for (const auto& compId : userCompIds)
 	{
-		assert( compId != BAD_COMPID );
 		Component& comp = m_compMgr.GetComponentById( compId );
 		assert( comp.GetType() != COMP::INVALID );
 		DestroyComponent( comp );
@@ -937,7 +931,6 @@ void Board::CopyComps(const std::list<int>& compIds)	// Make a blank copy of the
 	if ( bMakeNewGroup && newGroupId == INT_MAX ) return;	// Fail if we've reached the max allowed groupId
 	for (auto& compId : compIds)
 	{
-		assert( compId != BAD_COMPID );
 		const Component&	comp		= m_compMgr.GetComponentById( compId );
 		assert( comp.GetType() != COMP::INVALID );
 		const int			newCompId	= CreateComponent(-1, -1, comp.GetType(), &comp);	// Create blank copy of the component and get its compId
@@ -1000,7 +993,6 @@ bool Board::MoveComps(const std::list<int>& compIds, const int& deltaRow, const 
 	// Take off all comps, and finally the trax comp. Move them but keep them floating.
 	for (auto& compId : compIds)
 	{
-		assert( compId != BAD_COMPID );
 		Component& comp = m_compMgr.GetComponentById( compId );
 		assert( comp.GetType() != COMP::INVALID );
 		int newRow = comp.GetRow() + deltaRow;
@@ -1029,7 +1021,6 @@ bool Board::MoveComps(const std::list<int>& compIds, const int& deltaRow, const 
 	{
 		for (auto& compId : compIds)
 		{
-			assert( compId != BAD_COMPID );
 			Component& comp = m_compMgr.GetComponentById( compId );
 			assert( comp.GetType() != COMP::INVALID );
 			PutDown(comp);
@@ -1080,7 +1071,6 @@ void Board::RotateComps(const std::list<int>& compIds, const bool& bCW)	// Rotat
 	// Take off all comps, and finally the trax comp. Move and rotate them but keep them floating.
 	for (auto& compId : compIds)
 	{
-		assert( compId != BAD_COMPID );
 		Component& comp	= m_compMgr.GetComponentById( compId );
 		assert( comp.GetType() != COMP::INVALID );
 		TakeOff(comp);
@@ -1130,7 +1120,6 @@ void Board::RotateComps(const std::list<int>& compIds, const bool& bCW)	// Rotat
 	{
 		for (auto& compId : compIds)
 		{
-			assert( compId != BAD_COMPID );
 			Component& comp = m_compMgr.GetComponentById( compId );
 			assert( comp.GetType() != COMP::INVALID );
 			PutDown(comp);
@@ -1150,8 +1139,8 @@ void Board::FixCorruption()
 
 	for (auto& compId : badCompIds)
 	{
-		assert( compId != BAD_COMPID );
 		Component& comp = m_compMgr.GetComponentById( compId );
+		assert( comp.GetType() == COMP::INVALID );
 		DestroyComponent(comp);
 	}
 
@@ -1188,7 +1177,6 @@ Rect Board::GetFootprintBounds(const std::list<int>& compIds)
 	Rect bounding;
 	for (auto& compId : compIds)
 	{
-		assert( compId != BAD_COMPID );
 		const Component& comp	= m_compMgr.GetComponentById( compId );
 		assert( comp.GetType() != COMP::INVALID );
 		bounding |= comp.GetFootprintRect();

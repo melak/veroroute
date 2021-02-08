@@ -205,14 +205,13 @@ public:
 
 	int GetPerimeterCode(const Element* p)	// Helper for the GUI "blobs"
 	{
-		const bool		bDiagsOK	= GetDiagsMode() != DIAGSMODE::OFF;
-		const bool		bMinDiags	= GetDiagsMode() == DIAGSMODE::MIN;
+		const bool	bDiagsOK	= GetDiagsMode() != DIAGSMODE::OFF;
+		const bool	bMinDiags	= GetDiagsMode() == DIAGSMODE::MIN;
 
 		int iCode = p->GetPerimeterCode(bDiagsOK, bMinDiags);	// 0 to 255
 
-		// Now modify perimeter code to handle pin layer preferences
-
-		if ( !p->GetHasPin() || p->GetHasWire() ) return iCode;
+		// For a 2-layer board, modify perimeter code to handle pin layer preferences
+		if ( GetLyrs() == 1 || !p->GetHasPin() || p->GetHasWire() ) return iCode;
 
 		const bool		bBottomLayer	= p->IsLayer0();	// true ==> p is on bottom layer
 		const int&		compId			= p->GetCompId();		assert(compId != BAD_COMPID);
@@ -454,7 +453,6 @@ public:
 	Component& GetUserComponent()	// The currently selected component
 	{
 		assert( m_groupMgr.GetNumUserComps() == 1 );	// Should only have one component selected
-		assert( m_groupMgr.GetUserCompId() != BAD_COMPID );
 		Component& comp = m_compMgr.GetComponentById( m_groupMgr.GetUserCompId() );
 		assert( comp.GetType() != COMP::INVALID );
 		return comp;

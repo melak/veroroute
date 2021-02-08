@@ -483,6 +483,7 @@ public:
 	{
 		switch( GetType() )
 		{
+			case COMP::INVALID:
 			case COMP::VERO_NUMBER:
 			case COMP::VERO_LETTER:
 			case COMP::MARK:
