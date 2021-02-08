@@ -189,9 +189,9 @@ public:
 
 		const uchar oldPref = comp.GetLayerPref(pinIndex);
 		uchar		newPref(LAYER_X);
-		if ( !bReset)
+		if ( !bReset )
 		{
-			switch( comp.GetLayerPref(pinIndex) )
+			switch( oldPref )
 			{
 				case LAYER_X:	newPref = ( iLyr == 0 ) ? LAYER_B : LAYER_T;	break;
 				case LAYER_B:	newPref = LAYER_T;	break;
@@ -214,11 +214,10 @@ public:
 
 		if ( !p->GetHasPin() || p->GetHasWire() ) return iCode;
 
-		const int&		compId		= p->GetCompId();
-		const size_t	pinIndex	= p->GetPinIndex();
-		assert(compId != BAD_COMPID && pinIndex != BAD_PININDEX);
-		const int	iLayerPrefP		= m_compMgr.GetComponentById(compId).GetLayerPref(pinIndex);
-		const bool	bBottomLayer	= p->IsLayer0();	// true ==> p is on bottom layer
+		const bool		bBottomLayer	= p->IsLayer0();	// true ==> p is on bottom layer
+		const int&		compId			= p->GetCompId();		assert(compId != BAD_COMPID);
+		const size_t	pinIndex		= p->GetPinIndex();		assert(pinIndex != BAD_PININDEX);
+		const int		iLayerPrefP		= m_compMgr.GetComponentById(compId).GetLayerPref(pinIndex);
 
 		for (int iNbr = 0, iStep = bDiagsOK ? 1 : 2; iNbr < 8; iNbr += iStep)
 		{
@@ -227,20 +226,13 @@ public:
 			const Element* q = p->GetNbr(iNbr);
 			if ( !q->GetHasPin() || q->GetHasWire() ) continue;
 
-			const int&		compId		= q->GetCompId();
-			const size_t	pinIndex	= q->GetPinIndex();
-			assert(compId != BAD_COMPID && pinIndex != BAD_PININDEX);
+			const int&		compId		= q->GetCompId();		assert(compId != BAD_COMPID);
+			const size_t	pinIndex	= q->GetPinIndex();		assert(pinIndex != BAD_PININDEX);
+			const int		iLayerPrefQ	= m_compMgr.GetComponentById(compId).GetLayerPref(pinIndex);
 
-			const int iLayerPrefQ	= m_compMgr.GetComponentById(compId).GetLayerPref(pinIndex);
-
-			bool bOK(true);
-			if ( bBottomLayer )
-				bOK = ( iLayerPrefP == LAYER_B ) || ( iLayerPrefQ == LAYER_B ) ||
-					  ( iLayerPrefP == LAYER_X && iLayerPrefQ == LAYER_X );
-			else
-				bOK = ( iLayerPrefP == LAYER_T ) || ( iLayerPrefQ == LAYER_T )||
-					  ( iLayerPrefP == LAYER_X && iLayerPrefQ == LAYER_X );
-
+			const bool bOK = ( iLayerPrefP == LAYER_X && iLayerPrefQ == LAYER_X ) ||
+							 ( bBottomLayer ? ( iLayerPrefP == LAYER_B || iLayerPrefQ == LAYER_B )
+											: ( iLayerPrefP == LAYER_T || iLayerPrefQ == LAYER_T ) );
 			if ( !bOK ) ClearCodeBit(iNbr, iCode);
 		}
 		return iCode;
