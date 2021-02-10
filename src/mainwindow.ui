@@ -62,6 +62,20 @@
      <addaction name="actionImportTango"/>
      <addaction name="actionImportOrcad"/>
     </widget>
+    <widget class="QMenu" name="menuExport_as_Gerber_1_Layer">
+     <property name="title">
+      <string>Export as Gerber (1-Layer)</string>
+     </property>
+     <addaction name="actionWrite_Gerber1_in"/>
+     <addaction name="actionWrite_Gerber1_mm"/>
+    </widget>
+    <widget class="QMenu" name="menuExport_as_Gerber_2_Layer">
+     <property name="title">
+      <string>Export as Gerber (2-Layer)</string>
+     </property>
+     <addaction name="actionWrite_Gerber2_in"/>
+     <addaction name="actionWrite_Gerber2_mm"/>
+    </widget>
     <addaction name="actionNew"/>
     <addaction name="actionOpen"/>
     <addaction name="actionMerge"/>
@@ -73,8 +87,8 @@
     <addaction name="separator"/>
     <addaction name="actionWrite_PDF"/>
     <addaction name="actionWrite_PNG"/>
-    <addaction name="actionWrite_Gerber"/>
-    <addaction name="actionWrite_Gerber2"/>
+    <addaction name="menuExport_as_Gerber_1_Layer"/>
+    <addaction name="menuExport_as_Gerber_2_Layer"/>
     <addaction name="separator"/>
     <addaction name="actionClearRecent"/>
     <addaction name="separator"/>
@@ -1167,16 +1181,6 @@
     <string>Wire Options</string>
    </property>
   </action>
-  <action name="actionWrite_Gerber">
-   <property name="text">
-    <string>Export as Gerber (1-layer)</string>
-   </property>
-  </action>
-  <action name="actionWrite_Gerber2">
-   <property name="text">
-    <string>Export as Gerber (2-Layer)</string>
-   </property>
-  </action>
   <action name="actionClearRecent">
    <property name="text">
     <string>Clear recent files list</string>
@@ -1236,6 +1240,29 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+F</string>
+   </property>
+  </action>
+  <action name="actionWrite_Gerber1_in">
+   <property name="text">
+    <string>Imperial units (inches)</string>
+   </property>
+   <property name="font">
+    <font/>
+   </property>
+  </action>
+  <action name="actionWrite_Gerber1_mm">
+   <property name="text">
+    <string>Metric units (mm)</string>
+   </property>
+  </action>
+  <action name="actionWrite_Gerber2_in">
+   <property name="text">
+    <string>Imperial units (inches)</string>
+   </property>
+  </action>
+  <action name="actionWrite_Gerber2_mm">
+   <property name="text">
+    <string>Metric units (mm)</string>
    </property>
   </action>
  </widget>

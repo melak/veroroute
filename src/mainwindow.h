@@ -130,8 +130,11 @@ public slots:
 	void ImportOrcad();
 	void WritePDF();
 	void WritePNG();
-	void WriteGerber(const bool& bTwoLayerGerber = false);
-	void WriteGerber2() { WriteGerber(true); }
+	void WriteGerber(const bool& bTwoLayerGerber, const bool& bMetric);
+	void WriteGerber1in()	{ WriteGerber(false, false); }
+	void WriteGerber1mm()	{ WriteGerber(false, true); }
+	void WriteGerber2in()	{ WriteGerber(true, false); }
+	void WriteGerber2mm()	{ WriteGerber(true, true); }
 	void ClearRecentFiles();
 	void Quit();
 	// View menu items

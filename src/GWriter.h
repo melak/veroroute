@@ -75,7 +75,7 @@ public:
 	~GStream()	{ Close(); Clear(); }
 	void Clear();
 	void Close();
-	bool Open(const char* fileName, const GFILE& eType, const Board& board, const bool& bVias, const QString& UTC);
+	bool Open(const char* fileName, const GFILE& eType, const bool& bMetric, const Board& board, const bool& bVias, const QString& UTC);
 	void Drill(const QPoint& pF);
 	void SetPolarity(const GPOLARITY& ePolarity, bool bCheckOK = true);
 	void AddPad(const QPointF& pF, const GPEN& ePen, const int& w = 0);				// Add to m_pads buffer
@@ -113,6 +113,7 @@ private:
 	void GetQPoint(const QPointF& in, QPoint& out) const;		// Convert float to integer
 	void GetQPolygon(const QPolygonF& in, QPolygon& out) const;	// Convert float to integer
 	std::string MilToInch(const int& iMil, const bool& bLZ = false) const;
+	std::string MilToMM(const int& iMil, const bool& bLZ = false) const;
 	// Data
 	GFILE				m_eType		= GFILE::GBL;	// GKO, GBL, GBS, GTL, GTS, GTO
 	GPEN				m_ePen		= GPEN::NONE;
@@ -123,6 +124,7 @@ private:
 	bool				m_bVias		= false;		// true ==> the board has vias
 	int					m_iLastX	= INT_MAX;		// Last X used
 	int					m_iLastY	= INT_MAX;		// Last Y used
+	bool				m_bMetric	= false;		// true ==> use mm as units instead of inches
 	// Buffers for optimising data before writing to file
 	CurveList			m_pads;		// Pads
 	CurveList			m_viapads;	// Via pads
@@ -140,7 +142,7 @@ class GWriter
 public:
 	GWriter()	{}
 	~GWriter()	{ Close(); }
-	bool		Open(const char* fileName, const Board& board, const bool& bVias, const bool& bTwoLayerGerber);
+	bool		Open(const char* fileName, const Board& board, const bool& bVias, const bool& bTwoLayerGerber, const bool& bMetric);
 	void		Close();
 	GStream&	GetStream(const GFILE& eType);
 private:

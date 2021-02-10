@@ -38,6 +38,7 @@ void GStream::Clear()
 	m_bVias		= false;
 	m_iLastX	= INT_MAX;
 	m_iLastY	= INT_MAX;
+	m_bMetric	= false;
 	ClearBuffers(false);	// false ==> skip GetOK() checks
 }
 void GStream::Close()
@@ -46,14 +47,14 @@ void GStream::Close()
 	switch( m_eType )
 	{
 		case GFILE::DRL:	m_os << "M30";	EndLine();	return m_os.close();	// End of program
-		default:			m_os << "M00";	EndLine();							// Program stop
-							m_os << "M02";	EndLine();	return m_os.close();	// End of file
+		default:			m_os << "M02";	EndLine();	return m_os.close();	// End of file
 	}
 }
-bool GStream::Open(const char* fileName, const GFILE& eType, const Board& board, const bool& bVias, const QString& UTC)
+bool GStream::Open(const char* fileName, const GFILE& eType, const bool& bMetric, const Board& board, const bool& bVias, const QString& UTC)
 {
 	Clear();
 	m_eType		= eType;
+	m_bMetric	= bMetric;
 	m_pBoard	= &board;
 	m_bVias		= bVias;
 
@@ -83,7 +84,7 @@ void GStream::WriteHeader(const QString& UTC)	// Write header for current stream
 	std::string	strLayer	= std::string("Layer: ");
 	std::string	strProgram	= std::string("VeroRoute V") + std::string(szVEROROUTE_VERSION);
 	std::string	strUTC		= UTC.toStdString();
-	std::string	strGen		= std::string("Gerber Generator version 0.6");
+	std::string	strGen		= std::string("Gerber Generator version 0.7");
 	switch(m_eType)
 	{
 		case GFILE::GKO: strLayer += "BoardOutline";			break;
@@ -102,10 +103,16 @@ void GStream::WriteHeader(const QString& UTC)	// Write header for current stream
 
 	if ( m_eType == GFILE::DRL )
 	{
-		m_os << "M48";				EndLine();	// M48 is start of header
-		m_os << "INCH,LZ,00.0000";	EndLine();	// Inches.  Leading zeros INCLUDED.  2 integer and 4 decimal
+		m_os << "M48";	EndLine();	// M48 is start of header
+		if ( m_bMetric )
+		{
+			m_os << "METRIC,LZ,0000.000000";	EndLine();	// Millimetres.  Leading zeros INCLUDED.  4 integer and 6 decimal
+		}
+		else
+		{
+			m_os << "INCH,LZ,00.0000";			EndLine();	// Inches.  Leading zeros INCLUDED.  2 integer and 4 decimal
+		}
 		MakeDrills();
-	//	m_os << "M95";	EndLine();							// M95 End of the header
 		m_os << "%";	EndLine();							// Rewind Stop.  Often used instead of M95.
 		m_os << ( XNC_FORMAT ? "G05" : "G81" );	EndLine();	// Turn on drill
 		m_os << "G90";	EndLine();							// Absolute mode
@@ -113,12 +120,20 @@ void GStream::WriteHeader(const QString& UTC)	// Write header for current stream
 	else
 	{
 		Comment("Scale: 100 percent, Rotated: No, Reflected: No");
-		Comment("Dimensions in inches");
-		Comment("Leading zeros omitted, Absolute positions, 2 integer and 4 decimal");
-		m_os << "%MOIN*%"		<< std::endl;	// MOIN/MOMM ==> Inches/mm
-		m_os << "%FSLAX24Y24*%"	<< std::endl;
-		m_os << "G90";		EndLine();			// G90/G91   ==> Absolute/relative coords
-		m_os << "G70D02";	EndLine();			// G70/G71   ==> in/mm
+		if ( m_bMetric )
+		{
+			Comment("Dimensions in mm");
+			Comment("Leading zeros omitted, Absolute positions, 4 integer and 6 decimal");
+			m_os << "%MOMM*%"		<< std::endl;	// MOMM ==> Millimetres
+			m_os << "%FSLAX46Y46*%"	<< std::endl;
+		}
+		else
+		{
+			Comment("Dimensions in inches");
+			Comment("Leading zeros omitted, Absolute positions, 2 integer and 4 decimal");
+			m_os << "%MOIN*%"		<< std::endl;	// MOIN ==> Inches
+			m_os << "%FSLAX24Y24*%"	<< std::endl;
+		}
 		MakeApertures();
 	}
 }
@@ -145,8 +160,16 @@ void GStream::MakeDrills()
 		if ( o.m_iCode < 10 ) codeStr += "0";	// Add leading zero
 		codeStr += std::to_string(o.m_iCode);
 
-		m_os << ";" << o.m_comment << MilToInch(o.m_iWidth, bLZ) << " INCH";	EndLine();
-		m_os << codeStr << "C" << MilToInch(o.m_iWidth, bLZ);	EndLine();
+		if ( m_bMetric )
+		{
+			m_os << ";" << o.m_comment << MilToMM(o.m_iWidth, bLZ) << " MM";	EndLine();
+			m_os << codeStr << "C" << MilToMM(o.m_iWidth, bLZ);	EndLine();
+		}
+		else
+		{
+			m_os << ";" << o.m_comment << MilToInch(o.m_iWidth, bLZ) << " INCH";	EndLine();
+			m_os << codeStr << "C" << MilToInch(o.m_iWidth, bLZ);	EndLine();
+		}
 	}
 }
 void GStream::MakeApertures()	// Make "pens" for current stream
@@ -211,7 +234,10 @@ void GStream::MakeApertures()	// Make "pens" for current stream
 			std::string str = std::string("Aperture ") + codeStr + o.m_comment;
 			Comment( str.c_str() );
 		}
-		m_os << "%AD" << codeStr << "C," << MilToInch(o.m_iWidth) << "*%" << std::endl;
+		if ( m_bMetric )
+			m_os << "%AD" << codeStr << "C," << MilToMM(o.m_iWidth) << "*%" << std::endl;
+		else
+			m_os << "%AD" << codeStr << "C," << MilToInch(o.m_iWidth) << "*%" << std::endl;
 	}
 }
 void GStream::LinearInterpolation()
@@ -433,9 +459,7 @@ void GStream::Flash(const QPoint& p)
 void GStream::Move(const QPoint& p)
 {
 	if ( !m_os.is_open() || m_eType == GFILE::DRL ) return;
-	const int& ix = p.x();
-	const int& iy = p.y();
-	if ( m_iLastX == ix && m_iLastY == iy ) return;
+	if ( m_iLastX == p.x() && m_iLastY == p.y() ) return;
 	WriteXY(p, FULL_LINE);
 	m_os << "D02";		// Always specify D02 code
 	EndLine();
@@ -443,9 +467,7 @@ void GStream::Move(const QPoint& p)
 void GStream::Draw(const QPoint& p)
 {
 	if ( !m_os.is_open() || m_eType == GFILE::DRL ) return;
-	const int& ix = p.x();
-	const int& iy = p.y();
-	if ( m_iLastX == ix && m_iLastY == iy ) return;
+	if ( m_iLastX == p.x() && m_iLastY == p.y() ) return;
 	WriteXY(p, FULL_LINE);
 	m_os << "D01";		// Always specify D01 code
 	EndLine();
@@ -458,31 +480,50 @@ void GStream::Line(const QPoint& pA, const QPoint& pB)
 void GStream::WriteXY(const QPoint& p,  const bool& bFullLine)
 {
 	if ( !m_os.is_open() ) return;
-	const int& ix = p.x();
-	const int& iy = p.y();
+	const int ix = ( m_bMetric ) ? ( 2540 * p.x() ) : p.x();	// metric ==> convert mil to nanometres
+	const int iy = ( m_bMetric ) ? ( 2540 * p.y() ) : p.y();	// metric ==> convert mil to nanometres
 	if ( bFullLine || m_iLastX != ix ) m_os << "X" << ix;
-	m_iLastX = ix;
 	if ( bFullLine || m_iLastY != iy ) m_os << "Y" << iy;
-	m_iLastY = iy;
+	m_iLastX = p.x();
+	m_iLastY = p.y();
 }
-void GStream::WriteDrillOrdinate(const int& iDeciMils)	// Writes inches in format AABBBB
+void GStream::WriteDrillOrdinate(const int& iDeciMils)
 {
 	if ( !m_os.is_open() || m_eType != GFILE::DRL ) return;
-	const int iAbs = abs(iDeciMils);
-	assert( iAbs <= 999999 );	// 999999 ==> 99.9999 inches
-	m_os << ( iDeciMils >= 0 ? "+" : "-" );	// Write sign	
-	// Add leading zeros
-	if ( iAbs < 100000 ) m_os << "0";
-	if ( iAbs <  10000 ) m_os << "0";
-	if ( iAbs <   1000 ) m_os << "0";
-	if ( iAbs <    100 ) m_os << "0";
-	if ( iAbs <     10 ) m_os << "0";
-	m_os << iAbs;
+	m_os << ( iDeciMils >= 0 ? "+" : "-" );	// Write sign
+	if ( m_bMetric )	// Writes mm in format AAAABBBBBB
+	{
+		// Millimetres in 4.6 format, 1 deciMil = 0000.002540 mm
+		const int iAbs = abs(2540 * iDeciMils);	// Absolute value in nanometres
+		assert( iAbs <= 9999999999 );			// 9999999999 ==> 9999.999999 mm
+		if ( iAbs < 1000000000 ) m_os << "0";
+		if ( iAbs <  100000000 ) m_os << "0";
+		if ( iAbs <   10000000 ) m_os << "0";
+		if ( iAbs <    1000000 ) m_os << "0";
+		if ( iAbs <     100000 ) m_os << "0";
+		if ( iAbs <      10000 ) m_os << "0";
+		if ( iAbs <       1000 ) m_os << "0";
+		if ( iAbs <        100 ) m_os << "0";
+		if ( iAbs <         10 ) m_os << "0";
+		m_os << iAbs;
+	}
+	else			// Writes inches in format AABBBB
+	{
+		// Inches in 2.4 format, 1 deciMil = 00.0001 inches
+		const int iAbs = abs(iDeciMils);		// Absolute value in deciMil
+		assert( iAbs <= 999999 );				// 999999 ==> 99.9999 inches
+		if ( iAbs < 100000 ) m_os << "0";
+		if ( iAbs <  10000 ) m_os << "0";
+		if ( iAbs <   1000 ) m_os << "0";
+		if ( iAbs <    100 ) m_os << "0";
+		if ( iAbs <     10 ) m_os << "0";
+		m_os << iAbs;
+	}
 }
 std::string GStream::MilToInch(const int& iMil, const bool& bLZ) const	// Get inches in format AA.BBBB (for drills and apertures)
 {
 	std::string str;
-	const int i = iMil * 10;
+	const int i = iMil * 10;			// deciMil
 	assert( i >= 0 && i <= 999999 );	// 999999 ==> 99.9999 inches
 	const int inches = i / 10000;
 	const int remain = i - 10000 * inches;
@@ -493,6 +534,26 @@ std::string GStream::MilToInch(const int& iMil, const bool& bLZ) const	// Get in
 	if ( remain < 100  ) str += "0";
 	if ( remain < 10   ) str += "0";
 	str += std::to_string(remain);
+	return str;
+}
+std::string GStream::MilToMM(const int& iMil, const bool& bLZ) const	// Get mm in format AAAA.BBBBBB (for drills and apertures)
+{
+	// Avoid integer overflow by working in 4.4 format and appending two trailing zeros to give 4.6 format
+	std::string str;
+	const int i = iMil * 254;					// deciMicrons
+	assert( i >= 0 && i <= 99999999 );			// 99999999 ==> 9999.9999 mm
+	const int mm	 = i / 10000;
+	const int remain = i - 10000 * mm;
+	assert( mm < 10000 && remain < 10000 );		// i.e. AAAA.BBBB
+	if ( bLZ && mm < 1000 ) str += "0";			// bLZ ==> Add leading zeros
+	if ( bLZ && mm < 100  ) str += "0";			// bLZ ==> Add leading zeros
+	if ( bLZ && mm < 10   ) str += "0";			// bLZ ==> Add leading zeros
+	str += std::to_string(mm) + ".";
+	if ( remain < 1000   ) str += "0";
+	if ( remain < 100    ) str += "0";
+	if ( remain < 10     ) str += "0";
+	str += std::to_string(remain);
+	str += "00";	// Final two trailing zeros	// i.e. AAAA.BBBB00
 	return str;
 }
 void GStream::GetQPoint(const QPointF& in, QPoint& out) const
@@ -511,7 +572,7 @@ void GStream::GetQPolygon(const QPolygonF& in, QPolygon& out) const
 }
 
 // Wrapper for handling a set of Gerber files
-bool GWriter::Open(const char* fileName, const Board& board, const bool& bVias, const bool& bTwoLayerGerber)
+bool GWriter::Open(const char* fileName, const Board& board, const bool& bVias, const bool& bTwoLayerGerber, const bool& bMetric)
 {
 	QDateTime	local(QDateTime::currentDateTime());
 	QString		UTC = local.toTimeSpec(Qt::UTC).toString(Qt::ISODate);
@@ -523,7 +584,7 @@ bool GWriter::Open(const char* fileName, const Board& board, const bool& bVias, 
 		if ( GFILE(i) == GFILE::GTL && !bTwoLayerGerber ) continue;
 		if ( GFILE(i) == GFILE::GTS && !bTwoLayerGerber ) continue;
 		if ( GFILE(i) == GFILE::GBO ) continue;	// Don't write this layer yet
-		bOK = m_os[i].Open(fileName, GFILE(i), board, bVias, UTC);
+		bOK = m_os[i].Open(fileName, GFILE(i), bMetric, board, bVias, UTC);
 	}
 	if ( !bOK ) Close();
 	return bOK;

@@ -132,8 +132,10 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	QObject::connect(ui->actionImportOrcad,				SIGNAL(triggered()), this, SLOT(ImportOrcad()));
 	QObject::connect(ui->actionWrite_PDF,				SIGNAL(triggered()), this, SLOT(WritePDF()));
 	QObject::connect(ui->actionWrite_PNG,				SIGNAL(triggered()), this, SLOT(WritePNG()));
-	QObject::connect(ui->actionWrite_Gerber,			SIGNAL(triggered()), this, SLOT(WriteGerber()));
-	QObject::connect(ui->actionWrite_Gerber2,			SIGNAL(triggered()), this, SLOT(WriteGerber2()));
+	QObject::connect(ui->actionWrite_Gerber1_in,		SIGNAL(triggered()), this, SLOT(WriteGerber1in()));
+	QObject::connect(ui->actionWrite_Gerber1_mm,		SIGNAL(triggered()), this, SLOT(WriteGerber1mm()));
+	QObject::connect(ui->actionWrite_Gerber2_in,		SIGNAL(triggered()), this, SLOT(WriteGerber2in()));
+	QObject::connect(ui->actionWrite_Gerber2_mm,		SIGNAL(triggered()), this, SLOT(WriteGerber2mm()));
 	QObject::connect(ui->actionClearRecent,				SIGNAL(triggered()), this, SLOT(ClearRecentFiles()));
 	QObject::connect(ui->actionQuit,					SIGNAL(triggered()), this, SLOT(Quit()));
 	QObject::connect(ui->actionZoom_In,					SIGNAL(triggered()), this, SLOT(ZoomIn()));
@@ -676,7 +678,7 @@ void MainWindow::WritePDF()
 	}
 }
 
-void MainWindow::WriteGerber(const bool& bTwoLayerGerber)
+void MainWindow::WriteGerber(const bool& bTwoLayerGerber, const bool& bMetric)
 {
 	m_bTwoLayerGerber = bTwoLayerGerber;
 	m_board.SetHoleType(m_bTwoLayerGerber ? HOLETYPE::PTH : HOLETYPE::NPTH);
@@ -697,7 +699,7 @@ void MainWindow::WriteGerber(const bool& bTwoLayerGerber)
 		const bool bWireVias	= m_bTwoLayerGerber && m_board.GetLyrs() == 1 && m_board.GetCompMgr().GetHavePlacedWires();
 		const bool bVias		= m_board.GetHasVias() || bWireVias;
 
-		if ( m_gWriter.Open(m_gerberFileName.toStdString().c_str(), m_board, bVias, m_bTwoLayerGerber) )
+		if ( m_gWriter.Open(m_gerberFileName.toStdString().c_str(), m_board, bVias, m_bTwoLayerGerber, bMetric) )
 		{
 			const int origlayer = m_board.GetCurrentLayer();
 			for (int lyr = 0, lyrs = m_board.GetLyrs(); lyr < lyrs; lyr++)
@@ -1720,8 +1722,8 @@ void MainWindow::UpdateControls()
 	const bool		bThin			= !m_board.GetVeroTracks() && !m_board.GetCurvedTracks() && !m_board.GetFatTracks();
 	const bool		bCurved			= !m_board.GetVeroTracks() &&  m_board.GetCurvedTracks();
 
-	ui->actionWrite_Gerber->setEnabled( bPCB && !bCompEdit && !m_board.GetMirrored() && !m_board.GetVeroTracks() && m_board.GetLyrs() == 1);
-	ui->actionWrite_Gerber2->setEnabled(bPCB && !bCompEdit && !m_board.GetMirrored() && !m_board.GetVeroTracks());
+	ui->menuExport_as_Gerber_1_Layer->setEnabled(bPCB && !bCompEdit && !m_board.GetMirrored() && !m_board.GetVeroTracks() && m_board.GetLyrs() == 1);
+	ui->menuExport_as_Gerber_2_Layer->setEnabled(bPCB && !bCompEdit && !m_board.GetMirrored() && !m_board.GetVeroTracks());
 	ui->actionMerge->setEnabled(    !bPCB && !bCompEdit);
 	ui->actionWrite_PDF->setEnabled(!bPCB && !bCompEdit);
 	ui->menuAdd->setEnabled( !bCompEdit && m_board.GetCompMode() != COMPSMODE::OFF && !m_board.GetMirrored() );
