@@ -479,9 +479,10 @@ void GStream::Line(const QPoint& pA, const QPoint& pB)
 }
 void GStream::WriteXY(const QPoint& p,  const bool& bFullLine)
 {
+	// p has deciMil units (since GRIDPIXELS == 1000 for Gerber Export)
 	if ( !m_os.is_open() ) return;
-	const int ix = ( m_bMetric ) ? ( 2540 * p.x() ) : p.x();	// metric ==> convert mil to nanometres
-	const int iy = ( m_bMetric ) ? ( 2540 * p.y() ) : p.y();	// metric ==> convert mil to nanometres
+	const int ix = ( m_bMetric ) ? ( 2540 * p.x() ) : p.x();	// metric ==> convert deciMil to nanometres
+	const int iy = ( m_bMetric ) ? ( 2540 * p.y() ) : p.y();	// metric ==> convert deciMil to nanometres
 	if ( bFullLine || m_iLastX != ix ) m_os << "X" << ix;
 	if ( bFullLine || m_iLastY != iy ) m_os << "Y" << iy;
 	m_iLastX = p.x();
@@ -495,7 +496,6 @@ void GStream::WriteDrillOrdinate(const int& iDeciMils)
 	{
 		// Millimetres in 4.6 format, 1 deciMil = 0000.002540 mm
 		const int iAbs = abs(2540 * iDeciMils);	// Absolute value in nanometres
-		assert( iAbs <= 9999999999 );			// 9999999999 ==> 9999.999999 mm
 		if ( iAbs < 1000000000 ) m_os << "0";
 		if ( iAbs <  100000000 ) m_os << "0";
 		if ( iAbs <   10000000 ) m_os << "0";
@@ -511,7 +511,6 @@ void GStream::WriteDrillOrdinate(const int& iDeciMils)
 	{
 		// Inches in 2.4 format, 1 deciMil = 00.0001 inches
 		const int iAbs = abs(iDeciMils);		// Absolute value in deciMil
-		assert( iAbs <= 999999 );				// 999999 ==> 99.9999 inches
 		if ( iAbs < 100000 ) m_os << "0";
 		if ( iAbs <  10000 ) m_os << "0";
 		if ( iAbs <   1000 ) m_os << "0";
@@ -520,11 +519,10 @@ void GStream::WriteDrillOrdinate(const int& iDeciMils)
 		m_os << iAbs;
 	}
 }
-std::string GStream::MilToInch(const int& iMil, const bool& bLZ) const	// Get inches in format AA.BBBB (for drills and apertures)
+std::string GStream::MilToInch(const int& iMil, const bool& bLZ) const	// Get inches in format AA.BBBB (for defining drills and apertures)
 {
 	std::string str;
-	const int i = iMil * 10;			// deciMil
-	assert( i >= 0 && i <= 999999 );	// 999999 ==> 99.9999 inches
+	const int i		 = iMil * 10;				// deciMil
 	const int inches = i / 10000;
 	const int remain = i - 10000 * inches;
 	assert( inches < 100 && remain < 10000 );	// i.e. AA.BBBB
@@ -536,24 +534,23 @@ std::string GStream::MilToInch(const int& iMil, const bool& bLZ) const	// Get in
 	str += std::to_string(remain);
 	return str;
 }
-std::string GStream::MilToMM(const int& iMil, const bool& bLZ) const	// Get mm in format AAAA.BBBBBB (for drills and apertures)
+std::string GStream::MilToMM(const int& iMil, const bool& bLZ) const	// Get mm in format AAAA.BBBBBB (for defining drills and apertures)
 {
-	// Avoid integer overflow by working in 4.4 format and appending two trailing zeros to give 4.6 format
 	std::string str;
-	const int i = iMil * 254;					// deciMicrons
-	assert( i >= 0 && i <= 99999999 );			// 99999999 ==> 9999.9999 mm
-	const int mm	 = i / 10000;
-	const int remain = i - 10000 * mm;
-	assert( mm < 10000 && remain < 10000 );		// i.e. AAAA.BBBB
+	const int i		 = iMil * 25400;			// nanometres
+	const int mm	 = i / 1000000;
+	const int remain = i - 1000000 * mm;
+	assert( mm < 10000 && remain < 1000000 );	// i.e. AAAA.BBBBBB
 	if ( bLZ && mm < 1000 ) str += "0";			// bLZ ==> Add leading zeros
 	if ( bLZ && mm < 100  ) str += "0";			// bLZ ==> Add leading zeros
 	if ( bLZ && mm < 10   ) str += "0";			// bLZ ==> Add leading zeros
 	str += std::to_string(mm) + ".";
+	if ( remain < 100000 ) str += "0";
+	if ( remain < 10000  ) str += "0";
 	if ( remain < 1000   ) str += "0";
 	if ( remain < 100    ) str += "0";
 	if ( remain < 10     ) str += "0";
 	str += std::to_string(remain);
-	str += "00";	// Final two trailing zeros	// i.e. AAAA.BBBB00
 	return str;
 }
 void GStream::GetQPoint(const QPointF& in, QPoint& out) const

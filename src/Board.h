@@ -27,6 +27,8 @@
 #include "TextManager.h"
 #include <QPointF>
 
+#define SMART_PAN_CAN_AUTOCROP true
+
 class MyScrollArea;
 
 // Board is the main algorithm class.
@@ -181,14 +183,11 @@ public:
 		Element* p = Get(iLyr, iRow, iCol);
 		if ( !p->GetHasPin() || p->GetHasWire() ) return false;	// Want pins only.  Hole sharing wires could contradict each other, so ignore them
 
-		const int&		compId		= p->GetCompId();
-		const size_t	pinIndex	= p->GetPinIndex();
-		assert(compID != BAD_COMPID && pinIndex != BAD_PININDEX);
-
-		Component& comp = m_compMgr.GetComponentById(compId);
-
-		const uchar oldPref = comp.GetLayerPref(pinIndex);
-		uchar		newPref(LAYER_X);
+		const int&		compId		= p->GetCompId();	assert(compId != BAD_COMPID);
+		const size_t	pinIndex	= p->GetPinIndex();	assert(pinIndex != BAD_PININDEX);
+		Component&		comp		= m_compMgr.GetComponentById(compId);
+		const uchar		oldPref		= comp.GetLayerPref(pinIndex);
+		uchar			newPref(LAYER_X);
 		if ( !bReset )
 		{
 			switch( oldPref )
@@ -315,21 +314,27 @@ public:
 			return GrowThenPan(0, incRows, incCols, 0, 0);
 		}
 
-		if ( minRow + iDown  < 0 )							// Too far up ...
+		if ( minRow + iDown < 0 )								// Too far up ...
 		{
-			iDown = -minRow;								// ... so pan to very top
-			incRows = std::min(0, maxRow + 1 - GetRows());	// ... and shrink grid from bottom
+			if ( SMART_PAN_CAN_AUTOCROP )
+				incRows = std::min(0, maxRow + 1 - GetRows());	// ... so shrink grid from bottom
+			//else
+			//	incRows	= -(minRow + iDown);					// ... so grow grid from bottom
+			iDown	= -minRow;									// ... and pan to very top
 		}
-		else if ( maxRow + iDown  >= GetRows() )			// Too far down ...
-			incRows	= 1 + maxRow + iDown - GetRows();		// ...so grow grid from bottom
+		else if ( maxRow + iDown >= GetRows() )					// Too far down ...
+			incRows	= 1 + maxRow + iDown - GetRows();			// ...so grow grid from bottom
 
-		if ( minCol + iRight < 0 )							// Too far left ...
+		if ( minCol + iRight < 0 )								// Too far left ...
 		{
-			iRight	= -minCol;								// ... so pan to very left
-			incCols	= std::min(0, maxCol + 1 - GetCols());	// ... and shrink grid from right
+			if ( SMART_PAN_CAN_AUTOCROP )
+				incCols	= std::min(0, maxCol + 1 - GetCols());	// ... so shrink grid from right
+			//else
+			//	incCols	= -(minCol + iRight);					// ... so grow grid from right
+			iRight	= -minCol;									// ... and pan to very left
 		}
-		else if ( maxCol + iRight >= GetCols() )			// Too far right ...
-			incCols	= 1 + maxCol + iRight - GetCols();		// ... so grow grid from right
+		else if ( maxCol + iRight >= GetCols() )				// Too far right ...
+			incCols	= 1 + maxCol + iRight - GetCols();			// ... so grow grid from right
 
 		GrowThenPan(0, incRows, incCols, iDown, iRight);
 	}

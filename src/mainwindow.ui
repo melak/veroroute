@@ -495,6 +495,9 @@
    <property name="text">
     <string>Auto-Crop</string>
    </property>
+   <property name="toolTip">
+    <string>Auto-crop the grid to the circuit</string>
+   </property>
    <property name="autoRepeat">
     <bool>false</bool>
    </property>

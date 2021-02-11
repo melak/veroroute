@@ -883,8 +883,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					assert( comp.GetType() != COMP::INVALID );
 					if ( board.GetLyrs() == 2 )
 					{
-						const size_t	 pinIndex	= pC->GetPinIndex();
-						assert( pinIndex != BAD_PININDEX );
+						const size_t pinIndex = pC->GetPinIndex();	assert(pinIndex != BAD_PININDEX);
 						if ( nodeId != BAD_NODEID )
 							layerPref	= comp.GetLayerPref(pinIndex);
 					}

@@ -20,6 +20,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+const bool ALLOW_SMART_PAN_WITHOUT_CTRLKEY = true;
+
 // Following 2 are to slow down the auto-panning while moving components with the mouse
 static std::chrono::steady_clock::time_point g_lastAutoPanTime;
 static bool g_bHaveAutoPanned = false;
@@ -205,6 +207,8 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 		centralWidget()->setCursor(Qt::SizeFDiagCursor);
 	else if ( GetCurrentTextId() != BAD_TEXTID || GetCurrentCompId() != BAD_COMPID )
 		centralWidget()->setCursor(Qt::ClosedHandCursor);
+	else if ( ALLOW_SMART_PAN_WITHOUT_CTRLKEY && m_bRightClick )
+		centralWidget()->setCursor(Qt::ClosedHandCursor);
 	else
 		centralWidget()->setCursor(Qt::OpenHandCursor);
 
@@ -328,17 +332,21 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 	if ( GetPaintPins() || GetPaintFlood() || GetPaintLyrPref() ) return;	// Ignore mouse move while painting pins or flooding
 	if ( GetShiftKeyDown() ) return;										// Ignore mouse move while trying to group components
 
+	bool bSmartPan = GetCtrlKeyDown();
+
 	if ( m_board.GetCompEdit() && GetCurrentShapeId() != BAD_ID && m_bMouseClick )
+		centralWidget()->setCursor(Qt::ClosedHandCursor);
+	else if ( bSmartPan )
 		centralWidget()->setCursor(Qt::ClosedHandCursor);
 	else if ( GetDefiningRect() || GetResizingText() )
 		centralWidget()->setCursor(Qt::SizeFDiagCursor);
-	else if ( GetCtrlKeyDown() )
-		centralWidget()->setCursor(Qt::ClosedHandCursor);
 	else if ( GetPaintBoard() )
 		centralWidget()->setCursor(Qt::CrossCursor);
 	else if ( GetCurrentTextId() != BAD_TEXTID && m_bMouseClick )
 		centralWidget()->setCursor(Qt::ClosedHandCursor);
 	else if ( GetCurrentCompId() != BAD_COMPID && m_bMouseClick )
+		centralWidget()->setCursor(Qt::ClosedHandCursor);
+	else if ( ALLOW_SMART_PAN_WITHOUT_CTRLKEY && m_bRightClick )
 		centralWidget()->setCursor(Qt::ClosedHandCursor);
 	else
 		centralWidget()->setCursor(Qt::OpenHandCursor);
@@ -375,28 +383,14 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 			UpdateCompDialog();
 		}
 	}
-	else if ( GetDefiningRect() )
+	else if ( !bSmartPan && GetDefiningRect() )
 	{
 		m_board.GetRectMgr().UpdateNewRect(m_gridRow, m_gridCol);
 		SelectAllInRects();
 	}
-	else if ( GetCtrlKeyDown() )
-	{
-		int pixmapX(0), pixmapY(0);
-		GetPixMapXY(event->pos(), pixmapX, pixmapY);
-
-		if ( deltaRow == 0 ) { if ( pixmapY > W * m_board.GetRows() ) deltaRow = 1; }
-		if ( deltaCol == 0 ) { if ( pixmapX > W * m_board.GetCols() ) deltaCol = 1; }
-		if ( deltaRow == 0 ) { if ( pixmapY < W ) deltaRow = -1; }
-		if ( deltaCol == 0 ) { if ( pixmapX < W ) deltaCol = -1; }
-		if ( deltaRow == 0 && deltaCol == 0 ) return;	// No change
-		m_board.SmartPan(deltaRow, deltaCol);	// Pan whole circuit w.r.t. grid area, growing/shrinking as needed
-		mouseActionString = "Smart move/grow/crop";
-	}
-	else if ( GetPaintBoard() )	// (Un)Paint nodeId on board but NOT pins
+	else if ( !bSmartPan && GetPaintBoard() && trackMode != TRACKMODE::OFF )	// (Un)Paint nodeId on board but NOT pins
 	{
 		assert( !GetPaintPins() && !GetPaintFlood() );	// Sanity check
-		if ( trackMode == TRACKMODE::OFF ) return;
 		if ( m_bLeftClick )		// Paint
 		{
 			const bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, GetCurrentNodeId(), GetPaintPins());	// Only allow paint board (not pins)
@@ -412,7 +406,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 		m_board.WipeAutoSetPoints();
 		m_board.PlaceFloaters();	// See if we can now place floating components down
 	}
-	else if ( GetCurrentTextId() != BAD_TEXTID )
+	else if ( !bSmartPan && GetCurrentTextId() != BAD_TEXTID )
 	{
 		int pixmapX(0), pixmapY(0);
 		GetPixMapXY(event->pos(), pixmapX, pixmapY);
@@ -445,10 +439,8 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 		}
 		mouseActionString = ( GetResizingText() ) ? "Resize text box" : "Move text box";
 	}
-	else if ( GetCurrentCompId() != BAD_COMPID )	// Move user-group components
+	else if ( !bSmartPan && GetCurrentCompId() != BAD_COMPID && compMode != COMPSMODE::OFF )	// Move user-group components
 	{
-		if ( compMode == COMPSMODE::OFF ) return;
-
 		int pixmapX(0), pixmapY(0);
 		GetPixMapXY(event->pos(), pixmapX, pixmapY);
 
@@ -472,7 +464,20 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 		}
 		mouseActionString = "Move part(s)";
 	}
-	else 
+	else if ( bSmartPan || (ALLOW_SMART_PAN_WITHOUT_CTRLKEY && m_bRightClick) )
+	{
+		int pixmapX(0), pixmapY(0);
+		GetPixMapXY(event->pos(), pixmapX, pixmapY);
+
+		if ( deltaRow == 0 ) { if ( pixmapY > W * m_board.GetRows() ) deltaRow = 1; }
+		if ( deltaCol == 0 ) { if ( pixmapX > W * m_board.GetCols() ) deltaCol = 1; }
+		if ( deltaRow == 0 ) { if ( pixmapY < W ) deltaRow = -1; }
+		if ( deltaCol == 0 ) { if ( pixmapX < W ) deltaCol = -1; }
+		if ( deltaRow == 0 && deltaCol == 0 ) return;	// No change
+		m_board.SmartPan(deltaRow, deltaCol);	// Pan whole circuit w.r.t. grid area, growing/shrinking as needed
+		mouseActionString = "Smart move/grow/crop";
+	}
+	else
 		return;
 
 	if ( abs(deltaRow) <= 1 && abs(deltaCol) <= 1 )	// If not moved mouse too fast ...
