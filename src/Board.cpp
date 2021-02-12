@@ -230,7 +230,7 @@ double Board::GetMIN_SEPARATION()	// Minimum separation (in mil) between a pad o
 	return std::max(0.0, dMin);
 }
 
-void Board::GetGroundFillBounds(int& L, int& R, int& T, int& B)
+void Board::CalcGroundFillBounds()
 {
 	const int&	W = GetGRIDPIXELS();	// Square width in pixels
 	const int	C = W >> 1;				// Half square width in pixels
@@ -241,7 +241,7 @@ void Board::GetGroundFillBounds(int& L, int& R, int& T, int& B)
 	// Loop points on edge of grid
 	for (int j = minRow; j <= maxRow; j++)
 	{
-		const int iStep = ( j == minRow || j == maxRow ) ? 1 : (maxCol - minCol);
+		const int iStep = ( j == minRow || j == maxRow ) ? 1 : std::max(1, maxCol - minCol);
 		for (int i = minCol; i <= maxCol; i += iStep)
 		{
 			const Element* p = Get(0, j, i);	// Sufficient to check layer 0 when looking for pins
@@ -266,10 +266,15 @@ void Board::GetGroundFillBounds(int& L, int& R, int& T, int& B)
 			if ( j == maxRow ) deltaB = std::max(deltaB, delta);
 		}
 	}
-	L = 0 - deltaL;
-	T = 0 - deltaT;
-	R = W * GetCols() + deltaR;
-	B = W * GetRows() + deltaB;
+	m_gndL = 0 - deltaL;
+	m_gndT = 0 - deltaT;
+	m_gndR = W * GetCols() + deltaR;
+	m_gndB = W * GetRows() + deltaB;
+}
+
+void Board::GetGroundFillBounds(int& L, int& R, int& T, int& B) const
+{
+	L = m_gndL; R = m_gndR; T = m_gndT; B = m_gndB;
 }
 
 // Methods to paint/unpaint nodeIds

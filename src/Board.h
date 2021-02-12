@@ -472,7 +472,8 @@ public:
 	void	GetHoleWidths_MIL(std::list<int>& o, int& iDefaultWidth) const;
 	void	GetSeparations(double& minTrackSeparation_mil, double& minGroundFill_mil);
 	double	GetMIN_SEPARATION();			// Minimum possible separation (in mil) between a pad or track without ground fill
-	void	GetGroundFillBounds(int& L, int& R, int& T, int& B);
+	void	CalcGroundFillBounds();
+	void	GetGroundFillBounds(int& L, int& R, int& T, int& B) const;
 
 	// Methods to paint/unpaint nodeIds
 	void SetNodeId(Element* p, const int& nodeId, const bool bAllLyrs);	// Helper to make sure we do UpdateCounts() before painting an element
@@ -749,6 +750,12 @@ private:
 	RectManager				m_rectMgr;		// Handles the set of user-defined rectangles
 	TextManager				m_textMgr;		// Handles the set of user-defined text labels
 	ColorManager			m_colorMgr;		// Handles color assignment to nodeIds
+
+	// Pixmap info for ground fill extent	// Don't persist or copy
+	int						m_gndL = 0;		// Set by CalcGroundFillBounds()
+	int						m_gndR = 0;		// Set by CalcGroundFillBounds()
+	int						m_gndT = 0;		// Set by CalcGroundFillBounds()
+	int						m_gndB = 0;		// Set by CalcGroundFillBounds()
 
 	// Track warnings		// Don't persist or copy
 	std::list<QPointF>		m_warnPoints[2];// For showing locations with min track separation on the 2 layers

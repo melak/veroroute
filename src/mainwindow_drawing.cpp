@@ -722,6 +722,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	board.GetBounds(minRow, minCol, maxRow, maxCol);
 
 	int gndL, gndR, gndT, gndB;
+	board.CalcGroundFillBounds();
 	board.GetGroundFillBounds(gndL, gndR, gndT, gndB);
 	const int reqWidth  = (gndR - gndL);
 	const int reqHeight = (gndB - gndT);

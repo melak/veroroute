@@ -34,6 +34,12 @@ void MainWindow::GetPixMapXY(const QPoint& currentPoint, int& pixmapX, int& pixm
 	const int iToolbarHeight = ( ui->toolBar->isFloating() || ui->toolBar->isHidden() ) ? 0 : ui->toolBar->height();
 	pixmapX = currentPoint.x() + m_scrollArea->horizontalScrollBar()->value();
 	pixmapY = currentPoint.y() + m_scrollArea->verticalScrollBar()->value() - ui->menuBar->height()- iToolbarHeight;
+
+	int gndL, gndR, gndT, gndB;
+	m_board.GetGroundFillBounds(gndL, gndR, gndT, gndB);
+
+	pixmapX += gndL;
+	pixmapY += gndT;
 }
 
 void MainWindow::GetRowCol(const QPoint& currentPoint, int& row, int& col, double& deltaRow, double& deltaCol) const
