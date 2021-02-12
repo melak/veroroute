@@ -271,6 +271,10 @@ static const char* szVEROROUTE_VERSION =
 			//                       Maximum custom hole size increased to 100 mil.
 			// New feature:  Add ability to show locations of minimum track separation.
 			// Updated tutorials.
-  "2.03";	// Bug fix: Wire rendering broken in 2.02.
+//"2.03";	// Bug fix: Wire rendering broken in 2.02.
 			// New feature. Can specify layer preference on component pins of 2-layer PCBs.
 			// Updated tutorials.
+  "2.04";	// Bug fix: Since 2.02, VeroRoute freezes if the grid is made 1 column wide.
+			// Omit deprecated G codes from Gerber export, and allow Gerber export in mm or inches.
+			// Allow circuit panning/grid resize by grabbing the grid with the right mouse button (ctrl key optional).
+			// Improve GUI behaviour in Tutorials by passing key presses from the Info dialog to the main window.
