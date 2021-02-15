@@ -167,12 +167,19 @@ public:
 	double			GetAlen() const	{ double d = m_a2 - m_a1; while ( d < 0 ) d += 360.0; return d; }
 	void GetSafeBounds(double& L, double& R, double& T, double& B) const	// Allows for worst case rotation "A3"
 	{
-		const double DX( GetDX() ), DY( GetDY() );
-		const double d = sqrt(DX*DX + DY*DY);
-		L = GetCX() - d;
-		R = GetCX() + d;
-		T = GetCY() - d;
-		B = GetCY() + d;
+		if ( GetA3() == 0 )
+		{
+			L = GetXmin();		R = GetXmax();
+			T = GetYmin();		B = GetYmax();
+		}
+		else
+		{
+			// The following could be improved (to a tighter bound) by considering the shape and rotation angle
+			const double DX( GetDX() ), DY( GetDY() );
+			const double d = sqrt(DX*DX + DY*DY) * 0.5;
+			L = GetCX() - d;	R = GetCX() + d;
+			T = GetCY() - d;	B = GetCY() + d;
+		}
 	}
 	// Persist interface functions
 	virtual void Load(DataStream& inStream) override

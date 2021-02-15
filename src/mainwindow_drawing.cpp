@@ -1401,8 +1401,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 				double SL,ST,SR,SB;
 				comp.GetSafeBounds(SL,SR,ST,SB);
-				const double dReqW = (1 + SR - SL) * W;
-				const double dReqH = (1 + SB - ST) * W;
+				SL = SL * W - C;	SR = SR * W + C;
+				ST = ST * W - C;	SB = SB * W + C;
+				const double dReqW(SR - SL), dReqH(SB - ST);
 				GPainter painterTmp;
 				QPixmap tmpPixmap(dReqW, dReqH);
 				tmpPixmap.setDevicePixelRatio(1.0);
@@ -1422,14 +1423,14 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 					pPainter->save();	// Save (original axes)
 					if ( iLoop == 0 )
-						pPainter->translate(dReqW*0.5, dReqH*0.5);	// Shape coordinates are relative to pixmap centre
+						pPainter->translate(-SL,-ST);	// Shape coordinates are relative to pixmap top left
 					else
-						pPainter->translate(X, Y);					// Shape coordinates are relative to footprint centre
+						pPainter->translate(X, Y);		// Shape coordinates are relative to footprint centre
 
 					if ( bFill && iLoop == 1 )	// Draw the pixmap created on the previous pass
 					{
 						painter.setOpacity( /*bWire ? 1.0 :*/ board.GetFillSaturation() * 0.01);
-						painter.drawPixmap(-dReqW*0.5, -dReqH*0.5, tmpPixmap);
+						painter.drawPixmap(SL, ST, tmpPixmap);
 						painter.setOpacity(1.0);
 					}
 

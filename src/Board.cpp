@@ -237,8 +237,8 @@ void Board::CalcGroundFillBounds()
 
 	int deltaL(0), deltaR(0), deltaT(0), deltaB(0);	// Maximum pad protrusions (in pixels) at edge of grid
 
+	// Loop points on edge of grid and look for large pads there
 	int minRow(0), minCol(0), maxRow(GetRows()-1), maxCol(GetCols()-1);
-	// Loop points on edge of grid
 	for (int j = minRow; j <= maxRow; j++)
 	{
 		const int iStep = ( j == minRow || j == maxRow ) ? 1 : std::max(1, maxCol - minCol);
@@ -270,6 +270,26 @@ void Board::CalcGroundFillBounds()
 	m_gndT = 0 - deltaT;
 	m_gndR = W * GetCols() + deltaR;
 	m_gndB = W * GetRows() + deltaB;
+
+	// Loop all shapes and get a safe estimate of their outer bounds
+	const bool bMonoPCB		= GetTrackMode() == TRACKMODE::MONO || GetTrackMode() == TRACKMODE::PCB;
+	const bool bFill		= !bMonoPCB && GetFillSaturation() > 0;	// No component fill in Mono/PCB mode
+	for (const auto& mapObj : m_compMgr.GetMapIdToComp())
+	{
+		const Component& comp = mapObj.second;
+
+		double L,R,T,B;
+		comp.GetSafeBounds(L, R, T, B, bFill);
+
+		// Footprint centre
+		const double X = C * ( comp.GetCol() + comp.GetLastCol() + 1 );
+		const double Y = C * ( comp.GetRow() + comp.GetLastRow() + 1 );
+
+		m_gndL = std::min(m_gndL, (int)(X + W * L));
+		m_gndT = std::min(m_gndT, (int)(Y + W * T));
+		m_gndR = std::max(m_gndR, (int)(X + W * R));
+		m_gndB = std::max(m_gndB, (int)(Y + W * B));
+	}
 }
 
 void Board::GetGroundFillBounds(int& L, int& R, int& T, int& B) const

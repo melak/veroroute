@@ -349,17 +349,29 @@ public:
 										  else		SetPinFlags( m_iPinFlags & ~PIN_CUSTOM ); }
 	bool GetCustomPads() const			{ return ( GetPinFlags() & PIN_CUSTOM ) != 0; }
 
-	void GetSafeBounds(double& L, double& R, double& T, double& B) const
+	void GetSafeBounds(double& L, double& R, double& T, double& B, bool bFill = true) const
 	{
-		L = T =  DBL_MAX;
-		R = B = -DBL_MAX;
-		double l,r,t,b;
+		// First consider footprint bounds
+		const double dW( 0.5 * GetCompCols() ), dH( 0.5 * GetCompRows() );
+		L = -dW;	R = dW;		T = -dH;	B = dH;
+
+		// Then consider the list of shapes
+		double l,r,t,b;	// Working variables
 		for (auto& o : m_shapes)
 		{
-			o.GetSafeBounds(l,r,t,b);
+			if ( !bFill && o.GetDrawFill() ) continue;	// If view is not drawing filled shapes, skip them
+			o.GetSafeBounds(l, r, t, b);
 			L = std::min(L,l);	T = std::min(T,t);
 			R = std::max(R,r);	B = std::max(B,b);
 		}
+		switch ( GetDirection() )
+		{
+			case 'E':	l = -R;	t = -B;	r = -L;	b = -T;	break;
+			case 'N':	l = -B;	t =  L;	r = -T;	b =  R;	break;
+			case 'S':	l =  T;	t = -R;	r =  B;	b = -L;	break;
+			default:	return;
+		}
+		L = l;	T = t;	R = r;	B = b;
 	}
 	std::string GetFullTypeStr() const		// For SIP/DIP types, append the number of pins
 	{
