@@ -351,11 +351,10 @@ public:
 
 	void GetSafeBounds(double& L, double& R, double& T, double& B, bool bFill = true) const
 	{
-		// First consider footprint bounds
-		const double dW( 0.5 * GetCompCols() ), dH( 0.5 * GetCompRows() );
+		// First consider footprint bounds (for direction 'W')
+		const double dW( 0.5 * GetCols() ), dH( 0.5 * GetRows() );
 		L = -dW;	R = dW;		T = -dH;	B = dH;
-
-		// Then consider the list of shapes
+		// Then consider the list of shapes (for direction 'W')
 		double l,r,t,b;	// Working variables
 		for (auto& o : m_shapes)
 		{
@@ -364,6 +363,7 @@ public:
 			L = std::min(L,l);	T = std::min(T,t);
 			R = std::max(R,r);	B = std::max(B,b);
 		}
+		// Handle other component directions
 		switch ( GetDirection() )
 		{
 			case 'E':	l = -R;	t = -B;	r = -L;	b = -T;	break;
