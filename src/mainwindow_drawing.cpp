@@ -227,6 +227,34 @@ void MainWindow::PaintTag(const GuiControl& guiCtrl, QPainter& painter, const QC
 	}
 }
 
+
+void MainWindow::PaintLeg(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, const QPointF& pCoffset, const int& iLyr, const bool& bGap)
+{
+	// Paints a short leg connecting an offset pad to its original location
+	if ( m_bWriteGerber )
+	{
+		QPolygonF polygon;
+		polygon.push_back(pC);
+		polygon.push_back(pCoffset);
+		switch(iLyr)
+		{
+			case 0:	m_gWriter.GetStream(GFILE::GBL).AddTrack(polygon, bGap ? GPEN::TRK_GAP : GPEN::TRK); break;	// Bottom copper layer
+			case 1:	m_gWriter.GetStream(GFILE::GTL).AddTrack(polygon, bGap ? GPEN::TRK_GAP : GPEN::TRK); break;	// Top    copper layer
+		}
+	}
+	else
+	{
+		const int gapWidth		= bGap ? guiCtrl.GetPixelsFromMIL( guiCtrl.GetGAP_MIL() ) : 0;
+		const int trackWidth	= ( guiCtrl.GetHalfPixelsFromMIL( guiCtrl.GetTRACK_MIL() ) + gapWidth ) << 1;
+		static QPen	pen(Qt::black, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+		pen.setColor(color);
+		pen.setWidth(trackWidth);
+		painter.setPen(pen);
+		painter.setBrush(Qt::NoBrush);
+		painter.drawLine(pC, pCoffset);
+	}
+}
+
 void MainWindow::PaintDiag(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pCorner, bool bLT)
 {
 	const int&	H			= m_radPixmapDiag;
@@ -243,7 +271,7 @@ void MainWindow::PaintDiag(const GuiControl& guiCtrl, QPainter& painter, const Q
 		painter.drawLine(pCorner + QPointF(-H, H), pCorner + QPointF(H,-H));
 }
 
-void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, const int& iPerimeterCode, const bool bGap)
+void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, const int& iPerimeterCode, const bool bHavePad, const bool bGap)
 {
 	const bool	bMaxDiags		= ( guiCtrl.GetDiagsMode() == DIAGSMODE::MAX );
 	const int&	W				= guiCtrl.GetGRIDPIXELS();	// Square width in pixels
@@ -282,6 +310,9 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 	// bOrtho		==> Track bends 90 degrees
 	// bObtuse		==> Track bends < 90 degrees
 
+
+	bool bOpenLine(false);	// true ==> don't draw a closed polygon
+
 	if ( N == 0 )
 		polygon << pC;
 	else if ( N == 1 )
@@ -291,7 +322,6 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 	}
 	else
 	{
-		bool bOpenLine(false);	// true ==> don't draw a closed polygon
 		if ( N == 2 )
 		{
 			int  nCount(0);					// Perimeter point counter
@@ -317,13 +347,14 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 			const int jj = ( ii + iFirst ) % 8;
 			if ( !bUsed[jj] ) continue;
 			iL = iR;	iR = jj;	// Update iL and iR
-			const int iDiff = ( 8 + iR - iL ) % 8;
-			bStraight	= ( iDiff == 4 );
-			bOrtho		= ( iDiff == 2 || iDiff == 6 );
-			bObtuse		= ( iDiff == 3 || iDiff == 5 );
+			const int  iDiff		= ( 8 + iR - iL ) % 8;
+			const bool bOrtho		= ( iDiff == 2 || iDiff == 6 );
+			const bool bObtuse		= ( iDiff == 3 || iDiff == 5 );
 			nCount++;
 			if ( bOrtho || bObtuse )	// Bend <= 90 degrees
 			{
+				if ( bHavePad && bOpenLine ) polygon << pC;	// If we have a pad, we actually want to draw a closed curve including pC
+
 				if ( bCurvedTracks )
 				{
 					// Make an N-point curve from L to R passing near central control point C
@@ -331,7 +362,7 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 					// Using higher order (e.g. 2.5) gives bends passing closer to C (hence sharper corners)
 					const int		N = 10;
 					const double	d = 1.0 / N;
-					const QPointF	pLC(p[iL] - pC), pRC(p[iR] -pC);
+					const QPointF	pLC(p[iL] - pC), pRC(p[iR] - pC);
 					for (int i = 0; i <= N; i++)
 					{
 						const double t(i * d), u(1 - t);
@@ -358,6 +389,8 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 		if ( polygon.size() == 2 && !bStraight )	// If points are not directly opposite the centre ...
 			polygon << pC;							// ... add centre point
 	}
+
+	if ( bHavePad && !bStraight ) bOpenLine = false;
 
 	// Pens for drawing (not Gerber)
 	static QPen		pen(Qt::black, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
@@ -387,7 +420,7 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 			painter.drawPoint(pC);
 		}
 	}
-	else if ( N <= 2 && ( bOrtho || bObtuse || bStraight ) )	// Draw open line segment
+	else if ( N <= 2 && bOpenLine )	// Draw open line segment
 	{
 		if ( m_bWriteGerber )
 		{
@@ -877,14 +910,23 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				int		iPadWidthMIL(0), iHoleWidthMIL(0);	// 0 ==> Not a custom size value
 				uchar	layerPref(LAYER_X);
 
+				int		padOffsetX(0), padOffsetY(0);
 				if ( bPad && !bWire )
 				{
-					const int		 compId	= pC->GetCompId();
-					const Component& comp	= compMgr.GetComponentById( compId );
+					const size_t	 pinIndex	= pC->GetPinIndex();	assert(pinIndex != BAD_PININDEX);
+					const int		 compId		= pC->GetCompId();
+					const Component& comp		= compMgr.GetComponentById( compId );
 					assert( comp.GetType() != COMP::INVALID );
+
+					if ( bPCB )
+					{
+						comp.GetCompPinOffsets(pinIndex, padOffsetX, padOffsetY);
+						padOffsetX = (padOffsetX * W) / 100;	 // Convert from mil to pixels
+						padOffsetY = (padOffsetY * W) / 100;	 // Convert from mil to pixels
+					}
+
 					if ( board.GetLyrs() == 2 )
 					{
-						const size_t pinIndex = pC->GetPinIndex();	assert(pinIndex != BAD_PININDEX);
 						if ( nodeId != BAD_NODEID )
 							layerPref	= comp.GetLayerPref(pinIndex);
 					}
@@ -896,6 +938,10 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						iHoleWidthMIL	= comp.GetHoleWidth();
 					}
 				}
+				const bool bPadOffset	= ( padOffsetX != 0 || padOffsetY != 0 );
+				const bool bBlob		= !bPadOffset || iPerimeterCode != 0;
+				const bool bLeg			=  bPadOffset && iPerimeterCode != 0;
+
 				QPen& greyPen = ( layerPref == LAYER_X ) ? penGry :
 								( layerPref == LAYER_T ) ? penTop : penBot;
 
@@ -917,6 +963,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				GetLRTB(board, 100, j, i, L, R, T, B);	// 100% size square
 				const int X((L+R)/2), Y((T+B)/2);
 				const QPointF pCentre(X,Y);
+				const QPointF pCentreOff(X+padOffsetX, Y+padOffsetY);
 
 				// Common special case: Draw blank wire-ends as squares (so we can easily see them)
 				if ( nodeId == BAD_NODEID && bWire )
@@ -1034,16 +1081,18 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				{
 					if ( iLoop == 0 )
 					{
-						if ( nodeId != groundNodeId )	// Only the non-ground tracks have a "white" surround
-							PaintBlob(board, painter, backgroundColor, pCentre, iPerimeterCode, true);						// Draw fat "white" track blob
-						if ( bVia ) PaintVia(board, painter, backgroundColor, pCentre, true);								// Draw fat "white" via
-						if ( bPad ) PaintPad(board, painter, backgroundColor, pCentre, iPadWidthMIL, iHoleWidthMIL, true);	// Draw fat "white" pad
+						if ( nodeId != groundNodeId && bBlob )	// Only the non-ground tracks have a "white" surround
+							PaintBlob(board, painter, backgroundColor, pCentre, iPerimeterCode, bPad, true);	// Draw fat "white" track blob
+						if ( bVia ) PaintVia(board, painter, backgroundColor, pCentre, true);				// Draw fat "white" via
+						if ( bPad ) PaintPad(board, painter, backgroundColor, pCentreOff, iPadWidthMIL, iHoleWidthMIL, true);	// Draw fat "white" pad
+						if ( bLeg ) PaintLeg(board, painter, backgroundColor, pCentre, pCentreOff, layer, true);
 					}
 					else if ( iLoop == 1 )	// Draw track "blobs" and pads directly
 					{
-						PaintBlob(board, painter, color, pCentre, iPerimeterCode);							// Draw track blob
-						if ( bVia ) PaintVia(board, painter, color, pCentre);								// Draw via same color as track
-						if ( bPad ) PaintPad(board, painter, color, pCentre, iPadWidthMIL, iHoleWidthMIL);	// Draw pad same color as track
+						if ( bBlob ) PaintBlob(board, painter, color, pCentre, iPerimeterCode, bPad);	// Draw track blob
+						if ( bVia )  PaintVia(board, painter, color, pCentre);								// Draw via same color as track
+						if ( bPad )  PaintPad(board, painter, color, pCentreOff, iPadWidthMIL, iHoleWidthMIL);	// Draw pad same color as track
+						if ( bLeg )  PaintLeg(board, painter, color, pCentre, pCentreOff, layer);
 						if ( bExtraTags && bPad && nodeId == groundNodeId && nodeId != BAD_NODEID )			// Draw extra thermal relief tags
 						{
 							int iCode(iPerimeterCode);		// Take a copy of the perimeter code
@@ -1063,21 +1112,22 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					else if ( bDrawGrey )
 					{
 						if ( bVia ) PaintViaGrey(board, painter, pCentre);							// Draw grey via
-						if ( bPad ) PaintPadGrey(board, painter, greyPen, pCentre, iPadWidthMIL);	// Draw "grey" pad
+						if ( bPad ) PaintPadGrey(board, painter, greyPen, pCentreOff, iPadWidthMIL);	// Draw "grey" pad
 					}
 				}
 				if ( bDirect )	// Draw track "blobs" and pads directly (PDF/Gerber)
 				{
 					if ( iLoop == 0 )
 					{
-						PaintBlob(board, painter, color, pCentre, iPerimeterCode);							// Draw track blob
-						if ( bVia ) PaintVia(board, painter, color, pCentre);								// Draw via same color as track
-						if ( bPad ) PaintPad(board, painter, color, pCentre, iPadWidthMIL, iHoleWidthMIL);	// Draw pad same color as track
+						if ( bBlob ) PaintBlob(board, painter, color, pCentre, iPerimeterCode, bPad);		// Draw track blob
+						if ( bVia )  PaintVia(board, painter, color, pCentre);					// Draw via same color as track
+						if ( bPad )  PaintPad(board, painter, color, pCentreOff, iPadWidthMIL, iHoleWidthMIL);	// Draw pad same color as track
+						if ( bLeg )  PaintLeg(board, painter, color, pCentre, pCentreOff, layer);
 					}
 					else if ( bDrawGrey )
 					{
 						if ( bVia ) PaintViaGrey(board, painter, pCentre);							// Draw grey via
-						if ( bPad ) PaintPadGrey(board, painter, greyPen, pCentre, iPadWidthMIL);	// Draw "grey" pad
+						if ( bPad ) PaintPadGrey(board, painter, greyPen, pCentreOff, iPadWidthMIL);	// Draw "grey" pad
 					}
 				}
 			}
@@ -1286,6 +1336,14 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						const size_t iPinIndex = comp.GetCompElement(jj,ii)->GetPinIndex();
 						if ( iPinIndex == BAD_PININDEX ) continue;
 
+						int padOffsetX(0), padOffsetY(0);
+						if ( !bWire && bPCB )
+						{
+							comp.GetCompPinOffsets(iPinIndex, padOffsetX, padOffsetY);	// Get offsets in mil
+							padOffsetX = (padOffsetX * W) / 100;	// Convert from mil to pixels
+							padOffsetY = (padOffsetY * W) / 100;	// Convert from mil to pixels
+						}
+
 						if ( bColor && !bPlaced )	// Color pins of floating components (if in Color mode)
 						{
 							const int&	 nodeId			= comp.GetNodeId(iPinIndex);
@@ -1354,7 +1412,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 							if ( bMonoPCB && bPlaced )
 							{
 								GetLRTB(board, 100, j, i, L, R, T, B);	// 100% size square
-								painter.drawPoint((L+R)/2, (T+B)/2);
+								painter.drawPoint(padOffsetX + (L+R)/2, padOffsetY + (T+B)/2);
 							}
 							else
 								painter.drawEllipse(L, T, R-L, B-T);

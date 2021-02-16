@@ -118,6 +118,11 @@ void Board::GetSeparations(double& minTrackSeparation_mil, double& minGroundFill
 }
 double Board::GetMIN_SEPARATION()	// Minimum separation (in mil) between a pad or track without ground fill
 {
+	//TODO This cannot actually work properly with pad offsets since the search space is
+	// still actually a grid of 100 mil squares.
+	// An offset pad could have a vertical track on its right but it would not check all
+	// points on that track, only those that lie on the grid, and so would miss the closest point.
+
 	// Following code applies to proper 2-layer routing.
 	// So wires have regular pad sizes, and are not converted to tracks on the top layer using a via.
 
@@ -130,6 +135,8 @@ double Board::GetMIN_SEPARATION()	// Minimum separation (in mil) between a pad o
 	//     angle in question is not orthogonal to either the horizontal, vertical, or diagonal tracks.
 	//     Curved tracks don't help either.  As it stands, the current calculation will be too strict
 	//     for some track styles.
+
+	int Xmil, Ymil;	// For pad offsets
 
 	// Get bounds to minimise looping
 	int minRow, minCol, maxRow, maxCol;
@@ -145,7 +152,9 @@ double Board::GetMIN_SEPARATION()	// Minimum separation (in mil) between a pad o
 		const int&		nodeIdA			= pA->GetNodeId();
 		if ( nodeIdA == BAD_NODEID && !pA->GetHasPin() ) continue;
 
-		int iA(0);
+		int xA(i*100), yA(j*100);	// pA co-ordinates in mil
+		int iA(0);					// pA pad/track diameter in mil
+
 		if ( pA->GetHasWire() )		iA = GetPAD_MIL();	// No custom pad size for wires
 		else if ( pA->GetHasPin() )
 		{
@@ -153,6 +162,10 @@ double Board::GetMIN_SEPARATION()	// Minimum separation (in mil) between a pad o
 			const Component& comp	= m_compMgr.GetComponentById( pA->GetCompId() );
 			assert( comp.GetType() != COMP::INVALID );
 			iA = comp.GetCustomPads() ? comp.GetPadWidth() : GetPAD_MIL();
+
+			const size_t pinIndex = pA->GetPinIndex();	assert(pinIndex != BAD_PININDEX);
+			comp.GetCompPinOffsets(pinIndex, Xmil, Ymil);
+			xA += Xmil; yA += Ymil;
 		}
 		else if ( pA->GetIsVia() )	iA = GetVIAPAD_MIL();
 		else
@@ -172,7 +185,9 @@ double Board::GetMIN_SEPARATION()	// Minimum separation (in mil) between a pad o
 			if ( nodeIdB == BAD_NODEID && !pB->GetHasPin() ) continue;
 			if ( nodeIdB == nodeIdA ) continue;
 
-			int iB(0);
+			double xB(ii*100), yB(jj*100);	// pB co-ordinates in mil
+			int iB(0);						// pB pad/track diameter in mil
+
 			if ( pB->GetHasWire() )		iB = GetPAD_MIL();	// No custom pad size for wires
 			else if ( pB->GetHasPin() )
 			{
@@ -180,6 +195,10 @@ double Board::GetMIN_SEPARATION()	// Minimum separation (in mil) between a pad o
 				const Component& comp	= m_compMgr.GetComponentById( pB->GetCompId() );
 				assert( comp.GetType() != COMP::INVALID );
 				iB = comp.GetCustomPads() ? comp.GetPadWidth() : GetPAD_MIL();
+
+				const size_t pinIndex = pB->GetPinIndex();	assert(pinIndex != BAD_PININDEX);
+				comp.GetCompPinOffsets(pinIndex, Xmil, Ymil);
+				xB += Xmil; yB += Ymil;
 			}
 			else if ( pB->GetIsVia() )	iB = GetVIAPAD_MIL();
 			else
@@ -189,14 +208,14 @@ double Board::GetMIN_SEPARATION()	// Minimum separation (in mil) between a pad o
 				iB = bFatB ? GetPAD_MIL() : GetTRACK_MIL();	// Fat H/V track section is as wide as pad
 			}
 
-			const double D = 100.0 * sqrt((jj-j)*(jj-j) + (ii-i)*(ii-i));	// Distance between centres of pA and pB
+			const double D = sqrt((xB-xA)*(xB-xA) + (yB-yA)*(yB-yA));	// Distance between centres of pA and pB in mil
 			const double d = D - 0.5 * ( iA + iB );
 			if ( d > dMin ) continue;
 			if ( d < dMin ) { dMin = d;	ClearWarnPoints(); }
-			m_warnPoints[k].push_back( QPointF(0.5*(jj + j), 0.5*(ii + i)) );	// Approximate location is good enough
+			m_warnPoints[k].push_back( QPointF(0.005*(yB+yA), 0.005*(xB+xA)) );	// Approximate location is good enough
 		}
 
-		if ( bDiagsOK )
+		if ( bDiagsOK )	//TODO This would need a major change to handle offset pads
 		{
 			for (int N = 0; N < nRings; N++)
 			{
@@ -246,24 +265,25 @@ void Board::CalcGroundFillBounds()
 		{
 			const Element* p = Get(0, j, i);	// Sufficient to check layer 0 when looking for pins
 			if ( !p->GetHasPin() ) continue;
+			if ( p->GetHasWire() ) continue;	// Wires can't have custom sized pads or offset pads
 
-			int compId = p->GetCompId();
-			if ( compId == BAD_COMPID ) compId = p->GetCompId2();	// Not in first slot, so must be a wire in the second slot
-			assert( compId != BAD_COMPID );
-			if ( compId == BAD_COMPID ) continue;
+			const int compId	= p->GetCompId();	assert( compId != BAD_COMPID );
+			const int pinIndex	= p->GetPinIndex();	assert( pinIndex != BAD_PININDEX );
 
 			Component&	comp	= m_compMgr.GetComponentById( compId );
-			if ( !comp.GetCustomPads() ) continue;	// Only custom pads can be bigger than 100 mil
+			int Xmil(0), Ymil(0);	// Pad offsets
+			comp.GetCompPinOffsets(pinIndex, Xmil, Ymil);
+
+			if ( !comp.GetCustomPads() && Xmil == 0 && Ymil == 0) continue;	// Skip pad if not custom or offset
 
 			const int w			= comp.GetPadWidth();
 			const int padWidth	= GetHalfPixelsFromMIL( w ) + 1;	// +1 for back compatibility (i.e. max pad size was 98)
-			const int delta		= padWidth - C;		// The protrusion
-			if ( delta <= 0 ) continue;
+			const int delta		= padWidth - C;		// The protrusion for a pad without offset
 
-			if ( i == minCol ) deltaL = std::max(deltaL, delta);
-			if ( i == maxCol ) deltaR = std::max(deltaR, delta);
-			if ( j == minRow ) deltaT = std::max(deltaT, delta);
-			if ( j == maxRow ) deltaB = std::max(deltaB, delta);
+			if ( i == minCol ) deltaL = std::max(deltaL, delta - ( Xmil * W ) / 100);
+			if ( i == maxCol ) deltaR = std::max(deltaR, delta + ( Xmil * W ) / 100);
+			if ( j == minRow ) deltaT = std::max(deltaT, delta - ( Ymil * W ) / 100);
+			if ( j == maxRow ) deltaB = std::max(deltaB, delta + ( Ymil * W ) / 100);
 		}
 	}
 	m_gndL = 0 - deltaL;

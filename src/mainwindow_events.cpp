@@ -540,6 +540,34 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
 {
 	commonKeyPressEvent(event);
 
+	// Pin offsets (Ctrl + Cursor keys)
+	if ( GetCtrlKeyDown() && m_board.GetTrackMode() == TRACKMODE::PCB && !m_board.GetCompEdit() )
+	{
+		const Element* pC =  m_board.Get(0, m_gridRow, m_gridCol);
+		if ( pC->GetHasPin() && !pC->GetHasWire() )	// Wires can share holes so cannot have offset pads
+		{
+			Component&		comp		= m_board.GetCompMgr().GetComponentById( pC->GetCompId() );
+			const size_t	pinIndex	= pC->GetPinIndex();
+			int dx(0), dy(0);
+			switch( event->key() )
+			{
+				case Qt::Key_Left:	 dx--; break;
+				case Qt::Key_Right:	 dx++; break;
+				case Qt::Key_Up:	 dy--; break;
+				case Qt::Key_Down:	 dy++; break;
+			}
+			comp.IncCompPinOffsets(pinIndex, dx, dy);
+
+			int X,Y;
+			comp.GetCompPinOffsets(pinIndex, X, Y);
+
+			char buffer[256] = {'\0'};
+			sprintf(buffer,"(X, Y) pad offset (mil) = (%d, %d)", X, Y);
+			ui->statusBar->showMessage(QString(buffer), 1000);
+
+			return RepaintSkipRouting();
+		}
+	}
 	if ( GetCtrlKeyDown() ) return;		// Try to keep Ctrl key input handled by menu items
 	if ( GetShiftKeyDown() ) return;	// Ignore other key presses while trying to group components
 

@@ -59,6 +59,8 @@ public:
 		m_origIdPins1.clear();
 		m_origIdPins2.clear();
 		m_layerPrefs.clear();
+		m_pinOffsetRow.clear();
+		m_pinOffsetCol.clear();
 		m_pinLabels.clear();
 		m_pinAligns.clear();
 		m_shapes.clear();
@@ -143,6 +145,8 @@ public:
 		std::copy(o.m_origIdPins1.begin(),	o.m_origIdPins1.end(),	m_origIdPins1.begin());
 		std::copy(o.m_origIdPins2.begin(),	o.m_origIdPins2.end(),	m_origIdPins2.begin());
 		std::copy(o.m_layerPrefs.begin(),	o.m_layerPrefs.end(),	m_layerPrefs.begin());
+		std::copy(o.m_pinOffsetRow.begin(),	o.m_pinOffsetRow.end(),	m_pinOffsetRow.begin());
+		std::copy(o.m_pinOffsetCol.begin(),	o.m_pinOffsetCol.end(),	m_pinOffsetCol.begin());
 		std::copy(o.m_pinLabels.begin(),	o.m_pinLabels.end(),	m_pinLabels.begin());
 		std::copy(o.m_pinAligns.begin(),	o.m_pinAligns.end(),	m_pinAligns.begin());
 		CopyShapes( o );
@@ -178,12 +182,14 @@ public:
 				&& GetNumShapes()		== o.GetNumShapes();
 		for (size_t i = 0; i < GetNumPins() && bOK; i++)
 		{
-			bOK =  m_nodeIdPins[i]	== o.m_nodeIdPins[i]
-				&& m_origIdPins1[i]	== o.m_origIdPins1[i]
-				&& m_origIdPins2[i] == o.m_origIdPins2[i]
-				&& m_layerPrefs[i]	== o.m_layerPrefs[i]
-				&& m_pinLabels[i]	== o.m_pinLabels[i]
-				&& m_pinAligns[i]	== o.m_pinAligns[i];
+			bOK =  m_nodeIdPins[i]		== o.m_nodeIdPins[i]
+				&& m_origIdPins1[i]		== o.m_origIdPins1[i]
+				&& m_origIdPins2[i]		== o.m_origIdPins2[i]
+				&& m_layerPrefs[i]		== o.m_layerPrefs[i]
+				&& m_pinOffsetRow[i]	== o.m_pinOffsetRow[i]
+				&& m_pinOffsetCol[i]	== o.m_pinOffsetCol[i]
+				&& m_pinLabels[i]		== o.m_pinLabels[i]
+				&& m_pinAligns[i]		== o.m_pinAligns[i];
 		}
 		for (size_t i = 0; i < GetNumShapes() && bOK; i++)
 		{
@@ -199,6 +205,8 @@ public:
 		m_origIdPins1.clear();
 		m_origIdPins2.clear();
 		m_layerPrefs.clear();
+		m_pinOffsetRow.clear();
+		m_pinOffsetCol.clear();
 		m_pinLabels.clear();
 		m_pinAligns.clear();
 		m_shapes.clear();
@@ -228,6 +236,14 @@ public:
 	void SetLayerPref(const size_t& iPinIndex, const uchar& iPref)
 	{
 		if ( iPinIndex < m_layerPrefs.size() ) m_layerPrefs[iPinIndex] = iPref;
+	}
+	void SetPinOffsetRow(const size_t& iPinIndex, const int& i)
+	{
+		if ( iPinIndex < m_pinOffsetRow.size() ) m_pinOffsetRow[iPinIndex] = std::max(-50, std::min(50, i));
+	}
+	void SetPinOffsetCol(const size_t& iPinIndex, const int& i)
+	{
+		if ( iPinIndex < m_pinOffsetCol.size() ) m_pinOffsetCol[iPinIndex] = std::max(-50, std::min(50, i));
 	}
 	void SetPinLabel(const size_t& iPinIndex, const std::string& s)
 	{
@@ -259,6 +275,8 @@ public:
 		m_origIdPins1.clear();	m_origIdPins1.resize(numPins, BAD_NODEID);
 		m_origIdPins2.clear();	m_origIdPins2.resize(numPins, BAD_NODEID);
 		m_layerPrefs.clear();	m_layerPrefs.resize(numPins, LAYER_X);
+		m_pinOffsetRow.clear();	m_pinOffsetRow.resize(numPins, 0);
+		m_pinOffsetCol.clear();	m_pinOffsetCol.resize(numPins, 0);
 		m_pinLabels.clear();	m_pinLabels.resize(numPins, "");
 		m_pinAligns.clear();	m_pinAligns.resize(numPins, Qt::AlignHCenter);
 		SetDefaultPinLabels();
@@ -310,6 +328,16 @@ public:
 	{
 		static uchar noPref(LAYER_X);
 		return ( iPinIndex < m_layerPrefs.size() ) ? m_layerPrefs[iPinIndex] : noPref;
+	}
+	const int&			GetPinOffsetRow(const size_t& iPinIndex) const
+	{
+		static int defaultOffset(0);
+		return ( iPinIndex < m_pinOffsetRow.size() ) ? m_pinOffsetRow[iPinIndex] : defaultOffset;
+	}
+	const int&			GetPinOffsetCol(const size_t& iPinIndex) const
+	{
+		static int defaultOffset(0);
+		return ( iPinIndex < m_pinOffsetCol.size() ) ? m_pinOffsetCol[iPinIndex] : defaultOffset;
 	}
 	const std::string&	GetPinLabel(const size_t& iPinIndex) const
 	{
@@ -402,6 +430,32 @@ public:
 	const int&			GetCompCols() const	{ return GetCols( GetDirection() ); }
 	int					GetLastRow() const	{ return GetRow() + GetCompRows() - 1; }
 	int					GetLastCol() const	{ return GetCol() + GetCompCols() - 1; }
+	void				GetCompPinOffsets(const size_t& iPinIndex, int& Xmil, int& Ymil) const
+	{
+		switch ( GetDirection() )
+		{
+			case 'E':	Xmil = -GetPinOffsetCol(iPinIndex);	Ymil = -GetPinOffsetRow(iPinIndex); return;
+			case 'N':	Xmil = -GetPinOffsetRow(iPinIndex);	Ymil =  GetPinOffsetCol(iPinIndex); return;
+			case 'S':	Xmil =  GetPinOffsetRow(iPinIndex);	Ymil = -GetPinOffsetCol(iPinIndex); return;
+			default:	Xmil =  GetPinOffsetCol(iPinIndex);	Ymil =  GetPinOffsetRow(iPinIndex); return;
+		}
+	}
+	void				SetCompPinOffsets(const size_t& iPinIndex, const int& Xmil, const int& Ymil)
+	{
+		switch ( GetDirection() )
+		{
+			case 'E':	SetPinOffsetCol(iPinIndex, -Xmil);	SetPinOffsetRow(iPinIndex, -Ymil); return;
+			case 'N':	SetPinOffsetRow(iPinIndex, -Xmil);	SetPinOffsetCol(iPinIndex,  Ymil); return;
+			case 'S':	SetPinOffsetRow(iPinIndex,  Xmil);	SetPinOffsetCol(iPinIndex, -Ymil); return;
+			default:	SetPinOffsetCol(iPinIndex,  Xmil);	SetPinOffsetRow(iPinIndex,  Ymil); return;
+		}
+	}
+	void				IncCompPinOffsets(const size_t& iPinIndex, const int& dX, const int& dY)
+	{
+			int Xmil, Ymil;
+			GetCompPinOffsets(iPinIndex, Xmil, Ymil);
+			SetCompPinOffsets(iPinIndex, Xmil + dX, Ymil + dY);
+	}
 	const CompElement*	GetCompElement(const int& compRow, const int& compCol) const
 	{
 		return FootPrint::Get(0, compRow, compCol, (char)GetDirection());
@@ -613,6 +667,11 @@ public:
 				inStream.Load(m_origIdPins2[i]);	// Added in VRT_VERSION_34
 			if ( inStream.GetVersion() >= VRT_VERSION_45 )
 				inStream.Load(m_layerPrefs[i]);		// Added in VRT_VERSION_45
+			if ( inStream.GetVersion() >= VRT_VERSION_46 )
+			{
+				inStream.Load(m_pinOffsetRow[i]);	// Added in VRT_VERSION_46
+				inStream.Load(m_pinOffsetCol[i]);	// Added in VRT_VERSION_46
+			}
 			if ( inStream.GetVersion() >= VRT_VERSION_7 )
 				inStream.Load(m_pinLabels[i]);		// Added in VRT_VERSION_7
 			if ( inStream.GetVersion() >= VRT_VERSION_30 )
@@ -660,6 +719,8 @@ public:
 			outStream.Save(m_origIdPins1[i]);
 			outStream.Save(m_origIdPins2[i]);	// Added in VRT_VERSION_34
 			outStream.Save(m_layerPrefs[i]);	// Added in VRT_VERSION_45
+			outStream.Save(m_pinOffsetRow[i]);	// Added in VRT_VERSION_46
+			outStream.Save(m_pinOffsetCol[i]);	// Added in VRT_VERSION_46
 			outStream.Save(m_pinLabels[i]);		// Added in VRT_VERSION_7
 			outStream.Save(m_pinAligns[i]);		// Added in VRT_VERSION_30
 		}
@@ -679,6 +740,8 @@ private:
 	std::vector<int>			m_origIdPins1;		// NodeIds under the pins BEFORE placement (1st layer)
 	std::vector<int>			m_origIdPins2;		// NodeIds under the pins BEFORE placement (2nd Layer)
 	std::vector<uchar>			m_layerPrefs;		// Prefered layers of the pins
+	std::vector<int>			m_pinOffsetRow;		// Pin row offset (-50 mil to +50 mil) to allow pad shifts in PCB mode
+	std::vector<int>			m_pinOffsetCol;		// Pin row offset (-50 mil to +50 mil) to allow pad shifts in PCB mode
 	std::vector<std::string>	m_pinLabels;		// Pin labels
 	std::vector<int>			m_pinAligns;		// Pin label alignments (Qt::AlignLeft,Qt::AlignRight,Qt::AlignHCenter)
 	std::vector<Shape>			m_shapes;			// For rendering components. Coordinates are RELATIVE to footprint centre.

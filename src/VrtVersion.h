@@ -45,4 +45,5 @@ const int VRT_VERSION_42 = 42;	// Auto-fix corruption of old VRTs on load
 const int VRT_VERSION_43 = 43;	// Added vero numbers and vero letters
 const int VRT_VERSION_44 = 44;	// Added option to show close tracks
 const int VRT_VERSION_45 = 45;	// Added layer preference for each component pin
-const int VRT_VERSION_CURRENT = VRT_VERSION_45;
+const int VRT_VERSION_46 = 46;	// Added pad offsets for PCB mode
+const int VRT_VERSION_CURRENT = VRT_VERSION_46;
