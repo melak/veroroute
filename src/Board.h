@@ -25,7 +25,7 @@
 #include "GroupManager.h"
 #include "ColorManager.h"
 #include "TextManager.h"
-#include <QPointF>
+#include "PolygonHelper.h"
 
 #define SMART_PAN_CAN_AUTOCROP true
 
@@ -412,8 +412,8 @@ public:
 		}
 
 		// Move any warning points
-		for (auto& o : m_warnPoints[0])	o += QPointF(iDown, iRight);
-		for (auto& o : m_warnPoints[1])	o += QPointF(iDown, iRight);
+		for (auto& o : m_warnPoints[0])	o += QPointF(iRight, iDown);
+		for (auto& o : m_warnPoints[1])	o += QPointF(iRight, iDown);
 	}
 
 	bool GetBounds(int& minRow, int& minCol, int& maxRow, int& maxCol) const
@@ -470,6 +470,7 @@ public:
 	// Methods to handle variable pad/hole and PCB tolerances
 	void	GetPadWidths_MIL(std::list<int>& o, int& iDefaultWidth) const;
 	void	GetHoleWidths_MIL(std::list<int>& o, int& iDefaultWidth) const;
+	void	CalcBlob(const QPointF& pC, const int& iPerimeterCode, std::list<MyPolygonF>& out, const bool bHavePad = false);
 	void	GetSeparations(double& minTrackSeparation_mil, double& minGroundFill_mil);
 	double	GetMIN_SEPARATION();			// Minimum possible separation (in mil) between a pad or track without ground fill
 	void	CalcGroundFillBounds();

@@ -102,6 +102,168 @@ void Board::GetHoleWidths_MIL(std::list<int>& o, int& iDefaultWidth) const
 	iDefaultWidth = GetHOLE_MIL();
 	m_compMgr.GetHoleWidths(o, iDefaultWidth);
 }
+void Board::CalcBlob(const QPointF& pC, const int& iPerimeterCode, std::list<MyPolygonF>& out, const bool bHavePad)
+{
+	// Given a grid point (pC) and its perimeter code, this method populates "out" with a
+	// description of the local track pattern at the grid point (or "blob").
+	// Everything is currently in units of grid squares (i.e. 1 unit = 0.1 inches)
+
+	//TODO Refactor this so that it can be used by PaintBlob.
+
+	out.clear();
+
+	const bool	bMaxDiags		= GetDiagsMode() == DIAGSMODE::MAX;
+	const qreal	W				= 1;
+	const qreal	C				= W * 0.5;	// Half square width
+	const qreal	padWidth		= 0.01 * GetPAD_MIL();
+	const qreal	trackWidth		= 0.01 * GetTRACK_MIL();
+	const bool&	bCurvedTracks	= GetCurvedTracks();
+	const bool&	bFatTracks		= !bCurvedTracks && GetFatTracks();
+
+	// Clockwise-ordered array of perimeter points around the square, starting at left...
+	const QPointF p[8] = { pC+QPointF(-C,0), pC+QPointF(-C,-C), pC+QPointF(0,-C), pC+QPointF( C,-C),
+						   pC+QPointF( C,0), pC+QPointF( C, C), pC+QPointF(0, C), pC+QPointF(-C, C) };
+	// Clockwise-ordered array of perimeter point usage, starting at left...
+	bool bUsed[8];
+	for (int iNbr = 0; iNbr < 8; iNbr++) bUsed[iNbr] = ReadCodeBit(iNbr, iPerimeterCode);
+
+	if ( bMaxDiags )	// For "max diagonals mode", force relevant corner perimeter points to be used
+	{
+		if ( bUsed[NBR_L] && bUsed[NBR_T] ) bUsed[NBR_LT] = true;
+		if ( bUsed[NBR_R] && bUsed[NBR_T] ) bUsed[NBR_RT] = true;
+		if ( bUsed[NBR_L] && bUsed[NBR_B] ) bUsed[NBR_LB] = true;
+		if ( bUsed[NBR_R] && bUsed[NBR_B] ) bUsed[NBR_RB] = true;
+	}
+
+	// Construct a track polygon ("blob") based on used perimeter points
+
+	MyPolygonF polygon;
+
+	// Count used perimeter points and find the first
+	int iFirst(-1), N(0);	// N ==> number of perimeter points
+	for (int i = 0; i < 8; i++)
+		if ( bUsed[i] ) { N++; if ( iFirst == -1 ) iFirst = i; }
+
+	bool bStraight(false), bOrtho(false), bObtuse(false);	// Flags to help describe track sections
+	// bStraight	==> Track goes straight across the centre point
+	// bOrtho		==> Track bends 90 degrees
+	// bObtuse		==> Track bends < 90 degrees
+
+	bool bOpenLine(false);	// true ==> don't draw a closed polygon
+
+	if ( N == 0 )
+		polygon << pC;
+	else if ( N == 1 )
+	{
+		polygon << p[iFirst] << pC;
+		bStraight = true;
+	}
+	else
+	{
+		if ( N == 2 )
+		{
+			int  nCount(0);					// Perimeter point counter
+			int  iL(iFirst), iR(iFirst);	// Indexes of consecutive used perimeter points
+			for (int ii = 1; ii <= 8 && nCount < N; ii++)	// A full clockwise loop around the perimeter back to the start
+			{
+				const int jj = ( ii + iFirst ) % 8;
+				if ( !bUsed[jj] ) continue;
+				iL = iR;	iR = jj;	// Update iL and iR
+				const int iDiff = ( 8 + iR - iL ) % 8;
+				bStraight	= ( iDiff == 4 );
+				bOrtho		= ( iDiff == 2 || iDiff == 6 );
+				bObtuse		= ( iDiff == 3 || iDiff == 5 );
+				nCount++;
+			}
+			bOpenLine = ( bOrtho || bObtuse || bStraight );
+		}
+		int  nCount(0);					// Perimeter point counter
+		int  iL(iFirst), iR(iFirst);	// Indexes of consecutive used perimeter points
+		for (int ii = 1; ii <= 8 && nCount < N; ii++)	// A full clockwise loop around the perimeter back to the start
+		{
+			if ( bOpenLine && ii == 8 ) break;	// bOpenLine ==> don't close the polygon
+			const int jj = ( ii + iFirst ) % 8;
+			if ( !bUsed[jj] ) continue;
+			iL = iR;	iR = jj;	// Update iL and iR
+			const int  iDiff		= ( 8 + iR - iL ) % 8;
+			const bool bOrtho		= ( iDiff == 2 || iDiff == 6 );
+			const bool bObtuse		= ( iDiff == 3 || iDiff == 5 );
+			nCount++;
+			if ( bOrtho || bObtuse )	// Bend <= 90 degrees
+			{
+				if ( bHavePad && bOpenLine ) polygon << pC;	// If we have a pad, we actually want to draw a closed curve including pC
+
+				if ( bCurvedTracks )
+				{
+					// Make an N-point curve from L to R passing near central control point C
+					// Current interpolation is quadratic.
+					// Using higher order (e.g. 2.5) gives bends passing closer to C (hence sharper corners)
+					const int		N = 10;
+					const double	d = 1.0 / N;
+					const QPointF	pLC(p[iL] - pC), pRC(p[iR] - pC);
+					for (int i = 0; i <= N; i++)
+					{
+						const double t(i * d), u(1 - t);
+						polygon << pC + pLC*(u*u) + pRC*(t*t);	// Bezier curve (quadratic interpolation)
+					//	polygon << pC + pLC*pow(u,2.5) + pRC*pow(t,2.5);	// Sharper bends
+					}
+				}
+				else if ( bOrtho )	// Bend == 90 degrees (chosen to approximate the above curve)
+				{
+					const double r = 0.5;			// i.e. 2*t^2	when t = 0.5
+				//	const double r = 0.25*sqrt(2);	// i.e. 2*t^2.5	when t = 0.5
+					const double s = 1 - r;
+					polygon << p[iL] << p[iL]*r + pC*s << p[iR]*r + pC*s << p[iR];	// Draw mitred corner instead of 90 degree bend for L-C-R
+				}
+				else
+					polygon << p[iL] << pC << p[iR];	// Draw a sharp bend for L-C-R instead of a smooth curve
+			}
+			else
+			{
+				if ( iL == iFirst ) polygon << p[iL];	// Add "L" to the polygon is it's the first point
+				if ( iR != iFirst ) polygon << p[iR];	// Add "R" to the polygon if it isn't the first point
+			}
+		}
+		if ( polygon.size() == 2 && !bStraight )	// If points are not directly opposite the centre ...
+			polygon << pC;							// ... add centre point
+	}
+
+	if ( bHavePad && !bStraight ) bOpenLine = false;
+
+
+	// Set other polygon attributes, then copy the polygon to the output polygon list
+	polygon.m_radius	= trackWidth * 0.5;
+	polygon.m_bClosed	= (N > 3) || !bOpenLine;
+	out.push_back(polygon);
+
+	if ( bFatTracks && padWidth > trackWidth )	// Widen H and V tracks to pad width
+	{
+		// Create additional polygons for any fat H/V tracks, and copy them to the output polygon list
+		polygon.m_radius	= padWidth * 0.5;
+		polygon.m_bClosed	= false;
+		for (int iNbr = 0; iNbr < 8; iNbr += 2)	// Loop non-diagonal perimeter points
+		{
+			if ( !bUsed[iNbr] ) continue;
+
+			int iNbrOpp = (iNbr + 12 ) % 8;
+			if ( bUsed[iNbrOpp] )	// If can go straight across, do so
+			{
+				if ( iNbr <= 2 )	// No overlay
+				{
+					polygon.clear();
+					polygon << p[iNbr] << p[iNbrOpp];
+					out.push_back(polygon);
+				}
+			}
+			else
+			{
+				polygon.clear();
+				polygon << pC << p[iNbr];
+				out.push_back(polygon);
+			}
+		}
+	}
+}
 void Board::GetSeparations(double& minTrackSeparation_mil, double& minGroundFill_mil)
 {
 	// Calc minimum track separation in mil
@@ -116,137 +278,116 @@ void Board::GetSeparations(double& minTrackSeparation_mil, double& minGroundFill
 	// then all locations have min separation, so don't show warning points in the view
 	if ( minTrackSeparation_mil == dGap ) ClearWarnPoints();
 }
-double Board::GetMIN_SEPARATION()	// Minimum separation (in mil) between a pad or track without ground fill
+double Board::GetMIN_SEPARATION()
 {
-	//TODO This cannot actually work properly with pad offsets since the search space is
-	// still actually a grid of 100 mil squares.
-	// An offset pad could have a vertical track on its right but it would not check all
-	// points on that track, only those that lie on the grid, and so would miss the closest point.
-
-	// Following code applies to proper 2-layer routing.
-	// So wires have regular pad sizes, and are not converted to tracks on the top layer using a via.
-
-	const bool		bDiagsOK	= GetDiagsMode() != DIAGSMODE::OFF;
-	const bool&		bFatTracks	= GetFatTracks() && !GetCurvedTracks();
-	const double	dDiagonal	= 100.0 * sqrt(2.0);
-	const int		nRings		= 2;	// 2 ==> Max pad size supported by VeroRoute could be up to 200 mil
-	//TODO Need to refine the check below to deal with nRings = 2 if pad size increases beyong 130.
-	//     The "knight move" squares on the second ring are not quite right because the
-	//     angle in question is not orthogonal to either the horizontal, vertical, or diagonal tracks.
-	//     Curved tracks don't help either.  As it stands, the current calculation will be too strict
-	//     for some track styles.
-
+	const int nRings = 2;	// 2 ==> Max pad size supported by VeroRoute could be up to 200 mil in future
 	int Xmil, Ymil;	// For pad offsets
+
+	const bool bPCB = GetTrackMode() == TRACKMODE::PCB;
 
 	// Get bounds to minimise looping
 	int minRow, minCol, maxRow, maxCol;
 	GetBounds(minRow, minCol, maxRow, maxCol);
 
-	double dMin(100.0);	// Only care about separations less than 100 mil
 	ClearWarnPoints();	// Wipe list of warning locations on both layers
+
+	qreal DMIN_ALL_LYRS(DBL_MAX);
 	for (int k = 0, kMax = GetLyrs(); k < kMax; k++)	// Check all layers
-	for (int j = minRow; j <= maxRow; j++)
-	for (int i = minCol; i <= maxCol; i++)
 	{
-		const Element*	pA				= Get(k, j, i);
-		const int&		nodeIdA			= pA->GetNodeId();
-		if ( nodeIdA == BAD_NODEID && !pA->GetHasPin() ) continue;
+		QPolygonF	pWarnLyr;
+		qreal		DminLyr(DBL_MAX);
 
-		int xA(i*100), yA(j*100);	// pA co-ordinates in mil
-		int iA(0);					// pA pad/track diameter in mil
-
-		if ( pA->GetHasWire() )		iA = GetPAD_MIL();	// No custom pad size for wires
-		else if ( pA->GetHasPin() )
+		for (int j = minRow; j <= maxRow; j++)
+		for (int i = minCol; i <= maxCol; i++)
 		{
-			// Non-wire part must use slot 0
-			const Component& comp	= m_compMgr.GetComponentById( pA->GetCompId() );
-			assert( comp.GetType() != COMP::INVALID );
-			iA = comp.GetCustomPads() ? comp.GetPadWidth() : GetPAD_MIL();
+			const Element*	pA		= Get(k, j, i);
+			const int&		nodeIdA	= pA->GetNodeId();
+			if ( nodeIdA == BAD_NODEID && !pA->GetHasPin() ) continue;	// Skip if no track and no pin
 
-			const size_t pinIndex = pA->GetPinIndex();	assert(pinIndex != BAD_PININDEX);
-			comp.GetCompPinOffsets(pinIndex, Xmil, Ymil);
-			xA += Xmil; yA += Ymil;
-		}
-		else if ( pA->GetIsVia() )	iA = GetVIAPAD_MIL();
-		else
-		{
-			const int	iPerimeterCodeA = GetPerimeterCode(pA);	// 0 to 255
-			const bool	bFatA			= bFatTracks && ( ( iPerimeterCodeA & CODEBITS_HV ) > 0 );
-			iA = bFatA ? GetPAD_MIL() : GetTRACK_MIL();	// Fat H/V track section is as wide as pad
-		}
-
-		// Only need to loop half the directions in the following loop (the i,j scan takes care of the other half)
-		for (int jj = std::max(minRow,j-nRings); jj <= j; jj++)
-		for (int ii = std::max(minCol,i-nRings), iiMax = std::min(maxCol,i+nRings); ii <= iiMax; ii++)
-		{
-			if ( jj == j && ii == i ) continue;	// Skip pA
-			const Element*	pB		= Get(k, jj, ii);
-			const int&		nodeIdB	= pB->GetNodeId();
-			if ( nodeIdB == BAD_NODEID && !pB->GetHasPin() ) continue;
-			if ( nodeIdB == nodeIdA ) continue;
-
-			double xB(ii*100), yB(jj*100);	// pB co-ordinates in mil
-			int iB(0);						// pB pad/track diameter in mil
-
-			if ( pB->GetHasWire() )		iB = GetPAD_MIL();	// No custom pad size for wires
-			else if ( pB->GetHasPin() )
+			MyPointF pointA(i, j);	// pA co-ordinates and radius (in units of grid squares)
+			if ( pA->GetHasWire() )
+				pointA.m_radius = 0.005 * GetPAD_MIL();	// No custom pad size for wires
+			else if ( pA->GetHasPin() )
 			{
-				// Non-wire part must use slot 0
-				const Component& comp	= m_compMgr.GetComponentById( pB->GetCompId() );
+				const Component& comp	= m_compMgr.GetComponentById( pA->GetCompId() );	// Non-wire part must use slot 0
 				assert( comp.GetType() != COMP::INVALID );
-				iB = comp.GetCustomPads() ? comp.GetPadWidth() : GetPAD_MIL();
-
-				const size_t pinIndex = pB->GetPinIndex();	assert(pinIndex != BAD_PININDEX);
-				comp.GetCompPinOffsets(pinIndex, Xmil, Ymil);
-				xB += Xmil; yB += Ymil;
-			}
-			else if ( pB->GetIsVia() )	iB = GetVIAPAD_MIL();
-			else
-			{
-				const int	iPerimeterCodeB = GetPerimeterCode(pB);	// 0 to 255
-				const bool	bFatB			= bFatTracks && ( ( iPerimeterCodeB & CODEBITS_HV ) > 0 );
-				iB = bFatB ? GetPAD_MIL() : GetTRACK_MIL();	// Fat H/V track section is as wide as pad
-			}
-
-			const double D = sqrt((xB-xA)*(xB-xA) + (yB-yA)*(yB-yA));	// Distance between centres of pA and pB in mil
-			const double d = D - 0.5 * ( iA + iB );
-			if ( d > dMin ) continue;
-			if ( d < dMin ) { dMin = d;	ClearWarnPoints(); }
-			m_warnPoints[k].push_back( QPointF(0.005*(yB+yA), 0.005*(xB+xA)) );	// Approximate location is good enough
-		}
-
-		if ( bDiagsOK )	//TODO This would need a major change to handle offset pads
-		{
-			for (int N = 0; N < nRings; N++)
-			{
-				// Look for orthogonal (not radial) diagonal track portions in ring N
-				for (int iNbr = 0; iNbr < 8; iNbr += 2)	// Loop all non-diagonal nbrs
+				// Handle custom pad sizes
+				pointA.m_radius = 0.005 * ( comp.GetCustomPads() ? comp.GetPadWidth() : GetPAD_MIL() );
+				// Handle pad offsets
+				if ( bPCB )
 				{
-					const Element*	pC		= pA->GetNbr(iNbr);	// Move L/T/R/B relative to A to a point in ring 0
-					for (int nn = 0; nn < N; nn++)
-						pC = pC->GetNbr((iNbr+1) %8);			// ... then slide outwards LT/RT/RB/LB to a point in ring N
-					const int&		nodeIdC	= pC->GetNodeId();
-					if ( nodeIdC == BAD_NODEID || nodeIdC == nodeIdA ) continue;
-					const int iPerimeterCodeC = GetPerimeterCode(pC);	// 0 to 255
-					// .. then check for track in direction RT/RB/LB/LT
-					if ( ReadCodeBit((iNbr+3) % 8, iPerimeterCodeC) )
-					{
-						const double d = 0.5 * ( (1 + 2 * N) * dDiagonal - iA - GetTRACK_MIL() );
-						if ( d > dMin ) continue;
-						if ( d < dMin ) { dMin = d;	ClearWarnPoints();  }
-						switch( iNbr )
-						{
-							case 0:	m_warnPoints[k].push_back( QPointF(-0.35355*(1+N)+j, -0.35355*(1+N)+i) );	break;
-							case 2:	m_warnPoints[k].push_back( QPointF(-0.35355*(1+N)+j,  0.35355*(1+N)+i) );	break;
-							case 4:	m_warnPoints[k].push_back( QPointF( 0.35355*(1+N)+j,  0.35355*(1+N)+i) );	break;
-							case 6:	m_warnPoints[k].push_back( QPointF( 0.35355*(1+N)+j, -0.35355*(1+N)+i) );	break;
-						}
-					}
+					const size_t pinIndex = pA->GetPinIndex();	assert(pinIndex != BAD_PININDEX);
+					comp.GetCompPinOffsets(pinIndex, Xmil, Ymil);
+					pointA += QPointF(0.01 * Xmil, 0.01 * Ymil);
 				}
 			}
+			else if ( pA->GetIsVia() )
+				pointA.m_radius = 0.005 * GetVIAPAD_MIL();
+
+			std::list<MyPolygonF> blobA;	// Blob A points (in units of grid squares)
+			CalcBlob(QPointF(i,j), GetPerimeterCode(pA), blobA, pA->GetHasPin());
+
+			// Only need to loop half the directions in the following loop (the i,j scan takes care of the other half)
+			for (int jj = std::max(minRow,j-nRings); jj <= j; jj++)
+			for (int ii = std::max(minCol,i-nRings), iiMax = std::min(maxCol,i+nRings); ii <= iiMax; ii++)
+			{
+				if ( jj == j && ii == i ) continue;	// Skip pA
+				const Element*	pB		= Get(k, jj, ii);
+				const int&		nodeIdB	= pB->GetNodeId();
+				if ( nodeIdB == BAD_NODEID && !pB->GetHasPin() ) continue;	// Skip if no track and no pin
+				if ( nodeIdB == nodeIdA ) continue;
+
+				MyPointF pointB(ii, jj);	// pB co-ordinates and radius (in units of grid squares)
+				if ( pB->GetHasWire() )
+					pointB.m_radius = 0.005 * GetPAD_MIL();	// No custom pad size for wires
+				else if ( pB->GetHasPin() )
+				{
+					const Component& comp	= m_compMgr.GetComponentById( pB->GetCompId() );	// Non-wire part must use slot 0
+					assert( comp.GetType() != COMP::INVALID );
+					// Handle custom pad sizes
+					pointB.m_radius = 0.005 * ( comp.GetCustomPads() ? comp.GetPadWidth() : GetPAD_MIL() );
+					// Handle pad offsets
+					if ( bPCB )
+					{
+						const size_t pinIndex = pB->GetPinIndex();	assert(pinIndex != BAD_PININDEX);
+						comp.GetCompPinOffsets(pinIndex, Xmil, Ymil);
+						pointB += QPointF(0.01 * Xmil, 0.01 * Ymil);
+					}
+				}
+				else if ( pB->GetIsVia() )
+					pointB.m_radius = 0.005 * GetVIAPAD_MIL();
+
+				std::list<MyPolygonF> blobB;	// Blob B points (in units of grid squares)
+				CalcBlob(QPointF(ii,jj), GetPerimeterCode(pB), blobB, pB->GetHasPin());
+
+				// Pad A to Pad B
+				if ( pointA.m_radius > 0 && pointB.m_radius > 0 )
+					PolygonHelper::UpdateClosest(pointA, pointB, pWarnLyr, DminLyr);
+
+				// Pad A to Blob B
+				if ( pointA.m_radius > 0 )
+					for(auto& b : blobB) PolygonHelper::UpdateClosest(pointA, b, pWarnLyr ,DminLyr);
+
+				// Pad B to Blob A
+				if ( pointB.m_radius > 0 )
+					for(auto& a : blobA) PolygonHelper::UpdateClosest(pointB, a, pWarnLyr, DminLyr);
+
+				// Blob A to Blob B
+				for(auto & a : blobA)
+					for(auto& b : blobB)
+						PolygonHelper::UpdateClosest(a, b, pWarnLyr, DminLyr);
+			}
 		}
-	}
-	return std::max(0.0, dMin);
+
+		if ( DminLyr < DMIN_ALL_LYRS )	// If min for layer is lowest across all layers ...
+			ClearWarnPoints();			// ... wipe all warning points
+		if ( DminLyr <= DMIN_ALL_LYRS )
+		{
+			for (auto& p : pWarnLyr) m_warnPoints[k].push_back(p);
+			DMIN_ALL_LYRS = DminLyr;
+		}
+	}	// Next layer
+	return 100.0 * DMIN_ALL_LYRS;	// Convert from qrid squares to mil
 }
 
 void Board::CalcGroundFillBounds()
@@ -267,8 +408,8 @@ void Board::CalcGroundFillBounds()
 			if ( !p->GetHasPin() ) continue;
 			if ( p->GetHasWire() ) continue;	// Wires can't have custom sized pads or offset pads
 
-			const int compId	= p->GetCompId();	assert( compId != BAD_COMPID );
-			const int pinIndex	= p->GetPinIndex();	assert( pinIndex != BAD_PININDEX );
+			const int	 compId		= p->GetCompId();	assert( compId != BAD_COMPID );
+			const size_t pinIndex	= p->GetPinIndex();	assert( pinIndex != BAD_PININDEX );
 
 			Component&	comp	= m_compMgr.GetComponentById( compId );
 			int Xmil(0), Ymil(0);	// Pad offsets

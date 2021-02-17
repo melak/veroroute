@@ -283,8 +283,8 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 	const bool&	bFatTracks		= !bCurvedTracks && guiCtrl.GetFatTracks();
 
 	// Clockwise-ordered array of perimeter points around the square, starting at left...
-	const QPointF p[8] = { pC+QPointF(-C,0), pC+QPointF(-C,-C), pC+QPointF(0,-C), pC+QPointF(C,-C),
-						   pC+QPointF( C,0), pC+QPointF( C, C), pC+QPointF(0, C), pC+QPointF(-C,C) };
+	const QPointF p[8] = { pC+QPointF(-C,0), pC+QPointF(-C,-C), pC+QPointF(0,-C), pC+QPointF( C,-C),
+						   pC+QPointF( C,0), pC+QPointF( C, C), pC+QPointF(0, C), pC+QPointF(-C, C) };
 	// Clockwise-ordered array of perimeter point usage, starting at left...
 	bool bUsed[8];
 	for (int iNbr = 0; iNbr < 8; iNbr++) bUsed[iNbr] = ReadCodeBit(iNbr, iPerimeterCode);
@@ -309,7 +309,6 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 	// bStraight	==> Track goes straight across the centre point
 	// bOrtho		==> Track bends 90 degrees
 	// bObtuse		==> Track bends < 90 degrees
-
 
 	bool bOpenLine(false);	// true ==> don't draw a closed polygon
 
@@ -1746,8 +1745,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		painter.setBrush(Qt::NoBrush);
 		for (auto& o : m_board.GetWarnPoints(layer))
 		{
-			GetXY(board, o.rx(), o.ry(), X, Y);
-			painter.drawRect(X-C/2, Y-C/2, C, C);
+			GetXY(board, o.ry(), o.rx(), X, Y);
+			painter.drawRect(X-C/3, Y-C/3, W/3, W/3);
 		}
 		painter.restore();
 	}

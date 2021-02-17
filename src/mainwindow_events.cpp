@@ -551,10 +551,10 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
 			int dx(0), dy(0);
 			switch( event->key() )
 			{
-				case Qt::Key_Left:	 dx--; break;
-				case Qt::Key_Right:	 dx++; break;
-				case Qt::Key_Up:	 dy--; break;
-				case Qt::Key_Down:	 dy++; break;
+				case Qt::Key_Left:	 dx-=5; break;
+				case Qt::Key_Right:	 dx+=5; break;
+				case Qt::Key_Up:	 dy-=5; break;
+				case Qt::Key_Down:	 dy+=5; break;
 			}
 			comp.IncCompPinOffsets(pinIndex, dx, dy);
 

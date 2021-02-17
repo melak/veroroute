@@ -79,6 +79,7 @@ HEADERS  += mainwindow.h \
     MyRGB.h \
     NodeInfo.h \
     NodeInfoManager.h \
+    PolygonHelper.h \
     Template.h \
     TemplateManager.h \
     Persist.h \
