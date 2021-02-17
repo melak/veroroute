@@ -1733,13 +1733,19 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	if ( !m_bWriteGerber && !bVero && trackMode != TRACKMODE::OFF && m_board.GetShowCloseTracks() )
 	{
 		painter.save();
-		m_orangePen.setWidth(3);
-		painter.setPen(m_orangePen);
 		painter.setBrush(Qt::NoBrush);
-		for (auto& o : m_board.GetWarnPoints(layer))
+		for (int lyr = 0; lyr < m_board.GetLyrs(); lyr++)
 		{
-			GetXY(board, o.ry(), o.rx(), X, Y);
-			painter.drawRect(X-C/3, Y-C/3, W/3, W/3);
+			m_orangePen.setWidth(lyr == layer ? 3 : 1);	// Current layer shown fatter
+			painter.setPen(m_orangePen);
+			for (auto& o : m_board.GetWarnPoints(lyr))
+			{
+				GetXY(board, o.ry(), o.rx(), X, Y);
+				if ( lyr == layer )
+					painter.drawRect(X-C/3, Y-C/3, W/3, W/3);
+				else
+					painter.drawRect(X-C/6, Y-C/6, W/6, W/6);
+			}
 		}
 		painter.restore();
 	}
