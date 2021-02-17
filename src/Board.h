@@ -470,7 +470,7 @@ public:
 	// Methods to handle variable pad/hole and PCB tolerances
 	void	GetPadWidths_MIL(std::list<int>& o, int& iDefaultWidth) const;
 	void	GetHoleWidths_MIL(std::list<int>& o, int& iDefaultWidth) const;
-	void	CalcBlob(const QPointF& pC, const int& iPerimeterCode, std::list<MyPolygonF>& out, const bool bHavePad = false);
+	void	CalcBlob(const QPointF& pC, const QPointF& pCoffset, const int& iPerimeterCode, std::list<MyPolygonF>& out, const bool bHavePad = false);
 	void	GetSeparations(double& minTrackSeparation_mil, double& minGroundFill_mil);
 	double	GetMIN_SEPARATION();			// Minimum possible separation (in mil) between a pad or track without ground fill
 	void	CalcGroundFillBounds();

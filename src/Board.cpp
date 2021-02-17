@@ -102,7 +102,7 @@ void Board::GetHoleWidths_MIL(std::list<int>& o, int& iDefaultWidth) const
 	iDefaultWidth = GetHOLE_MIL();
 	m_compMgr.GetHoleWidths(o, iDefaultWidth);
 }
-void Board::CalcBlob(const QPointF& pC, const int& iPerimeterCode, std::list<MyPolygonF>& out, const bool bHavePad)
+void Board::CalcBlob(const QPointF& pC, const QPointF& pCoffset, const int& iPerimeterCode, std::list<MyPolygonF>& out, const bool bHavePad)
 {
 	// Given a grid point (pC) and its perimeter code, this method populates "out" with a
 	// description of the local track pattern at the grid point (or "blob").
@@ -119,6 +119,7 @@ void Board::CalcBlob(const QPointF& pC, const int& iPerimeterCode, std::list<MyP
 	const qreal	trackWidth		= 0.01 * GetTRACK_MIL();
 	const bool&	bCurvedTracks	= GetCurvedTracks();
 	const bool&	bFatTracks		= !bCurvedTracks && GetFatTracks();
+	const bool	bLeg			= ( iPerimeterCode > 0 ) && pCoffset != pC;
 
 	// Clockwise-ordered array of perimeter points around the square, starting at left...
 	const QPointF p[8] = { pC+QPointF(-C,0), pC+QPointF(-C,-C), pC+QPointF(0,-C), pC+QPointF( C,-C),
@@ -236,6 +237,16 @@ void Board::CalcBlob(const QPointF& pC, const int& iPerimeterCode, std::list<MyP
 	polygon.m_bClosed	= (N > 3) || !bOpenLine;
 	out.push_back(polygon);
 
+	if ( bLeg )	// Track leg from offset pad to its grid origin
+	{
+		polygon.m_radius	= trackWidth * 0.5;
+		polygon.m_bClosed	= false;
+
+		polygon.clear();
+		polygon << pC << pCoffset;
+		out.push_back(polygon);
+	}
+
 	if ( bFatTracks && padWidth > trackWidth )	// Widen H and V tracks to pad width
 	{
 		// Create additional polygons for any fat H/V tracks, and copy them to the output polygon list
@@ -304,28 +315,30 @@ double Board::GetMIN_SEPARATION()
 			const int&		nodeIdA	= pA->GetNodeId();
 			if ( nodeIdA == BAD_NODEID && !pA->GetHasPin() ) continue;	// Skip if no track and no pin
 
-			MyPointF pointA(i, j);	// pA co-ordinates and radius (in units of grid squares)
+			MyPointF pointA(i, j, 0.005 * GetTRACK_MIL());	// The blob centre for pA (note: track radius !!!)
+			MyPointF pointAoffset(pointA);					// The pad centre for pA (pad radius will be set below)
+
 			if ( pA->GetHasWire() )
-				pointA.m_radius = 0.005 * GetPAD_MIL();	// No custom pad size for wires
+				pointAoffset.m_radius = 0.005 * GetPAD_MIL();	// No custom pad size for wires
 			else if ( pA->GetHasPin() )
 			{
 				const Component& comp	= m_compMgr.GetComponentById( pA->GetCompId() );	// Non-wire part must use slot 0
 				assert( comp.GetType() != COMP::INVALID );
 				// Handle custom pad sizes
-				pointA.m_radius = 0.005 * ( comp.GetCustomPads() ? comp.GetPadWidth() : GetPAD_MIL() );
+				pointAoffset.m_radius = 0.005 * ( comp.GetCustomPads() ? comp.GetPadWidth() : GetPAD_MIL() );
 				// Handle pad offsets
 				if ( bPCB )
 				{
 					const size_t pinIndex = pA->GetPinIndex();	assert(pinIndex != BAD_PININDEX);
 					comp.GetCompPinOffsets(pinIndex, Xmil, Ymil);
-					pointA += QPointF(0.01 * Xmil, 0.01 * Ymil);
+					pointAoffset += QPointF(0.01 * Xmil, 0.01 * Ymil);
 				}
 			}
 			else if ( pA->GetIsVia() )
-				pointA.m_radius = 0.005 * GetVIAPAD_MIL();
+				pointAoffset.m_radius = 0.005 * GetVIAPAD_MIL();
 
 			std::list<MyPolygonF> blobA;	// Blob A points (in units of grid squares)
-			CalcBlob(QPointF(i,j), GetPerimeterCode(pA), blobA, pA->GetHasPin());
+			CalcBlob(pointA, pointAoffset, GetPerimeterCode(pA), blobA, pA->GetHasPin());
 
 			// Only need to loop half the directions in the following loop (the i,j scan takes care of the other half)
 			for (int jj = std::max(minRow,j-nRings); jj <= j; jj++)
@@ -337,40 +350,42 @@ double Board::GetMIN_SEPARATION()
 				if ( nodeIdB == BAD_NODEID && !pB->GetHasPin() ) continue;	// Skip if no track and no pin
 				if ( nodeIdB == nodeIdA ) continue;
 
-				MyPointF pointB(ii, jj);	// pB co-ordinates and radius (in units of grid squares)
+				MyPointF pointB(ii, jj, 0.005 * GetTRACK_MIL());	// The blob centre for pB (note: track radius !!!)
+				MyPointF pointBoffset(pointB);						// The pad centre for pB (pad radius will be set below)
+
 				if ( pB->GetHasWire() )
-					pointB.m_radius = 0.005 * GetPAD_MIL();	// No custom pad size for wires
+					pointBoffset.m_radius = 0.005 * GetPAD_MIL();	// No custom pad size for wires
 				else if ( pB->GetHasPin() )
 				{
 					const Component& comp	= m_compMgr.GetComponentById( pB->GetCompId() );	// Non-wire part must use slot 0
 					assert( comp.GetType() != COMP::INVALID );
 					// Handle custom pad sizes
-					pointB.m_radius = 0.005 * ( comp.GetCustomPads() ? comp.GetPadWidth() : GetPAD_MIL() );
+					pointBoffset.m_radius = 0.005 * ( comp.GetCustomPads() ? comp.GetPadWidth() : GetPAD_MIL() );
 					// Handle pad offsets
 					if ( bPCB )
 					{
 						const size_t pinIndex = pB->GetPinIndex();	assert(pinIndex != BAD_PININDEX);
 						comp.GetCompPinOffsets(pinIndex, Xmil, Ymil);
-						pointB += QPointF(0.01 * Xmil, 0.01 * Ymil);
+						pointBoffset += QPointF(0.01 * Xmil, 0.01 * Ymil);
 					}
 				}
 				else if ( pB->GetIsVia() )
-					pointB.m_radius = 0.005 * GetVIAPAD_MIL();
+					pointBoffset.m_radius = 0.005 * GetVIAPAD_MIL();
 
 				std::list<MyPolygonF> blobB;	// Blob B points (in units of grid squares)
-				CalcBlob(QPointF(ii,jj), GetPerimeterCode(pB), blobB, pB->GetHasPin());
+				CalcBlob(pointB, pointBoffset, GetPerimeterCode(pB), blobB, pB->GetHasPin());
 
 				// Pad A to Pad B
-				if ( pointA.m_radius > 0 && pointB.m_radius > 0 )
-					PolygonHelper::UpdateClosest(pointA, pointB, pWarnLyr, DminLyr);
+				if ( pointAoffset.m_radius > 0 && pointBoffset.m_radius > 0 )
+					PolygonHelper::UpdateClosest(pointAoffset, pointBoffset, pWarnLyr, DminLyr);
 
 				// Pad A to Blob B
-				if ( pointA.m_radius > 0 )
-					for(auto& b : blobB) PolygonHelper::UpdateClosest(pointA, b, pWarnLyr ,DminLyr);
+				if ( pointAoffset.m_radius > 0 )
+					for(auto& b : blobB) PolygonHelper::UpdateClosest(pointAoffset, b, pWarnLyr ,DminLyr);
 
 				// Pad B to Blob A
-				if ( pointB.m_radius > 0 )
-					for(auto& a : blobA) PolygonHelper::UpdateClosest(pointB, a, pWarnLyr, DminLyr);
+				if ( pointBoffset.m_radius > 0 )
+					for(auto& a : blobA) PolygonHelper::UpdateClosest(pointBoffset, a, pWarnLyr, DminLyr);
 
 				// Blob A to Blob B
 				for(auto & a : blobA)
