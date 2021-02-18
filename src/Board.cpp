@@ -388,9 +388,8 @@ double Board::GetMIN_SEPARATION()
 					for(auto& a : blobA) PolygonHelper::UpdateClosest(pointBoffset, a, pWarnLyr, DminLyr);
 
 				// Blob A to Blob B
-				for(auto & a : blobA)
-					for(auto& b : blobB)
-						PolygonHelper::UpdateClosest(a, b, pWarnLyr, DminLyr);
+				if ( abs(jj - j) < 2 && abs(ii - i) < 2 )	// Want pA and pB to be neighbours
+					for(auto & a : blobA) for(auto& b : blobB) PolygonHelper::UpdateClosest(a, b, pWarnLyr, DminLyr);
 			}
 		}
 
