@@ -22,12 +22,12 @@
 #include "Common.h"
 #include <QPolygonF>
 
-// A set of methods for calculating distances between tracks and pads
+// A helper for calculating separations between tracks
 
 struct MyPointF : public QPointF		// A point + the pen radius for drawing it
 {
 	MyPointF(qreal x = 0, qreal y = 0, qreal radius = 0) : QPointF(x,y), m_radius(radius) {}
-	~MyPointF()	{}
+	~MyPointF() {}
 	MyPointF(const QPointF& p, const qreal& radius) : QPointF(p), m_radius(radius) {}
 	MyPointF(const MyPointF& o) : QPointF(o), m_radius(o.m_radius) {}
 	MyPointF& operator=(const MyPointF& o)	{ QPointF::operator=(o); m_radius = o.m_radius; return *this; }
@@ -37,7 +37,7 @@ struct MyPointF : public QPointF		// A point + the pen radius for drawing it
 struct MyPolygonF : public QPolygonF	// A polygon + the pen radius for drawing it
 {
 	MyPolygonF() {}
-	~MyPolygonF()	{}
+	~MyPolygonF() {}
 	MyPolygonF(const QPolygonF& p, const qreal& radius, bool bClosed) : QPolygonF(p), m_radius(radius), m_bClosed(bClosed) {}
 	MyPolygonF(const MyPolygonF& o) : QPolygonF(o), m_radius(o.m_radius), m_bClosed(o.m_bClosed) {}
 	MyPolygonF& operator=(const MyPolygonF& o) { QPolygonF::operator=(o); m_radius = o.m_radius; m_bClosed = o.m_bClosed; return *this; }
@@ -47,86 +47,60 @@ struct MyPolygonF : public QPolygonF	// A polygon + the pen radius for drawing i
 
 struct PolygonHelper
 {
-private:
-	static QPointF Closest(const QPointF& X, const QPointF& A, const QPointF& B)	// Closest point to X on line segment A-B
-	{
-		if ( A == B ) return A;
-		const QPointF	AB(B-A), AX(X-A);
-		const qreal		lambda = std::max(0.0, std::min(1.0, QPointF::dotProduct(AB,AX) / QPointF::dotProduct(AB,AB)));
-		return A + (AB * lambda);
-	}
-	static qreal Distance(const QPointF& A, const QPointF& B)	// Distance from A to B
-	{
-		const QPointF r(B-A);	return sqrt( QPointF::dotProduct(r,r) );
-	}
-public:
-	static void UpdateClosest(const MyPointF& X, const MyPointF& Y,	// For calculating separation between 2 points.
-							  QPolygonF& pWarn, qreal& Dmin)		// Updates Dmin, and the set of warning points pWarn.
+	PolygonHelper()		{ m_pWarn.clear(); }
+	~PolygonHelper()	{ m_pWarn.clear(); }
+	QPolygonF	m_pWarn;			// Set of warning points
+	qreal		m_Dmin = DBL_MAX;	// The closest separation found
+
+	inline void CalcSeparation(const MyPointF& X, const MyPointF& Y)
 	{
 		const qreal radii	= X.m_radius + Y.m_radius;
 		const qreal semi	= 0.5 * ( X.m_radius - Y.m_radius );
-		const qreal w		= Distance(X,Y);
-		const qreal D		= std::max(0.0, w - radii);
-		if ( D > Dmin ) return;
-		if ( D < Dmin ) pWarn.clear();
-
-		QPointF mid( (X + Y) * 0.5 );
-		if ( semi != 0 && w != 0 ) mid += (Y - X) * ( semi / w );
-		pWarn.push_back( mid );
-		Dmin = D;
+		Update(X, Y, radii, semi);
 	}
-	static void UpdateClosest(const MyPointF& X, const MyPolygonF& P,	// For calculating separation between a point and a polygon.
-							  QPolygonF& pWarn, qreal& Dmin)			// Updates Dmin, and the set of warning points pWarn.
+	inline void CalcSeparation(const MyPointF& X, const MyPolygonF& P)
 	{
 		if ( P.empty() ) return;
-
 		const qreal radii	= X.m_radius + P.m_radius;
 		const qreal semi	= 0.5 * ( X.m_radius - P.m_radius );
-		const int iSize = P.size();
-		if ( iSize == 1 )
-		{
-			const QPointF&	Y = P[0];
-			const qreal		w = Distance(X,Y);
-			const qreal		D = std::max(0.0, w - radii);
-			if ( D > Dmin ) return;
-			if ( D < Dmin ) pWarn.clear();
 
-			QPointF mid( (X + Y) * 0.5 );
-			if ( semi != 0 && w != 0 ) mid += (Y - X) * ( semi / w );
-			pWarn.push_back( mid );
-			Dmin = D;
-			return;
-		}
+		const int iSize = P.size();
+		if ( iSize == 1 ) return Update(X, P[0], radii, semi);
+
 		for (int i = 0, j = 1, iEnd = P.m_bClosed ? iSize : (iSize-1); i < iEnd; i++, j++)
 		{
 			if ( j == iSize ) j = 0;
-			QPointF		Y = Closest(X, P[i], P[j]);	// Get closest point on line segment P[i]-P[j]
-			const qreal	w = Distance(X,Y);
-			const qreal	D = std::max(0.0, w - radii);
-			if ( D > Dmin ) continue;
-			if ( D < Dmin ) pWarn.clear();
-
-			QPointF mid( (X + Y) * 0.5 );
-			if ( semi != 0 && w != 0 ) mid += (Y - X) * ( semi / w );
-			pWarn.push_back( mid );
-			Dmin = D;
+			Update(X, Closest(X, P[i], P[j]), radii, semi);
 		}
 	}
-	static void UpdateClosest(const MyPolygonF& P, const MyPolygonF& Q,	// For calculating separation between 2 polygons.
-							  QPolygonF& pWarn, qreal& Dmin)			// Updates Dmin, and the set of warning points pWarn.
+	inline void CalcSeparation(const MyPolygonF& P, const MyPolygonF& Q)
 	{
 		if ( P.empty() || Q.empty() ) return;
-		for (auto& q : Q) UpdateClosest(MyPointF(q, Q.m_radius), P, pWarn, Dmin);
-		for (auto& p : P) UpdateClosest(MyPointF(p, P.m_radius), Q, pWarn, Dmin);
+		for (auto& q : Q) CalcSeparation(MyPointF(q, Q.m_radius), P);
+		for (auto& p : P) CalcSeparation(MyPointF(p, P.m_radius), Q);
 	}
-	PolygonHelper() { assert( true || PreventBuildWarnings() ); }
 private:
-	bool PreventBuildWarnings() const
+	static inline QPointF Closest(const QPointF& X, const QPointF& A, const QPointF& B)	// Closest point to X on line segment A-B
 	{
-		MyPolygonF	P;
-		QPolygonF	W;
-		qreal		dummy;
-		UpdateClosest(P, P, W, dummy);
-		return true;
+		if ( A == B ) return A;
+		const QPointF	AB(B - A), AX(X - A);
+		const qreal		lambda = std::max(0.0, std::min(1.0, QPointF::dotProduct(AB,AX) / QPointF::dotProduct(AB,AB)));
+		return A + (AB * lambda);
+	}
+	inline void Update(const QPointF& X, const QPointF& Y, const qreal& radii, const qreal& semi)	// Sum of radii, and semi-diff of radii
+	{
+		const QPointF	L(Y - X);
+		const qreal		l = Length(L);
+		const qreal		D = round( std::max(0.0, l - radii) * 100000 ) * 0.00001;	// 0.001 mil accuracy
+		if ( D > m_Dmin ) return;
+		if ( D < m_Dmin ) m_pWarn.clear();
+		m_Dmin = D;
+		QPointF mid( (X + Y) * 0.5 );
+		if ( semi != 0 && l != 0 ) mid += L * ( semi / l );
+		m_pWarn.push_back( mid );
+	}
+	Q_DECL_CONSTEXPR static inline qreal Length(const QPointF& p)
+	{
+		return !p.x() ? fabs(p.y()) : !p.y() ? fabs(p.x()) : sqrt( QPointF::dotProduct(p,p) );
 	}
 };

@@ -58,6 +58,7 @@ void HotkeysDialog::Setup()
 	list.push_back( KEY_ACTION("F + left mouse button",			"Paint with flood-fill (all connected tracks + pins)") );
 	list.push_back( KEY_ACTION("T + left mouse button",			"Toggle layer preference of pin (in 2 layer PCB mode)") );
 	list.push_back( KEY_ACTION("T + right mouse button",		"Clear layer preference of pin (in 2 layer PCB mode)") );
+	list.push_back( KEY_ACTION("Ctrl + arrow keys",				"Offset pad location (in PCB mode)") );
 
 	const int numRows = (int) ( list.size() );
 	// Set up the table

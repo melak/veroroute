@@ -58,9 +58,14 @@ void RenderingDialog::UpdateControls()
 {
 	Board& board = m_pMainWindow->m_board;
 
-	// First do the separation calculations
-	double minTrk, minGnd;
-	board.GetSeparations(minTrk, minGnd);
+	const bool bCompEdit		= board.GetCompEdit();
+	const bool bPCB				= board.GetTrackMode() == TRACKMODE::PCB;
+	const bool bMonoPCB			= board.GetTrackMode() == TRACKMODE::MONO || bPCB;
+	const bool bNoTrackOptions	= board.GetTrackMode() == TRACKMODE::OFF;
+	const bool bGndFill			= board.GetGroundFill();
+	const bool bVero			= board.GetVeroTracks();
+	const bool bVias			= board.GetViasEnabled();
+	const bool bCloseTrackInfo	= board.GetHaveWarnPoints();
 
 	ui->comptext->setValue( board.GetTextSizeComp() );
 	ui->comppins->setValue( board.GetTextSizePins() );
@@ -74,15 +79,6 @@ void RenderingDialog::UpdateControls()
 		case 2:		ui->antiAliasHigh->setChecked(true);	break;
 		default:	ui->antiAliasOn->setChecked(true);		break;
 	}
-
-	const bool bCompEdit		= board.GetCompEdit();
-	const bool bPCB				= board.GetTrackMode() == TRACKMODE::PCB;
-	const bool bMonoPCB			= board.GetTrackMode() == TRACKMODE::MONO || bPCB;
-	const bool bNoTrackOptions	= board.GetTrackMode() == TRACKMODE::OFF;
-	const bool bGndFill			= board.GetGroundFill();
-	const bool bVero			= board.GetVeroTracks();
-	const bool bVias			= board.GetViasEnabled();
-	const bool bCloseTrackInfo	= board.GetHaveWarnPoints();
 
 	ui->groupBox_target->setDisabled(	bCompEdit );
 	ui->comptext->setDisabled(			bCompEdit );
@@ -122,20 +118,26 @@ void RenderingDialog::UpdateControls()
 	ui->viapadWidth->setValue(	board.GetVIAPAD_MIL()	);
 	ui->viaholeWidth->setValue(	board.GetVIAHOLE_MIL()	);
 
+	double minTrk(0), minGnd(0);
+	board.GetSeparations(minTrk, minGnd);
+
 	const int minTrkMil = (int)minTrk;
 	const int minTrkRem = (int)(100.0 * (minTrk - minTrkMil) );
 	const int minGndMil = (int)minGnd;
 	const int minGndRem = (int)(100.0 * (minGnd - minGndMil) );
 
-	const std::string str = "Current min track separation = "
-						  + std::to_string(minTrkMil) + "." + std::to_string(minTrkRem) + " mil";
+	std::string str = "Current min track separation = ";
+	if ( bCompEdit || bVero )
+		str += "n/a";
+	else
+		str += std::to_string(minTrkMil) + "." + std::to_string(minTrkRem) + " mil";
 	ui->label_info->setText( QString::fromStdString(str) );
 
 	std::string str2 = "Current min ground-fill width = ";
-	if ( bGndFill )
-		str2 += std::to_string(minGndMil) + "." + std::to_string(minGndRem) + " mil";
-	else
+	if ( bCompEdit || bVero || !bMonoPCB || !bGndFill )
 		str2 += "n/a";
+	else
+		str2 += std::to_string(minGndMil) + "." + std::to_string(minGndRem) + " mil";
 	ui->label_info_2->setText( QString::fromStdString(str2) );
 
 	ui->closeTracks->setChecked( board.GetShowCloseTracks() );

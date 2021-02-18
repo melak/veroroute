@@ -333,8 +333,8 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 					// Make an N-point curve from L to R passing near central control point C
 					// Current interpolation is quadratic.
 					// Using higher order (e.g. 2.5) gives bends passing closer to C (hence sharper corners)
-					const int		N = 10;
-					const double	d = 1.0 / N;
+					static int		N = 10;
+					static double	d = 1.0 / N;
 					const QPointF	pLC(p[iL] - pC), pRC(p[iR] - pC);
 					for (int i = 0; i <= N; i++)
 					{
@@ -345,9 +345,9 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 				}
 				else if ( bOrtho )	// Bend == 90 degrees (chosen to approximate the above curve)
 				{
-					const double r = 0.5;			// i.e. 2*t^2	when t = 0.5
-				//	const double r = 0.25*sqrt(2);	// i.e. 2*t^2.5	when t = 0.5
-					const double s = 1 - r;
+					static double r = 0.5;			// i.e. 2*t^2	when t = 0.5
+				//	static double r = 0.25*sqrt(2);	// i.e. 2*t^2.5	when t = 0.5
+					static double s = 1 - r;
 					polygon << p[iL] << p[iL]*r + pC*s << p[iR]*r + pC*s << p[iR];	// Draw mitred corner instead of 90 degree bend for L-C-R
 				}
 				else

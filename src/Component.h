@@ -32,6 +32,7 @@ const uchar	LAYER_X = 0;	// No preference
 const uchar	LAYER_B	= 1;	// Prefer bottom layer
 const uchar	LAYER_T	= 2;	// Prefer top layer
 
+const int MAX_PAD_OFFSET_MIL = 50;
 
 class CompManager;
 
@@ -239,11 +240,11 @@ public:
 	}
 	void SetPinOffsetRow(const size_t& iPinIndex, const int& i)
 	{
-		if ( iPinIndex < m_pinOffsetRow.size() ) m_pinOffsetRow[iPinIndex] = std::max(-50, std::min(50, i));
+		if ( iPinIndex < m_pinOffsetRow.size() ) m_pinOffsetRow[iPinIndex] = std::max(-MAX_PAD_OFFSET_MIL, std::min(MAX_PAD_OFFSET_MIL, i));
 	}
 	void SetPinOffsetCol(const size_t& iPinIndex, const int& i)
 	{
-		if ( iPinIndex < m_pinOffsetCol.size() ) m_pinOffsetCol[iPinIndex] = std::max(-50, std::min(50, i));
+		if ( iPinIndex < m_pinOffsetCol.size() ) m_pinOffsetCol[iPinIndex] = std::max(-MAX_PAD_OFFSET_MIL, std::min(MAX_PAD_OFFSET_MIL, i));
 	}
 	void SetPinLabel(const size_t& iPinIndex, const std::string& s)
 	{
