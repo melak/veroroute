@@ -274,7 +274,14 @@ static const char* szVEROROUTE_VERSION =
 //"2.03";	// Bug fix: Wire rendering broken in 2.02.
 			// New feature. Can specify layer preference on component pins of 2-layer PCBs.
 			// Updated tutorials.
-  "2.04";	// Bug fix: Since 2.02, VeroRoute freezes if the grid is made 1 column wide.
+//"2.04";	// Bug fix: Since 2.02, VeroRoute freezes if the grid is made 1 column wide.
 			// Omit deprecated G codes from Gerber export, and allow Gerber export in mm or inches.
 			// Allow circuit panning/grid resize by grabbing the grid with the right mouse button (ctrl key optional).
 			// Improve GUI behaviour in Tutorials by passing key presses from the Info dialog to the main window.
+  "2.05";	// Bug fix: Code for filling parts with color not correctly handling shape transformations.
+			// Bug fix: Track separation info in the Rendering dialog not updating when auto-routing toggled.
+			// Bug fix: Components with lines outside the footprint area could be rendered off screen
+			// leading to an invalid set of Gerber files (e.g. GTO file having points outside the boundary in the GKO file).
+			// Improvement: Total rewrite of minimum track separation for improved accuracy.
+			// Improvement: Show points for all layers when displaying locations of minimum track separation.
+			// New feature: In PCB mode, individual pad locations can be shifted by up to 50 mil using Ctrl + Arrow keys.
