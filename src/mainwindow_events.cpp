@@ -541,7 +541,7 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
 	commonKeyPressEvent(event);
 
 	// Pin offsets (Ctrl + Cursor keys)
-	if ( GetCtrlKeyDown() && m_board.GetTrackMode() == TRACKMODE::PCB && !m_board.GetCompEdit() )
+	if ( GetCtrlKeyDown() && !m_board.GetVeroTracks() && !m_board.GetCompEdit() )
 	{
 		const Element* pC =  m_board.Get(0, m_gridRow, m_gridCol);
 		if ( pC->GetHasPin() && !pC->GetHasWire() )	// Wires can share holes so cannot have offset pads

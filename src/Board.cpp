@@ -295,8 +295,7 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 	const int nRings = 2;	// 2 ==> Max pad size supported by VeroRoute could be up to 200 mil in future
 	int Xmil, Ymil;	// For pad offsets
 
-	const bool bPCB				= GetTrackMode() == TRACKMODE::PCB;
-	const bool bStandardBlobs	= MAX_PAD_OFFSET_MIL <= 50;	// true ==> legs for offset pads will be within a grid square
+	const bool bStandardBlobs = ( MAX_PAD_OFFSET_MIL <= 50 );	// true ==> legs for offset pads will be within a grid square
 
 	// Get bounds to minimise looping
 	int minRow, minCol, maxRow, maxCol;
@@ -328,11 +327,8 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 				// Handle custom pad sizes
 				padA.m_radius = 0.005 * ( comp.GetCustomPads() ? comp.GetPadWidth() : GetPAD_MIL() );
 				// Handle pad offsets
-				if ( bPCB )
-				{
-					comp.GetCompPinOffsets(pA->GetPinIndex(), Xmil, Ymil);
-					padA += QPointF(0.01 * Xmil, 0.01 * Ymil);
-				}
+				comp.GetCompPinOffsets(pA->GetPinIndex(), Xmil, Ymil);
+				padA += QPointF(0.01 * Xmil, 0.01 * Ymil);
 			}
 			else if ( pA->GetIsVia() )
 				padA.m_radius = 0.005 * GetVIAPAD_MIL();
@@ -364,11 +360,8 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 					// Handle custom pad sizes
 					padB.m_radius = 0.005 * ( comp.GetCustomPads() ? comp.GetPadWidth() : GetPAD_MIL() );
 					// Handle pad offsets
-					if ( bPCB )
-					{
-						comp.GetCompPinOffsets(pB->GetPinIndex(), Xmil, Ymil);
-						padB += QPointF(0.01 * Xmil, 0.01 * Ymil);
-					}
+					comp.GetCompPinOffsets(pB->GetPinIndex(), Xmil, Ymil);
+					padB += QPointF(0.01 * Xmil, 0.01 * Ymil);
 				}
 				else if ( pB->GetIsVia() )
 					padB.m_radius = 0.005 * GetVIAPAD_MIL();

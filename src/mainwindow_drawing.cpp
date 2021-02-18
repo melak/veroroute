@@ -914,7 +914,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					const Component& comp		= compMgr.GetComponentById( compId );
 					assert( comp.GetType() != COMP::INVALID );
 
-					if ( bPCB )
+					if ( !bVero )
 					{
 						comp.GetCompPinOffsets(pinIndex, padOffsetX, padOffsetY);
 						padOffsetX = (padOffsetX * W) / 100;	 // Convert from mil to pixels
@@ -1013,27 +1013,30 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					assert( !bPCB );
 					if ( iLoop == 0 )
 					{
-						// Draw background square first in relevant color
 						painter.setPen(Qt::NoPen);
 						painter.setBrush(color);
-						painter.drawRect(L+C-m_radPixmapBlob, T+C-m_radPixmapBlob, m_radPixmapBlob << 1, m_radPixmapBlob << 1);
+						// Draw blob
+						if ( bBlob && !bCustomSize && !bPadOffset )		// Custom/offset stuff is rendered on last loop
+						{
+							// Draw background square first in relevant color
+							painter.drawRect(L+C-m_radPixmapBlob, T+C-m_radPixmapBlob, m_radPixmapBlob << 1, m_radPixmapBlob << 1);
 
-						// Set the area that is not in the "blob" to the background color
-						painter.drawPixmap(L+C-m_radPixmapBlob, T+C-m_radPixmapBlob, *(m_ppPixmapBlob[iPerimeterCode]));
-
+							// Set the area that is not in the "blob" to the background color
+							painter.drawPixmap(L+C-m_radPixmapBlob, T+C-m_radPixmapBlob, *(m_ppPixmapBlob[iPerimeterCode]));
+						}
 						// Draw pad/via
 						if ( bCustomColor )
 						{
 							if ( bVia )
 								PaintVia(board, painter, color, pCentre);
-							if ( bPad && !bCustomSize )	// Standard size pad. Custom size pads are rendered on last loop
+							if ( bPad && !bCustomSize && !bPadOffset )	// Custom/offset stuff is rendered on last loop
 								PaintPad(board, painter, color, pCentre);
 						}
 						else	// Non-custom color means we can use a cached pixmap
 						{
 							if ( bVia )
 								painter.drawPixmap(L+C-m_radPixmapVia, T+C-m_radPixmapVia, *(m_ppPixmapVia[iEffColorId]));
-							if ( bPad && !bCustomSize )	// Standard size pad. Custom size pads are rendered in next loop
+							if ( bPad && !bCustomSize && !bPadOffset )	// Custom/offset stuff is rendered on last loop
 								painter.drawPixmap(L+C-m_radPixmapPad, T+C-m_radPixmapPad, *(m_ppPixmapPad[iEffColorId]));
 						}
 					}
@@ -1066,10 +1069,10 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 							if ( bUsedRT ) painter.drawPixmap(R-m_radPixmapDiag, T-m_radPixmapDiag, *pRT);
 						}
 					}
-					else
+					else if (  bCustomSize || bPadOffset )	// Custom/offset stuff ...
 					{
-						if ( bPad && bCustomSize )	// Custom size pad
-							PaintPad(board, painter, color, pCentre, iPadWidthMIL, iHoleWidthMIL);
+						if ( bBlob ) PaintBlob(board, painter, color, pCentre, pCentreOff, iPerimeterCode, bPad);
+						if ( bPad )  PaintPad(board, painter, color, pCentreOff, iPadWidthMIL, iHoleWidthMIL);
 					}
 				}
 				if ( bGroundFill )	// Draw track "blobs" and pads directly (PDF/Gerber)
@@ -1329,7 +1332,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						if ( iPinIndex == BAD_PININDEX ) continue;
 
 						int padOffsetX(0), padOffsetY(0);
-						if ( !bWire && bPCB )
+						if ( !bWire && !bVero )
 						{
 							comp.GetCompPinOffsets(iPinIndex, padOffsetX, padOffsetY);	// Get offsets in mil
 							padOffsetX = (padOffsetX * W) / 100;	// Convert from mil to pixels
@@ -1349,6 +1352,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 						const int iPinSizeMIL = ( !bColor || bPlaced ) ? iHoleWidthMIL : std::min(3*iHoleWidthMIL/2, iPadWidthMIL);
 						GetLRTB(board, iPinSizeMIL, j, i, L, R, T, B);
+						L += padOffsetX;	R += padOffsetX;	T += padOffsetY;	B += padOffsetY;
 
 						// Stop pins vanishing if zoomed too far out
 						if ( L == R ) { L--, R++; }
