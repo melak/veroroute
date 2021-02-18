@@ -209,6 +209,8 @@ void Board::UpdateVias()	// Sets the via flag to true on all candidate vias
 	}
 	SetViasEnabled(bViasEnabled);		// Restore vias state
 	SetRoutingEnabled(bRoutingEnabled);	// Restore routing state
+
+	CalcMIN_SEPARATION();
 }
 
 unsigned int Board::Flood(const int& iFloodNodeId)

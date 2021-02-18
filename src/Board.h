@@ -472,7 +472,7 @@ public:
 	void	GetHoleWidths_MIL(std::list<int>& o, int& iDefaultWidth) const;
 	void	CalcBlob(const QPointF& pC, const QPointF& pCoffset, const int& iPerimeterCode, std::list<MyPolygonF>& out, const bool bHavePad = false);
 	void	GetSeparations(double& minTrackSeparation_mil, double& minGroundFill_mil);
-	double	GetMIN_SEPARATION();			// Minimum possible separation (in mil) between a pad or track without ground fill
+	void	CalcMIN_SEPARATION();	// Sets m_dMinSeparation and m_warnPoints[]
 	void	CalcGroundFillBounds();
 	void	GetGroundFillBounds(int& L, int& R, int& T, int& B) const;
 
@@ -760,6 +760,7 @@ private:
 
 	// Track warnings		// Don't persist or copy
 	std::list<QPointF>		m_warnPoints[2];// For showing locations with min track separation on the 2 layers
+	double					m_dMinSeparation = DBL_MAX;	// Units of grid squares
 
 	// Routing algorithm	// Don't persist or copy
 	std::vector<Element*>	m_targetPins;	// Set of pins to route.

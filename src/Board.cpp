@@ -278,7 +278,7 @@ void Board::CalcBlob(const QPointF& pC, const QPointF& pCoffset, const int& iPer
 void Board::GetSeparations(double& minTrackSeparation_mil, double& minGroundFill_mil)
 {
 	// Calc minimum track separation in mil
-	const double dMinSep	= GetMIN_SEPARATION();	// Min separation without ground fill
+	const double dMinSep	= 100.0 * m_dMinSeparation;	// Min separation in MIL, without ground fill
 	const double dGap		= GetGroundFill() ? GetGAP_MIL() : 100.0;
 	minTrackSeparation_mil	= std::min(dGap, dMinSep);
 	// Calc minimum ground-fill width in mil
@@ -289,7 +289,7 @@ void Board::GetSeparations(double& minTrackSeparation_mil, double& minGroundFill
 	// then all locations have min separation, so don't show warning points in the view
 	if ( minTrackSeparation_mil == dGap ) ClearWarnPoints();
 }
-double Board::GetMIN_SEPARATION()
+void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 {
 	const int nRings = 2;	// 2 ==> Max pad size supported by VeroRoute could be up to 200 mil in future
 	int Xmil, Ymil;	// For pad offsets
@@ -301,8 +301,8 @@ double Board::GetMIN_SEPARATION()
 	GetBounds(minRow, minCol, maxRow, maxCol);
 
 	ClearWarnPoints();	// Wipe list of warning locations on both layers
+	m_dMinSeparation = DBL_MAX;
 
-	qreal DMIN_ALL_LYRS(DBL_MAX);
 	for (int k = 0, kMax = GetLyrs(); k < kMax; k++)	// Check all layers
 	{
 		QPolygonF	pWarnLyr;
@@ -392,14 +392,13 @@ double Board::GetMIN_SEPARATION()
 					for(auto & a : blobA) for(auto& b : blobB) PolygonHelper::UpdateClosest(a, b, pWarnLyr, DminLyr);
 			}
 		}
-		if ( DminLyr > DMIN_ALL_LYRS ) continue;
-		if ( DminLyr < DMIN_ALL_LYRS )	// If min for layer is lowest across all layers ...
-			ClearWarnPoints();			// ... wipe all warning points
+		if ( DminLyr > m_dMinSeparation ) continue;
+		if ( DminLyr < m_dMinSeparation )	// If min for layer is lowest across all layers ...
+			ClearWarnPoints();				// ... wipe all warning points
 
 		for (auto& p : pWarnLyr) m_warnPoints[k].push_back(p);
-		DMIN_ALL_LYRS = DminLyr;
+		m_dMinSeparation = DminLyr;
 	}	// Next layer
-	return 100.0 * DMIN_ALL_LYRS;	// Convert from qrid squares to mil
 }
 
 void Board::CalcGroundFillBounds()

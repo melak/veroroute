@@ -397,7 +397,8 @@ void MainWindow::HandleRouting()
 		m_board.Route(true);	// true ==> Use minimal routing
 		releaseMouse();
 	}
-	m_board.UpdateVias();
+	m_board.UpdateVias();	// Needed before m_renderingDlg->UpdateControls() for via info and track separation
+	m_renderingDlg->UpdateControls();
 	if ( GetCurrentNodeId() != BAD_NODEID )
 	{
 		grabMouse(Qt::WaitCursor);
@@ -1809,7 +1810,7 @@ void MainWindow::UpdateControls()
 	UpdateTextDialog(true);	// true ==> full
 
 	m_pinDlg->Update();
-	m_board.UpdateVias();	// Needed before m_renderingDlg->UpdateControls() for via info
+	m_board.UpdateVias();	// Needed before m_renderingDlg->UpdateControls() for via info and track separation
 	m_renderingDlg->UpdateControls();
 	m_wireDlg->UpdateControls();
 	m_controlDlg->UpdateCompControls();
