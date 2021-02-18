@@ -91,7 +91,7 @@ private:
 	{
 		const QPointF	L(Y - X);
 		const qreal		l = Length(L);
-		const qreal		D = round( std::max(0.0, l - radii) * 100000 ) * 0.00001;	// 0.001 mil accuracy
+		const qreal		D = round( std::max(0.0, l - radii) * 1000 ) * 0.001;	// 0.1 mil resolution
 		if ( D > m_Dmin ) return;
 		if ( D < m_Dmin ) m_pWarn.clear();
 		m_Dmin = D;

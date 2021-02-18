@@ -122,9 +122,9 @@ void RenderingDialog::UpdateControls()
 	board.GetSeparations(minTrk, minGnd);
 
 	const int minTrkMil = (int)minTrk;
-	const int minTrkRem = (int)(100.0 * (minTrk - minTrkMil) );
+	const int minTrkRem = (int)(10.0 * (minTrk - minTrkMil) );	// 0.1 mil resolution
 	const int minGndMil = (int)minGnd;
-	const int minGndRem = (int)(100.0 * (minGnd - minGndMil) );
+	const int minGndRem = (int)(10.0 * (minGnd - minGndMil) );	// 0.1 mil resolution
 
 	std::string str = "Current min track separation = ";
 	if ( bCompEdit || bVero )
