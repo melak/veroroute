@@ -392,14 +392,12 @@ double Board::GetMIN_SEPARATION()
 					for(auto & a : blobA) for(auto& b : blobB) PolygonHelper::UpdateClosest(a, b, pWarnLyr, DminLyr);
 			}
 		}
-
+		if ( DminLyr > DMIN_ALL_LYRS ) continue;
 		if ( DminLyr < DMIN_ALL_LYRS )	// If min for layer is lowest across all layers ...
 			ClearWarnPoints();			// ... wipe all warning points
-		if ( DminLyr <= DMIN_ALL_LYRS )
-		{
-			for (auto& p : pWarnLyr) m_warnPoints[k].push_back(p);
-			DMIN_ALL_LYRS = DminLyr;
-		}
+
+		for (auto& p : pWarnLyr) m_warnPoints[k].push_back(p);
+		DMIN_ALL_LYRS = DminLyr;
 	}	// Next layer
 	return 100.0 * DMIN_ALL_LYRS;	// Convert from qrid squares to mil
 }

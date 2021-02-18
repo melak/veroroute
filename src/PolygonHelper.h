@@ -64,56 +64,52 @@ public:
 							  QPolygonF& pWarn, qreal& Dmin)		// Updates Dmin, and the set of warning points pWarn.
 	{
 		const qreal radii	= X.m_radius + Y.m_radius;
+		const qreal semi	= 0.5 * ( X.m_radius - Y.m_radius );
 		const qreal w		= Distance(X,Y);
 		const qreal D		= std::max(0.0, w - radii);
+		if ( D > Dmin ) return;
 		if ( D < Dmin ) pWarn.clear();
-		if ( D <= Dmin )
-		{
-			QPointF	XY(Y-X);
-			QPointF	Xt	= ( w == 0 ) ? X : ( X + XY*(X.m_radius / w) );
-			QPointF	Yt	= ( w == 0 ) ? Y : ( Y - XY*(Y.m_radius / w) );
-			pWarn.push_back(0.5*(Xt+Yt));
-			Dmin = D;
-		}
+
+		QPointF mid( (X + Y) * 0.5 );
+		if ( semi != 0 && w != 0 ) mid += (Y - X) * ( semi / w );
+		pWarn.push_back( mid );
+		Dmin = D;
 	}
 	static void UpdateClosest(const MyPointF& X, const MyPolygonF& P,	// For calculating separation between a point and a polygon.
 							  QPolygonF& pWarn, qreal& Dmin)			// Updates Dmin, and the set of warning points pWarn.
 	{
 		if ( P.empty() ) return;
 
-		const qreal radii = X.m_radius + P.m_radius;
+		const qreal radii	= X.m_radius + P.m_radius;
+		const qreal semi	= 0.5 * ( X.m_radius - P.m_radius );
 		const int iSize = P.size();
 		if ( iSize == 1 )
 		{
-			QPointF		Y = P[0];
-			const qreal w = Distance(X,Y);
-			const qreal D = std::max(0.0, w - radii);
+			const QPointF&	Y = P[0];
+			const qreal		w = Distance(X,Y);
+			const qreal		D = std::max(0.0, w - radii);
+			if ( D > Dmin ) return;
 			if ( D < Dmin ) pWarn.clear();
-			if ( D <= Dmin )
-			{
-				QPointF	XY(Y-X);
-				QPointF	Xt	= ( w == 0 ) ? X : ( X + XY*(X.m_radius / w) );
-				QPointF	Yt	= ( w == 0 ) ? Y : ( Y - XY*(P.m_radius / w) );
-				pWarn.push_back(0.5*(Xt+Yt));
-				Dmin = D;
-			}
+
+			QPointF mid( (X + Y) * 0.5 );
+			if ( semi != 0 && w != 0 ) mid += (Y - X) * ( semi / w );
+			pWarn.push_back( mid );
+			Dmin = D;
 			return;
 		}
 		for (int i = 0, j = 1, iEnd = P.m_bClosed ? iSize : (iSize-1); i < iEnd; i++, j++)
 		{
 			if ( j == iSize ) j = 0;
 			QPointF		Y = Closest(X, P[i], P[j]);	// Get closest point on line segment P[i]-P[j]
-			const qreal w = Distance(X,Y);
-			const qreal D = std::max(0.0, w - radii);
+			const qreal	w = Distance(X,Y);
+			const qreal	D = std::max(0.0, w - radii);
+			if ( D > Dmin ) continue;
 			if ( D < Dmin ) pWarn.clear();
-			if ( D <= Dmin )
-			{
-				QPointF	XY(Y-X);
-				QPointF	Xt	= ( w == 0 ) ? X : ( X + XY*(X.m_radius / w) );
-				QPointF	Yt	= ( w == 0 ) ? Y : ( Y - XY*(P.m_radius / w) );
-				pWarn.push_back(0.5*(Xt+Yt));
-				Dmin = D;
-			}
+
+			QPointF mid( (X + Y) * 0.5 );
+			if ( semi != 0 && w != 0 ) mid += (Y - X) * ( semi / w );
+			pWarn.push_back( mid );
+			Dmin = D;
 		}
 	}
 	static void UpdateClosest(const MyPolygonF& P, const MyPolygonF& Q,	// For calculating separation between 2 polygons.
