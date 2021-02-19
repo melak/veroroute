@@ -335,7 +335,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 	const int&			W			= m_board.GetGRIDPIXELS();
 	const int&			layer		= m_board.GetCurrentLayer();
 
-	if ( GetPaintPins() || GetPaintFlood() || GetPaintLyrPref() ) return;	// Ignore mouse move while painting pins or flooding
+	if ( GetPaintPins() || GetPaintFlood() ) return;	// Ignore mouse move while painting pins or flooding
 	if ( GetShiftKeyDown() ) return;										// Ignore mouse move while trying to group components
 
 	bool bSmartPan = GetCtrlKeyDown();
@@ -388,6 +388,12 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 			compDefiner.MoveCurrentShape(deltaRow, deltaCol);	// Move the shape
 			UpdateCompDialog();
 		}
+	}
+	else if ( !bSmartPan && GetPaintLyrPref() && m_bRightClick )
+	{
+		const bool bChanged = m_board.ToggleLyrPref(layer, m_gridRow, m_gridCol, true);	// true ==> reset
+		if ( !bChanged ) return;
+		mouseActionString = "Clear pin layer preference";
 	}
 	else if ( !bSmartPan && GetDefiningRect() )
 	{
