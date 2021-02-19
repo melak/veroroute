@@ -38,16 +38,16 @@ const int	NBR_L(0), NBR_LT(1), NBR_T(2), NBR_RT(3),	// Left,  Left-Top,     Top,
 			NBR_R(4), NBR_RB(5), NBR_B(6), NBR_LB(7);	// Right, Right-Bottom, Bottom, Left-Bottom
 const int	NBR_X(8);	// Index for the neighbour element in the layer above/below
 
-static int	Opposite(int NBR)	// Helper to get opposite neighbour index
+Q_DECL_CONSTEXPR static inline int	Opposite(int NBR)	// Helper to get opposite neighbour index
 {
 	return ( NBR == NBR_X ) ? NBR_X : ( ( NBR + 4 ) % 8 );
 }
 
 // Functions for mapping NBR indices to "code bits" and manipulating them
-static bool ReadCodeBit(const int& NBR, const int& iCode)	{ return ( iCode & (1<<NBR) ) != 0; }
-static void SetCodeBit(const int& NBR, int& iCode)			{ iCode |=  (1<<NBR); }
-static void ClearCodeBit(const int& NBR, int& iCode)		{ iCode &= ~(1<<NBR); }
-static void ToggleCodeBit(const int& NBR, int& iCode)		{ iCode ^=  (1<<NBR); }
+Q_DECL_CONSTEXPR static inline bool ReadCodeBit(const int& NBR, const int& iCode)	{ return ( iCode & (1<<NBR) ) != 0; }
+static inline void SetCodeBit(const int& NBR, int& iCode)		{ iCode |=  (1<<NBR); }
+static inline void ClearCodeBit(const int& NBR, int& iCode)		{ iCode &= ~(1<<NBR); }
+static inline void ToggleCodeBit(const int& NBR, int& iCode)	{ iCode ^=  (1<<NBR); }
 const int CODEBITS_HV  = 0x55;	// All H/V neighbours in same layer
 const int CODEBITS_LYR = 0xFF;	// All neighbours in same layer
 const int CODEBITS_ALL = 0x1FF;	// All neighbours in same layer + the neighbour in the layer above/below
