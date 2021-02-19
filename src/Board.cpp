@@ -259,6 +259,9 @@ void Board::GetSeparations(double& minTrackSeparation_mil, double& minGroundFill
 }
 void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 {
+	ClearWarnPoints();	// Wipe list of warning locations on both layers
+	m_dMinSeparation = DBL_MAX;
+
 	if ( GetCompEdit() || GetVeroTracks() ) return;
 
 	const int nRings = 2;	// 2 ==> Max pad size supported by VeroRoute could be up to 200 mil in future
@@ -269,9 +272,6 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 	// Get bounds to minimise looping
 	int minRow, minCol, maxRow, maxCol;
 	GetBounds(minRow, minCol, maxRow, maxCol);
-
-	ClearWarnPoints();	// Wipe list of warning locations on both layers
-	m_dMinSeparation = DBL_MAX;
 
 	for (int k = 0, kMax = GetLyrs(); k < kMax; k++)	// Check all layers
 	{

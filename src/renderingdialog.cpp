@@ -58,6 +58,9 @@ void RenderingDialog::UpdateControls()
 {
 	Board& board = m_pMainWindow->m_board;
 
+	double minTrk(0), minGnd(0);
+	board.GetSeparations(minTrk, minGnd);	// Put be called first since it may clear the warning points
+
 	const bool bCompEdit		= board.GetCompEdit();
 	const bool bPCB				= board.GetTrackMode() == TRACKMODE::PCB;
 	const bool bMonoPCB			= board.GetTrackMode() == TRACKMODE::MONO || bPCB;
@@ -117,9 +120,6 @@ void RenderingDialog::UpdateControls()
 	ui->edgeWidth->setValue(	board.GetEDGE_MIL()		);
 	ui->viapadWidth->setValue(	board.GetVIAPAD_MIL()	);
 	ui->viaholeWidth->setValue(	board.GetVIAHOLE_MIL()	);
-
-	double minTrk(0), minGnd(0);
-	board.GetSeparations(minTrk, minGnd);
 
 	const int minTrkMil = (int)minTrk;
 	const int minTrkRem = (int)(10.0 * (minTrk - minTrkMil) );	// 0.1 mil resolution
