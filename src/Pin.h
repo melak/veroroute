@@ -47,21 +47,21 @@
 //		HOLE_WIRE			==> the hole is occupied by one wire.
 //		HOLE_FULL			==> the hole is fully occupied.  (By a regular component pin, or by 2 wires).
 
-const uchar	 BAD_PINCHAR		= 255;
-const size_t BAD_PININDEX		= -1;
+static const uchar	 BAD_PINCHAR		= 255;
+static const size_t BAD_PININDEX		= -1;
 
-const uchar  SURFACE_FREE		= 0;
-const uchar  SURFACE_GAP		= 1;
-const uchar  SURFACE_WIRE_END	= 2;	// Hence: "SURFACE_WIRE_END + SURFACE_WIRE_END == SURFACE_WIRE"
-const uchar  SURFACE_WIRE		= 4;	// Hence: "SURFACE_WIRE + SURFACE_WIRE == SURFACE_PLUG"
-const uchar  SURFACE_PLUG		= 8;
-const uchar  SURFACE_FULL		= 9;	// Hence: "SURFACE_PLUG + SURFACE_GAP == SURFACE_FULL"
-const uchar  SURFACE_NOPAINT	= 16;	// Should only be used as part of SURFACE_HOLE
-const uchar  SURFACE_HOLE		= 25;	// Hence: "SURFACE_FULL + SURFACE_NOPAINT = SURFACE_HOLE"
+static const uchar  SURFACE_FREE		= 0;
+static const uchar  SURFACE_GAP			= 1;
+static const uchar  SURFACE_WIRE_END	= 2;	// Hence: "SURFACE_WIRE_END + SURFACE_WIRE_END == SURFACE_WIRE"
+static const uchar  SURFACE_WIRE		= 4;	// Hence: "SURFACE_WIRE + SURFACE_WIRE == SURFACE_PLUG"
+static const uchar  SURFACE_PLUG		= 8;
+static const uchar  SURFACE_FULL		= 9;	// Hence: "SURFACE_PLUG + SURFACE_GAP == SURFACE_FULL"
+static const uchar  SURFACE_NOPAINT		= 16;	// Should only be used as part of SURFACE_HOLE
+static const uchar  SURFACE_HOLE		= 25;	// Hence: "SURFACE_FULL + SURFACE_NOPAINT = SURFACE_HOLE"
 
-const uchar  HOLE_FREE			= 0;
-const uchar  HOLE_WIRE			= 1;	// Hence: "HOLE_WIRE + HOLE_WIRE == HOLE_FULL"
-const uchar  HOLE_FULL			= 2;
+static const uchar  HOLE_FREE			= 0;
+static const uchar  HOLE_WIRE			= 1;	// Hence: "HOLE_WIRE + HOLE_WIRE == HOLE_FULL"
+static const uchar  HOLE_FULL			= 2;
 
 static size_t GetPinIndexFromLegacyPinChar(const uchar& c)	// Legacy VRT format had messy mapping of pinChar to pinIndex
 {

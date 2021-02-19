@@ -25,8 +25,8 @@ class QPoint;
 class QPolygon;
 
 // Bits used to construct the GPEN enum
-const int	BIT_GKO(1),	 BIT_PAD(2), BIT_VIA(4), BIT_TRK(8),
-			BIT_SLK(16), BIT_GAP(32), BIT_MSK(64), BIT_HLE(128);
+static const int	BIT_GKO(1),	 BIT_PAD(2), BIT_VIA(4), BIT_TRK(8),
+					BIT_SLK(16), BIT_GAP(32), BIT_MSK(64), BIT_HLE(128);
 
 // The GPEN enum defines "pen" types for writing to Gerber/Excellon files
 enum class GPEN

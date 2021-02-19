@@ -20,8 +20,6 @@
 #include "CompDefiner.h"
 #include "Component.h"
 
-int CompDefiner::GetMinMargin() const { return 12; }	// The margin around the footprint on the screen
-
 void CompDefiner::Populate(const Component& o)
 {
 	Clear();

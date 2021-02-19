@@ -31,12 +31,12 @@
 // then setting the code appropriately at each point will allow
 // a single diagonal connection to exist, either (A-A) or (B-B).
 
-const int NUM_NBRS = 9;	// (NBR_L to NBR_LB) + NBR_X
+static const int	NUM_NBRS = 9;	// (NBR_L to NBR_LB) + NBR_X
 
 // Indexes for the 8 neighbour elements in the same layer, starting on the left and going clockwise
-const int	NBR_L(0), NBR_LT(1), NBR_T(2), NBR_RT(3),	// Left,  Left-Top,     Top,    Right-Top,
-			NBR_R(4), NBR_RB(5), NBR_B(6), NBR_LB(7);	// Right, Right-Bottom, Bottom, Left-Bottom
-const int	NBR_X(8);	// Index for the neighbour element in the layer above/below
+static const int	NBR_L(0), NBR_LT(1), NBR_T(2), NBR_RT(3),	// Left,  Left-Top,     Top,    Right-Top,
+					NBR_R(4), NBR_RB(5), NBR_B(6), NBR_LB(7);	// Right, Right-Bottom, Bottom, Left-Bottom
+static const int	NBR_X(8);	// Index for the neighbour element in the layer above/below
 
 Q_DECL_CONSTEXPR static inline int	Opposite(int NBR)	// Helper to get opposite neighbour index
 {
@@ -48,22 +48,21 @@ Q_DECL_CONSTEXPR static inline bool ReadCodeBit(const int& NBR, const int& iCode
 static inline void SetCodeBit(const int& NBR, int& iCode)		{ iCode |=  (1<<NBR); }
 static inline void ClearCodeBit(const int& NBR, int& iCode)		{ iCode &= ~(1<<NBR); }
 static inline void ToggleCodeBit(const int& NBR, int& iCode)	{ iCode ^=  (1<<NBR); }
-const int CODEBITS_HV  = 0x55;	// All H/V neighbours in same layer
-const int CODEBITS_LYR = 0xFF;	// All neighbours in same layer
-const int CODEBITS_ALL = 0x1FF;	// All neighbours in same layer + the neighbour in the layer above/below
+static const int CODEBITS_LYR = 0xFF;	// All neighbours in same layer
+static const int CODEBITS_ALL = 0x1FF;	// All neighbours in same layer + the neighbour in the layer above/below
 
 // Flag is a bitfield describing the status of the nodeId at point.
 // USERSET points will not have their nodeId modified during the auto-routing.
 // The algorithm will change the flag from USERSET to AUTOKEPT if it thinks the point is useful.
 // On hitting "Tidy", only AUTOKEPT and AUTOSET points are kept, and any USERSET
 // points will be wiped (if they are not component pins).
-const char USERSET	= 1;					// ==> user assigned the nodeId
-const char AUTOSET	= 2;					// ==> routing algorithm assigned the nodeId
-const char AUTOKEPT	= (USERSET | AUTOSET);	// ==> user assigned the nodeId, and routing algorithm agrees it is useful
-const char VEROSET	= 4;					// ==> auto assigned to create Vero strips
-const char RECTSET	= 8;					// ==> is within a user-defined rect
+static const char USERSET	= 1;					// ==> user assigned the nodeId
+static const char AUTOSET	= 2;					// ==> routing algorithm assigned the nodeId
+static const char AUTOKEPT	= (USERSET | AUTOSET);	// ==> user assigned the nodeId, and routing algorithm agrees it is useful
+static const char VEROSET	= 4;					// ==> auto assigned to create Vero strips
+static const char RECTSET	= 8;					// ==> is within a user-defined rect
 
-const int BAD_NODEID = 0;	// Invalid node ID (i.e. netlist ID)
+static const int  BAD_NODEID = 0;	// Invalid node ID (i.e. netlist ID)
 
 class TrackElement : public Persist, public Merge
 {
@@ -171,6 +170,6 @@ private:
 	}
 private:
 	int		m_nodeId = BAD_NODEID;	// The netlist value assigned to the element (or BAD_NODEID if not set)
-	int		m_iCode	 = 0;			// An 8-bit code describing connections to the 8 neighbours.  Bit set ==> connection used
+	int		m_iCode	 = 0;			// An 8-bit code describing connections to the 8 same-layer neighbours.  Bit set ==> connection used
 	char	m_flag	 = USERSET;		// For routing:  USERSET/AUTOKEPT/AUTOSET/VEROSET/RECTSET
 };

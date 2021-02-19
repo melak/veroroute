@@ -23,8 +23,8 @@
 #include <QPolygonF>
 #include <QTimeZone>
 
-const bool	FULL_LINE	= false;	// Set to true to force each Gerber line to be written in long format
-const bool	XNC_FORMAT	= true;		// true ==> XNC Format / Excellon Format 2.		false ==> Excellon Format 1.
+static const bool	FULL_LINE	= false;	// Set to true to force each Gerber line to be written in long format
+static const bool	XNC_FORMAT	= true;		// true ==> XNC Format / Excellon Format 2.		false ==> Excellon Format 1.
 
 // Wrapper for a stream to a Gerber file
 void GStream::Clear()

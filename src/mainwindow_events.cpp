@@ -20,7 +20,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-const bool ALLOW_SMART_PAN_WITHOUT_CTRLKEY = true;
+static const bool ALLOW_SMART_PAN_WITHOUT_CTRLKEY = true;
 
 // Following 2 are to slow down the auto-panning while moving components with the mouse
 static std::chrono::steady_clock::time_point g_lastAutoPanTime;

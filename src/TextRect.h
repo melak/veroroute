@@ -23,10 +23,10 @@
 #include "MyRGB.h"
 
 // Bitfield for text style
-const int TEXT_NORMAL		= 0;
-const int TEXT_BOLD			= 1;
-const int TEXT_ITALIC		= 2;
-const int TEXT_UNDERLINE	= 4;
+static const int TEXT_NORMAL	= 0;
+static const int TEXT_BOLD		= 1;
+static const int TEXT_ITALIC	= 2;
+static const int TEXT_UNDERLINE	= 4;
 
 class TextRect : public Rect, public MyRGB
 {

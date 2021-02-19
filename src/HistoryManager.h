@@ -25,7 +25,7 @@
 
 #include "Board.h"
 
-const size_t MAX_HISTORY_FILES = 1000;
+static const size_t MAX_HISTORY_FILES = 1000;
 
 typedef std::tuple<size_t, int, std::string>	HistoryItem;	// <index, compId, description>
 typedef std::list<HistoryItem>::const_iterator	HistoryItemIter;

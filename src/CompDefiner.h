@@ -27,11 +27,11 @@ class Component;
 // Class used to build a description of a custom component
 
 // The following flags are used to form a bitfield that determine how pins may be drawn
-const uchar PIN_RECT	= 1;	// Draw pin as a rectangle instead of circle (e.g. for switches/relays)
-const uchar PIN_LABELS	= 2;	// Allow pin labels to be drawn
-const uchar PIN_CUSTOM	= 4;	// Allow over-ride of pad and hole size
+static const uchar	PIN_RECT	= 1;	// Draw pin as a rectangle instead of circle (e.g. for switches/relays)
+static const uchar	PIN_LABELS	= 2;	// Allow pin labels to be drawn
+static const uchar	PIN_CUSTOM	= 4;	// Allow over-ride of pad and hole size
 
-const int BAD_ID = -1;
+static const int	BAD_ID	= -1;
 
 // Quicker to use struct than a std::pair
 struct IntShape
@@ -144,7 +144,7 @@ public:
 	const std::string&		GetImportStr() const		{ return m_importStr; }
 	const PinGrid&			GetGrid() const				{ return m_grid; }
 	std::list<IntShape>&	GetShapes()					{ return m_mapShapes; }
-	int  GetMinMargin() const;	// The margin around the footprint on the screen
+	Q_DECL_CONSTEXPR static inline int GetMinMargin()	{ return 12; }	// The margin around the footprint on the screen
 	int  GetScreenRows() const	{ return 2 * GetMinMargin() + GetGridRows(); }
 	int  GetScreenCols() const	{ return 2 * GetMinMargin() + GetGridCols(); }
 

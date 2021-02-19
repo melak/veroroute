@@ -28,11 +28,11 @@
 // This only affects rendered connections between adjacent pins..
 // It does not affect connectivity or routing.
 // The joint preference of adjacent pins determines which layers will show the connection.
-const uchar	LAYER_X = 0;	// No preference
-const uchar	LAYER_B	= 1;	// Prefer bottom layer
-const uchar	LAYER_T	= 2;	// Prefer top layer
+static const uchar	LAYER_X = 0;	// No preference
+static const uchar	LAYER_B	= 1;	// Prefer bottom layer
+static const uchar	LAYER_T	= 2;	// Prefer top layer
 
-const int MAX_PAD_OFFSET_MIL = 50;
+static const int MAX_PAD_OFFSET_MIL = 50;
 
 class CompManager;
 

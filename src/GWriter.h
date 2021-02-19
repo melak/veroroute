@@ -28,7 +28,8 @@ class GStream;
 
 enum class	GPOLARITY	{ UNKNOWN = 0, DARK, CLEAR };
 enum class	GFILE		{ GKO = 0, GBL, GBS, GBO, GTL, GTS, GTO, DRL };
-const int	NUM_STREAMS	= 8;
+
+static const int	NUM_STREAMS	= 8;
 
 struct GPenInfo
 {
