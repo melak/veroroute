@@ -271,57 +271,35 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 		if ( bUsed[NBR_R] && bUsed[NBR_B] ) bUsed[NBR_RB] = true;
 	}
 
-	// Construct polygon ("blob") based on used perimeter points
+	// Construct a track polygon ("blob") based on used perimeter points
 	QPolygonF	polygon;
 
 	// Count used perimeter points and find the first
 	int iFirst(-1), N(0);	// N ==> number of perimeter points
-	for (int i = 0; i < 8; i++)
-		if ( bUsed[i] ) { N++; if ( iFirst == -1 ) iFirst = i; }
+	for (int i = 0; i < 8; i++) if ( bUsed[i] ) { N++; if ( iFirst == -1 ) iFirst = i; }
 
-	// Flags to describe track sections of the blob perimeter:
-	// bPeri	==> Only have 2 consecutive perimeter points
-	// bOrtho	==> Track section bends 90 degrees	 (i.e. jumps 1 perimeter point)
-	// bObtuse	==> Track section bends < 90 degrees (i.e. jumps 2 perimeter points)
-
-	bool bPeri(false);
-
-	if ( N == 0 )
-		polygon << pC;
-	else if ( N == 1 )
-		polygon << p[iFirst] << pC;
-	else if ( N == 2 )
+	if		( N == 0 )	polygon << pC;				// Done making polygon
+	else if ( N == 1 )	polygon << pC << p[iFirst];	// Done making polygon
+	else if ( N == 2 )	// Check if second point is consecutive to first point
 	{
-		int  nCount(0);					// Perimeter point counter
-		int  iL(iFirst), iR(iFirst);	// Indexes of consecutive used perimeter points
-		for (int ii = 1; ii <= 8 && nCount < N; ii++)	// A full clockwise loop around the perimeter back to the start
-		{
-			const int jj = ( ii + iFirst ) % 8;
-			if ( !bUsed[jj] ) continue;
-			iL = iR;	iR = jj;	// Update iL and iR
-			const int iDiff = ( 8 + iR - iL ) % 8;
-			bPeri = ( iDiff == 1 || iDiff == 7 );
-			nCount++;
-		}
-		if ( bPeri ) polygon << pC; // Add centre point.  We want to end up with a closed polygon for this case.
+		if		( bUsed[( 1 + iFirst ) % 8] )	polygon << pC << p[iFirst] << p[( 1 + iFirst ) % 8];	// Done making polygon
+		else if	( bUsed[( 7 + iFirst ) % 8] )	polygon << pC << p[iFirst] << p[( 7 + iFirst ) % 8];	// Done making polygon
 	}
+	const bool bClosed = ( N > 2 ) || ( polygon.size() == 3 );	// true ==> closed polygon
 
-	const bool bClosed = bPeri || ( N > 2 );	// true ==> we'll draw a closed polygon
-
-	if ( N > 1 )
+	if ( N > 2 || ( N == 2 && !bClosed ) )	// If not done making polygon ...
 	{
-		int  nCount(0);					// Perimeter point counter
-		int  iL(iFirst), iR(iFirst);	// Indexes of consecutive used perimeter points
+		int nCount(0);				// Perimeter point counter
+		int iL(iFirst), iR(iFirst);	// Indexes of consecutive used perimeter points
 		for (int ii = 1; ii <= 8 && nCount < N; ii++)	// A full clockwise loop around the perimeter back to the start
 		{
 			if ( !bClosed && ii == 8 ) break;
 			const int jj = ( ii + iFirst ) % 8;
-			if ( !bUsed[jj] ) continue;
+			if ( bUsed[jj] ) nCount++; else continue;
 			iL = iR;	iR = jj;	// Update iL and iR
 			const int  iDiff	= ( 8 + iR - iL ) % 8;
-			const bool bOrtho	= ( iDiff == 2 || iDiff == 6 );
-			const bool bObtuse	= ( iDiff == 3 || iDiff == 5 );
-			nCount++;
+			const bool bOrtho	= ( iDiff == 2 || iDiff == 6 );	// Track section bends 90 degrees
+			const bool bObtuse	= ( iDiff == 3 || iDiff == 5 );	// Track section bends < 90 degrees
 			if ( bOrtho || bObtuse )	// Bend <= 90 degrees
 			{
 				if ( bCurvedTracks && !bHavePad )
@@ -351,67 +329,86 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 			}
 			else
 			{
-				if ( iL == iFirst ) polygon << p[iL];	// Add "L" to the polygon is it's the first point
+				if ( iL == iFirst ) polygon << p[iL];	// Add "L" to the polygon if it's the first point
 				if ( iR != iFirst ) polygon << p[iR];	// Add "R" to the polygon if it isn't the first point
 			}
 		}
 	}
 
-	// Pens for drawing (not Gerber)
-	static QPen		pen(Qt::black, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
-	static QBrush	brush(Qt::black,  Qt::SolidPattern);
-	pen.setColor(color);
-	brush.setColor(color);
-
-	// Draw
-	if ( N == 0 )	// Isolated node (no longer drawn as pad)
+	if ( m_bWriteGerber )	// Write to Gerber
 	{
-		if ( m_bWriteGerber )
+		for (int k = 0; k < m_board.GetLyrs(); k++)
 		{
-			assert( polygon.size() == 1 );
+			GStream& os = m_gWriter.GetStream(k == 0 ? GFILE::GBL : GFILE::GTL);	// Bottom/Top copper layer
 
-			auto& osT = m_gWriter.GetStream(GFILE::GTL);	// Top    copper layer
-			auto& osB = m_gWriter.GetStream(GFILE::GBL);	// Bottom copper layer
-			const GPEN ePen		= bGap ? GPEN::TRK_GAP : GPEN::TRK;
+			if ( N == 0 )			// Isolated node (no longer drawn as pad)
+			{
+				assert( polygon.size() == 1 );
+				const GPEN ePen		= bGap ? GPEN::TRK_GAP : GPEN::TRK;
+				os.AddTrack(polygon, ePen);
+			}
+			else if ( !bClosed )	// Draw open line segment
+			{
+				const GPEN ePen		= bGap ? GPEN::TRK_GAP : GPEN::TRK;
+				const GPEN ePenHV	= bGap ? GPEN::PAD_GAP : GPEN::PAD;
+				if ( bFatTracks && padWidth > trackWidth )
+					os.AddVariTrack(polygon, ePenHV, ePen);
+				else
+					os.AddTrack(polygon, ePen);
+			}
+			else	// Draw closed polygon
+			{
+				os.AddLoop(polygon, bGap ? GPEN::TRK_GAP : GPEN::TRK);		// Closed polygon outline
+				if ( !bGap ) os.AddRegion(polygon);		// Only non-Gap polygon needs filling
+			}
+			if ( bLeg )	// Track leg from offset pad to its grid origin
+			{
+				const GPEN ePen = bGap ? GPEN::TRK_GAP : GPEN::TRK;
+				polygon.clear();
+				polygon << pC << pCoffset;
+				os.AddTrack(polygon, ePen);		// Draw track across
+			}
+			if ( bFatTracks && padWidth > trackWidth )	// Widen H and V tracks to pad width
+			{
+				const GPEN ePen = bGap ? GPEN::PAD_GAP : GPEN::PAD;
+				for (int iNbr = 0; iNbr < 8; iNbr += 2)	// Loop non-diagonal perimeter points
+				{
+					if ( !bUsed[iNbr] ) continue;
 
-			if ( m_board.GetLyrs() > 1 )
-				osT.AddTrack(polygon, ePen);
-			osB.AddTrack(polygon, ePen);
-		}
-		else
-		{
-			pen.setWidth(trackWidth);
-			painter.setPen(pen);
-			painter.drawPoint(pC);
+					int iNbrOpp = (iNbr + 12 ) % 8;
+					if ( bUsed[iNbrOpp] )	// If can go straight across, do so
+					{
+						if ( iNbr <= 2 )	// No overlay
+						{
+							polygon.clear();
+							polygon << p[iNbr] << p[iNbrOpp];
+							os.AddTrack(polygon, ePen);	// Draw track across
+						}
+					}
+					else
+					{
+						polygon.clear();
+						polygon << pC << p[iNbr];
+						os.AddTrack(polygon, ePen);		// Draw track from centre to perimeter point
+					}
+				}
+			}
 		}
 	}
-	else if ( !bClosed )	// Draw open line segment
+	else	// Draw to pixmap
 	{
-		if ( m_bWriteGerber )
-		{
-			auto& osT = m_gWriter.GetStream(GFILE::GTL);	// Top    copper layer
-			auto& osB = m_gWriter.GetStream(GFILE::GBL);	// Bottom copper layer
-			const GPEN ePen		= bGap ? GPEN::TRK_GAP : GPEN::TRK;
-			const GPEN ePenHV	= bGap ? GPEN::PAD_GAP : GPEN::PAD;
+		static QPen		pen(Qt::black, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+		static QBrush	brush(Qt::black,  Qt::SolidPattern);
+		pen.setColor(color);
+		brush.setColor(color);
 
-			if ( bFatTracks && padWidth > trackWidth )
-			{
-				if ( m_board.GetLyrs() > 1 )
-					osT.AddVariTrack(polygon, ePenHV, ePen);
-				osB.AddVariTrack(polygon, ePenHV, ePen);
-			}
-			else
-			{
-				if ( m_board.GetLyrs() > 1 )
-					osT.AddTrack(polygon, ePen);
-				osB.AddTrack(polygon, ePen);
-			}
-		}
-		else
+		if ( N == 0 )	// Isolated node (no longer drawn as pad)
 		{
-			pen.setWidth(trackWidth);
-			painter.setPen(pen);
-			painter.setBrush(brush);
+			pen.setWidth(trackWidth);	painter.setPen(pen);	painter.drawPoint(pC);
+		}
+		else if ( !bClosed )	// Draw open line segment
+		{
+			pen.setWidth(trackWidth);	painter.setPen(pen);	painter.setBrush(brush);
 			auto iterA = polygon.begin();
 			auto iterB = iterA; iterB++;
 			while( iterB != polygon.end() )
@@ -420,91 +417,19 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 				++iterA; ++iterB;
 			}
 		}
-	}
-	else	// Draw closed polygon
-	{
-		if ( m_bWriteGerber )
+		else	// Draw closed polygon
 		{
-			auto& osT = m_gWriter.GetStream(GFILE::GTL);	// Top    copper layer
-			auto& osB = m_gWriter.GetStream(GFILE::GBL);	// Bottom copper layer
-			if ( m_board.GetLyrs() > 1 )
-			{
-				osT.AddLoop(polygon, bGap ? GPEN::TRK_GAP : GPEN::TRK);	// Closed polygon outline
-				if ( !bGap ) osT.AddRegion(polygon);	// Only non-Gap polygon needs filling
-			}
-			osB.AddLoop(polygon, bGap ? GPEN::TRK_GAP : GPEN::TRK);		// Closed polygon outline
-			if ( !bGap ) osB.AddRegion(polygon);		// Only non-Gap polygon needs filling
-		}
-		else
-		{
-			pen.setWidth(trackWidth);
-			painter.setPen(pen);
-			painter.setBrush(brush);
+			pen.setWidth(trackWidth);	painter.setPen(pen);	painter.setBrush(brush);
 			painter.drawPolygon(polygon);
 		}
-	}
-
-	if ( bLeg )	// Track leg from offset pad to its grid origin
-	{
-		if ( m_bWriteGerber )
+		if ( bLeg )	// Track leg from offset pad to its grid origin
 		{
-			auto& osT = m_gWriter.GetStream(GFILE::GTL);	// Top    copper layer
-			auto& osB = m_gWriter.GetStream(GFILE::GBL);	// Bottom copper layer
-			const GPEN ePen = bGap ? GPEN::TRK_GAP : GPEN::TRK;
-
-			polygon.clear();
-			polygon << pC << pCoffset;
-			if ( m_board.GetLyrs() > 1 )
-				osT.AddTrack(polygon, ePen);	// Draw track across
-			osB.AddTrack(polygon, ePen);		// Draw track across
-		}
-		else
-		{
-			pen.setWidth(trackWidth);
-			painter.setPen(pen);
-			painter.setBrush(brush);
+			pen.setWidth(trackWidth);	painter.setPen(pen);	painter.setBrush(brush);
 			painter.drawLine(pC, pCoffset);
 		}
-	}
-
-	if ( bFatTracks && padWidth > trackWidth )	// Widen H and V tracks to pad width
-	{
-		if ( m_bWriteGerber )
+		if ( bFatTracks && padWidth > trackWidth )	// Widen H and V tracks to pad width
 		{
-			auto& osT = m_gWriter.GetStream(GFILE::GTL);	// Top    copper layer
-			auto& osB = m_gWriter.GetStream(GFILE::GBL);	// Bottom copper layer
-			const GPEN ePen = bGap ? GPEN::PAD_GAP : GPEN::PAD;
-			for (int iNbr = 0; iNbr < 8; iNbr += 2)	// Loop non-diagonal perimeter points
-			{
-				if ( !bUsed[iNbr] ) continue;
-
-				int iNbrOpp = (iNbr + 12 ) % 8;
-				if ( bUsed[iNbrOpp] )	// If can go straight across, do so
-				{
-					if ( iNbr <= 2 )	// No overlay
-					{
-						polygon.clear();
-						polygon << p[iNbr] << p[iNbrOpp];
-						if ( m_board.GetLyrs() > 1 )
-							osT.AddTrack(polygon, ePen);	// Draw track across
-						osB.AddTrack(polygon, ePen);		// Draw track across
-					}
-				}
-				else
-				{
-					polygon.clear();
-					polygon << pC << p[iNbr];
-					if ( m_board.GetLyrs() > 1 )
-						osT.AddTrack(polygon, ePen);	// Draw track from centre to perimeter point
-					osB.AddTrack(polygon, ePen);		// Draw track from centre to perimeter point
-				}
-			}
-		}
-		else
-		{
-			pen.setWidth(padWidth);
-			painter.setPen(pen);
-			painter.setBrush(brush);
+			pen.setWidth(padWidth);		painter.setPen(pen);	painter.setBrush(brush);
 			for (int iNbr = 0; iNbr < 8; iNbr += 2)	// Loop non-diagonal perimeter points
 				if ( bUsed[iNbr] ) painter.drawLine(pC, p[iNbr]);	// Draw track from centre to perimeter point
 		}

@@ -137,57 +137,34 @@ void Board::CalcBlob(const QPointF& pC, const QPointF& pCoffset, const int& iPer
 	}
 
 	// Construct a track polygon ("blob") based on used perimeter points
-
 	MyPolygonF polygon;
 
 	// Count used perimeter points and find the first
 	int iFirst(-1), N(0);	// N ==> number of perimeter points
-	for (int i = 0; i < 8; i++)
-		if ( bUsed[i] ) { N++; if ( iFirst == -1 ) iFirst = i; }
+	for (int i = 0; i < 8; i++) if ( bUsed[i] ) { N++; if ( iFirst == -1 ) iFirst = i; }
 
-	// Flags to describe track sections of the blob perimeter:
-	// bPeri	==> Only have 2 consecutive perimeter points
-	// bOrtho	==> Track section bends 90 degrees	 (i.e. jumps 1 perimeter point)
-	// bObtuse	==> Track section bends < 90 degrees (i.e. jumps 2 perimeter points)
-
-	bool bPeri(false);
-
-	if ( N == 0 )
-		polygon << pC;
-	else if ( N == 1 )
-		polygon << p[iFirst] << pC;
-	else if ( N == 2 )
+	if		( N == 0 )	polygon << pC;				// Done making polygon
+	else if ( N == 1 )	polygon << pC << p[iFirst];	// Done making polygon
+	else if ( N == 2 )	// Check if second point is consecutive to first point
 	{
-		int  nCount(0);					// Perimeter point counter
-		int  iL(iFirst), iR(iFirst);	// Indexes of consecutive used perimeter points
-		for (int ii = 1; ii <= 8 && nCount < N; ii++)	// A full clockwise loop around the perimeter back to the start
-		{
-			const int jj = ( ii + iFirst ) % 8;
-			if ( !bUsed[jj] ) continue;
-			iL = iR;	iR = jj;	// Update iL and iR
-			const int iDiff = ( 8 + iR - iL ) % 8;
-			bPeri = ( iDiff == 1 || iDiff == 7 );
-			nCount++;
-		}
-		if ( bPeri ) polygon << pC; // Add centre point.  We want to end up with a closed polygon for this case.
+		if		( bUsed[( 1 + iFirst ) % 8] )	polygon << pC << p[iFirst] << p[( 1 + iFirst ) % 8];	// Done making polygon
+		else if	( bUsed[( 7 + iFirst ) % 8] )	polygon << pC << p[iFirst] << p[( 7 + iFirst ) % 8];	// Done making polygon
 	}
+	const bool bClosed = ( N > 2 ) || ( polygon.size() == 3 );	// true ==> closed polygon
 
-	const bool bClosed = bPeri || ( N > 2 );	// true ==> we'll draw a closed polygon
-
-	if ( N > 1 )
+	if ( N > 2 || ( N == 2 && !bClosed ) )	// If not done making polygon ...
 	{
-		int  nCount(0);					// Perimeter point counter
-		int  iL(iFirst), iR(iFirst);	// Indexes of consecutive used perimeter points
+		int nCount(0);				// Perimeter point counter
+		int iL(iFirst), iR(iFirst);	// Indexes of consecutive used perimeter points
 		for (int ii = 1; ii <= 8 && nCount < N; ii++)	// A full clockwise loop around the perimeter back to the start
 		{
 			if ( !bClosed && ii == 8 ) break;
 			const int jj = ( ii + iFirst ) % 8;
-			if ( !bUsed[jj] ) continue;
+			if ( bUsed[jj] ) nCount++; else continue;
 			iL = iR;	iR = jj;	// Update iL and iR
 			const int  iDiff	= ( 8 + iR - iL ) % 8;
-			const bool bOrtho	= ( iDiff == 2 || iDiff == 6 );
-			const bool bObtuse	= ( iDiff == 3 || iDiff == 5 );
-			nCount++;
+			const bool bOrtho	= ( iDiff == 2 || iDiff == 6 );	// Track section bends 90 degrees
+			const bool bObtuse	= ( iDiff == 3 || iDiff == 5 );	// Track section bends < 90 degrees
 			if ( bOrtho || bObtuse )	// Bend <= 90 degrees
 			{
 				if ( bCurvedTracks && !bHavePad )
@@ -217,7 +194,7 @@ void Board::CalcBlob(const QPointF& pC, const QPointF& pCoffset, const int& iPer
 			}
 			else
 			{
-				if ( iL == iFirst ) polygon << p[iL];	// Add "L" to the polygon is it's the first point
+				if ( iL == iFirst ) polygon << p[iL];	// Add "L" to the polygon if it's the first point
 				if ( iR != iFirst ) polygon << p[iR];	// Add "R" to the polygon if it isn't the first point
 			}
 		}
@@ -232,12 +209,10 @@ void Board::CalcBlob(const QPointF& pC, const QPointF& pCoffset, const int& iPer
 	{
 		polygon.m_radius	= trackWidth * 0.5;
 		polygon.m_bClosed	= false;
-
 		polygon.clear();
 		polygon << pC << pCoffset;
 		out.push_back(polygon);
 	}
-
 	if ( bFatTracks && padWidth > trackWidth )	// Widen H and V tracks to pad width
 	{
 		// Create additional polygons for any fat H/V tracks, and copy them to the output polygon list
