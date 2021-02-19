@@ -279,56 +279,52 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 	for (int i = 0; i < 8; i++)
 		if ( bUsed[i] ) { N++; if ( iFirst == -1 ) iFirst = i; }
 
-	bool bStraight(false), bOrtho(false), bObtuse(false);	// Flags to help describe track sections
-	// bStraight	==> Track goes straight across the centre point
-	// bOrtho		==> Track bends 90 degrees
-	// bObtuse		==> Track bends < 90 degrees
+	// Flags to describe track sections of the blob perimeter:
+	// bPeri	==> Only have 2 consecutive perimeter points
+	// bOrtho	==> Track section bends 90 degrees	 (i.e. jumps 1 perimeter point)
+	// bObtuse	==> Track section bends < 90 degrees (i.e. jumps 2 perimeter points)
 
-	bool bOpenLine(false);	// true ==> don't draw a closed polygon
+	bool bPeri(false);
 
 	if ( N == 0 )
 		polygon << pC;
 	else if ( N == 1 )
-	{
 		polygon << p[iFirst] << pC;
-		bStraight = true;
-	}
-	else
+	else if ( N == 2 )
 	{
-		if ( N == 2 )
-		{
-			int  nCount(0);					// Perimeter point counter
-			int  iL(iFirst), iR(iFirst);	// Indexes of consecutive used perimeter points
-			for (int ii = 1; ii <= 8 && nCount < N; ii++)	// A full clockwise loop around the perimeter back to the start
-			{
-				const int jj = ( ii + iFirst ) % 8;
-				if ( !bUsed[jj] ) continue;
-				iL = iR;	iR = jj;	// Update iL and iR
-				const int iDiff = ( 8 + iR - iL ) % 8;
-				bStraight	= ( iDiff == 4 );
-				bOrtho		= ( iDiff == 2 || iDiff == 6 );
-				bObtuse		= ( iDiff == 3 || iDiff == 5 );
-				nCount++;
-			}
-			bOpenLine = ( bOrtho || bObtuse || bStraight );
-		}
 		int  nCount(0);					// Perimeter point counter
 		int  iL(iFirst), iR(iFirst);	// Indexes of consecutive used perimeter points
 		for (int ii = 1; ii <= 8 && nCount < N; ii++)	// A full clockwise loop around the perimeter back to the start
 		{
-			if ( bOpenLine && ii == 8 ) break;	// bOpenLine ==> don't close the polygon
 			const int jj = ( ii + iFirst ) % 8;
 			if ( !bUsed[jj] ) continue;
 			iL = iR;	iR = jj;	// Update iL and iR
-			const int  iDiff		= ( 8 + iR - iL ) % 8;
-			const bool bOrtho		= ( iDiff == 2 || iDiff == 6 );
-			const bool bObtuse		= ( iDiff == 3 || iDiff == 5 );
+			const int iDiff = ( 8 + iR - iL ) % 8;
+			bPeri = ( iDiff == 1 || iDiff == 7 );
+			nCount++;
+		}
+		if ( bPeri ) polygon << pC; // Add centre point.  We want to end up with a closed polygon for this case.
+	}
+
+	const bool bClosed = bPeri || ( N > 2 );	// true ==> we'll draw a closed polygon
+
+	if ( N > 1 )
+	{
+		int  nCount(0);					// Perimeter point counter
+		int  iL(iFirst), iR(iFirst);	// Indexes of consecutive used perimeter points
+		for (int ii = 1; ii <= 8 && nCount < N; ii++)	// A full clockwise loop around the perimeter back to the start
+		{
+			if ( !bClosed && ii == 8 ) break;
+			const int jj = ( ii + iFirst ) % 8;
+			if ( !bUsed[jj] ) continue;
+			iL = iR;	iR = jj;	// Update iL and iR
+			const int  iDiff	= ( 8 + iR - iL ) % 8;
+			const bool bOrtho	= ( iDiff == 2 || iDiff == 6 );
+			const bool bObtuse	= ( iDiff == 3 || iDiff == 5 );
 			nCount++;
 			if ( bOrtho || bObtuse )	// Bend <= 90 degrees
 			{
-				if ( bHavePad && bOpenLine ) polygon << pC;	// If we have a pad, we actually want to draw a closed curve including pC
-
-				if ( bCurvedTracks )
+				if ( bCurvedTracks && !bHavePad )
 				{
 					// Make an N-point curve from L to R passing near central control point C
 					// Current interpolation is quadratic.
@@ -343,7 +339,7 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 					//	polygon << pC + pLC*pow(u,2.5) + pRC*pow(t,2.5);	// Sharper bends
 					}
 				}
-				else if ( bOrtho )	// Bend == 90 degrees (chosen to approximate the above curve)
+				else if ( bOrtho && !bHavePad )	// Bend == 90 degrees (chosen to approximate the above curve)
 				{
 					static double r = 0.5;			// i.e. 2*t^2	when t = 0.5
 				//	static double r = 0.25*sqrt(2);	// i.e. 2*t^2.5	when t = 0.5
@@ -359,11 +355,7 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 				if ( iR != iFirst ) polygon << p[iR];	// Add "R" to the polygon if it isn't the first point
 			}
 		}
-		if ( polygon.size() == 2 && !bStraight )	// If points are not directly opposite the centre ...
-			polygon << pC;							// ... add centre point
 	}
-
-	if ( bHavePad && !bStraight ) bOpenLine = false;
 
 	// Pens for drawing (not Gerber)
 	static QPen		pen(Qt::black, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
@@ -393,7 +385,7 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 			painter.drawPoint(pC);
 		}
 	}
-	else if ( N <= 2 && bOpenLine )	// Draw open line segment
+	else if ( !bClosed )	// Draw open line segment
 	{
 		if ( m_bWriteGerber )
 		{

@@ -217,7 +217,7 @@ public:
 		const size_t	pinIndex		= p->GetPinIndex();		assert(pinIndex != BAD_PININDEX);
 		const int		iLayerPrefP		= m_compMgr.GetComponentById(compId).GetLayerPref(pinIndex);
 
-		for (int iNbr = 0, iStep = bDiagsOK ? 1 : 2; iNbr < 8; iNbr += iStep)
+		for (int iNbr = 0; iNbr < 8; iNbr ++)
 		{
 			if ( !ReadCodeBit(iNbr, iCode) ) continue;
 
