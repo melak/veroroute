@@ -118,9 +118,11 @@ void GuiControl::CalcBlob(const qreal& W, const QPointF& pC, const QPointF& pCof
 	}
 
 	// Set other polygon attributes, then copy the polygon to the output polygon list
+	const bool bVariTracks = N > 0 && !bClosed && bFatTracks && padWidth > trkWidth;
 	polygon.m_eTrkPen	= trkPen;
-	polygon.m_ePadPen	= ( N > 0 && !bClosed && bFatTracks && padWidth > trkWidth ) ? padPen : GPEN::NONE;	// i.e. "VariTracks" if needed
-	polygon.m_radius	= trkWidth * 0.5;
+	polygon.m_ePadPen	= bVariTracks ? padPen : GPEN::NONE;
+	polygon.m_radiusTrk	= trkWidth * 0.5;
+	polygon.m_radiusPad	= bVariTracks ? ( padWidth * 0.5 ) : 0;
 	polygon.m_bClosed	= bClosed;
 	out.push_back(polygon);
 
@@ -128,7 +130,8 @@ void GuiControl::CalcBlob(const qreal& W, const QPointF& pC, const QPointF& pCof
 	{
 		polygon.m_eTrkPen	= trkPen;
 		polygon.m_ePadPen	= GPEN::NONE;
-		polygon.m_radius	= trkWidth * 0.5;
+		polygon.m_radiusTrk	= trkWidth * 0.5;
+		polygon.m_radiusPad	= 0;
 		polygon.m_bClosed	= false;
 		polygon.clear();
 		polygon << pC << pCoffset;
@@ -139,7 +142,8 @@ void GuiControl::CalcBlob(const qreal& W, const QPointF& pC, const QPointF& pCof
 		// Create additional polygons for any fat H/V tracks, and copy them to the output polygon list
 		polygon.m_eTrkPen	= GPEN::NONE;
 		polygon.m_ePadPen	= padPen;
-		polygon.m_radius	= padWidth * 0.5;
+		polygon.m_radiusTrk	= 0;
+		polygon.m_radiusPad	= padWidth * 0.5;
 		polygon.m_bClosed	= false;
 		for (int iNbr = 0; iNbr < 8; iNbr += 2)	// Loop non-diagonal perimeter points
 		{
