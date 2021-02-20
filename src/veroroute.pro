@@ -39,7 +39,8 @@ SOURCES += main.cpp\
     CompDefiner.cpp \
     CurveList.cpp \
     FootPrint.cpp \    
-    GWriter.cpp
+    GWriter.cpp \
+    GuiControl.cpp
 
 
 HEADERS  += mainwindow.h \

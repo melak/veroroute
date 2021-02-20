@@ -246,94 +246,12 @@ void MainWindow::PaintDiag(const GuiControl& guiCtrl, QPainter& painter, const Q
 
 void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, const QPointF& pCoffset, const int& iPerimeterCode, const bool bHavePad, const bool bGap)
 {
-	const bool	bMaxDiags		= ( guiCtrl.GetDiagsMode() == DIAGSMODE::MAX );
-	const int&	W				= guiCtrl.GetGRIDPIXELS();	// Square width in pixels
-	const int	C				= W >> 1;					// Half square width in pixels
-	const int	gapWidth		= bGap ? guiCtrl.GetPixelsFromMIL( guiCtrl.GetGAP_MIL() ) : 0;
-	const int	padWidth		= ( guiCtrl.GetHalfPixelsFromMIL( guiCtrl.GetPAD_MIL() )   + gapWidth ) << 1;	// Pad width in pixels
-	const int	trackWidth		= ( guiCtrl.GetHalfPixelsFromMIL( guiCtrl.GetTRACK_MIL() ) + gapWidth ) << 1;	// Track width in pixels
-	const bool&	bCurvedTracks	= guiCtrl.GetCurvedTracks();
-	const bool&	bFatTracks		= !bCurvedTracks && guiCtrl.GetFatTracks();
-	const bool	bLeg			= ( iPerimeterCode > 0 ) && pCoffset != pC;
+	const int	gapWidth	= bGap ? guiCtrl.GetPixelsFromMIL( guiCtrl.GetGAP_MIL() ) : 0;
+	const int	padWidth	= ( guiCtrl.GetHalfPixelsFromMIL( guiCtrl.GetPAD_MIL() )   + gapWidth ) << 1;	// Pad width in pixels
+	const int	trackWidth	= ( guiCtrl.GetHalfPixelsFromMIL( guiCtrl.GetTRACK_MIL() ) + gapWidth ) << 1;	// Track width in pixels
 
-	// Clockwise-ordered array of perimeter points around the square, starting at left...
-	const QPointF p[8] = { pC+QPointF(-C,0), pC+QPointF(-C,-C), pC+QPointF(0,-C), pC+QPointF( C,-C),
-						   pC+QPointF( C,0), pC+QPointF( C, C), pC+QPointF(0, C), pC+QPointF(-C, C) };
-	// Clockwise-ordered array of perimeter point usage, starting at left...
-	bool bUsed[8];
-	for (int iNbr = 0; iNbr < 8; iNbr++) bUsed[iNbr] = ReadCodeBit(iNbr, iPerimeterCode);
-
-	if ( bMaxDiags )	// For "max diagonals mode", force relevant corner perimeter points to be used
-	{
-		if ( bUsed[NBR_L] && bUsed[NBR_T] ) bUsed[NBR_LT] = true;
-		if ( bUsed[NBR_R] && bUsed[NBR_T] ) bUsed[NBR_RT] = true;
-		if ( bUsed[NBR_L] && bUsed[NBR_B] ) bUsed[NBR_LB] = true;
-		if ( bUsed[NBR_R] && bUsed[NBR_B] ) bUsed[NBR_RB] = true;
-	}
-
-	// Construct a track polygon ("blob") based on used perimeter points
-	QPolygonF	polygon;
-
-	// Count used perimeter points and find the first
-	int iFirst(-1), N(0);	// N ==> number of perimeter points
-	for (int i = 0; i < 8; i++) if ( bUsed[i] ) { N++; if ( iFirst == -1 ) iFirst = i; }
-
-	if		( N == 0 )	polygon << pC;				// Done making polygon
-	else if ( N == 1 )	polygon << pC << p[iFirst];	// Done making polygon
-	else if ( N == 2 )	// Check if second point is consecutive to first point
-	{
-		if		( bUsed[( 1 + iFirst ) % 8] )	polygon << pC << p[iFirst] << p[( 1 + iFirst ) % 8];	// Done making polygon
-		else if	( bUsed[( 7 + iFirst ) % 8] )	polygon << pC << p[iFirst] << p[( 7 + iFirst ) % 8];	// Done making polygon
-	}
-	const bool bClosed = ( N > 2 ) || ( polygon.size() == 3 );	// true ==> closed polygon
-
-	if ( N > 2 || ( N == 2 && !bClosed ) )	// If not done making polygon ...
-	{
-		int nCount(0);				// Perimeter point counter
-		int iL(iFirst), iR(iFirst);	// Indexes of consecutive used perimeter points
-		for (int ii = 1; ii <= 8 && nCount < N; ii++)	// A full clockwise loop around the perimeter back to the start
-		{
-			if ( !bClosed && ii == 8 ) break;
-			const int jj = ( ii + iFirst ) % 8;
-			if ( bUsed[jj] ) nCount++; else continue;
-			iL = iR;	iR = jj;	// Update iL and iR
-			const int  iDiff	= ( 8 + iR - iL ) % 8;
-			const bool bOrtho	= ( iDiff == 2 || iDiff == 6 );	// Track section bends 90 degrees
-			const bool bObtuse	= ( iDiff == 3 || iDiff == 5 );	// Track section bends < 90 degrees
-			if ( bOrtho || bObtuse )	// Bend <= 90 degrees
-			{
-				if ( bCurvedTracks && !bHavePad )
-				{
-					// Make an N-point curve from L to R passing near central control point C
-					// Current interpolation is quadratic.
-					// Using higher order (e.g. 2.5) gives bends passing closer to C (hence sharper corners)
-					static int		N = 10;
-					static double	d = 1.0 / N;
-					const QPointF	pLC(p[iL] - pC), pRC(p[iR] - pC);
-					for (int i = 0; i <= N; i++)
-					{
-						const double t(i * d), u(1 - t);
-						polygon << pC + pLC*(u*u) + pRC*(t*t);	// Bezier curve (quadratic interpolation)
-					//	polygon << pC + pLC*pow(u,2.5) + pRC*pow(t,2.5);	// Sharper bends
-					}
-				}
-				else if ( bOrtho && !bHavePad )	// Bend == 90 degrees (chosen to approximate the above curve)
-				{
-					static double r = 0.5;			// i.e. 2*t^2	when t = 0.5
-				//	static double r = 0.25*sqrt(2);	// i.e. 2*t^2.5	when t = 0.5
-					static double s = 1 - r;
-					polygon << p[iL] << p[iL]*r + pC*s << p[iR]*r + pC*s << p[iR];	// Draw mitred corner instead of 90 degree bend for L-C-R
-				}
-				else
-					polygon << p[iL] << pC << p[iR];	// Draw a sharp bend for L-C-R instead of a smooth curve
-			}
-			else
-			{
-				if ( iL == iFirst ) polygon << p[iL];	// Add "L" to the polygon if it's the first point
-				if ( iR != iFirst ) polygon << p[iR];	// Add "R" to the polygon if it isn't the first point
-			}
-		}
-	}
+	std::list<MyPolygonF> polygonList;
+	guiCtrl.CalcBlob(guiCtrl.GetGRIDPIXELS(), pC, pCoffset, iPerimeterCode, polygonList, bHavePad, bGap);	// Populate polygonList
 
 	if ( m_bWriteGerber )	// Write to Gerber
 	{
@@ -341,57 +259,23 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 		{
 			GStream& os = m_gWriter.GetStream(k == 0 ? GFILE::GBL : GFILE::GTL);	// Bottom/Top copper layer
 
-			if ( N == 0 )			// Isolated node (no longer drawn as pad)
+			for (auto & polygon : polygonList)
 			{
-				assert( polygon.size() == 1 );
-				const GPEN ePen		= bGap ? GPEN::TRK_GAP : GPEN::TRK;
-				os.AddTrack(polygon, ePen);
-			}
-			else if ( !bClosed )	// Draw open line segment
-			{
-				const GPEN ePen		= bGap ? GPEN::TRK_GAP : GPEN::TRK;
-				const GPEN ePenHV	= bGap ? GPEN::PAD_GAP : GPEN::PAD;
-				if ( bFatTracks && padWidth > trackWidth )
-					os.AddVariTrack(polygon, ePenHV, ePen);
+				const bool bPad	= polygon.m_ePadPen != GPEN::NONE;
+				const bool bTrk	= polygon.m_eTrkPen != GPEN::NONE;
+				if ( !bTrk && !bPad ) continue;
+
+				const GPEN& ePen = bTrk ? polygon.m_eTrkPen : polygon.m_ePadPen;
+
+				if ( polygon.m_bClosed )
+				{
+					os.AddLoop(polygon, ePen);			// Closed polygon outline
+					if ( !bGap ) os.AddRegion(polygon);	// Only non-Gap polygon needs filling
+				}
+				else if ( bPad && bTrk )	// Fat tracks with diagonals
+					os.AddVariTrack(polygon, polygon.m_ePadPen, polygon.m_eTrkPen);
 				else
 					os.AddTrack(polygon, ePen);
-			}
-			else	// Draw closed polygon
-			{
-				os.AddLoop(polygon, bGap ? GPEN::TRK_GAP : GPEN::TRK);		// Closed polygon outline
-				if ( !bGap ) os.AddRegion(polygon);		// Only non-Gap polygon needs filling
-			}
-			if ( bLeg )	// Track leg from offset pad to its grid origin
-			{
-				const GPEN ePen = bGap ? GPEN::TRK_GAP : GPEN::TRK;
-				polygon.clear();
-				polygon << pC << pCoffset;
-				os.AddTrack(polygon, ePen);		// Draw track across
-			}
-			if ( bFatTracks && padWidth > trackWidth )	// Widen H and V tracks to pad width
-			{
-				const GPEN ePen = bGap ? GPEN::PAD_GAP : GPEN::PAD;
-				for (int iNbr = 0; iNbr < 8; iNbr += 2)	// Loop non-diagonal perimeter points
-				{
-					if ( !bUsed[iNbr] ) continue;
-
-					int iNbrOpp = (iNbr + 12 ) % 8;
-					if ( bUsed[iNbrOpp] )	// If can go straight across, do so
-					{
-						if ( iNbr <= 2 )	// No overlay
-						{
-							polygon.clear();
-							polygon << p[iNbr] << p[iNbrOpp];
-							os.AddTrack(polygon, ePen);	// Draw track across
-						}
-					}
-					else
-					{
-						polygon.clear();
-						polygon << pC << p[iNbr];
-						os.AddTrack(polygon, ePen);		// Draw track from centre to perimeter point
-					}
-				}
 			}
 		}
 	}
@@ -401,37 +285,41 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 		static QBrush	brush(Qt::black,  Qt::SolidPattern);
 		pen.setColor(color);
 		brush.setColor(color);
+		painter.setBrush(brush);
 
-		if ( N == 0 )	// Isolated node (no longer drawn as pad)
+		for (auto & polygon : polygonList)
 		{
-			pen.setWidth(trackWidth);	painter.setPen(pen);	painter.drawPoint(pC);
-		}
-		else if ( !bClosed )	// Draw open line segment
-		{
-			pen.setWidth(trackWidth);	painter.setPen(pen);	painter.setBrush(brush);
-			auto iterA = polygon.begin();
-			auto iterB = iterA; iterB++;
-			while( iterB != polygon.end() )
+			const bool bTrk	= polygon.m_eTrkPen != GPEN::NONE;
+			const bool bPad	= polygon.m_ePadPen != GPEN::NONE;
+			if ( !bTrk && !bPad ) continue;
+
+			pen.setWidth(bTrk ? trackWidth : padWidth);
+			painter.setPen(pen);
+
+			if ( polygon.m_bClosed )
+				painter.drawPolygon(polygon);
+			else if ( polygon.size() == 1 )
+				painter.drawPoint( polygon.first() );
+			else if ( bPad && bTrk )	// Fat tracks with diagonals
 			{
-				painter.drawLine(*iterA, *iterB);
-				++iterA; ++iterB;
+				auto iterA = polygon.begin();
+				auto iterB = iterA; iterB++;
+				while( iterB != polygon.end() )
+				{
+					const bool bHV = ( iterA->x() == iterB->x() || iterA->y() == iterB->y() );
+					pen.setWidth(bHV ? padWidth : trackWidth);	painter.setPen(pen);
+					painter.drawLine(*iterA, *iterB); ++iterA; ++iterB;
+				}
 			}
-		}
-		else	// Draw closed polygon
-		{
-			pen.setWidth(trackWidth);	painter.setPen(pen);	painter.setBrush(brush);
-			painter.drawPolygon(polygon);
-		}
-		if ( bLeg )	// Track leg from offset pad to its grid origin
-		{
-			pen.setWidth(trackWidth);	painter.setPen(pen);	painter.setBrush(brush);
-			painter.drawLine(pC, pCoffset);
-		}
-		if ( bFatTracks && padWidth > trackWidth )	// Widen H and V tracks to pad width
-		{
-			pen.setWidth(padWidth);		painter.setPen(pen);	painter.setBrush(brush);
-			for (int iNbr = 0; iNbr < 8; iNbr += 2)	// Loop non-diagonal perimeter points
-				if ( bUsed[iNbr] ) painter.drawLine(pC, p[iNbr]);	// Draw track from centre to perimeter point
+			else
+			{
+				auto iterA = polygon.begin();
+				auto iterB = iterA; iterB++;
+				while( iterB != polygon.end() )
+				{
+					painter.drawLine(*iterA, *iterB); ++iterA; ++iterB;
+				}
+			}
 		}
 	}
 }

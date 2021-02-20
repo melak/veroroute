@@ -19,7 +19,11 @@
 
 #pragma once
 
-#include "CompElement.h"	// For BAD_COMPID, BAD_NODEID, TRAX_COMPID
+#include "TrackElement.h"	// For BAD_NODEID
+#include "Element.h"		// For BAD_COMPID, TRAX_COMPID
+
+class  QPointF;
+struct MyPolygonF;
 
 enum class DIAGSMODE { OFF = 0, MIN, MAX };
 enum class TRACKMODE { OFF = 0, MONO, COLOR, PCB };
@@ -465,6 +469,7 @@ public:
 	{
 		return std::max(1, static_cast<int> (GetGRIDPIXELS() * iMIL	* 0.010 ));
 	}
+	void	CalcBlob(const qreal& W, const QPointF& pC, const QPointF& pCoffset, const int& iPerimeterCode, std::list<MyPolygonF>& out, const bool bHavePad = false, const bool bGap = false) const;
 private:
 	int			m_currentLayer		= 0;				// Currently selected layer for display
 	int			m_currentCompId		= BAD_COMPID;		// Currently selected component ID

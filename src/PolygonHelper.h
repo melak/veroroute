@@ -21,6 +21,7 @@
 
 #include "Common.h"
 #include <QPolygonF>
+#include "CurveList.h"	// For GPEN
 
 // A helper for calculating separations between tracks
 
@@ -38,11 +39,23 @@ struct MyPolygonF : public QPolygonF	// A polygon + the pen radius for drawing i
 {
 	MyPolygonF() {}
 	~MyPolygonF() {}
-	MyPolygonF(const QPolygonF& p, const qreal& radius, bool bClosed) : QPolygonF(p), m_radius(radius), m_bClosed(bClosed) {}
-	MyPolygonF(const MyPolygonF& o) : QPolygonF(o), m_radius(o.m_radius), m_bClosed(o.m_bClosed) {}
-	MyPolygonF& operator=(const MyPolygonF& o) { QPolygonF::operator=(o); m_radius = o.m_radius; m_bClosed = o.m_bClosed; return *this; }
-	qreal	m_radius	= 0;		// Pen radius
-	bool	m_bClosed	= false;	// Flag to indicate closed polygon
+	MyPolygonF(const QPolygonF& p, const GPEN& eTrkPen, const GPEN& ePadPen, const qreal& radius, bool bClosed)
+		: QPolygonF(p), m_eTrkPen(eTrkPen), m_ePadPen(ePadPen), m_radius(radius), m_bClosed(bClosed) {}
+	MyPolygonF(const MyPolygonF& o)
+		: QPolygonF(o), m_eTrkPen(o.m_eTrkPen), m_ePadPen(o.m_ePadPen), m_radius(o.m_radius), m_bClosed(o.m_bClosed) {}
+	MyPolygonF& operator=(const MyPolygonF& o)
+	{
+		QPolygonF::operator=(o);
+		m_eTrkPen	= o.m_eTrkPen;
+		m_ePadPen	= o.m_ePadPen;
+		m_radius	= o.m_radius;
+		m_bClosed	= o.m_bClosed;
+		return *this;
+	}
+	GPEN	m_eTrkPen	= GPEN::NONE;	// TRK, TRK_GAP, or NONE
+	GPEN	m_ePadPen	= GPEN::NONE;	// PAD, PAD_GAP, or NONE
+	qreal	m_radius	= 0;			// Pen radius (pad/track radius + gap)
+	bool	m_bClosed	= false;		// Flag to indicate closed polygon
 };
 
 struct PolygonHelper
