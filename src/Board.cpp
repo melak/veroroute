@@ -96,6 +96,8 @@ void Board::GetPadWidths_MIL(std::list<int>& o, int& iDefaultWidth) const
 {
 	iDefaultWidth = GetPAD_MIL();
 	m_compMgr.GetPadWidths(o, iDefaultWidth);
+	if ( GetFatTracks() && std::find(o.begin(), o.end(), iDefaultWidth) == o.end() )
+		o.push_back( iDefaultWidth );
 }
 void Board::GetHoleWidths_MIL(std::list<int>& o, int& iDefaultWidth) const
 {

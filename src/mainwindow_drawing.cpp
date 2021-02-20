@@ -298,19 +298,19 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 
 			if ( polygon.m_bClosed )
 				painter.drawPolygon(polygon);
-			else if ( polygon.size() == 1 )
-				painter.drawPoint( polygon.first() );
 			else if ( bPad && bTrk )	// Fat tracks with diagonals
 			{
+				int i(0);
 				auto iterA = polygon.begin();
 				auto iterB = iterA; iterB++;
 				while( iterB != polygon.end() )
 				{
-					const bool bHV = ( iterA->x() == iterB->x() || iterA->y() == iterB->y() );
-					pen.setWidth(bHV ? padWidth : trackWidth);	painter.setPen(pen);
+					pen.setWidth(polygon.m_bFatEdge[i++] ? padWidth : trackWidth);	painter.setPen(pen);
 					painter.drawLine(*iterA, *iterB); ++iterA; ++iterB;
 				}
 			}
+			else if ( polygon.size() == 1 )
+				painter.drawPoint( polygon.first() );
 			else
 			{
 				auto iterA = polygon.begin();
