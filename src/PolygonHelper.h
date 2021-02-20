@@ -149,7 +149,7 @@ private:
 		if ( semi != 0 && l != 0 ) mid += L * ( semi / l );
 		m_pWarn.push_back( mid );
 	}
-	Q_DECL_CONSTEXPR static inline qreal Length(const QPointF& p)
+	static inline qreal Length(const QPointF& p)
 	{
 		return !p.x() ? fabs(p.y()) : !p.y() ? fabs(p.x()) : sqrt( QPointF::dotProduct(p,p) );
 	}

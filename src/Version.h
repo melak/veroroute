@@ -278,10 +278,15 @@ static const char* szVEROROUTE_VERSION =
 			// Omit deprecated G codes from Gerber export, and allow Gerber export in mm or inches.
 			// Allow circuit panning/grid resize by grabbing the grid with the right mouse button (ctrl key optional).
 			// Improve GUI behaviour in Tutorials by passing key presses from the Info dialog to the main window.
-  "2.05";	// Bug fix: Code for filling parts with color not correctly handling shape transformations.
+//"2.05";	// Bug fix: Code for filling parts with color not correctly handling shape transformations.
 			// Bug fix: Track separation info in the Rendering dialog not updating when auto-routing toggled.
 			// Bug fix: Components with lines outside the footprint area could be rendered off screen
 			// leading to an invalid set of Gerber files (e.g. GTO file having points outside the boundary in the GKO file).
 			// Improvement: Total rewrite of minimum track separation for improved accuracy.
 			// Improvement: Show points for all layers when displaying locations of minimum track separation.
 			// New feature: In PCB mode, individual pad locations can be shifted by up to 50 mil using Ctrl + Arrow keys.
+  "2.06";	// Bug fix: In Rendering Options, the "Show closest tracks" box was not being hidden when minimum separation was same as Gap size.
+			// Bug fix. In Fat Tracks mode with diagonals, tracks in the view were not all of correct width, but the ones in Gerber export were.
+			// Bug fix: In Fat Tracks mode with diagonals, the track separation algorithm was not handling all cases properly.
+			// Bug fix: In Fat Tracks mode, Gerber export should create an aperture for pads even if there are no parts in the circuit.
+			// Improvement: Allow reset pin layer preference ("T" + right button) while moving mouse instead of having to do single clicks.
