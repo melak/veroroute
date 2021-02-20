@@ -300,6 +300,7 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 				painter.drawPolygon(polygon);
 			else if ( bPad && bTrk )	// Fat tracks with diagonals
 			{
+				//polygon.Process();	// Not needed since m_bFatEdge already populated
 				int i(0);
 				auto iterA = polygon.begin();
 				auto iterB = iterA; iterB++;

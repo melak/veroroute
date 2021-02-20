@@ -137,7 +137,7 @@ void GuiControl::CalcBlob(const qreal& W, const QPointF& pC, const QPointF& pCof
 		polygon << pC << pCoffset;
 		out.push_back(polygon);
 	}
-	if ( bFatTracks && padWidth > trkWidth )	// Widen H and V tracks to pad width (to fix things not covered by "VariTracks" approach)
+	if ( bFatTracks && padWidth > trkWidth )	// Widen H and V tracks to pad width (closed loops not handled by "VariTracks" approach)
 	{
 		// Create additional polygons for any fat H/V tracks, and copy them to the output polygon list
 		polygon.m_eTrkPen	= GPEN::NONE;
@@ -149,7 +149,7 @@ void GuiControl::CalcBlob(const qreal& W, const QPointF& pC, const QPointF& pCof
 		{
 			if ( !bUsed[iNbr] ) continue;
 
-			int iNbrOpp = (iNbr + 12 ) % 8;
+			const int iNbrOpp = Opposite(iNbr);
 			if ( bUsed[iNbrOpp] )	// If can go straight across, do so
 			{
 				if ( iNbr <= 2 )	// No overlay

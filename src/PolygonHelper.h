@@ -61,10 +61,11 @@ struct MyPolygonF : public QPolygonF	// A polygon + the pen radii for drawing it
 		return *this;
 	}
 	bool HaveVariTracks() const { return QPolygonF::size() > 1 && m_radiusPad > m_radiusTrk && m_radiusTrk > 0; }
-	void Process() const
+	void Process(bool bForce = false) const
 	{
 		// Set flags to indicate if points and edges are fat or thin
-		const int iSize = (int) QPolygonF::size();
+		const int iSize = QPolygonF::size();
+		if ( !bForce && m_bFatPoint.size() == (size_t) iSize ) return;
 		m_bFatPoint.resize(iSize, false);
 		m_bFatEdge.resize(iSize, false);
 		if ( !HaveVariTracks() ) return;
@@ -103,7 +104,7 @@ struct PolygonHelper
 	inline void CalcSeparation(const MyPointF& X, const MyPolygonF& P)
 	{
 		if ( P.empty() ) return;
-		if ( P.m_bFatEdge.empty() ) P.Process();
+		//P.Process();	// Not needed since m_bFatEdge already populated
 		const bool  bVariTracks	= P.HaveVariTracks();
 		const qreal sum			= ( X.m_radius + P.m_radiusTrk );
 		const qreal semi		= ( X.m_radius - P.m_radiusTrk ) * 0.5;
@@ -123,8 +124,7 @@ struct PolygonHelper
 	inline void CalcSeparation(const MyPolygonF& P, const MyPolygonF& Q)
 	{
 		if ( P.empty() || Q.empty() ) return;
-		if ( P.m_bFatPoint.empty() ) P.Process();
-		if ( Q.m_bFatPoint.empty() ) Q.Process();
+		//P.Process();	Q.Process();	// Not needed since m_bFatPoint already populated
 		size_t i(0), j(0);
 		for (auto& p : P) CalcSeparation(MyPointF(p, P.m_bFatPoint[i++] ? P.m_radiusPad : P.m_radiusTrk), Q);
 		for (auto& q : Q) CalcSeparation(MyPointF(q, Q.m_bFatPoint[j++] ? Q.m_radiusPad : Q.m_radiusTrk), P);
