@@ -298,7 +298,6 @@ static COMP GetTypeFromTypeStr(const std::string& str)
 	InitMapsCompTypeToStr();
 	for (const auto& mapObj : mapCompTypeToTypeStr)
 		if ( mapObj.second == str ) return mapObj.first;
-	assert(0);	// Either InitMapsCompTypeToStr() needs updating, or str is bad
 	return COMP::INVALID;
 }
 
@@ -307,7 +306,6 @@ static std::string GetDefaultImportStr(const COMP& eType)
 	InitMapsCompTypeToStr();
 	const auto iter = mapCompTypeToImportStr.find(eType);
 	if ( iter != mapCompTypeToImportStr.end() ) return iter->second;
-	assert(0);	// Either InitMapsCompTypeToStr() needs updating, or eType is bad
 	return "INVALID";
 }
 
@@ -316,7 +314,6 @@ static std::string GetDefaultTypeStr(const COMP& eType)
 	InitMapsCompTypeToStr();
 	const auto iter = mapCompTypeToTypeStr.find(eType);
 	if ( iter != mapCompTypeToTypeStr.end() ) return iter->second;
-	assert(0);	// Either InitMapsCompTypeToStr() needs updating, or eType is bad
 	return "INVALID";
 }
 
