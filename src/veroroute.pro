@@ -93,7 +93,8 @@ HEADERS  += mainwindow.h \
     TextManager.h \
     Transform.h \
     Version.h \
-    VrtVersion.h
+    VrtVersion.h \
+    ConnectionMatrix.h
 
 
 FORMS    += mainwindow.ui \

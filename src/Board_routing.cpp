@@ -225,31 +225,31 @@ unsigned int Board::Flood()
 	// The return value is a cost that shows how unconnected the pins are.
 	// Zero cost means the pins are all inter-connected.
 
-	if ( m_targetPins.size() < 2 ) return 0;	// Return cost of zero
+	const size_t N = m_targetPins.size();
 
-	// Allocate the connection matrix ppConn[][] to indicate which pairs of targetPins are connected
-	const size_t N	= m_targetPins.size();
-	const size_t N2	= N * N;
-	bool*	pConn	= new bool[N2];
-	bool**	ppConn	= new bool*[N];
-	memset(pConn, 0, N2 * sizeof(bool));
-	for (size_t i = 0; i < N; i++) ppConn[i] = pConn + i * N;
-	for (size_t i = 0; i < N; i++) ppConn[i][i] = true;	// Each pin is connected to itself
-	unsigned int cost = (unsigned int)(N2 - N);	// Cost = number of false values in the connection matrix
+	if ( N < 2 ) return 0;	// Return cost of zero
+
+	// Allocate the connection matrix to indicate which pairs of targetPins are connected
+	m_connectionMatrix.Allocate( N );
+
+	// All target pins that support "flying wires" are connected to each other
+	for (size_t j = 0; j < N; j++)
+		if ( GetSupportsFlyingWire( m_targetPins[j] ) )
+			for (size_t k = j+1; k < N; k++)
+				if ( GetSupportsFlyingWire( m_targetPins[k] ) )
+					m_connectionMatrix.Connect(j, k);	// Make j-k connection and enforce transitivity
 
 	if ( m_bRouteMinimal )	// For minimal routing, first do a preliminary flood to see which pins are connected
-		Flood_Helper(ppConn, cost, false);	// false ==> don't build new tracks
+		Flood_Helper(false);	// false ==> don't build new tracks
 
 	if ( GetRoutingEnabled() )
-		Flood_Helper(ppConn, cost, true);	// true ==> build new tracks
+		Flood_Helper(true);	// true ==> build new tracks
 
-	// Deallocate connection matrix
-	delete[] ppConn;
-	delete[] pConn;
-	return cost;
+	m_connectionMatrix.DeAllocate();
+	return m_connectionMatrix.GetCost();
 }
 
-void Board::Flood_Helper(bool** ppConn, unsigned int& cost, const bool bBuildTracks)
+void Board::Flood_Helper(const bool bBuildTracks)
 {
 	for (int i = 0, iSize = GetSize(); i < iSize; i++)	// Loop all grid points
 		GetAt(i)->ResetMH();	// Wipe RouteId. Set "infinite" MH distance.  Zero max MH parameter.
@@ -271,7 +271,6 @@ void Board::Flood_Helper(bool** ppConn, unsigned int& cost, const bool bBuildTra
 	const bool			bMultiLayer	 = GetLyrs() > 1;
 	const bool			bViasEnabled = bMultiLayer && GetViasEnabled();
 	const int&			iFloodNodeId = m_targetPins[0]->GetNodeId();
-	const unsigned int	numRIDs		 = RID + 1;	assert( m_targetPins.size() == (size_t) numRIDs );
 	const bool			bDiagsOK	 = ( GetDiagsMode() != DIAGSMODE::OFF );
 	const unsigned int	iMaxDeltaMH	 = ( bViasEnabled ) ? MH_LVIA : bDiagsOK ? MH_DIAG : MH_LRTB;	// The max MH increment in single-layer mode depends on if diagonals are allowed
 
@@ -309,7 +308,7 @@ void Board::Flood_Helper(bool** ppConn, unsigned int& cost, const bool bBuildTra
 				{
 					case 0:	// Type 0 ==> Change layer at a pin
 						if ( pJ->GetHasPin() && pJ->GetMH() + MH_LPIN == iMH )
-							Flood_Grow(numRIDs, iFloodNodeId, ppConn, cost, pJ, NBR_X, bBuildTracks, iMH, iMaxMH, bDone);
+							Flood_Grow(iFloodNodeId, pJ, NBR_X, bBuildTracks, iMH, iMaxMH, bDone);
 						break;
 					case 1:	// Type 1 ==> Move within layer
 						for (int iDiag = 0, iDiagMax = ( bDiagsOK ) ? 2 : 1; iDiag < iDiagMax && !bDone; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
@@ -318,12 +317,12 @@ void Board::Flood_Helper(bool** ppConn, unsigned int& cost, const bool bBuildTra
 							if ( pJ->GetMH() + iDeltaMH != iMH ) continue;	// pJ has wrong MH for connection
 
 							for (int iNbr = iDiag; iNbr < 8 && !bDone; iNbr += 2)	// Even/Odd iNbr ==> Non-diagonal/Diagonal
-								Flood_Grow(numRIDs, iFloodNodeId, ppConn, cost, pJ, iNbr, bBuildTracks, iMH, iMaxMH, bDone);
+								Flood_Grow(iFloodNodeId, pJ, iNbr, bBuildTracks, iMH, iMaxMH, bDone);
 						}
 						break;
 					case 2:	// Type 2 ==> Change layer at a via
 						if ( !pJ->GetHasPin() && pJ->GetMH() + MH_LVIA == iMH )
-							Flood_Grow(numRIDs, iFloodNodeId, ppConn, cost, pJ, NBR_X, bBuildTracks, iMH, iMaxMH, bDone);
+							Flood_Grow(iFloodNodeId, pJ, NBR_X, bBuildTracks, iMH, iMaxMH, bDone);
 						break;
 				}
 			}
@@ -331,7 +330,7 @@ void Board::Flood_Helper(bool** ppConn, unsigned int& cost, const bool bBuildTra
 	}
 }
 
-void Board::Flood_Grow(const unsigned int& numRIDs, const int& iFloodNodeId, bool** ppConn, unsigned int& cost, Element* pJ, const int& iNbr, const bool& bBuildTracks, unsigned int& iMH, unsigned int& iMaxMH, bool& bDone)
+void Board::Flood_Grow(const int& iFloodNodeId, Element* pJ, const int& iNbr, const bool& bBuildTracks, unsigned int& iMH, unsigned int& iMaxMH, bool& bDone)
 {
 	WIRELIST wireList;	// Helper for chains of wires
 
@@ -371,7 +370,7 @@ void Board::Flood_Grow(const unsigned int& numRIDs, const int& iFloodNodeId, boo
 		}
 		return;
 	}
-	if ( ppConn[j][k] ) return;
+	if ( m_connectionMatrix.GetAreConnected(j,k) ) return;
 
 	// Routes with RIDs j and k have met and don't have a connection yet ...
 	if ( bBuildTracks )	// If building tracks ...
@@ -380,35 +379,9 @@ void Board::Flood_Grow(const unsigned int& numRIDs, const int& iFloodNodeId, boo
 		Backtrace(pK, iFloodNodeId);	// ... trace pK back to its source, painting iFloodNodeId along the way
 	}
 
-	// Make j-k connection and enforce transitivity
-	typedef std::pair<unsigned int, unsigned int> CONNECTION;
-	std::list<CONNECTION> list;		// Helper for updating the connection matrix
-	list.push_back( CONNECTION(j,k) );
-	while ( !list.empty() )
-	{
-		auto iter = list.begin();	// Read info from first list entry ...
-		const auto a = iter->first;
-		const auto b = iter->second;
-		list.erase( iter );			// ... then remove the list entry
+	m_connectionMatrix.Connect(j, k);	// Make j-k connection and enforce transitivity
 
-		if ( !ppConn[a][b] )	// If no a-b connection ...
-		{
-			ppConn[a][b] = ppConn[b][a] = true;	// Make a-b connection ...
-			cost -= 2;							// Update cost
-			for (unsigned int c = 0; c < numRIDs; c++)	// Update 1st-order transitive relations
-			{
-				if ( ppConn[a][c] )
-				{
-					if ( !ppConn[b][c] ) list.push_back( CONNECTION(b,c) );	// a-c connection ==> b-c connection
-				}
-				else
-				{
-					if (  ppConn[b][c] ) list.push_back( CONNECTION(a,c) );	// b-c connection ==> a-c connection
-				}
-			}
-		}
-	}
-	bDone = ( cost == 0 );	// Zero cost ==> done
+	bDone = ( m_connectionMatrix.GetCost() == 0 );	// Zero cost ==> done
 }
 
 void Board::Backtrace(Element* pEnd, const int& nodeId)
@@ -549,9 +522,25 @@ void Board::Manhatten(Element* p)
 	const unsigned int RID(0);
 	unsigned int iMH(0), iMaxMH(0);
 
-	// Add p to set of visited points, with MH value of zero
-	m_tmpVec[m_tmpVecSize++] = p;
-	p->UpdateMH(RID, iMH, iMaxMH);
+	// All pins that support "flying wires" and have the same nodeID are connected to each other
+	if ( GetSupportsFlyingWire(p) )
+	{
+		for (int i = 0, iSize = GetSize(); i < iSize; i++)	// Loop all grid points
+		{
+			Element* pL = GetAt(i);
+			if ( GetSupportsFlyingWire(pL) && pL->GetNodeId() == p->GetNodeId() )
+			{
+				m_tmpVec[m_tmpVecSize++] = pL;	// Add pL to set of visited points, with MH value of zero
+				pL->UpdateMH(RID, iMH, iMaxMH);
+			}
+		}
+	}
+	else
+	{
+		m_tmpVec[m_tmpVecSize++] = p;	// Add p to set of visited points, with MH value of zero
+		p->UpdateMH(RID, iMH, iMaxMH);
+	}
+
 	const bool bWire = p->IsLayer0() && p->GetHasWire();	// Constrain wire-routing to layer 0
 	if ( bWire )
 	{
@@ -630,8 +619,25 @@ void Board::ManhattenHelper(const Element* p, const int& iNbr, const int& RID, u
 
 	if ( p->GetUsed(iNbr) && pK->GetMH() == BAD_MH )
 	{
-		m_tmpVec[m_tmpVecSize++] = pK;	// Add pK to set of visited points
-		pK->UpdateMH(RID, iMH, iMaxMH);
+		// All pins that support "flying wires" and have the same nodeID are connected to each other
+		if ( GetSupportsFlyingWire(pK) )
+		{
+			for (int i = 0, iSize = GetSize(); i < iSize; i++)	// Loop all grid points
+			{
+				Element* pL = GetAt(i);
+				if ( GetSupportsFlyingWire(pL) && pL->GetNodeId() == pK->GetNodeId() )
+				{
+					m_tmpVec[m_tmpVecSize++] = pL;	// Add pL to set of visited points
+					pL->UpdateMH(RID, iMH, iMaxMH);
+				}
+			}
+		}
+		else
+		{
+			m_tmpVec[m_tmpVecSize++] = pK;	// Add pK to set of visited points
+			pK->UpdateMH(RID, iMH, iMaxMH);
+		}
+
 		const bool bWire = pK->IsLayer0() && pK->GetHasWire();	// Constrain wire-routing to layer 0
 		if ( bWire )
 		{
@@ -654,8 +660,6 @@ void Board::CheckAllComplete()
 {
 	assert( !GetRoutingEnabled() );	// If routing is enabled, use the "RoutedOK" flags instead of the "Complete" flags.
 
-	// New algorithm.
-	/*
 	// Calling Route() when routing is not enabled sets the cost info without building new tracks.
 	// So we can use that to set the "Complete" flags
 	Route(true);
@@ -663,31 +667,6 @@ void Board::CheckAllComplete()
 	{
 		NodeInfo* pNodeInfo = m_nodeInfoMgr.GetAt(n);
 		pNodeInfo->SetComplete( pNodeInfo->GetCost() == 0 );
-	}
-	m_nodeInfoMgr.SortByLowestDifficulty(m_compMgr);
-	return;
-	*/
-
-	// Old algorithm.  In most cases this is faster than the new algorithm, but worst-case performance is worse
-	for (size_t n = 0, nSize = m_nodeInfoMgr.GetSize(); n < nSize; n++)
-	{
-		NodeInfo* pNodeInfo = m_nodeInfoMgr.GetAt(n);
-		pNodeInfo->SetComplete(false);
-
-		const int& nodeId = pNodeInfo->GetNodeId();
-		if ( nodeId == BAD_NODEID ) continue;
-
-		BuildTargetPins(nodeId);
-
-		bool bComplete(true);
-		for (auto iterI = m_targetPins.begin(), iterEnd = m_targetPins.end(); iterI != iterEnd && bComplete; ++iterI)
-		{
-			Manhatten(*iterI);
-
-			for (auto iterJ = iterI; iterJ != iterEnd && bComplete; ++iterJ)
-				bComplete = ( (*iterJ)->GetMH() != BAD_MH );
-		}
-		pNodeInfo->SetComplete(bComplete);
 	}
 	m_nodeInfoMgr.SortByLowestDifficulty(m_compMgr);
 }

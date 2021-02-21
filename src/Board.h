@@ -26,6 +26,7 @@
 #include "ColorManager.h"
 #include "TextManager.h"
 #include "PolygonHelper.h"
+#include "ConnectionMatrix.h"
 
 #define SMART_PAN_CAN_AUTOCROP true
 
@@ -493,8 +494,8 @@ public:
 	const bool& GetHasVias() const { return m_bHasVias; }
 	unsigned int Flood(const int& nodeId);
 	unsigned int Flood();
-	void Flood_Helper(bool** ppConn, unsigned int& cost, const bool bBuildTracks);
-	void Flood_Grow(const unsigned int& numRIDs, const int& iFloodNodeId, bool** ppConn, unsigned int& cost, Element* pJ, const int& iNbr, const bool& bBuildTracks, unsigned int& iMH, unsigned int& iMaxMH, bool& bDone);
+	void Flood_Helper(const bool bBuildTracks);
+	void Flood_Grow(const int& iFloodNodeId, Element* pJ, const int& iNbr, const bool& bBuildTracks, unsigned int& iMH, unsigned int& iMaxMH, bool& bDone);
 	void Backtrace(Element* pEnd, const int& nodeId);
 	void BacktraceHelper(Element*& p, const int& nodeId, const int& iDeltaMH, const int& iNbr, const int& iLoop, unsigned int& MH, bool& bOK);
 	void Manhatten(Element* p);
@@ -565,6 +566,12 @@ public:
 	int	 GetCurrentShapeId() const			{ return m_compDefiner.GetCurrentShapeId(); }
 	bool SetCurrentPinId(const int& i)		{ return m_compDefiner.SetCurrentPinId(i); }
 	bool SetCurrentShapeId(const int& i)	{ return m_compDefiner.SetCurrentShapeId(i); }
+
+	// Helper for flying wires
+	bool GetSupportsFlyingWire(Element* p)	//TODO Make this const
+	{
+		return p == nullptr && p->GetNodeId() != BAD_NODEID && !p->GetHasWire() && p->IsLayer0() && m_compMgr.GetComponentById(p->GetCompId()).GetType() == COMP::PAD;	//TODO  Flying wires.
+	}
 
 	// Helpers for locations of close tracks
 	std::list<QPointF>& GetWarnPoints(int iLayer)	{ return m_warnPoints[iLayer]; }
@@ -691,8 +698,7 @@ public:
 
 		RebuildAdjacencies();
 
-		if ( inStream.GetVersion() < VRT_VERSION_42 )
-			FixCorruption();
+		FixCorruption();
 	}
 
 	virtual void Save(DataStream& outStream) override
@@ -762,9 +768,10 @@ private:
 	double					m_dMinSeparation = DBL_MAX;	// Units of grid squares
 
 	// Routing algorithm	// Don't persist or copy
-	std::vector<Element*>	m_targetPins;	// Set of pins to route.
-	std::vector<Element*>	m_tmpVec;		// The set of visited points.
-	size_t					m_tmpVecSize;	// The number of visited points.
-	bool					m_bRouteMinimal;// true ==> don't build tracks between pins that are already connected
-	bool					m_bHasVias;		// true ==> there are routed vias in the design (as opposed to "wires-as-tracks" vias)
+	ConnectionMatrix		m_connectionMatrix;	// Tracks connectivity between target pins
+	std::vector<Element*>	m_targetPins;		// Set of pins to route.
+	std::vector<Element*>	m_tmpVec;			// The set of visited points.
+	size_t					m_tmpVecSize;		// The number of visited points.
+	bool					m_bRouteMinimal;	// true ==> don't build tracks between pins that are already connected
+	bool					m_bHasVias;			// true ==> there are routed vias in the design (as opposed to "wires-as-tracks" vias)
 };

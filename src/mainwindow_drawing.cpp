@@ -1560,6 +1560,51 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		painter.restore();
 	}
 
+	// Draw flying wires =========================================================================
+	if ( !m_bWriteGerber && !bMonoPCB && compMode != COMPSMODE::OFF )
+	{
+		painter.save();
+		painter.setBrush(Qt::NoBrush);
+		m_varPen.setWidth(3);
+		m_varPen.setStyle(Qt::DashLine);
+
+		std::set<int> visitedNodeIds;
+
+		int xstart, ystart, xend, yend;
+		for (int j = minRow; j <= maxRow; j++)
+		for (int i = minCol; i <= maxCol; i++)
+		{
+			Element*	pC		= board.Get(0, j, i);	// Layer 0 only
+			if ( !board.GetSupportsFlyingWire(pC) ) continue;
+			const int&		nodeId	= pC->GetNodeId();
+			if ( visitedNodeIds.find(nodeId) != visitedNodeIds.end() ) continue;
+			visitedNodeIds.insert(nodeId);
+
+			const bool	 bCurrentNodeId	= nodeId == GetCurrentNodeId();
+			const QColor color	= bCurrentNodeId ? colorMgr.GetPixmapColor(MY_GREY)
+												 : colorMgr.GetColorFromNodeId(nodeId);
+			m_varPen.setColor(color);
+			painter.setPen(m_varPen);
+
+			GetXY(board, j, i, xstart, ystart);
+
+			for (int jj = j; jj <= maxRow; jj++)
+			for (int ii = (jj == j) ? (i+1) : minCol; ii <= maxCol; ii++)
+			{
+				Element*	pD	= board.Get(0, jj, ii);	// Layer 0 only
+				if ( pD->GetNodeId() != nodeId ) continue;
+				if ( !board.GetSupportsFlyingWire(pD) ) continue;
+
+				GetXY(board, jj, ii, xend, yend);
+
+				painter.drawLine(xstart, ystart, xend, yend);
+				xstart = xend;
+				ystart = yend;
+			}
+		}
+		painter.restore();
+	}
+
 	if ( m_bWriteGerber )
 		m_gWriter.GetStream(GFILE::GTO).DrawBuffers();	// Top silk layer
 
