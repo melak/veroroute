@@ -94,7 +94,8 @@ HEADERS  += mainwindow.h \
     Transform.h \
     Version.h \
     VrtVersion.h \
-    ConnectionMatrix.h
+    ConnectionMatrix.h \
+    SpanningTreeHelper.h
 
 
 FORMS    += mainwindow.ui \

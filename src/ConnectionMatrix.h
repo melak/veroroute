@@ -19,22 +19,22 @@
 
 #pragma once
 
-// Keeps track of connectivity between a set of target pins in the routing algorithm.
+// Keeps track of connectivity between a set of points (e.g. target pins in the routing algorithm)
 
 class ConnectionMatrix
 {
 public:
 	ConnectionMatrix() {}
 	~ConnectionMatrix() { DeAllocate(); }
-	void Allocate(const size_t& numTargetPins)
+	void Allocate(const size_t& N)
 	{
-		m_N				= numTargetPins;
+		m_N				= N;
 		const size_t N2	= m_N * m_N;
 		m_pConn			= new bool[N2];
 		m_ppConn		= new bool*[m_N];
 		memset(m_pConn, 0, N2 * sizeof(bool));
 		for (size_t i = 0; i < m_N; i++) m_ppConn[i] = m_pConn + i * m_N;
-		for (size_t i = 0; i < m_N; i++) m_ppConn[i][i] = true;	// Each pin is connected to itself
+		for (size_t i = 0; i < m_N; i++) m_ppConn[i][i] = true;	// Each point is connected to itself
 		m_cost = (unsigned int)(N2 - m_N);	// Cost = number of false values in the connection matrix
 	}
 	void DeAllocate()
@@ -77,8 +77,8 @@ public:
 	const bool& GetAreConnected(const size_t& j, const size_t& k) const { return m_ppConn[j][k]; }
 	const unsigned int&	GetCost() const { return m_cost; }
 private:
-	size_t			m_N			= 0;		// Number of target pins
+	size_t			m_N			= 0;		// Number of points in the set
 	bool*			m_pConn		= nullptr;	//
-	bool**			m_ppConn	= nullptr;	// m_ppConn[j][k] is true if pins j and k are connected
-	unsigned int	m_cost		= UINT_MAX; // Zero ==> all target pins are connected
+	bool**			m_ppConn	= nullptr;	// m_ppConn[j][k] is true if points j and k are connected
+	unsigned int	m_cost		= UINT_MAX; // Zero ==> all points are connected
 };

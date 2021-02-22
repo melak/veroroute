@@ -20,6 +20,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "GPainter.h"
+#include "SpanningTreeHelper.h"
 
 void MainWindow::DestroyPixmapCache()
 {
@@ -1376,7 +1377,6 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 		std::set<int> visitedNodeIds;
 
-		int xstart, ystart, xend, yend;
 		for (int j = minRow; j <= maxRow; j++)
 		for (int i = minCol; i <= maxCol; i++)
 		{
@@ -1391,7 +1391,10 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 												 : colorMgr.GetColorFromNodeId(nodeId);
 			m_varPen.setColor(color);
 
-			GetXY(board, j, i, xstart, ystart);
+			std::list<QPointF> spanTreePoints;
+
+			GetXY(board, j, i, X, Y);
+			spanTreePoints.push_back( QPointF(X, Y) );
 
 			for (int jj = j; jj <= maxRow; jj++)
 			for (int ii = (jj == j) ? (i+1) : minCol; ii <= maxCol; ii++)
@@ -1399,17 +1402,23 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				Element*	pD	= board.Get(0, jj, ii);	// Layer 0 only
 				if ( pD->GetNodeId() != nodeId || !board.GetAllowFlyWire(pD) ) continue;
 
-				GetXY(board, jj, ii, xend, yend);
-				const QPointF vec(xend - xstart, yend - ystart);
+				GetXY(board, jj, ii, X, Y);
+				spanTreePoints.push_back( QPointF(X, Y) );
+			}
+
+			std::list< SpanningTreeHelper::EDGE > spanTreeEdges;
+			SpanningTreeHelper::Build(spanTreePoints, spanTreeEdges);
+			for (auto& o : spanTreeEdges)
+			{
+				const QPointF	vec	= ( o.second - o.first );
+				const QPointF	mid	= ( o.second + o.first ) * 0.5;
+				const qreal		L	= PolygonHelper::Length(vec);
 				painter.save();
-				painter.translate(0.5*(xstart + xend), 0.5*(ystart + yend));
-				const double dL = 0.5 * PolygonHelper::Length(vec);
+				painter.translate(mid.x(), mid.y());
 				painter.rotate(atan2(vec.y(), vec.x()) * 180.0 / M_PI);
-				painter.setPen(m_varPen);		painter.drawLine(-dL, 0, dL, 0);
-				painter.setPen(fillBlackPen);	painter.drawRoundedRect(-dL, -dH, dL+dL, dH+dH, dW, dW);
+				painter.setPen(m_varPen);		painter.drawLine(-L * 0.5, 0, L * 0.5, 0);
+				painter.setPen(fillBlackPen);	painter.drawRoundedRect(-L * 0.5, -dH, L, dH+dH, dW, dW);
 				painter.restore();
-				xstart = xend;	// Make daisy chain
-				ystart = yend;	// Make daisy chain
 			}
 		}
 		painter.restore();
