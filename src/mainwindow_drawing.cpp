@@ -1363,7 +1363,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	}
 
 	// Draw flying wires =========================================================================
-	if ( !m_bWriteGerber && !bMonoPCB && compMode != COMPSMODE::OFF )
+	if ( !m_bWriteGerber && !bMonoPCB && compMode != COMPSMODE::OFF && board.GetShowFlyWires() )
 	{
 		painter.save();
 

@@ -146,6 +146,7 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	QObject::connect(ui->actionToggleFlipH,				SIGNAL(triggered()), this, SLOT(ToggleFlipH()));
 	QObject::connect(ui->actionToggleFlipV,				SIGNAL(triggered()), this, SLOT(ToggleFlipV()));
 	QObject::connect(ui->actionTogglePinLabels,			SIGNAL(triggered()), this, SLOT(TogglePinLabels()));
+	QObject::connect(ui->actionToggleFlyWires,			SIGNAL(triggered()), this, SLOT(ToggleFlyWires()));
 	QObject::connect(ui->actionVeroV,					SIGNAL(triggered()), this, SLOT(VeroV()));
 	QObject::connect(ui->actionVeroH,					SIGNAL(triggered()), this, SLOT(VeroH()));
 	QObject::connect(ui->actionFat,						SIGNAL(triggered()), this, SLOT(Fat()));
@@ -1105,6 +1106,7 @@ void MainWindow::SetShowText(bool b)			{ if ( m_board.SetShowText(b) )			{ Updat
 void MainWindow::SetFlipH(bool b)				{ if ( m_board.SetFlipH(b) )			{ UpdateHistory("Toggle flip horizontal");	UpdateControls(); RepaintSkipRouting(); } }
 void MainWindow::SetFlipV(bool b)				{ if ( m_board.SetFlipV(b) )			{ UpdateHistory("Toggle flip vertical");	UpdateControls(); RepaintSkipRouting(); } }
 void MainWindow::SetShowPinLabels(bool b)		{ if ( m_board.SetShowPinLabels(b) )	{ UpdateHistory("Toggle pin labels");		UpdateControls(); RepaintSkipRouting(); } }
+void MainWindow::SetShowFlyWires(bool b)		{ if ( m_board.SetShowFlyWires(b) )		{ UpdateHistory("Toggle flying wires");		UpdateControls(); RepaintSkipRouting(); } }
 void MainWindow::SetFill(bool b)
 {
 	if ( m_board.SetGroundFill(b) )
@@ -1123,6 +1125,7 @@ void MainWindow::ToggleText()			{ SetShowText( !m_board.GetShowText() ); if ( !m
 void MainWindow::ToggleFlipH()			{ SetFlipH( !m_board.GetFlipH() ); }
 void MainWindow::ToggleFlipV()			{ SetFlipV( !m_board.GetFlipV() ); }
 void MainWindow::TogglePinLabels()		{ SetShowPinLabels( !m_board.GetShowPinLabels() ); }
+void MainWindow::ToggleFlyWires()		{ SetShowFlyWires( !m_board.GetShowFlyWires() ); }
 
 // Toolbar items
 void MainWindow::VeroV()				{ SetTracksVeroV(true); }
@@ -1768,12 +1771,16 @@ void MainWindow::UpdateControls()
 	ui->actionToggleFlipV->setEnabled( !bCompEdit );
 	const bool bPinLabels = m_board.GetCompMode() != COMPSMODE::OFF && ( bNoTracks || bColor );
 	ui->actionTogglePinLabels->setEnabled( bPinLabels );
+	const bool bFlyWires  = m_board.GetCompMode() != COMPSMODE::OFF && ( bNoTracks || bColor );
+	ui->actionToggleFlyWires->setEnabled( bFlyWires );
 
 	ui->actionToggleGrid->setChecked( m_board.GetShowGrid() && !bPCB );
 	ui->actionToggleText->setChecked( m_board.GetShowText() && !bCompEdit && !bPCB );
 	ui->actionToggleFlipH->setChecked( m_board.GetFlipH()   && !bCompEdit );
 	ui->actionToggleFlipV->setChecked( m_board.GetFlipV()   && !bCompEdit );
 	ui->actionTogglePinLabels->setChecked( m_board.GetShowPinLabels() && bPinLabels );
+	ui->actionToggleFlyWires->setChecked( m_board.GetShowFlyWires() && bFlyWires );
+	ui->actionToggleFlyWires->setText( m_board.GetShowFlyWires() ? QString("Hide Flying Wires") : QString("Show Flying Wires"));
 
 	ui->actionPinDlg->setEnabled( !bCompEdit );
 	ui->actionControlDlg->setEnabled( !bCompEdit );

@@ -202,6 +202,8 @@
     <addaction name="separator"/>
     <addaction name="actionTogglePinLabels"/>
     <addaction name="separator"/>
+    <addaction name="actionToggleFlyWires"/>
+    <addaction name="separator"/>
     <addaction name="actionToggleFlipH"/>
     <addaction name="actionToggleFlipV"/>
     <addaction name="separator"/>
@@ -903,6 +905,9 @@
    <property name="toolTip">
     <string>Text Boxes (On/Off)</string>
    </property>
+   <property name="autoRepeat">
+    <bool>false</bool>
+   </property>
   </action>
   <action name="actionTextBox">
    <property name="text">
@@ -1272,6 +1277,17 @@
   <action name="actionPad_FlyWire">
    <property name="text">
     <string>Pad (Flying Wire)</string>
+   </property>
+  </action>
+  <action name="actionToggleFlyWires">
+   <property name="text">
+    <string>Flying Wires</string>
+   </property>
+   <property name="toolTip">
+    <string>Flying Wires (On/Off)</string>
+   </property>
+   <property name="autoRepeat">
+    <bool>false</bool>
    </property>
   </action>
  </widget>

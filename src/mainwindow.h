@@ -146,6 +146,7 @@ public slots:
 	void ToggleFlipH();
 	void ToggleFlipV();
 	void TogglePinLabels();
+	void ToggleFlyWires();
 	// Toolbar items
 	void VeroV();
 	void VeroH();
@@ -262,6 +263,7 @@ public slots:
 	void SetFlipH(bool b);
 	void SetFlipV(bool b);
 	void SetShowPinLabels(bool b);
+	void SetShowFlyWires(bool b);
 	void SetFill(bool b);
 	// Part controls
 	void SetCompName(const QString& str);

@@ -47,4 +47,5 @@ static const int VRT_VERSION_44 = 44;	// Added option to show close tracks
 static const int VRT_VERSION_45 = 45;	// Added layer preference for each component pin
 static const int VRT_VERSION_46 = 46;	// Added pad offsets for PCB mode
 static const int VRT_VERSION_47 = 47;	// Added component attribute to allow flying wires
-static const int VRT_VERSION_CURRENT = VRT_VERSION_47;
+static const int VRT_VERSION_48 = 48;	// Added board setting to show/hide flying wires
+static const int VRT_VERSION_CURRENT = VRT_VERSION_48;

@@ -85,6 +85,7 @@ public:
 		m_bFlipH			= o.m_bFlipH;
 		m_bFlipV			= o.m_bFlipV;
 		m_bPinLabels		= o.m_bPinLabels;
+		m_bFlyWires			= o.m_bFlyWires;
 		m_bGroundFill		= o.m_bGroundFill;
 		m_bVerticalStrips	= o.m_bVerticalStrips;
 		m_bCompEdit			= o.m_bCompEdit;
@@ -135,6 +136,7 @@ public:
 			&&	m_bFlipH			== o.m_bFlipH
 			&&	m_bFlipV			== o.m_bFlipV
 			&&	m_bPinLabels		== o.m_bPinLabels
+			&&	m_bFlyWires			== o.m_bFlyWires
 			&&	m_bGroundFill		== o.m_bGroundFill
 			&&	m_bVerticalStrips	== o.m_bVerticalStrips
 			&&	m_bCompEdit			== o.m_bCompEdit;
@@ -292,6 +294,9 @@ public:
 		m_bPinLabels = false;
 		if ( inStream.GetVersion() >= VRT_VERSION_2 )
 			inStream.Load(m_bPinLabels);		// Added in VRT_VERSION_2
+		m_bFlyWires = true;
+		if ( inStream.GetVersion() >= VRT_VERSION_48 )
+			inStream.Load(m_bFlyWires);			// Added in VRT_VERSION_48
 		m_bGroundFill = false;
 		if ( inStream.GetVersion() >= VRT_VERSION_3 )
 			inStream.Load(m_bGroundFill);		// Added in VRT_VERSION_3
@@ -347,6 +352,7 @@ public:
 		outStream.Save(m_bFlipH);
 		outStream.Save(m_bFlipV);			// Added in VRT_VERSION_14
 		outStream.Save(m_bPinLabels);		// Added in VRT_VERSION_2
+		outStream.Save(m_bFlyWires);		// Added in VRT_VERSION_48
 		outStream.Save(m_bGroundFill);		// Added in VRT_VERSION_3
 		outStream.Save(m_bVerticalStrips);	// Added in VRT_VERSION_12
 		outStream.Save(m_bCompEdit);		// Added in VRT_VERSION_19
@@ -403,6 +409,7 @@ public:
 	bool SetFlipH(const bool& b)			{ const bool bChanged = m_bFlipH			!= b; m_bFlipH			= b; return bChanged; }
 	bool SetFlipV(const bool& b)			{ const bool bChanged = m_bFlipV			!= b; m_bFlipV			= b; return bChanged; }
 	bool SetShowPinLabels(const bool& b)	{ const bool bChanged = m_bPinLabels		!= b; m_bPinLabels		= b; return bChanged; }
+	bool SetShowFlyWires(const bool& b)		{ const bool bChanged = m_bFlyWires			!= b; m_bFlyWires		= b; return bChanged; }
 	bool SetGroundFill(const bool& b)		{ const bool bChanged = m_bGroundFill		!= b; m_bGroundFill		= b; return bChanged; }
 	bool SetVerticalStrips(const bool& b)	{ const bool bChanged = m_bVerticalStrips	!= b; m_bVerticalStrips	= b; return bChanged; }
 	bool SetCompEdit(const bool& b)			{ const bool bChanged = m_bCompEdit			!= b; m_bCompEdit		= b; return bChanged; }
@@ -449,6 +456,7 @@ public:
 	const bool&			GetFlipH() const			{ return m_bFlipH; }
 	const bool&			GetFlipV() const			{ return m_bFlipV; }
 	const bool&			GetShowPinLabels() const	{ return m_bPinLabels; }
+	const bool&			GetShowFlyWires() const		{ return m_bFlyWires; }
 	const bool&			GetGroundFill() const		{ return m_bGroundFill; }
 	const bool&			GetVerticalStrips() const	{ return m_bVerticalStrips; }
 	const bool&			GetCompEdit() const			{ return m_bCompEdit; }
@@ -514,6 +522,7 @@ private:
 	bool		m_bFlipH			= false;			// true ==> flip L and R (with no manual manipulation)
 	bool		m_bFlipV			= false;			// true ==> flip T and B (with no manual manipulation)
 	bool		m_bPinLabels		= true;				// Show SIP/DIP pins as labels in non-mono mode
+	bool		m_bFlyWires			= true;				// Show flying wires
 	bool		m_bGroundFill		= false;
 	bool		m_bVerticalStrips	= true;
 	bool		m_bCompEdit			= false;			// true ==> component editor mode
