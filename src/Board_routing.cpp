@@ -234,9 +234,9 @@ unsigned int Board::Flood()
 
 	// All target pins that support "flying wires" are connected to each other
 	for (size_t j = 0; j < N; j++)
-		if ( GetSupportsFlyingWire( m_targetPins[j] ) )
+		if ( GetAllowFlyWire( m_targetPins[j] ) )
 			for (size_t k = j+1; k < N; k++)
-				if ( GetSupportsFlyingWire( m_targetPins[k] ) )
+				if ( GetAllowFlyWire( m_targetPins[k] ) )
 					m_connectionMatrix.Connect(j, k);	// Make j-k connection and enforce transitivity
 
 	if ( m_bRouteMinimal )	// For minimal routing, first do a preliminary flood to see which pins are connected
@@ -523,12 +523,12 @@ void Board::Manhatten(Element* p)
 	unsigned int iMH(0), iMaxMH(0);
 
 	// All pins that support "flying wires" and have the same nodeID are connected to each other
-	if ( GetSupportsFlyingWire(p) )
+	if ( GetAllowFlyWire(p) )
 	{
 		for (int i = 0, iSize = GetSize(); i < iSize; i++)	// Loop all grid points
 		{
 			Element* pL = GetAt(i);
-			if ( GetSupportsFlyingWire(pL) && pL->GetNodeId() == p->GetNodeId() )
+			if ( GetAllowFlyWire(pL) && pL->GetNodeId() == p->GetNodeId() )
 			{
 				m_tmpVec[m_tmpVecSize++] = pL;	// Add pL to set of visited points, with MH value of zero
 				pL->UpdateMH(RID, iMH, iMaxMH);
@@ -620,12 +620,12 @@ void Board::ManhattenHelper(const Element* p, const int& iNbr, const int& RID, u
 	if ( p->GetUsed(iNbr) && pK->GetMH() == BAD_MH )
 	{
 		// All pins that support "flying wires" and have the same nodeID are connected to each other
-		if ( GetSupportsFlyingWire(pK) )
+		if ( GetAllowFlyWire(pK) )
 		{
 			for (int i = 0, iSize = GetSize(); i < iSize; i++)	// Loop all grid points
 			{
 				Element* pL = GetAt(i);
-				if ( GetSupportsFlyingWire(pL) && pL->GetNodeId() == pK->GetNodeId() )
+				if ( GetAllowFlyWire(pL) && pL->GetNodeId() == pK->GetNodeId() )
 				{
 					m_tmpVec[m_tmpVecSize++] = pL;	// Add pL to set of visited points
 					pL->UpdateMH(RID, iMH, iMaxMH);

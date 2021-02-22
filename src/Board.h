@@ -568,9 +568,9 @@ public:
 	bool SetCurrentShapeId(const int& i)	{ return m_compDefiner.SetCurrentShapeId(i); }
 
 	// Helper for flying wires
-	bool GetSupportsFlyingWire(Element* p)	//TODO Make this const
+	bool GetAllowFlyWire(Element* p) const
 	{
-		return p == nullptr && p->GetNodeId() != BAD_NODEID && !p->GetHasWire() && p->IsLayer0() && m_compMgr.GetComponentById(p->GetCompId()).GetType() == COMP::PAD;	//TODO  Flying wires.
+		return p->GetNodeId() != BAD_NODEID && !p->GetHasWire() && p->IsLayer0() && m_compMgr.GetAllowFlyWire(p->GetCompId());
 	}
 
 	// Helpers for locations of close tracks

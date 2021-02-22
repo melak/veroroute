@@ -163,6 +163,7 @@
      <addaction name="actionBlock200"/>
     </widget>
     <addaction name="actionPad"/>
+    <addaction name="actionPad_FlyWire"/>
     <addaction name="actionWire"/>
     <addaction name="actionResistor"/>
     <addaction name="actionInductor"/>
@@ -1266,6 +1267,11 @@
   <action name="actionWrite_Gerber2_mm">
    <property name="text">
     <string>Metric units (mm)</string>
+   </property>
+  </action>
+  <action name="actionPad_FlyWire">
+   <property name="text">
+    <string>Pad (Flying Wire)</string>
    </property>
   </action>
  </widget>

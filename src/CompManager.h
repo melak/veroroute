@@ -108,6 +108,11 @@ public:
 		comp.SetId(compId);	// Even a blank component should have the correct compId
 		return comp;
 	}
+	bool GetAllowFlyWire(const int& compId) const
+	{
+		auto iter = m_mapIdToComp.find(compId);
+		return ( iter != m_mapIdToComp.end() ) ? iter->second.GetAllowFlyWire() : false;
+	}
 	const std::unordered_map<int, Component>& GetMapIdToComp() const
 	{
 		return m_mapIdToComp;

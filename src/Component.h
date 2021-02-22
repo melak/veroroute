@@ -56,6 +56,7 @@ public:
 		m_iPinFlags		= 0;
 		m_iPadWidth		= 70;
 		m_iHoleWidth	= 40;
+		m_bAllowFlyWire	= false;
 		m_nodeIdPins.clear();
 		m_origIdPins1.clear();
 		m_origIdPins2.clear();
@@ -91,6 +92,7 @@ public:
 
 		BuildDefault(eType);	// Build method for default component
 
+		SetAllowFlyWire(eType == COMP::PAD_FLYWIRE);
 		SetDefaultPinFlags();
 		SetDefaultStrings();
 		SetDefaultLabelOffsets();
@@ -141,6 +143,7 @@ public:
 		m_iPinFlags			= o.m_iPinFlags;
 		m_iPadWidth			= o.m_iPadWidth;
 		m_iHoleWidth		= o.m_iHoleWidth;
+		m_bAllowFlyWire		= o.m_bAllowFlyWire;
 		AllocatePins( o.GetNumPins() );
 		std::copy(o.m_nodeIdPins.begin(),	o.m_nodeIdPins.end(),	m_nodeIdPins.begin());
 		std::copy(o.m_origIdPins1.begin(),	o.m_origIdPins1.end(),	m_origIdPins1.begin());
@@ -179,6 +182,7 @@ public:
 				&& m_iPinFlags			== o.m_iPinFlags
 				&& m_iPadWidth			== o.m_iPadWidth
 				&& m_iHoleWidth			== o.m_iHoleWidth
+				&& m_bAllowFlyWire		== o.m_bAllowFlyWire
 				&& GetNumPins()			== o.GetNumPins()
 				&& GetNumShapes()		== o.GetNumShapes();
 		for (size_t i = 0; i < GetNumPins() && bOK; i++)
@@ -296,6 +300,7 @@ public:
 	void SetPinFlags(const uchar& i)			{ m_iPinFlags = i; }
 	void SetPadWidth(const int& i)				{ m_iPadWidth = i; }
 	void SetHoleWidth(const int& i)				{ m_iHoleWidth = i; }
+	void SetAllowFlyWire(const bool& b)			{ m_bAllowFlyWire = b; }
 	void AddOne(const Shape& s)					{ m_shapes.push_back(s); }
 	void AddTwo(const Shape& s)	// Adds the shape twice.  Once with fill only, and once with line only
 	{
@@ -355,17 +360,18 @@ public:
 		static Shape	defaultShape;
 		return ( iShapeIndex < m_shapes.size() ) ? m_shapes[iShapeIndex] : defaultShape;
 	}
-	const int&			GetLyr() const			{ return m_lyr; }
-	const int&			GetRow() const			{ return m_row; }
-	const int&			GetCol() const			{ return m_col; }
+	const int&			GetLyr() const				{ return m_lyr; }
+	const int&			GetRow() const				{ return m_row; }
+	const int&			GetCol() const				{ return m_col; }
 //	const int&			GetLabelOffsetRow() const	{ return m_iLabelOffsetRow; }
 //	const int&			GetLabelOffsetCol() const	{ return m_iLabelOffsetCol; }
-	const char&			GetDirection() const	{ return m_direction; }
-	const bool&			GetIsPlaced() const		{ return m_bIsPlaced; }
-	const uchar&		GetPinFlags() const		{ return m_iPinFlags; }
-	const int&			GetPadWidth() const		{ return m_iPadWidth; }
-	const int&			GetHoleWidth() const	{ return m_iHoleWidth; }
-	const std::vector<Shape>& GetShapes() const	{ return m_shapes; }
+	const char&			GetDirection() const		{ return m_direction; }
+	const bool&			GetIsPlaced() const			{ return m_bIsPlaced; }
+	const uchar&		GetPinFlags() const			{ return m_iPinFlags; }
+	const int&			GetPadWidth() const			{ return m_iPadWidth; }
+	const int&			GetHoleWidth() const		{ return m_iHoleWidth; }
+	const bool&			GetAllowFlyWire() const		{ return m_bAllowFlyWire; }
+	const std::vector<Shape>& GetShapes() const		{ return m_shapes; }
 
 	// Helpers for labels
 	void SetDefaultLabelOffsets();
@@ -657,6 +663,9 @@ public:
 			inStream.Load(m_iPadWidth);				// Added in VRT_VERSION_39
 			inStream.Load(m_iHoleWidth);			// Added in VRT_VERSION_39
 		}
+		m_bAllowFlyWire = false;
+		if ( inStream.GetVersion() >= VRT_VERSION_47 )
+			inStream.Load(m_bAllowFlyWire);			// Added in VRT_VERSION_47
 		unsigned int numPins(0);
 		inStream.Load(numPins);
 		AllocatePins(numPins);
@@ -712,6 +721,7 @@ public:
 		outStream.Save(m_iPinFlags);			// Added in VRT_VERSION_19
 		outStream.Save(m_iPadWidth);			// Added in VRT_VERSION_39
 		outStream.Save(m_iHoleWidth);			// Added in VRT_VERSION_39
+		outStream.Save(m_bAllowFlyWire);		// Added in VRT_VERSION_47
 		const unsigned int numPins = static_cast<unsigned int>( GetNumPins() );
 		outStream.Save(numPins);
 		for (unsigned int i = 0; i < numPins; i++)
@@ -749,6 +759,7 @@ private:
 	uchar						m_iPinFlags;		// 1 ==> PIN_RECT, 2 ==> PIN_LABELS, 4 ==> PIN_CUSTOM
 	int							m_iPadWidth;		// Used if the PIN_CUSTOM flag is set
 	int							m_iHoleWidth;		// Used if the PIN_CUSTOM flag is set
+	bool						m_bAllowFlyWire;	// For single pin parts only
 	// Current placement in board
 	int							m_lyr;				// Board layer for component
 	int							m_row;				// Board row for top-left element of footprint

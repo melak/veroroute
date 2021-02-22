@@ -27,6 +27,7 @@ void CompDefiner::Populate(const Component& o)
 	SetPinFlags( o.GetPinFlags() );
 	SetPadWidth( o.GetPadWidth() );
 	SetHoleWidth( o.GetHoleWidth() );
+	SetAllowFlyWire( o.GetAllowFlyWire() );
 
 	// Copy strings
 	SetValueStr( o.GetValueStr() );
@@ -74,6 +75,7 @@ void CompDefiner::Build(Component& comp) const
 	comp.SetPinFlags( GetPinFlags() );
 	comp.SetPadWidth( GetPadWidth() );
 	comp.SetHoleWidth( GetHoleWidth() );
+	comp.SetAllowFlyWire( GetAllowFlyWire() );
 	comp.SetValueStr( GetValueStr() );
 	comp.SetPrefixStr( GetPrefixStr() );
 	comp.SetTypeStr( GetTypeStr() );
@@ -139,6 +141,7 @@ bool CompDefiner::SetWidth(const int& i)
 		m_grid.Allocate(1, m_grid.GetRows(), i);
 		m_grid.Clear( Pin(BAD_PINCHAR, SURFACE_FULL, HOLE_FREE) );
 		m_mapShapes.clear();
+		SetAllowFlyWire(false);
 		AddRect();	// Provide a Rect by default
 	}
 	return bChanged;
@@ -154,6 +157,7 @@ bool CompDefiner::SetHeight(const int& i)
 		m_grid.Allocate(1, i, m_grid.GetCols());
 		m_grid.Clear( Pin(BAD_PINCHAR, SURFACE_FULL, HOLE_FREE) );
 		m_mapShapes.clear();
+		SetAllowFlyWire(false);
 		AddRect();	// Provide a Rect by default
 	}
 	return bChanged;

@@ -54,6 +54,7 @@ void Component::SetDefaultPinFlags()
 		case COMP::RELAY_DIP_8PIN:	return SetPinFlags(PIN_RECT | PIN_LABELS | iCustomFlag);
 		case COMP::MARK:
 		case COMP::PAD:
+		case COMP::PAD_FLYWIRE:
 		case COMP::WIRE:
 		case COMP::RESISTOR:
 		case COMP::INDUCTOR:
@@ -120,6 +121,7 @@ void Component::SetDefaultShapes(const bool& bUsePCBshapes)
 											AddOne( Shape(SHAPE::LINE,		true, false,	-0.21,  0.21, -0.21,  0.21) );
 											AddOne( Shape(SHAPE::LINE,		true, false,	-0.21,  0.21,  0.21, -0.21) );	break;
 		case COMP::PAD:						AddTwo( Shape(SHAPE::ELLIPSE,	true, true,		-0.45,  0.45, -0.45,  0.45) );	break;
+		case COMP::PAD_FLYWIRE:				AddTwo( Shape(SHAPE::RECT,		true, true,		-0.45,  0.45, -0.45,  0.45) );	break;
 		case COMP::LED:						AddTwo( Shape(SHAPE::CHORD,		true, true,		-0.75,  0.75, -0.75,  0.75, 30, -30) );break;
 		case COMP::CAP_ELECTRO_200_NP:		AddTwo( Shape(SHAPE::ELLIPSE,	true, true,		-1.00,  1.00, -1.00,  1.00) );	break;
 		case COMP::CAP_ELECTRO_250_NP:		AddTwo( Shape(SHAPE::ELLIPSE,	true, true,		-1.25,  1.25, -1.25,  1.25) );	break;
@@ -323,7 +325,8 @@ void Component::SetDefaultColor()
 		case COMP::CUSTOM:
 		case COMP::TRACKS:
 		case COMP::MARK:					return;
-		case COMP::PAD:						return SetFillColor(MyRGB(0xFFFFDF));
+		case COMP::PAD:
+		case COMP::PAD_FLYWIRE:				return SetFillColor(MyRGB(0xFFFFDF));
 		case COMP::LED:						return SetFillColor(MyRGB(0xFF6644));
 		case COMP::CAP_ELECTRO_200:
 		case COMP::CAP_ELECTRO_200_NP:
@@ -404,7 +407,6 @@ void Component::SetDefaultLabelOffsets()
 	m_iLabelOffsetCol = 0;
 	switch( GetType() )
 	{
-//		case COMP::PAD:					m_iLabelOffsetRow =  14;	return;
 		case COMP::LED:					m_iLabelOffsetRow =   8;	return;
 		case COMP::CRYSTAL:
 		case COMP::CAP_ELECTRO_200:

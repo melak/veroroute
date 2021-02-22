@@ -165,6 +165,7 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	QObject::connect(ui->actionDelete,					SIGNAL(triggered()), this, SLOT(Delete()));
 	QObject::connect(ui->actionMarker,					SIGNAL(triggered()), this, SLOT(AddMarker()));
 	QObject::connect(ui->actionPad,						SIGNAL(triggered()), this, SLOT(AddPad()));
+	QObject::connect(ui->actionPad_FlyWire,				SIGNAL(triggered()), this, SLOT(AddPadFlyWire()));
 	QObject::connect(ui->actionStrip100,				SIGNAL(triggered()), this, SLOT(AddStrip100()));
 	QObject::connect(ui->actionBlock100,				SIGNAL(triggered()), this, SLOT(AddBlock100()));
 	QObject::connect(ui->actionBlock200,				SIGNAL(triggered()), this, SLOT(AddBlock200()));

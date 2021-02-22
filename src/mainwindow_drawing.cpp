@@ -1062,6 +1062,49 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		painter.restore();
 	}
 
+	// Draw flying wires =========================================================================
+	if ( !m_bWriteGerber && !bMonoPCB && compMode != COMPSMODE::OFF )
+	{
+		painter.save();
+		painter.setBrush(Qt::NoBrush);
+		m_varPen.setWidth(1+W/6);
+		m_varPen.setStyle(Qt::DotLine);
+
+		std::set<int> visitedNodeIds;
+
+		int xstart, ystart, xend, yend;
+		for (int j = minRow; j <= maxRow; j++)
+		for (int i = minCol; i <= maxCol; i++)
+		{
+			Element*	pC		= board.Get(0, j, i);	// Layer 0 only
+			if ( !board.GetAllowFlyWire(pC) ) continue;
+			const int&	nodeId	= pC->GetNodeId();
+			if ( visitedNodeIds.find(nodeId) != visitedNodeIds.end() ) continue;
+			visitedNodeIds.insert(nodeId);
+
+			const bool	 bCurrentNodeId	= nodeId == GetCurrentNodeId();
+			const QColor color	= bCurrentNodeId ? colorMgr.GetPixmapColor(MY_GREY)
+												 : colorMgr.GetColorFromNodeId(nodeId);
+			m_varPen.setColor(color);
+			painter.setPen(m_varPen);
+
+			GetXY(board, j, i, xstart, ystart);
+
+			for (int jj = j; jj <= maxRow; jj++)
+			for (int ii = (jj == j) ? (i+1) : minCol; ii <= maxCol; ii++)
+			{
+				Element*	pD	= board.Get(0, jj, ii);	// Layer 0 only
+				if ( pD->GetNodeId() != nodeId || !board.GetAllowFlyWire(pD) ) continue;
+
+				GetXY(board, jj, ii, xend, yend);
+				painter.drawLine(xstart, ystart, xend, yend);
+				xstart = xend;
+				ystart = yend;
+			}
+		}
+		painter.restore();
+	}
+
 	// Draw Component outlines and pins ==========================================================
 	QPen& penPlaced	= ( bMono ) ? m_lightBluePen : ( bPCB ) ? m_whitePen : m_blackPen;	// For placed (non-floating) components
 	QPen  fillBlackPen = m_blackPen;	// Used for lines in the component pixmap
@@ -1555,51 +1598,6 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					painter.drawRect(X-C/3, Y-C/3, W/3, W/3);
 				else
 					painter.drawRect(X-C/6, Y-C/6, W/6, W/6);
-			}
-		}
-		painter.restore();
-	}
-
-	// Draw flying wires =========================================================================
-	if ( !m_bWriteGerber && !bMonoPCB && compMode != COMPSMODE::OFF )
-	{
-		painter.save();
-		painter.setBrush(Qt::NoBrush);
-		m_varPen.setWidth(3);
-		m_varPen.setStyle(Qt::DashLine);
-
-		std::set<int> visitedNodeIds;
-
-		int xstart, ystart, xend, yend;
-		for (int j = minRow; j <= maxRow; j++)
-		for (int i = minCol; i <= maxCol; i++)
-		{
-			Element*	pC		= board.Get(0, j, i);	// Layer 0 only
-			if ( !board.GetSupportsFlyingWire(pC) ) continue;
-			const int&		nodeId	= pC->GetNodeId();
-			if ( visitedNodeIds.find(nodeId) != visitedNodeIds.end() ) continue;
-			visitedNodeIds.insert(nodeId);
-
-			const bool	 bCurrentNodeId	= nodeId == GetCurrentNodeId();
-			const QColor color	= bCurrentNodeId ? colorMgr.GetPixmapColor(MY_GREY)
-												 : colorMgr.GetColorFromNodeId(nodeId);
-			m_varPen.setColor(color);
-			painter.setPen(m_varPen);
-
-			GetXY(board, j, i, xstart, ystart);
-
-			for (int jj = j; jj <= maxRow; jj++)
-			for (int ii = (jj == j) ? (i+1) : minCol; ii <= maxCol; ii++)
-			{
-				Element*	pD	= board.Get(0, jj, ii);	// Layer 0 only
-				if ( pD->GetNodeId() != nodeId ) continue;
-				if ( !board.GetSupportsFlyingWire(pD) ) continue;
-
-				GetXY(board, jj, ii, xend, yend);
-
-				painter.drawLine(xstart, ystart, xend, yend);
-				xstart = xend;
-				ystart = yend;
 			}
 		}
 		painter.restore();

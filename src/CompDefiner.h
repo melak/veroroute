@@ -71,6 +71,7 @@ public:
 	{
 		m_currentPinId = m_currentShapeId = BAD_ID;
 		m_iPinFlags = 0; m_iPadWidth = 70; m_iHoleWidth = 35;
+		m_bAllowFlyWire = false;
 		m_valueStr = m_prefixStr = m_typeStr = m_importStr = "";
 		m_grid.Allocate(1,4,4);
 		m_grid.Clear( Pin(BAD_PINCHAR, SURFACE_FULL, HOLE_FREE) );
@@ -84,6 +85,7 @@ public:
 		m_iPinFlags			= o.m_iPinFlags;
 		m_iPadWidth			= o.m_iPadWidth;
 		m_iHoleWidth		= o.m_iHoleWidth;
+		m_bAllowFlyWire		= o.m_bAllowFlyWire;
 		m_valueStr			= o.m_valueStr;
 		m_prefixStr			= o.m_prefixStr;
 		m_typeStr			= o.m_typeStr;
@@ -100,6 +102,7 @@ public:
 				&& m_iPinFlags			== o.m_iPinFlags
 				&& m_iPadWidth			== o.m_iPadWidth
 				&& m_iHoleWidth			== o.m_iHoleWidth
+				&& m_bAllowFlyWire		== o.m_bAllowFlyWire
 				&& m_valueStr			== o.m_valueStr
 				&& m_prefixStr			== o.m_prefixStr
 				&& m_typeStr			== o.m_typeStr
@@ -127,6 +130,7 @@ public:
 											  if ( bChanged && GetPadWidth() < i+8 ) SetPadWidth( i+8 );	// 8 ==> minimum annular ring = 4 mil
 											  return bChanged;
 											}
+	bool SetAllowFlyWire(const bool& b)		{ const bool bChanged = ( m_bAllowFlyWire	!= b );	m_bAllowFlyWire		= b; return bChanged; }
 	bool SetValueStr(const std::string& s)	{ const bool bChanged = ( m_valueStr		!= s );	m_valueStr			= s; return bChanged; }
 	bool SetPrefixStr(const std::string& s)	{ const bool bChanged = ( m_prefixStr		!= s );	m_prefixStr			= s; return bChanged; }
 	bool SetTypeStr(const std::string& s)	{ const bool bChanged = ( m_typeStr			!= s );	m_typeStr			= s; return bChanged; }
@@ -138,6 +142,7 @@ public:
 	const uchar&			GetPinFlags() const			{ return m_iPinFlags; }
 	const int&				GetPadWidth() const			{ return m_iPadWidth; }
 	const int&				GetHoleWidth() const		{ return m_iHoleWidth; }
+	const bool&				GetAllowFlyWire() const		{ return m_bAllowFlyWire; }
 	const std::string&		GetValueStr() const			{ return m_valueStr; }
 	const std::string&		GetPrefixStr() const		{ return m_prefixStr; }
 	const std::string&		GetTypeStr() const			{ return m_typeStr; }
@@ -334,6 +339,9 @@ public:
 			inStream.Load(m_iPadWidth);		// Added in VRT_VERSION_39
 			inStream.Load(m_iHoleWidth);	// Added in VRT_VERSION_39
 		}
+		m_bAllowFlyWire = false;
+		if ( inStream.GetVersion() >= VRT_VERSION_47 )
+			inStream.Load(m_bAllowFlyWire);	// Added in VRT_VERSION_47
 		inStream.Load(m_valueStr);
 		inStream.Load(m_prefixStr);
 		inStream.Load(m_typeStr);
@@ -359,6 +367,7 @@ public:
 		outStream.Save(m_iPinFlags);
 		outStream.Save(m_iPadWidth);	// Added in VRT_VERSION_39
 		outStream.Save(m_iHoleWidth);	// Added in VRT_VERSION_39
+		outStream.Save(m_bAllowFlyWire);// Added in VRT_VERSION_47
 		outStream.Save(m_valueStr);
 		outStream.Save(m_prefixStr);
 		outStream.Save(m_typeStr);
@@ -390,6 +399,7 @@ private:
 	uchar					m_iPinFlags;		// 1 ==> PIN_RECT, 2 ==> PIN_LABELS, 4 ==> PIN_CUSTOM
 	int						m_iPadWidth;		// Used if the PIN_CUSTOM flag is set
 	int						m_iHoleWidth;		// Used if the PIN_CUSTOM flag is set
+	bool					m_bAllowFlyWire;	// true ==> Allow flying wire to pins
 	std::string				m_valueStr;			// Value label (e.g. "MN3004")
 	std::string				m_prefixStr;		// Prefix string (e.g. "IC")
 	std::string				m_typeStr;			// Component type (e.g. "BBD")

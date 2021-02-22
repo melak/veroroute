@@ -46,4 +46,5 @@ static const int VRT_VERSION_43 = 43;	// Added vero numbers and vero letters
 static const int VRT_VERSION_44 = 44;	// Added option to show close tracks
 static const int VRT_VERSION_45 = 45;	// Added layer preference for each component pin
 static const int VRT_VERSION_46 = 46;	// Added pad offsets for PCB mode
-static const int VRT_VERSION_CURRENT = VRT_VERSION_46;
+static const int VRT_VERSION_47 = 47;	// Added component attribute to allow flying wires
+static const int VRT_VERSION_CURRENT = VRT_VERSION_47;

@@ -64,6 +64,7 @@ void BomDialog::Update()
 			case COMP::VERO_LETTER:
 			case COMP::MARK:
 			case COMP::PAD:
+			case COMP::PAD_FLYWIRE:
 			case COMP::WIRE:	break;	// Not true components for BOM
 			default:			pComps.push_back(&comp);
 		}
