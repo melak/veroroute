@@ -1062,49 +1062,6 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		painter.restore();
 	}
 
-	// Draw flying wires =========================================================================
-	if ( !m_bWriteGerber && !bMonoPCB && compMode != COMPSMODE::OFF )
-	{
-		painter.save();
-		painter.setBrush(Qt::NoBrush);
-		m_varPen.setWidth(1+W/6);
-		m_varPen.setStyle(Qt::DotLine);
-
-		std::set<int> visitedNodeIds;
-
-		int xstart, ystart, xend, yend;
-		for (int j = minRow; j <= maxRow; j++)
-		for (int i = minCol; i <= maxCol; i++)
-		{
-			Element*	pC		= board.Get(0, j, i);	// Layer 0 only
-			if ( !board.GetAllowFlyWire(pC) ) continue;
-			const int&	nodeId	= pC->GetNodeId();
-			if ( visitedNodeIds.find(nodeId) != visitedNodeIds.end() ) continue;
-			visitedNodeIds.insert(nodeId);
-
-			const bool	 bCurrentNodeId	= nodeId == GetCurrentNodeId();
-			const QColor color	= bCurrentNodeId ? colorMgr.GetPixmapColor(MY_GREY)
-												 : colorMgr.GetColorFromNodeId(nodeId);
-			m_varPen.setColor(color);
-			painter.setPen(m_varPen);
-
-			GetXY(board, j, i, xstart, ystart);
-
-			for (int jj = j; jj <= maxRow; jj++)
-			for (int ii = (jj == j) ? (i+1) : minCol; ii <= maxCol; ii++)
-			{
-				Element*	pD	= board.Get(0, jj, ii);	// Layer 0 only
-				if ( pD->GetNodeId() != nodeId || !board.GetAllowFlyWire(pD) ) continue;
-
-				GetXY(board, jj, ii, xend, yend);
-				painter.drawLine(xstart, ystart, xend, yend);
-				xstart = xend;
-				ystart = yend;
-			}
-		}
-		painter.restore();
-	}
-
 	// Draw Component outlines and pins ==========================================================
 	QPen& penPlaced	= ( bMono ) ? m_lightBluePen : ( bPCB ) ? m_whitePen : m_blackPen;	// For placed (non-floating) components
 	QPen  fillBlackPen = m_blackPen;	// Used for lines in the component pixmap
@@ -1125,7 +1082,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			if ( bPCB && (bMark || bVeroLabel) )	continue;	// Don't show markers and vero-lables in PCB mode
 			if ( m_bWriteGerber && !bPlaced ) continue;	// Don't write floating components to Gerber
 			if ( bWiresAsTracks && bWire && compMgr.GetWireCanBeTrack(&comp) ) continue;
-			const bool 		 bFound			= compMgr.GetFound( comp.GetId() );
+			const bool		 bFound			= compMgr.GetFound( comp.GetId() );
 			const bool		 bPinLabels		= !bMonoPCB && (comp.GetPinFlags() & PIN_LABELS) > 0 && board.GetShowPinLabels();
 			const bool		 bRectPins		= !bMonoPCB && (comp.GetPinFlags() & PIN_RECT) > 0;
 			const bool		 bHighlightComp	= board.GetGroupMgr().GetIsUserComp( comp.GetId() );
@@ -1402,53 +1359,117 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					}
 				}
 			}
-			// End draw component fill + outline -------------------------------------------------
+		}
+	}
 
-			// Begin draw component text ---------------------------------------------------------
-			if ( compMode != COMPSMODE::OFF && !bMark && !bWire && !bVeroLabel )
+	// Draw flying wires =========================================================================
+	if ( !m_bWriteGerber && !bMonoPCB && compMode != COMPSMODE::OFF )
+	{
+		painter.save();
+
+		QPen  blackPen = m_blackPen;	// Used for lines in the component pixmap
+		blackPen.setWidth(2);
+		m_varPen.setWidth(0.175 * W);
+		m_varPen.setStyle(Qt::DotLine);
+		painter.setBrush(Qt::NoBrush);
+		const double dH(0.1*W), dW(0.35*W);	// Params for wire rounded rect
+
+		std::set<int> visitedNodeIds;
+
+		int xstart, ystart, xend, yend;
+		for (int j = minRow; j <= maxRow; j++)
+		for (int i = minCol; i <= maxCol; i++)
+		{
+			Element*	pC		= board.Get(0, j, i);	// Layer 0 only
+			if ( !board.GetAllowFlyWire(pC) ) continue;
+			const int&	nodeId	= pC->GetNodeId();
+			if ( visitedNodeIds.find(nodeId) != visitedNodeIds.end() ) continue;
+			visitedNodeIds.insert(nodeId);
+
+			const bool	 bCurrentNodeId	= nodeId == GetCurrentNodeId();
+			const QColor color	= bCurrentNodeId ? colorMgr.GetPixmapColor(MY_GREY)
+												 : colorMgr.GetColorFromNodeId(nodeId);
+			m_varPen.setColor(color);
+
+			GetXY(board, j, i, xstart, ystart);
+
+			for (int jj = j; jj <= maxRow; jj++)
+			for (int ii = (jj == j) ? (i+1) : minCol; ii <= maxCol; ii++)
 			{
+				Element*	pD	= board.Get(0, jj, ii);	// Layer 0 only
+				if ( pD->GetNodeId() != nodeId || !board.GetAllowFlyWire(pD) ) continue;
+
+				GetXY(board, jj, ii, xend, yend);
+				const QPointF vec(xend - xstart, yend - ystart);
 				painter.save();
-
-				double dCopyTextScale = dTextScale;
-				if ( bPCB )
-				{
-					dCopyTextScale *= m_board.GetTextSizeComp() * (20.0 / 243 );	// Scale to make the Gerber font size similar to regular component font size
-				}
-				else
-				{
-					QFont compFont = painter.font();	// Copy of current font
-					compFont.setPointSize( m_board.GetTextSizeComp() );
-					painter.setFont(compFont);
-				}
-
-				// Use floating point pen width to better match Gerber output.
-				// Scale the pen width down to compensate for painter.scale() scaling things up in the loop below.
-				const double dPenWidth = ( bPCB ) ? board.GetSilkWidth() / dCopyTextScale : 0;
-				m_orangePen.setWidthF(dPenWidth);	// Use colored text for found components
-				m_redPen.setWidthF(dPenWidth);		// Use red text for floating components
-				penPlaced.setWidthF(dPenWidth);		// Use this for placed components
-
-				GetXY(board, comp, X, Y);	// Get footprint centre
-
-				int offsetRow(0), offsetCol(0);
-				comp.GetLabelOffsets(offsetRow, offsetCol);
-
-				X += W * 0.0625 * offsetCol; // Offset for text is 1/16 of a grid square
-				Y += W * 0.0625 * offsetRow; // Offset for text is 1/16 of a grid square
-
-				painter.translate(X, Y);
-				if ( compDirection == 'N' || compDirection == 'S' )
-					painter.rotate(270);
-
-				const std::string& myStr = ( compMode == COMPSMODE::NAME )  ? comp.GetNameStr() :
-										   ( compMode == COMPSMODE::VALUE ) ? comp.GetValueStr() : "";
-
-				painter.scale(dCopyTextScale, dCopyTextScale);
-				painter.setPen(bFound ? m_orangePen : bPlaced ? penPlaced : m_redPen);
-				painter.drawText(0,0,0,0, Qt::AlignCenter | Qt::TextDontClip, myStr.c_str(), bPCB);
+				painter.translate(0.5*(xstart + xend), 0.5*(ystart + yend));
+				const double dL = 0.5 * PolygonHelper::Length(vec);
+				painter.rotate(atan2(vec.y(), vec.x()) * 180.0 / M_PI);
+				painter.setPen(m_varPen);		painter.drawLine(-dL, 0, dL, 0);
+				painter.setPen(fillBlackPen);	painter.drawRoundedRect(-dL, -dH, dL+dL, dH+dH, dW, dW);
 				painter.restore();
+				xstart = xend;	// Make daisy chain
+				ystart = yend;	// Make daisy chain
 			}
-			// End draw component text -----------------------------------------------------------
+		}
+		painter.restore();
+	}
+
+	// Draw component text =======================================================================
+	if ( compMode != COMPSMODE::OFF )
+	{
+		for (const auto& pComp : sortedComps)	// Iterate sorted components
+		{
+			const Component& comp			= *pComp;
+			const COMP&		 compType		= comp.GetType();
+			const char&		 compDirection	= comp.GetDirection();
+			const bool		 bMark			= compType == COMP::MARK;
+			const bool		 bWire			= compType == COMP::WIRE;
+			const bool		 bVeroLabel		= compType == COMP::VERO_NUMBER || compType == COMP::VERO_LETTER;
+			if ( bMark || bWire || bVeroLabel ) continue;
+			const bool		 bPlaced		= comp.GetIsPlaced();
+			if ( m_bWriteGerber && !bPlaced ) continue;		// Don't write floating components to Gerber
+			const bool		 bFound			= compMgr.GetFound( comp.GetId() );
+
+			painter.save();
+			double dCopyTextScale = dTextScale;
+			if ( bPCB )
+			{
+				dCopyTextScale *= m_board.GetTextSizeComp() * (20.0 / 243 );	// Scale to make the Gerber font size similar to regular component font size
+			}
+			else
+			{
+				QFont compFont = painter.font();	// Copy of current font
+				compFont.setPointSize( m_board.GetTextSizeComp() );
+				painter.setFont(compFont);
+			}
+
+			// Use floating point pen width to better match Gerber output.
+			// Scale the pen width down to compensate for painter.scale() scaling things up in the loop below.
+			const double dPenWidth = ( bPCB ) ? board.GetSilkWidth() / dCopyTextScale : 0;
+			m_orangePen.setWidthF(dPenWidth);	// Use colored text for found components
+			m_redPen.setWidthF(dPenWidth);		// Use red text for floating components
+			penPlaced.setWidthF(dPenWidth);		// Use this for placed components
+
+			GetXY(board, comp, X, Y);	// Get footprint centre
+
+			int offsetRow(0), offsetCol(0);
+			comp.GetLabelOffsets(offsetRow, offsetCol);
+
+			X += W * 0.0625 * offsetCol; // Offset for text is 1/16 of a grid square
+			Y += W * 0.0625 * offsetRow; // Offset for text is 1/16 of a grid square
+
+			painter.translate(X, Y);
+			if ( compDirection == 'N' || compDirection == 'S' )
+				painter.rotate(270);
+
+			const std::string& myStr = ( compMode == COMPSMODE::NAME )  ? comp.GetNameStr() :
+									   ( compMode == COMPSMODE::VALUE ) ? comp.GetValueStr() : "";
+
+			painter.scale(dCopyTextScale, dCopyTextScale);
+			painter.setPen(bFound ? m_orangePen : bPlaced ? penPlaced : m_redPen);
+			painter.drawText(0,0,0,0, Qt::AlignCenter | Qt::TextDontClip, myStr.c_str(), bPCB);
+			painter.restore();
 		}
 	}
 

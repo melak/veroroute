@@ -95,6 +95,10 @@ struct PolygonHelper
 	QPolygonF	m_pWarn;			// Set of warning points
 	qreal		m_Dmin = DBL_MAX;	// The closest separation found
 
+	static inline qreal Length(const QPointF& p)
+	{
+		return !p.x() ? fabs(p.y()) : !p.y() ? fabs(p.x()) : sqrt( QPointF::dotProduct(p,p) );
+	}
 	inline void CalcSeparation(const MyPointF& X, const MyPointF& Y)
 	{
 		const qreal sum		= ( X.m_radius + Y.m_radius );
@@ -148,9 +152,5 @@ private:
 		QPointF mid( (X + Y) * 0.5 );
 		if ( semi != 0 && l != 0 ) mid += L * ( semi / l );
 		m_pWarn.push_back( mid );
-	}
-	static inline qreal Length(const QPointF& p)
-	{
-		return !p.x() ? fabs(p.y()) : !p.y() ? fabs(p.x()) : sqrt( QPointF::dotProduct(p,p) );
 	}
 };
