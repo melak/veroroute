@@ -169,7 +169,7 @@ public slots:
 	// Add menu items
 	void AddMarker()			{ AddPart(COMP::MARK); }
 	void AddPad()				{ AddPart(COMP::PAD); }
-	void AddPadFlyWire()		{ AddPart(COMP::PAD_FLYWIRE); }
+	void AddPadFlyWire()		{ AddPart(COMP::PAD_FLYINGWIRE); }
 	void AddWire()				{ AddPart(COMP::WIRE); }
 	void AddResistor()			{ AddPart(COMP::RESISTOR); }
 	void AddInductor()			{ AddPart(COMP::INDUCTOR); }

@@ -888,6 +888,7 @@ void Board::ChangeTypeUserComp(const COMP& eType)
 	WipeAutoSetPoints();
 	TakeOff(comp);
 	comp.BuildDefault(eType);
+	comp.SetAllowFlyWire(eType == COMP::PAD_FLYINGWIRE);
 	comp.SetDefaultPinFlags();
 	comp.SetDefaultStrings();
 	comp.SetDefaultLabelOffsets();

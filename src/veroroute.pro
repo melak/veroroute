@@ -73,6 +73,7 @@ HEADERS  += mainwindow.h \
     AdjInfoManager.h \
     ColorManager.h \
     CompManager.h \
+    ConnectionMatrix.h \
     GroupManager.h \
     GPainter.h \
     GWriter.h \
@@ -88,15 +89,14 @@ HEADERS  += mainwindow.h \
     RectManager.h \
     Shape.h \
     SimplexFont.h \
+    SpanningTreeHelper.h \
     StringHelper.h \
     TextRect.h \
     TextManager.h \
     Transform.h \
     Version.h \
-    VrtVersion.h \
-    ConnectionMatrix.h \
-    SpanningTreeHelper.h
-
+    VrtVersion.h
+   
 
 FORMS    += mainwindow.ui \
     controldialog.ui \

@@ -23,49 +23,53 @@
 #include "ConnectionMatrix.h"
 #include "PolygonHelper.h"
 
-// Builds a minimal spanning tree between a set of points
+// Builds a minimal spanning tree or daisy chain between a set of points
 
 struct SpanningTreeHelper
 {
-	typedef std::pair<QPointF, QPointF>	EDGE;
-	typedef std::pair<size_t, size_t>	EDGE_INDICES;
+	typedef std::pair<QPointF, QPointF>	LINE;
 
-	static void Build(const std::list<QPointF>& pointsIn, std::list<EDGE>& edgesOut)
+	static inline void Build(const std::list<QPointF>& pointsIn, std::list<LINE>& linesOut, const bool& bDaisyChain = false)
 	{
-		edgesOut.clear();
+		typedef std::pair<size_t, size_t>	INDICES;
+		typedef std::pair<INDICES, qreal>	EDGE;
+
+		linesOut.clear();
 
 		const size_t N = pointsIn.size();
 		if ( N < 2 ) return;
 
-		std::vector<QPointF> v;	v.resize(N);	// Points stored as a vector (for access via index)
+		std::vector<size_t>		nConn;	nConn.resize(N,0);	// Number of direct connections to each point
+		std::vector<QPointF>	v;		v.resize(N);		// Points stored as a vector (for access via index)
 		size_t i(0);
 		for (auto& o: pointsIn) v[i++] = o;
 
-		std::list<EDGE_INDICES> edges;	// Working list of edges
+		std::list<EDGE> edges;	// Working list of edges
 		for (size_t i = 0; i < N; i++)
 			for (size_t j = i + 1; j < N; j++)
-				edges.push_back( EDGE_INDICES(i,j) );
+				edges.push_back( EDGE(INDICES(i,j), PolygonHelper::Length(v[i]-v[j])) );
 
 		ConnectionMatrix matrix;	// Helper for tracking connectivity between points
 		matrix.Allocate(N);
 
-		while ( edgesOut.size() < N-1 )
+		while ( linesOut.size() < N-1 )
 		{
 			double Dmin(DBL_MAX);
-			EDGE_INDICES best;	// The shortest edge that does not make an unnecessary connection
-			for (auto& edge : edges)
+			auto iterBest = edges.begin();	// The shortest edge that does not make an unnecessary connection
+			for (auto iter = iterBest, iterEnd = edges.end(); iter != iterEnd; ++iter)
 			{
-				const double D = PolygonHelper::Length( v[edge.first] - v[edge.second] );
-				if ( D < Dmin && !matrix.GetAreConnected(edge.first, edge.second) )
-				{
-					best	= edge;
-					Dmin	= D;
-				}
+				const INDICES&	ij	= iter->first;
+				const qreal&	D	= iter->second;
+				if ( D > Dmin || matrix.GetAreConnected(ij.first, ij.second) ) continue;
+				if ( bDaisyChain && (nConn[ij.first] > 1 || nConn[ij.second] > 1) ) continue;
+				iterBest	= iter;
+				Dmin		= D;
 			}
-			edgesOut.push_back( EDGE(v[best.first], v[best.second]) );	// Add best to output list
-			matrix.Connect(best.first, best.second);					// Update connection matrix
-			auto iter = std::find(edges.begin(), edges.end(), best);	// Remove best edge from the working list of edges
-			if ( iter != edges.end() ) edges.erase(iter);
+			const INDICES& ij = iterBest->first;
+			linesOut.push_back( LINE(v[ij.first], v[ij.second]) );	// Add best to output list
+			matrix.Connect(ij.first, ij.second);					// Update connection matrix
+			nConn[ij.first]++;	nConn[ij.second]++;					// Update number of direct connections
+			edges.erase(iterBest);									// Remove best from the working list
 		}
 	}
 
@@ -74,7 +78,7 @@ private:
 	bool PreventBuildWarnings() const
 	{
 		std::list<QPointF>	in;
-		std::list<EDGE>		out;
+		std::list<LINE>		out;
 		Build(in, out);
 		return true;
 	}

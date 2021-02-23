@@ -1406,9 +1406,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				spanTreePoints.push_back( QPointF(X, Y) );
 			}
 
-			std::list< SpanningTreeHelper::EDGE > spanTreeEdges;
-			SpanningTreeHelper::Build(spanTreePoints, spanTreeEdges);
-			for (auto& o : spanTreeEdges)
+			std::list< SpanningTreeHelper::LINE > spanTreeLines;
+			SpanningTreeHelper::Build(spanTreePoints, spanTreeLines, true);	// true ==> daisy chain
+			for (auto& o : spanTreeLines)
 			{
 				const QPointF	vec	= ( o.second - o.first );
 				const QPointF	mid	= ( o.second + o.first ) * 0.5;

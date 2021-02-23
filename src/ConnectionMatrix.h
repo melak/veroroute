@@ -30,17 +30,17 @@ public:
 	{
 		m_N				= N;
 		const size_t N2	= m_N * m_N;
-		m_pConn			= new bool[N2];
-		m_ppConn		= new bool*[m_N];
-		memset(m_pConn, 0, N2 * sizeof(bool));
-		for (size_t i = 0; i < m_N; i++) m_ppConn[i] = m_pConn + i * m_N;
-		for (size_t i = 0; i < m_N; i++) m_ppConn[i][i] = true;	// Each point is connected to itself
+		m_p				= new bool[N2];
+		m_pp			= new bool*[m_N];
+		memset(m_p, 0, N2 * sizeof(bool));
+		for (size_t i = 0; i < m_N; i++) m_pp[i] = m_p + i * m_N;
+		for (size_t i = 0; i < m_N; i++) m_pp[i][i] = true;	// Each point is connected to itself
 		m_cost = (unsigned int)(N2 - m_N);	// Cost = number of false values in the connection matrix
 	}
 	void DeAllocate()
 	{
-		if ( m_ppConn ) delete[] m_ppConn;	m_ppConn	= nullptr;
-		if ( m_pConn  ) delete[] m_pConn;	m_pConn		= nullptr;
+		if ( m_pp ) delete[] m_pp;	m_pp	= nullptr;
+		if ( m_p  ) delete[] m_p;	m_p		= nullptr;
 	}
 	void Connect(const size_t& j, const size_t& k)
 	{
@@ -56,29 +56,29 @@ public:
 			const auto b = iter->second;
 			list.erase( iter );			// ... then remove the list entry
 
-			if ( !m_ppConn[a][b] )	// If no a-b connection ...
+			if ( !m_pp[a][b] )	// If no a-b connection ...
 			{
-				m_ppConn[a][b] = m_ppConn[b][a] = true;	// Make a-b connection ...
-				m_cost -= 2;							// Update cost
+				m_pp[a][b] = m_pp[b][a] = true;	// Make a-b connection ...
+				m_cost -= 2;					// Update cost
 				for (unsigned int c = 0; c < m_N; c++)	// Update 1st-order transitive relations
 				{
-					if ( m_ppConn[a][c] )
+					if ( m_pp[a][c] )
 					{
-						if ( !m_ppConn[b][c] ) list.push_back( CONNECTION(b,c) );	// a-c connection ==> b-c connection
+						if ( !m_pp[b][c] ) list.push_back( CONNECTION(b,c) );	// a-c connection ==> b-c connection
 					}
 					else
 					{
-						if (  m_ppConn[b][c] ) list.push_back( CONNECTION(a,c) );	// b-c connection ==> a-c connection
+						if (  m_pp[b][c] ) list.push_back( CONNECTION(a,c) );	// b-c connection ==> a-c connection
 					}
 				}
 			}
 		}
 	}
-	const bool& GetAreConnected(const size_t& j, const size_t& k) const { return m_ppConn[j][k]; }
+	const bool& GetAreConnected(const size_t& j, const size_t& k) const { return m_pp[j][k]; }
 	const unsigned int&	GetCost() const { return m_cost; }
 private:
-	size_t			m_N			= 0;		// Number of points in the set
-	bool*			m_pConn		= nullptr;	//
-	bool**			m_ppConn	= nullptr;	// m_ppConn[j][k] is true if points j and k are connected
-	unsigned int	m_cost		= UINT_MAX; // Zero ==> all points are connected
+	size_t			m_N		= 0;		// Number of points in the set
+	bool*			m_p		= nullptr;	//
+	bool**			m_pp	= nullptr;	// m_pp[j][k] is true if points j and k are connected
+	unsigned int	m_cost	= UINT_MAX; // Zero ==> all points are connected
 };

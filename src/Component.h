@@ -92,7 +92,7 @@ public:
 
 		BuildDefault(eType);	// Build method for default component
 
-		SetAllowFlyWire(eType == COMP::PAD_FLYWIRE);
+		SetAllowFlyWire(eType == COMP::PAD_FLYINGWIRE);
 		SetDefaultPinFlags();
 		SetDefaultStrings();
 		SetDefaultLabelOffsets();

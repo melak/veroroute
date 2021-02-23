@@ -25,7 +25,7 @@
 enum class COMP {	INVALID					=   -1,
 					MARK					=    0,
 					PAD						=  100,
-					PAD_FLYWIRE				=  110,
+					PAD_FLYINGWIRE			=  110,
 					WIRE					=  200,
 					RESISTOR				=  300,
 					INDUCTOR				=  350,
@@ -107,7 +107,7 @@ static int GetListOrder(const COMP& eType)	// For dialogs/menus.  Lower number =
 	switch( eType )
 	{
 		case COMP::PAD:					return 0;
-		case COMP::PAD_FLYWIRE:			return 1;
+		case COMP::PAD_FLYINGWIRE:		return 1;
 		case COMP::WIRE:				return 2;
 		case COMP::RESISTOR:			return 3;
 		case COMP::INDUCTOR:			return 4;
@@ -190,7 +190,7 @@ static bool IsPlug(const COMP& type)	// true ==> Can plug gap between rows of IC
 	{
 		case COMP::MARK:
 		case COMP::PAD:
-		case COMP::PAD_FLYWIRE:
+		case COMP::PAD_FLYINGWIRE:
 		case COMP::WIRE:
 		case COMP::RESISTOR:
 		case COMP::DIODE:
@@ -215,7 +215,7 @@ static void InitMapsCompTypeToStr()
 	if ( !mapCompTypeToTypeStr.empty() ) return;
 	UpdateMaps(COMP::MARK,					"Marker",						"");	// No import string
 	UpdateMaps(COMP::PAD,					"Pad",							"PAD");
-	UpdateMaps(COMP::PAD_FLYWIRE,			"Pad (Fly Wire)",				"PAD_FLYWIRE");
+	UpdateMaps(COMP::PAD_FLYINGWIRE,		"Pad (Flying Wire)",			"PAD_FLYINGWIRE");
 	UpdateMaps(COMP::WIRE,					"Wire",							"");	// No import string
 	UpdateMaps(COMP::RESISTOR,				"Resistor",						"RESISTOR");
 	UpdateMaps(COMP::INDUCTOR,				"Inductor",						"INDUCTOR");
@@ -390,7 +390,7 @@ static std::string GetDefaultPrefixStr(const COMP& eType)	// Prefix for name on 
 	{
 		case COMP::MARK:				return "Marker";
 		case COMP::PAD:
-		case COMP::PAD_FLYWIRE:			return "Pad";
+		case COMP::PAD_FLYINGWIRE:		return "Pad";
 		case COMP::WIRE:				return "Wire";
 		case COMP::RESISTOR:			return "R";
 		case COMP::INDUCTOR:			return "L";
@@ -487,6 +487,7 @@ static bool AllowTypeChange(const COMP& eTypeA, const COMP& eTypeB)
 	const std::string prefixA = GetDefaultPrefixStr(eTypeA);
 	const std::string prefixB = GetDefaultPrefixStr(eTypeB);
 	if ( prefixA != prefixB ) return false;
+	if ( prefixA == std::string("Pad") )	return true;
 	if ( prefixA == std::string("D") )		return true;
 	if ( prefixA == std::string("C") )		return true;
 	if ( prefixA == std::string("RT") )		return true;
@@ -530,7 +531,7 @@ static std::string GetMakeInstructions(const COMP& eType, int& rows, int& cols)
 	{
 		case COMP::MARK					: rows = 1; cols = 1;  return ".";
 		case COMP::PAD					: rows = 1; cols = 1;  return "1";
-		case COMP::PAD_FLYWIRE			: rows = 1; cols = 1;  return "1";
+		case COMP::PAD_FLYINGWIRE		: rows = 1; cols = 1;  return "1";
 		case COMP::WIRE					: rows = 1; cols = 3;  return "1+2";
 		case COMP::RESISTOR				: rows = 1; cols = 5;  return "1+++2";
 		case COMP::INDUCTOR				: rows = 1; cols = 5;  return "1+++2";
@@ -651,7 +652,7 @@ static int GetDefaultNumPins(const COMP& eType)
 	{
 		case COMP::MARK:				return 0;
 		case COMP::PAD:
-		case COMP::PAD_FLYWIRE:			return 1;
+		case COMP::PAD_FLYINGWIRE:		return 1;
 		case COMP::WIRE:
 		case COMP::RESISTOR:
 		case COMP::INDUCTOR:
