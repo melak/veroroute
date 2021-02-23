@@ -61,6 +61,12 @@ int Board::CreateComponent(int iRow, int iCol, const COMP& eType, const Componen
 		// If pComp has a sensible Value field, then use it
 		if ( pComp->GetValueStr() != pComp->GetNameStr() )
 			tmp.SetValueStr( pComp->GetValueStr() );
+		if ( pComp->GetNameStr().empty() && pComp->GetValueStr().empty() )	// This may be typical for some pads
+		{
+			tmp.SetNameStr("");
+			tmp.SetValueStr("");
+		}
+
 	}
 	const bool bDoPlace = ( pComp == nullptr || pComp->GetIsTemplate() );	// Leave copied components floating
 	return AddComponent(iRow, iCol, tmp, bDoPlace);
