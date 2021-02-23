@@ -46,7 +46,7 @@ public:
 	{
 		// Make j-k connection and enforce transitivity
 
-		typedef std::pair<unsigned int, unsigned int> CONNECTION;
+		typedef std::pair<size_t, size_t> CONNECTION;
 		std::list<CONNECTION> list;		// Helper for updating the connection matrix
 		list.push_back( CONNECTION(j,k) );
 		while ( !list.empty() )
@@ -60,7 +60,7 @@ public:
 			{
 				m_pp[a][b] = m_pp[b][a] = true;	// Make a-b connection ...
 				m_cost -= 2;					// Update cost
-				for (unsigned int c = 0; c < m_N; c++)	// Update 1st-order transitive relations
+				for (size_t c = 0; c < m_N; c++)	// Update 1st-order transitive relations
 				{
 					if ( m_pp[a][c] )
 					{

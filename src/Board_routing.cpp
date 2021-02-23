@@ -337,9 +337,9 @@ void Board::Flood_Grow(const int& iFloodNodeId, Element* pJ, const int& iNbr, co
 	Element* pK = pJ->GetNbr(iNbr);	assert( pK );
 	if ( pK == nullptr ) return;
 
-	const bool 			bOK	= pJ->GetNodeId() == iFloodNodeId;	// true ==> pJ already painted with correct NodeId
-	const unsigned int& j 	= pJ->GetRouteId();
-	const unsigned int& k 	= pK->GetRouteId();
+	const bool			bOK	= pJ->GetNodeId() == iFloodNodeId;	// true ==> pJ already painted with correct NodeId
+	const unsigned int&	j	= pJ->GetRouteId();
+	const unsigned int&	k	= pK->GetRouteId();
 
 	const bool bDirOK = ( bOK && pJ->GetUsed(iNbr) ) ||	// i.e. if already painted with correct nodeId
 						( bBuildTracks && pJ->HaveNoBlankPins(iNbr) && !pJ->IsBlocked(iNbr, iFloodNodeId) && !pJ->IsUselessWire(iNbr, iFloodNodeId) );
@@ -608,7 +608,7 @@ void Board::Manhatten(Element* p)
 	}
 }
 
-void Board::ManhattenHelper(const Element* p, const int& iNbr, const int& RID, unsigned int& iMH, unsigned int& iMaxMH)
+void Board::ManhattenHelper(const Element* p, const int& iNbr, const unsigned int& RID, unsigned int& iMH, unsigned int& iMaxMH)
 {
 	if ( !ReadCodeBit(iNbr, p->GetRoutable()) ) return;	// Skip non-routable nbrs
 
