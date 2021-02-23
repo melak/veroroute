@@ -292,3 +292,6 @@ V2.06  Bug fix: In Rendering Options, the "Show closest tracks" box was not bein
        Bug fix: In Fat Tracks mode with diagonals, the track separation algorithm was not handling all cases properly.
        Bug fix: In Fat Tracks mode, Gerber export should create an aperture for pads even if there are no parts in the circuit.
        Improvement: Allow reset pin layer preference ("T" + right button) while moving mouse instead of having to do single clicks.
+V2.07  Improvement: Faster algorithm for building the list of broken nodes.
+       Improvement: Copying a part with no name and no value should produce a part with no name and no value.
+       New feature: Flying wires.  Automatically generated between "Pad (Flying Wire)" objects.

@@ -285,8 +285,11 @@ static const char* szVEROROUTE_VERSION =
 			// Improvement: Total rewrite of minimum track separation for improved accuracy.
 			// Improvement: Show points for all layers when displaying locations of minimum track separation.
 			// New feature: In PCB mode, individual pad locations can be shifted by up to 50 mil using Ctrl + Arrow keys.
-  "2.06";	// Bug fix: In Rendering Options, the "Show closest tracks" box was not being hidden when minimum separation was same as Gap size.
+//"2.06";	// Bug fix: In Rendering Options, the "Show closest tracks" box was not being hidden when minimum separation was same as Gap size.
 			// Bug fix. In Fat Tracks mode with diagonals, tracks in the view were not all of correct width, but the ones in Gerber export were.
 			// Bug fix: In Fat Tracks mode with diagonals, the track separation algorithm was not handling all cases properly.
 			// Bug fix: In Fat Tracks mode, Gerber export should create an aperture for pads even if there are no parts in the circuit.
 			// Improvement: Allow reset pin layer preference ("T" + right button) while moving mouse instead of having to do single clicks.
+  "2.07";	// Improvement: Faster algorithm for building the list of broken nodes.
+			// Improvement: Copying a part with no name and no value should produce a part with no name and no value.
+			// New feature: Flying wires.  Automatically generated between "Pad (Flying Wire)" objects.

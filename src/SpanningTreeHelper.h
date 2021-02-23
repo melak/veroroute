@@ -54,7 +54,7 @@ struct SpanningTreeHelper
 
 		while ( linesOut.size() < N-1 )
 		{
-			double Dmin(DBL_MAX);
+			qreal Dmin(DBL_MAX);
 			auto iterBest = edges.begin();	// The shortest edge that does not make an unnecessary connection
 			for (auto iter = iterBest, iterEnd = edges.end(); iter != iterEnd; ++iter)
 			{
