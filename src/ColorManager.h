@@ -95,9 +95,11 @@ public:
 		if ( iter != m_mapNodeIdToCustomColor.end() )
 			m_mapNodeIdToCustomColor.erase(iter);
 	}
-	void CalculateColors(AdjInfoManager& adjManager, ElementGrid* pBoard)	// The coloring algorithm
+	void CalculateColors(const AdjInfoManager& adjManager, ElementGrid* pBoard)	// The coloring algorithm
 	{
-		adjManager.SortByLowestNodeId();
+		std::vector<int> nodeIds;
+		adjManager.GetBoardNodeIds(nodeIds);	// The set of valid nodeIDs on the board
+
 		if ( m_bReAssign )
 		{
 			if ( pBoard->GetNumNodeIds() > MYNUMCOLORS )
@@ -106,30 +108,30 @@ public:
 		}
 		std::list<int> cnList[MYNUMCOLORS];	// Lists of nodeIds used by colours
 		int iStartColorId(0);
-		for (size_t i = 0, iSize = adjManager.GetSize(); i < iSize; i++)	// Loop nodeIds in adjManager
+		for (size_t i = 0, iSize = nodeIds.size(); i < iSize; i++)	// Loop nodeIds on board
 		{
-			AdjInfo*	pI		= adjManager.GetAt(i);
-			const int&	nodeIdI	= pI->GetNodeId();
-			if ( nodeIdI == BAD_NODEID ) continue;
-			const int colorIdI = GetColorId(nodeIdI);
+			const int&	nodeIdI		= nodeIds[i];
+			const int	colorIdI	= GetColorId(nodeIdI);
 			if ( colorIdI != BAD_COLORID )
 			{
 				cnList[colorIdI].push_back(nodeIdI);	// Update list
 				continue;	// Don't recolor
 			}
+
+			const AdjInfo* pI = adjManager.GetAdjInfo( nodeIdI );
+
 			int bestColorId(0), minCost(INT_MAX);
 			for (int iLoopColor = 0; iLoopColor < MYNUMCOLORS; iLoopColor++)
 			{
 				const int iColorId = ( iStartColorId + iLoopColor ) % MYNUMCOLORS;
 				m_mapNodeIdToColorId[nodeIdI] = iColorId;
 				int cost(0);
-				for (size_t j = 0; j < iSize; j++)	// Loop nodeIds in adjManager
+				for (size_t j = 0; j < iSize; j++)	// Loop nodeIds on board
 				{
 					if ( j == i ) continue;	// Skip self
-					AdjInfo*	pJ		= adjManager.GetAt(j);
-					const int&	nodeIdJ	= pJ->GetNodeId();
-					if ( nodeIdJ == BAD_NODEID || !pI->GetHasAdj(nodeIdJ) ) continue;	// Skip non-adjacent nodes
-					assert( pJ->GetHasAdj(nodeIdI) );	// Sanity check.  Adjacencies should be symmetric
+					const int&	nodeIdJ	= nodeIds[j];
+
+					if ( !pI->GetHasAdj(nodeIdJ) ) continue;	// Skip non-adjacent nodes
 					if ( iColorId == GetColorId(nodeIdJ) ) cost++;
 				}
 				if ( cost < minCost ) { minCost = cost;	bestColorId = iColorId; }	// Update bestColorId

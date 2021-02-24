@@ -27,7 +27,7 @@
 class AdjInfo
 {
 public:
-	AdjInfo(int nodeId = BAD_NODEID) : m_nodeId(nodeId) {}
+	AdjInfo(int nodeId) : m_nodeId(nodeId) {}
 	~AdjInfo()					{ m_adjCount.clear(); }
 	AdjInfo(const AdjInfo& o)	{ *this = o; }
 	AdjInfo& operator=(const AdjInfo& o)
@@ -37,7 +37,6 @@ public:
 		m_adjCount.insert(o.m_adjCount.begin(), o.m_adjCount.end());
 		return *this;
 	}
-	void		SetNodeId(int i)			{ m_nodeId = i; }
 	const int&	GetNodeId() const			{ return m_nodeId; }
 	bool		GetHasAdj(int nodeId) const	{ return m_adjCount.find(nodeId) != m_adjCount.end(); }
 	void IncCount(int nodeId)
@@ -53,6 +52,6 @@ public:
 		if ( iter != m_adjCount.end() ) { iter->second--; if ( iter->second == 0 ) m_adjCount.erase(iter); }
 	}
 private:
-	int							m_nodeId;	// The NodeID of interest
-	std::unordered_map<int,int>	m_adjCount;	// Map of adjacent NodeID to element count
+	int							m_nodeId = BAD_NODEID;	// The NodeID of interest
+	std::unordered_map<int,int>	m_adjCount;				// Map of adjacent NodeID to element count
 };

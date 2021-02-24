@@ -559,19 +559,16 @@ void Board::AutoFillVero()
 void Board::CalcSolder()	// Work out locations of solder blobs to join veroboard tracks together
 {
 	for (int i = 0, iSize = GetSize(); i < iSize; i++)
-	{
-		Element* p = GetAt(i);
-		p->SetSolderR(false);	// Clear solder
-	}
+		GetAt(i)->SetSolderR(false);	// Clear solder
+
 	const bool& bVertical = GetVerticalStrips();	// Strip direction
-	for (size_t n = 0, N = m_adjInfoMgr.GetSize(); n < N; n++)
-	{
-		const int& nodeId = m_adjInfoMgr.GetAt(n)->GetNodeId();
-		if ( nodeId == BAD_NODEID ) continue;	// Want valid nodeIds
-		const int& numCols = ( bVertical ) ? GetCols() : GetRows();
-		for (int col = 0; col < numCols; col++)	// Loop cols/rows
-			SetSolder(nodeId, col, bVertical);
-	}
+
+	std::vector<int> nodeIds;
+	m_adjInfoMgr.GetBoardNodeIds(nodeIds);	// The set of valid nodeIDs on the board
+
+	for (size_t n = 0, N = nodeIds.size(); n < N; n++)
+		for (int col = 0, numCols = bVertical ? GetCols() : GetRows(); col < numCols; col++)	// Loop cols/rows
+			SetSolder(nodeIds[n], col, bVertical);
 }
 
 void Board::SetSolder(const int& nodeId, const int& col, const bool& bVertical)

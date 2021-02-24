@@ -30,31 +30,31 @@ public:
 	~AdjInfoManager() { DeAllocate(); }
 	void DeAllocate()
 	{
-		for (auto& pAdjInfo : m_list) delete pAdjInfo;
-		m_list.clear();
+		for (auto& o : m_mapIdtoAdjInfo) delete o.second;
+		m_mapIdtoAdjInfo.clear();
 	}
-	size_t	 GetSize() const		{ return m_list.size(); }
-	AdjInfo* GetAt(size_t i) const	{ return m_list[i]; }
-	bool	 GetNodeIdExists(const int& nodeId) const	// true ==> the nodeId exists on the board
+	AdjInfo* GetAdjInfo(int nodeId) const
 	{
-		for (const auto& pAdjInfo : m_list) if ( pAdjInfo->GetNodeId() == nodeId ) return true;
-		return false;
+		auto iter = m_mapIdtoAdjInfo.find(nodeId);
+		return ( iter != m_mapIdtoAdjInfo.end() ) ? iter->second : nullptr;
+	}
+	bool GetNodeIdExists(const int& nodeId) const	// true ==> the nodeId exists on the board
+	{
+		return GetAdjInfo(nodeId) != nullptr;
 	}
 	void InitCounts(Element* p)	// Pretend we're assigning "p" for the first time
 	{
 		const int& newNodeId = p->GetNodeId();
 		if ( newNodeId == BAD_NODEID ) return;
 
-		// Search m_list for adjacency info on newNodeId
-		AdjInfo* pNew(nullptr);
-		for (const auto& pAdjInfo : m_list) if ( pAdjInfo->GetNodeId() == newNodeId ) { pNew = pAdjInfo; break; }
-		if ( !pNew )									// If no info on newNodeId in m_list ...
+		AdjInfo* pNew = GetAdjInfo(newNodeId);
+
+		if ( !pNew )								// If no info on newNodeId ...
 		{
-			m_list.push_back(new AdjInfo(newNodeId));	// ... add it
-			pNew = m_list.back();
+			pNew = new AdjInfo(newNodeId);
+			m_mapIdtoAdjInfo[ newNodeId ] = pNew;	// ... add it
 		}
 		// Modify adjacency info for newNodeId
-		assert( pNew->GetNodeId() == newNodeId );	// Sanity check.
 		for (int iNbr = 0; iNbr < NUM_NBRS; iNbr++)
 		{
 			if ( p->GetNbr(iNbr) && ReadCodeBit(iNbr, p->GetRoutable()) )
@@ -65,21 +65,16 @@ public:
 	void UpdateCounts(Element* p, int newNodeId)	// Only called by Board::SetNodeId()
 	{
 		const int& oldNodeId = p->GetNodeId();
-		if ( oldNodeId == newNodeId ) return;	// No change in nodeId for element
+		if ( oldNodeId == newNodeId ) return;		// No change in nodeId for element
 
-		// Search m_list for adjacency info on oldNodeId and newNodeId
-		AdjInfo *pOld(nullptr), *pNew(nullptr);
-		for (const auto& pAdjInfo : m_list)
+		// Search for adjacency info on oldNodeId and newNodeId
+		AdjInfo* pOld = GetAdjInfo(oldNodeId);
+		AdjInfo* pNew = GetAdjInfo(newNodeId);
+
+		if ( !pNew && newNodeId != BAD_NODEID )		// If no info on newNodeId ...
 		{
-			const int& nodeId = pAdjInfo->GetNodeId();
-			if ( nodeId == oldNodeId ) pOld = pAdjInfo;
-			if ( nodeId == newNodeId ) pNew = pAdjInfo;
-			if ( pOld && pNew ) break;
-		}
-		if ( !pNew && newNodeId != BAD_NODEID )			// If no info on newNodeId in m_list ...
-		{
-			m_list.push_back(new AdjInfo(newNodeId));	// ... add it
-			pNew = m_list.back();
+			pNew = new AdjInfo(newNodeId);
+			m_mapIdtoAdjInfo[ newNodeId ] = pNew;	// ... add it
 		}
 		// Modify adjacency info for oldNodeId and newNodeId
 		assert( pNew == nullptr || pNew->GetNodeId() == newNodeId );	// Sanity check.
@@ -90,9 +85,12 @@ public:
 		}
 		// Don't do p->GetW() !! That will be handled on painting the other wire end
 	}
-	void SortByLowestNodeId()
+	void GetBoardNodeIds(std::vector<int>& out) const
 	{
-		std::stable_sort(m_list.begin(), m_list.end(), HasLowerNodeId());
+		out.resize( m_mapIdtoAdjInfo.size() );
+		size_t i(0);
+		for (auto& o : m_mapIdtoAdjInfo) out[i++] = o.first;
+		std::stable_sort(out.begin(), out.end());	// Sort nodeIds to help keep coloring consistent
 	}
 private:
 	void ModifyCount(AdjInfo* pOld, AdjInfo* pNew, const int& nbrNodeId)
@@ -100,8 +98,7 @@ private:
 		if ( nbrNodeId == BAD_NODEID ) return;
 		if ( pOld && pNew && pOld->GetNodeId() == pNew->GetNodeId() ) return;	// No change in nodeId
 
-		AdjInfo* pNbr(nullptr);
-		for (const auto& pAdjInfo : m_list) if ( pAdjInfo->GetNodeId() == nbrNodeId ) { pNbr = pAdjInfo; break; }
+		AdjInfo* pNbr = GetAdjInfo(nbrNodeId);
 
 		if ( pOld && pNbr && pOld->GetNodeId() != pNbr->GetNodeId() )
 		{
@@ -114,13 +111,6 @@ private:
 			pNbr->IncCount(pNew->GetNodeId());
 		}
 	}
-	struct HasLowerNodeId
-	{
-		bool operator()(const AdjInfo* pA, const AdjInfo* pB) const
-		{
-			return pA->GetNodeId() < pB->GetNodeId();
-		}
-	};
 private:
-	std::vector<AdjInfo*>	m_list;	// Store pointers to avoid object copies on sort
+	std::unordered_map<int, AdjInfo*>	m_mapIdtoAdjInfo;
 };
