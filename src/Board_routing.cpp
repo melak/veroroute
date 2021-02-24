@@ -263,9 +263,8 @@ void Board::Flood_Helper(const bool bBuildTracks)
 	unsigned int RID(BAD_ROUTEID);
 	for (auto p : m_targetPins)
 	{
-		m_tmpVec[m_tmpVecSize++] = p;			// Add p to set of visited points
 		RID++;	assert( RID < BAD_ROUTEID );	// Should be safely < UINT_MAX in practice
-		p->UpdateMH(RID, iMH, iMaxMH);
+		UpdateMH(p, RID, iMH, iMaxMH);			// Add p to set of visited points
 	}
 
 	const bool			bMultiLayer	 = GetLyrs() > 1;
@@ -350,8 +349,8 @@ void Board::Flood_Grow(const int& iFloodNodeId, Element* pJ, const int& iNbr, co
 		const int& nodeId = pK->GetNodeId();
 		if ( nodeId == iFloodNodeId || nodeId == BAD_NODEID )
 		{
-			m_tmpVec[m_tmpVecSize++] = pK;	// Add pK to set of visited points
-			pK->UpdateMH(j, iMH, iMaxMH);
+			UpdateMH(pK, j, iMH, iMaxMH);	// Add pK to set of visited points
+
 			const bool bWire = pK->IsLayer0() && pK->GetHasWire();	// Constrain wire-routing to layer 0
 			if ( bWire )
 			{
@@ -363,8 +362,7 @@ void Board::Flood_Grow(const int& iFloodNodeId, Element* pJ, const int& iNbr, co
 					assert( pK->GetNodeId() == pW->GetNodeId() );			// Sanity check
 					if ( pW->GetMH() != BAD_MH ) continue;					// Don't overwrite visited points (even if MH is improved)
 					const unsigned int iOtherMH = iMH + MH_WIRE * o.second;	// Each wire increases MH by MH_WIRE
-					m_tmpVec[m_tmpVecSize++] = pW;							// Add pW to set of visited points
-					pW->UpdateMH(j, iOtherMH, iMaxMH);
+					UpdateMH(pW, j, iOtherMH, iMaxMH);						// Add pW to set of visited points
 				}
 			}
 		}
@@ -507,8 +505,16 @@ void Board::Manhatten(Element* p)
 
 	WIRELIST wireList;	// Helper for chains of wires
 
+	m_targetPins.clear();	// Reusing this to hold only flying wire pads for the nodeId being traced
+
 	for (int i = 0, iSize = GetSize(); i < iSize; i++)	// Loop all grid points
-		GetAt(i)->ResetMH();	// Wipe RouteId. Set "infinite" MH distance.  Zero max MH parameter.
+	{
+		Element* pL = GetAt(i);
+		if ( GetAllowFlyWire(pL) && pL->GetNodeId() == iTraceNodeId )
+			m_targetPins.push_back(pL);
+
+		pL->ResetMH();	// Wipe RouteId. Set "infinite" MH distance.  Zero max MH parameter.
+	}
 
 	m_tmpVec.resize(GetSize(), nullptr);	// Clear the set of visited points
 	m_tmpVecSize = 0;
@@ -524,22 +530,10 @@ void Board::Manhatten(Element* p)
 
 	// All pins that support "flying wires" and have the same nodeID are connected to each other
 	if ( GetAllowFlyWire(p) )
-	{
-		for (int i = 0, iSize = GetSize(); i < iSize; i++)	// Loop all grid points
-		{
-			Element* pL = GetAt(i);
-			if ( GetAllowFlyWire(pL) && pL->GetNodeId() == p->GetNodeId() )
-			{
-				m_tmpVec[m_tmpVecSize++] = pL;	// Add pL to set of visited points, with MH value of zero
-				pL->UpdateMH(RID, iMH, iMaxMH);
-			}
-		}
-	}
+		for (auto& pL : m_targetPins)
+			UpdateMH(pL, RID, iMH, iMaxMH);	// Add pL to set of visited points (with MH value of zero)
 	else
-	{
-		m_tmpVec[m_tmpVecSize++] = p;	// Add p to set of visited points, with MH value of zero
-		p->UpdateMH(RID, iMH, iMaxMH);
-	}
+		UpdateMH(p, RID, iMH, iMaxMH);	// Add p to set of visited points (with MH value of zero)
 
 	const bool bWire = p->IsLayer0() && p->GetHasWire();	// Constrain wire-routing to layer 0
 	if ( bWire )
@@ -552,8 +546,7 @@ void Board::Manhatten(Element* p)
 			assert( p->GetNodeId() == pW->GetNodeId() );			// Sanity check
 			if ( pW->GetMH() != BAD_MH ) continue;					// Don't overwrite visited points (even if MH is improved)
 			const unsigned int iOtherMH = iMH + MH_WIRE * o.second;	// Each wire increases MH by MH_WIRE
-			m_tmpVec[m_tmpVecSize++] = pW;							// Add pW to set of visited points
-			pW->UpdateMH(RID, iOtherMH, iMaxMH);
+			UpdateMH(pW, RID, iOtherMH, iMaxMH);					// Add pW to set of visited points
 		}
 	}
 	while ( true )
@@ -621,22 +614,10 @@ void Board::ManhattenHelper(const Element* p, const int& iNbr, const unsigned in
 	{
 		// All pins that support "flying wires" and have the same nodeID are connected to each other
 		if ( GetAllowFlyWire(pK) )
-		{
-			for (int i = 0, iSize = GetSize(); i < iSize; i++)	// Loop all grid points
-			{
-				Element* pL = GetAt(i);
-				if ( GetAllowFlyWire(pL) && pL->GetNodeId() == pK->GetNodeId() )
-				{
-					m_tmpVec[m_tmpVecSize++] = pL;	// Add pL to set of visited points
-					pL->UpdateMH(RID, iMH, iMaxMH);
-				}
-			}
-		}
+			for (auto& pL : m_targetPins)
+				UpdateMH(pL, RID, iMH, iMaxMH);	// Add pL to set of visited points
 		else
-		{
-			m_tmpVec[m_tmpVecSize++] = pK;	// Add pK to set of visited points
-			pK->UpdateMH(RID, iMH, iMaxMH);
-		}
+			UpdateMH(pK, RID, iMH, iMaxMH);	// Add pK to set of visited points
 
 		const bool bWire = pK->IsLayer0() && pK->GetHasWire();	// Constrain wire-routing to layer 0
 		if ( bWire )
@@ -649,8 +630,7 @@ void Board::ManhattenHelper(const Element* p, const int& iNbr, const unsigned in
 				assert( pK->GetNodeId() == pW->GetNodeId() );			// Sanity check
 				if ( pW->GetMH() != BAD_MH ) continue;					// Don't overwrite visited points (even if MH is improved)
 				const unsigned int iOtherMH = iMH + MH_WIRE * o.second;	// Each wire increases MH by MH_WIRE
-				m_tmpVec[m_tmpVecSize++] = pW;							// Add pW to set of visited points
-				pW->UpdateMH(RID, iOtherMH, iMaxMH);
+				UpdateMH(pW, RID, iOtherMH, iMaxMH);					// Add pW to set of visited points
 			}
 		}
 	}

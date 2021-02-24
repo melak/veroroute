@@ -715,6 +715,11 @@ public:
 		m_colorMgr.Save(outStream);		// Call Save() on color manager			// Added in VRT_VERSION_41
 	}
 private:
+	inline void UpdateMH(Element* p, const unsigned int& routeID, const unsigned int& iMH, unsigned int& iMaxMH)
+	{
+		m_tmpVec[m_tmpVecSize++] = p;	// Add p to set of visited points
+		p->UpdateMH(routeID, iMH, iMaxMH);
+	}
 	void FixLegacyWires()
 	{
 		// Find all placed wires and update the surface and hole codes on the board
