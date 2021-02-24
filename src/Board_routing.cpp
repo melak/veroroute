@@ -111,7 +111,7 @@ void Board::Route(bool bMinimal)
 		m_nodeInfoMgr.GetAt(i)->SetCost(UINT_MAX);	// i.e. Mark all nodesIds as unrouted
 
 	int iPasses(0);
-	bool bImproved(true), bAllowRipUp( bRipUpEnabled && GetRoutingEnabled() );
+	bool bImproved(true), bAllowRipUp( bRipUpEnabled && GetRoutingEnabled() ), bRebuildAdjacencies(false);
 	while ( bImproved )
 	{
 		bImproved = false;	// Gets set true if we manage to lower any route costs on this pass
@@ -168,15 +168,25 @@ void Board::Route(bool bMinimal)
 									CopyTo(Ibest);		// ... log the improved route (it's the best so far)
 							}
 						}
-						if ( pI->GetCost() > 0 ) CopyFrom(Iripped);	// Revert to ripped-up I
+						if ( pI->GetCost() > 0 )
+						{
+							CopyFrom(Iripped);	// Revert to ripped-up I
+							bRebuildAdjacencies = true;
+						}
 					}
 					if ( j == 0 ) break; else j--;
 				}
-				if ( pI->GetCost() > 0 ) CopyFrom(Ibest);
+				if ( pI->GetCost() > 0 )
+				{
+					CopyFrom(Ibest);
+					bRebuildAdjacencies = true;
+				}
 			}
 		}
 		if ( !bAllowRipUp ) break;
 	}
+	if ( bRebuildAdjacencies )
+		RebuildAdjacencies();
 //	const auto elapsed = std::chrono::steady_clock::now() - start;
 //	const auto duration_ms	= std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
 //	std::cout << "Time : " << duration_ms << std::endl;
