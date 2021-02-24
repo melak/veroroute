@@ -147,11 +147,11 @@ public:
 		m_MH		= BAD_MH;		// Set "infinite" MH distance.
 		m_maxMH		= 0;			// Zero max MH parameter
 	}
-	void UpdateMH(const unsigned int& routeID, const unsigned int& iMH, unsigned int& iMaxMH)
+	void UpdateMH(const unsigned int& iRouteID, const unsigned int& iMH, unsigned int& iMaxMH)
 	{
 		assert( m_MH == BAD_MH );	// Should only ever write the MH once
 		iMaxMH		= std::max(iMaxMH, iMH);	// Update iMaxMH for output before storing it
-		m_routeId	= routeID;
+		m_routeId	= iRouteID;
 		m_MH		= iMH;
 		m_maxMH		= iMaxMH;
 	}

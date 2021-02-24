@@ -512,7 +512,7 @@ public:
 	void Backtrace(Element* pEnd, const int& nodeId);
 	void BacktraceHelper(Element*& p, const int& nodeId, const int& iDeltaMH, const int& iNbr, const int& iLoop, unsigned int& MH, bool& bOK);
 	void Manhatten(Element* p);
-	void ManhattenHelper(const Element* p, const int& iNbr, const unsigned int& RID, unsigned int& iMH, unsigned int& iMaxMH);
+	void ManhattenHelper(const Element* p, const int& iNbr, const unsigned int& iRouteID, unsigned int& iMH, unsigned int& iMaxMH);
 	void CheckAllComplete();
 	void PasteTracks(bool bTidy);
 	void WipeTracks();
@@ -728,10 +728,10 @@ public:
 		m_colorMgr.Save(outStream);		// Call Save() on color manager			// Added in VRT_VERSION_41
 	}
 private:
-	inline void UpdateMH(Element* p, const unsigned int& routeID, const unsigned int& iMH, unsigned int& iMaxMH)
+	inline void UpdateMH(Element* p, const unsigned int& iRouteID, const unsigned int& iMH, unsigned int& iMaxMH)
 	{
 		m_tmpVec[m_tmpVecSize++] = p;	// Add p to set of visited points
-		p->UpdateMH(routeID, iMH, iMaxMH);
+		p->UpdateMH(iRouteID, iMH, iMaxMH);
 	}
 	void FixLegacyWires()
 	{
