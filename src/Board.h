@@ -450,6 +450,19 @@ public:
 		return bOK;
 	}
 
+	bool CopyFrom(const TrackElementGrid& o, const AdjInfoManager& m)
+	{
+		const bool bOK = ElementGrid::CopyFrom(o);
+		if ( bOK ) m_adjInfoMgr = m;
+		return bOK;
+	}
+
+	void CopyTo(TrackElementGrid& o, AdjInfoManager& m) const
+	{
+		m = m_adjInfoMgr;
+		ElementGrid::CopyTo(o);
+	}
+
 	void RebuildAdjacencies()
 	{
 		m_adjInfoMgr.DeAllocate();

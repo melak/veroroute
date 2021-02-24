@@ -28,6 +28,14 @@ class AdjInfoManager
 public:
 	AdjInfoManager() {}
 	~AdjInfoManager() { DeAllocate(); }
+	AdjInfoManager(const AdjInfoManager& o)	{ *this = o; }
+	AdjInfoManager& operator=(const AdjInfoManager& o)
+	{
+		m_mapIdtoAdjInfo.clear();
+		for (auto& mapObj : o.m_mapIdtoAdjInfo)
+			m_mapIdtoAdjInfo[mapObj.first] = new AdjInfo(*mapObj.second);
+		return *this;
+	}
 	void DeAllocate()
 	{
 		for (auto& o : m_mapIdtoAdjInfo) delete o.second;
