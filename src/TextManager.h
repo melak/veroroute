@@ -26,8 +26,8 @@ class TextManager : public Persist, public Merge
 {
 	friend class Board;
 public:
-	TextManager()	{ Clear(); }
-	~TextManager()	{ Clear(); }
+	TextManager()	{}
+	~TextManager()	{}
 	void Clear()	{ m_mapIdtoText.clear(); }
 	TextManager(const TextManager& o)	{ *this = o; }
 	TextManager& operator=(const TextManager& o)

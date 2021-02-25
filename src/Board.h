@@ -51,6 +51,8 @@ public:
 		GlueNbrs();		// Set pointers between neighbouring grid elements
 	}
 
+	~Board() {}
+
 	Board(const Board& o, bool bFullCopy = true)
 	: ElementGrid()
 	, GuiControl()
@@ -102,13 +104,6 @@ public:
 		m_bRouteMinimal	= true;
 		m_bHasVias = false;
 		return *this;
-	}
-
-	~Board()
-	{
-		m_infoStr.clear();
-		m_targetPins.clear();
-		m_tmpVec.clear();
 	}
 
 	bool operator==(const Board& o) const	// Compare persisted info
@@ -459,8 +454,8 @@ public:
 
 	void CopyTo(TrackElementGrid& o, AdjInfoManager& m) const
 	{
-		m = m_adjInfoMgr;
 		ElementGrid::CopyTo(o);
+		m = m_adjInfoMgr;
 	}
 
 	void RebuildAdjacencies()

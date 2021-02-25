@@ -65,6 +65,7 @@ class CompDefiner : public Persist
 {
 public:
 	CompDefiner() { Clear(); }
+	~CompDefiner() {}
 	CompDefiner(const CompDefiner& o) { *this = o; }
 	void Populate(const Component& o);	// Set up using an existing component
 	void Clear()
@@ -113,11 +114,6 @@ public:
 		for (auto iterA = m_mapShapes.begin(), iterB = o.m_mapShapes.begin(); iterA != m_mapShapes.end() && iterB != o.m_mapShapes.end(); ++iterA, ++iterB)
 			if ( (*iterA) != (*iterB) ) return false;
 		return true;
-	}
-	~CompDefiner()
-	{
-		m_grid.DeAllocate();
-		m_mapShapes.clear();
 	}
 	bool SetCurrentPinId(const int& i)		{ const bool bChanged = ( m_currentPinId	!= i );	m_currentPinId		= i; return bChanged; }
 	bool SetCurrentShapeId(const int& i)	{ const bool bChanged = ( m_currentShapeId	!= i );	m_currentShapeId	= i; return bChanged; }

@@ -38,7 +38,7 @@ struct MyPointF : public QPointF		// A point + the pen radius for drawing it
 struct MyPolygonF : public QPolygonF	// A polygon + the pen radii for drawing it
 {
 	MyPolygonF() {}
-	~MyPolygonF() { m_bFatPoint.clear(); m_bFatEdge.clear(); }
+	~MyPolygonF() {}
 	MyPolygonF(const QPolygonF& p, const GPEN& eTrkPen, const GPEN& ePadPen, const qreal& radiusTrk, const qreal& radiusPad, bool bClosed)
 		: QPolygonF(p), m_eTrkPen(eTrkPen), m_ePadPen(ePadPen), m_radiusTrk(radiusTrk), m_radiusPad(radiusPad), m_bClosed(bClosed)
 	{
@@ -90,8 +90,8 @@ struct MyPolygonF : public QPolygonF	// A polygon + the pen radii for drawing it
 
 struct PolygonHelper
 {
-	PolygonHelper()		{ m_pWarn.clear(); }
-	~PolygonHelper()	{ m_pWarn.clear(); }
+	PolygonHelper() {}
+	~PolygonHelper() {}
 	QPolygonF	m_pWarn;			// Set of warning points
 	qreal		m_Dmin = DBL_MAX;	// The closest separation found
 

@@ -41,6 +41,7 @@ class ColorManager : public Persist, public Merge
 {
 public:
 	ColorManager() : m_iSaturation(100), m_iFillSaturation(0), m_bReAssign(true) {}
+	~ColorManager() {}
 	ColorManager(const ColorManager& o) { assert(0); *this = o; }	// Never called
 	ColorManager& operator=(const ColorManager& o)
 	{
@@ -68,7 +69,6 @@ public:
 	{
 		return !(*this == o);
 	}
-	~ColorManager()					{ Clear(); }
 	void Clear()					{ m_mapNodeIdToColorId.clear(); m_mapNodeIdToCustomColor.clear(); ReAssignColors(); }
 	void ReAssignColors()			{ m_bReAssign = true; }
 	void SetSaturation(int i)		{ m_iSaturation = i; }

@@ -26,16 +26,8 @@
 class NodeInfo
 {
 public:
-	NodeInfo(int nodeId = BAD_NODEID)
-	: m_bComplete(false)
-	, m_iCost(UINT_MAX)
-	, m_nodeId(nodeId)
-	, m_minRow(INT_MAX)
-	, m_minCol(INT_MAX)
-	, m_maxRow(0)
-	, m_maxCol(0)
-	{}
-	~NodeInfo()					{ m_compIds.clear(); }
+	NodeInfo(int nodeId) : m_nodeId(nodeId) {}
+	~NodeInfo() {}
 	NodeInfo(const NodeInfo& o)	{ *this = o; }
 	NodeInfo& operator=(const NodeInfo& o)
 	{
@@ -121,12 +113,12 @@ public:
 		}
 	}
 private:
-	bool				m_bComplete;	// true ==> All component pins with the nodeId are connected (before routing)
-	unsigned int		m_iCost;		// zero ==> All component pins with the nodeId are connected (after routing)
-	int					m_nodeId;		// The NodeID
-	int					m_minRow;		// For the bounding rectangle based on comp pins
-	int					m_minCol;		// For the bounding rectangle based on comp pins
-	int					m_maxRow;		// For the bounding rectangle based on comp pins
-	int					m_maxCol;		// For the bounding rectangle based on comp pins
-	std::vector<int>	m_compIds;		// ComponentIDs of components (not markers/wires) that use the nodeId
+	bool				m_bComplete = false;		// true ==> All component pins with the nodeId are connected (before routing)
+	unsigned int		m_iCost		= UINT_MAX;		// zero ==> All component pins with the nodeId are connected (after routing)
+	int					m_nodeId	= BAD_NODEID;	// The NodeID
+	int					m_minRow	= INT_MAX;		// For the bounding rectangle based on comp pins
+	int					m_minCol	= INT_MAX;		// For the bounding rectangle based on comp pins
+	int					m_maxRow	= 0;			// For the bounding rectangle based on comp pins
+	int					m_maxCol	= 0;			// For the bounding rectangle based on comp pins
+	std::vector<int>	m_compIds;					// ComponentIDs of components (not markers/wires) that use the nodeId
 };

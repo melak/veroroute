@@ -31,8 +31,8 @@ static const int TEXT_UNDERLINE	= 4;
 class TextRect : public Rect, public MyRGB
 {
 public:
-	TextRect() : Rect(), MyRGB()	{ SetDefaults(); }
-	TextRect(int rowMin, int rowMax, int colMin, int colMax) : Rect(rowMin, rowMax, colMin, colMax), MyRGB() { SetDefaults(); }
+	TextRect() : Rect(), MyRGB() {}
+	TextRect(int rowMin, int rowMax, int colMin, int colMax) : Rect(rowMin, rowMax, colMin, colMax), MyRGB() {}
 	~TextRect()	{}
 	TextRect(const TextRect& o)	: Rect(o), MyRGB(o) { *this = o; }
 	TextRect& operator=(const TextRect& o)
@@ -57,13 +57,6 @@ public:
 	bool operator!=(const TextRect& o) const
 	{
 		return !(*this == o);
-	}
-	void SetDefaults()
-	{
-		m_str.clear();
-		m_size	= 9;
-		m_style	= TEXT_NORMAL;
-		m_flags	= Qt::AlignJustify;
 	}
 	bool SetStr(const std::string& s)	{ const bool bChanged = (m_str   != s);	m_str   = s; return bChanged; }
 	bool SetSize(const int& i)			{ const bool bChanged = (m_size  != i);	m_size  = i; return bChanged; }
@@ -95,7 +88,7 @@ public:
 	}
 private:
 	std::string	m_str;
-	int			m_size;		// Point size
-	int			m_style;	// Bitfield using TEXT_NORMAL, TEXT_BOLD, TEXT_ITALIC, TEXT_UNDERLINE
-	int			m_flags;	// Qt::AlignLeft,Qt::AlignRight,Qt::AlignHCenter,Qt::AlignJustify
+	int			m_size	= 9;				// Point size
+	int			m_style	= TEXT_NORMAL;		// Bitfield using TEXT_NORMAL, TEXT_BOLD, TEXT_ITALIC, TEXT_UNDERLINE
+	int			m_flags	= Qt::AlignJustify;	// Qt::AlignLeft,Qt::AlignRight,Qt::AlignHCenter,Qt::AlignJustify
 };

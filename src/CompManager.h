@@ -51,8 +51,8 @@ class CompManager : public Persist, public Merge
 {
 	friend class Board;
 public:
-	CompManager()	{ Clear(); }
-	~CompManager()	{ Clear(); }
+	CompManager()	{ ClearTrax(); }
+	~CompManager()	{}
 	CompManager(const CompManager& o) { *this = o; }
 	void Clear()
 	{

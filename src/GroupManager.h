@@ -45,7 +45,7 @@ class GroupManager : public Persist, public Merge
 {
 public:
 	GroupManager()	{}
-	~GroupManager()	{ Clear(); }
+	~GroupManager()	{}
 	GroupManager(const GroupManager& o) { *this = o; }
 	GroupManager& operator=(const GroupManager& o)
 	{

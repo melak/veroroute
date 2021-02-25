@@ -28,7 +28,7 @@ class AdjInfo
 {
 public:
 	AdjInfo(int nodeId) : m_nodeId(nodeId) {}
-	~AdjInfo()					{ m_adjCount.clear(); }
+	~AdjInfo()					{}
 	AdjInfo(const AdjInfo& o)	{ *this = o; }
 	AdjInfo& operator=(const AdjInfo& o)
 	{

@@ -24,7 +24,7 @@
 class Rect : public Persist, public Merge
 {
 public:
-	Rect()	{ SetInvalid(); }
+	Rect()	{}
 	Rect(int rowMin, int rowMax, int colMin, int colMax) : m_rowMin(rowMin), m_rowMax(rowMax), m_colMin(colMin), m_colMax(colMax) {}
 	~Rect()	{}
 	Rect(const Rect& o)						{ *this = o; }
@@ -80,5 +80,5 @@ public:
 		outStream.Save(m_colMin);
 		outStream.Save(m_colMax);
 	}
-	int m_rowMin, m_rowMax, m_colMin, m_colMax;
+	int m_rowMin = INT_MAX, m_rowMax = INT_MIN, m_colMin = INT_MAX, m_colMax = INT_MIN;
 };

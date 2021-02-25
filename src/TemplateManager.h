@@ -27,7 +27,7 @@ class TemplateManager : public Persist
 {
 public:
 	TemplateManager()	{}
-	~TemplateManager()	{ m_listGeneric.clear(); m_listUser.clear(); }
+	~TemplateManager()	{}
 	TemplateManager(const TemplateManager& o) { *this = o; }
 	TemplateManager& operator=(const TemplateManager& o)
 	{

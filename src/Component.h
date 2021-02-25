@@ -43,6 +43,7 @@ class Component : public FootPrint
 {
 public:
 	Component()	: FootPrint() { Clear(); }
+	~Component() {}
 	Component(const Component& o) : FootPrint() { *this = o; }
 	void Clear()
 	{
@@ -204,18 +205,6 @@ public:
 	}
 	bool operator<(const Component& o) const	{ return m_id < o.m_id; }
 	bool operator==(const Component& o) const	{ return m_id == o.m_id; }
-	~Component()
-	{
-		m_nodeIdPins.clear();
-		m_origIdPins1.clear();
-		m_origIdPins2.clear();
-		m_layerPrefs.clear();
-		m_pinOffsetRow.clear();
-		m_pinOffsetCol.clear();
-		m_pinLabels.clear();
-		m_pinAligns.clear();
-		m_shapes.clear();
-	}
 	void SetId(const int& i)					{ m_id = i; }
 	void SetNameStr(const std::string& s)		{ m_nameStr = s; }
 	void SetValueStr(const std::string& s)		{ m_valueStr = s; }

@@ -24,8 +24,8 @@
 class RectManager : public Persist
 {
 public:
-	RectManager()	{ Clear(); }
-	~RectManager()	{ Clear(); }
+	RectManager()	{}
+	~RectManager()	{}
 	void Clear()	{ m_startRow = m_startCol = 0; m_current.SetInvalid(); m_bounding.SetInvalid(), m_list.clear(); }
 	RectManager(const RectManager& o)	{ *this = o; }
 	RectManager& operator=(const RectManager& o)
@@ -128,8 +128,8 @@ private:
 		m_bounding |= rect;	// Update bounding rectangle
 	}
 private:
-	int					m_startRow;
-	int					m_startCol;
+	int					m_startRow = 0;
+	int					m_startCol = 0;
 	mutable Rect		m_current;	// The rectangle currently being defined by the user
 	mutable Rect		m_bounding;	// The bounding rectangle of m_list
 	std::vector<Rect>	m_list;		// The list of completed rectangles

@@ -563,7 +563,6 @@ void GStream::GetQPoint(const QPointF& in, QPoint& out) const
 }
 void GStream::GetQPolygon(const QPolygonF& in, QPolygon& out) const
 {
-	out.clear();
 	out.resize( in.size() );
 	for (int i = 0, iSize = in.size(); i < iSize; i++) GetQPoint(in[i], out[i]);
 }

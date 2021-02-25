@@ -31,7 +31,7 @@
 struct GPainter : public QPainter
 {
 	GPainter() : QPainter()					{}
-	~GPainter()								{ m_transforms.clear(); }
+	~GPainter()								{}
 	void SetGStream(GStream* p)				{ m_pStream = p; }
 	virtual bool begin(QPaintDevice* p)		{ if ( !m_pStream ) return QPainter::begin(p);	return true; }
 	virtual bool end()						{ if ( !m_pStream ) return QPainter::end();		return true; }
