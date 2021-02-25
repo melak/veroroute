@@ -510,7 +510,7 @@ public:
 	void Flood_Helper(const bool bBuildTracks);
 	void Flood_Grow(const int& iFloodNodeId, Element* pJ, const int& iNbr, const bool& bBuildTracks, unsigned int& iMH, unsigned int& iMaxMH, bool& bDone);
 	void Backtrace(Element* pEnd, const int& nodeId);
-	void BacktraceHelper(Element*& p, const int& nodeId, const int& iDeltaMH, const int& iNbr, const int& iLoop, unsigned int& MH, bool& bOK);
+	bool BacktraceHelper(Element*& p, unsigned int& MH, const int& nodeId, const int& iDeltaMH, const int& iNbr, const int& iLoop);
 	void Manhatten(Element* p);
 	void ManhattenHelper(const Element* p, const int& iNbr, const unsigned int& iRouteID, unsigned int& iMH, unsigned int& iMaxMH);
 	void CheckAllComplete();

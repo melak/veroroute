@@ -447,7 +447,7 @@ void Board::Backtrace(Element* pEnd, const int& nodeId)
 
 		if ( MH == 0 ) break;
 
-		bool bOK(false);
+		bool bOK(false);	// Will be set true after a successful backtrace (with modified p and MH)
 		// Now decide where to back trace to.
 
 		// Check wires first...
@@ -458,24 +458,25 @@ void Board::Backtrace(Element* pEnd, const int& nodeId)
 
 		for (int iLoop = 0; iLoop < 2 && !bOK; iLoop++)	// First pass to give preference to nbrs that are not wire ends
 		{
+			const bool bHasPin = ( bMultiLayer ) ? p->GetHasPin() : false;	// Only care if p has a pin if multilayer routing
 			const int iTypeMin(bMultiLayer ? 0 : 1), iTypeMax(bViasEnabled ? 2 : 1);
 			for (int iType = iTypeMin; iType <= iTypeMax && !bOK; iType++)
 			{
 				switch( iType )
 				{
 					case 0:	// Type 0 ==> Change layer at a pin
-						if ( p->GetHasPin() ) BacktraceHelper(p, nodeId, MH_LPIN, NBR_X, iLoop, MH, bOK);
+						if ( bHasPin ) bOK = BacktraceHelper(p, MH, nodeId, MH_LPIN, NBR_X, iLoop);
 						break;
 					case 1:	// Type 1 ==> Move within layer
 						for (int iDiag = 0, iDiagMax = ( bDiagsOK ) ? 2 : 1; iDiag < iDiagMax && !bOK; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
 						{
 							const int iDeltaMH = ( iDiag ) ? MH_DIAG : MH_LRTB;
 							for (int iNbr = iDiag; iNbr < 8 && !bOK; iNbr += 2)	// Even/Odd iNbr ==> Non-diagonal/Diagonal
-								BacktraceHelper(p, nodeId, iDeltaMH, iNbr, iLoop, MH, bOK);
+								bOK = BacktraceHelper(p, MH, nodeId, iDeltaMH, iNbr, iLoop);
 						}
 						break;
 					case 2:	// Type 2 ==> Change layer at a via
-						if ( !p->GetHasPin() ) BacktraceHelper(p, nodeId, MH_LVIA, NBR_X, iLoop, MH, bOK);
+						if ( !bHasPin ) bOK = BacktraceHelper(p, MH, nodeId, MH_LVIA, NBR_X, iLoop);
 						break;
 				}
 			}
@@ -487,16 +488,17 @@ void Board::Backtrace(Element* pEnd, const int& nodeId)
 	}
 }
 
-void Board::BacktraceHelper(Element*& p, const int& nodeId, const int& iDeltaMH, const int& iNbr, const int& iLoop, unsigned int& MH, bool & bOK)
+bool Board::BacktraceHelper(Element*& p, unsigned int& MH, const int& nodeId, const int& iDeltaMH, const int& iNbr, const int& iLoop)
 {
 	Element* pNbr = p->GetNbr(iNbr);
-	if ( pNbr->GetRouteId() != p->GetRouteId() ) return;		// Skip if nbr has wrong routeId
+	if ( pNbr->GetRouteId() != p->GetRouteId() ) return false;	// Skip if nbr has wrong routeId
 	const bool bWire = pNbr->IsLayer0() && pNbr->GetHasWire();	// Constrain wire-routing to layer 0
-	if ( iLoop == 0 &&  bWire ) return;							// Skip if nbr is a wire
-	if ( iLoop == 1 && !bWire ) return;							// Skip if nbr is a non-wire
-	if ( p->IsBlocked(iNbr, nodeId) ) return;					// Skip if blocked
-	if ( pNbr->GetMH() != MH - iDeltaMH ) return;				// Skip if wrong MH change
-	p = pNbr;	MH -= iDeltaMH;		bOK = true;
+	if ( iLoop == 0 &&  bWire ) return false;					// Skip if nbr is a wire
+	if ( iLoop == 1 && !bWire ) return false;					// Skip if nbr is a non-wire
+	if ( p->IsBlocked(iNbr, nodeId) ) return false;				// Skip if blocked
+	if ( pNbr->GetMH() != MH - iDeltaMH ) return false;			// Skip if wrong MH change
+	p = pNbr;	MH -= iDeltaMH;
+	return true;	// We backtraced OK, and have modified p and MH
 }
 
 void Board::Manhatten(Element* p)
