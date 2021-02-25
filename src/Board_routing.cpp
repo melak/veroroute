@@ -309,7 +309,7 @@ void Board::Flood_Helper(const bool bBuildTracks)
 				switch( iType )
 				{
 					case 0:	// Type 0 ==> Change layer at a pin
-						if ( pJ->GetHasPin() && pJ->GetMH() + MH_LPIN == iMH )
+						if ( pJ->GetMH() + MH_LPIN == iMH && pJ->GetHasPin() )
 							Flood_Grow(iFloodNodeId, pJ, NBR_X, bBuildTracks, iMH, iMaxMH, bDone);
 						break;
 					case 1:	// Type 1 ==> Move within layer
@@ -323,7 +323,7 @@ void Board::Flood_Helper(const bool bBuildTracks)
 						}
 						break;
 					case 2:	// Type 2 ==> Change layer at a via
-						if ( !pJ->GetHasPin() && pJ->GetMH() + MH_LVIA == iMH )
+						if ( pJ->GetMH() + MH_LVIA == iMH && !pJ->GetHasPin() )
 							Flood_Grow(iFloodNodeId, pJ, NBR_X, bBuildTracks, iMH, iMaxMH, bDone);
 						break;
 				}
@@ -403,18 +403,18 @@ void Board::Backtrace(Element* pEnd, const int& nodeId)
 	{
 		assert( !p->GetIsHole() );
 
-		const bool bAllLyrs = p->GetHasPin();
+		const bool bHasPin = p->GetHasPin();
 
 		Element* pW0 = p->GetW(0);
 		Element* pW1 = p->GetW(1);
 		const bool bWire = p->IsLayer0() && p->GetHasWire();	// Constrain wire-routing to layer 0
-		if ( !p->GetHasPin() || bWire ) // For non-pins and wires
+		if ( !bHasPin || bWire ) // For non-pins and wires
 		{
 			if ( p->GetNodeId() == BAD_NODEID )	// Set NodeId if not set yet.
 			{
-				SetNodeId(p, nodeId, bAllLyrs);
-				WipeFlagBits(p, USERSET, bAllLyrs);
-				MarkFlagBits(p, AUTOSET, bAllLyrs);
+				SetNodeId(p, nodeId, bHasPin);
+				WipeFlagBits(p, USERSET, bHasPin);
+				MarkFlagBits(p, AUTOSET, bHasPin);
 				if ( bWire )
 				{
 					p->GetWireList(wireList);	// Get list of p and its wired points
@@ -422,16 +422,16 @@ void Board::Backtrace(Element* pEnd, const int& nodeId)
 					{
 						Element* pW = const_cast<Element*> (o.first);
 						if ( pW == p ) continue;	// Skip p
-						SetNodeId(pW, nodeId, bAllLyrs);
-						WipeFlagBits(pW, USERSET, bAllLyrs);
-						MarkFlagBits(pW, AUTOSET, bAllLyrs);
+						SetNodeId(pW, nodeId, bHasPin);
+						WipeFlagBits(pW, USERSET, bHasPin);
+						MarkFlagBits(pW, AUTOSET, bHasPin);
 					}
 				}
 			}
 			else if ( p->ReadFlagBits(USERSET) )
 			{
 				assert( p->GetNodeId() == nodeId );
-				MarkFlagBits(p, AUTOSET, bAllLyrs);
+				MarkFlagBits(p, AUTOSET, bHasPin);
 				if ( bWire )
 				{
 					p->GetWireList(wireList);	// Get list of p and its wired points
@@ -439,7 +439,7 @@ void Board::Backtrace(Element* pEnd, const int& nodeId)
 					{
 						Element* pW = const_cast<Element*> (o.first);
 						if ( pW == p ) continue;	// Skip p
-						MarkFlagBits(pW, AUTOSET, bAllLyrs);
+						MarkFlagBits(pW, AUTOSET, bHasPin);
 					}
 				}
 			}
@@ -581,7 +581,7 @@ void Board::Manhatten(Element* p)
 				switch( iType )
 				{
 					case 0:	// Type 0 ==> Change layer at a pin
-						if ( pJ->GetHasPin() && pJ->GetMH() + MH_LPIN == iMH )
+						if ( pJ->GetMH() + MH_LPIN == iMH && pJ->GetHasPin() )
 							ManhattenHelper(pJ, NBR_X, iRouteID, iMH, iMaxMH);
 						break;
 					case 1:	// Type 1 ==> Move within layer
@@ -595,7 +595,7 @@ void Board::Manhatten(Element* p)
 						}
 						break;
 					case 2:	// Type 2 ==> Change layer at a via
-						if ( !pJ->GetHasPin() && pJ->GetMH() + MH_LVIA == iMH )
+						if ( pJ->GetMH() + MH_LVIA == iMH && !pJ->GetHasPin() )
 							ManhattenHelper(pJ, NBR_X, iRouteID, iMH, iMaxMH);
 						break;
 				}
@@ -671,22 +671,22 @@ void Board::PasteTracks(bool bTidy)
 	{
 		Element* p = GetAt(i);
 
-		const bool bAllLyrs = p->GetHasPin();
+		const bool bHasPin = p->GetHasPin();
 
 		// Tidy clears all non-pins and wires that are USER_SET ...
-		if ( bTidy && ( !p->GetHasPin() || p->GetHasWire() ) && p->ReadFlagBits(USERSET) && !p->ReadFlagBits(AUTOSET|VEROSET) )
+		if ( bTidy && ( !bHasPin || p->GetHasWire() ) && p->ReadFlagBits(USERSET) && !p->ReadFlagBits(AUTOSET|VEROSET) )
 		{
-			SetNodeId(p, BAD_NODEID, bAllLyrs);
+			SetNodeId(p, BAD_NODEID, bHasPin);
 			for (int iSlot = 0; iSlot < 2; iSlot++)
 			{
 				Element* pW = p->GetW(iSlot);
-				if ( pW ) SetNodeId(pW, BAD_NODEID, bAllLyrs);
+				if ( pW ) SetNodeId(pW, BAD_NODEID, bHasPin);
 			}
 		}
 
 		// Make the point USERSET
-		WipeFlagBits(p, AUTOSET|VEROSET, bAllLyrs);
-		MarkFlagBits(p, USERSET, bAllLyrs);
+		WipeFlagBits(p, AUTOSET|VEROSET, bHasPin);
+		MarkFlagBits(p, USERSET, bHasPin);
 
 		// For wires, the "Paste" operation either paints the board at the wire-ends or wipes it.
 		// Fix-up the nodeId info on any wire components ...

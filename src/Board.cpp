@@ -143,9 +143,10 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 		for (int j = minRow; j <= maxRow; j++)
 		for (int i = minCol; i <= maxCol; i++)
 		{
-			const Element*	pA		= Get(k, j, i);
-			const int&		nodeIdA	= pA->GetNodeId();
-			if ( nodeIdA == BAD_NODEID && !pA->GetHasPin() ) continue;	// Skip if no track and no pin
+			const Element*	pA			= Get(k, j, i);
+			const int&		nodeIdA		= pA->GetNodeId();
+			const bool		bHasPinA	= pA->GetHasPin();
+			if ( nodeIdA == BAD_NODEID && !bHasPinA ) continue;	// Skip if no track and no pin
 
 			MyPointF pointA(i, j, 0.005 * GetTRACK_MIL());	// The blob centre for pA (note: track radius !!!)
 			MyPointF padA(pointA);							// The pad centre for pA (pad radius will be set below)
@@ -153,7 +154,7 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 
 			if ( pA->GetHasWire() )
 				padA.m_radius = 0.005 * GetPAD_MIL();	// No custom pad size for wires
-			else if ( pA->GetHasPin() )
+			else if ( bHasPinA )
 			{
 				const Component& comp	= m_compMgr.GetComponentById( pA->GetCompId() );	// Non-wire part must use slot 0
 				// Handle custom pad sizes
@@ -168,16 +169,17 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 				bPadA = false;
 
 			std::list<MyPolygonF> blobA;	// Blob A points (in units of grid squares)
-			CalcBlob(1, pointA, padA, GetPerimeterCode(pA), blobA, pA->GetHasPin());	// 1 ==> scale of 1 grid square
+			CalcBlob(1, pointA, padA, GetPerimeterCode(pA), blobA, bHasPinA);	// 1 ==> scale of 1 grid square
 
 			// Only need to loop half the directions in the following loop (the i,j scan takes care of the other half)
 			for (int jj = std::max(minRow,j-nRings); jj <= j; jj++)
 			for (int ii = std::max(minCol,i-nRings), iiMax = std::min(maxCol,i+nRings); ii <= iiMax; ii++)
 			{
 				if ( jj == j && ii == i ) continue;	// Skip pA
-				const Element*	pB		= Get(k, jj, ii);
-				const int&		nodeIdB	= pB->GetNodeId();
-				if ( nodeIdB == BAD_NODEID && !pB->GetHasPin() ) continue;	// Skip if no track and no pin
+				const Element*	pB			= Get(k, jj, ii);
+				const int&		nodeIdB		= pB->GetNodeId();
+				const bool		bHasPinB	= pB->GetHasPin();
+				if ( nodeIdB == BAD_NODEID && !bHasPinB ) continue;	// Skip if no track and no pin
 				if ( nodeIdB == nodeIdA ) continue;
 
 				MyPointF pointB(ii, jj, 0.005 * GetTRACK_MIL());	// The blob centre for pB (note: track radius !!!)
@@ -186,7 +188,7 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 
 				if ( pB->GetHasWire() )
 					padB.m_radius = 0.005 * GetPAD_MIL();	// No custom pad size for wires
-				else if ( pB->GetHasPin() )
+				else if ( bHasPinB )
 				{
 					const Component& comp	= m_compMgr.GetComponentById( pB->GetCompId() );	// Non-wire part must use slot 0
 					// Handle custom pad sizes
@@ -201,7 +203,7 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 					bPadB = false;
 
 				std::list<MyPolygonF> blobB;	// Blob B points (in units of grid squares)
-				CalcBlob(1, pointB, padB, GetPerimeterCode(pB), blobB, pB->GetHasPin());	// 1 ==> scale of 1 grid square
+				CalcBlob(1, pointB, padB, GetPerimeterCode(pB), blobB, bHasPinB);	// 1 ==> scale of 1 grid square
 
 				const bool bCompareBlobs = !bStandardBlobs || ( abs(jj - j) < 2 && abs(ii - i) < 2 );	// Standard blobs ==> just consider neighbouring grid points
 

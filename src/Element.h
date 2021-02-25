@@ -201,7 +201,7 @@ public:
 			default:	pinIndex = BAD_PININDEX;	compId = BAD_COMPID;	assert(0);
 		}
 	}
-	bool GetWireExists(Element* p) const
+	bool GetWireExists(const Element* p) const
 	{
 		return p != nullptr && ( GetW(0) == p || GetW(1) == p );
 	}

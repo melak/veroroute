@@ -706,7 +706,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				const bool		bWireAsVia		= bWire && bWiresAsTracks;	// true ==> draw small via pad
 				const int		iPerimeterCode	= board.GetPerimeterCode(pC);	// 0 to 255
 				const bool		bVia			= pC->GetIsVia()  ||  bWireAsVia;
-				const bool		bPad			= pC->GetHasPin() && !bWireAsVia;
+				const bool		bPad			= !bWireAsVia && pC->GetHasPin();
 				assert( !(bVia && bPad) );	// Can't be both a via and a regular pad
 
 				bool	bCustomSize(false);
