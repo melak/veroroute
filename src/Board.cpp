@@ -307,13 +307,15 @@ void Board::SetNodeId(Element* p, const int& nodeId, const bool bAllLyrs)	// Hel
 	Element* p2	= std::max(p, q);
 	if ( p1 )
 	{
-		m_adjInfoMgr.UpdateCounts(p1, nodeId);	// Do this BEFORE we call SetNodeId() on the element
-		p1->SetNodeId(nodeId);					// Write node value
+		if ( !GetRoutingEnabled() )	// No point updating m_adjInfoMgr since RebuildAdjacencies() is called after routing
+			m_adjInfoMgr.UpdateCounts(p1, nodeId);	// Do this BEFORE we call SetNodeId() on the element
+		p1->SetNodeId(nodeId);	// Write node value
 	}
 	if ( p2 )
 	{
-		m_adjInfoMgr.UpdateCounts(p2, nodeId);	// Do this BEFORE we call SetNodeId() on the element
-		p2->SetNodeId(nodeId);					// Write node value
+		if ( !GetRoutingEnabled() )	// No point updating m_adjInfoMgr since RebuildAdjacencies() is called after routing
+			m_adjInfoMgr.UpdateCounts(p2, nodeId);	// Do this BEFORE we call SetNodeId() on the element
+		p2->SetNodeId(nodeId);	// Write node value
 	}
 }
 
