@@ -1136,14 +1136,7 @@ void MainWindow::Curved()				{ SetTracksCurved(true); }
 void MainWindow::ToggleDiagsMin()		{ if ( m_board.GetDiagsMode() == DIAGSMODE::MIN ) SetDiagonalsOff(true); else SetDiagonalsMin(true); }
 void MainWindow::ToggleDiagsMax()		{ if ( m_board.GetDiagsMode() == DIAGSMODE::MAX ) SetDiagonalsOff(true); else SetDiagonalsMax(true); }
 void MainWindow::ToggleFill()			{ SetFill( !m_board.GetGroundFill() ); }
-void MainWindow::ToggleSelectArea()
-{
-	SetDefiningRect( !GetDefiningRect() );
-	if ( GetDefiningRect() )
-		centralWidget()->setCursor(Qt::SizeFDiagCursor);
-	else
-		centralWidget()->setCursor(Qt::OpenHandCursor);
-}
+void MainWindow::ToggleSelectArea()		{ SetDefiningRect( !GetDefiningRect() ); }
 
 // Part controls
 void MainWindow::SetCompName(const QString& str)
@@ -1328,15 +1321,17 @@ void MainWindow::Paste()		// On hitting the Paste button ...
 	if ( !m_board.GetRoutingEnabled() ) return;
 	m_board.PasteTracks(false);	// false ==> Don't wipe redundant track portions
 	if ( m_board.GetVeroTracks() )  m_board.AutoFillVero();
+	SetDefiningRect( false );
 	UpdateHistory("Paste Track");
 	UpdateControls();
 	RepaintWithListNodes();
 }
-void MainWindow::Tidy()	// On hitting the Paste+Tidy button ...
+void MainWindow::Tidy()			// On hitting the Paste+Tidy button ...
 {
 	if ( m_board.GetRoutingEnabled() ) return;
 	m_board.PasteTracks(true);	// true ==> Wipe redundant track portions
 	if ( m_board.GetVeroTracks() ) m_board.AutoFillVero();
+	SetDefiningRect( false );
 	UpdateHistory("Tidy Tracks");
 	UpdateControls();
 	RepaintWithListNodes();
@@ -1345,7 +1340,7 @@ void MainWindow::WipeTracks()	// On hitting the Wipe All button ...
 {
 	if ( m_board.GetDisableWipe() ) return;
 	m_board.WipeTracks();
-	m_board.SetRoutingEnabled(false);
+	SetDefiningRect( false );
 	UpdateHistory("Wipe Tracks");
 	UpdateControls();
 	RepaintWithListNodes();

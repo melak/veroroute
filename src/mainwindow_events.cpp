@@ -140,7 +140,6 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 		}
 		else				// Right/middle click quits rectangle mode
 		{
-			centralWidget()->setCursor(Qt::OpenHandCursor);
 			SetDefiningRect( false );
 			UpdateControls();
 		}
@@ -617,7 +616,7 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
 	{
 		switch( event->key() )
 		{
-			case Qt::Key_R:	SetDefiningRect(true);	centralWidget()->setCursor(Qt::SizeFDiagCursor); bUpdateControls = true; break;
+			case Qt::Key_R:	SetDefiningRect(true);	bUpdateControls = true; break;
 		}
 	}
 
@@ -651,14 +650,14 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
 		switch( event->key() )
 		{
 			case Qt::Key_P:		if ( trackMode == TRACKMODE::OFF || compMode == COMPSMODE::OFF || GetPaintBoard() || GetPaintFlood() || GetPaintLyrPref() ) return;
-								SetPaintPins(true);		centralWidget()->setCursor(Qt::CrossCursor); break;
+								SetPaintPins(true);		break;
 			case Qt::Key_Space:	if ( trackMode == TRACKMODE::OFF || GetPaintPins() || GetPaintFlood() || GetPaintLyrPref() ) return;
-								SetPaintBoard(true);	centralWidget()->setCursor(Qt::CrossCursor); break;
+								SetPaintBoard(true);	break;
 			case Qt::Key_F:		if ( trackMode == TRACKMODE::OFF || compMode == COMPSMODE::OFF || GetPaintBoard() || GetPaintPins() || GetPaintLyrPref() ) return;
 								if ( m_board.GetRoutingEnabled() ) return;
-								SetPaintFlood(true);	centralWidget()->setCursor(Qt::CrossCursor); break;
+								SetPaintFlood(true);	break;
 			case Qt::Key_T:		if ( trackMode != TRACKMODE::PCB || m_board.GetLyrs() == 1 || GetPaintBoard() || GetPaintPins() || GetPaintFlood() ) return;
-								SetPaintLyrPref(true);	centralWidget()->setCursor(Qt::CrossCursor); break;
+								SetPaintLyrPref(true);	break;
 			case Qt::Key_W:		WipeTracks();	break;
 		}
 	}
@@ -690,16 +689,14 @@ void MainWindow::keyReleaseEvent(QKeyEvent* event)
 			case Qt::Key_F:		SetPaintFlood(false);	break;
 			case Qt::Key_T:		SetPaintLyrPref(false);	break;
 			case Qt::Key_Space:	SetPaintBoard(false);	break;
+			default:
+				if ( GetCurrentTextId() != BAD_TEXTID && m_bMouseClick )
+					centralWidget()->setCursor(Qt::ClosedHandCursor);
+				else if ( GetCurrentCompId() != BAD_COMPID && m_bMouseClick )
+					centralWidget()->setCursor(Qt::ClosedHandCursor);
+				else
+					centralWidget()->setCursor(Qt::OpenHandCursor);
 		}
-		if ( GetCurrentTextId() != BAD_TEXTID && m_bMouseClick )
-			centralWidget()->setCursor(Qt::ClosedHandCursor);
-		else if ( GetCurrentCompId() != BAD_COMPID && m_bMouseClick )
-			centralWidget()->setCursor(Qt::ClosedHandCursor);
-		else if ( GetDefiningRect() )
-			centralWidget()->setCursor(Qt::SizeFDiagCursor);
-		else
-			centralWidget()->setCursor(Qt::OpenHandCursor);
-
 		UpdateControls();
 		RepaintWithListNodes();
 	}
@@ -759,4 +756,30 @@ void MainWindow::dropEvent(QDropEvent *e)
 											 QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::No ) return;
 		OpenVrt(fileName);
 	}
+}
+
+void MainWindow::SetPaintPins(bool b)
+{
+	m_bPaintPins	= b;
+	centralWidget()->setCursor(b ? Qt::CrossCursor : Qt::OpenHandCursor);
+}
+void MainWindow::SetPaintBoard(bool b)
+{
+	m_bPaintBoard	= b;
+	centralWidget()->setCursor(b ? Qt::CrossCursor : Qt::OpenHandCursor);
+}
+void MainWindow::SetPaintFlood(bool b)
+{
+	m_bPaintFlood	= b;
+	centralWidget()->setCursor(b ? Qt::CrossCursor : Qt::OpenHandCursor);
+}
+void MainWindow::SetPaintLyrPref(bool b)
+{
+	m_bPaintLyrPref	= b;
+	centralWidget()->setCursor(b ? Qt::CrossCursor : Qt::OpenHandCursor);
+}
+void MainWindow::SetDefiningRect(bool b)
+{
+	m_bDefiningRect	= b;
+	centralWidget()->setCursor(b ? Qt::SizeFDiagCursor : Qt::OpenHandCursor);
 }

@@ -93,6 +93,8 @@ void FootPrint::BuildTrax(CompManager* pCompMgr, const RectManager& rectMgr, con
 					break;
 				}
 			}
+			else if ( !pSource->ReadFlagBits(USERSET) )	// Don't copy auto-routed tracks
+				iNodeId = BAD_NODEID;
 			pTarget->SetNodeId(iNodeId);
 			pTarget->SetCode(pSource->GetCode());	// Note: This is wrong at boundaries
 			pTarget->MarkFlagBits(RECTSET);

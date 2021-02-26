@@ -671,11 +671,21 @@ void Board::PasteTracks(bool bTidy)
 	size_t	iPinIndex;
 	int		tmpCompId;
 
-	for (int i = 0, iSize = GetSize(); i < iSize; i++)
-	{
-		Element* p = GetAt(i);
+	// If we are doing a paste (not a tidy) and have a placed trax component, only paste within it then destroy the trax component
+	Component&	trax		= m_compMgr.GetTrax();
+	const bool	bRestrict	= !bTidy && ( trax.GetSize() > 0 && trax.GetIsPlaced() );
+	const int	lyrs		= bRestrict ? trax.GetLyr() + 1  : GetLyrs();
+	const int	rows		= bRestrict ? trax.GetCompRows() : GetRows();
+	const int	cols		= bRestrict ? trax.GetCompCols() : GetCols();
 
-		const bool bHasPin = p->GetHasPin();
+	for (int k = bRestrict ? trax.GetLyr() : 0;			k < lyrs; k++)
+	for (int j = 0, jRow = bRestrict ? trax.GetRow() : 0;	j < rows; j++, jRow++)
+	for (int i = 0, iCol = bRestrict ? trax.GetCol() : 0;	i < cols; i++, iCol++)
+	{
+		if ( bRestrict && !trax.GetCompElement(j,i)->ReadFlagBits(RECTSET) ) continue;	// Skip points outside grey area
+
+		Element*	p		= Get(k, jRow, iCol);
+		const bool	bHasPin	= p->GetHasPin();
 
 		// Tidy clears all non-pins and wires that are USER_SET ...
 		if ( bTidy && ( !bHasPin || p->GetHasWire() ) && p->ReadFlagBits(USERSET) && !p->ReadFlagBits(AUTOSET|VEROSET) )
@@ -710,50 +720,45 @@ void Board::PasteTracks(bool bTidy)
 			}
 		}
 	}
-	SetRoutingEnabled(false);
+	if ( bRestrict )
+	{
+		m_compMgr.ClearTrax();
+		m_rectMgr.Clear();
+	}
+	if ( !bRestrict )
+		SetRoutingEnabled(false);
 }
 
 void Board::WipeTracks()
 {
 	FloatAllComps();	// Float all components
 
-	// If we have a placed trax component, only wipe the board within it then destroy it
-	Component& trax = m_compMgr.GetTrax();
-	if ( trax.GetSize() > 0 && trax.GetIsPlaced() )
+	// If we have a placed trax component, only wipe the board within it then destroy the trax component
+	Component&	trax		= m_compMgr.GetTrax();
+	const bool	bRestrict	= ( trax.GetSize() > 0 && trax.GetIsPlaced() );
+	const int	lyrs		= bRestrict ? trax.GetLyr() + 1  : GetLyrs();
+	const int	rows		= bRestrict ? trax.GetCompRows() : GetRows();
+	const int	cols		= bRestrict ? trax.GetCompCols() : GetCols();
+
+	for (int k = bRestrict ? trax.GetLyr() : 0;			k < lyrs; k++)
+	for (int j = 0, jRow = bRestrict ? trax.GetRow() : 0;	j < rows; j++, jRow++)
+	for (int i = 0, iCol = bRestrict ? trax.GetCol() : 0;	i < cols; i++, iCol++)
 	{
-		const bool bAllLyrs(false);
-		const int& lyr = trax.GetLyr();
+		if ( bRestrict && !trax.GetCompElement(j,i)->ReadFlagBits(RECTSET) ) continue;	// Skip points outside grey area
+		Element* p = Get(k, jRow, iCol);
+		assert( !p->GetHasPin() && !p->GetIsHole() && !p->GetHasComp() );	// Sanity check
 
-		for (int j = 0, jRow = trax.GetRow(), rows = trax.GetCompRows(); j < rows; j++, jRow++)
-		for (int i = 0, iCol = trax.GetCol(), cols = trax.GetCompCols(); i < cols; i++, iCol++)
-		{
-			if ( !trax.GetCompElement(j,i)->ReadFlagBits(RECTSET) ) continue;
-			Element* p = Get(lyr, jRow, iCol);
-			assert( !p->GetHasPin() && !p->GetIsHole() && !p->GetHasComp() );	// Sanity check
-
-			SetNodeId(p, BAD_NODEID, bAllLyrs);
-			p->SetSurface(SURFACE_FREE);
-			WipeFlagBits(p, AUTOSET|VEROSET|RECTSET, bAllLyrs);
-			MarkFlagBits(p, USERSET, bAllLyrs);
-		}
+		SetNodeId(p, BAD_NODEID, !bRestrict);
+		p->SetSurface(SURFACE_FREE);
+		WipeFlagBits(p, bRestrict ? (AUTOSET|VEROSET|RECTSET) : (AUTOSET|VEROSET), !bRestrict);
+		MarkFlagBits(p, USERSET, !bRestrict);
+	}
+	if ( bRestrict )
+	{
 		m_compMgr.ClearTrax();
 		m_rectMgr.Clear();
 	}
-	else	// ... otherwise wipe all the points on the board. The floating trax component won't get wiped
-	{
-		const bool bAllLyrs(true);
-
-		for (int k = 0, lyrs = GetLyrs(); k < lyrs; k++)
-		for (int j = 0, rows = GetRows(); j < rows; j++)
-		for (int i = 0, cols = GetCols(); i < cols; i++)
-		{
-			Element* p = Get(k, j, i);
-			assert( !p->GetHasPin() && !p->GetIsHole() && !p->GetHasComp() );	// Sanity check
-			SetNodeId(p, BAD_NODEID, bAllLyrs);
-			p->SetSurface(SURFACE_FREE);
-			WipeFlagBits(p, AUTOSET|VEROSET, bAllLyrs);
-			MarkFlagBits(p, USERSET, bAllLyrs);
-		}
-	}
+	if ( !bRestrict )
+		SetRoutingEnabled(false);
 	PlaceFloaters();	// Unfloat components
 }

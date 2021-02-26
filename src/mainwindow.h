@@ -97,11 +97,11 @@ public:
 	const bool&	GetResizingText() const	{ return m_bResizingText;	}
 	void		SetCtrlKeyDown(bool b)	{ m_bCtrlKeyDown	= b; }
 	void		SetShiftKeyDown(bool b)	{ m_bShiftKeyDown	= b; }
-	void		SetPaintPins(bool b)	{ m_bPaintPins		= b; }
-	void		SetPaintBoard(bool b)	{ m_bPaintBoard		= b; }
-	void		SetPaintFlood(bool b)	{ m_bPaintFlood		= b; }
-	void		SetPaintLyrPref(bool b)	{ m_bPaintLyrPref	= b; }
-	void		SetDefiningRect(bool b)	{ m_bDefiningRect	= b; }
+	void		SetPaintPins(bool b);
+	void		SetPaintBoard(bool b);
+	void		SetPaintFlood(bool b);
+	void		SetPaintLyrPref(bool b);
+	void		SetDefiningRect(bool b);
 	void		SetResizingText(bool b)	{ m_bResizingText	= b; }
 protected:
 	void paintEvent(QPaintEvent* event);
