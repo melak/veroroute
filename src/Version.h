@@ -290,6 +290,14 @@ static const char* szVEROROUTE_VERSION =
 			// Bug fix: In Fat Tracks mode with diagonals, the track separation algorithm was not handling all cases properly.
 			// Bug fix: In Fat Tracks mode, Gerber export should create an aperture for pads even if there are no parts in the circuit.
 			// Improvement: Allow reset pin layer preference ("T" + right button) while moving mouse instead of having to do single clicks.
-  "2.07";	// Improvement: Faster algorithm for building the list of broken nodes.
+//"2.07";	// Improvement: Faster algorithm for building the list of broken nodes.
 			// Improvement: Copying a part with no name and no value should produce a part with no name and no value.
 			// New feature: Flying wires.  Automatically generated between "Pad (Flying Wire)" objects.
+  "2.08";	// Bug fix: Autorouting in non-fast mode corrupts how adjacent nodeIDs on the grid are tracked,
+			//          leading to many adjacent nets being given the same color.
+			// Improvement: Speed up how flying wires are handled during connectivity checking.
+			// Improvement: Speed up code for tracking adjacent nodeIDs on the grid.
+			// Improvement: Speed up routing in non-fast mode by 5% to 10%.
+			// Improvement: Allow "Paste" when auto-routing to be restricted to grey areas.
+			// Improvement: Moving/rotating grey areas while auto-routing will ignore auto-routed tracks in the grey areas
+			//				instead of pasting them.
