@@ -99,6 +99,7 @@ public:
 
 		// Routing algorithm variables are cleared, not copied
 		m_targetPins.clear();
+		m_growingRoutes.clear();
 		m_tmpVec.clear();
 		m_tmpVecSize	= 0;
 		m_bRouteMinimal	= true;
@@ -129,6 +130,7 @@ public:
 		SetInfoStr("Use this box to enter a circuit description or other info");
 		m_compMgr.Clear();
 		m_targetPins.clear();
+		m_growingRoutes.clear();
 		m_tmpVec.clear();
 		m_nodeInfoMgr.DeAllocate();
 		m_adjInfoMgr.DeAllocate();
@@ -494,7 +496,7 @@ public:
 	void Backtrace(Element* pEnd, const int& nodeId);
 	bool BacktraceHelper(Element*& p, unsigned int& MH, const int& nodeId, const int& iDeltaMH, const int& iNbr, const int& iLoop);
 	void Manhatten(Element* p);
-	void ManhattenHelper(const Element* p, const int& iNbr, const unsigned int& iRouteID, unsigned int& iMH, unsigned int& iMaxMH);
+	void ManhattenHelper(const Element* p, const int& iNbr, unsigned int& iMH, unsigned int& iMaxMH);
 	void CheckAllComplete();
 	void PasteTracks(bool bTidy);
 	void WipeTracks();
@@ -712,6 +714,7 @@ public:
 private:
 	inline void UpdateMH(Element* p, const unsigned int& iRouteID, const unsigned int& iMH, unsigned int& iMaxMH)
 	{
+		m_growingRoutes[(size_t)iRouteID] = true;
 		m_tmpVec[m_tmpVecSize++] = p;	// Add p to set of visited points
 		p->UpdateMH(iRouteID, iMH, iMaxMH);
 	}
@@ -770,6 +773,7 @@ private:
 	// Routing algorithm	// Don't persist or copy
 	ConnectionMatrix		m_connectionMatrix;	// Tracks connectivity between target pins
 	std::vector<Element*>	m_targetPins;		// Set of pins to route.
+	std::vector<bool>		m_growingRoutes;	// Flags to indicate if routes to target pins are still growing
 	std::vector<Element*>	m_tmpVec;			// The set of visited points.
 	size_t					m_tmpVecSize;		// The number of visited points.
 	bool					m_bRouteMinimal;	// true ==> don't build tracks between pins that are already connected

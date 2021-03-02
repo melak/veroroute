@@ -66,8 +66,8 @@ struct MyPolygonF : public QPolygonF	// A polygon + the pen radii for drawing it
 		// Set flags to indicate if points and edges are fat or thin
 		const int iSize = QPolygonF::size();
 		if ( !bForce && m_bFatPoint.size() == (size_t) iSize ) return;
-		m_bFatPoint.resize(iSize, false);
-		m_bFatEdge.resize(iSize, false);
+		m_bFatPoint.clear();	m_bFatPoint.resize(iSize, false);
+		m_bFatEdge.clear();		m_bFatEdge.resize(iSize, false);
 		if ( !HaveVariTracks() ) return;
 		for (int i = 0, j = 1, iEnd = m_bClosed ? iSize : (iSize-1); i < iEnd; i++, j++)
 		{

@@ -259,10 +259,13 @@ void Board::Flood_Helper(const bool bBuildTracks)
 	for (int i = 0, iSize = GetSize(); i < iSize; i++)	// Loop all grid points
 		GetAt(i)->ResetMH();	// Wipe RouteId. Set "infinite" MH distance.  Zero max MH parameter.
 
-	m_tmpVec.resize(GetSize(), nullptr);	// Clear the set of visited points
-	m_tmpVecSize = 0;
+	m_tmpVec.resize(GetSize(), nullptr);
+	m_tmpVecSize = 0;			// Clear the set of visited points
 
-	unsigned int iMH(0), iMaxMH(0);
+	const size_t N = m_targetPins.size();
+	m_growingRoutes.resize(N);	// Allocate flags to track route growth from pins
+
+	unsigned int iMH(0), iMaxMH(0), iMHlastGrowthCheck(0);
 
 	// Add each target pin to the set of visited points, with a unique routeId, and MH value of zero
 	unsigned int iRouteID(BAD_ROUTEID);
@@ -271,6 +274,8 @@ void Board::Flood_Helper(const bool bBuildTracks)
 		iRouteID++;	assert( iRouteID < BAD_ROUTEID );	// Should be safely < UINT_MAX in practice
 		UpdateMH(p, iRouteID, iMH, iMaxMH);				// Add p to set of visited points
 	}
+
+	std::fill(m_growingRoutes.begin(), m_growingRoutes.end(), false);	// Clear flags tracking route growth from pins
 
 	const bool			bMultiLayer	 = GetLyrs() > 1;
 	const bool			bViasEnabled = bMultiLayer && GetViasEnabled();
@@ -329,6 +334,23 @@ void Board::Flood_Helper(const bool bBuildTracks)
 							Flood_Grow(iFloodNodeId, pJ, NBR_X, bBuildTracks, iMH, iMaxMH, bDone);
 						break;
 				}
+			}
+		}
+
+		// Periodically (every sufficiently large MH increase) examine which routes have grown.
+		// If all growing routes are connected to each other then we're done.
+		if ( !bDone && iMH >= iMHlastGrowthCheck + iMaxDeltaMH )
+		{
+			bDone = true;
+			for (size_t i = 0; i < N && bDone; i++)
+				if ( m_growingRoutes[i] )
+					for (size_t j = i+1; j < N && bDone; j++)
+						if ( m_growingRoutes[j] )
+							bDone = m_connectionMatrix.GetAreConnected(i,j);
+			if ( !bDone )
+			{
+				iMHlastGrowthCheck = iMH;
+				std::fill(m_growingRoutes.begin(), m_growingRoutes.end(), false);	// Clear flags tracking route growth from pins
 			}
 		}
 	}
@@ -523,8 +545,8 @@ void Board::Manhatten(Element* p)
 		pL->ResetMH();	// Wipe RouteId. Set "infinite" MH distance.  Zero max MH parameter.
 	}
 
-	m_tmpVec.resize(GetSize(), nullptr);	// Clear the set of visited points
-	m_tmpVecSize = 0;
+	m_tmpVec.resize(GetSize(), nullptr);
+	m_tmpVecSize = 0;	// Clear the set of visited points
 
 	const bool			bMultiLayer	 = GetLyrs() > 1;
 	const bool			bViasEnabled = bMultiLayer && GetViasEnabled();
@@ -534,6 +556,8 @@ void Board::Manhatten(Element* p)
 	size_t jjStart(0);
 	const unsigned int iRouteID(0);
 	unsigned int iMH(0), iMaxMH(0);
+
+	if ( m_growingRoutes.empty() ) m_growingRoutes.resize(1, 0);	// Only ever use iRouteID == 0 in Manhatten()
 
 	// All pins that support "flying wires" and have the same nodeID are connected to each other
 	if ( GetAllowFlyWire(p) )
@@ -586,7 +610,7 @@ void Board::Manhatten(Element* p)
 				{
 					case 0:	// Type 0 ==> Change layer at a pin
 						if ( pJ->GetMH() + MH_LPIN == iMH && pJ->GetHasPin() )
-							ManhattenHelper(pJ, NBR_X, iRouteID, iMH, iMaxMH);
+							ManhattenHelper(pJ, NBR_X, iMH, iMaxMH);
 						break;
 					case 1:	// Type 1 ==> Move within layer
 						for (int iDiag = 0, iDiagMax = ( bDiagsOK ) ? 2 : 1; iDiag < iDiagMax; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
@@ -595,12 +619,12 @@ void Board::Manhatten(Element* p)
 							if ( pJ->GetMH() + iDeltaMH != iMH ) continue;	// pJ has wrong MH for connection
 
 							for (int iNbr = iDiag; iNbr < 8; iNbr += 2)	// Even/Odd iNbr ==> Non-diagonal/Diagonal
-								ManhattenHelper(pJ, iNbr, iRouteID, iMH, iMaxMH);
+								ManhattenHelper(pJ, iNbr, iMH, iMaxMH);
 						}
 						break;
 					case 2:	// Type 2 ==> Change layer at a via
 						if ( pJ->GetMH() + MH_LVIA == iMH && !pJ->GetHasPin() )
-							ManhattenHelper(pJ, NBR_X, iRouteID, iMH, iMaxMH);
+							ManhattenHelper(pJ, NBR_X, iMH, iMaxMH);
 						break;
 				}
 			}
@@ -608,7 +632,7 @@ void Board::Manhatten(Element* p)
 	}
 }
 
-void Board::ManhattenHelper(const Element* p, const int& iNbr, const unsigned int& iRouteID, unsigned int& iMH, unsigned int& iMaxMH)
+void Board::ManhattenHelper(const Element* p, const int& iNbr, unsigned int& iMH, unsigned int& iMaxMH)
 {
 	if ( !ReadCodeBit(iNbr, p->GetRoutable()) ) return;	// Skip non-routable nbrs
 
@@ -617,6 +641,7 @@ void Board::ManhattenHelper(const Element* p, const int& iNbr, const unsigned in
 
 	WIRELIST wireList;	// Helper for chains of wires
 
+	const unsigned iRouteID(0);
 	if ( p->GetUsed(iNbr) && pK->GetMH() == BAD_MH )
 	{
 		// All pins that support "flying wires" and have the same nodeID are connected to each other
