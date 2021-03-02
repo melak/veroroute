@@ -59,13 +59,7 @@ void TextDialog::Update(const TextRect& rect, bool bFull)
 	ui->pushButtonC->setChecked(rect.GetFlags() == Qt::AlignHCenter);
 	ui->pushButtonR->setChecked(rect.GetFlags() == Qt::AlignRight);
 	ui->pushButtonJ->setChecked(rect.GetFlags() == Qt::AlignJustify);
-
-	QPalette pal = ui->pushButtonRGB->palette();
-	pal.setColor(QPalette::Button, rect.GetQColor());
-	ui->pushButtonRGB->setAutoFillBackground(true);
-	ui->pushButtonRGB->setPalette(pal);
-	ui->pushButtonRGB->update();
-
+	ui->pushButtonRGB->setStyleSheet("border:2px solid " + rect.GetQColor().name());
 	if ( bFull )
 		ui->plainTextEdit->setPlainText( QString::fromStdString(rect.GetStr()) );
 }

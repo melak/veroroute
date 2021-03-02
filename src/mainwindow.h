@@ -50,7 +50,7 @@ class BomDialog;
 class PinDialog;
 class FindDialog;
 
-#define MAX_RECENT_FILES 10
+const size_t MAX_RECENT_FILES = 10;
 
 class MainWindow : public QMainWindow
 {
@@ -322,7 +322,6 @@ public slots:
 	void SetShowCloseTracks(bool b);
 	void SetAntialiasOff(bool b);
 	void SetAntialiasOn(bool b);
-	void SetAntialiasHigh(bool b);
 	// Find parts by name/value
 	void Find(bool bUseName, bool bExact, const QString& str);
 	// Wire options

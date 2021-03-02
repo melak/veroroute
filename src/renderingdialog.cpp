@@ -31,7 +31,6 @@ RenderingDialog::RenderingDialog(MainWindow* parent)
 	ui->antiAliasOn->setChecked(true);
 	QObject::connect(ui->antiAliasOff,	SIGNAL(toggled(bool)),		m_pMainWindow, SLOT(SetAntialiasOff(bool)));
 	QObject::connect(ui->antiAliasOn,	SIGNAL(toggled(bool)),		m_pMainWindow, SLOT(SetAntialiasOn(bool)));
-	QObject::connect(ui->antiAliasHigh,	SIGNAL(toggled(bool)),		m_pMainWindow, SLOT(SetAntialiasHigh(bool)));
 	QObject::connect(ui->shade,			SIGNAL(toggled(bool)),		m_pMainWindow, SLOT(SetShowTarget(bool)));
 	QObject::connect(ui->comptext,		SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetTextSizeComp(int)));
 	QObject::connect(ui->comppins,		SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetTextSizePins(int)));
@@ -75,14 +74,7 @@ void RenderingDialog::UpdateControls()
 	ui->spinBox_height->setValue( board.GetTargetRows() );
 	ui->spinBox_width->setValue( board.GetTargetCols() );
 	ui->shade->setChecked( board.GetShowTarget() );
-	switch( board.GetRenderQuality() )
-	{
-		case 0:		ui->antiAliasOff->setChecked(true);		break;
-		case 1:		ui->antiAliasOn->setChecked(true);		break;
-		case 2:		ui->antiAliasHigh->setChecked(true);	break;
-		default:	ui->antiAliasOn->setChecked(true);		break;
-	}
-
+	if ( board.GetRenderQuality() == 0 ) ui->antiAliasOff->setChecked(true); else ui->antiAliasOn->setChecked(true);
 	ui->groupBox_target->setDisabled(	bCompEdit );
 	ui->comptext->setDisabled(			bCompEdit );
 	ui->comppins->setDisabled(			!bCompEdit && bMonoPCB );

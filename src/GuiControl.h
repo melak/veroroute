@@ -499,7 +499,7 @@ private:
 	int			m_EDGE_MIL			= 20;				// Range  0 to 50
 	int			m_VIAPAD_MIL		= 50;				// Range 50 to 80
 	int			m_VIAHOLE_MIL		= 25;				// Range 20 to 40
-	int			m_iRenderQuality	= 1;				// 0 (Low) to 2 (High)
+	int			m_iRenderQuality	= 1;				// 0 (Low) to 1 (High)
 	int			m_iSaturation		= 60;				// Track color saturation (20 to 100 percent)
 	int			m_iFillSaturation	= 0;				// Component fill saturation (0 to 100 percent)
 	int			m_iCropMargin		= 0;				// Number of border squares after auto-crop

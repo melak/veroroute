@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include "Common.h"
+
 // Keeps track of connectivity between a set of points (e.g. target pins in the routing algorithm)
 
 class ConnectionMatrix
@@ -39,8 +41,10 @@ public:
 	}
 	void DeAllocate()
 	{
-		if ( m_pp ) delete[] m_pp;	m_pp	= nullptr;
-		if ( m_p  ) delete[] m_p;	m_p		= nullptr;
+		if ( m_pp ) delete[] m_pp;
+		if ( m_p  ) delete[] m_p;
+		m_pp = nullptr;
+		m_p	 = nullptr;
 	}
 	void Connect(const size_t& j, const size_t& k)
 	{

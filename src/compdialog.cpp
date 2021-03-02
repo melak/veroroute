@@ -65,7 +65,7 @@ void CompDialog::SetMainWindow(MainWindow* p)
 	QObject::connect(ui->lineEdit_Import,	SIGNAL(textChanged(const QString&)),		m_pMainWindow,	SLOT(DefinerSetImportStr(const QString&)));
 	QObject::connect(ui->spinBox_Width,		SIGNAL(valueChanged(int)),					m_pMainWindow,	SLOT(DefinerWidthChanged(int)));
 	QObject::connect(ui->spinBox_Height,	SIGNAL(valueChanged(int)),					m_pMainWindow,	SLOT(DefinerHeightChanged(int)));
-	QObject::connect(ui->comboBox_PinShape,	SIGNAL(currentIndexChanged(const QString&)),m_pMainWindow,	SLOT(DefinerSetPinShapeType(const QString&)));
+	QObject::connect(ui->comboBox_PinShape,	SIGNAL(currentTextChanged(const QString&)),m_pMainWindow,	SLOT(DefinerSetPinShapeType(const QString&)));
 	QObject::connect(ui->checkBox_PinLabels,SIGNAL(toggled(bool)),						m_pMainWindow,	SLOT(DefinerToggledPinLabels(bool)));
 	QObject::connect(ui->custom,			SIGNAL(toggled(bool)),						m_pMainWindow,	SLOT(DefinerToggledCustomFlag(bool)));
 	QObject::connect(ui->padWidth,			SIGNAL(valueChanged(int)),					m_pMainWindow,	SLOT(DefinerPadWidthChanged(int)));
@@ -74,7 +74,7 @@ void CompDialog::SetMainWindow(MainWindow* p)
 	QObject::connect(ui->pushButtonRGB,		SIGNAL(clicked()),							m_pMainWindow,	SLOT(DefinerChooseColor()));
 	QObject::connect(ui->pushButtonU,		SIGNAL(clicked()),							m_pMainWindow,	SLOT(DefinerRaise()));
 	QObject::connect(ui->pushButtonD,		SIGNAL(clicked()),							m_pMainWindow,	SLOT(DefinerLower()));
-	QObject::connect(ui->comboBox_Shape,	SIGNAL(currentIndexChanged(const QString&)),m_pMainWindow,	SLOT(DefinerSetShapeType(const QString&)));
+	QObject::connect(ui->comboBox_Shape,	SIGNAL(currentTextChanged(const QString&)),m_pMainWindow,	SLOT(DefinerSetShapeType(const QString&)));
 	QObject::connect(ui->checkBox_Line,		SIGNAL(toggled(bool)),						m_pMainWindow,	SLOT(DefinerToggleShapeLine(bool)));
 	QObject::connect(ui->checkBox_Fill,		SIGNAL(toggled(bool)),						m_pMainWindow,	SLOT(DefinerToggleShapeFill(bool)));
 	QObject::connect(ui->doubleSpinBox_CX,	SIGNAL(valueChanged(double)),				m_pMainWindow,	SLOT(DefinerSetCX(double)));
@@ -149,11 +149,7 @@ void CompDialog::Update()
 		ui->doubleSpinBox_A3->setValue(  s.GetA3() );
 		rgb = s.GetFillColor();
 	}
-	QPalette pal = ui->pushButtonRGB->palette();
-	pal.setColor(QPalette::Button, rgb.GetQColor());
-	ui->pushButtonRGB->setAutoFillBackground(true);
-	ui->pushButtonRGB->setPalette(pal);
-	ui->pushButtonRGB->update();
+	ui->pushButtonRGB->setStyleSheet("border:2px solid " + rgb.GetQColor().name());
 	EnableControls();
 }
 

@@ -62,7 +62,7 @@ void ControlDialog::SetMainWindow(MainWindow* p)
 
 	QObject::connect(ui->nameEdit,			SIGNAL(textChanged(const QString&)),		m_pMainWindow, SLOT(SetCompName(const QString&)));
 	QObject::connect(ui->valueEdit,			SIGNAL(textChanged(const QString&)),		m_pMainWindow, SLOT(SetCompValue(const QString&)));
-	QObject::connect(ui->typeComboBox,		SIGNAL(currentIndexChanged(const QString&)),m_pMainWindow, SLOT(SetCompType(const QString&)));
+	QObject::connect(ui->typeComboBox,		SIGNAL(currentTextChanged(const QString&)),	m_pMainWindow, SLOT(SetCompType(const QString&)));
 	QObject::connect(ui->rotateCCW,			SIGNAL(clicked()),			m_pMainWindow,	SLOT(CompRotateCCW()));
 	QObject::connect(ui->rotateCW,			SIGNAL(clicked()),			m_pMainWindow,	SLOT(CompRotateCW()));
 	QObject::connect(ui->grow,				SIGNAL(clicked()),			m_pMainWindow,	SLOT(CompGrow()));
@@ -275,12 +275,8 @@ void ControlDialog::UpdateControls()	// Non-component controls
 	ui->setColor->setEnabled( bColor && bNodeIdOK );
 	ui->autoColor->setChecked( bNodeIdOK && !board.GetColorMgr().GetIsFixed( board.GetCurrentNodeId() ) );
 
-	QPalette pal = ui->setColor->palette();
-	pal.setColor(QPalette::Button, bColor ? board.GetColorMgr().GetColorFromNodeId( board.GetCurrentNodeId(), false ) : Qt::black);
-
-	ui->setColor->setAutoFillBackground(true);
-	ui->setColor->setPalette(pal);
-	ui->setColor->update();
+	QColor color = bColor ? board.GetColorMgr().GetColorFromNodeId( board.GetCurrentNodeId(), false ) : Qt::black;
+	ui->setColor->setStyleSheet("border:2px solid " + color.name());
 }
 
 void ControlDialog::wheelEvent(QWheelEvent* event)

@@ -66,10 +66,10 @@ void MainWindow::GetRowCol(const QPoint& currentPoint, const int rows, const int
 
 void MainWindow::wheelEvent(QWheelEvent* event)
 {
-	//TODO QWheelEvent::pos() has been deprecated in newer Qt versions.
-	//	To avoid a build warning, use event->position() instead as follows:
-	//	m_mousePos = QPoint((int)event->position().x(), (int)event->position().y());
-	m_mousePos = event->pos();
+	//TODO For Qt 6.0 and later use position() instead of posF()
+	m_mousePos = QPoint((int)event->posF().x(), (int)event->posF().y());
+//	m_mousePos = QPoint((int)event->position().x(), (int)event->position().y());
+
 	if ( GetShiftKeyDown() ) return;	// Ignore wheel events while trying to group components
 	const bool bBack = ( event->angleDelta().y() < 0 );
 	if ( GetCtrlKeyDown() )

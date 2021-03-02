@@ -49,7 +49,7 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	ui->setupUi(this);
 
 	// Create menu actions for recent files
-	for (int i = 0; i < MAX_RECENT_FILES; ++i)
+	for (size_t i = 0; i < MAX_RECENT_FILES; ++i)
 	{
 		m_recentFileAction[i] = new QAction(this);
 		m_recentFileAction[i]->setVisible(false);
@@ -736,7 +736,7 @@ void MainWindow::ClearRecentFiles()
 {
 	QSettings	settings("veroroute","veroroute");	// Organisation = "veroroute", Application = "veroroute"
 	settings.setValue("recentFiles", QStringList());
-	for (int i = 0; i < MAX_RECENT_FILES; i++)
+	for (size_t i = 0; i < MAX_RECENT_FILES; i++)
 		m_recentFileAction[i]->setVisible(false);
 	ui->actionClearRecent->setEnabled(false);
 	m_separator->setVisible(false);
@@ -1473,7 +1473,6 @@ void MainWindow::SetShowTarget(bool b)		{ if ( m_board.SetShowTarget(b) )		  { U
 void MainWindow::SetShowCloseTracks(bool b)	{ if ( m_board.SetShowCloseTracks(b) )	  { UpdateHistory("Show closest tracks on/off");	UpdateControls();	RepaintSkipRouting(); } }
 void MainWindow::SetAntialiasOff(bool b)	{ if ( b && m_board.SetRenderQuality(0) ) { UpdateHistory("Anti-alias off");  DestroyPixmapCache(); RepaintSkipRouting(); } }
 void MainWindow::SetAntialiasOn(bool b)		{ if ( b && m_board.SetRenderQuality(1) ) { UpdateHistory("Anti-alias on");   DestroyPixmapCache(); RepaintSkipRouting(); } }
-void MainWindow::SetAntialiasHigh(bool b)	{ if ( b && m_board.SetRenderQuality(2) ) { UpdateHistory("Anti-alias high"); DestroyPixmapCache(); RepaintSkipRouting(); } }
 
 // Wire dialog
 void MainWindow::SetWireShare(bool b)		{ if ( m_board.SetWireShare(b) ) { UpdateHistory("Wire hole-sharing on/off");	RepaintSkipRouting(); } }
@@ -1669,13 +1668,13 @@ void MainWindow::UpdateRecentFiles(const QString* pFileName, bool bAdd)
 		files.removeAll(fileName);
 		if ( bAdd )
 			files.prepend(fileName);
-		while ( files.size() > MAX_RECENT_FILES )
+		while ( (size_t)files.size() > MAX_RECENT_FILES )
 			files.removeLast();
 		settings.setValue("recentFiles", files);
 	}
 
-	const int numFiles = std::min(files.size(), MAX_RECENT_FILES);
-	for (int i = 0; i < numFiles; i++)
+	const size_t numFiles = std::min((size_t)files.size(), MAX_RECENT_FILES);
+	for (size_t i = 0; i < numFiles; i++)
 	{
 		const QString&	fileName	= files[i];
 		const QString	text		= tr("&%1 %2").arg( i + 1 ).arg( fileName );
@@ -1683,7 +1682,7 @@ void MainWindow::UpdateRecentFiles(const QString* pFileName, bool bAdd)
 		m_recentFileAction[i]->setData(fileName);
 		m_recentFileAction[i]->setVisible(true);
 	}
-	for (int i = numFiles; i < MAX_RECENT_FILES; i++)
+	for (size_t i = numFiles; i < MAX_RECENT_FILES; i++)
 		m_recentFileAction[i]->setVisible(false);
 
 	ui->actionClearRecent->setEnabled(numFiles > 0);
@@ -1838,15 +1837,7 @@ void MainWindow::UpdateTextDialog(bool bFull)
 }
 
 // Helpers
-void MainWindow::SetQuality(QPainter& painter)
-{
-	switch( m_board.GetRenderQuality() )
-	{
-		case 0:		return painter.setRenderHint(QPainter::Antialiasing, false);
-		case 1:		return painter.setRenderHint(QPainter::Antialiasing, true);
-		default:	return painter.setRenderHint(QPainter::HighQualityAntialiasing, true);
-	}
-}
+void MainWindow::SetQuality(QPainter& painter) { painter.setRenderHint(QPainter::Antialiasing, m_board.GetRenderQuality() != 0); }
 bool MainWindow::CanZoomIn() const	{ return m_board.GetGRIDPIXELS() < 256; }	// 256 == MAX_GRIDPIXELS
 bool MainWindow::CanZoomOut() const	{ return m_board.GetGRIDPIXELS() > 6;   }	//   6 == MIN_GRIDPIXELS
 bool MainWindow::GetIsModified() const

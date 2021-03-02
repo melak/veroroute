@@ -517,7 +517,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	const bool		 bPCB			= trackMode == TRACKMODE::PCB;
 	const bool		 bMonoPCB		= bMono || bPCB;
 	const bool		 bGroundFill	= !bVero && bMonoPCB && board.GetGroundFill();
-	const bool		 bPixmapCache	= !bVero && !bPCB && !bGroundFill && !m_bWritePDF;	// true ==> Faster rendering (Mono/Color modes)
+	const bool		 bPixmapCache	= !bVero && ( bMono || bColor ) && !bGroundFill && !m_bWritePDF;	// true ==> Faster rendering (Mono/Color modes)
 	const bool		 bDirect		= !bVero && !bPixmapCache && !bGroundFill;			// true ==> Draw track "blobs" and pads directly (PDF/Gerber)
 	const bool		 bExtraTags		= false;											// true ==> Add extra thermal relief tags
 	const int&		 layer			= board.GetCurrentLayer();
