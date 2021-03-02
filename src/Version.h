@@ -293,7 +293,7 @@ static const char* szVEROROUTE_VERSION =
 //"2.07";	// Improvement: Faster algorithm for building the list of broken nodes.
 			// Improvement: Copying a part with no name and no value should produce a part with no name and no value.
 			// New feature: Flying wires.  Automatically generated between "Pad (Flying Wire)" objects.
-  "2.08";	// Bug fix: Autorouting in non-fast mode corrupts how adjacent nodeIDs on the grid are tracked,
+//"2.08";	// Bug fix: Autorouting in non-fast mode corrupts how adjacent nodeIDs on the grid are tracked,
 			//          leading to many adjacent nets being given the same color.
 			// Improvement: Speed up how flying wires are handled during connectivity checking.
 			// Improvement: Speed up code for tracking adjacent nodeIDs on the grid.
@@ -301,3 +301,4 @@ static const char* szVEROROUTE_VERSION =
 			// Improvement: Allow "Paste" when auto-routing to be restricted to grey areas.
 			// Improvement: Moving/rotating grey areas while auto-routing will ignore auto-routed tracks in the grey areas
 			//				instead of pasting them.
+  "2.09";	// Improvement: Routing algorithm speed increased.

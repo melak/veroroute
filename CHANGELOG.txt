@@ -303,3 +303,4 @@ V2.08  Bug fix: Auto-routing in non-fast mode corrupts how adjacent nodeIDs on t
        Improvement: Allow "Paste" when auto-routing to be restricted to grey areas.
        Improvement: Moving/rotating grey areas while auto-routing will ignore auto-routed tracks in the grey areas
                     instead of pasting them.
+V2.09  Improvement: Routing algorithm speed increased.
