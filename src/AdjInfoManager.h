@@ -20,6 +20,7 @@
 #pragma once
 
 #include "AdjInfo.h"
+#include "Element.h"
 
 // Manager class to record the adjacency info for all NodeIds on the board (NOT floating components)
 

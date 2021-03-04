@@ -21,6 +21,7 @@
 
 #include "AdjInfoManager.h"
 #include "MyRGB.h"
+#include "Grid.h"
 
 #define MYNUMCOLORS 		12
 #define MY_GREY				(MYNUMCOLORS)

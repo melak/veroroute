@@ -23,7 +23,6 @@
 #include "RectManager.h"
 #include "CompDefiner.h"
 
-
 // For 2-layer boards, the following says which is the prefered layer for a pin to make connections.
 // This only affects rendered connections between adjacent pins..
 // It does not affect connectivity or routing.

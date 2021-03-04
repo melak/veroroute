@@ -45,5 +45,3 @@ private:
 	Ui_TextDialog*	ui;
 	MainWindow*		m_pMainWindow;
 };
-
-

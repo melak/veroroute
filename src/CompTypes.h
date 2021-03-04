@@ -19,6 +19,9 @@
 
 #pragma once
 
+#include "Common.h"
+#include "qnamespace.h"
+
 // Enumeration and static methods for the component types
 
 //*** Don't delete or modify existing values in COMP.  Just add new ones and update all methods below. ***
@@ -626,28 +629,9 @@ static int GetDefaultPinAlign(size_t iPinIndex, size_t iNumPins, const COMP& eTy
 	}
 }
 
-static bool StopBuildWarnings()
-{
-	// Following lines are just to avoid pointless build warnings about the previous functions being unused
-	static int DUMMY(0);
-	AllowCustomPCBshapes(COMP::INVALID);
-	AllowTypeChange(COMP::INVALID,COMP::INVALID);
-	GetPinSeparation(COMP::INVALID);
-	GetTypeFromImportStr("");
-	IsPlug(COMP::INVALID);
-	GetListCompTypes();
-	GetDefaultImportStr(COMP::INVALID);
-	GetDefaultTypeStr(COMP::INVALID);
-	GetFamilyStr(COMP::INVALID);
-	GetTypeFromTypeStr("");
-	GetListOrder(COMP::INVALID);
-	GetMakeInstructions(COMP::INVALID, DUMMY, DUMMY);
-	return true;
-}
-
 static int GetDefaultNumPins(const COMP& eType)
 {
-	if ( false ) StopBuildWarnings();
+
 	switch( eType )
 	{
 		case COMP::MARK:				return 0;
@@ -728,6 +712,7 @@ static int GetDefaultNumPins(const COMP& eType)
 		default:						return 0;	// Unhandled eType
 	}
 }
+
 static int GetMinNumPins(const COMP& eType)
 {
 	switch( eType )
@@ -743,6 +728,7 @@ static int GetMinNumPins(const COMP& eType)
 		default:					return GetDefaultNumPins(eType);
 	}
 }
+
 static int GetMaxNumPins(const COMP& eType)
 {
 	switch( eType )
@@ -758,6 +744,7 @@ static int GetMaxNumPins(const COMP& eType)
 		default:					return GetDefaultNumPins(eType);
 	}
 }
+
 static int GetStretchIncrement(const COMP& eType)	// For stretchable components
 {
 	switch( eType )
@@ -768,6 +755,7 @@ static int GetStretchIncrement(const COMP& eType)	// For stretchable components
 		default:				return 1;
 	}
 }
+
 static int GetMinLength(const COMP& eType)	// For stretchable components
 {
 	switch( eType )
@@ -792,6 +780,7 @@ static int GetMinLength(const COMP& eType)	// For stretchable components
 		default:	assert(0);		return 1;	// Non-stretchable component
 	}
 }
+
 static int GetMaxLength(const COMP& eType)	// For stretchable components
 {
 	switch( eType )
@@ -816,3 +805,30 @@ static int GetMaxLength(const COMP& eType)	// For stretchable components
 		default:	assert(0);		return 1;	// Non-stretchable component
 	}
 }
+
+struct CompTypeWarningHelper
+{
+	CompTypeWarningHelper() { assert( true || PreventBuildWarnings() ); }
+	bool PreventBuildWarnings() const
+	{
+		static int DUMMY(0);
+		AllowCustomPCBshapes(COMP::INVALID);
+		AllowTypeChange(COMP::INVALID,COMP::INVALID);
+		GetPinSeparation(COMP::INVALID);
+		GetTypeFromImportStr("");
+		IsPlug(COMP::INVALID);
+		GetListCompTypes();
+		GetDefaultImportStr(COMP::INVALID);
+		GetDefaultTypeStr(COMP::INVALID);
+		GetFamilyStr(COMP::INVALID);
+		GetTypeFromTypeStr("");
+		GetListOrder(COMP::INVALID);
+		GetMakeInstructions(COMP::INVALID, DUMMY, DUMMY);
+		GetDefaultPinLabel(0);
+		GetDefaultPinAlign(0,0,COMP::INVALID);
+		GetStretchIncrement(COMP::INVALID);
+		GetMinLength(COMP::INVALID);
+		GetMaxLength(COMP::INVALID);
+		return true;
+	}
+};

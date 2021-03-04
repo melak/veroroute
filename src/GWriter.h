@@ -23,6 +23,7 @@
 
 class QPointF;
 class QPolygonF;
+class QString;
 class Board;
 class GStream;
 

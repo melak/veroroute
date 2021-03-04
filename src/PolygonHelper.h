@@ -93,7 +93,7 @@ struct PolygonHelper
 	PolygonHelper() {}
 	~PolygonHelper() {}
 	QPolygonF	m_pWarn;			// Set of warning points
-	qreal		m_Dmin = DBL_MAX;	// The closest separation found
+	qreal		m_Dmin = DBL_MAX;	// The closest separation found (units of grid squares)
 
 	static inline qreal Length(const QPointF& p)
 	{
@@ -145,10 +145,14 @@ private:
 	{
 		const QPointF	L(Y - X);
 		const qreal		l = Length(L);
-		const qreal		D = round( std::max(0.0, l - sum) * 1000 ) * 0.001;	// 0.1 mil resolution
-		if ( D > m_Dmin ) return;
-		if ( D < m_Dmin ) m_pWarn.clear();
-		m_Dmin = D;
+		const qreal		D = round( std::max(0.0, l - sum) * 1000 );	// Units of 0.1 mil
+		if ( m_Dmin != DBL_MAX )
+		{
+			const int iDelta = (int) ( D - m_Dmin * 1000 );	// Units of 0.1 mil
+			if ( iDelta > 0 ) return;
+			if ( iDelta < 0 ) m_pWarn.clear();
+		}
+		m_Dmin = D * 0.001;	// Units of grid squares (100 mil)
 		QPointF mid( (X + Y) * 0.5 );
 		if ( semi != 0 && l != 0 ) mid += L * ( semi / l );
 		m_pWarn.push_back( mid );

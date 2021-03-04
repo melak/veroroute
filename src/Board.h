@@ -25,8 +25,8 @@
 #include "GroupManager.h"
 #include "ColorManager.h"
 #include "TextManager.h"
-#include "PolygonHelper.h"
 #include "ConnectionMatrix.h"
+#include <QPointF>
 
 #define SMART_PAN_CAN_AUTOCROP true
 

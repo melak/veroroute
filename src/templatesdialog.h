@@ -61,4 +61,3 @@ private:
 	int					m_iRowL;
 	int					m_iRowR;
 };
-

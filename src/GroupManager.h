@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include "CompElement.h" // For BAD_COMPID, TRAX_COMPID
+#include "Element.h" // For BAD_COMPID, TRAX_COMPID
 
 // The class that manages grouping/ungrouping of components.
 // Every group has a "groupId", and every component has a "compId".
