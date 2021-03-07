@@ -723,7 +723,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 					if ( !bVero )
 					{
-						comp.GetCompPinOffsets(pinIndex, padOffsetX, padOffsetY);
+						comp.GetCompPinOffsets(pinIndex, padOffsetX, padOffsetY);	// Get offsets in mil
 						padOffsetX = (padOffsetX * W) / 100;	 // Convert from mil to pixels
 						padOffsetY = (padOffsetY * W) / 100;	 // Convert from mil to pixels
 					}
@@ -1251,14 +1251,6 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 				GetXY(board, comp, X, Y);	// Get footprint centre
 
-				if ( comp.GetNumPins() == 1 )	// Account for pin offsets
-				{
-					int offsetXmil, offsetYmil;
-					comp.GetCompShapeOffsets(offsetXmil, offsetYmil);
-					X += (offsetXmil * W) / 100;	 // Convert from mil to pixels
-					Y += (offsetYmil * W) / 100;	 // Convert from mil to pixels
-				}
-
 				// Implement wire shift
 				if ( bWire && bPlaced )
 				{
@@ -1383,6 +1375,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		painter.setBrush(Qt::NoBrush);
 		const double dH(0.1*W), dW(0.35*W);	// Params for wire rounded rect
 
+		int padOffsetX, padOffsetY;	// For handling offset pads
+
 		std::set<int> visitedNodeIds;
 
 		for (int j = minRow; j <= maxRow; j++)
@@ -1402,6 +1396,12 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			std::list<QPointF> spanTreePoints;
 
 			GetXY(board, j, i, X, Y);
+
+			const Component& comp = compMgr.GetComponentById( pC->GetCompId() );
+			comp.GetCompPinOffsets(pC->GetPinIndex(), padOffsetX, padOffsetY);	// Get offsets in mil
+			X += (padOffsetX * W) / 100;	 // Convert from mil to pixels
+			Y += (padOffsetY * W) / 100;	 // Convert from mil to pixels
+
 			spanTreePoints.push_back( QPointF(X, Y) );
 
 			for (int jj = j; jj <= maxRow; jj++)
@@ -1411,6 +1411,12 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				if ( pD->GetNodeId() != nodeId || !board.GetAllowFlyWire(pD) ) continue;
 
 				GetXY(board, jj, ii, X, Y);
+
+				const Component& comp = compMgr.GetComponentById( pD->GetCompId() );
+				comp.GetCompPinOffsets(pD->GetPinIndex(), padOffsetX, padOffsetY);	// Get offsets in mil
+				X += (padOffsetX * W) / 100;	 // Convert from mil to pixels
+				Y += (padOffsetY * W) / 100;	 // Convert from mil to pixels
+
 				spanTreePoints.push_back( QPointF(X, Y) );
 			}
 
@@ -1469,14 +1475,6 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			penPlaced.setWidthF(dPenWidth);		// Use this for placed components
 
 			GetXY(board, comp, X, Y);	// Get footprint centre
-
-			if ( comp.GetNumPins() == 1 )	// Account for pin offsets
-			{
-				int offsetXmil, offsetYmil;
-				comp.GetCompShapeOffsets(offsetXmil, offsetYmil);
-				X += (offsetXmil * W) / 100;	 // Convert from mil to pixels
-				Y += (offsetYmil * W) / 100;	 // Convert from mil to pixels
-			}
 
 			int offsetRow(0), offsetCol(0);
 			comp.GetLabelOffsets(offsetRow, offsetCol);
@@ -1715,4 +1713,13 @@ void MainWindow::GetXY(const GuiControl& guiCtrl, const Component& comp, int& X,
 	GetLRTB(guiCtrl, comp, L, R, T, B);
 	X = ( L + R ) / 2;
 	Y = ( T + B ) / 2;
+
+	if ( comp.GetNumPins() == 1 )	// For single pin components, offset the footprint by the pin offsets
+	{
+		const int& W = guiCtrl.GetGRIDPIXELS();	// Square width in pixels
+		int padOffsetX, padOffsetY;
+		comp.GetCompShapeOffsets(padOffsetX, padOffsetY);	// Get offsets in mil
+		X += (padOffsetX * W) / 100;	// Convert from mil to pixels
+		Y += (padOffsetY * W) / 100;	// Convert from mil to pixels
+	}
 }

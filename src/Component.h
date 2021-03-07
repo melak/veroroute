@@ -458,9 +458,9 @@ public:
 	}
 	void				IncCompPinOffsets(const size_t& iPinIndex, const int& dX, const int& dY)
 	{
-			int Xmil, Ymil;
-			GetCompPinOffsets(iPinIndex, Xmil, Ymil);
-			SetCompPinOffsets(iPinIndex, Xmil + dX, Ymil + dY);
+		int Xmil, Ymil;
+		GetCompPinOffsets(iPinIndex, Xmil, Ymil);
+		SetCompPinOffsets(iPinIndex, Xmil + dX, Ymil + dY);
 	}
 	void				GetCompShapeOffsets(int& Xmil, int& Ymil) const
 	{

@@ -335,7 +335,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 	const int&			layer		= m_board.GetCurrentLayer();
 
 	if ( GetPaintPins() || GetPaintFlood() ) return;	// Ignore mouse move while painting pins or flooding
-	if ( GetShiftKeyDown() ) return;										// Ignore mouse move while trying to group components
+	if ( GetShiftKeyDown() ) return;					// Ignore mouse move while trying to group components
 
 	bool bSmartPan = GetCtrlKeyDown();
 
@@ -564,7 +564,7 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
 			comp.IncCompPinOffsets(pinIndex, dx, dy);
 
 			int X,Y;
-			comp.GetCompPinOffsets(pinIndex, X, Y);
+			comp.GetCompPinOffsets(pinIndex, X, Y);	// Get offsets in mil
 
 			char buffer[256] = {'\0'};
 			sprintf(buffer,"(X, Y) pad offset (mil) = (%d, %d)", X, Y);
