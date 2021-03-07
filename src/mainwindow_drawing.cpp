@@ -1397,10 +1397,13 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 			GetXY(board, j, i, X, Y);
 
-			const Component& comp = compMgr.GetComponentById( pC->GetCompId() );
-			comp.GetCompPinOffsets(pC->GetPinIndex(), padOffsetX, padOffsetY);	// Get offsets in mil
-			X += (padOffsetX * W) / 100;	 // Convert from mil to pixels
-			Y += (padOffsetY * W) / 100;	 // Convert from mil to pixels
+			if ( !bVero )
+			{
+				const Component& comp = compMgr.GetComponentById( pC->GetCompId() );
+				comp.GetCompPinOffsets(pC->GetPinIndex(), padOffsetX, padOffsetY);	// Get offsets in mil
+				X += (padOffsetX * W) / 100;	 // Convert from mil to pixels
+				Y += (padOffsetY * W) / 100;	 // Convert from mil to pixels
+			}
 
 			spanTreePoints.push_back( QPointF(X, Y) );
 
@@ -1412,10 +1415,13 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 				GetXY(board, jj, ii, X, Y);
 
-				const Component& comp = compMgr.GetComponentById( pD->GetCompId() );
-				comp.GetCompPinOffsets(pD->GetPinIndex(), padOffsetX, padOffsetY);	// Get offsets in mil
-				X += (padOffsetX * W) / 100;	 // Convert from mil to pixels
-				Y += (padOffsetY * W) / 100;	 // Convert from mil to pixels
+				if ( !bVero )
+				{
+					const Component& comp = compMgr.GetComponentById( pD->GetCompId() );
+					comp.GetCompPinOffsets(pD->GetPinIndex(), padOffsetX, padOffsetY);	// Get offsets in mil
+					X += (padOffsetX * W) / 100;	 // Convert from mil to pixels
+					Y += (padOffsetY * W) / 100;	 // Convert from mil to pixels
+				}
 
 				spanTreePoints.push_back( QPointF(X, Y) );
 			}
@@ -1714,7 +1720,7 @@ void MainWindow::GetXY(const GuiControl& guiCtrl, const Component& comp, int& X,
 	X = ( L + R ) / 2;
 	Y = ( T + B ) / 2;
 
-	if ( comp.GetNumPins() == 1 )	// For single pin components, offset the footprint by the pin offsets
+	if ( !guiCtrl.GetVeroTracks() && comp.GetNumPins() == 1 )	// For single pin components, offset the footprint by the pin offsets
 	{
 		const int& W = guiCtrl.GetGRIDPIXELS();	// Square width in pixels
 		int padOffsetX, padOffsetY;
