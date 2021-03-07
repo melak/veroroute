@@ -1251,6 +1251,14 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 				GetXY(board, comp, X, Y);	// Get footprint centre
 
+				if ( comp.GetNumPins() == 1 )	// Account for pin offsets
+				{
+					int offsetXmil, offsetYmil;
+					comp.GetCompShapeOffsets(offsetXmil, offsetYmil);
+					X += (offsetXmil * W) / 100;	 // Convert from mil to pixels
+					Y += (offsetYmil * W) / 100;	 // Convert from mil to pixels
+				}
+
 				// Implement wire shift
 				if ( bWire && bPlaced )
 				{
@@ -1461,6 +1469,14 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			penPlaced.setWidthF(dPenWidth);		// Use this for placed components
 
 			GetXY(board, comp, X, Y);	// Get footprint centre
+
+			if ( comp.GetNumPins() == 1 )	// Account for pin offsets
+			{
+				int offsetXmil, offsetYmil;
+				comp.GetCompShapeOffsets(offsetXmil, offsetYmil);
+				X += (offsetXmil * W) / 100;	 // Convert from mil to pixels
+				Y += (offsetYmil * W) / 100;	 // Convert from mil to pixels
+			}
 
 			int offsetRow(0), offsetCol(0);
 			comp.GetLabelOffsets(offsetRow, offsetCol);

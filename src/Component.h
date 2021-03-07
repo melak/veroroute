@@ -333,6 +333,17 @@ public:
 		static int defaultOffset(0);
 		return ( iPinIndex < m_pinOffsetCol.size() ) ? m_pinOffsetCol[iPinIndex] : defaultOffset;
 	}
+	const int&			GetShapeOffsetRow() const
+	{
+		static int defaultOffset(0);
+		return ( m_pinOffsetRow.size() == 1 ) ? m_pinOffsetRow[0] : defaultOffset;
+	}
+	const int&			GetShapeOffsetCol() const
+	{
+		static int defaultOffset(0);
+		return ( m_pinOffsetCol.size() == 1 ) ? m_pinOffsetCol[0] : defaultOffset;
+	}
+
 	const std::string&	GetPinLabel(const size_t& iPinIndex) const
 	{
 		static const std::string emptyStr("");
@@ -450,6 +461,16 @@ public:
 			int Xmil, Ymil;
 			GetCompPinOffsets(iPinIndex, Xmil, Ymil);
 			SetCompPinOffsets(iPinIndex, Xmil + dX, Ymil + dY);
+	}
+	void				GetCompShapeOffsets(int& Xmil, int& Ymil) const
+	{
+		switch ( GetDirection() )
+		{
+			case 'E':	Xmil = -GetShapeOffsetCol();	Ymil = -GetShapeOffsetRow(); return;
+			case 'N':	Xmil = -GetShapeOffsetRow();	Ymil =  GetShapeOffsetCol(); return;
+			case 'S':	Xmil =  GetShapeOffsetRow();	Ymil = -GetShapeOffsetCol(); return;
+			default:	Xmil =  GetShapeOffsetCol();	Ymil =  GetShapeOffsetRow(); return;
+		}
 	}
 	const CompElement*	GetCompElement(const int& compRow, const int& compCol) const
 	{
