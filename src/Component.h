@@ -454,7 +454,6 @@ public:
 	bool GetUniformPinOffsets() const	// Check if all pins have the same offsets
 	{
 		const size_t iSize = GetNumPins();
-		std::cout << "iSize " << iSize << std::endl;
 		if ( iSize < 2 ) return iSize == 1;
 		bool bAllSame(true);
 		for (size_t i = 1; i < iSize && bAllSame; i++)
