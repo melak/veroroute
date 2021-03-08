@@ -333,17 +333,6 @@ public:
 		static int defaultOffset(0);
 		return ( iPinIndex < m_pinOffsetCol.size() ) ? m_pinOffsetCol[iPinIndex] : defaultOffset;
 	}
-	const int&			GetShapeOffsetRow() const
-	{
-		static int defaultOffset(0);
-		return ( m_pinOffsetRow.size() == 1 ) ? m_pinOffsetRow[0] : defaultOffset;
-	}
-	const int&			GetShapeOffsetCol() const
-	{
-		static int defaultOffset(0);
-		return ( m_pinOffsetCol.size() == 1 ) ? m_pinOffsetCol[0] : defaultOffset;
-	}
-
 	const std::string&	GetPinLabel(const size_t& iPinIndex) const
 	{
 		static const std::string emptyStr("");
@@ -432,11 +421,11 @@ public:
 		return str;
 	}
 	// Helpers (account for component direction)
-	const int&			GetCompRows() const	{ return GetRows( GetDirection() ); }
-	const int&			GetCompCols() const	{ return GetCols( GetDirection() ); }
-	int					GetLastRow() const	{ return GetRow() + GetCompRows() - 1; }
-	int					GetLastCol() const	{ return GetCol() + GetCompCols() - 1; }
-	void				GetCompPinOffsets(const size_t& iPinIndex, int& Xmil, int& Ymil) const
+	const int&	GetCompRows() const	{ return GetRows( GetDirection() ); }
+	const int&	GetCompCols() const	{ return GetCols( GetDirection() ); }
+	int			GetLastRow() const	{ return GetRow() + GetCompRows() - 1; }
+	int			GetLastCol() const	{ return GetCol() + GetCompCols() - 1; }
+	void GetCompPinOffsets(const size_t& iPinIndex, int& Xmil, int& Ymil) const
 	{
 		switch ( GetDirection() )
 		{
@@ -446,7 +435,7 @@ public:
 			default:	Xmil =  GetPinOffsetCol(iPinIndex);	Ymil =  GetPinOffsetRow(iPinIndex); return;
 		}
 	}
-	void				SetCompPinOffsets(const size_t& iPinIndex, const int& Xmil, const int& Ymil)
+	void SetCompPinOffsets(const size_t& iPinIndex, const int& Xmil, const int& Ymil)
 	{
 		switch ( GetDirection() )
 		{
@@ -456,21 +445,35 @@ public:
 			default:	SetPinOffsetCol(iPinIndex,  Xmil);	SetPinOffsetRow(iPinIndex,  Ymil); return;
 		}
 	}
-	void				IncCompPinOffsets(const size_t& iPinIndex, const int& dX, const int& dY)
+	void IncCompPinOffsets(const size_t& iPinIndex, const int& dX, const int& dY)
 	{
 		int Xmil, Ymil;
 		GetCompPinOffsets(iPinIndex, Xmil, Ymil);
 		SetCompPinOffsets(iPinIndex, Xmil + dX, Ymil + dY);
 	}
-	void				GetCompShapeOffsets(int& Xmil, int& Ymil) const
+	bool GetUniformPinOffsets() const	// Check if all pins have the same offsets
 	{
-		switch ( GetDirection() )
+		const size_t iSize = GetNumPins();
+		std::cout << "iSize " << iSize << std::endl;
+		if ( iSize < 2 ) return iSize == 1;
+		bool bAllSame(true);
+		for (size_t i = 1; i < iSize && bAllSame; i++)
+			bAllSame = ( m_pinOffsetRow[i] == m_pinOffsetRow[0] ) && ( m_pinOffsetCol[i] == m_pinOffsetCol[0] );
+		return bAllSame;
+	}
+	void GetCompShapeOffsets(int& Xmil, int& Ymil) const
+	{
+		if ( GetUniformPinOffsets() )
 		{
-			case 'E':	Xmil = -GetShapeOffsetCol();	Ymil = -GetShapeOffsetRow(); return;
-			case 'N':	Xmil = -GetShapeOffsetRow();	Ymil =  GetShapeOffsetCol(); return;
-			case 'S':	Xmil =  GetShapeOffsetRow();	Ymil = -GetShapeOffsetCol(); return;
-			default:	Xmil =  GetShapeOffsetCol();	Ymil =  GetShapeOffsetRow(); return;
+			switch ( GetDirection() )
+			{
+				case 'E':	Xmil = -m_pinOffsetCol[0];	Ymil = -m_pinOffsetRow[0]; return;
+				case 'N':	Xmil = -m_pinOffsetRow[0];	Ymil =  m_pinOffsetCol[0]; return;
+				case 'S':	Xmil =  m_pinOffsetRow[0];	Ymil = -m_pinOffsetCol[0]; return;
+				default:	Xmil =  m_pinOffsetCol[0];	Ymil =  m_pinOffsetRow[0]; return;
+			}
 		}
+		Xmil = Ymil = 0;	// Default to 0 offsets
 	}
 	const CompElement*	GetCompElement(const int& compRow, const int& compCol) const
 	{

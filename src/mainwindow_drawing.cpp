@@ -1720,7 +1720,7 @@ void MainWindow::GetXY(const GuiControl& guiCtrl, const Component& comp, int& X,
 	X = ( L + R ) / 2;
 	Y = ( T + B ) / 2;
 
-	if ( !guiCtrl.GetVeroTracks() && comp.GetNumPins() == 1 )	// For single pin components, offset the footprint by the pin offsets
+	if ( !guiCtrl.GetVeroTracks() )	// Offset the footprint if all pin offsets are equal
 	{
 		const int& W = guiCtrl.GetGRIDPIXELS();	// Square width in pixels
 		int padOffsetX, padOffsetY;
