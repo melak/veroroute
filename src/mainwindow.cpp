@@ -344,7 +344,7 @@ void MainWindow::CheckFolders()
 void MainWindow::ResetView(bool bTutorial)
 {
 	m_mousePos = QPoint(0,0);
-	m_bMouseClick	= m_bLeftClick	= m_bRightClick = m_bCtrlKeyDown  = m_bShiftKeyDown	=false;
+	m_bMouseClick	= m_bLeftClick	= m_bRightClick = m_bCtrlKeyDown  = m_bShiftKeyDown	= false;
 	m_bPaintPins	= m_bPaintBoard	= m_bPaintFlood = m_bPaintLyrPref = m_bDefiningRect = m_bResizingText = m_bWritePDF = m_bWriteGerber = m_bTwoLayerGerber = false;
 	m_XGRIDOFFSET	= m_YGRIDOFFSET	= m_XCORRECTION = m_YCORRECTION = 0;
 
@@ -447,7 +447,7 @@ void MainWindow::ShowCurrentRectSize()
 {
 	auto& rect = m_board.GetRectMgr().GetCurrent();
 	char buffer[256] = {'\0'};
-	sprintf(buffer,"Current rectangle (%d x %d)    (%gmm x %gmm)", rect.GetCols(), rect.GetRows(), rect.GetCols()*2.54, rect.GetRows()*2.54);
+	sprintf(buffer,"Current rectangle = (%d mil x %d mil),    (%.2f mm x %.2f mm)", rect.GetCols()*100, rect.GetRows()*100, rect.GetCols()*2.54, rect.GetRows()*2.54);
 	ui->statusBar->showMessage(QString(buffer), 1000);
 }
 

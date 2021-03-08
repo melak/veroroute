@@ -556,10 +556,10 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
 			int dx(0), dy(0);
 			switch( event->key() )
 			{
-				case Qt::Key_Left:	 dx-=5; break;
-				case Qt::Key_Right:	 dx+=5; break;
-				case Qt::Key_Up:	 dy-=5; break;
-				case Qt::Key_Down:	 dy+=5; break;
+				case Qt::Key_Left:	 dx--; break;
+				case Qt::Key_Right:	 dx++; break;
+				case Qt::Key_Up:	 dy--; break;
+				case Qt::Key_Down:	 dy++; break;
 			}
 			comp.IncCompPinOffsets(pinIndex, dx, dy);
 
@@ -567,7 +567,7 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
 			comp.GetCompPinOffsets(pinIndex, X, Y);	// Get offsets in mil
 
 			char buffer[256] = {'\0'};
-			sprintf(buffer,"(X, Y) pad offset (mil) = (%d, %d)", X, Y);
+			sprintf(buffer,"(X, Y) pad offset = (%d, %d) mil,    (%.4f, %.4f) mm", X, Y, X * 0.0254, Y * 0.0254);
 			ui->statusBar->showMessage(QString(buffer), 1000);
 
 			return RepaintSkipRouting();

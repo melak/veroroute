@@ -486,31 +486,27 @@ private:
 	QBrush	m_darkBrush;
 	QBrush	m_varBrush;
 private:
-	Ui::MainWindow*			ui;
-	QAction*				m_recentFileAction[MAX_RECENT_FILES];
-	QAction*				m_separator;	// At the end of the recent files list
-
 	QNetworkAccessManager	m_networkMgr;	// For checking version against Sourceforge
-
-	MyScrollArea*			m_scrollArea;	// The mainwindow contains a scrollable area ...
-	QLabel*					m_label;		// ... for a QLabel widget that ...
-	QPixmap					m_mainPixmap;	// ... contains an image of the whole board
-
-	QLabel*					m_labelStatus;	// For permanent status bar text
-
-	QDockWidget*			m_dockControlDlg;
-	QDockWidget*			m_dockCompDlg;
-	ControlDialog*			m_controlDlg;
-	RenderingDialog*		m_renderingDlg;
-	WireDialog*				m_wireDlg;
-	HotkeysDialog*			m_hotkeysDlg;
-	InfoDialog*				m_infoDlg;
-	CompDialog*				m_compDlg;
-	TextDialog*				m_textDlg;
-	BomDialog*				m_bomDlg;
-	TemplatesDialog*		m_templatesDlg;
-	PinDialog*				m_pinDlg;
-	FindDialog*				m_findDlg;
+	QAction*				m_recentFileAction[MAX_RECENT_FILES];
+	QAction*				m_separator			= nullptr;	// At the end of the recent files list
+	Ui::MainWindow*			ui					= nullptr;
+	MyScrollArea*			m_scrollArea		= nullptr;	// The mainwindow contains a scrollable area ...
+	QLabel*					m_label				= nullptr;	// ... for a QLabel widget that ...
+	QPixmap					m_mainPixmap;					// ... contains a pixmap image of the whole board
+	QLabel*					m_labelStatus		= nullptr;	// For permanent status bar text
+	QDockWidget*			m_dockControlDlg	= nullptr;
+	QDockWidget*			m_dockCompDlg		= nullptr;
+	ControlDialog*			m_controlDlg		= nullptr;
+	RenderingDialog*		m_renderingDlg		= nullptr;
+	WireDialog*				m_wireDlg			= nullptr;
+	HotkeysDialog*			m_hotkeysDlg		= nullptr;
+	InfoDialog*				m_infoDlg			= nullptr;
+	CompDialog*				m_compDlg			= nullptr;
+	TextDialog*				m_textDlg			= nullptr;
+	BomDialog*				m_bomDlg			= nullptr;
+	TemplatesDialog*		m_templatesDlg		= nullptr;
+	PinDialog*				m_pinDlg			= nullptr;
+	FindDialog*				m_findDlg			= nullptr;
 
 	Board					m_board;			// *** The main object ***
 	HistoryManager			m_historyMgr;		// Class to manage undo/redo
@@ -523,39 +519,39 @@ private:
 	std::string				m_tutorialsPathStr;	// The path to the "tutorials" folder and "veroroute.png"
 
 	// Cached pixmaps containing pre-colored pads and blobs.
-	QPixmap**	m_ppPixmapPad	= nullptr;	// A pad in the host element
-	QPixmap**	m_ppPixmapVia	= nullptr;	// A via in the host element
-	QPixmap**	m_ppPixmapDiag	= nullptr;	// For filling small diagonal gaps not covered by blob pixmaps
-	QPixmap**	m_ppPixmapBlob	= nullptr;	// A composite shape with all the host element connections
-	QPixmap*	m_pPixmapDiagLT	= nullptr;	// Used instead of m_ppPixmapDiag for custom colors
-	QPixmap*	m_pPixmapDiagRT	= nullptr;	// Used instead of m_ppPixmapDiag for custom colors
-	int			m_radPixmapPad	= 0;		// Half pixmap width ...
-	int			m_radPixmapVia	= 0;		// ...
-	int			m_radPixmapDiag	= 0;		// ...
-	int			m_radPixmapBlob	= 0;		// ...
+	QPixmap**	m_ppPixmapPad		= nullptr;	// A pad in the host element
+	QPixmap**	m_ppPixmapVia		= nullptr;	// A via in the host element
+	QPixmap**	m_ppPixmapDiag		= nullptr;	// For filling small diagonal gaps not covered by blob pixmaps
+	QPixmap**	m_ppPixmapBlob		= nullptr;	// A composite shape with all the host element connections
+	QPixmap*	m_pPixmapDiagLT		= nullptr;	// Used instead of m_ppPixmapDiag for custom colors
+	QPixmap*	m_pPixmapDiagRT		= nullptr;	// Used instead of m_ppPixmapDiag for custom colors
+	int			m_radPixmapPad		= 0;		// Half pixmap width ...
+	int			m_radPixmapVia		= 0;		// ...
+	int			m_radPixmapDiag		= 0;		// ...
+	int			m_radPixmapBlob		= 0;		// ...
 	QPoint		m_mousePos;
-	bool		m_bRepaint		= false;	// Flag to make paintEvent() do something useful
-	bool		m_bMouseClick;				// Flag of click beginning
-	bool		m_bLeftClick;
-	bool		m_bRightClick;
-	bool		m_bCtrlKeyDown;
-	bool		m_bShiftKeyDown;
-	bool		m_bPaintPins;			// true ==> allow paint the component pins (and the board)
-	bool		m_bPaintBoard;			// true ==> allow paint the board only (not the component pins)
-	bool		m_bPaintFlood;			// true ==> allow flood-fill all connected tracks & pins
-	bool		m_bPaintLyrPref;		// true ==> allow paint layer preference to pins
-	bool		m_bDefiningRect;		// true ==> user is defining a rectangle
-	bool		m_bResizingText;		// true ==> user is resizing a text rectangle
-	bool		m_bWritePDF;			// true ==> draw to PDF file instead of screen
-	bool		m_bWriteGerber;			// true ==> draw to Gerber file instead of screen
-	bool		m_bTwoLayerGerber;		// true ==> 2-layer Gerber output instead of 1-layer
-	bool		m_bHistoryDir;			// true ==> have "history" folder
-	bool		m_bTemplatesDir;		// true ==> have "templates" folder
-	int			m_XGRIDOFFSET;			// So we can centre when writing to PDF
-	int			m_YGRIDOFFSET;			// So we can centre when writing to PDF
-	int			m_XCORRECTION;			// So we can fully render pads larger than 100 mil diameter
-	int			m_YCORRECTION;			// So we can fully render pads larger than 100 mil diameter
-	int			m_gridRow;				// Board row corresponding to mouse position
-	int			m_gridCol;				// Board col correspondong to mouse position
-	int			m_iTutorialNumber = -1;	// Tutorial file number 0,1,2,... (or -1 if not in tutorial mode)
+	bool		m_bRepaint			= false;	// Flag to make paintEvent() do something useful
+	bool		m_bMouseClick		= false;	// Flag of click beginning
+	bool		m_bLeftClick		= false;
+	bool		m_bRightClick		= false;
+	bool		m_bCtrlKeyDown		= false;
+	bool		m_bShiftKeyDown		= false;
+	bool		m_bPaintPins		= false;	// true ==> allow paint the component pins (and the board)
+	bool		m_bPaintBoard		= false;	// true ==> allow paint the board only (not the component pins)
+	bool		m_bPaintFlood		= false;	// true ==> allow flood-fill all connected tracks & pins
+	bool		m_bPaintLyrPref		= false;	// true ==> allow paint layer preference to pins
+	bool		m_bDefiningRect		= false;	// true ==> user is defining a rectangle
+	bool		m_bResizingText		= false;	// true ==> user is resizing a text rectangle
+	bool		m_bWritePDF			= false;	// true ==> draw to PDF file instead of screen
+	bool		m_bWriteGerber		= false;	// true ==> draw to Gerber file instead of screen
+	bool		m_bTwoLayerGerber	= false;	// true ==> 2-layer Gerber output instead of 1-layer
+	bool		m_bHistoryDir		= false;	// true ==> have "history" folder
+	bool		m_bTemplatesDir		= false;	// true ==> have "templates" folder
+	int			m_XGRIDOFFSET		= 0;		// So we can centre when writing to PDF
+	int			m_YGRIDOFFSET		= 0;		// So we can centre when writing to PDF
+	int			m_XCORRECTION		= 0;		// So we can fully render pads larger than 100 mil diameter
+	int			m_YCORRECTION		= 0;		// So we can fully render pads larger than 100 mil diameter
+	int			m_gridRow			= 0;		// Board row corresponding to mouse position
+	int			m_gridCol			= 0;		// Board col correspondong to mouse position
+	int			m_iTutorialNumber	= -1;		// Tutorial file number 0,1,2,... (or -1 if not in tutorial mode)
 };
