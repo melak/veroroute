@@ -1653,6 +1653,27 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		painter.restore();
 	}
 
+	
+	if ( !m_bWriteGerber && m_bRuler )
+	{
+		QPointF A,B;
+		GetRulerExact(board, m_rulerA, A);
+		GetRulerExact(board, m_rulerB, B);
+
+		m_dRulerMil = PolygonHelper::Length(B-A) * 100;	// mil
+
+		int XA, YA, XB, YB;
+		GetXY(board, A.ry(), A.rx(), XA, YA);
+		GetXY(board, B.ry(), B.rx(), XB, YB);
+
+		painter.save();
+		m_rulerPen.setWidth(C);
+		painter.setPen(m_rulerPen);
+		painter.setBrush(Qt::NoBrush);
+		painter.drawLine(XA,YA,XB,YB);
+		painter.restore();
+	}
+
 	if ( m_bWriteGerber )
 		m_gWriter.GetStream(GFILE::GTO).DrawBuffers();	// Top silk layer
 
@@ -1727,5 +1748,21 @@ void MainWindow::GetXY(const GuiControl& guiCtrl, const Component& comp, int& X,
 		comp.GetCompShapeOffsets(padOffsetX, padOffsetY);	// Get offsets in mil
 		X += (padOffsetX * W) / 100;	// Convert from mil to pixels
 		Y += (padOffsetY * W) / 100;	// Convert from mil to pixels
+	}
+}
+
+void MainWindow::GetRulerExact(Board& board, const QPoint& p, QPointF& pOut) const
+{
+	pOut =  p;
+	if ( !board.GetVeroTracks() )
+	{
+		const Element* pC = board.Get(0, p.y(), p.x());
+		if ( pC->GetHasPin() && !pC->GetHasWire() )
+		{
+			int padOffsetX(0), padOffsetY(0);
+			const Component& comp = board.GetCompMgr().GetComponentById( pC->GetCompId() );
+			comp.GetCompPinOffsets(pC->GetPinIndex(), padOffsetX, padOffsetY);	// Get offsets in mil
+			pOut += QPointF(0.01 * padOffsetX, 0.01 * padOffsetY);
+		}
 	}
 }

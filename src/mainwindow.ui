@@ -204,6 +204,8 @@
     <addaction name="separator"/>
     <addaction name="actionToggleFlyWires"/>
     <addaction name="separator"/>
+    <addaction name="actionToggleRuler"/>
+    <addaction name="separator"/>
     <addaction name="actionToggleFlipH"/>
     <addaction name="actionToggleFlipV"/>
     <addaction name="separator"/>
@@ -1288,6 +1290,14 @@
    </property>
    <property name="autoRepeat">
     <bool>false</bool>
+   </property>
+  </action>
+  <action name="actionToggleRuler">
+   <property name="text">
+    <string>Distance Tool</string>
+   </property>
+   <property name="toolTip">
+    <string>Distance Tool (On/Off)</string>
    </property>
   </action>
  </widget>

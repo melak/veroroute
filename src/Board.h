@@ -567,7 +567,7 @@ public:
 	// Helper for flying wires
 	bool GetAllowFlyWire(Element* p) const
 	{
-		return p->GetNodeId() != BAD_NODEID && !p->GetHasWire() && p->IsLayer0() && m_compMgr.GetAllowFlyWire(p->GetCompId());
+		return p->GetNodeId() != BAD_NODEID && p->GetHasPin() && !p->GetHasWire() && p->IsLayer0() && m_compMgr.GetAllowFlyWire(p->GetCompId());
 	}
 
 	// Helpers for locations of close tracks

@@ -86,6 +86,7 @@ public:
 	void GetLRTB(const GuiControl& guiCtrl, const Component& comp, int& L, int& R, int& T, int& B) const;
 	void GetLRTB(const GuiControl& guiCtrl, const Rect& rect, int& L, int& R, int& T, int& B) const;
 	void GetXY(const GuiControl& guiCtrl, const Component& comp, int& X, int& Y) const;
+	void GetRulerExact(Board& board, const QPoint& p, QPointF& pOut) const;
 
 	const bool&	GetCtrlKeyDown() const	{ return m_bCtrlKeyDown;	}
 	const bool&	GetShiftKeyDown() const	{ return m_bShiftKeyDown;	}
@@ -147,6 +148,7 @@ public slots:
 	void ToggleFlipV();
 	void TogglePinLabels();
 	void ToggleFlyWires();
+	void ToggleRuler();
 	// Toolbar items
 	void VeroV();
 	void VeroH();
@@ -458,6 +460,8 @@ private:
 
 	// Helpers
 	void SetQuality(QPainter& p);
+	void ResetRuler();
+	bool CanModifyRuler() const;
 	bool CanZoomIn() const;
 	bool CanZoomOut() const;
 	bool GetIsModified() const;
@@ -472,6 +476,7 @@ private:
 	QColor	GetBackgroundColor() const;	// For screen only.  PDF is always white.
 
 	// Pens
+	QPen	m_rulerPen;
 	QPen	m_backgroundPen;
 	QPen	m_darkGreyPen;
 	QPen	m_blackPen;
@@ -547,11 +552,16 @@ private:
 	bool		m_bTwoLayerGerber	= false;	// true ==> 2-layer Gerber output instead of 1-layer
 	bool		m_bHistoryDir		= false;	// true ==> have "history" folder
 	bool		m_bTemplatesDir		= false;	// true ==> have "templates" folder
+	bool		m_bRuler			= false;
+	bool		m_bModifyRulerA		= false;
 	int			m_XGRIDOFFSET		= 0;		// So we can centre when writing to PDF
 	int			m_YGRIDOFFSET		= 0;		// So we can centre when writing to PDF
 	int			m_XCORRECTION		= 0;		// So we can fully render pads larger than 100 mil diameter
 	int			m_YCORRECTION		= 0;		// So we can fully render pads larger than 100 mil diameter
 	int			m_gridRow			= 0;		// Board row corresponding to mouse position
 	int			m_gridCol			= 0;		// Board col correspondong to mouse position
+	QPoint		m_rulerA;
+	QPoint		m_rulerB;
+	qreal		m_dRulerMil			= 0.0;
 	int			m_iTutorialNumber	= -1;		// Tutorial file number 0,1,2,... (or -1 if not in tutorial mode)
 };

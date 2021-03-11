@@ -109,6 +109,7 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	m_labelStatus->setFrameStyle(QFrame::NoFrame);
 	ui->statusBar->addPermanentWidget(m_labelStatus, 0);
 
+	m_rulerPen			= QPen(QColor(255,255,0,192), 0,	Qt::SolidLine, Qt::FlatCap);	// using alpha
 	m_backgroundPen		= QPen(Qt::white, 0,				Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 	m_darkGreyPen		= QPen(QColor(96,96,96,255), 0,		Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 	m_blackPen			= QPen(Qt::black, 0,				Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
@@ -120,7 +121,7 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	m_dotPen			= QPen(QColor(96,96,96,255), 0,		Qt::DotLine,   Qt::RoundCap, Qt::RoundJoin);
 	m_dashPen			= QPen(QColor(96,96,96,255), 0,		Qt::DashLine,  Qt::RoundCap, Qt::RoundJoin);
 	m_backgroundBrush	= QBrush(Qt::white,					Qt::SolidPattern);
-	m_darkBrush			= QBrush(QColor(0, 0, 0, 150),		Qt::SolidPattern);	// using alpha
+	m_darkBrush			= QBrush(QColor(0,0,0,150),			Qt::SolidPattern);	// using alpha
 	m_varBrush			= QBrush(QColor(255,255,255,0),		Qt::SolidPattern);
 
 	QObject::connect(ui->actionNew,						SIGNAL(triggered()), this, SLOT(New()));
@@ -147,6 +148,7 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	QObject::connect(ui->actionToggleFlipV,				SIGNAL(triggered()), this, SLOT(ToggleFlipV()));
 	QObject::connect(ui->actionTogglePinLabels,			SIGNAL(triggered()), this, SLOT(TogglePinLabels()));
 	QObject::connect(ui->actionToggleFlyWires,			SIGNAL(triggered()), this, SLOT(ToggleFlyWires()));
+	QObject::connect(ui->actionToggleRuler,				SIGNAL(triggered()), this, SLOT(ToggleRuler()));
 	QObject::connect(ui->actionVeroV,					SIGNAL(triggered()), this, SLOT(VeroV()));
 	QObject::connect(ui->actionVeroH,					SIGNAL(triggered()), this, SLOT(VeroH()));
 	QObject::connect(ui->actionFat,						SIGNAL(triggered()), this, SLOT(Fat()));
@@ -350,6 +352,9 @@ void MainWindow::ResetView(bool bTutorial)
 
 	// Try to set m_gridRow, m_gridCol to match the current NodeId in the board
 	m_gridRow = m_gridCol = 0;
+
+	ResetRuler();	// Reset the ruler
+
 	bool bOK(false);	// true ==> found
 	const int k = m_board.GetCurrentLayer();
 	for (int j = 0, jMax = m_board.GetRows(); j < jMax && !bOK; j++)
@@ -426,6 +431,13 @@ void MainWindow::RepaintWithListNodes(bool bNow)
 	ListNodes();	// Slow due lots of MH calcs
 	m_bRepaint = true;
 	if ( bNow ) repaint(); else update();
+	if ( m_bRuler && !m_bMouseClick && !GetCtrlKeyDown() )	// Ctrl key ==> status bar might be displaying pad offsets
+	{
+		const qreal		d_mm	= m_dRulerMil * 0.0254;
+		char buffer[256] = {'\0'};
+		sprintf(buffer,"Distance = %.2f mil,    %.4f mm", m_dRulerMil, d_mm);
+		ui->statusBar->showMessage(QString(buffer), 1000);
+	}
 }
 
 void MainWindow::RepaintWithRouting(bool bNow)
@@ -434,6 +446,13 @@ void MainWindow::RepaintWithRouting(bool bNow)
 	HandleRouting();
 	m_bRepaint = true;
 	if ( bNow ) repaint(); else update();
+	if ( m_bRuler && !m_bMouseClick && !GetCtrlKeyDown() )	// Ctrl key ==> status bar might be displaying pad offsets
+	{
+		const qreal		d_mm	= m_dRulerMil * 0.0254;
+		char buffer[256] = {'\0'};
+		sprintf(buffer,"Distance = %.2f mil,    %.4f mm", m_dRulerMil, d_mm);
+		ui->statusBar->showMessage(QString(buffer), 1000);
+	}
 }
 
 void MainWindow::RepaintSkipRouting(bool bNow)
@@ -441,6 +460,13 @@ void MainWindow::RepaintSkipRouting(bool bNow)
 	UpdateWindowTitle();
 	m_bRepaint = true;
 	if ( bNow ) repaint(); else update();
+	if ( m_bRuler && !m_bMouseClick && !GetCtrlKeyDown() )	// Ctrl key ==> status bar might be displaying pad offsets
+	{
+		const qreal		d_mm	= m_dRulerMil * 0.0254;
+		char buffer[256] = {'\0'};
+		sprintf(buffer,"Distance = %.2f mil,    %.4f mm", m_dRulerMil, d_mm);
+		ui->statusBar->showMessage(QString(buffer), 1000);
+	}
 }
 
 void MainWindow::ShowCurrentRectSize()
@@ -1126,6 +1152,15 @@ void MainWindow::ToggleFlipH()			{ SetFlipH( !m_board.GetFlipH() ); }
 void MainWindow::ToggleFlipV()			{ SetFlipV( !m_board.GetFlipV() ); }
 void MainWindow::TogglePinLabels()		{ SetShowPinLabels( !m_board.GetShowPinLabels() ); }
 void MainWindow::ToggleFlyWires()		{ SetShowFlyWires( !m_board.GetShowFlyWires() ); }
+void MainWindow::ToggleRuler()			{ m_bRuler = !m_bRuler; if ( !m_bRuler ) ResetRuler();
+										  UpdateControls(); RepaintSkipRouting();
+										}
+void MainWindow::ResetRuler()
+{
+	m_bRuler = m_bModifyRulerA = false;
+	int X(m_board.GetCols()/3), Y(m_board.GetRows() / 2);
+	m_rulerA = QPoint(X,Y); m_rulerB = QPoint(2*X,Y);
+}
 
 // Toolbar items
 void MainWindow::VeroV()				{ SetTracksVeroV(true); }
@@ -1767,6 +1802,7 @@ void MainWindow::UpdateControls()
 	ui->actionTogglePinLabels->setEnabled( bPinLabels );
 	const bool bFlyWires  = m_board.GetCompMode() != COMPSMODE::OFF && ( bNoTracks || bColor );
 	ui->actionToggleFlyWires->setEnabled( bFlyWires );
+	ui->actionToggleRuler->setEnabled( true );
 
 	ui->actionToggleGrid->setChecked( m_board.GetShowGrid() && !bPCB );
 	ui->actionToggleText->setChecked( m_board.GetShowText() && !bCompEdit && !bPCB );
@@ -1775,6 +1811,8 @@ void MainWindow::UpdateControls()
 	ui->actionTogglePinLabels->setChecked( m_board.GetShowPinLabels() && bPinLabels );
 	ui->actionToggleFlyWires->setChecked( m_board.GetShowFlyWires() && bFlyWires );
 	ui->actionToggleFlyWires->setText( m_board.GetShowFlyWires() ? QString("Hide Flying Wires") : QString("Show Flying Wires"));
+	ui->actionToggleRuler->setChecked( m_bRuler );
+	ui->actionToggleRuler->setText( m_bRuler ? QString("Hide Distance Tool") : QString("Show Distance Tool"));
 
 	ui->actionPinDlg->setEnabled( !bCompEdit );
 	ui->actionControlDlg->setEnabled( !bCompEdit );

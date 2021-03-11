@@ -19,6 +19,7 @@
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "PolygonHelper.h"
 
 static const bool ALLOW_SMART_PAN_WITHOUT_CTRLKEY = true;
 
@@ -86,6 +87,12 @@ void MainWindow::wheelEvent(QWheelEvent* event)
 	event->accept();	// If we don't do this, we can get the same event passed multiple times if we're on MS Windows.
 }
 
+bool MainWindow::CanModifyRuler() const
+{
+	return m_bRuler && !( m_board.GetCompEdit() || GetCtrlKeyDown() || GetShiftKeyDown() || GetResizingText() ||
+						  GetDefiningRect() || GetPaintPins() || GetPaintBoard() || GetPaintFlood() || GetPaintLyrPref() );
+}
+
 void MainWindow::mousePressEvent(QMouseEvent* event)
 {
 	m_mousePos = event->pos();
@@ -107,6 +114,19 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 		GetRowCol(event->pos(), compDefiner.GetScreenRows(), compDefiner.GetScreenCols(), m_gridRow, m_gridCol, dRow, dCol);
 	else
 		GetRowCol(event->pos(), m_gridRow, m_gridCol, dRow, dCol);
+
+	if ( m_bLeftClick && CanModifyRuler() )
+	{
+		const QPoint current(m_gridCol, m_gridRow);
+		if      ( current == m_rulerA ) m_bModifyRulerA = false;	// Do nothing, but prefer end B next time
+		else if ( current == m_rulerB ) m_bModifyRulerA = true;		// Do nothing, but prefer end A next time
+		else
+		{
+			if ( m_bModifyRulerA )	m_rulerA = current;
+			else					m_rulerB = current;
+			m_bModifyRulerA = !m_bModifyRulerA;
+		}
+	}
 
 	if ( m_board.GetCompEdit() )
 	{
@@ -367,6 +387,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 	int deltaRow = row - m_gridRow;
 	int deltaCol = col - m_gridCol;
 
+	int oldRow(m_gridRow), oldCol(m_gridCol);
 	m_gridRow = row;
 	m_gridCol = col;
 
@@ -490,6 +511,19 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 	}
 	else
 		return;
+
+	if ( m_bLeftClick && CanModifyRuler() )
+	{
+		const QPoint old(oldCol, oldRow);
+		const QPoint current(m_gridCol, m_gridRow);
+		bool bModifyA = ( old == m_rulerA );
+		bool bModifyB = !bModifyA && ( old == m_rulerB );
+		if ( !(bModifyA || bModifyB) )
+			bModifyA = PolygonHelper::Length(current - m_rulerA) < PolygonHelper::Length(current - m_rulerB);	// Choose nearest
+		if ( bModifyA )	m_rulerA = current;
+		else			m_rulerB = current;
+		m_bModifyRulerA = !bModifyA;
+	}
 
 	if ( abs(deltaRow) <= 1 && abs(deltaCol) <= 1 )	// If not moved mouse too fast ...
 	{
