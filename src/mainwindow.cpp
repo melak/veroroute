@@ -31,6 +31,7 @@
 #include "templatesdialog.h"
 #include "pindialog.h"
 #include "finddialog.h"
+#include "PolygonHelper.h"
 
 MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorialsPathStr, QWidget* parent)
 : QMainWindow(parent)
@@ -431,13 +432,7 @@ void MainWindow::RepaintWithListNodes(bool bNow)
 	ListNodes();	// Slow due lots of MH calcs
 	m_bRepaint = true;
 	if ( bNow ) repaint(); else update();
-	if ( m_bRuler && !m_bMouseClick && !GetCtrlKeyDown() )	// Ctrl key ==> status bar might be displaying pad offsets
-	{
-		const qreal		d_mm	= m_dRulerMil * 0.0254;
-		char buffer[256] = {'\0'};
-		sprintf(buffer,"Distance = %.2f mil,    %.4f mm", m_dRulerMil, d_mm);
-		ui->statusBar->showMessage(QString(buffer), 1000);
-	}
+	UpdateRulerInfo();
 }
 
 void MainWindow::RepaintWithRouting(bool bNow)
@@ -446,13 +441,7 @@ void MainWindow::RepaintWithRouting(bool bNow)
 	HandleRouting();
 	m_bRepaint = true;
 	if ( bNow ) repaint(); else update();
-	if ( m_bRuler && !m_bMouseClick && !GetCtrlKeyDown() )	// Ctrl key ==> status bar might be displaying pad offsets
-	{
-		const qreal		d_mm	= m_dRulerMil * 0.0254;
-		char buffer[256] = {'\0'};
-		sprintf(buffer,"Distance = %.2f mil,    %.4f mm", m_dRulerMil, d_mm);
-		ui->statusBar->showMessage(QString(buffer), 1000);
-	}
+	UpdateRulerInfo();
 }
 
 void MainWindow::RepaintSkipRouting(bool bNow)
@@ -460,13 +449,7 @@ void MainWindow::RepaintSkipRouting(bool bNow)
 	UpdateWindowTitle();
 	m_bRepaint = true;
 	if ( bNow ) repaint(); else update();
-	if ( m_bRuler && !m_bMouseClick && !GetCtrlKeyDown() )	// Ctrl key ==> status bar might be displaying pad offsets
-	{
-		const qreal		d_mm	= m_dRulerMil * 0.0254;
-		char buffer[256] = {'\0'};
-		sprintf(buffer,"Distance = %.2f mil,    %.4f mm", m_dRulerMil, d_mm);
-		ui->statusBar->showMessage(QString(buffer), 1000);
-	}
+	UpdateRulerInfo();
 }
 
 void MainWindow::ShowCurrentRectSize()
@@ -1736,6 +1719,23 @@ void MainWindow::UpdateWindowTitle()
 	}
 	setWindowTitle(title);
 }
+
+void MainWindow::UpdateRulerInfo()
+{
+	if ( m_bRuler && !m_bWriteGerber && !m_bMouseClick && !GetCtrlKeyDown() )	// Ctrl key ==> status bar might be displaying pad offsets
+	{
+		QPointF A,B;
+		GetRulerExact(m_board, m_rulerA, A);
+		GetRulerExact(m_board, m_rulerB, B);
+
+		const qreal	d_mil	= PolygonHelper::Length(B-A) * 100;	// mil
+		const qreal	d_mm	= d_mil * 0.0254;
+		char buffer[256] = {'\0'};
+		sprintf(buffer,"Distance = %.2f mil,    %.4f mm", d_mil, d_mm);
+		ui->statusBar->showMessage(QString(buffer), 1000);
+	}
+}
+
 void MainWindow::UpdateControls()
 {
 	GroupManager&	groupMgr		=  m_board.GetGroupMgr();

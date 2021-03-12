@@ -451,6 +451,7 @@ private:
 	// GUI update
 	void UpdateRecentFiles(const QString* pFileName, bool bAdd);
 	void UpdateWindowTitle();
+	void UpdateRulerInfo();
 	void UpdateControls();
 	void UpdateCompDialog();
 	void EnableCompDialogControls();
@@ -562,6 +563,5 @@ private:
 	int			m_gridCol			= 0;		// Board col correspondong to mouse position
 	QPoint		m_rulerA;
 	QPoint		m_rulerB;
-	qreal		m_dRulerMil			= 0.0;
 	int			m_iTutorialNumber	= -1;		// Tutorial file number 0,1,2,... (or -1 if not in tutorial mode)
 };

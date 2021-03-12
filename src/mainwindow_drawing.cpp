@@ -1660,8 +1660,6 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		GetRulerExact(board, m_rulerA, A);
 		GetRulerExact(board, m_rulerB, B);
 
-		m_dRulerMil = PolygonHelper::Length(B-A) * 100;	// mil
-
 		int XA, YA, XB, YB;
 		GetXY(board, A.ry(), A.rx(), XA, YA);
 		GetXY(board, B.ry(), B.rx(), XB, YB);

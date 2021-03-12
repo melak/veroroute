@@ -153,11 +153,7 @@ public:
 	{
 		badCompIds.clear();
 		for (const auto& mapObj : m_mapIdToComp)
-		{
-			const Component& comp = mapObj.second;
-			if ( comp.GetType() == COMP::INVALID )
-				badCompIds.insert(mapObj.first);
-		}
+			if ( mapObj.second.GetType() == COMP::INVALID ) badCompIds.insert(mapObj.first);
 	}
 	bool GetIsEmpty() const
 	{
@@ -332,8 +328,8 @@ public:
 		if ( str.empty() ) return;
 		for (auto& mapObj : m_mapIdToComp)
 		{
-			Component&	comp	= mapObj.second;
-			const COMP&	eType	= comp.GetType();
+			const Component&	comp	= mapObj.second;
+			const COMP&			eType	= comp.GetType();
 			if ( eType == COMP::WIRE || eType == COMP::MARK || eType == COMP::VERO_NUMBER || eType == COMP::VERO_LETTER ) continue;
 			const std::string& compStr = bUseName ? comp.GetNameStr() : comp.GetValueStr();
 			const bool bFound = bExact ? ( compStr == str )
@@ -350,20 +346,14 @@ public:
 	virtual void UpdateMergeOffsets(MergeOffsets& o) override
 	{
 		for (auto& mapObj : m_mapIdToComp)
-		{
-			Component& comp = mapObj.second;
-			comp.UpdateMergeOffsets(o);
-		}
+			mapObj.second.UpdateMergeOffsets(o);
 		if ( m_trax.GetSize() > 0 )
 			m_trax.UpdateMergeOffsets(o);
 	}
 	virtual void ApplyMergeOffsets(const MergeOffsets& o) override
 	{
 		for (auto& mapObj : m_mapIdToComp)
-		{
-			Component& comp = mapObj.second;
-			comp.ApplyMergeOffsets(o);
-		}
+			mapObj.second.ApplyMergeOffsets(o);
 		if ( m_trax.GetSize() > 0 )
 			m_trax.ApplyMergeOffsets(o);
 	}
