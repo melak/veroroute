@@ -454,7 +454,7 @@ void MainWindow::RepaintSkipRouting(bool bNow)
 
 void MainWindow::ShowCurrentRectSize()
 {
-	auto& rect = m_board.GetRectMgr().GetCurrent();
+	const auto& rect = m_board.GetRectMgr().GetCurrent();
 	char buffer[256] = {'\0'};
 	sprintf(buffer,"Current rectangle = (%d mil x %d mil),    (%.2f mm x %.2f mm)", rect.GetCols()*100, rect.GetRows()*100, rect.GetCols()*2.54, rect.GetRows()*2.54);
 	ui->statusBar->showMessage(QString(buffer), 1000);

@@ -35,7 +35,7 @@ public:
 		m_current	= o.m_current;
 		m_bounding	= o.m_bounding;
 		m_list.clear();
-		for (auto& oo : o.m_list) m_list.push_back( oo );
+		for (const auto& oo : o.m_list) m_list.push_back( oo );
 		return *this;
 	}
 	bool operator==(const RectManager& o) const	// Compare persisted info
@@ -79,7 +79,7 @@ public:
 	{
 		if ( m_current.ContainsPoint(row, col) ) return true;		// Check current before the list
 		if ( !m_bounding.ContainsPoint(row, col) ) return false;	// Check bounding rect of the list first
-		for (auto& o : m_list) if ( o.ContainsPoint(row,col) ) return true;
+		for (const auto& o : m_list) if ( o.ContainsPoint(row,col) ) return true;
 		return false;
 	}
 	void MoveAll(int iDown, int iRight)

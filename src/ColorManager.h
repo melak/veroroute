@@ -225,13 +225,13 @@ public:
 	// Merge interface functions
 	virtual void UpdateMergeOffsets(MergeOffsets& o) override
 	{
-		for (auto& mapObj : m_mapNodeIdToCustomColor)
+		for (const auto& mapObj : m_mapNodeIdToCustomColor)
 			if ( mapObj.first != BAD_NODEID ) o.deltaNodeId = std::max(o.deltaNodeId, mapObj.first  + 1);
 	}
 	virtual void ApplyMergeOffsets(const MergeOffsets& o) override
 	{
 		std::unordered_map<int,MyRGB> tmp;
-		for (auto& mapObj : m_mapNodeIdToCustomColor)
+		for (const auto& mapObj : m_mapNodeIdToCustomColor)
 			tmp[mapObj.first + o.deltaNodeId] = mapObj.second;
 		m_mapNodeIdToCustomColor.clear();
 		m_mapNodeIdToCustomColor.insert(tmp.begin(), tmp.end());

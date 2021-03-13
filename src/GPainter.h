@@ -211,13 +211,13 @@ private:
 	void AddTrack()
 	{
 		for (auto& o : m_polygon)	// Loop polygon points
-			for (auto& t : m_transforms) t.Do(o);	// Apply set of transforms to each
+			for (const auto& t : m_transforms) t.Do(o);	// Apply set of transforms to each
 		if ( m_pStream ) m_pStream->AddTrack(m_polygon, GPEN::SLK);
 	}
 	void AddPad()
 	{
 		for (auto& o : m_polygon)	// Loop polygon points
-			for (auto& t : m_transforms) t.Do(o);	// Apply set of transforms to each
+			for (const auto& t : m_transforms) t.Do(o);	// Apply set of transforms to each
 		if ( m_pStream ) m_pStream->AddPad(m_polygon.first(), GPEN::SLK);
 	}
 	GStream*				m_pStream	= nullptr;

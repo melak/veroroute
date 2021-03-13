@@ -42,7 +42,7 @@ struct SpanningTreeHelper
 		std::vector<size_t>		nConn;	nConn.resize(N,0);	// Number of direct connections to each point
 		std::vector<QPointF>	v;		v.resize(N);		// Points stored as a vector (for access via index)
 		size_t i(0);
-		for (auto& o: pointsIn) v[i++] = o;
+		for (const auto& o: pointsIn) v[i++] = o;
 
 		std::list<EDGE> edges;	// Working list of edges
 		for (size_t i = 0; i < N; i++)

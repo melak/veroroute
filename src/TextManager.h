@@ -121,7 +121,7 @@ public:
 	void Merge(const TextManager& o)
 	{
 		int iMaxId(BAD_TEXTID);
-		for (auto& mapObj : m_mapIdtoText)
+		for (const auto& mapObj : m_mapIdtoText)
 			iMaxId = std::max(iMaxId, (int) mapObj.first);
 		for (const auto& mapObj : o.m_mapIdtoText)
 		{

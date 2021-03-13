@@ -50,7 +50,7 @@ public:
 	GroupManager& operator=(const GroupManager& o)
 	{
 		m_list.clear();
-		for (auto& oo : o.m_list) m_list.push_back( std::pair<int,int>(oo.first, oo.second) );
+		for (const auto& oo : o.m_list) m_list.push_back( std::pair<int,int>(oo.first, oo.second) );
 		return *this;
 	}
 	bool operator==(const GroupManager& o) const	// Compare persisted info
@@ -145,7 +145,7 @@ public:
 	virtual void UpdateMergeOffsets(MergeOffsets& o) override
 	{
 		o.deltaGroupId = GetNewGroupId();	// This compacts the current groupIds
-		for (auto& oo : m_list)
+		for (const auto& oo : m_list)
 			o.deltaCompId = std::max(o.deltaCompId, oo.second + 1);
 	}
 	virtual void ApplyMergeOffsets(const MergeOffsets& o) override
@@ -160,7 +160,7 @@ public:
 	void Merge(const GroupManager& o)
 	{
 		RemoveGroup(USER_GROUPID);	// Wipe existing user group.  It will be replaced by the one in 'o'
-		for (auto& oo : o.m_list)
+		for (const auto& oo : o.m_list)
 		{
 			if ( !GetEntryIsOK(oo) ) continue;	// The merge offsets must have blown the compId or groupId limits
 			if ( oo.first == USER_GROUPID )
@@ -188,7 +188,7 @@ public:
 	{
 		const unsigned int iSize = static_cast<unsigned int>( GetSize() );
 		outStream.Save(iSize);
-		for (auto& o : m_list)
+		for (const auto& o : m_list)
 		{
 			outStream.Save(o.first);
 			outStream.Save(o.second);
@@ -264,7 +264,7 @@ private:
 	void Compact()	// Make groupId's increment by 1
 	{
 		int newGroupId(0);	// Start at lowest groupId
-		for (auto& o : m_list)
+		for (const auto& o : m_list)
 		{
 			const int groupId = o.first;
 			if ( groupId == newGroupId + 1 )

@@ -77,7 +77,7 @@ void HotkeysDialog::Setup()
 
 	// Populate the table with data
 	int iRow(0);
-	for (auto& o : list)
+	for (const auto& o : list)
 	{
 		auto pItem0 = new QTableWidgetItem(QString::fromStdString( o.first ));
 		pItem0->setFlags(Qt::NoItemFlags);

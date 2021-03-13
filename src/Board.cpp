@@ -211,20 +211,20 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 				if ( bPadA && bPadB ) polygonHelper.CalcSeparation(padA, padB);
 
 				// Pad A to Blob B
-				if ( bPadA ) for(auto& b : blobB) polygonHelper.CalcSeparation(padA, b);
+				if ( bPadA ) for(const auto& b : blobB) polygonHelper.CalcSeparation(padA, b);
 
 				// Pad B to Blob A
-				if ( bPadB ) for(auto& a : blobA) polygonHelper.CalcSeparation(padB, a);
+				if ( bPadB ) for(const auto& a : blobA) polygonHelper.CalcSeparation(padB, a);
 
 				// Blob A to Blob B
-				if ( bCompareBlobs ) for(auto & a : blobA) for(auto& b : blobB) polygonHelper.CalcSeparation(a, b);
+				if ( bCompareBlobs ) for(const auto & a : blobA) for(const auto& b : blobB) polygonHelper.CalcSeparation(a, b);
 			}
 		}
 		if ( polygonHelper.m_Dmin > m_dMinSeparation ) continue;
 		if ( polygonHelper.m_Dmin < m_dMinSeparation )	// If min for layer is lowest across all layers ...
 			ClearWarnPoints();							// ... wipe all warning points
 
-		for (auto& p : polygonHelper.m_pWarn) m_warnPoints[k].push_back(p);
+		for (const auto& p : polygonHelper.m_pWarn) m_warnPoints[k].push_back(p);
 		m_dMinSeparation = polygonHelper.m_Dmin;
 	}	// Next layer
 }
@@ -395,7 +395,7 @@ bool Board::SetNodeIdByUser(const int& lyr, const int& row, const int& col, cons
 
 	// Set the NodeId on the element and all connected wire points
 	p->GetWireList(wireList);	// Get list containing p and its wired points
-	for (auto& o : wireList)
+	for (const auto& o : wireList)
 	{
 		Element* pW = const_cast<Element*> (o.first);
 		const bool bAllLyrs = pW->GetHasPin();
@@ -411,7 +411,7 @@ bool Board::SetNodeIdByUser(const int& lyr, const int& row, const int& col, cons
 		{
 			size_t	pinIndex;
 			int		compId;
-			for (auto& o : wireList)
+			for (const auto& o : wireList)
 			{
 				Element* pL = const_cast<Element*> (o.first);
 				for (int iSlot = 0; iSlot < 2; iSlot++)

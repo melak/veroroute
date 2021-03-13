@@ -1428,7 +1428,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 			std::list< SpanningTreeHelper::LINE > spanTreeLines;
 			SpanningTreeHelper::Build(spanTreePoints, spanTreeLines, true);	// true ==> daisy chain
-			for (auto& o : spanTreeLines)
+			for (const auto& o : spanTreeLines)
 			{
 				const QPointF	vec	= ( o.second - o.first );
 				const QPointF	mid	= ( o.second + o.first ) * 0.5;
@@ -1641,9 +1641,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		{
 			m_orangePen.setWidth(lyr == layer ? 3 : 1);	// Current layer shown fatter
 			painter.setPen(m_orangePen);
-			for (auto& o : m_board.GetWarnPoints(lyr))
+			for (const auto& o : m_board.GetWarnPoints(lyr))
 			{
-				GetXY(board, o.ry(), o.rx(), X, Y);
+				GetXY(board, o.y(), o.x(), X, Y);
 				if ( lyr == layer )
 					painter.drawRect(X-C/3, Y-C/3, W/3, W/3);
 				else

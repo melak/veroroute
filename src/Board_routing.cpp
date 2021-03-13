@@ -52,14 +52,14 @@ void Board::WipeAutoSetPoints(int nodeId)
 		if ( p->GetHasWire() )
 		{
 			p->GetWireList(wireList);	// Get list containing p and its wired points ...
-			for (auto& o : wireList)	// ... and disable wipe if any of them are USERSET
+			for (const auto& o : wireList)	// ... and disable wipe if any of them are USERSET
 			{
 				const Element* pW = o.first;
 				if ( pW == p ) continue;	// Skip p
 				bWipe &= ( !pW->ReadFlagBits(USERSET) );
 				if ( !bWipe ) break;
 			}
-			for (auto& o : wireList)
+			for (const auto& o : wireList)
 			{
 				Element* pW = const_cast<Element*> (o.first);
 				if ( bWipe ) SetNodeId(pW, BAD_NODEID, bAllLyrs);
@@ -382,7 +382,7 @@ void Board::Flood_Grow(const int& iFloodNodeId, Element* pJ, const int& iNbr, co
 			if ( bWire )
 			{
 				pK->GetWireList(wireList);	// Get list of pK and its wired points
-				for (auto& o : wireList)	// Ideally want these in order of increasing MH
+				for (const auto& o : wireList)	// Ideally want these in order of increasing MH
 				{
 					Element* pW = const_cast<Element*> (o.first);
 					if ( pW == pK ) continue;	// Skip pK
@@ -442,7 +442,7 @@ void Board::Backtrace(Element* pEnd, const int& nodeId)
 				if ( bWire )
 				{
 					p->GetWireList(wireList);	// Get list of p and its wired points
-					for (auto& o : wireList)
+					for (const auto& o : wireList)
 					{
 						Element* pW = const_cast<Element*> (o.first);
 						if ( pW == p ) continue;	// Skip p
@@ -459,7 +459,7 @@ void Board::Backtrace(Element* pEnd, const int& nodeId)
 				if ( bWire )
 				{
 					p->GetWireList(wireList);	// Get list of p and its wired points
-					for (auto& o : wireList)
+					for (const auto& o : wireList)
 					{
 						Element* pW = const_cast<Element*> (o.first);
 						if ( pW == p ) continue;	// Skip p
@@ -561,7 +561,7 @@ void Board::Manhatten(Element* p)
 
 	// All pins that support "flying wires" and have the same nodeID are connected to each other
 	if ( GetAllowFlyWire(p) )
-		for (auto& pL : m_targetPins)
+		for (const auto& pL : m_targetPins)
 			UpdateMH(pL, iRouteID, iMH, iMaxMH);	// Add pL to set of visited points (with MH value of zero)
 	else
 		UpdateMH(p, iRouteID, iMH, iMaxMH);	// Add p to set of visited points (with MH value of zero)
@@ -570,7 +570,7 @@ void Board::Manhatten(Element* p)
 	if ( bWire )
 	{
 		p->GetWireList(wireList);	// Get list of p and its wired points
-		for (auto& o : wireList)	// Ideally want these in order of increasing MH
+		for (const auto& o : wireList)	// Ideally want these in order of increasing MH
 		{
 			Element* pW = const_cast<Element*> (o.first);
 			if ( pW == p ) continue;	// Skip p
@@ -646,7 +646,7 @@ void Board::ManhattenHelper(const Element* p, const int& iNbr, unsigned int& iMH
 	{
 		// All pins that support "flying wires" and have the same nodeID are connected to each other
 		if ( GetAllowFlyWire(pK) )
-			for (auto& pL : m_targetPins)
+			for (const auto& pL : m_targetPins)
 				UpdateMH(pL, iRouteID, iMH, iMaxMH);	// Add pL to set of visited points
 		else
 			UpdateMH(pK, iRouteID, iMH, iMaxMH);	// Add pK to set of visited points
@@ -655,7 +655,7 @@ void Board::ManhattenHelper(const Element* p, const int& iNbr, unsigned int& iMH
 		if ( bWire )
 		{
 			pK->GetWireList(wireList);	// Get list of pK and its wired points
-			for (auto& o : wireList)	// Ideally want these in order of increasing MH
+			for (const auto& o : wireList)	// Ideally want these in order of increasing MH
 			{
 				Element* pW = const_cast<Element*> (o.first);
 				if ( pW == pK ) continue;	// Skip pK

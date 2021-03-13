@@ -130,8 +130,8 @@ struct PolygonHelper
 		if ( P.empty() || Q.empty() ) return;
 		//P.Process();	Q.Process();	// Not needed since m_bFatPoint already populated
 		size_t i(0), j(0);
-		for (auto& p : P) CalcSeparation(MyPointF(p, P.m_bFatPoint[i++] ? P.m_radiusPad : P.m_radiusTrk), Q);
-		for (auto& q : Q) CalcSeparation(MyPointF(q, Q.m_bFatPoint[j++] ? Q.m_radiusPad : Q.m_radiusTrk), P);
+		for (const auto& p : P) CalcSeparation(MyPointF(p, P.m_bFatPoint[i++] ? P.m_radiusPad : P.m_radiusTrk), Q);
+		for (const auto& q : Q) CalcSeparation(MyPointF(q, Q.m_bFatPoint[j++] ? Q.m_radiusPad : Q.m_radiusTrk), P);
 	}
 private:
 	static inline QPointF Closest(const QPointF& X, const QPointF& A, const QPointF& B)	// Closest point to X on line segment A-B

@@ -38,7 +38,7 @@ public:
 			auto& listOther	= bGeneric ? o.m_listGeneric : o.m_listUser;
 
 			listThis.clear();
-			for (auto& r : listOther)
+			for (const auto& r : listOther)
 				listThis.push_back( Template(r) );
 		}
 		return *this;
@@ -58,14 +58,14 @@ public:
 	}
 	bool GetFromImportStr(const std::string& importStr, Component& out) const
 	{
-		for (auto& o : m_listUser)
+		for (const auto& o : m_listUser)
 			if ( o.GetType() == COMP::CUSTOM && o.GetImportStr() == importStr ) { out = o; return true; }
 		return false;
 	}
 	void AddDefaults()
 	{
 		std::string nameStr(""), valueStr("");
-		for (auto& eType : GetListCompTypes())
+		for (const auto& eType : GetListCompTypes())
 		{
 			if ( eType == COMP::TRACKS ) continue;		// Not a real component
 			if ( eType == COMP::VERO_NUMBER ) continue;	// Not a real component
@@ -92,7 +92,7 @@ public:
 		if ( comp.GetType() == COMP::CUSTOM )
 		{
 			assert( !bGeneric );
-			for (auto& o : lst)
+			for (const auto& o : lst)
 			{
 				if ( comp.GetTypeStr() == o.GetTypeStr() && comp.GetValueStr() == o.GetValueStr() )
 				{

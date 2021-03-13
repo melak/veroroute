@@ -496,7 +496,7 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 		// Handle all connected wires.  (We just need the wirelist on one end, so use pA)
 		pA->GetWireList(wireList);	// Get list containing pA and its wired points
 
-		for (auto& o : wireList)
+		for (const auto& o : wireList)
 		{
 			Element* pW = const_cast<Element*> (o.first);
 			// Set the nodeId's on the wire components ...
@@ -635,7 +635,7 @@ bool Board::TakeOff(Component& comp)
 			pEnd->GetWireList(wireList);	// Get list containing pEnd and its wired points
 
 			int origId0(BAD_NODEID), origId1(BAD_NODEID);
-			for (auto& o : wireList)	// See if any of the wires in the set have a valid origId
+			for (const auto& o : wireList)	// See if any of the wires in the set have a valid origId
 			{
 				const Element* pW = o.first;
 				for (int iSlot = 0; iSlot < 2 && origId0 == BAD_NODEID && origId1 == BAD_NODEID; iSlot++)
@@ -654,7 +654,7 @@ bool Board::TakeOff(Component& comp)
 			if ( origId0 == BAD_NODEID && origId1 == BAD_NODEID )	// If no wired points connected to pEnd have a valid origId ...
 			{
 				// ... wipe all their nodeIds
-				for (auto& o : wireList)
+				for (const auto& o : wireList)
 				{
 					Element* pW = const_cast<Element*> (o.first);
 					// Wipe the nodeId's on the wire components ...
@@ -936,7 +936,7 @@ void Board::CopyComps(const std::list<int>& compIds)	// Make a blank copy of the
 	const bool bMakeNewGroup	= ( compIds.size() > 1 );	// If we have multiple components, the copies will be put into a single new group
 	const int  newGroupId		= ( bMakeNewGroup ) ? m_groupMgr.GetNewGroupId() : BAD_GROUPID;	// Make new groupId bigger than all others
 	if ( bMakeNewGroup && newGroupId == INT_MAX ) return;	// Fail if we've reached the max allowed groupId
-	for (auto& compId : compIds)
+	for (const auto& compId : compIds)
 	{
 		const Component&	comp		= m_compMgr.GetComponentById( compId );
 		assert( comp.GetType() != COMP::INVALID );
@@ -998,7 +998,7 @@ bool Board::MoveComps(const std::list<int>& compIds, const int& deltaRow, const 
 	WipeAutoSetPoints();
 
 	// Take off all comps, and finally the trax comp. Move them but keep them floating.
-	for (auto& compId : compIds)
+	for (const auto& compId : compIds)
 	{
 		Component& comp = m_compMgr.GetComponentById( compId );
 		assert( comp.GetType() != COMP::INVALID );
@@ -1026,7 +1026,7 @@ bool Board::MoveComps(const std::list<int>& compIds, const int& deltaRow, const 
 	PutDown(trax);
 	if ( trax.GetSize() == 0 || trax.GetIsPlaced() )
 	{
-		for (auto& compId : compIds)
+		for (const auto& compId : compIds)
 		{
 			Component& comp = m_compMgr.GetComponentById( compId );
 			assert( comp.GetType() != COMP::INVALID );
@@ -1076,7 +1076,7 @@ void Board::RotateComps(const std::list<int>& compIds, const bool& bCW)	// Rotat
 	WipeAutoSetPoints();
 
 	// Take off all comps, and finally the trax comp. Move and rotate them but keep them floating.
-	for (auto& compId : compIds)
+	for (const auto& compId : compIds)
 	{
 		Component& comp	= m_compMgr.GetComponentById( compId );
 		assert( comp.GetType() != COMP::INVALID );
@@ -1125,7 +1125,7 @@ void Board::RotateComps(const std::list<int>& compIds, const bool& bCW)	// Rotat
 	PutDown(trax);
 	if ( trax.GetSize() == 0 || trax.GetIsPlaced() )
 	{
-		for (auto& compId : compIds)
+		for (const auto& compId : compIds)
 		{
 			Component& comp = m_compMgr.GetComponentById( compId );
 			assert( comp.GetType() != COMP::INVALID );
@@ -1144,7 +1144,7 @@ void Board::FixCorruption()
 	std::set<int> badCompIds;
 	m_compMgr.GetBadCompIds(badCompIds);
 
-	for (auto& compId : badCompIds)
+	for (const auto& compId : badCompIds)
 	{
 		Component& comp = m_compMgr.GetComponentById( compId );
 		assert( comp.GetType() == COMP::INVALID );
@@ -1182,7 +1182,7 @@ void Board::FixCorruption()
 Rect Board::GetFootprintBounds(const std::list<int>& compIds)
 {
 	Rect bounding;
-	for (auto& compId : compIds)
+	for (const auto& compId : compIds)
 	{
 		const Component& comp	= m_compMgr.GetComponentById( compId );
 		assert( comp.GetType() != COMP::INVALID );

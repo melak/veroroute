@@ -27,7 +27,7 @@ Curve::Curve(const QPoint& p, const GPEN& ePen, const int& width) : m_ePen(ePen)
 
 Curve::Curve(const QPolygon& polygon, const GPEN& ePen, const int& width) : m_ePen(ePen), m_width(width)
 {
-	for (auto& p : polygon) push_back(p);
+	for (const auto& p : polygon) push_back(p);
 	// DO NOT COMPRESS BY DEFAULT.  That's only OK for open line segments
 }
 

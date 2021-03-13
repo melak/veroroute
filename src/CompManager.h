@@ -219,7 +219,7 @@ public:
 		const Component* pPrev(nullptr);	// The previous wire on the line
 		const Component* pLast(nullptr);	// The wire that reaches most along the line
 		int i(0);
-		for (auto& p : wiresH)
+		for (const auto& p : wiresH)
 		{
 			if ( pPrev == nullptr || p->GetRow() != pPrev->GetRow() )	// Reset all if new row
 			{
@@ -253,7 +253,7 @@ public:
 		}
 		pPrev = pLast = nullptr;
 		i = 0;
-		for (auto& p : wiresV)
+		for (const auto& p : wiresV)
 		{
 			if ( pPrev == nullptr || p->GetCol() != pPrev->GetCol() )	// Reset all if new col
 			{
@@ -284,8 +284,8 @@ public:
 			i++;
 		}
 
-		for (auto& pH : wiresH)
-			for (auto& pV : wiresV)
+		for (const auto& pH : wiresH)
+			for (const auto& pV : wiresV)
 				if ( pH->GetRow() > pV->GetRow() &&
 					 pH->GetRow() < pV->GetLastRow() &&
 					 pV->GetCol() > pH->GetCol() &&
@@ -326,7 +326,7 @@ public:
 	{
 		m_foundId.clear();
 		if ( str.empty() ) return;
-		for (auto& mapObj : m_mapIdToComp)
+		for (const auto& mapObj : m_mapIdToComp)
 		{
 			const Component&	comp	= mapObj.second;
 			const COMP&			eType	= comp.GetType();

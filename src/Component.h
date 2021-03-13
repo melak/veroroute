@@ -379,7 +379,7 @@ public:
 		L = -dW;	R = dW;		T = -dH;	B = dH;
 		// Then consider the list of shapes (for direction 'W')
 		double l,r,t,b;	// Working variables
-		for (auto& o : m_shapes)
+		for (const auto& o : m_shapes)
 		{
 			if ( !bFill && o.GetDrawFill() ) continue;	// If view is not drawing filled shapes, skip them
 			o.GetSafeBounds(l, r, t, b);
@@ -586,7 +586,7 @@ public:
 		{
 			bool bOK(true);
 			MyRGB tmp(iColor);
-			for (auto& o : m_shapes)
+			for (const auto& o : m_shapes)
 				if ( o.GetFillColor() == tmp ) { bOK = false; break; }
 			if ( bOK ) return tmp;
 		}

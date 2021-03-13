@@ -147,14 +147,14 @@ void GStream::MakeDrills()
 
 	// Build drill list
 	int code = 1;	// Start with drill T01
-	for (auto& hole : holes)
+	for (const auto& hole : holes)
 		m_ePenList.push_back( GPenInfo(GPEN::PAD_HLE, hole, code++, "Pad Hole = ", hole != holeDefault) );
 	if ( m_bVias )
 		m_ePenList.push_back( GPenInfo(GPEN::VIA_HLE, viahole, code++, "Via Hole = ") );
 
 	// Write drill list to file
 	const bool bLZ(true);	// Include leading zeros
-	for (auto& o : m_ePenList)
+	for (const auto& o : m_ePenList)
 	{
 		std::string codeStr("T");
 		if ( o.m_iCode < 10 ) codeStr += "0";	// Add leading zero
@@ -194,14 +194,14 @@ void GStream::MakeApertures()	// Make "pens" for current stream
 			break;
 		case GFILE::GBL:
 		case GFILE::GTL:
-			for (auto& pad : pads)
+			for (const auto& pad : pads)
 				m_ePenList.push_back( GPenInfo(GPEN::PAD, pad, code++, " is for pads", pad != padDefault) );
 			if ( m_bVias )
 				m_ePenList.push_back( GPenInfo(GPEN::VIA, via, code++, " is for via-pads") );
 			if ( true )
 				m_ePenList.push_back( GPenInfo(GPEN::TRK, trk, code++, " is for tracks") );
 			if ( !m_pBoard->GetGroundFill() ) break;
-			for (auto& pad : pads)
+			for (const auto& pad : pads)
 				m_ePenList.push_back( GPenInfo(GPEN::PAD_GAP, pad + 2 * gap, code++, " is for separating pads from fill", pad != padDefault) );
 			if ( m_bVias )
 				m_ePenList.push_back( GPenInfo(GPEN::VIA_GAP, via + 2 * gap, code++, " is for separating via-pads from fill") );
@@ -210,7 +210,7 @@ void GStream::MakeApertures()	// Make "pens" for current stream
 			break;
 		case GFILE::GBS:
 		case GFILE::GTS:
-			for (auto& pad : pads)
+			for (const auto& pad : pads)
 				m_ePenList.push_back( GPenInfo(GPEN::PAD_MSK, pad + 2 * msk, code++, " is for pads", pad != padDefault) );
 			if ( m_bVias )
 				m_ePenList.push_back( GPenInfo(GPEN::VIA_MSK, via + 2 * msk, code++, " is for via-pads") );
@@ -222,7 +222,7 @@ void GStream::MakeApertures()	// Make "pens" for current stream
 		case GFILE::DRL:	break;
 	}
 	// Write aperture list to file
-	for (auto& o : m_ePenList)
+	for (const auto& o : m_ePenList)
 	{
 		std::string codeStr("D");
 		assert(o.m_iCode >= 10);
@@ -381,12 +381,12 @@ void GStream::DrawBuffers()
 	m_pads.Sort();
 	m_viapads.Sort();
 	m_holes.Sort();
-	for (auto& o : m_regions)	Region(*o);
-	for (auto& o : m_loops)		OutLine(*o, true);	// true  ==> closed
-	for (auto& o : m_tracks)	OutLine(*o, false);	// false ==> not closed
-	for (auto& o : m_pads)		OutLine(*o, false);	// false ==> not closed
-	for (auto& o : m_viapads)	OutLine(*o, false);	// false ==> not closed
-	for (auto& o : m_holes)		OutLine(*o, false);	// false ==> not closed
+	for (const auto& o : m_regions)	Region(*o);
+	for (const auto& o : m_loops)	OutLine(*o, true);	// true  ==> closed
+	for (const auto& o : m_tracks)	OutLine(*o, false);	// false ==> not closed
+	for (const auto& o : m_pads)	OutLine(*o, false);	// false ==> not closed
+	for (const auto& o : m_viapads)	OutLine(*o, false);	// false ==> not closed
+	for (const auto& o : m_holes)	OutLine(*o, false);	// false ==> not closed
 }
 void GStream::Region(const Curve& curve)	// A filled closed curve (with zero width pen)
 {
@@ -404,7 +404,7 @@ void GStream::OutLine(const Curve& curve, bool bForceClose)	// Outline of a curv
 	const size_t N = curve.size();
 	if	( N == 1 ) return Flash( curve.front() );
 	if	( N == 2 ) return Line( curve.front(), curve.back() );
-	auto& front = curve.front();
+	const auto& front = curve.front();
 	Move(front);	// Move pen to start of curve
 	auto iter = curve.begin(); ++iter;
 	for (auto iterEnd = curve.end(); iter != iterEnd; ++iter)
@@ -436,7 +436,7 @@ void GStream::SetPen(const GPEN& ePen, const int& w)
 
 	if ( m_ePen == GPEN::NONE ) return;
 
-	for (auto& o : m_ePenList)
+	for (const auto& o : m_ePenList)
 	{
 		if ( o.m_ePen == ePen && ( o.m_iWidth == penWidth || ( !bCustom && !o.m_bCustom ) ) )
 		{

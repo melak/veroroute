@@ -60,7 +60,7 @@ void CompDefiner::Populate(const Component& o)
 	// Copy shapes
 	m_mapShapes.clear();
 	int iShapeId(0);
-	for (auto& shape : o.GetShapes())
+	for (const auto& shape : o.GetShapes())
 	{
 		AddShape(iShapeId, shape);
 		iShapeId++;
@@ -268,7 +268,7 @@ bool CompDefiner::GetIsValid() const
 	}
 	if ( m_grid.GetSize() == 0 ) return false;	// Should not be possible
 	bool bOK(false);
-	for (auto& mapObj : m_mapShapes)
+	for (const auto& mapObj : m_mapShapes)
 		if ( mapObj.second.GetDrawLine() && !mapObj.second.GetDrawFill() ) { bOK = true; break; }
 	if ( !bOK ) return false;	// Must have a shape with line and no fill (so  it can't be faded out)
 	// Pin indexes must be consecutive at start at 0
@@ -279,7 +279,7 @@ bool CompDefiner::GetIsValid() const
 
 	pinIndexes.sort();
 	size_t iTest(0);
-	for (auto& pinIndex : pinIndexes)
+	for (const auto& pinIndex : pinIndexes)
 	{
 		if ( pinIndex != iTest ) return false;
 		iTest++;

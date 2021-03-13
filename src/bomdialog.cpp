@@ -74,7 +74,7 @@ void BomDialog::Update()
 	// Count the number of values in the list.  This determines the number of rows in the table
 	int numValues(0);
 	std::string currentValue("");
-	for (auto& p : pComps) if ( p->GetValueStr() != currentValue ) { currentValue = p->GetValueStr(); numValues++; }
+	for (const auto& p : pComps) if ( p->GetValueStr() != currentValue ) { currentValue = p->GetValueStr(); numValues++; }
 
 	// Set up the table
 	ui->tableWidget->clear();
@@ -96,7 +96,7 @@ void BomDialog::Update()
 	std::string rowNames(""), rowTypes(""), rowValue("");
 	int row(-1), rowQuantity(0);
 	char buffer[256] = {'\0'};
-	for (auto& p : pComps)
+	for (const auto& p : pComps)
 	{
 		const bool bLast		= ( p == pComps.back() );
 		const bool bNewValue	= ( p->GetValueStr() != rowValue );

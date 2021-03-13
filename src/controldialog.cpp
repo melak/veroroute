@@ -161,7 +161,7 @@ void ControlDialog::UpdateCompControls()	// Component controls
 			else
 			{
 				int index(0);
-				for (auto& compType : GetListCompTypes())
+				for (const auto& compType : GetListCompTypes())
 				{
 					if ( AllowTypeChange(comp.GetType(), compType) )	// Only put allowed types in combo
 					{
