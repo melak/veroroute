@@ -277,6 +277,7 @@ void Board::Flood_Helper(const bool bBuildTracks)
 
 	std::fill(m_growingRoutes.begin(), m_growingRoutes.end(), false);	// Clear flags tracking route growth from pins
 
+	const bool			bHaveWires	 = m_compMgr.GetHavePlacedWires();
 	const bool			bMultiLayer	 = GetLyrs() > 1;
 	const bool			bViasEnabled = bMultiLayer && GetViasEnabled();
 	const int&			iFloodNodeId = m_targetPins[0]->GetNodeId();
@@ -339,7 +340,7 @@ void Board::Flood_Helper(const bool bBuildTracks)
 
 		// Periodically (every sufficiently large MH increase) examine which routes have grown.
 		// If all growing routes are connected to each other then we're done.
-		if ( !bDone && iMH >= iMHlastGrowthCheck + iMaxDeltaMH )
+		if ( !bDone && iMH >= iMHlastGrowthCheck + iMaxDeltaMH + (bHaveWires ? MH_WIRE : 0) )
 		{
 			bDone = true;
 			for (size_t i = 0; i < N && bDone; i++)
