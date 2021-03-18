@@ -302,9 +302,11 @@ static const char* szVEROROUTE_VERSION =
 			// Improvement: Moving/rotating grey areas while auto-routing will ignore auto-routed tracks in the grey areas
 			//				instead of pasting them.
 //"2.09";	// Improvement: Routing algorithm speed increased.
-  "2.10";	// Bug fix: Show closest tracks did not draw all locations due to rounding errors.
+//"2.10";	// Bug fix: Show closest tracks did not draw all locations due to rounding errors.
 			// Bug fix: Flying wires not drawn properly to offset pads.
 			// Improvement: If all pads on a component are shifted by the same amount, then give the component outline and text the same shift.
 			// Improvement: Show rectangular area sizes and pad offsets in both mil and mm.
 			// Improvement: Allow pad offsets to change in 1 mil steps instead of 5 mil.
 			// New feature: Added distance tool for measuring distance between holes/grid points (to help set pad offsets).
+  "2.11";	// Bug fix: The routing changes in V2.09 introduced a bug in the connectivity checking of layouts with wires,
+			//          so fully connected nets that use wires could sometimes be wrongly listed as "Bad Nodes".
