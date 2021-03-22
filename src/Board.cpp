@@ -118,7 +118,7 @@ void Board::GetSeparations(double& minTrackSeparation_mil, double& minGroundFill
 
 	// If the minimum track separation is determined by the gap,
 	// then all locations have min separation, so don't show warning points in the view
-	if ( minTrackSeparation_mil == dGap ) ClearWarnPoints();
+	if ( minTrackSeparation_mil - dGap == 0.0 ) ClearWarnPoints();
 }
 void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 {
@@ -285,10 +285,10 @@ void Board::CalcGroundFillBounds()
 		const double X = C * ( comp.GetCol() + comp.GetLastCol() + 1 );
 		const double Y = C * ( comp.GetRow() + comp.GetLastRow() + 1 );
 
-		m_gndL = std::min(m_gndL, (int)(X + W * L));
-		m_gndT = std::min(m_gndT, (int)(Y + W * T));
-		m_gndR = std::max(m_gndR, (int)(X + W * R));
-		m_gndB = std::max(m_gndB, (int)(Y + W * B));
+		m_gndL = std::min(m_gndL, static_cast<int>(X + W * L));
+		m_gndT = std::min(m_gndT, static_cast<int>(Y + W * T));
+		m_gndR = std::max(m_gndR, static_cast<int>(X + W * R));
+		m_gndB = std::max(m_gndB, static_cast<int>(Y + W * B));
 	}
 }
 

@@ -615,7 +615,7 @@ static std::string GetMakeInstructions(const COMP& eType, int& rows, int& cols)
 static std::string GetDefaultPinLabel(size_t iPinIndex)
 {
 	static char buffer[32];
-	sprintf(buffer, "%d", (int)(iPinIndex+1));	// Pin numbers on screen start at 1
+	sprintf(buffer, "%d", static_cast<int>(iPinIndex+1));	// Pin numbers on screen start at 1
 	return buffer;
 }
 

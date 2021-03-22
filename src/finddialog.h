@@ -29,7 +29,7 @@ class FindDialog : public QDialog
 	Q_OBJECT
 
 public:
-	explicit FindDialog(MainWindow* parent = 0);
+	explicit FindDialog(MainWindow* parent = nullptr);
 	~FindDialog();
 
 	void UpdateControls();

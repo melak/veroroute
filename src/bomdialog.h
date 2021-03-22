@@ -29,7 +29,7 @@ class BomDialog : public QDialog
 	Q_OBJECT
 
 public:
-	explicit BomDialog(MainWindow* parent = 0);
+	explicit BomDialog(MainWindow* parent = nullptr);
 	~BomDialog();
 
 	void Update();

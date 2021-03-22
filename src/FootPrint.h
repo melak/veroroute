@@ -46,7 +46,7 @@ public:
 	{
 		return !(*this == o);
 	}
-	~FootPrint() {}
+	virtual ~FootPrint() override {}
 	void SetType(const COMP& type)	{ m_type = type; }
 	const COMP& GetType() const		{ return m_type; }
 	void BuildDefault(const COMP& type);
@@ -125,7 +125,7 @@ public:
 				for (int i = 0; i < GetSize(); i++)
 				{
 					CompElement* p = GetAt(i);
-					p->SetPinIndex( i );
+					p->SetPinIndex( static_cast<size_t>(i) );
 					p->SetSurface( SURFACE_FULL );
 				}
 				return SetupOccupancies();
@@ -135,8 +135,8 @@ public:
 				for (int iCol = 0, cols = GetCols(); iCol < cols; iCol++)
 				{
 					CompElement* p = Get(iRow,iCol);
-					p->SetPinIndex( ( iRow == 0 ) ? 2*GetCols()-1-iCol :
-									( iRow == GetRows()-1 ) ? iCol : BAD_PININDEX );
+					p->SetPinIndex( ( iRow == 0 ) ? static_cast<size_t>(2*GetCols()-1-iCol) :
+									( iRow == GetRows()-1 ) ? static_cast<size_t>(iCol) : BAD_PININDEX );
 					p->SetSurface( p->GetIsPin() ? SURFACE_FULL : SURFACE_GAP );
 				}
 				return SetupOccupancies();
@@ -145,7 +145,7 @@ public:
 				for (int i = 0, iSize = GetSize(); i < iSize; i++)
 				{
 					CompElement* p = GetAt(i);
-					p->SetPinIndex( i );
+					p->SetPinIndex( static_cast<size_t>(i) );
 					p->SetSurface( SURFACE_FULL );
 				}
 				return SetupOccupancies();
@@ -155,7 +155,7 @@ public:
 				for (int iCol = 0, cols = GetCols(); iCol < cols; iCol++)
 				{
 					CompElement* p = Get(iRow,iCol);
-					p->SetPinIndex( ( iRow == 1 ) ? iCol : BAD_PININDEX );
+					p->SetPinIndex( ( iRow == 1 ) ? static_cast<size_t>(iCol) : BAD_PININDEX );
 					p->SetSurface( SURFACE_FULL );
 				}
 				return SetupOccupancies();
@@ -165,7 +165,7 @@ public:
 				for (int iCol = 0, cols = GetCols(); iCol < cols; iCol++)
 				{
 					CompElement* p = Get(iRow,iCol);
-					p->SetPinIndex( ( iRow == 1 && iCol % 2 == 1 ) ? ( iCol - 1 ) / 2 : BAD_PININDEX );
+					p->SetPinIndex( ( iRow == 1 && iCol % 2 == 1 ) ? static_cast<size_t>(( iCol - 1 ) / 2) : BAD_PININDEX );
 					p->SetSurface( ( iCol == 0 || iCol == GetCols()-1 ) ? SURFACE_FREE : SURFACE_FULL );
 				}
 				return SetupOccupancies();
@@ -176,7 +176,7 @@ public:
 				for (int iCol = 0, cols = GetCols(); iCol < cols; iCol++)
 				{
 					CompElement* p = Get(iRow,iCol);
-					p->SetPinIndex( ( iCol % 2 == 0 && iRow % 2 == 0 ) ? (iCol/2 + (iRow/2)*((1 + GetCols())/2)) : BAD_PININDEX );
+					p->SetPinIndex( ( iCol % 2 == 0 && iRow % 2 == 0 ) ? static_cast<size_t>(iCol/2 + (iRow/2)*((1 + GetCols())/2)) : BAD_PININDEX );
 					p->SetSurface( SURFACE_FULL );
 				}
 				return SetupOccupancies();
@@ -187,8 +187,8 @@ public:
 				for (int iCol = 0, cols = GetCols(); iCol < cols; iCol++)
 				{
 					CompElement* p = Get(iRow,iCol);
-					p->SetPinIndex( ( iRow == 0 ) ? iCol :
-									( iRow == 3 ) ? iCol + GetCols() : BAD_PININDEX );
+					p->SetPinIndex( ( iRow == 0 ) ? static_cast<size_t>(iCol) :
+									( iRow == 3 ) ? static_cast<size_t>(iCol + GetCols()) : BAD_PININDEX );
 					p->SetSurface( SURFACE_FULL );
 				}
 				return SetupOccupancies();
@@ -204,8 +204,8 @@ public:
 		for (int iCol = 0, cols = GetCols(); iCol < cols; iCol++)
 		{
 			CompElement* p = Get(iRow,iCol);
-			p->SetPinIndex( ( iRow == 0 ) ? 2*GetCols()-1-iCol :
-							( iRow == GetRows()-1 ) ? iCol : BAD_PININDEX );
+			p->SetPinIndex( ( iRow == 0 ) ? static_cast<size_t>(2*GetCols()-1-iCol) :
+							( iRow == GetRows()-1 ) ? static_cast<size_t>(iCol) : BAD_PININDEX );
 			p->SetSurface( ( iRow == 0 || iRow == GetRows()-1 ) ? SURFACE_FULL : SURFACE_GAP );
 		}
 		return SetupOccupancies();
@@ -230,7 +230,7 @@ public:
 	virtual void Save(DataStream& outStream) override
 	{
 		CompElementGrid::Save(outStream);	// Save() base class
-		outStream.Save((int)m_type);
+		outStream.Save(static_cast<int>(m_type));
 	}
 private:
 	COMP m_type;	// Type

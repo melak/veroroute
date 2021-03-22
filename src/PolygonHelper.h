@@ -65,15 +65,19 @@ struct MyPolygonF : public QPolygonF	// A polygon + the pen radii for drawing it
 	{
 		// Set flags to indicate if points and edges are fat or thin
 		const int iSize = QPolygonF::size();
-		if ( !bForce && m_bFatPoint.size() == (size_t) iSize ) return;
-		m_bFatPoint.clear();	m_bFatPoint.resize(iSize, false);
-		m_bFatEdge.clear();		m_bFatEdge.resize(iSize, false);
+		if ( !bForce && m_bFatPoint.size() == static_cast<size_t>(iSize) ) return;
+		m_bFatPoint.clear();	m_bFatPoint.resize(static_cast<size_t>(iSize), false);
+		m_bFatEdge.clear();		m_bFatEdge.resize(static_cast<size_t>(iSize), false);
 		if ( !HaveVariTracks() ) return;
 		for (int i = 0, j = 1, iEnd = m_bClosed ? iSize : (iSize-1); i < iEnd; i++, j++)
 		{
 			if ( j == iSize ) j = 0;
-			if ( operator[](i).x() == operator[](j).x() || operator[](i).y() == operator[](j).y() )
-				m_bFatPoint[i] = m_bFatPoint[j] = m_bFatEdge[i] = true;
+			const QPointF edge(operator[](i) - operator[](j));
+			if ( edge.x() == 0.0 || edge.y() == 0.0 )	// If edge is V or H ...
+			{
+				const size_t I(static_cast<size_t>(i)), J(static_cast<size_t>(j));
+				m_bFatPoint[I] = m_bFatPoint[J] = m_bFatEdge[I] = true;
+			}
 		}
 	}
 	// If both pens are set, then it means we are in fat tracks mode
@@ -97,7 +101,7 @@ struct PolygonHelper
 
 	static inline qreal Length(const QPointF& p)
 	{
-		return !p.x() ? fabs(p.y()) : !p.y() ? fabs(p.x()) : sqrt( QPointF::dotProduct(p,p) );
+		return (p.x() == 0.0) ? fabs(p.y()) : (p.y() == 0.0) ? fabs(p.x()) : sqrt( QPointF::dotProduct(p,p) );
 	}
 	inline void CalcSeparation(const MyPointF& X, const MyPointF& Y)
 	{
@@ -120,8 +124,9 @@ struct PolygonHelper
 
 		for (int i = 0, j = 1, iEnd = P.m_bClosed ? iSize : (iSize-1); i < iEnd; i++, j++)
 		{
+			const size_t I = static_cast<size_t>(i);
 			if ( j == iSize ) j = 0;
-			if ( P.m_bFatEdge[i] )	Update(X, Closest(X, P[i], P[j]), sumHV, semiHV);
+			if ( P.m_bFatEdge[I] )	Update(X, Closest(X, P[i], P[j]), sumHV, semiHV);
 			else					Update(X, Closest(X, P[i], P[j]), sum, semi);
 		}
 	}
@@ -148,13 +153,13 @@ private:
 		const qreal		D = round( std::max(0.0, l - sum) * 1000 );	// Units of 0.1 mil
 		if ( m_Dmin != DBL_MAX )
 		{
-			const int iDelta = (int) ( D - m_Dmin * 1000 );	// Units of 0.1 mil
+			const int iDelta = static_cast<int>( D - m_Dmin * 1000 );	// Units of 0.1 mil
 			if ( iDelta > 0 ) return;
 			if ( iDelta < 0 ) m_pWarn.clear();
 		}
 		m_Dmin = D * 0.001;	// Units of grid squares (100 mil)
 		QPointF mid( (X + Y) * 0.5 );
-		if ( semi != 0 && l != 0 ) mid += L * ( semi / l );
+		if ( semi != 0.0 && l != 0.0 ) mid += L * ( semi / l );
 		m_pWarn.push_back( mid );
 	}
 };

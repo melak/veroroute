@@ -30,7 +30,7 @@ class TextDialog : public QDialog
 	Q_OBJECT
 
 public:
-	explicit TextDialog(MainWindow* parent = 0);
+	explicit TextDialog(MainWindow* parent = nullptr);
 	~TextDialog();
 
 	void Clear();

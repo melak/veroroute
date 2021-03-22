@@ -27,7 +27,7 @@ class TemplateManager : public Persist
 {
 public:
 	TemplateManager()	{}
-	~TemplateManager()	{}
+	virtual ~TemplateManager()	{}
 	TemplateManager(const TemplateManager& o) { *this = o; }
 	TemplateManager& operator=(const TemplateManager& o)
 	{
@@ -71,9 +71,9 @@ public:
 			if ( eType == COMP::VERO_NUMBER ) continue;	// Not a real component
 			if ( eType == COMP::VERO_LETTER ) continue;	// Not a real component
 			if ( eType == COMP::CUSTOM ) continue;		// Don't show custom components in the left pane
-			const size_t numPins = GetDefaultNumPins(eType);
+			const int numPins = GetDefaultNumPins(eType);
 			std::vector<int> nodeList;
-			nodeList.resize(numPins, BAD_NODEID);
+			nodeList.resize(static_cast<size_t>(numPins), BAD_NODEID);
 			Component comp(nameStr, valueStr, eType, nodeList);
 
 			comp.SetId(BAD_COMPID);	// This indicates a component template

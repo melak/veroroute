@@ -33,7 +33,7 @@ void Component::SetDefaultPinFlags()
 		case COMP::DIP_RECTIFIER:
 		case COMP::STRIP_100:
 		case COMP::BLOCK_100:
-		case COMP::BLOCK_200:		return SetPinFlags(PIN_LABELS | iCustomFlag);
+		case COMP::BLOCK_200:		return SetPinFlags(static_cast<uchar>(PIN_LABELS | iCustomFlag));
 		case COMP::SWITCH_ST:
 		case COMP::SWITCH_DT:
 		case COMP::SWITCH_ST_DIP:
@@ -49,9 +49,9 @@ void Component::SetDefaultPinFlags()
 		case COMP::RELAY_JQC_3F_APPROX:
 		case COMP::RELAY_S1A050000:
 		case COMP::RELAY_TRCD:
-		case COMP::FUSE_HOLDER:		return SetPinFlags(PIN_RECT | iCustomFlag);
+		case COMP::FUSE_HOLDER:		return SetPinFlags(static_cast<uchar>(PIN_RECT | iCustomFlag));
 		case COMP::RELAY_DIP_4PIN:
-		case COMP::RELAY_DIP_8PIN:	return SetPinFlags(PIN_RECT | PIN_LABELS | iCustomFlag);
+		case COMP::RELAY_DIP_8PIN:	return SetPinFlags(static_cast<uchar>(PIN_RECT | PIN_LABELS | iCustomFlag));
 		case COMP::MARK:
 		case COMP::PAD:
 		case COMP::PAD_FLYINGWIRE:
@@ -95,13 +95,12 @@ void Component::SetDefaultPinFlags()
 		case COMP::TRIM_3362W:
 		case COMP::TRIM_3362X:
 		case COMP::TRIM_3362Z:
-		case COMP::CRYSTAL:	assert( GetPinFlags() == iCustomFlag );	return SetPinFlags(iCustomFlag);
+		case COMP::CRYSTAL:	assert( GetPinFlags() == iCustomFlag );	return SetPinFlags(static_cast<uchar>(iCustomFlag));
 		case COMP::VERO_NUMBER:
 		case COMP::VERO_LETTER:
 		case COMP::CUSTOM:
-		case COMP::TRACKS:
-		case COMP::INVALID:		return;
-		default:	assert(0);	return;	// Unhandled eType
+		case COMP::TRACKS:	return;
+		default:	assert(GetType() == COMP::INVALID);	return;	// Unhandled eType
 	}
 }
 
@@ -396,8 +395,7 @@ void Component::SetDefaultColor()
 		case COMP::STRIP_100:				return SetFillColor(MyRGB(0xFFFFDF));
 		case COMP::BLOCK_100:				return SetFillColor(MyRGB(0xFFFFDF));
 		case COMP::BLOCK_200:				return SetFillColor(MyRGB(0xFFFFDF));
-		case COMP::INVALID:					return;
-		default:	assert(0);	// Unhandled eType
+		default:	assert(GetType() == COMP::INVALID);	return;// Unhandled eType
 	}
 }
 

@@ -130,7 +130,7 @@ bool Board::ImportTango(const TemplateManager& templateMgr, const std::string& f
 				}
 
 				// Check pins per component is within limits
-				if ( numPins == 0 ) numPins = ( bCustom ) ? (int) custom.GetNumPins() : GetDefaultNumPins(eType);
+				if ( numPins == 0 ) numPins = ( bCustom )  ? static_cast<int>( custom.GetNumPins() ) : GetDefaultNumPins(eType);
 				if ( bOK )
 				{
 					bOK = ( numPins > 0 );
@@ -173,7 +173,7 @@ bool Board::ImportTango(const TemplateManager& templateMgr, const std::string& f
 					else
 					{
 						assert( eType != COMP::INVALID );
-						nodeList.resize(numPins, BAD_NODEID);
+						nodeList.resize(static_cast<size_t>(numPins), BAD_NODEID);
 						Component tmp(nameStr, valueStr, eType, nodeList);
 						if ( nLength > 0 )
 						{
@@ -217,7 +217,7 @@ bool Board::ImportTango(const TemplateManager& templateMgr, const std::string& f
 				if ( bOK )
 				{
 					// Paint the component pin using SetNodeIdByUser
-					const size_t	iPinIndex	= atoi(pinStr.c_str()) - 1;
+					const size_t	iPinIndex	= static_cast<size_t>( atoi(pinStr.c_str()) - 1 );
 					const int		compId		= m_compMgr.GetComponentIdFromName(nameStr);
 
 					bOK = compId != BAD_COMPID;
@@ -288,8 +288,6 @@ bool Board::ImportOrcad(const TemplateManager& templateMgr, const std::string& f
 
 	bool bPartStart(false);
 	std::list<std::string> offBoard;	// List of off-board part names
-
-	int compId(BAD_COMPID);
 
 	while( bOK )	// Loop through file
 	{
@@ -393,7 +391,7 @@ bool Board::ImportOrcad(const TemplateManager& templateMgr, const std::string& f
 			}
 
 			// Check pins per component is within limits
-			if ( numPins == 0 ) numPins = ( bCustom ) ? (int) custom.GetNumPins() : GetDefaultNumPins(eType);
+			if ( numPins == 0 ) numPins = ( bCustom ) ? static_cast<int>( custom.GetNumPins() ) : GetDefaultNumPins(eType);
 			bOK = ( numPins > 0 );
 			if ( !bOK )
 			{
@@ -440,15 +438,15 @@ bool Board::ImportOrcad(const TemplateManager& templateMgr, const std::string& f
 			else
 			{
 				assert( eType != COMP::INVALID );
-				nodeList.resize(numPins, BAD_NODEID);
+				nodeList.resize(static_cast<size_t>(numPins), BAD_NODEID);
 				Component tmp(nameStr, valueStr, eType, nodeList);
 				if ( nLength > 0 )
 				{
 					while ( tmp.GetCols() < nLength ) tmp.Stretch(true);	// grow
 					while ( tmp.GetCols() > nLength ) tmp.Stretch(false);	// shrink
 				}
-				compId = AddComponent(-1, -1, tmp);
-				bOK = ( compId!= BAD_COMPID );	// Create part and place it
+				const int compId = AddComponent(-1, -1, tmp);
+				bOK = ( compId != BAD_COMPID );	// Create part and place it
 			}
 			if ( !bOK )
 			{
@@ -467,7 +465,6 @@ bool Board::ImportOrcad(const TemplateManager& templateMgr, const std::string& f
 			{
 				// If we have just a ')' on the line then we're done with the pins ...
 				bPartStart = false;	// ... and we're done with the part, move onto the next one
-				compId = BAD_COMPID;
 				continue;
 			}
 
@@ -501,7 +498,7 @@ bool Board::ImportOrcad(const TemplateManager& templateMgr, const std::string& f
 			}
 
 			// Paint the component pin using SetNodeIdByUser
-			const size_t	iPinIndex	= atoi(pinStr.c_str()) - 1;
+			const size_t	iPinIndex	= static_cast<size_t>( atoi(pinStr.c_str()) - 1 );
 			const int		compId		= m_compMgr.GetComponentIdFromName( nameStr );
 
 			bOK = compId != BAD_COMPID;
@@ -560,7 +557,7 @@ bool Board::BreakComponentIntoPads(Component& comp)
 	{
 		// Create a new PAD component for the pin, with suitable name, value, nodeId
 		static char buffer[32];
-		sprintf(buffer, "_%d", (int)(iPinIndex+1));
+		sprintf(buffer, "_%d", static_cast<int>(iPinIndex+1));
 		nodeList[0] = comp.GetNodeId(iPinIndex);
 		Component tmp(comp.GetNameStr() + std::string(buffer), comp.GetValueStr(), COMP::PAD, nodeList);
 

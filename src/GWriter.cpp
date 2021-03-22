@@ -558,8 +558,8 @@ void GStream::GetQPoint(const QPointF& in, QPoint& out) const
 	// GRIDPIXELS == 100 means each integer ordinate is 1 mil
 	assert( m_pBoard && m_pBoard->GetGRIDPIXELS() == 1000 );	// Confirm each integer ordinate == 0.0001 inches
 	const double dEdge = m_pBoard->GetEdgeWidth();	// Add/subtract this offset so bottom-left corner of board outline is at (0,0)
-	out.setX( (int)(in.x()+dEdge) );
-	out.setY( m_pBoard->GetGRIDPIXELS() * m_pBoard->GetRows() - (int) (in.y()-dEdge) ); // Gerber y-axis goes up screen
+	out.setX( static_cast<int>(in.x() + dEdge) );
+	out.setY( m_pBoard->GetGRIDPIXELS() * m_pBoard->GetRows() - static_cast<int>(in.y() - dEdge) ); // Gerber y-axis goes up screen
 }
 void GStream::GetQPolygon(const QPolygonF& in, QPolygon& out) const
 {
@@ -591,5 +591,5 @@ void GWriter::Close()	// Close all file streams
 }
 GStream& GWriter::GetStream(const GFILE& eType)
 {
-	return m_os[(size_t)(eType)];
+	return m_os[static_cast<size_t>(eType)];
 }

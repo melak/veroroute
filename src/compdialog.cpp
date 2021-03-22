@@ -26,7 +26,7 @@ CompDialog::CompDialog(QWidget* parent)
 , ui(new Ui::CompDialog)
 , m_pMainWindow(nullptr)
 {
-	ui->setupUi((QDialog*)this);
+	ui->setupUi( reinterpret_cast<QDialog*>(this) );
 
 	QFont font = ui->pushButtonU->font();
 	font.setFamily(QString("Arial Unicode MS"));
@@ -131,13 +131,13 @@ void CompDialog::Update()
 	if ( bValidPinId )
 	{
 		const Pin& pin = def.GetCurrentPin();
-		ui->spinBox_PinNumber->setValue( (int) pin.GetPinIndex() + 1 );
+		ui->spinBox_PinNumber->setValue( static_cast<int>(pin.GetPinIndex() + 1) );
 	}
 	MyRGB rgb;
 	if ( bValidShapeId )
 	{
 		const Shape& s = def.GetCurrentShape();
-		ui->comboBox_Shape->setCurrentIndex((int) s.GetType() );
+		ui->comboBox_Shape->setCurrentIndex( static_cast<int>( s.GetType() ) );
 		ui->checkBox_Line->setChecked( s.GetDrawLine() );
 		ui->checkBox_Fill->setChecked( s.GetDrawFill() );
 		ui->doubleSpinBox_CX->setValue(  s.GetCX() );

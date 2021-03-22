@@ -31,7 +31,7 @@ void FootPrint::BuildDefault(const COMP& type)
 	int numRows(0), numCols(0);
 	const std::string pinStr = GetMakeInstructions(m_type, numRows, numCols);
 
-	const bool bOK = ( (int)pinStr.size() == numRows * numCols );	assert( bOK );	// Check string length OK
+	const bool bOK = ( pinStr.size() == static_cast<size_t>(numRows * numCols) );	assert( bOK );	// Check string length OK
 	if ( !bOK ) return;
 
 	Allocate(1, numRows, numCols);
@@ -50,7 +50,7 @@ void FootPrint::BuildDefault(const COMP& type)
 			case '-':	p->SetSurface(SURFACE_GAP);		break;
 			default:	p->SetSurface(bPlug ? SURFACE_PLUG : SURFACE_FULL);
 		}
-		p->SetPinIndex( GetPinIndexFromLegacyPinChar(pinChar) );
+		p->SetPinIndex( GetPinIndexFromLegacyPinChar(static_cast<uchar>(pinChar)) );
 	}
 	SetupOccupancies();	// Setup hole use (and for wires setup surface use too)
 }

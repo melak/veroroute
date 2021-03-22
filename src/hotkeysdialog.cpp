@@ -60,10 +60,9 @@ void HotkeysDialog::Setup()
 	list.push_back( KEY_ACTION("T + right mouse button",		"Clear layer preference of pin (in 2 layer PCB mode)") );
 	list.push_back( KEY_ACTION("Ctrl + arrow keys",				"Offset pad location (in PCB mode)") );
 
-	const int numRows = (int) ( list.size() );
 	// Set up the table
 	ui->tableWidget->clear();
-	ui->tableWidget->setRowCount(numRows);
+	ui->tableWidget->setRowCount(static_cast<int>( list.size() ));
 	ui->tableWidget->setColumnCount(2);
 	ui->tableWidget->setColumnWidth(0,259);
 	ui->tableWidget->setColumnWidth(1,400);

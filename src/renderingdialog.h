@@ -29,7 +29,7 @@ class RenderingDialog : public QDialog
 	Q_OBJECT
 
 public:
-	explicit RenderingDialog(MainWindow* parent = 0);
+	explicit RenderingDialog(MainWindow* parent = nullptr);
 	~RenderingDialog();
 
 	void UpdateControls();

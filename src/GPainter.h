@@ -31,7 +31,7 @@
 struct GPainter : public QPainter
 {
 	GPainter() : QPainter()					{}
-	~GPainter()								{}
+	virtual ~GPainter()						{}
 	void SetGStream(GStream* p)				{ m_pStream = p; }
 	virtual bool begin(QPaintDevice* p)		{ if ( !m_pStream ) return QPainter::begin(p);	return true; }
 	virtual bool end()						{ if ( !m_pStream ) return QPainter::end();		return true; }
@@ -168,14 +168,14 @@ struct GPainter : public QPainter
 		yRadius = std::min(yRadius, 0.5 * h);
 		const auto xDiameter = xRadius + xRadius;
 		const auto yDiameter = yRadius + yRadius;
-		drawArc( x+w-xDiameter, y, xDiameter, yDiameter, 0,1440);
-		drawLine(x+w-xRadius, y, x+xRadius, y);
-		drawArc(x, y, xDiameter, yDiameter, 1440, 1440);
-		drawLine(x, y+yRadius,x, y+h-yRadius);
-		drawArc(x, y+h-yDiameter, xDiameter, yDiameter, 2880,1440);
-		drawLine(x+xRadius, y+h, x+w-xRadius, y+h);
-		drawArc(x+w-xDiameter, y+h-yDiameter, xDiameter, yDiameter, 4320,1440);
-		drawLine(x+w, y+h-yRadius, x+w, y+yRadius);
+		drawArc(static_cast<int>(x+w-xDiameter), static_cast<int>(y), static_cast<int>(xDiameter), static_cast<int>(yDiameter), 0,1440);
+		drawLine(static_cast<int>(x+w-xRadius), static_cast<int>(y), static_cast<int>(x+xRadius), static_cast<int>(y));
+		drawArc(static_cast<int>(x), static_cast<int>(y), static_cast<int>(xDiameter), static_cast<int>(yDiameter), 1440, 1440);
+		drawLine(static_cast<int>(x), static_cast<int>(y+yRadius), static_cast<int>(x), static_cast<int>(y+h-yRadius));
+		drawArc(static_cast<int>(x), static_cast<int>(y+h-yDiameter), static_cast<int>(xDiameter), static_cast<int>(yDiameter), 2880,1440);
+		drawLine(static_cast<int>(x+xRadius), static_cast<int>(y+h), static_cast<int>(x+w-xRadius), static_cast<int>(y+h));
+		drawArc(static_cast<int>(x+w-xDiameter), static_cast<int>(y+h-yDiameter), static_cast<int>(xDiameter), static_cast<int>(yDiameter), 4320,1440);
+		drawLine(static_cast<int>(x+w), static_cast<int>(y+h-yRadius), static_cast<int>(x+w), static_cast<int>(y+yRadius));
 	}
 	virtual void drawArc(int x, int y, int w, int h, int a, int alen, bool bClose = false)
 	{

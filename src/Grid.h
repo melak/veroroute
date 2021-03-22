@@ -177,7 +177,7 @@ class CompElementGrid : public Grid<CompElement>
 public:
 	CompElementGrid() : Grid<CompElement>() {}
 	CompElementGrid(const CompElementGrid& o) : Grid<CompElement>(o) { *this = o; }
-	virtual ~CompElementGrid() {}
+	virtual ~CompElementGrid() override {}
 	CompElementGrid& operator=(const CompElementGrid& o) { Grid<CompElement>::operator=(o); return *this; }
 	bool operator==(const CompElementGrid& o) const { return Grid<CompElement>::operator==(o); }
 	bool operator!=(const CompElementGrid& o) const	{ return Grid<CompElement>::operator!=(o); }
@@ -288,7 +288,7 @@ class ElementGrid : public Grid<Element>
 public:
 	ElementGrid() : Grid<Element>() {}
 	ElementGrid(const ElementGrid& o) : Grid<Element>(o) { *this = o; }
-	virtual ~ElementGrid() {}
+	virtual ~ElementGrid() override {}
 	ElementGrid& operator=(const ElementGrid& o) { Grid<Element>::operator=(o); return *this; }
 	bool operator==(const ElementGrid& o) const { return Grid<Element>::operator==(o); }
 	bool operator!=(const ElementGrid& o) const	{ return Grid<Element>::operator!=(o); }

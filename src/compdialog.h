@@ -29,7 +29,7 @@ class CompDialog : public QWidget
 	Q_OBJECT
 
 public:
-	explicit CompDialog(QWidget* parent = 0);
+	explicit CompDialog(QWidget* parent = nullptr);
 	~CompDialog();
 
 	void SetMainWindow(MainWindow* p);

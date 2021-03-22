@@ -538,7 +538,7 @@ void MainWindow::OpenRecent()
 										 QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::No ) return;
 	}
 
-	QAction* pAction = qobject_cast<QAction*> ( sender() );
+	QAction* pAction = qobject_cast<QAction*>( sender() );
 	if ( pAction )
 	{
 		QString fileName = pAction->data().toString();
@@ -818,8 +818,8 @@ void MainWindow::ZoomHelper(int delta)	// delta == change in GRIDPIXELS
 	RepaintSkipRouting(true);
 
 	// Try to have same grid position under mouse after zoom
-	pH->setValue(L + X * delta * 1.0 / W);
-	pV->setValue(T + Y * delta * 1.0 / W);
+	pH->setValue(static_cast<int>(L + X * delta * 1.0 / W));
+	pV->setValue(static_cast<int>(T + Y * delta * 1.0 / W));
 }
 
 // Edit menu items
@@ -1391,7 +1391,7 @@ void MainWindow::SelectNodeColor()
 }
 
 // Track controls
-DIAGSMODE oldDiagsMode(DIAGSMODE::OFF);
+static DIAGSMODE oldDiagsMode(DIAGSMODE::OFF);
 
 void MainWindow::SetTracksVeroV(bool b)
 {
@@ -1686,15 +1686,15 @@ void MainWindow::UpdateRecentFiles(const QString* pFileName, bool bAdd)
 		files.removeAll(fileName);
 		if ( bAdd )
 			files.prepend(fileName);
-		while ( (size_t)files.size() > MAX_RECENT_FILES )
+		while ( static_cast<size_t>(files.size()) > MAX_RECENT_FILES )
 			files.removeLast();
 		settings.setValue("recentFiles", files);
 	}
 
-	const size_t numFiles = std::min((size_t)files.size(), MAX_RECENT_FILES);
+	const size_t numFiles = std::min(static_cast<size_t>(files.size()), MAX_RECENT_FILES);
 	for (size_t i = 0; i < numFiles; i++)
 	{
-		const QString&	fileName	= files[i];
+		const QString&	fileName	= files[static_cast<int>(i)];
 		const QString	text		= tr("&%1 %2").arg( i + 1 ).arg( fileName );
 		m_recentFileAction[i]->setText(text);
 		m_recentFileAction[i]->setData(fileName);

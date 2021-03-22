@@ -25,8 +25,8 @@ class RectManager : public Persist
 {
 public:
 	RectManager()	{}
-	~RectManager()	{}
-	void Clear()	{ m_startRow = m_startCol = 0; m_current.SetInvalid(); m_bounding.SetInvalid(), m_list.clear(); }
+	virtual ~RectManager() {}
+	void Clear()	{ m_startRow = m_startCol = 0; m_current.SetInvalid(); m_bounding.SetInvalid(); m_list.clear(); }
 	RectManager(const RectManager& o)	{ *this = o; }
 	RectManager& operator=(const RectManager& o)
 	{

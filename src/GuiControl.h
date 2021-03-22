@@ -38,7 +38,7 @@ class GuiControl : public Persist, public Merge
 {
 public:
 	GuiControl() {}
-	~GuiControl() {}
+	virtual ~GuiControl() {}
 	GuiControl(const GuiControl& o) { *this = o; }
 	GuiControl& operator=(const GuiControl& o)
 	{
@@ -315,10 +315,10 @@ public:
 		outStream.Save(m_groundNodeId0);	// Added in VRT_VERSION_3
 		outStream.Save(m_groundNodeId1);	// Added in VRT_VERSION_34
 		outStream.Save(m_currentTextId);	// Added in VRT_VERSION_14
-		outStream.Save((int) m_diagsMode);
-		outStream.Save((int) m_iTrackMode);
-		outStream.Save((int) m_iCompMode);
-		outStream.Save((int) m_iHoleType);	// Added in VRT_VERSION_33
+		outStream.Save(static_cast<int>(m_diagsMode));
+		outStream.Save(static_cast<int>(m_iTrackMode));
+		outStream.Save(static_cast<int>(m_iCompMode));
+		outStream.Save(static_cast<int>(m_iHoleType));	// Added in VRT_VERSION_33
 		outStream.Save(m_GRIDPIXELS);
 		outStream.Save(m_PAD_MIL);
 		outStream.Save(m_TRACK_MIL);

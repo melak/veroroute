@@ -51,7 +51,7 @@ public:
 		GlueNbrs();		// Set pointers between neighbouring grid elements
 	}
 
-	~Board() {}
+	virtual ~Board() override {}
 
 	Board(const Board& o, bool bFullCopy = true)
 	: ElementGrid()
@@ -494,7 +494,7 @@ public:
 	void Flood_Helper(const bool bBuildTracks);
 	void Flood_Grow(const int& iFloodNodeId, Element* pJ, const int& iNbr, const bool& bBuildTracks, unsigned int& iMH, unsigned int& iMaxMH, bool& bDone);
 	void Backtrace(Element* pEnd, const int& nodeId);
-	bool BacktraceHelper(Element*& p, unsigned int& MH, const int& nodeId, const int& iDeltaMH, const int& iNbr, const int& iLoop);
+	bool BacktraceHelper(Element*& p, unsigned int& MH, const int& nodeId, const unsigned int& iDeltaMH, const int& iNbr, const int& iLoop);
 	void Manhatten(Element* p);
 	void ManhattenHelper(const Element* p, const int& iNbr, unsigned int& iMH, unsigned int& iMaxMH);
 	void CheckAllComplete();
@@ -714,7 +714,7 @@ public:
 private:
 	inline void UpdateMH(Element* p, const unsigned int& iRouteID, const unsigned int& iMH, unsigned int& iMaxMH)
 	{
-		m_growingRoutes[(size_t)iRouteID] = true;
+		m_growingRoutes[static_cast<size_t>(iRouteID)] = true;
 		m_tmpVec[m_tmpVecSize++] = p;	// Add p to set of visited points
 		p->UpdateMH(iRouteID, iMH, iMaxMH);
 	}

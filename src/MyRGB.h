@@ -36,7 +36,7 @@ public:
 	{
 		SetRGB(o.red(), o.green(), o.blue());
 	}
-	~MyRGB() {}
+	virtual ~MyRGB() {}
 	MyRGB& operator=(const MyRGB& o)
 	{
 		m_R	= o.m_R;

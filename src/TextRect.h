@@ -33,7 +33,7 @@ class TextRect : public Rect, public MyRGB
 public:
 	TextRect() : Rect(), MyRGB() {}
 	TextRect(int rowMin, int rowMax, int colMin, int colMax) : Rect(rowMin, rowMax, colMin, colMax), MyRGB() {}
-	~TextRect()	{}
+	virtual ~TextRect() override {}
 	TextRect(const TextRect& o)	: Rect(o), MyRGB(o) { *this = o; }
 	TextRect& operator=(const TextRect& o)
 	{

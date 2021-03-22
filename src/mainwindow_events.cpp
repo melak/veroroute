@@ -27,8 +27,7 @@ static const bool ALLOW_SMART_PAN_WITHOUT_CTRLKEY = true;
 static std::chrono::steady_clock::time_point g_lastAutoPanTime;
 static bool g_bHaveAutoPanned = false;
 
-std::string mouseActionString("Action");	// For the undo/redo history
-
+static std::string mouseActionString("Action");	// For the undo/redo history
 
 void MainWindow::GetPixMapXY(const QPoint& currentPoint, int& pixmapX, int& pixmapY) const
 {
@@ -68,8 +67,8 @@ void MainWindow::GetRowCol(const QPoint& currentPoint, const int rows, const int
 void MainWindow::wheelEvent(QWheelEvent* event)
 {
 	//TODO For Qt 6.0 and later use position() instead of posF()
-	m_mousePos = QPoint((int)event->posF().x(), (int)event->posF().y());
-//	m_mousePos = QPoint((int)event->position().x(), (int)event->position().y());
+	m_mousePos = QPoint(static_cast<int>(event->posF().x()), static_cast<int>(event->posF().y()));
+//	m_mousePos = QPoint(static_cast<int>(event->position().x()), static_cast<int>(event->position().y()));
 
 	if ( GetShiftKeyDown() ) return;	// Ignore wheel events while trying to group components
 	const bool bBack = ( event->angleDelta().y() < 0 );

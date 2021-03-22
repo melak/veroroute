@@ -45,23 +45,23 @@ struct DataStream
 	void Close() { m_file.close(); }
 
 	void Load(bool& o)					{				m_ios >> o; }
-	void Load(char& o)					{ qint8		t;	m_ios >> t; o = (char)			t; }
-	void Load(unsigned char& o)			{ quint8	t;	m_ios >> t; o = (unsigned char)	t; }
-	void Load(short& o)					{ qint16	t;	m_ios >> t; o = (short)			t; }
-	void Load(unsigned short& o)		{ quint16	t;	m_ios >> t; o = (unsigned short)t; }
-	void Load(int& o)					{ qint32	t;	m_ios >> t; o = (int)			t; }
-	void Load(unsigned int& o)			{ quint32	t;	m_ios >> t; o = (unsigned int)	t; }
+	void Load(char& o)					{ qint8		t;	m_ios >> t; o = static_cast<char>			(t); }
+	void Load(unsigned char& o)			{ quint8	t;	m_ios >> t; o = static_cast<unsigned char>	(t); }
+	void Load(short& o)					{ qint16	t;	m_ios >> t; o = static_cast<short>			(t); }
+	void Load(unsigned short& o)		{ quint16	t;	m_ios >> t; o = static_cast<unsigned short>	(t); }
+	void Load(int& o)					{ qint32	t;	m_ios >> t; o = static_cast<int>			(t); }
+	void Load(unsigned int& o)			{ quint32	t;	m_ios >> t; o = static_cast<unsigned int>	(t); }
 	void Load(float& o)					{				m_ios >> o; }
 	void Load(double& o)				{				m_ios >> o; }
 	void Load(std::string& o)			{ QString	t;	m_ios >> t; o = t.toStdString();}
 
 	void Save(const bool& o)			{ m_ios << o; }
-	void Save(const char& o)			{ m_ios << (qint8)	o; }
-	void Save(const unsigned char& o)	{ m_ios << (quint8)	o; }
-	void Save(const short& o)			{ m_ios << (qint16)	o; }
-	void Save(const unsigned short& o)	{ m_ios << (quint16)o; }
-	void Save(const int& o)				{ m_ios << (qint32)	o; }
-	void Save(const unsigned int& o)	{ m_ios << (quint32)o; }
+	void Save(const char& o)			{ m_ios << static_cast<qint8>	(o); }
+	void Save(const unsigned char& o)	{ m_ios << static_cast<quint8>	(o); }
+	void Save(const short& o)			{ m_ios << static_cast<qint16>	(o); }
+	void Save(const unsigned short& o)	{ m_ios << static_cast<quint16>	(o); }
+	void Save(const int& o)				{ m_ios << static_cast<qint32>	(o); }
+	void Save(const unsigned int& o)	{ m_ios << static_cast<quint32>	(o); }
 	void Save(const float& o)			{ m_ios << o; }
 	void Save(const double& o)			{ m_ios << o; }
 	void Save(const std::string& o)		{ m_ios << QString::fromStdString(o); }
@@ -71,11 +71,11 @@ struct DataStream
 	const bool& GetOK() const			{ return m_bOK; }
 	void		SetOK(bool b)			{ m_bOK = b; }
 private:
-	TYPE			m_type;
-	QFile			m_file;
-	QDataStream		m_ios;
-	int				m_version;	// Used to represent VRT version being loaded so the format can evolve
-	bool			m_bOK;		// To flag problems
+	TYPE		m_type;
+	QFile		m_file;
+	QDataStream	m_ios;
+	int			m_version;	// Used to represent VRT version being loaded so the format can evolve
+	bool		m_bOK;		// To flag problems
 };
 
 // The interface definition for load and saving data to file
@@ -91,12 +91,12 @@ struct Persist
 
 struct MergeOffsets
 {
-	int deltaNodeId 	= 0;
-	int deltaCompId 	= 0;
+	int deltaNodeId		= 0;
+	int deltaCompId		= 0;
 	int deltaGroupId	= 0;
 	int deltaLyr		= 0;
-	int deltaRow	 	= 0;
-	int deltaCol 		= 0;
+	int deltaRow		= 0;
+	int deltaCol		= 0;
 };
 
 // The interface definition for handling merge offsets

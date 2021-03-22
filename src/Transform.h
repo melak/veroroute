@@ -45,13 +45,12 @@ struct Transform
 		const qreal y = o.y();	// Take a copy (not a reference)
 		switch( m_eType )
 		{
-			case TRANSFORM::NONE:		return;
 			case TRANSFORM::SCALE:		o.setX(x * m_A);	o.setY(y * m_B);	return;
 			case TRANSFORM::TRANSLATE:	o.setX(x + m_A);	o.setY(y + m_B);	return;
 			case TRANSFORM::ROTATE:		dRadians = m_A * M_PI / 180;
 										C = cos(dRadians);	S = sin(dRadians);
 										o.setX(x*C - y*S);	o.setY(x*S + y*C);	return;
-			default:					assert(0);								return;
+			default:					assert(m_eType == TRANSFORM::NONE);		return;
 		}
 	}
 	const TRANSFORM& GetType() const { return m_eType; }

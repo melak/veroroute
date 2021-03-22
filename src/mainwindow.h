@@ -69,7 +69,7 @@ class MainWindow : public QMainWindow
 	Q_OBJECT
 
 public:
-	explicit MainWindow(const QString& localDataPathStr, const QString& tutorialsPathStr, QWidget* parent = 0);
+	explicit MainWindow(const QString& localDataPathStr, const QString& tutorialsPathStr, QWidget* parent = nullptr);
 	~MainWindow();
 
 	void ResetView(bool bTutorial = false);

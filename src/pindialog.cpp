@@ -49,7 +49,7 @@ void PinDialog::CellChanged(int row, int col)
 
 	Component*			pComp		= GetUserComp();	assert( pComp );
 	QTableWidgetItem*	pItemLabel	= ui->tableWidget->item(row, col);
-	const size_t		iPinIndex	= row;
+	const size_t		iPinIndex	= static_cast<size_t>(row);
 	const std::string	strLabel	= pItemLabel->text().toStdString();
 
 	if ( col == 1 )
@@ -76,11 +76,11 @@ void PinDialog::CellChanged(int row, int col)
 
 void PinDialog::Update()
 {
-	Component*	pComp	= GetUserComp();
-	const int	numPins	= ( pComp ) ? (int) pComp->GetNumPins() : 0;
+	Component*		pComp	= GetUserComp();
+	const size_t	numPins	= ( pComp ) ? pComp->GetNumPins() : 0;
 	// Set up the table
 	ui->tableWidget->clear();
-	ui->tableWidget->setRowCount(numPins);
+	ui->tableWidget->setRowCount(static_cast<int>(numPins));
 	ui->tableWidget->setColumnCount(3);
 	ui->tableWidget->setColumnWidth(0,40);
 	ui->tableWidget->setColumnWidth(1,105);
@@ -94,7 +94,7 @@ void PinDialog::Update()
 	ui->tableWidget->setShowGrid(true);
 
 	// Populate the table with data
-	for (int iPinIndex = 0; iPinIndex < numPins; iPinIndex++)
+	for (size_t iPinIndex = 0; iPinIndex < numPins; iPinIndex++)
 	{
 		const int& iAlign = pComp->GetPinAlign(iPinIndex);
 		for (int iCol = 0; iCol < 3; iCol++)
@@ -116,7 +116,7 @@ void PinDialog::Update()
 			else
 				pItem->setFlags(Qt::ItemIsEditable | Qt::ItemIsEnabled);
 
-			ui->tableWidget->setItem(iPinIndex, iCol, pItem);
+			ui->tableWidget->setItem(static_cast<int>(iPinIndex), iCol, pItem);
 		}
 	}
 }

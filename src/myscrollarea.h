@@ -30,7 +30,7 @@ class MyScrollArea : public QScrollArea
 	Q_OBJECT
 
 public:
-	MyScrollArea(QWidget* parent = 0) : QScrollArea(parent), m_parent(parent) {}
+	MyScrollArea(QWidget* parent = nullptr) : QScrollArea(parent), m_parent(parent) {}
 	~MyScrollArea() {}
 
 protected:

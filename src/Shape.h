@@ -64,7 +64,7 @@ public:
 	{
 	}
 	Shape(const Shape& o) { *this = o; }
-	~Shape() {}
+	virtual ~Shape() {}
 	Shape& operator=(const Shape& o)
 	{
 		m_type		= o.m_type;
@@ -79,14 +79,14 @@ public:
 	}
 	bool operator==(const Shape& o) const	// Compare persisted info
 	{
-		return m_type		== o.m_type
-			&& m_x1			== o.m_x1	&& m_x2 == o.m_x2
-			&& m_y1			== o.m_y1	&& m_y2	== o.m_y2
-			&& m_a1			== o.m_a1	&& m_a2	== o.m_a2	&& m_a3	== o.m_a3
-			&& m_bDrawLine	== o.m_bDrawLine
-			&& m_bDrawFill	== o.m_bDrawFill
-			&& m_lineColor	== o.m_lineColor
-			&& m_fillColor	== o.m_fillColor;
+		return m_type		 == o.m_type
+			&& m_x1 - o.m_x1 == 0.0		&& m_x2 - o.m_x2 == 0.0
+			&& m_y1	- o.m_y1 == 0.0		&& m_y2	- o.m_y2 == 0.0
+			&& m_a1	- o.m_a1 == 0.0		&& m_a2	- o.m_a2 == 0.0		&& m_a3	- o.m_a3 == 0.0
+			&& m_bDrawLine	 == o.m_bDrawLine
+			&& m_bDrawFill	 == o.m_bDrawFill
+			&& m_lineColor	 == o.m_lineColor
+			&& m_fillColor	 == o.m_fillColor;
 	}
 	bool operator!=(const Shape& o) const
 	{
@@ -99,12 +99,12 @@ public:
 		if ( m_lineColor	!= o.m_lineColor )	return m_lineColor < o.m_lineColor;
 		if ( m_fillColor	!= o.m_fillColor )	return m_fillColor < o.m_fillColor;
 		if ( m_type			!= o.m_type )		return static_cast<int>(m_type) < static_cast<int>(o.m_type);
-		if ( m_x1			!= o.m_x1 )			return m_x1 < o.m_x1;
-		if ( m_x2			!= o.m_x2 )			return m_x2 < o.m_x2;
-		if ( m_y1			!= o.m_y1 )			return m_y1 < o.m_y1;
-		if ( m_y2			!= o.m_y2 )			return m_y2 < o.m_y2;
-		if ( m_a1			!= o.m_a1 )			return m_a1 < o.m_a1;
-		if ( m_a2			!= o.m_a2 )			return m_a2 < o.m_a2;
+		if ( m_x1 - o.m_x1	!= 0.0 )			return m_x1 < o.m_x1;
+		if ( m_x2 - o.m_x2	!= 0.0 )			return m_x2 < o.m_x2;
+		if ( m_y1 - o.m_y1	!= 0.0 )			return m_y1 < o.m_y1;
+		if ( m_y2 - o.m_y2	!= 0.0 )			return m_y2 < o.m_y2;
+		if ( m_a1 - o.m_a1	!= 0.0 )			return m_a1 < o.m_a1;
+		if ( m_a2 - o.m_a2	!= 0.0 )			return m_a2 < o.m_a2;
 		return m_a3 < o.m_a3;
 	}
 	void SetType(const SHAPE& c)		{ m_type = c; }
@@ -167,7 +167,7 @@ public:
 	double			GetAlen() const	{ double d = m_a2 - m_a1; while ( d < 0 ) d += 360.0; return d; }
 	void GetSafeBounds(double& L, double& R, double& T, double& B) const	// Allows for worst case rotation "A3"
 	{
-		if ( GetA3() == 0 )
+		if ( GetA3() == 0.0 )
 		{
 			L = GetXmin();		R = GetXmax();
 			T = GetYmin();		B = GetYmax();
@@ -186,7 +186,7 @@ public:
 	{
 		int type(0);
 		inStream.Load(type);
-		m_type = static_cast<SHAPE> (type);
+		m_type = static_cast<SHAPE>(type);
 		inStream.Load(m_x1);
 		inStream.Load(m_x2);
 		inStream.Load(m_y1);
@@ -212,7 +212,7 @@ public:
 	}
 	virtual void Save(DataStream& outStream) override
 	{
-		outStream.Save((int)m_type);
+		outStream.Save(static_cast<int>(m_type));
 		outStream.Save(m_x1);
 		outStream.Save(m_x2);
 		outStream.Save(m_y1);

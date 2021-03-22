@@ -51,8 +51,8 @@ class CompManager : public Persist, public Merge
 {
 	friend class Board;
 public:
-	CompManager()	{ ClearTrax(); }
-	~CompManager()	{}
+	CompManager() { ClearTrax(); }
+	virtual ~CompManager() {}
 	CompManager(const CompManager& o) { *this = o; }
 	void Clear()
 	{
@@ -237,9 +237,10 @@ public:
 					m_mapWireToInfo[pPrev].m_iShift = -1;
 					for (int j = i - 2; j >= 0; j--)			// ... and also back along its chain
 					{
-						if ( wiresH[j]->GetRow()	 != wiresH[j+1]->GetRow() ||
-							 wiresH[j]->GetLastCol() != wiresH[j+1]->GetCol() ) break;
-						m_mapWireToInfo[ wiresH[j] ].m_iShift = -1;
+						const size_t J = static_cast<size_t>(j);
+						if ( wiresH[J]->GetRow()	 != wiresH[J+1]->GetRow() ||
+							 wiresH[J]->GetLastCol() != wiresH[J+1]->GetCol() ) break;
+						m_mapWireToInfo[ wiresH[J] ].m_iShift = -1;
 					}
 				}
 				m_mapWireToInfo[p].m_iShift = -m_mapWireToInfo[pPrev].m_iShift;	// ... give this opposite shift to pPrev
@@ -270,9 +271,10 @@ public:
 					m_mapWireToInfo[pPrev].m_iShift = -1;
 				for (int j = i - 2; j >= 0; j--)				// ... and also back along its chain
 				{
-					if ( wiresV[j]->GetCol()	 != wiresV[j+1]->GetCol() ||
-						 wiresV[j]->GetLastRow() != wiresV[j+1]->GetRow() ) break;
-					m_mapWireToInfo[ wiresV[j] ].m_iShift = -1;
+					const size_t J = static_cast<size_t>(j);
+					if ( wiresV[J]->GetCol()	 != wiresV[J+1]->GetCol() ||
+						 wiresV[J]->GetLastRow() != wiresV[J+1]->GetRow() ) break;
+					m_mapWireToInfo[ wiresV[J] ].m_iShift = -1;
 				}
 				m_mapWireToInfo[p].m_iShift = -m_mapWireToInfo[pPrev].m_iShift;	// ... give this opposite shift to pPrev
 			}

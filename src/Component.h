@@ -42,7 +42,7 @@ class Component : public FootPrint
 {
 public:
 	Component()	: FootPrint() { Clear(); }
-	~Component() {}
+	virtual ~Component() override {}
 	Component(const Component& o) : FootPrint() { *this = o; }
 	void Clear()
 	{
@@ -402,7 +402,7 @@ public:
 		if ( GetType() == COMP::DIP || GetType() == COMP::SIP )
 		{
 			char buffer[32] = {'\0'};
-			sprintf(buffer, "%d", (int) GetNumPins());
+			sprintf(buffer, "%d", static_cast<int>(GetNumPins()));
 			str += std::string(buffer);		// e.g. "DIP16"
 		}
 		return str;
@@ -415,7 +415,7 @@ public:
 			 GetType() == COMP::STRIP_100 || GetType() == COMP::BLOCK_100 || GetType() == COMP::BLOCK_200 )
 		{
 			char buffer[32] = {'\0'};
-			sprintf(buffer, "%d", (int) GetNumPins());
+			sprintf(buffer, "%d", static_cast<int>(GetNumPins()));
 			str += std::string(buffer);		// e.g. "DIP16"
 		}
 		return str;
@@ -476,7 +476,7 @@ public:
 	}
 	const CompElement*	GetCompElement(const int& compRow, const int& compCol) const
 	{
-		return FootPrint::Get(0, compRow, compCol, (char)GetDirection());
+		return FootPrint::Get(0, compRow, compCol, GetDirection());
 	}
 	bool GetHasNodeId(int nodeId) const
 	{
@@ -535,14 +535,14 @@ public:
 
 		switch( GetType() )
 		{
-			case COMP::SIP:				return AllocatePins( GetCols() );
-			case COMP::DIP:				return AllocatePins( 2 * GetCols() );
-			case COMP::STRIP_100:		return AllocatePins( GetCols() );
-			case COMP::BLOCK_100:		return AllocatePins( GetCols() );
-			case COMP::BLOCK_200:		return AllocatePins( ( GetCols() - 1 ) / 2 );
-			case COMP::SWITCH_ST:		return AllocatePins( GetCols() + 1 );
-			case COMP::SWITCH_DT:		return AllocatePins( 3 * ( GetCols() + 1 ) / 2 );
-			case COMP::SWITCH_ST_DIP:	return AllocatePins( 2 * GetCols() );
+			case COMP::SIP:				return AllocatePins( static_cast<size_t>( GetCols() ) );
+			case COMP::DIP:				return AllocatePins( static_cast<size_t>( 2 * GetCols() ) );
+			case COMP::STRIP_100:		return AllocatePins( static_cast<size_t>( GetCols() ) );
+			case COMP::BLOCK_100:		return AllocatePins( static_cast<size_t>( GetCols() ) );
+			case COMP::BLOCK_200:		return AllocatePins( static_cast<size_t>( ( GetCols() - 1 ) / 2 ) );
+			case COMP::SWITCH_ST:		return AllocatePins( static_cast<size_t>( GetCols() + 1 ) );
+			case COMP::SWITCH_DT:		return AllocatePins( static_cast<size_t>( 3 * ( GetCols() + 1 ) / 2 ) );
+			case COMP::SWITCH_ST_DIP:	return AllocatePins( static_cast<size_t>( 2 * GetCols() ) );
 			default:					return;
 		}
 	}

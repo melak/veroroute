@@ -30,7 +30,7 @@ class TemplatesDialog : public QDialog
 	Q_OBJECT
 
 public:
-	explicit TemplatesDialog(MainWindow* parent = 0);
+	explicit TemplatesDialog(MainWindow* parent = nullptr);
 	~TemplatesDialog();
 
 	void Update();

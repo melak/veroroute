@@ -71,8 +71,8 @@ void GuiControl::CalcBlob(const qreal& W, const QPointF& pC, const QPointF& pCof
 
 	if ( N > 2 || ( N == 2 && !bClosed ) )	// If not done making polygon ...
 	{
-		int nCount(0);				// Perimeter point counter
-		int iL(iFirst), iR(iFirst);	// Indexes of consecutive used perimeter points
+		int nCount(0);		// Perimeter point counter
+		int iL, iR(iFirst);	// Indexes of consecutive used perimeter points
 		for (int ii = 1; ii <= 8 && nCount < N; ii++)	// A full clockwise loop around the perimeter back to the start
 		{
 			if ( !bClosed && ii == 8 ) break;

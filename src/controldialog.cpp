@@ -26,7 +26,7 @@ ControlDialog::ControlDialog(QWidget* parent)
 , ui(new Ui_ControlDialog)
 , m_pMainWindow(nullptr)
 {
-	ui->setupUi((QDialog*)(this));
+	ui->setupUi( reinterpret_cast<QDialog*>(this) );
 
 	QFont font = ui->rotateCCW->font();
 	font.setFamily(QString("Arial Unicode MS"));

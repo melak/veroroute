@@ -26,9 +26,9 @@ class Rect : public Persist, public Merge
 public:
 	Rect()	{}
 	Rect(int rowMin, int rowMax, int colMin, int colMax) : m_rowMin(rowMin), m_rowMax(rowMax), m_colMin(colMin), m_colMax(colMax) {}
-	~Rect()	{}
+	virtual ~Rect()	{}
 	Rect(const Rect& o)						{ *this = o; }
-	Rect&	operator=(const Rect& o)		{ m_rowMin = o.m_rowMin; m_rowMax = o.m_rowMax; m_colMin = o.m_colMin, m_colMax = o.m_colMax; return *this; }
+	Rect&	operator=(const Rect& o)		{ m_rowMin = o.m_rowMin; m_rowMax = o.m_rowMax; m_colMin = o.m_colMin; m_colMax = o.m_colMax; return *this; }
 	bool	operator==(const Rect& o) const	{ return m_rowMin == o.m_rowMin && m_rowMax == o.m_rowMax && m_colMin == o.m_colMin && m_colMax == o.m_colMax; }
 	bool	operator!=(const Rect& o) const	{ return !(*this == o); }
 	bool	operator<(const Rect& o) const	{ return GetArea() > o.GetArea(); }	// Bigger area is prefered

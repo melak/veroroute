@@ -88,7 +88,7 @@ public:
 
 	Element() : Pin(), TrackElement() { ZeroConnectionPointers(); }
 	Element(const Element& o) : Pin(o), TrackElement(o)	{ assert(0); *this = o; }	// The assert just shows this is never used
-	~Element() {}
+	virtual ~Element() override {}
 	void ZeroConnectionPointers()
 	{
 		memset(m_pNbr,	0, NUM_NBRS * sizeof(Element*));
@@ -429,6 +429,6 @@ private:
 	unsigned int	m_MH		= BAD_MH;		// Manhatten distance to another element.  For the routing/connectivity algorithm.
 	unsigned int	m_maxMH		= 0;			// For the routing algorithm.
 	// Connection pointers. Set by Board::GlueNbrs() and Board::GlueWires().	Don't persist.
-	Element*		m_pNbr[(size_t)NUM_NBRS];	// 0 to 7 <==> NBR_L to NBR_LB,	  8 ==> NBR_X
-	Element*		m_pW[2];					// Up to 2 wires per element. These point to the other end of the wire(s).
+	Element*		m_pNbr[static_cast<size_t>(NUM_NBRS)];	// 0 to 7 <==> NBR_L to NBR_LB,	  8 ==> NBR_X
+	Element*		m_pW[2];								// Up to 2 wires per element. These point to the other end of the wire(s).
 };

@@ -133,11 +133,11 @@ namespace Simplex
 		const int index = ( c - ' ' );
 		return ( index >= 0 && index < 95 ) ? index : -1;	// -1 ==> unsupported character
 	}
-	inline static int GetLetterData(size_t i, size_t j)
+	inline static int GetLetterData(int i, int j)
 	{
-		return ( i < 95 && j < 112 ) ? g_simplex[i][j] : -1;
+		return ( i < 95 && j < 112 ) ? g_simplex[static_cast<size_t>(i)][static_cast<size_t>(j)] : -1;
 	}
-	inline static void CalcXlimits(const size_t& i, std::pair<int,int>& o)
+	inline static void CalcXlimits(const int& i, std::pair<int,int>& o)
 	{
 		if ( i == 0 ) { o.first = 0; o.second = 5; return; }	// ' ' character
 		o.first = INT_MAX;	o.second = INT_MIN;
@@ -151,13 +151,13 @@ namespace Simplex
 			o.second = std::max(o.second, ix);
 		}
 	}
-	inline static const std::pair<int,int>& GetXlimits(const size_t& i)
+	inline static const std::pair<int,int>& GetXlimits(const int& i)
 	{
 		if ( g_xLimits.empty() )	// Empty cache ...
 		{
 			g_xLimits.resize(95);	// .. so build it
-			for (size_t ii = 0; ii < 95; ii++) CalcXlimits(ii, g_xLimits[ii]);
+			for (int ii = 0; ii < 95; ii++) CalcXlimits(ii, g_xLimits[static_cast<size_t>(ii)]);
 		}
-		return g_xLimits[i];	// Read cache
+		return g_xLimits[static_cast<size_t>(i)];	// Read cache
 	}
 }

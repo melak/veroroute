@@ -58,7 +58,7 @@ struct StringHelper
 						inStream.setstate(std::ios::eofbit);
 					return inStream;
 				default:
-					str += (char)c;
+					str += static_cast<char>( c );
 			}
 		}
 	}

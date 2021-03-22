@@ -29,7 +29,7 @@ class HotkeysDialog : public QDialog
 	Q_OBJECT
 
 public:
-	explicit HotkeysDialog(MainWindow* parent = 0);
+	explicit HotkeysDialog(MainWindow* parent = nullptr);
 	~HotkeysDialog();
 
 protected:

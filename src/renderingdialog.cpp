@@ -113,10 +113,10 @@ void RenderingDialog::UpdateControls()
 	ui->viapadWidth->setValue(	board.GetVIAPAD_MIL()	);
 	ui->viaholeWidth->setValue(	board.GetVIAHOLE_MIL()	);
 
-	const int minTrkMil = (int)minTrk;
-	const int minTrkRem = (int)(10.0 * (minTrk - minTrkMil) );	// 0.1 mil resolution
-	const int minGndMil = (int)minGnd;
-	const int minGndRem = (int)(10.0 * (minGnd - minGndMil) );	// 0.1 mil resolution
+	const int minTrkMil = static_cast<int>(minTrk);
+	const int minTrkRem = static_cast<int>(10.0 * (minTrk - minTrkMil));	// 0.1 mil resolution
+	const int minGndMil = static_cast<int>(minGnd);
+	const int minGndRem = static_cast<int>(10.0 * (minGnd - minGndMil));	// 0.1 mil resolution
 
 	std::string str = "Current min track separation = ";
 	if ( bCompEdit || bVero )

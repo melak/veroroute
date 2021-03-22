@@ -70,7 +70,7 @@ class TrackElement : public Persist, public Merge
 public:
 	TrackElement() {}
 	TrackElement(const TrackElement& o) { *this = o; }
-	~TrackElement() {}
+	virtual ~TrackElement() {}
 	TrackElement& operator=(const TrackElement& o)
 	{
 		m_nodeId	= o.m_nodeId;

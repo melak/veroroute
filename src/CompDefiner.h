@@ -65,7 +65,7 @@ class CompDefiner : public Persist
 {
 public:
 	CompDefiner() { Clear(); }
-	~CompDefiner() {}
+	virtual ~CompDefiner() {}
 	CompDefiner(const CompDefiner& o) { *this = o; }
 	void Populate(const Component& o);	// Set up using an existing component
 	void Clear()
@@ -174,7 +174,7 @@ public:
 	void	MoveCurrentShape(const double& dDown, const double& dRight);
 	size_t	GetNumTruePins() const
 	{
-		int count(0);
+		size_t count(0);
 		for (int i = 0, iSize = m_grid.GetSize(); i < iSize; i++)
 			if ( m_grid.GetAtConst(i)->GetIsPin() ) count++;
 		return count;
@@ -184,7 +184,7 @@ public:
 	{
 		if ( GetCurrentPinId() == BAD_ID ) return false;
 		auto& o =  GetCurrentPin();
-		o.SetPinIndex( i - 1 );
+		o.SetPinIndex( static_cast<size_t>(i - 1) );
 		o.SetSurface( SURFACE_FULL );
 		o.SetHoleUse( HOLE_FULL );
 		return true;

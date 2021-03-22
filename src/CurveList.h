@@ -64,7 +64,7 @@ public:
 		{
 			assert( (int)GPEN::PAD < (int)GPEN::VIA );
 			if ( p1->m_width != p2->m_width ) return p1->m_width > p2->m_width;
-			return (int)(p1->m_ePen) < (int)(p2->m_ePen);	// Pads before Vias if equal size
+			return static_cast<int>(p1->m_ePen) < static_cast<int>(p2->m_ePen);	// Pads before Vias if equal size
 		}
 	};
 	GPEN	m_ePen	= GPEN::NONE;

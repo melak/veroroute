@@ -31,7 +31,7 @@ public:
 		Component::operator=(o);	// Call operator= in base class
 		return *this;
 	}
-	~Template()	{}
+	virtual ~Template() override {}
 	bool MakeTemplate(const Component& o)	// Clears data not relevant to the template definition
 	{
 		Component::operator=(o);	// Call operator= in base class
@@ -70,12 +70,12 @@ public:
 		std::string b = o.GetTypeStr();
 		if ( GetType() == COMP::SIP || GetType() == COMP::DIP )
 		{
-			sprintf(buffer, "%d", (int)GetNumPins());
+			sprintf(buffer, "%d", static_cast<int>(GetNumPins()));
 			a += std::string(buffer);	// e.g. "DIP16"
 		}
 		if ( o.GetType() == COMP::SIP || o.GetType() == COMP::DIP )
 		{
-			sprintf(buffer, "%d", (int)o.GetNumPins());
+			sprintf(buffer, "%d", static_cast<int>(o.GetNumPins()));
 			b += std::string(buffer);	// e.g. "DIP16"
 		}
 		int i = a.compare( b );								// Compare Type strings
@@ -86,7 +86,7 @@ public:
 	{
 		// First order by type
 		if ( GetListOrder(GetType()) != GetListOrder(o.GetType()) ) return GetListOrder(GetType()) < GetListOrder(o.GetType());
-		if ( GetType() != o.GetType() ) return (int)GetType() < (int)o.GetType();
+		if ( GetType() != o.GetType() ) return static_cast<int>(GetType()) < static_cast<int>(o.GetType());
 		// .. then by least pins
 		if ( GetNumPins() != o.GetNumPins() ) return GetNumPins() < o.GetNumPins();
 		// ... then by type string comparison

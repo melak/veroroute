@@ -29,7 +29,7 @@ class WireDialog : public QDialog
 	Q_OBJECT
 
 public:
-	explicit WireDialog(MainWindow* parent = 0);
+	explicit WireDialog(MainWindow* parent = nullptr);
 	~WireDialog();
 
 	void UpdateControls();

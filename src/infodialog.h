@@ -29,7 +29,7 @@ class InfoDialog : public QDialog
 	Q_OBJECT
 
 public:
-	explicit InfoDialog(MainWindow* parent = 0);
+	explicit InfoDialog(MainWindow* parent = nullptr);
 	~InfoDialog();
 
 	void Update();

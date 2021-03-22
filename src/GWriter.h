@@ -93,7 +93,7 @@ public:
 //	void DrawPad(const QPointF& pF, const GPEN& ePen, const int& w)	{ ClearBuffers(); AddPad(pF, ePen, w);	DrawBuffers(); }
 //	void DrawTrack(const QPolygonF& pF, const GPEN& ePen )			{ ClearBuffers(); AddTrack(pF, ePen);	DrawBuffers(); }
 	void DrawLoop(const QPolygonF& pF, const GPEN& ePen)			{ ClearBuffers(); AddLoop(pF,ePen);		DrawBuffers(); }
-	void DrawRegion(const QPolygonF& pF)							{ ClearBuffers(); AddRegion(pF);		DrawBuffers(); };
+	void DrawRegion(const QPolygonF& pF)							{ ClearBuffers(); AddRegion(pF);		DrawBuffers(); }
 private:
 	void WriteHeader(const QString& UTC);
 	void MakeDrills();

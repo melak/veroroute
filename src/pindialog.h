@@ -30,7 +30,7 @@ class PinDialog : public QDialog
 	Q_OBJECT
 
 public:
-	explicit PinDialog(MainWindow* parent = 0);
+	explicit PinDialog(MainWindow* parent = nullptr);
 	~PinDialog();
 
 	void Update();

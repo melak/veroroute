@@ -49,7 +49,7 @@ void MainWindow::CreatePixmapCache(const GuiControl& guiCtrl, ColorManager& colo
 
 	m_radPixmapPad	= guiCtrl.GetHalfPixelsFromMIL( guiCtrl.GetPAD_MIL() );		// Half pad width in pixels
 	m_radPixmapVia	= guiCtrl.GetHalfPixelsFromMIL( guiCtrl.GetVIAPAD_MIL() );	// Half via width in pixels
-	m_radPixmapDiag	= (int) ceil(1.414 * guiCtrl.GetHalfPixelsFromMIL( guiCtrl.GetTRACK_MIL() ));
+	m_radPixmapDiag	= static_cast<int>( ceil(1.414 * guiCtrl.GetHalfPixelsFromMIL( guiCtrl.GetTRACK_MIL() )) );
 	m_radPixmapBlob	= guiCtrl.GetGRIDPIXELS() >> 1;	// Half grid-square width in pixels
 
 	m_ppPixmapPad	= new QPixmap*[NUM_PIXMAP_COLORS];
@@ -193,7 +193,7 @@ void MainWindow::PaintTag(const GuiControl& guiCtrl, QPainter& painter, const QC
 	// Paints a short tag connecting a pad to the ground fill
 	const int w = ( iPadWidthMIL == 0 ) ? guiCtrl.GetPAD_MIL() : iPadWidthMIL;
 	const int X = guiCtrl.GetHalfPixelsFromMIL( w ) + guiCtrl.GetPixelsFromMIL( guiCtrl.GetGAP_MIL() );
-	const int D = (int) ( X * sqrt(0.5) );
+	const int D = static_cast<int>( X * sqrt(0.5) );
 	QPointF pD;	// The other end of the tag
 	switch( iNbr)
 	{
@@ -302,7 +302,7 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 			else if ( bPad && bTrk )	// Fat tracks with diagonals
 			{
 				//polygon.Process();	// Not needed since m_bFatEdge already populated
-				int i(0);
+				size_t i(0);
 				auto iterA = polygon.begin();
 				auto iterB = iterA; iterB++;
 				while( iterB != polygon.end() )
@@ -511,7 +511,6 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	const TRACKMODE& trackMode		= board.GetTrackMode();
 	const COMPSMODE& compMode		= board.GetCompMode();
 	const bool&		 bVero			= board.GetVeroTracks();
-	const bool		 bDiagsOK		= ( board.GetDiagsMode() != DIAGSMODE::OFF );
 	const bool		 bColor			= trackMode == TRACKMODE::COLOR;
 	const bool		 bMono			= trackMode == TRACKMODE::MONO;
 	const bool		 bPCB			= trackMode == TRACKMODE::PCB;
@@ -654,7 +653,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		painter.setPen(GetBackgroundColor() == Qt::black ? m_whitePen : m_blackPen);
 		painter.setBrush(Qt::NoBrush);
 
-		const int dEdge = (int) board.GetEdgeWidth();
+		const int dEdge = static_cast<int>( board.GetEdgeWidth() );
 		painter.drawRect(m_XGRIDOFFSET - dEdge, m_YGRIDOFFSET - dEdge, reqWidth + (dEdge<<1), reqHeight + (dEdge<<1));
 	}
 
@@ -899,6 +898,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						if ( bExtraTags && bPad && nodeId == groundNodeId && nodeId != BAD_NODEID )		// Draw extra thermal relief tags
 						{
 							int iCode(iPerimeterCode);		// Take a copy of the perimeter code
+							const bool bDiagsOK( board.GetDiagsMode() != DIAGSMODE::OFF );	// If bExtraTags gets set true then move this to start of method
 							for (int iDiag = 0, iDiagMax = ( bDiagsOK ) ? 2 : 1; iDiag < iDiagMax; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
 							for (int iNbr = iDiag; iNbr < 8; iNbr += 2)	// Even/Odd iNbr ==> Non-diagonal/Diagonal
 							{
@@ -1162,8 +1162,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						L += padOffsetX;	R += padOffsetX;	T += padOffsetY;	B += padOffsetY;
 
 						// Stop pins vanishing if zoomed too far out
-						if ( L == R ) { L--, R++; }
-						if ( T == B ) { T--, B++; }
+						if ( L == R ) { L--; R++; }
+						if ( T == B ) { T--; B++; }
 
 						if ( bPinLabels )	// Write pin labels
 						{
@@ -1709,7 +1709,7 @@ void MainWindow::GetLRTB(const GuiControl& guiCtrl, double percent, double row, 
 	const int& W = guiCtrl.GetGRIDPIXELS();	// Square width in pixels
 	int X(0), Y(0);
 	GetXY(guiCtrl, row, col, X, Y);
-	const int S = (int) round(W * 0.005 * percent);
+	const int S = static_cast<int>( round(W * 0.005 * percent) );
 	L = X - S;	T = Y - S;
 	R = X + S;	B = Y + S;
 }

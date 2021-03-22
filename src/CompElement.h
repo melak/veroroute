@@ -28,7 +28,7 @@ class CompElement : public Pin, public TrackElement
 public:
 	CompElement() : Pin(), TrackElement() {}
 	CompElement(const CompElement& o) : Pin(o), TrackElement(o) { *this = o; }
-	~CompElement() {}
+	virtual ~CompElement() override {}
 	CompElement& operator=(const CompElement& o)
 	{
 		Pin::operator=(o);			// Call operator= in base class

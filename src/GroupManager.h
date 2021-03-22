@@ -45,7 +45,7 @@ class GroupManager : public Persist, public Merge
 {
 public:
 	GroupManager()	{}
-	~GroupManager()	{}
+	virtual ~GroupManager()	{}
 	GroupManager(const GroupManager& o) { *this = o; }
 	GroupManager& operator=(const GroupManager& o)
 	{
@@ -97,7 +97,7 @@ public:
 		if ( !GetIsUserComp(compId) ) return AddToUserGroup(compId);		// Comp not in group, so add it
 		if ( GetNumUserComps() > 1 ) return RemoveFromUserGroup(compId);	// Comp is not the last, so remove it ...
 	}
-	int  GetNewGroupId()	{ Compact();	return m_list.back().first + 1; };	// Get new groupId bigger than all others
+	int  GetNewGroupId()	{ Compact();	return m_list.back().first + 1; }	// Get new groupId bigger than all others
 	bool CanGroup() const	{ return GetNumUserComps() > 1 && GetSiblingGroupId() == USER_GROUPID; }
 	bool CanUnGroup() const	{ return GetNumUserComps() > 1 && GetSiblingGroupId() != USER_GROUPID; }
 	void Group()	// When user hits "G"
@@ -125,7 +125,6 @@ public:
 				if ( iter->second == compId ) { m_list.erase(iter); bErased = true; }
 			if ( !bErased ) return;
 		}
-		DeleteSingleCompGroups();	// Remove (non-user) groups with a single component
 	}
 	void Add(const int& groupId, const int& compId)
 	{
@@ -220,14 +219,6 @@ private:
 		for (auto iter = m_list.begin(); iter != m_list.end() && iter->first <= groupId; ++iter)
 			if ( iter->first == groupId ) count++;
 		return count;
-	}
-	void DeleteSingleCompGroups()	// Remove (non-user) groups with a single component
-	{
-		std::list<int> badGroupIds;
-		for (auto riter = m_list.rbegin(); riter != m_list.rend() && riter->first != USER_GROUPID; ++riter)	// Loop non-user groups in reverse order
-			if ( GetNumGroupComps( riter->first ) == 1 ) badGroupIds.push_back( riter->first );
-		badGroupIds.unique();
-		for (const auto& groupId : badGroupIds) RemoveGroup(groupId);
 	}
 	void RemoveGroup(const int& groupId)	// Remove all entries with the specified groupId
 	{

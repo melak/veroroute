@@ -16,74 +16,71 @@ TARGET = veroroute
 TEMPLATE = app
 
 
-SOURCES += main.cpp\
+SOURCES += bomdialog.cpp \
+    compdialog.cpp \
+    controldialog.cpp \
+    finddialog.cpp \
+    hotkeysdialog.cpp \
+    infodialog.cpp \
+    main.cpp \
     mainwindow.cpp \
     mainwindow_drawing.cpp \
     mainwindow_events.cpp \
-    renderingdialog.cpp \
-    hotkeysdialog.cpp \
-    infodialog.cpp \
-    controldialog.cpp \
-    bomdialog.cpp \
-    templatesdialog.cpp \
     pindialog.cpp \
+    renderingdialog.cpp \
+    templatesdialog.cpp \
     textdialog.cpp \
-    finddialog.cpp \
     wiredialog.cpp \
-    compdialog.cpp \
+    Board.cpp \
     Board_routing.cpp \
     Board_components.cpp \
     Board_import.cpp \
-    Board.cpp \
-    Component.cpp \
     CompDefiner.cpp \
+    Component.cpp \
     CurveList.cpp \
-    FootPrint.cpp \    
-    GWriter.cpp \
-    GuiControl.cpp
+    FootPrint.cpp \  
+    GuiControl.cpp \
+    GWriter.cpp
 
 
-HEADERS  += mainwindow.h \
+HEADERS  += bomdialog.h \
     controldialog.h \
     compdialog.h \
-    renderingdialog.h \
+    finddialog.h \
     hotkeysdialog.h \
     infodialog.h \
-    bomdialog.h \
-    templatesdialog.h \
+    mainwindow.h \
     pindialog.h \
+    renderingdialog.h \
+    templatesdialog.h \
     textdialog.h \
-    finddialog.h \
     wiredialog.h \
     myscrollarea.h \
-    Board.h \
-    GuiControl.h \
-    Common.h \
-    CompTypes.h \
-    CompDefiner.h \
-    Component.h \
-    CurveList.h \
-    Pin.h \
-    TrackElement.h \
-    CompElement.h \
-    Element.h \
-    Grid.h \
-    FootPrint.h \
     AdjInfo.h \
-    AdjInfoManager.h \
+    AdjInfoManager.h \   
+    Board.h \
     ColorManager.h \
-    CompManager.h \
+    Common.h \
+    Component.h \
+    CompDefiner.h \
+    CompElement.h \
+    CompManager.h \    
+    CompTypes.h \
     ConnectionMatrix.h \
+    CurveList.h \
+    Element.h \
+    FootPrint.h \
+    Grid.h \
     GroupManager.h \
+    GuiControl.h \
     GPainter.h \
     GWriter.h \
     HistoryManager.h \
     MyRGB.h \
     NodeInfo.h \
     NodeInfoManager.h \
+    Pin.h \
     PolygonHelper.h \
-    Template.h \
-    TemplateManager.h \
     Persist.h \
     Rect.h \
     RectManager.h \
@@ -91,24 +88,27 @@ HEADERS  += mainwindow.h \
     SimplexFont.h \
     SpanningTreeHelper.h \
     StringHelper.h \
+    Template.h \
+    TemplateManager.h \
     TextRect.h \
     TextManager.h \
+    TrackElement.h \
     Transform.h \
     Version.h \
     VrtVersion.h
    
 
-FORMS    += mainwindow.ui \
-    controldialog.ui \
+FORMS    += bomdialog.ui \
     compdialog.ui \
-    renderingdialog.ui \
+    controldialog.ui \
+    finddialog.ui \
     hotkeysdialog.ui \
     infodialog.ui \
-    bomdialog.ui \
-    templatesdialog.ui \
+    mainwindow.ui \
     pindialog.ui \
+    renderingdialog.ui \
+    templatesdialog.ui \
     textdialog.ui \
-    finddialog.ui \
     wiredialog.ui
     
 

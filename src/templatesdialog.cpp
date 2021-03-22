@@ -54,7 +54,7 @@ void TemplatesDialog::Update()
 	{
 		const bool bGeneric = ( iTable == 0 );
 
-		const int numRows = (int)mgr.GetSize(bGeneric);
+		const int numRows = static_cast<int>(mgr.GetSize(bGeneric));
 
 		auto* pTableWidget	= ( bGeneric ) ? ui->tableWidget : ui->tableWidget_2;
 		auto& tableHeader	= ( bGeneric ) ? m_tableHeaderL : m_tableHeaderR;
@@ -91,7 +91,7 @@ void TemplatesDialog::Update()
 		std::string strType(""), strValue(""), strFull("");
 		for (int i = 0; i < numRows; i++)
 		{
-			const Component&	comp	= mgr.GetNth(bGeneric, i);
+			const Component&	comp	= mgr.GetNth(bGeneric, static_cast<size_t>(i));
 			const COMP&			eType	= comp.GetType();
 
 			strType		= comp.GetFullTypeStr();	// e.g. "Film" or "DIP16"
@@ -132,8 +132,8 @@ void TemplatesDialog::GenericDoubleClicked(int row, int col)
 	TemplateManager& mgr = m_pMainWindow->GetTemplateManager();
 
 	const bool bGeneric = true;
-	if ( m_iRowL >= 0 && m_iRowL < (int)mgr.GetSize(bGeneric) )
-		m_pMainWindow->AddFromTemplate(mgr.GetNth(bGeneric, m_iRowL));
+	if ( m_iRowL >= 0 && m_iRowL < static_cast<int>(mgr.GetSize(bGeneric)) )
+		m_pMainWindow->AddFromTemplate(mgr.GetNth(bGeneric, static_cast<size_t>(m_iRowL)));
 }
 
 void TemplatesDialog::UserClicked(int row, int)
@@ -149,8 +149,8 @@ void TemplatesDialog::UserDoubleClicked(int row, int col)
 	TemplateManager& mgr = m_pMainWindow->GetTemplateManager();
 
 	const bool bGeneric = false;
-	if ( m_iRowR >= 0 && m_iRowR < (int)mgr.GetSize(bGeneric) )
-		m_pMainWindow->AddFromTemplate(mgr.GetNth(bGeneric, m_iRowR));
+	if ( m_iRowR >= 0 && m_iRowR < static_cast<int>(mgr.GetSize(bGeneric)) )
+		m_pMainWindow->AddFromTemplate(mgr.GetNth(bGeneric, static_cast<size_t>(m_iRowR)));
 }
 
 void TemplatesDialog::AddTemplates()
@@ -164,12 +164,12 @@ void TemplatesDialog::DeleteTemplate()
 
 	const bool bGeneric = false;
 
-	if ( m_iRowR >= 0 && m_iRowR < (int)mgr.GetSize(bGeneric) )
+	if ( m_iRowR >= 0 && m_iRowR < static_cast<int>(mgr.GetSize(bGeneric)) )
 	{
 		if ( QMessageBox::question(this, tr("Confirm Delete Template"),
 										 tr("There is no undo for this operation.  Continue?"),
 										 QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::No ) return;
-		const Component comp = mgr.GetNth(bGeneric, m_iRowR);
+		const Component comp = mgr.GetNth(bGeneric, static_cast<size_t>(m_iRowR));
 		if ( mgr.Remove(comp) )
 			Update();
 	}

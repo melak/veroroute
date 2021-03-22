@@ -259,7 +259,7 @@ void Board::Flood_Helper(const bool bBuildTracks)
 	for (int i = 0, iSize = GetSize(); i < iSize; i++)	// Loop all grid points
 		GetAt(i)->ResetMH();	// Wipe RouteId. Set "infinite" MH distance.  Zero max MH parameter.
 
-	m_tmpVec.resize(GetSize(), nullptr);
+	m_tmpVec.resize(static_cast<size_t>(GetSize()), nullptr);
 	m_tmpVecSize = 0;			// Clear the set of visited points
 
 	const size_t N = m_targetPins.size();
@@ -323,7 +323,7 @@ void Board::Flood_Helper(const bool bBuildTracks)
 					case 1:	// Type 1 ==> Move within layer
 						for (int iDiag = 0, iDiagMax = ( bDiagsOK ) ? 2 : 1; iDiag < iDiagMax && !bDone; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
 						{
-							const int iDeltaMH = ( iDiag ) ? MH_DIAG : MH_LRTB;
+							const unsigned int iDeltaMH = ( iDiag ) ? MH_DIAG : MH_LRTB;
 							if ( pJ->GetMH() + iDeltaMH != iMH ) continue;	// pJ has wrong MH for connection
 
 							for (int iNbr = iDiag; iNbr < 8 && !bDone; iNbr += 2)	// Even/Odd iNbr ==> Non-diagonal/Diagonal
@@ -495,7 +495,7 @@ void Board::Backtrace(Element* pEnd, const int& nodeId)
 					case 1:	// Type 1 ==> Move within layer
 						for (int iDiag = 0, iDiagMax = ( bDiagsOK ) ? 2 : 1; iDiag < iDiagMax && !bOK; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
 						{
-							const int iDeltaMH = ( iDiag ) ? MH_DIAG : MH_LRTB;
+							const unsigned int iDeltaMH = ( iDiag ) ? MH_DIAG : MH_LRTB;
 							for (int iNbr = iDiag; iNbr < 8 && !bOK; iNbr += 2)	// Even/Odd iNbr ==> Non-diagonal/Diagonal
 								bOK = BacktraceHelper(p, MH, nodeId, iDeltaMH, iNbr, iLoop);
 						}
@@ -513,7 +513,7 @@ void Board::Backtrace(Element* pEnd, const int& nodeId)
 	}
 }
 
-bool Board::BacktraceHelper(Element*& p, unsigned int& MH, const int& nodeId, const int& iDeltaMH, const int& iNbr, const int& iLoop)
+bool Board::BacktraceHelper(Element*& p, unsigned int& MH, const int& nodeId, const unsigned int& iDeltaMH, const int& iNbr, const int& iLoop)
 {
 	Element* pNbr = p->GetNbr(iNbr);
 	if ( pNbr->GetRouteId() != p->GetRouteId() ) return false;	// Skip if nbr has wrong routeId
@@ -546,7 +546,7 @@ void Board::Manhatten(Element* p)
 		pL->ResetMH();	// Wipe RouteId. Set "infinite" MH distance.  Zero max MH parameter.
 	}
 
-	m_tmpVec.resize(GetSize(), nullptr);
+	m_tmpVec.resize(static_cast<size_t>(GetSize()), nullptr);
 	m_tmpVecSize = 0;	// Clear the set of visited points
 
 	const bool			bMultiLayer	 = GetLyrs() > 1;
@@ -616,7 +616,7 @@ void Board::Manhatten(Element* p)
 					case 1:	// Type 1 ==> Move within layer
 						for (int iDiag = 0, iDiagMax = ( bDiagsOK ) ? 2 : 1; iDiag < iDiagMax; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
 						{
-							const int iDeltaMH = ( iDiag ) ? MH_DIAG : MH_LRTB;
+							const unsigned int iDeltaMH = ( iDiag ) ? MH_DIAG : MH_LRTB;
 							if ( pJ->GetMH() + iDeltaMH != iMH ) continue;	// pJ has wrong MH for connection
 
 							for (int iNbr = iDiag; iNbr < 8; iNbr += 2)	// Even/Odd iNbr ==> Non-diagonal/Diagonal

@@ -46,7 +46,7 @@ int Board::CreateComponent(int iRow, int iCol, const COMP& eType, const Componen
 		bNameExists = ( m_compMgr.GetComponentIdFromName(nameStr) != BAD_COMPID );
 	}
 
-	const size_t numPins = ( pComp ) ? pComp->GetNumPins() : GetDefaultNumPins(eType);
+	const size_t numPins = ( pComp ) ? pComp->GetNumPins() : static_cast<size_t>( GetDefaultNumPins(eType) );
 	std::vector<int> nodeList;
 	nodeList.resize(numPins, BAD_NODEID);
 	Component tmp(nameStr, nameStr, eType, nodeList);
@@ -89,9 +89,6 @@ int Board::AddComponent(int iRow, int iCol, const Component& tmp, bool bDoPlace)
 
 	if ( !bDoPlace ) return compId;
 
-	// Try place the component in free space on the board
-	bool bOK(false);
-
 	if ( iRow != -1 && iCol != -1  )	// If we passed in a valid row and col
 	{
 		// Put the component in the top left of the current visible view.
@@ -106,11 +103,12 @@ int Board::AddComponent(int iRow, int iCol, const Component& tmp, bool bDoPlace)
 		comp.SetRow(iRow);
 		comp.SetCol(iCol);
 		comp.SetDirection('W');
-		bOK = PutDown(comp);	// false ==> the component has to float
+		PutDown(comp);
 	}
 	else
 	{
 		// Try place the component in free space on the board.  Just used for Import() method
+		bool bOK(false);
 		while( !bOK )
 		{
 			for (int iRow = 0; iRow <= GetRows() - comp.GetCompRows() && !bOK; iRow++)
@@ -119,7 +117,7 @@ int Board::AddComponent(int iRow, int iCol, const Component& tmp, bool bDoPlace)
 				comp.SetRow(iRow);
 				comp.SetCol(iCol);
 				comp.SetDirection('W');
-				bOK = PutDown(comp);
+				bOK = PutDown(comp);	// false ==> the component has to float
 			}
 			if ( !bOK ) Pan(1, 0);	// No free board space, so pan the board down
 		}
@@ -767,14 +765,14 @@ bool Board::ConfirmDestroyUserComps()	// returns false if user-group is empty or
 	m_groupMgr.GetUserCompIds(userCompIds);
 	for (const auto& compId : userCompIds)
 	{
-		switch( m_compMgr.GetComponentById( compId ).GetType() )
+		const COMP& eType = m_compMgr.GetComponentById( compId ).GetType();
+		switch( eType)
 		{
 			case COMP::VERO_NUMBER:
 			case COMP::VERO_LETTER:
 			case COMP::WIRE:
 			case COMP::MARK:	continue;
-			case COMP::INVALID:	assert(0);
-			default:			return true;
+			default:	assert(eType == COMP::INVALID);	return true;
 		}
 	}
 	return false;

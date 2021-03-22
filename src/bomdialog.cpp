@@ -41,7 +41,7 @@ struct IsEarlierInBOM
 	bool operator()(const Component* pA, const Component* pB) const
 	{
 		// First order by type ...
-		if ( pA->GetType() != pB->GetType() ) return (int)pA->GetType() < (int)pB->GetType();
+		if ( pA->GetType() != pB->GetType() ) return static_cast<int>(pA->GetType()) < static_cast<int>(pB->GetType());
 		// ... then by value string comparison
 		const int i = pA->GetValueStr().compare( pB->GetValueStr() );
 		if ( i != 0 ) return i < 0;
@@ -121,12 +121,12 @@ void BomDialog::Update()
 			rowValue = p->GetValueStr();
 			if ( p->GetType() == COMP::DIP || p->GetType() == COMP::SIP )
 			{
-				sprintf(buffer, "%d", (int)p->GetNumPins());
+				sprintf(buffer, "%d", static_cast<int>(p->GetNumPins()));
 				rowTypes += std::string(buffer);	// e.g. "DIP16"
 			}
 			if ( p->GetType() == COMP::STRIP_100 || p->GetType() == COMP::BLOCK_100 || p->GetType() == COMP::BLOCK_200 )
 			{
-				sprintf(buffer, " (%d pins)", (int)p->GetNumPins());
+				sprintf(buffer, " (%d pins)", static_cast<int>(p->GetNumPins()));
 				rowTypes += std::string(buffer);
 			}
 		}

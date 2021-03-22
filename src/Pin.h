@@ -47,8 +47,8 @@
 //		HOLE_WIRE			==> the hole is occupied by one wire.
 //		HOLE_FULL			==> the hole is fully occupied.  (By a regular component pin, or by 2 wires).
 
-static const uchar	 BAD_PINCHAR		= 255;
-static const size_t BAD_PININDEX		= -1;
+static const uchar	BAD_PINCHAR			= 255;
+static const size_t	BAD_PININDEX		= static_cast<size_t>(-1);
 
 static const uchar  SURFACE_FREE		= 0;
 static const uchar  SURFACE_GAP			= 1;
@@ -98,7 +98,7 @@ public:
 	, m_holeUse(holeUse)
 	{}
 	Pin(const Pin& o) { *this = o; }
-	~Pin() {}
+	virtual ~Pin() {}
 	Pin& operator=(const Pin& o)
 	{
 		m_pinChar	= o.m_pinChar;

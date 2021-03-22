@@ -140,7 +140,7 @@ private:
 	{
 		assert( index < MAX_HISTORY_FILES );	// Sanity check
 		memset(m_buffer, 0, 256 * sizeof(char));
-		sprintf(m_buffer, "%s/history/history_%d_%d.vrt", m_pathStr.c_str(), m_ID, (int)index);
+		sprintf(m_buffer, "%s/history/history_%d_%d.vrt", m_pathStr.c_str(), m_ID, static_cast<int>(index));
 		return m_buffer;
 	}
 private:

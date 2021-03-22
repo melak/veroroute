@@ -27,7 +27,7 @@ class TextManager : public Persist, public Merge
 	friend class Board;
 public:
 	TextManager()	{}
-	~TextManager()	{}
+	virtual ~TextManager()	{}
 	void Clear()	{ m_mapIdtoText.clear(); }
 	TextManager(const TextManager& o)	{ *this = o; }
 	TextManager& operator=(const TextManager& o)
@@ -122,7 +122,7 @@ public:
 	{
 		int iMaxId(BAD_TEXTID);
 		for (const auto& mapObj : m_mapIdtoText)
-			iMaxId = std::max(iMaxId, (int) mapObj.first);
+			iMaxId = std::max(iMaxId, static_cast<int>(mapObj.first));
 		for (const auto& mapObj : o.m_mapIdtoText)
 		{
 			iMaxId++;
@@ -140,7 +140,7 @@ public:
 		{
 			TextRect tmp;
 			tmp.Load(inStream);
-			int iTextId = i;
+			int iTextId = static_cast<int>(i);
 			if ( inStream.GetVersion() >= VRT_VERSION_15 )
 				inStream.Load(iTextId);		// Added in VRT_VERSION_15
 			m_mapIdtoText[ iTextId ] =  tmp;

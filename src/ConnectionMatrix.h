@@ -37,7 +37,7 @@ public:
 		memset(m_p, 0, N2 * sizeof(bool));
 		for (size_t i = 0; i < m_N; i++) m_pp[i] = m_p + i * m_N;
 		for (size_t i = 0; i < m_N; i++) m_pp[i][i] = true;	// Each point is connected to itself
-		m_cost = (unsigned int)(N2 - m_N);	// Cost = number of false values in the connection matrix
+		m_cost = static_cast<unsigned int>(N2 - m_N);	// Cost = number of false values in the connection matrix
 	}
 	void DeAllocate()
 	{
