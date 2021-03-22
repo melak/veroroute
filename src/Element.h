@@ -87,7 +87,7 @@ public:
 	}
 
 	Element() : Pin(), TrackElement() { ZeroConnectionPointers(); }
-	Element(const Element& o) : Pin(o), TrackElement(o)	{ assert(0); *this = o; }	// The assert just shows this is never used
+	Element(const Element& o) : Pin(o), TrackElement(o)	{ *this = o; }	// This is never used
 	virtual ~Element() override {}
 	void ZeroConnectionPointers()
 	{

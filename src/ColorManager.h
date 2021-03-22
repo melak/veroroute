@@ -43,7 +43,7 @@ class ColorManager : public Persist, public Merge
 public:
 	ColorManager() : m_iSaturation(100), m_iFillSaturation(0), m_bReAssign(true) {}
 	virtual ~ColorManager() {}
-	ColorManager(const ColorManager& o) { assert(0); *this = o; }	// Never called
+	ColorManager(const ColorManager& o) { *this = o; }	// Never called
 	ColorManager& operator=(const ColorManager& o)
 	{
 		m_mapNodeIdToColorId.clear();

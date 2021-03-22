@@ -25,7 +25,7 @@
 // See http://paulbourke.net/dataformats/hershey/
 // First value is number of "points" and second is nominal width
 
-std::vector< std::vector<int> > g_simplex
+static std::vector< std::vector<int> > g_simplex
 {
 	std::vector<int> {0,16},
 	std::vector<int> {8,10,5,21,5,7,-1,-1,5,2,4,1,5,0,6,1,5,2},

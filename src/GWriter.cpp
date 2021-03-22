@@ -275,8 +275,7 @@ bool GStream::GetOK() const
 		case GFILE::GTL: return m_pBoard->GetCurrentLayer() == 1 || m_pBoard->GetLyrs() == 1;
 		case GFILE::GTS: return m_pBoard->GetCurrentLayer() == 1 || m_pBoard->GetLyrs() == 1;
 		case GFILE::GTO: return m_pBoard->GetCurrentLayer() == 1 || m_pBoard->GetLyrs() == 1;
-		case GFILE::DRL: return m_pBoard->GetCurrentLayer() == 0;
-		default:		 return false;
+		default:		 return m_pBoard->GetCurrentLayer() == 0 && m_eType == GFILE::DRL;
 	}
 }
 void GStream::SetPolarity(const GPOLARITY& ePolarity, bool bCheckOK)

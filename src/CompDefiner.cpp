@@ -202,8 +202,25 @@ int CompDefiner::GetShapeId(const double& dRowIn, const double& dColIn) const	//
 		bool bOK(false);
 		switch( s.GetType() )
 		{
-			case SHAPE::LINE:	// Check for distance within a narrow ellipse with foci at the endpoints
+			case SHAPE::RECT:
+			case SHAPE::ROUNDED_RECT:
+				dArea = fabs(DX*DY);			// Area of the rectangle
+				bOK   = fabs(2.0*ry) <= ( ( DY <= 0.1 ) ? epsilon : DY );
+				bOK  &= fabs(2.0*rx) <= ( ( DX <= 0.1 ) ? epsilon : DX );
+				break;
+			case SHAPE::ELLIPSE:
+			case SHAPE::ARC:
+			case SHAPE::CHORD:
 			{
+				dArea	= M_PI * 0.25*DX*DY;	// Area of the ellipse
+				double epsilon(dArea < 0.1 ? 0.1 : 0);
+				bOK		= rx*DY*rx*DY + ry*DX*ry*DX <= 0.25*DX*DX*DY*DY + epsilon;
+				break;
+			}
+			default:	// SHAPE::LINE
+			{
+				assert(s.GetType() == SHAPE::LINE);
+				// Check for distance within a narrow ellipse with foci at the endpoints
 				// Get true X1,X2,Y1,Y2 locations w.r.t. footprint centre
 				const double x1  = s.GetX1() - CX;
 				const double x2  = s.GetX2() - CX;
@@ -223,22 +240,6 @@ int CompDefiner::GetShapeId(const double& dRowIn, const double& dColIn) const	//
 				bOK		= sqrt(dx1*dx1 + dy1*dy1) + sqrt(dx2*dx2 + dy2*dy2) < dArea + epsilon;
 				break;
 			}
-			case SHAPE::RECT:
-			case SHAPE::ROUNDED_RECT:
-				dArea = fabs(DX*DY);			// Area of the rectangle
-				bOK   = fabs(2.0*ry) <= ( ( DY <= 0.1 ) ? epsilon : DY );
-				bOK  &= fabs(2.0*rx) <= ( ( DX <= 0.1 ) ? epsilon : DX );
-				break;
-			case SHAPE::ELLIPSE:
-			case SHAPE::ARC:
-			case SHAPE::CHORD:
-			{
-				dArea	= M_PI * 0.25*DX*DY;	// Area of the ellipse
-				double epsilon(dArea < 0.1 ? 0.1 : 0);
-				bOK		= rx*DY*rx*DY + ry*DX*ry*DX <= 0.25*DX*DX*DY*DY + epsilon;
-				break;
-			}
-			default: assert(0);
 		}
 		if ( !bOK ) continue;
 		if ( iBestId == BAD_ID || dArea <= dMinArea )

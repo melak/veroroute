@@ -1099,7 +1099,7 @@ void MainWindow::HandleNetworkReply(QNetworkReply* pReply)
 
 	if ( dSiteVersion > dThisVersion )
 		QMessageBox::information(this, tr(bufferThis), tr(bufferOther));
-	else if ( dSiteVersion == dThisVersion )
+	else if ( dSiteVersion - dThisVersion == 0.0 )
 		QMessageBox::information(this, tr(bufferThis), tr("You have the latest version."));
 	else
 		QMessageBox::information(this, tr(bufferThis), tr("You have a newer version than Sourceforge."));

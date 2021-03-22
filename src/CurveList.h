@@ -62,7 +62,7 @@ public:
 	{
 		bool operator() (const Curve* p1, const Curve* p2) const
 		{
-			assert( (int)GPEN::PAD < (int)GPEN::VIA );
+			assert( static_cast<int>(GPEN::PAD) < static_cast<int>(GPEN::VIA) );
 			if ( p1->m_width != p2->m_width ) return p1->m_width > p2->m_width;
 			return static_cast<int>(p1->m_ePen) < static_cast<int>(p2->m_ePen);	// Pads before Vias if equal size
 		}

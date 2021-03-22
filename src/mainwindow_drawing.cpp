@@ -410,21 +410,23 @@ void MainWindow::PaintCompDefiner()	// The paint method in "component editor mod
 		painter.setBrush( s.GetDrawFill() ? m_varBrush : Qt::NoBrush );
 
 		painter.save();
-		auto DX = s.GetDX() * W;
-		auto DY = s.GetDY() * W;
-		auto X  = DX * 0.5;
-		auto Y  = DY * 0.5;
 		painter.translate( s.GetCX() * W, s.GetCY() * W );
 		painter.rotate( -s.GetA3() );	// A3 > 0 ==> CCW
+		const int DX	= static_cast<int>(s.GetDX() * W);
+		const int DY	= static_cast<int>(s.GetDY() * W);
+		const int X		= static_cast<int>(s.GetDX() * W * 0.5);
+		const int Y		= static_cast<int>(s.GetDY() * W * 0.5);
+		const int A		= static_cast<int>(s.GetA1() * 16);
+		const int Alen	= static_cast<int>(s.GetAlen() * 16);
 		switch( s.GetType() )
 		{
-			case SHAPE::LINE:			painter.drawLine(-X, -Y, X, Y);		break;
 			case SHAPE::RECT:			painter.drawRect(-X, -Y, DX, DY);	break;
 			case SHAPE::ROUNDED_RECT:	painter.drawRoundedRect(-X, -Y, DX, DY, 0.35 * W, 0.35 * W);	break;
 			case SHAPE::ELLIPSE:		painter.drawEllipse(-X, -Y, DX, DY);	break;
-			case SHAPE::ARC:			painter.drawArc(  -X, -Y, DX, DY, s.GetA1() * 16, s.GetAlen() * 16);	break;
-			case SHAPE::CHORD:			painter.drawChord(-X, -Y, DX, DY, s.GetA1() * 16, s.GetAlen() * 16);	break;
-			default: assert(0);	// Unhandled shape
+			case SHAPE::ARC:			painter.drawArc(  -X, -Y, DX, DY, A, Alen);	break;
+			case SHAPE::CHORD:			painter.drawChord(-X, -Y, DX, DY, A, Alen);	break;
+			default:					assert(SHAPE::LINE == s.GetType() );
+										painter.drawLine(-X, -Y, X, Y);		break;
 		}
 		if ( bCurrentShape )
 		{
@@ -647,7 +649,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	}
 	else
 	{
-		const int iPenWidth = ( bPCB ) ? W * 0.100 : 0;	// Like GPEN::GKO = 10 mil used for Gerber
+		const int iPenWidth = ( bPCB ) ? static_cast<int>(W * 0.100) : 0;	// Like GPEN::GKO = 10 mil used for Gerber
 		m_blackPen.setWidth(iPenWidth);
 		m_whitePen.setWidth(iPenWidth);
 		painter.setPen(GetBackgroundColor() == Qt::black ? m_whitePen : m_blackPen);
@@ -1264,16 +1266,19 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				comp.GetSafeBounds(SL,SR,ST,SB);
 				SL = SL * W - C;	SR = SR * W + C;
 				ST = ST * W - C;	SB = SB * W + C;
-				const double dReqW(SR - SL), dReqH(SB - ST);
+				const int iReqW	= static_cast<int>(SR - SL);
+				const int iReqH	= static_cast<int>(SB - ST);
+				const int iSL	= static_cast<int>(SL);
+				const int iST	= static_cast<int>(ST);
 				GPainter painterTmp;
-				QPixmap tmpPixmap(dReqW, dReqH);
+				QPixmap tmpPixmap(iReqW, iReqH);
 				tmpPixmap.setDevicePixelRatio(1.0);
 				const QColor maskColor = comp.GetNewColor().GetQColor();// We'll mask out pixels with this color at the end
 
 				if ( bFill )
 				{
 					painterTmp.begin(&tmpPixmap);
-					painterTmp.fillRect(0,0,dReqW, dReqH, maskColor);	// This will be turned transparent later
+					painterTmp.fillRect(0, 0, iReqW, iReqH, maskColor);	// This will be turned transparent later
 					painterTmp.setPen(Qt::NoPen);
 				}
 
@@ -1291,7 +1296,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					if ( bFill && iLoop == 1 )	// Draw the pixmap created on the previous pass
 					{
 						painter.setOpacity( /*bWire ? 1.0 :*/ board.GetFillSaturation() * 0.01);
-						painter.drawPixmap(SL, ST, tmpPixmap);
+						painter.drawPixmap(iSL, iST, tmpPixmap);
 						painter.setOpacity(1.0);
 					}
 
@@ -1333,20 +1338,21 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						pPainter->translate( s.GetCX() * W, s.GetCY() * W );	// Translate to shape centre
 						pPainter->rotate( -s.GetA3() );	// A3 > 0 ==> CCW		// Rotate about shape centre
 
-						auto DX = s.GetDX() * W;
-						auto DY = s.GetDY() * W;
-						auto X  = DX * 0.5;
-						auto Y  = DY * 0.5;
-
+						const int DX	= static_cast<int>(s.GetDX() * W);
+						const int DY	= static_cast<int>(s.GetDY() * W);
+						const int X		= static_cast<int>(s.GetDX() * W * 0.5);
+						const int Y		= static_cast<int>(s.GetDY() * W * 0.5);
+						const int A		= static_cast<int>(s.GetA1() * 16);
+						const int Alen	= static_cast<int>(s.GetAlen() * 16);
 						switch( s.GetType() )
 						{
-							case SHAPE::LINE:			pPainter->drawLine(-X, -Y, X, Y);	break;
 							case SHAPE::RECT:			pPainter->drawRect(-X, -Y, DX, DY);	break;
 							case SHAPE::ROUNDED_RECT:	pPainter->drawRoundedRect(-X, -Y, DX, DY, 0.35 * W, 0.35 * W);	break;
 							case SHAPE::ELLIPSE:		pPainter->drawEllipse(-X, -Y, DX, DY);	break;
-							case SHAPE::ARC:			pPainter->drawArc(  -X, -Y, DX, DY, s.GetA1() * 16, s.GetAlen() * 16);	break;
-							case SHAPE::CHORD:			pPainter->drawChord(-X, -Y, DX, DY, s.GetA1() * 16, s.GetAlen() * 16);	break;
-							default: assert(0);	// Unhandled shape
+							case SHAPE::ARC:			pPainter->drawArc(  -X, -Y, DX, DY, A, Alen);	break;
+							case SHAPE::CHORD:			pPainter->drawChord(-X, -Y, DX, DY, A, Alen);	break;
+							default:					assert( SHAPE::LINE == s.GetType() );
+														pPainter->drawLine(-X, -Y, X, Y);	break;
 						}
 						pPainter->restore();
 					}
@@ -1370,10 +1376,11 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 		QPen  blackPen = m_blackPen;	// Used for lines in the component pixmap
 		blackPen.setWidth(2);
-		m_varPen.setWidth(0.175 * W);
+		m_varPen.setWidth(static_cast<int>(0.175 * W));
 		m_varPen.setStyle(Qt::DotLine);
 		painter.setBrush(Qt::NoBrush);
-		const double dH(0.1*W), dW(0.35*W);	// Params for wire rounded rect
+		const int		dH = static_cast<int>(0.1*W);	// Param for wire rounded rect
+		const double	dW(0.35*W);						// Param for wire rounded rect
 
 		int padOffsetX, padOffsetY;	// For handling offset pads
 
@@ -1432,12 +1439,12 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			{
 				const QPointF	vec	= ( o.second - o.first );
 				const QPointF	mid	= ( o.second + o.first ) * 0.5;
-				const qreal		L	= PolygonHelper::Length(vec);
+				const int		dL	= static_cast<int>(PolygonHelper::Length(vec) * 0.5);
 				painter.save();
 				painter.translate(mid.x(), mid.y());
 				painter.rotate(atan2(vec.y(), vec.x()) * 180.0 / M_PI);
-				painter.setPen(m_varPen);		painter.drawLine(-L * 0.5, 0, L * 0.5, 0);
-				painter.setPen(fillBlackPen);	painter.drawRoundedRect(-L * 0.5, -dH, L, dH+dH, dW, dW);
+				painter.setPen(m_varPen);		painter.drawLine(-dL, 0, dL, 0);
+				painter.setPen(fillBlackPen);	painter.drawRoundedRect(-dL, -dH, dL+dL, dH+dH, dW, dW);
 				painter.restore();
 			}
 		}
@@ -1577,7 +1584,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					label = std::to_string(iNumber);
 				else				// Letters go: A,B,...,Y,Z,AA,AB,...,AY,AZ,BA,BB, ... etc
 				{
-					if ( iNumber > 26 ) label += ( char('A') + (iNumber-1)/26 - 1);
+					if ( iNumber > 26 ) label += ( char('A') + static_cast<char>((iNumber-1)/26 - 1) );
 					label += ( char('A') + (iNumber-1)%26 );
 				}
 
@@ -1608,6 +1615,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			GetXY(board, rect.m_rowMax, rect.m_colMax, R, B);
 			L -= C; T -= C; R += C; B += C;
 
+			const int textW = static_cast<int>((R-L)/dTextScale);
+			const int textH = static_cast<int>((B-T)/dTextScale);
+
 			font.setBold( rect.GetStyle() & TEXT_BOLD );
 			font.setItalic( rect.GetStyle() & TEXT_ITALIC );
 			font.setUnderline( rect.GetStyle() & TEXT_UNDERLINE );
@@ -1620,7 +1630,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			painter.save();
 			painter.translate((bMono && layer == 0) ? R : L, T);							// Mirror all text boxes in Mono mode for bottom layer
 			painter.scale((bMono && layer == 0) ? -dTextScale : dTextScale, dTextScale);	// Mirror all text boxes in Mono mode for bottom layer
-			painter.drawText(0,0,(R-L)/dTextScale,(B-T)/dTextScale, Qt::TextWordWrap | rect.GetFlags(), QString::fromStdString(rect.GetStr()));
+			painter.drawText(0, 0, textW, textH, Qt::TextWordWrap | rect.GetFlags(), QString::fromStdString(rect.GetStr()));
 			painter.restore();
 
 			if ( mapObj.first == GetCurrentTextId() )
@@ -1697,8 +1707,8 @@ void MainWindow::GetXY(const GuiControl& guiCtrl, double row, double col, int& X
 	// Takes a point in the Board and returns coordinates in the drawn image.
 	const int& W = guiCtrl.GetGRIDPIXELS();	// Square width in pixels
 	const int  C = W >> 1;					// Half square width in pixels
-	X = m_XGRIDOFFSET + m_XCORRECTION + C + col * W;
-	Y = m_YGRIDOFFSET + m_YCORRECTION + C + row * W;
+	X = m_XGRIDOFFSET + m_XCORRECTION + C + static_cast<int>(col * W);
+	Y = m_YGRIDOFFSET + m_YCORRECTION + C + static_cast<int>(row * W);
 }
 
 void MainWindow::GetLRTB(const GuiControl& guiCtrl, double percent, double row, double col, int& L, int& R, int& T, int& B) const

@@ -151,7 +151,7 @@ private:
 		const QPointF	L(Y - X);
 		const qreal		l = Length(L);
 		const qreal		D = round( std::max(0.0, l - sum) * 1000 );	// Units of 0.1 mil
-		if ( m_Dmin != DBL_MAX )
+		if ( DBL_MAX - m_Dmin != 0.0 )
 		{
 			const int iDelta = static_cast<int>( D - m_Dmin * 1000 );	// Units of 0.1 mil
 			if ( iDelta > 0 ) return;
