@@ -737,10 +737,10 @@
   <tabstop>comptext</tabstop>
   <tabstop>comppins</tabstop>
   <tabstop>padWidth</tabstop>
-  <tabstop>trackWidth</tabstop>
-  <tabstop>holeWidth</tabstop>
   <tabstop>viapadWidth</tabstop>
+  <tabstop>holeWidth</tabstop>
   <tabstop>viaholeWidth</tabstop>
+  <tabstop>trackWidth</tabstop>
   <tabstop>gapWidth</tabstop>
   <tabstop>closeTracks</tabstop>
   <tabstop>maskWidth</tabstop>

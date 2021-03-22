@@ -1024,6 +1024,9 @@
   <tabstop>lineEdit_Import</tabstop>
   <tabstop>comboBox_PinShape</tabstop>
   <tabstop>checkBox_PinLabels</tabstop>
+  <tabstop>custom</tabstop>
+  <tabstop>padWidth</tabstop>
+  <tabstop>holeWidth</tabstop>
   <tabstop>spinBox_Width</tabstop>
   <tabstop>spinBox_Height</tabstop>
   <tabstop>spinBox_PinNumber</tabstop>
