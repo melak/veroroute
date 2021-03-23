@@ -1003,7 +1003,7 @@ void MainWindow::ShowAbout()
 {
 	std::string str = std::string("VeroRoute - Qt based Veroboard/Perfboard/PCB layout & routing application.\n\n")
 					+ std::string("Version ") + std::string(szVEROROUTE_VERSION) + std::string("\n\n")
-					+ std::string("Copyright (C) 2017  Alex Lawrow    ( dralx@users.sourceforge.net )\n\n")
+					+ std::string("Copyright (C) 2017-2021  Alex Lawrow    ( dralx@users.sourceforge.net )\n\n")
 					+ std::string("This program is free software: you can redistribute it and/or modify\n")
 					+ std::string("it under the terms of the GNU General Public License as published by\n")
 					+ std::string("the Free Software Foundation, either version 3 of the License, or\n")
