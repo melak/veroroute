@@ -21,8 +21,8 @@
 
 // A helper for reading/writing data to a file in binary form
 
-#include <QFile>
 #include <QDataStream>
+#include <QFile>
 #include "VrtVersion.h"
 #include "StringHelper.h"
 

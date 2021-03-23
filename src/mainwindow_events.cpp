@@ -27,8 +27,6 @@ static const bool ALLOW_SMART_PAN_WITHOUT_CTRLKEY = true;
 static std::chrono::steady_clock::time_point g_lastAutoPanTime;
 static bool g_bHaveAutoPanned = false;
 
-static std::string mouseActionString("Action");	// For the undo/redo history
-
 void MainWindow::GetPixMapXY(const QPoint& currentPoint, int& pixmapX, int& pixmapY) const
 {
 	const int iToolbarHeight = ( ui->toolBar->isFloating() || ui->toolBar->isHidden() ) ? 0 : ui->toolBar->height();
@@ -183,7 +181,7 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 					m_board.GetTextMgr().DestroyRect( GetCurrentTextId() );
 
 				if ( textId != BAD_TEXTID )
-					mouseActionString = "Select text box";
+					m_mouseActionString = "Select text box";
 
 				SetCurrentTextId(textId);
 			}
@@ -208,7 +206,7 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 				groupMgr.UpdateUserGroup( GetCurrentCompId() );	// Add/remove current comp (and its siblings) to user group
 				UpdateControls();
 				if ( GetCurrentTextId() == BAD_TEXTID )
-					mouseActionString = "(Un)select part(s)";
+					m_mouseActionString = "(Un)select part(s)";
 			}
 			else if ( !groupMgr.GetIsUserComp( GetCurrentCompId() ) )
 			{
@@ -217,7 +215,7 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 				compMgr.ClearTrax();
 				UpdateControls();
 				if ( GetCurrentTextId() == BAD_TEXTID )
-					mouseActionString = "(Un)select part(s)";
+					m_mouseActionString = "(Un)select part(s)";
 			}
 		}
 	}
@@ -250,7 +248,7 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 			{
 				const bool bChanged = m_board.ToggleLyrPref(layer, m_gridRow, m_gridCol, false);	// false ==> toggle
 				if ( !bChanged ) return;
-				mouseActionString = "Toggle pin layer preference";
+				m_mouseActionString = "Toggle pin layer preference";
 			}
 			else 
 			{
@@ -269,13 +267,13 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 					SetCurrentNodeId(tmp);	// Restore current nodeId
 
 					m_board.FloodNodeId( GetCurrentNodeId() );
-					mouseActionString = "Paint (flood)";
+					m_mouseActionString = "Paint (flood)";
 				}
 				else
 				{
 					const bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, GetCurrentNodeId(), GetPaintPins());
 					if ( !bChanged ) return;
-					mouseActionString = "Paint";
+					m_mouseActionString = "Paint";
 				}
 			}
 		}
@@ -285,13 +283,13 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 			{
 				const bool bChanged = m_board.ToggleLyrPref(layer, m_gridRow, m_gridCol, true);	// true ==> reset
 				if ( !bChanged ) return;
-				mouseActionString = "Clear pin layer preference";
+				m_mouseActionString = "Clear pin layer preference";
 			}
 			else
 			{
 				const bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, BAD_NODEID, GetPaintPins());
 				if ( !bChanged ) return;
-				mouseActionString = "Erase";
+				m_mouseActionString = "Erase";
 			}
 		}
 	}
@@ -302,7 +300,7 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 		if ( m_bRightClick )
 			SetCurrentNodeId( BAD_NODEID );
 		if ( m_bLeftClick || m_bRightClick )
-			mouseActionString = ( GetCurrentNodeId() == BAD_NODEID) ? "Unselect NodeId" : "Select NodeId";
+			m_mouseActionString = ( GetCurrentNodeId() == BAD_NODEID) ? "Unselect NodeId" : "Select NodeId";
 	}
 
 	m_board.WipeAutoSetPoints();
@@ -412,7 +410,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 	{
 		const bool bChanged = m_board.ToggleLyrPref(layer, m_gridRow, m_gridCol, true);	// true ==> reset
 		if ( !bChanged ) return;
-		mouseActionString = "Clear pin layer preference";
+		m_mouseActionString = "Clear pin layer preference";
 	}
 	else if ( !bSmartPan && GetDefiningRect() )
 	{
@@ -426,13 +424,13 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 		{
 			const bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, GetCurrentNodeId(), GetPaintPins());	// Only allow paint board (not pins)
 			if ( !bChanged ) return;	// No change
-			mouseActionString = "Paint";
+			m_mouseActionString = "Paint";
 		}
 		if ( m_bRightClick )	// Erase
 		{
 			const bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, BAD_NODEID, GetPaintPins());		// Only allow paint board (not pins)
 			if ( !bChanged ) return;	// No change
-			mouseActionString = "Erase";
+			m_mouseActionString = "Erase";
 		}
 		m_board.WipeAutoSetPoints();
 		m_board.PlaceFloaters();	// See if we can now place floating components down
@@ -468,7 +466,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 				g_lastAutoPanTime = std::chrono::steady_clock::now();
 			}
 		}
-		mouseActionString = ( GetResizingText() ) ? "Resize text box" : "Move text box";
+		m_mouseActionString = ( GetResizingText() ) ? "Resize text box" : "Move text box";
 	}
 	else if ( !bSmartPan && GetCurrentCompId() != BAD_COMPID && compMode != COMPSMODE::OFF )	// Move user-group components
 	{
@@ -493,7 +491,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 			g_bHaveAutoPanned = true;
 			g_lastAutoPanTime = std::chrono::steady_clock::now();
 		}
-		mouseActionString = "Move part(s)";
+		m_mouseActionString = "Move part(s)";
 	}
 	else if ( bSmartPan || (ALLOW_SMART_PAN_WITHOUT_CTRLKEY && m_bRightClick) )
 	{
@@ -506,7 +504,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 		if ( deltaCol == 0 ) { if ( pixmapX < W ) deltaCol = -1; }
 		if ( deltaRow == 0 && deltaCol == 0 ) return;	// No change
 		m_board.SmartPan(deltaRow, deltaCol);	// Pan whole circuit w.r.t. grid area, growing/shrinking as needed
-		mouseActionString = "Smart move/grow/crop";
+		m_mouseActionString = "Smart move/grow/crop";
 	}
 	else
 		return;
@@ -546,7 +544,7 @@ void MainWindow::mouseReleaseEvent(QMouseEvent* event)
 
 	if ( m_board.GetCompEdit() )
 	{
-		UpdateHistory(mouseActionString);
+		UpdateHistory(m_mouseActionString);
 		return RepaintSkipRouting();
 	}
 	if ( GetResizingText() )
@@ -569,7 +567,7 @@ void MainWindow::mouseReleaseEvent(QMouseEvent* event)
 	else
 		centralWidget()->setCursor(Qt::OpenHandCursor);
 
-	UpdateHistory(mouseActionString);
+	UpdateHistory(m_mouseActionString);
 	UpdateControls();
 	RepaintWithListNodes();
 }

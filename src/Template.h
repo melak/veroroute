@@ -85,7 +85,7 @@ public:
 	bool operator<(const Template& o) const
 	{
 		// First order by type
-		if ( GetListOrder(GetType()) != GetListOrder(o.GetType()) ) return GetListOrder(GetType()) < GetListOrder(o.GetType());
+		if ( CompTypes::GetListOrder(GetType()) != CompTypes::GetListOrder(o.GetType()) ) return CompTypes::GetListOrder(GetType()) < CompTypes::GetListOrder(o.GetType());
 		if ( GetType() != o.GetType() ) return static_cast<int>(GetType()) < static_cast<int>(o.GetType());
 		// .. then by least pins
 		if ( GetNumPins() != o.GetNumPins() ) return GetNumPins() < o.GetNumPins();

@@ -120,7 +120,7 @@ bool Board::ImportTango(const TemplateManager& templateMgr, const std::string& f
 				bool bCustom(false);	// true ==> We've found a custom template with matching import string
 				Component custom;		// The matching custom template
 
-				const COMP eType = GetTypeFromImportStr(typeStrCut);
+				const COMP eType = CompTypes::GetTypeFromImportStr(typeStrCut);
 				if ( bOK )
 				{
 					bOK = ( eType != COMP::CUSTOM && eType != COMP::TRACKS && eType != COMP::VERO_NUMBER && eType != COMP::VERO_LETTER && eType != COMP::INVALID );
@@ -130,7 +130,7 @@ bool Board::ImportTango(const TemplateManager& templateMgr, const std::string& f
 				}
 
 				// Check pins per component is within limits
-				if ( numPins == 0 ) numPins = ( bCustom )  ? static_cast<int>( custom.GetNumPins() ) : GetDefaultNumPins(eType);
+				if ( numPins == 0 ) numPins = ( bCustom )  ? static_cast<int>( custom.GetNumPins() ) : CompTypes::GetDefaultNumPins(eType);
 				if ( bOK )
 				{
 					bOK = ( numPins > 0 );
@@ -141,23 +141,23 @@ bool Board::ImportTango(const TemplateManager& templateMgr, const std::string& f
 				{
 					if ( bOK )
 					{
-						bOK = bCustom || ( nLength >= GetMinLength(eType) );
+						bOK = bCustom || ( nLength >= CompTypes::GetMinLength(eType) );
 						if ( !bOK ) errorStr = "Part section: " + nameStr + "\nInternal error: Part length is too small " + typeStr;
 					}
 					if ( bOK )
 					{
-						bOK = bCustom || ( nLength <= GetMaxLength(eType) );
+						bOK = bCustom || ( nLength <= CompTypes::GetMaxLength(eType) );
 						if ( !bOK ) errorStr = "Part section: " + nameStr + "\nInternal error: Part length is too large " + typeStr;
 					}
 				}
 				if ( bOK )
 				{
-					bOK = bCustom || ( numPins >= GetMinNumPins(eType) );
+					bOK = bCustom || ( numPins >= CompTypes::GetMinNumPins(eType) );
 					if ( !bOK ) errorStr = "Part section: " + nameStr + "\nPart type has fewer pins than VeroRoute supports: " + typeStr;
 				}
 				if ( bOK )
 				{
-					bOK = bCustom || ( numPins <= GetMaxNumPins(eType) );
+					bOK = bCustom || ( numPins <= CompTypes::GetMaxNumPins(eType) );
 					if ( !bOK ) errorStr = "Part section: " + nameStr + "\nPart type has more pins than VeroRoute supports: " + typeStr;
 				}
 				if ( bOK )
@@ -379,7 +379,7 @@ bool Board::ImportOrcad(const TemplateManager& templateMgr, const std::string& f
 			bool bCustom(false);	// true ==> We've found a custom template with matching import string
 			Component custom;		// The matching custom template
 
-			const COMP eType = GetTypeFromImportStr(typeStrCut);
+			const COMP eType = CompTypes::GetTypeFromImportStr(typeStrCut);
 
 			bOK = ( eType != COMP::CUSTOM && eType != COMP::TRACKS && eType != COMP::VERO_NUMBER && eType != COMP::VERO_LETTER && eType != COMP::INVALID );
 			if ( !bOK )	// Search template manager
@@ -391,7 +391,7 @@ bool Board::ImportOrcad(const TemplateManager& templateMgr, const std::string& f
 			}
 
 			// Check pins per component is within limits
-			if ( numPins == 0 ) numPins = ( bCustom ) ? static_cast<int>( custom.GetNumPins() ) : GetDefaultNumPins(eType);
+			if ( numPins == 0 ) numPins = ( bCustom ) ? static_cast<int>( custom.GetNumPins() ) : CompTypes::GetDefaultNumPins(eType);
 			bOK = ( numPins > 0 );
 			if ( !bOK )
 			{
@@ -402,13 +402,13 @@ bool Board::ImportOrcad(const TemplateManager& templateMgr, const std::string& f
 			// Check length is within limits for components with fixed numbers of pins
 			if ( nLength > 0 )
 			{
-				bOK = bCustom || ( nLength >= GetMinLength(eType) );
+				bOK = bCustom || ( nLength >= CompTypes::GetMinLength(eType) );
 				if ( !bOK )
 				{
 					errorStr = "Part: " + nameStr + "\nInternal error: Part length is too small " + typeStr;
 					break;
 				}
-				bOK = bCustom || ( nLength <= GetMaxLength(eType) );
+				bOK = bCustom || ( nLength <= CompTypes::GetMaxLength(eType) );
 				if ( !bOK )
 				{
 					errorStr = "Part: " + nameStr + "\nInternal error: Part length is too large " + typeStr;
@@ -416,13 +416,13 @@ bool Board::ImportOrcad(const TemplateManager& templateMgr, const std::string& f
 				}
 			}
 
-			bOK = bCustom || ( numPins >= GetMinNumPins(eType) );
+			bOK = bCustom || ( numPins >= CompTypes::GetMinNumPins(eType) );
 			if ( !bOK )
 			{
 				errorStr = "Part: " + nameStr + "\nPart type has fewer pins than VeroRoute supports: " + typeStr;
 				break;
 			}
-			bOK = bCustom || ( numPins <= GetMaxNumPins(eType) );
+			bOK = bCustom || ( numPins <= CompTypes::GetMaxNumPins(eType) );
 			if ( !bOK )
 			{
 				errorStr = "Part: " + nameStr + "\nPart type has more pins than VeroRoute supports: " + typeStr;

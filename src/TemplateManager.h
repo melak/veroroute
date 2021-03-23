@@ -65,13 +65,13 @@ public:
 	void AddDefaults()
 	{
 		std::string nameStr(""), valueStr("");
-		for (const auto& eType : GetListCompTypes())
+		for (const auto& eType : CompTypes::GetListCompTypes())
 		{
 			if ( eType == COMP::TRACKS ) continue;		// Not a real component
 			if ( eType == COMP::VERO_NUMBER ) continue;	// Not a real component
 			if ( eType == COMP::VERO_LETTER ) continue;	// Not a real component
 			if ( eType == COMP::CUSTOM ) continue;		// Don't show custom components in the left pane
-			const int numPins = GetDefaultNumPins(eType);
+			const int numPins = CompTypes::GetDefaultNumPins(eType);
 			std::vector<int> nodeList;
 			nodeList.resize(static_cast<size_t>(numPins), BAD_NODEID);
 			Component comp(nameStr, valueStr, eType, nodeList);

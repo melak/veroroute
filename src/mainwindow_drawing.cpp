@@ -496,7 +496,7 @@ void MainWindow::PaintCompDefiner()	// The paint method in "component editor mod
 			painter.setPen(m_blackPen);
 			painter.rotate(270);
 			painter.scale(dTextScale, dTextScale);
-			painter.drawText(0,0,0,0, Qt::TextDontClip | Qt::AlignCenter, GetDefaultPinLabel(p->GetPinIndex()).c_str());
+			painter.drawText(0,0,0,0, Qt::TextDontClip | Qt::AlignCenter, CompTypes::GetDefaultPinLabel(p->GetPinIndex()).c_str());
 		}
 		painter.restore();
 	}

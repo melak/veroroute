@@ -2,265 +2,45 @@
 
 static const char* szVEROROUTE_VERSION =
 
-//"0.90";	// First release to Sourceforge.
-//"0.91";	// Fixed bad write to PDF.  Allow backspace to work as delete.
-//"0.92";	// Add Ctrl shortcuts for File menu options.  Changed tutorials.  Fixed origId bug.
-//"0.93";	// Try auto-generate unique Name when adding new part.
-//"0.94";	// Added B.O.M.
-//"0.95";	// Added save to PNG.
-//"0.96";	// Show File menu-shortcuts.  Fixed tutorial description of polarised component Export.
-//"0.97";	// Added new part types.  Improved TO-92 outline.  Auto-centre when writing to PDF.
-//"0.98";	// Added Undo/Redo.
-//"0.981";	// Bug fix: Undo/Redo.
-//"0.99";	// Added new part types including multi-pole switches.
-//"0.991";	// Bug fix: Redraw when toggling track styles.
-//"0.992";	// Improve routing.
-//"0.993";	// Routing improvement.
-//"0.994";	// Bug fix: Erasing under floating pins while auto-routing.
-//"0.995";	// Check if circuit has been saved before launching Tutorials.  Don't auto-raise Info window on Undo/Redo.
-//"0.996";	// Bug fix: Deleting grouped components could cause a crash later.  Allow DIP gap resizing with "E","R" keys.
-//"0.997";	// Added part type combo.  Added width buttons for DIP gap resizing instead of "E","R" keys.
-//"0.998";	// Bug fix: After "Paste" auto-routed wire, color should stay on board when wire moved.
-//"0.999";	// Bug fix: Fix possible crash if adding new wire while auto-routing is enabled.
-//"1.00";	// Disable component text buttons when appropriate.  Tidy code.  Drop Beta.
-//"1.01";	// Added scroll bars.  Place new components in top-left of visible view and float them if needed.
-//"1.10";	// Added import of netlist from TinyCAD schematic.  Hide old Import/Export.
-//"1.11";	// Fixed crash on importing unknown package.  Increased maximum number of pins per component to over 200.
-//"1.12";	// Fixed TinyCAD package names for NP capacitors.  Make netlist import allow spaces in Name and Value fields.
-//"1.13";	// Bug fixes: PDF write was broken since V1.10.  "Add" menu item was enabled when view was mirrored.
-//"1.14";	// Added Help menu item to check if a new version is available.
-//"1.15";	// Added more Edit menu items.  Check for Tutorials and History folders at start-up.
-//"1.16";	// Fixed mouse-wheel behaviour on windows.  Added View menu option to show IC pins as numbers.
-//"1.17";	// Added ground-fill.
-//"1.18";	// Bug fix: Info dialog edits weren't treated as changes so "Save" was broken, but "Save As" was OK.
-//"1.19";	// Add separate "Paste" and "Paste+Tidy" buttons for auto-routing.  Updated tutorials.
-//"1.20";	// Added Grid checkbox.  PDF shows bounding box and can show grid.
-//			// Increased max pins per component to 255.
-//			// When writing to file, append ". vrt", ".pdf", ".png" to filename as needed.
-//"1.21";	// Improved rendering speed by avoiding pointless repaints.
-//			// Control dialog rearranged so a checkbox controls ground-fill.
-//			// Draw foil capacitors with thinner shape to better match the footprint.
-//			// Draw floating component text in red.
-//			// Made export to PDF centre on grid bounds instead of circuit bounds.
-//			// Write status bar messages.
-//"1.22";	// Added command line options to specify VRT file and path to VeroRoute home directory.
-//			// Support drag and drop of VRT files from file explorer.
-//			// Allow multiple VeroRoute instances to run at the same time.
-//			// Improved error reporting during netlist import.
-//			// Added color saturation slider.
-//			// Changed rendering behaviour when clicking on an item in the Broken list.
-//			// Added gEDA symbol libraries.
-//"1.23";	// Fixed memory leak on shutdown.
-//			// Updated Tutorial 19 with info on creating a registry key for MS Windows.
-//			// Added more JFETs to the symbol libraries.
-//"1.24";	// Added IC Pin Labels dialog.
-//"1.25";	// Usability tweaks:
-//			// Slow down the grid auto-pan/resize when moving components with the mouse.
-//			// Selecting a NodeID in the "Broken" list should also highlight it in the "Floating" list if it's there.
-//			// Added a Spin FV-1 IC and serial EEPROM to the gEDA library.
-//"1.26";	// Bug fix: Holding down "P" and SPACE at the same time would allow mouse move to modify component pins.
-//			// Usability tweak: Holding down SPACE now allows un-painting the board under a placed component pin,
-//			// or painting the board under the pin to match the existing NodeId on the pin.
-//"1.27";	// Bug fix: Deleting a component was not immediately updating the Bad Nodes lists.
-//			// Bug fix: V1.26 allowed components to be dragged while user was painting pins.
-//"1.28";	// Improvements:
-//			// Added "Toggle Grid" and "Toggle Mirror" as View menu items.
-//			// List part types in B.O.M.
-//			// Allow pin labels for TO packages as well as DIPs, SIPs.
-//			// New feature: Added "Parts/Templates Dialog" so user can build a parts library
-//			// for ICs and TO packages (avoids defining pin labels with each new circuit).
-//			// Double-clicking on any listed part adds it to the circuit.
-//"1.29";	// Added Crystal component type and gEDA library symbol.
-//"1.30";	// Improvement: Duplicating components copies their Value too if it's different to the name.
-//			// Added more component types. (Relays, Switches, Trimpots).
-//			// Changed default lengths of resistors and diodes to 400 mil.
-//			// Updated gEDA/TinyCAD import code for RESISTOR/DIODE/CAP_CERAMIC/CAP_FILM
-//			// so that appending an optional integer number to the footprint name
-//			// sets the length in 100s of mil. (e.g. RESISTOR3 = 300mil)
-//			// Updated gEDA library with resistors and caps of different lengths.
-//			// Added ability to select components/wipe tracks within area (hold down "R" to draw areas).
-//"1.31";	// Improvement: User-defined areas select tracks as well as components.
-//"1.32";	// New feature: "File->Open (merge into current)".
-//"1.33";	// New feature: Allow horizontal veroboard strips.
-//			// Tweaked color assignment algorithm.
-//"1.34";	// Bug fix: Merge was not clearing existing user-defined areas.
-//			// New feature: Added margin control for auto-crop.
-//			// New feature: While the user draws a rectangle, show its size in the status bar.
-//"1.35";	// New feature: Replace "Mirror" with "Flip-H" and "Flip-V" options.
-//			// New feature: Add->Text menu item for putting labels on the grid.
-//"1.36";	// Bug fix: Buttons in Text Label Editor weren't always reflecting text style.
-//			// Bug fix: Prevent user from selecting text boxes in "Hide Text" mode.
-//			// New feature: Added painting by "flood-fill".
-//"1.37";	// Bug fix: Trying to undo "Delete text" could cause a crash.
-//			// New feature: Text color can now be chosen.
-//			// New feature: Hitting "V" key will copy+paste a selected text box.
-//"1.38";	// Added more component types: TO-39 package, pin strips, terminal blocks, inductor, wide film cap, fuse holder, relays.
-//"1.39";	// Moved some controls from the control dialog to the toolbar.  Reduced heights of control dialog and templates dialog.
-//"1.40";	// Minor improvements: Automatically delete textboxes with no text.
-//			// Show board size in mm in the window title bar.  Show drawn rectangle size in mm in the status bar.
-//			// Color toolbar icons to differentiate track styles / diagonal modes.
-//"1.41";	// Bug fix: Menu and toolbars were being blanked while drawing rectangles with the "R" key.
-//			// Bug fix: The status of the diagonals mode was not always restored when toggling between vero and non-vero styles.
-//			// Improvement: Prevent copying of textboxes with no text.
-//			// Improvement: Show text box outline in dark grey instead of black, so it can be seen in ground-fill mode.
-//			// Improvement: When zooming in/out, try to keep the view showing the same centre point.
-//			// Improvement: Draw pin labels in black instead of grey so they are easier to read.
-//"1.42";	// Improvement: Added Rendering dialog controls for component text size.
-//			// Bug fix: Correct footprints for GTR-2 relays.
-//			// Improved outline sizes for relays and Bourns trimpots.
-//"1.43";	// Bug fix: Stop potential crash when defining areas for part/track selection.
-			// Improvement: Add toolbar button to select part/tracks by area.
-//"1.44";	// Bug fix: Fixed bad TRCD Relay.
-//			// New feature: Added component editor.
-//"1.45";	// Bug fix: Prevent mouse from dragging shapes off screen in the component editor.
-//			// Bug fix: Fix shape selection in the component editor.
-//"1.46";	// Bug fix: Fixed error in loaded old VRTs with strip connectors.
-//"1.47";	// Bug fix: Version 1.46 would produce duplicate shapes when loading parts from VRT.
-//			// Bug fix: Changing DIP width wasn't changing the component outline.
-//			// New feature: Component editor can define "holes" (i.e. non-paintable grid points).
-//"1.48";	// Bug fix: Possible crash during auto-routing while moving wires.
-//			// Improvement: Speed up algorithm for routing/connectivity checking.
-//"1.49";	// Restrict labels to 2 orientations. (Left to right, or bottom to top).
-//			// Improvement: Add rendering options to show target board area.
-//"1.50";	// Bug fix: Clicking on a floating track pattern should not place floating components.
-//			// Moved the Pad/Track/Hole/Gap controls to the Rendering Options dialog.  Updated the tutorials.
-//"1.51";	// Bug fix: Floating track pattern could not be placed over unpainted wires on the board.
-//			// Improvement: Made buttons to move component labels use a smaller step size.
-//"1.52";	// Bug fix: Missing Templates folder would disable Undo/Redo.
-//			// Bug fix: Changing component type using Control Dialog (e.g. from Diode to LED) not working properly.
-//			// History and Templates folders now auto-created in OS/application specific locations.
-//"1.53";	// Improvement: Added Undo/Redo buttons to toolbar.
-//			// Improvement: Allow Undo/Redo in Component Editor mode.
-//"1.54";	// Added Zoom buttons to toolbar.
-//			// Changed executable name, folder names, and file names to lowercase.
-//			// Made program search for "tutorials" folder in standard locations.
-//"1.55";	// Improvement: List recent VRT files in File menu.
-//"1.56";	// Tweaked dialog layouts to better handle 11 point fonts.
-//"1.57";	// Improvement: Faster routing algorithm.
-//"1.58";	// Improvement: Faster routing and connectivity checking.
-//"1.59";	// Improvement: Added Key/Mouse Actions dialog under Help menu.
-//"1.60";	// Bug fix: Since V1.58, connected tracks were not always rendered properly.
-//			// Improvement: Added option to disable "Fast" routing (to try reduce Bad Nodes).
-//"1.61";	// Improvement: Auto-router respects manually painted track between two pins.
-//			// Allow manual over-painting of auto-routed track, and show
-//			// all auto-routed tracks with hatched lines (including the current selection).
-//			// Split "Paste" and "Tidy" buttons, and only allow "Tidy" on completed circuits.
-//"1.62";	// Bug fix: Don't allow parts/tracks selected by area to be manipulated if a control slider is hiding some of the selection.
-//			// Bug fix: Don't show selected area if both control sliders are moved to Off.
-//			// New feature: Allow wires to cross, and allow up to two wires to be stacked next to each other (but no hole sharing yet).
-//"1.63";	// Bug fix: 1.62 could crash or corrupt the layout if stacking wires under an IC.
-//"1.64";	// Bug fix: Fixed algorithm for stacking wires.
-//			// New feature: Allow 2 wires to share a hole.
-//			// Added "Wire Options" dialog to set allowed wire operations.
-//"1.65";	// Bug fix: Wire hole-sharing under an IC only worked with wire-crossing enabled.
-//			// Improvement: Render wires as rounded rectangles so hole-sharing looks clearer.
-//"1.66";	// New feature: Allow shapes to be filled with colors.
-//"1.67";	// Bug fix: Rotating a track pattern did not correctly handle competing diagonals.
-//			// Bug fix: Couldn't use keys to move/rotate a track pattern unless components were also selected.
-//"1.68";	// Bug fix: Component Editor not drawing footprint area with dashed line.
-//"1.69";	// New feature: Allow netlist import in OrcadPCB2 format (so KiCad can be used as schematic editor).
-//"1.70";	// Bug fix: Handle selection of rotated shapes in component editor.
-			// Bug fix: Make netlist import handle connectors (strip/blocks) with different numbers of pins.
-//"1.71";	// Bug fix: Component editor not checking connectors (strip/blocks) for reserved import strings.
-//"1.72";	// Bug fix: Flood fill not preserving status of grid under wires.
-//"1.73";	// New feature: Make pin label alignment (Left,Centre,Right) editable in pin labels dialog.
-//"1.74";	// Better treatment of part labels under part rotation.  Offset labels for Pads/Connectors by default.
-//"1.75";	// Partial bug fix: Rendering components to PDF would always show them filled (even if "Fill" slider was off).
-			// Fixed to show only outline if "Fill" slider is off.
-			// New feature: Added info to rendering dialog showing the minimum guaranteed track separation
-			// based on the current (pad, track, gap, diagonal mode, ground fill) settings.
-			// New feature: Allow Gerber export when in Mono mode (Beta).
-//"1.76";	// Improvement: In Mono mode, all text boxes are now automatically mirrored for toner-transfer.
-			// Improvement: In Mono mode, all component outlines and component text are rendered to match Gerber output.
-//"1.77";	// Bug fix: Text rendering to PDF was broken by changes for PCB text.
-			// Improvement: Text size setting in Renderer Dialog affects PCB text size also.
-			// Improvement: Added more PCB parameters (for Gerber) to Rendering Dialog.
-			// Moved all Gerber related viewing from Mono mode to new PCB mode on the Track slider.
-//"1.78";	// Bug fix: Unpainted wire ends were being drawn as painted.
-			// Improvement: Added default label offsets to small Electrolytic Caps so they don't lie over pin holes.
-			// Stop offsetting pad labels by default (it was too confusing manipulating them like that).
-//"1.79";	// New feature: File menu allows Gerber export as either 1-layer or 2-layer.
-			// Removed NPTH/PTH selection since it is implied by the export type (1-layer/2-layer).
-			// Changed hatched lines in Mono mode from yellow to red.
-			// Hide vias in PCB mode (as they are ignored at the moment).
-			// Help->Support now opens forum in browser.
-			// Added "Clear recent files list" to File menu.
-//"1.80";	// Added second board layer.
-			// Made the Control and Component Editor dialogs dockable and docked by default.
-			// Updated the tutorials to describe 2-layer functionality.
-//"1.81";	// Bug fix: Hiding the top toolbar made mouse clicks map to the wrong grid locations.
-			// Bug fix: Right clicking on the top toolbar allowed control and component editor dialogs to be displayed together.
-			// Added shell script to uninstall on Linux and updated README.txt with info on uninstall procedure.
-//"1.82";	// Bug fix: Merge should not update the filename used for saving.
-//"1.83";	// Bug fix: Pin dialog should be hidden in component editor mode.
-			// Bug fix: Vias were only drawn with correct size in PCB mode.
-			// Improvement: Zoom with respect to mouse position rather than centre of view.
-			// Improvement: When adding to part templates from current circuit, only consider currently selected parts.
-			// Improvement: Reduce minimum allowed track width from 30 mil to 12 mil.
-			// New feature: Allow use vias to be enabled/disabled under Layers menu.
-			// New feature: Added new "Thin" track style for more traditional look and smaller Gerber files.
-//"1.84";	// Bug fix: Repainting pins on layer 2 did not update grid connections properly, and could crash when the part is moved.
-//"1.85";	// Bug fix: Refresh problem.  Broken and Floating lists could show zombie entries when the control dialog is docked.
-			// Bug fix: Rendering problem.  In Mono and Color modes, some zoom levels would leave gaps between pixmaps and draw offset diagonals.
-			// Bug fix: In Mono and Color modes, it was not possible to set via-pad and via-hole sizes.
-			// Improvement: Allow larger zoom level.
-			// Improvement: To avoid problems with some PCB companies, made the top solder mask cover most (but not all) of each pad/via.
-			// Improvement: When rendering the top layer in PCB mode, make it better represent the fact that a portion of each pad/via is visible.
-			// Improvement: When writing the drill file, use XNC/Excellon Format 2.
-//"1.86";	// Bug fix: V1.85 was sometimes hiding pin outlines (e.g. when track slider was set to Off).
-			// Bug fix: Switching to Component Editor mode from PCB mode gave black background.
-			// Bug fix: Placing a wire in 2-layer mode did not handle both wire ends properly.
-			// Improvement: Added button to Templates dialog to save all templates to a VRT file.
-			// Improvement: For ground-fills, auto-generate additional tags for thermal reliefs.
-			// Functionality change: To avoid track breaks, markers in Mono mode only make holes in ground-fills.
-			// Functionality change: Disabled show/hide of docked widgets by right mouse-click on menu bar.
-			// Added command line options (-h, --help, -v, --version).
-			// Added manpage as part of unix installation.
-//"1.87";	// Bug fix: 300 mil electrolytic cap was missing line marking negative side.
-			// Improvement: When modifying shapes in component editor, allow unit steps with the mouse wheel.
-			// Improvement: Allow flipped views in PCB mode but don't allow export/editing when flipped.
-			// Lots of minor GUI tweaks such as disabling certain buttons according to display mode.
-			// Added the Bourns 3362 series to the set of trimmers in the Templates dialog.
-//"1.88";	// Roll back of change made in V1.85:  Top solder mask now works in same way as bottom solder mask.
-			// Bug fix: Fix problem with docked dialogs passing mouse clicks to the main window.
-			// Improvement: Various minor fixes, improvements and simplificatons to Gerber Export code.
-			// Improvement: Changed diode cathode marking so it is less likely to be erased on a PCB.
-			// Improvement: Show actual minimum track separation (instead of the guaranteed minimum).
-			// New feature: Show minimum ground fill width to help avoid isolated ground "islands".
-			// New feature: Allow custom pad and hole sizes to be set on each part.
-//"1.89";	// Bug fix: Gerber export in V1.88 was writing unusable drill file, and not handling variable pad/hole widths correctly.
-//"1.90";	// Bug fix: While auto-routing, unpainting the board under a part would not always let it fall into place.
-			// Bug fix: Hole-usage was not handled properly for non-wires.
-			// Improvement: Increase max allowed hole size for parts from 40 mil to 50 mil.
-//"1.91";	// Bug fix: Allow 2-pin DIPs.
-			// Bug fix: Mouse click not always selecting most relevant shape in component editor mode.
-			// Improvement: Draw some parts (e.g. resistors/diodes/DIPs) differently in PCB mode when appropriate.
-//"1.92";	// Bug fix: Delete selected template would sometimes remove wrong template.
-//"1.93";	// Make control dialog better handle large font.
-//			// Draw pads for unassigned pins in Mono/PCB mode.
-//"1.94";	// Bug fix: When ground-filling with no specified nodeId, do not draw thermal relief tags to unassigned pins.
-			// New feature: Find parts in layout by Name or Value.
-			// Improvement: Made Rendering Options dialog better handle 11pt font.
-//"1.95";	// Bug fix: Thermal relief tags not calculated properly for pads with custom size.
-			// New feature: Allow user to specify a color for any NodeID.
-			// Improvement: Show info on Bad/Floating nodes in a single list.
-			// For consistency between view types, draw hashed lines for broken connections in red instead of yellow.
-//"1.96";	// New feature: In Color mode, color each wire according to its NodeId.
-//"1.97";	// Bug fix: In Color mode, diagonal track portions were drawn too long if using custom track color.
-			// Disabled code for drawing extra thermal relief tags (so a filled PCB will be easier to solder).
-//"1.98";	// Put in extra checks to stop potential crashes arising from a corrupted layout.
-			// Added file menu option to fix a corrupted layout.
-//"1.99";	// Code changes to help prevent layout from becoming corrupted.
-//"2.00";	// Bug fix: Poor-man's 2-layer Gerber export was not handling crossing wires.
-			// Bug fix: Isolated nodes were rendered to Gerber with pad-width instead of track-width.
-			// Bug fix: Isolated nodes were rendered to top layer for poor-man's 2-layer Gerber export.
-			// Improvement: Allow TAB to change focus of dialog controls.
-			// Improvement: Reworked some icons that did not work well with dark themes.
-			// Removed menu item to fix corruption.  Old corrupted VRTS are now auto-fixed on load.
-//"2.01";	// Bug fix: Chains of wires sharing holes sometimes not colored completely.
-			// Added ability to define custom pad/hole size in component editor.
-			// Added ability to add veroboard labels (numbers or letters).
-			// Improved algorithm for solder bridges.  Don't show a solder bridge if a wire is already doing that job.
+"2.11";		// Bug fix: The routing changes in V2.09 introduced a bug in the connectivity checking of layouts with wires,
+			//          so fully connected nets that use wires could sometimes be wrongly listed as "Bad Nodes".
+//"2.10";	// Bug fix: Show closest tracks did not draw all locations due to rounding errors.
+			// Bug fix: Flying wires not drawn properly to offset pads.
+			// Improvement: If all pads on a component are shifted by the same amount, then give the component outline and text the same shift.
+			// Improvement: Show rectangular area sizes and pad offsets in both mil and mm.
+			// Improvement: Allow pad offsets to change in 1 mil steps instead of 5 mil.
+			// New feature: Added distance tool for measuring distance between holes/grid points (to help set pad offsets)
+//"2.09";	// Improvement: Routing algorithm speed increased.
+//"2.08";	// Bug fix: Autorouting in non-fast mode corrupts how adjacent nodeIDs on the grid are tracked,
+			//          leading to many adjacent nets being given the same color.
+			// Improvement: Speed up how flying wires are handled during connectivity checking.
+			// Improvement: Speed up code for tracking adjacent nodeIDs on the grid.
+			// Improvement: Speed up routing in non-fast mode by 5% to 10%.
+			// Improvement: Allow "Paste" when auto-routing to be restricted to grey areas.
+			// Improvement: Moving/rotating grey areas while auto-routing will ignore auto-routed tracks in the grey areas
+			//				instead of pasting them.
+//"2.07";	// Improvement: Faster algorithm for building the list of broken nodes.
+			// Improvement: Copying a part with no name and no value should produce a part with no name and no value.
+			// New feature: Flying wires.  Automatically generated between "Pad (Flying Wire)" objects.
+//"2.06";	// Bug fix: In Rendering Options, the "Show closest tracks" box was not being hidden when minimum separation was same as Gap size.
+			// Bug fix. In Fat Tracks mode with diagonals, tracks in the view were not all of correct width, but the ones in Gerber export were.
+			// Bug fix: In Fat Tracks mode with diagonals, the track separation algorithm was not handling all cases properly.
+			// Bug fix: In Fat Tracks mode, Gerber export should create an aperture for pads even if there are no parts in the circuit.
+			// Improvement: Allow reset pin layer preference ("T" + right button) while moving mouse instead of having to do single clicks.
+//"2.05";	// Bug fix: Code for filling parts with color not correctly handling shape transformations.
+			// Bug fix: Track separation info in the Rendering dialog not updating when auto-routing toggled.
+			// Bug fix: Components with lines outside the footprint area could be rendered off screen
+			// leading to an invalid set of Gerber files (e.g. GTO file having points outside the boundary in the GKO file).
+			// Improvement: Total rewrite of minimum track separation for improved accuracy.
+			// Improvement: Show points for all layers when displaying locations of minimum track separation.
+			// New feature: In PCB mode, individual pad locations can be shifted by up to 50 mil using Ctrl + Arrow keys.
+//"2.04";	// Bug fix: Since 2.02, VeroRoute freezes if the grid is made 1 column wide.
+			// Omit deprecated G codes from Gerber export, and allow Gerber export in mm or inches.
+			// Allow circuit panning/grid resize by grabbing the grid with the right mouse button (ctrl key optional).
+			// Improve GUI behaviour in Tutorials by passing key presses from the Info dialog to the main window.
+//"2.03";	// Bug fix: Wire rendering broken in 2.02.
+			// New feature. Can specify layer preference on component pins of 2-layer PCBs.
+			// Updated tutorials.
 //"2.02";	// Bug fix: Fill slider should be enabled when track slider is set to Off.
 			// Bug fix: Calculation of minimum track separation was not correct when using fat tracks style.
 			// Bug fix: Changed render order in Color/Mono mode to fix issues with how custom sizes pads are drawn.
@@ -271,42 +51,261 @@ static const char* szVEROROUTE_VERSION =
 			//                       Maximum custom hole size increased to 100 mil.
 			// New feature:  Add ability to show locations of minimum track separation.
 			// Updated tutorials.
-//"2.03";	// Bug fix: Wire rendering broken in 2.02.
-			// New feature. Can specify layer preference on component pins of 2-layer PCBs.
-			// Updated tutorials.
-//"2.04";	// Bug fix: Since 2.02, VeroRoute freezes if the grid is made 1 column wide.
-			// Omit deprecated G codes from Gerber export, and allow Gerber export in mm or inches.
-			// Allow circuit panning/grid resize by grabbing the grid with the right mouse button (ctrl key optional).
-			// Improve GUI behaviour in Tutorials by passing key presses from the Info dialog to the main window.
-//"2.05";	// Bug fix: Code for filling parts with color not correctly handling shape transformations.
-			// Bug fix: Track separation info in the Rendering dialog not updating when auto-routing toggled.
-			// Bug fix: Components with lines outside the footprint area could be rendered off screen
-			// leading to an invalid set of Gerber files (e.g. GTO file having points outside the boundary in the GKO file).
-			// Improvement: Total rewrite of minimum track separation for improved accuracy.
-			// Improvement: Show points for all layers when displaying locations of minimum track separation.
-			// New feature: In PCB mode, individual pad locations can be shifted by up to 50 mil using Ctrl + Arrow keys.
-//"2.06";	// Bug fix: In Rendering Options, the "Show closest tracks" box was not being hidden when minimum separation was same as Gap size.
-			// Bug fix. In Fat Tracks mode with diagonals, tracks in the view were not all of correct width, but the ones in Gerber export were.
-			// Bug fix: In Fat Tracks mode with diagonals, the track separation algorithm was not handling all cases properly.
-			// Bug fix: In Fat Tracks mode, Gerber export should create an aperture for pads even if there are no parts in the circuit.
-			// Improvement: Allow reset pin layer preference ("T" + right button) while moving mouse instead of having to do single clicks.
-//"2.07";	// Improvement: Faster algorithm for building the list of broken nodes.
-			// Improvement: Copying a part with no name and no value should produce a part with no name and no value.
-			// New feature: Flying wires.  Automatically generated between "Pad (Flying Wire)" objects.
-//"2.08";	// Bug fix: Autorouting in non-fast mode corrupts how adjacent nodeIDs on the grid are tracked,
-			//          leading to many adjacent nets being given the same color.
-			// Improvement: Speed up how flying wires are handled during connectivity checking.
-			// Improvement: Speed up code for tracking adjacent nodeIDs on the grid.
-			// Improvement: Speed up routing in non-fast mode by 5% to 10%.
-			// Improvement: Allow "Paste" when auto-routing to be restricted to grey areas.
-			// Improvement: Moving/rotating grey areas while auto-routing will ignore auto-routed tracks in the grey areas
-			//				instead of pasting them.
-//"2.09";	// Improvement: Routing algorithm speed increased.
-//"2.10";	// Bug fix: Show closest tracks did not draw all locations due to rounding errors.
-			// Bug fix: Flying wires not drawn properly to offset pads.
-			// Improvement: If all pads on a component are shifted by the same amount, then give the component outline and text the same shift.
-			// Improvement: Show rectangular area sizes and pad offsets in both mil and mm.
-			// Improvement: Allow pad offsets to change in 1 mil steps instead of 5 mil.
-			// New feature: Added distance tool for measuring distance between holes/grid points (to help set pad offsets).
-  "2.11";	// Bug fix: The routing changes in V2.09 introduced a bug in the connectivity checking of layouts with wires,
-			//          so fully connected nets that use wires could sometimes be wrongly listed as "Bad Nodes".
+//"2.01";	// Bug fix: Chains of wires sharing holes sometimes not colored completely.
+			// Added ability to define custom pad/hole size in component editor.
+			// Added ability to add veroboard labels (numbers or letters).
+			// Improved algorithm for solder bridges.  Don't show a solder bridge if a wire is already doing that job.
+//"2.00";	// Bug fix: Poor-man's 2-layer Gerber export was not handling crossing wires.
+			// Bug fix: Isolated nodes were rendered to Gerber with pad-width instead of track-width.
+			// Bug fix: Isolated nodes were rendered to top layer for poor-man's 2-layer Gerber export.
+			// Improvement: Allow TAB to change focus of dialog controls.
+			// Improvement: Reworked some icons that did not work well with dark themes.
+			// Removed menu item to fix corruption.  Old corrupted VRTS are now auto-fixed on load.
+//"1.99";	// Code changes to help prevent layout from becoming corrupted.
+//"1.98";	// Put in extra checks to stop potential crashes arising from a corrupted layout.
+			// Added file menu option to fix a corrupted layout.
+//"1.97";	// Bug fix: In Color mode, diagonal track portions were drawn too long if using custom track color.
+			// Disabled code for drawing extra thermal relief tags (so a filled PCB will be easier to solder).
+//"1.96";	// New feature: In Color mode, color each wire according to its NodeId.
+//"1.95";	// Bug fix: Thermal relief tags not calculated properly for pads with custom size.
+			// New feature: Allow user to specify a color for any NodeID.
+			// Improvement: Show info on Bad/Floating nodes in a single list.
+			// For consistency between view types, draw hashed lines for broken connections in red instead of yellow.
+//"1.94";	// Bug fix: When ground-filling with no specified nodeId, do not draw thermal relief tags to unassigned pins.
+			// New feature: Find parts in layout by Name or Value.
+			// Improvement: Made Rendering Options dialog better handle 11pt font.
+//"1.93";	// Make control dialog better handle large font.
+//			// Draw pads for unassigned pins in Mono/PCB mode.
+//"1.92";	// Bug fix: Delete selected template would sometimes remove wrong template.
+//"1.91";	// Bug fix: Allow 2-pin DIPs.
+			// Bug fix: Mouse click not always selecting most relevant shape in component editor mode.
+			// Improvement: Draw some parts (e.g. resistors/diodes/DIPs) differently in PCB mode when appropriate.
+//"1.90";	// Bug fix: While auto-routing, unpainting the board under a part would not always let it fall into place.
+			// Bug fix: Hole-usage was not handled properly for non-wires.
+			// Improvement: Increase max allowed hole size for parts from 40 mil to 50 mil.
+//"1.89";	// Bug fix: Gerber export in V1.88 was writing unusable drill file, and not handling variable pad/hole widths correctly.
+//"1.88";	// Roll back of change made in V1.85:  Top solder mask now works in same way as bottom solder mask.
+			// Bug fix: Fix problem with docked dialogs passing mouse clicks to the main window.
+			// Improvement: Various minor fixes, improvements and simplificatons to Gerber Export code.
+			// Improvement: Changed diode cathode marking so it is less likely to be erased on a PCB.
+			// Improvement: Show actual minimum track separation (instead of the guaranteed minimum).
+			// New feature: Show minimum ground fill width to help avoid isolated ground "islands".
+			// New feature: Allow custom pad and hole sizes to be set on each part.
+//"1.87";	// Bug fix: 300 mil electrolytic cap was missing line marking negative side.
+			// Improvement: When modifying shapes in component editor, allow unit steps with the mouse wheel.
+			// Improvement: Allow flipped views in PCB mode but don't allow export/editing when flipped.
+			// Lots of minor GUI tweaks such as disabling certain buttons according to display mode.
+			// Added the Bourns 3362 series to the set of trimmers in the Templates dialog.
+//"1.86";	// Bug fix: V1.85 was sometimes hiding pin outlines (e.g. when track slider was set to Off).
+			// Bug fix: Switching to Component Editor mode from PCB mode gave black background.
+			// Bug fix: Placing a wire in 2-layer mode did not handle both wire ends properly.
+			// Improvement: Added button to Templates dialog to save all templates to a VRT file.
+			// Improvement: For ground-fills, auto-generate additional tags for thermal reliefs.
+			// Functionality change: To avoid track breaks, markers in Mono mode only make holes in ground-fills.
+			// Functionality change: Disabled show/hide of docked widgets by right mouse-click on menu bar.
+			// Added command line options (-h, --help, -v, --version).
+			// Added manpage as part of unix installation.
+//"1.85";	// Bug fix: Refresh problem.  Broken and Floating lists could show zombie entries when the control dialog is docked.
+			// Bug fix: Rendering problem.  In Mono and Color modes, some zoom levels would leave gaps between pixmaps and draw offset diagonals.
+			// Bug fix: In Mono and Color modes, it was not possible to set via-pad and via-hole sizes.
+			// Improvement: Allow larger zoom level.
+			// Improvement: To avoid problems with some PCB companies, made the top solder mask cover most (but not all) of each pad/via.
+			// Improvement: When rendering the top layer in PCB mode, make it better represent the fact that a portion of each pad/via is visible.
+			// Improvement: When writing the drill file, use XNC/Excellon Format 2.
+//"1.84";	// Bug fix: Repainting pins on layer 2 did not update grid connections properly, and could crash when the part is moved.
+//"1.83";	// Bug fix: Pin dialog should be hidden in component editor mode.
+			// Bug fix: Vias were only drawn with correct size in PCB mode.
+			// Improvement: Zoom with respect to mouse position rather than centre of view.
+			// Improvement: When adding to part templates from current circuit, only consider currently selected parts.
+			// Improvement: Reduce minimum allowed track width from 30 mil to 12 mil.
+			// New feature: Allow use vias to be enabled/disabled under Layers menu.
+			// New feature: Added new "Thin" track style for more traditional look and smaller Gerber files.
+//"1.82";	// Bug fix: Merge should not update the filename used for saving.
+//"1.81";	// Bug fix: Hiding the top toolbar made mouse clicks map to the wrong grid locations.
+			// Bug fix: Right clicking on the top toolbar allowed control and component editor dialogs to be displayed together.
+			// Added shell script to uninstall on Linux and updated README.txt with info on uninstall procedure.
+//"1.80";	// Added second board layer.
+			// Made the Control and Component Editor dialogs dockable and docked by default.
+			// Updated the tutorials to describe 2-layer functionality.
+//"1.79";	// New feature: File menu allows Gerber export as either 1-layer or 2-layer.
+			// Removed NPTH/PTH selection since it is implied by the export type (1-layer/2-layer).
+			// Changed hatched lines in Mono mode from yellow to red.
+			// Hide vias in PCB mode (as they are ignored at the moment).
+			// Help->Support now opens forum in browser.
+			// Added "Clear recent files list" to File menu.
+//"1.78";	// Bug fix: Unpainted wire ends were being drawn as painted.
+			// Improvement: Added default label offsets to small Electrolytic Caps so they don't lie over pin holes.
+			// Stop offsetting pad labels by default (it was too confusing manipulating them like that).
+//"1.77";	// Bug fix: Text rendering to PDF was broken by changes for PCB text.
+			// Improvement: Text size setting in Renderer Dialog affects PCB text size also.
+			// Improvement: Added more PCB parameters (for Gerber) to Rendering Dialog.
+			// Moved all Gerber related viewing from Mono mode to new PCB mode on the Track slider.
+//"1.76";	// Improvement: In Mono mode, all text boxes are now automatically mirrored for toner-transfer.
+			// Improvement: In Mono mode, all component outlines and component text are rendered to match Gerber output.
+//"1.75";	// Partial bug fix: Rendering components to PDF would always show them filled (even if "Fill" slider was off).
+			// Fixed to show only outline if "Fill" slider is off.
+			// New feature: Added info to rendering dialog showing the minimum guaranteed track separation
+			// based on the current (pad, track, gap, diagonal mode, ground fill) settings.
+			// New feature: Allow Gerber export when in Mono mode (Beta).
+//"1.74";	// Better treatment of part labels under part rotation.  Offset labels for Pads/Connectors by default.
+//"1.73";	// New feature: Make pin label alignment (Left,Centre,Right) editable in pin labels dialog.
+//"1.72";	// Bug fix: Flood fill not preserving status of grid under wires.
+//"1.71";	// Bug fix: Component editor not checking connectors (strip/blocks) for reserved import strings.
+//"1.70";	// Bug fix: Handle selection of rotated shapes in component editor.
+			// Bug fix: Make netlist import handle connectors (strip/blocks) with different numbers of pins.
+//"1.69";	// New feature: Allow netlist import in OrcadPCB2 format (so KiCad can be used as schematic editor).
+//"1.68";	// Bug fix: Component Editor not drawing footprint area with dashed line.
+//"1.67";	// Bug fix: Rotating a track pattern did not correctly handle competing diagonals.
+//			// Bug fix: Couldn't use keys to move/rotate a track pattern unless components were also selected.
+//"1.66";	// New feature: Allow shapes to be filled with colors.
+//"1.65";	// Bug fix: Wire hole-sharing under an IC only worked with wire-crossing enabled.
+//			// Improvement: Render wires as rounded rectangles so hole-sharing looks clearer.
+//"1.64";	// Bug fix: Fixed algorithm for stacking wires.
+//			// New feature: Allow 2 wires to share a hole.
+//			// Added "Wire Options" dialog to set allowed wire operations.
+//"1.63";	// Bug fix: 1.62 could crash or corrupt the layout if stacking wires under an IC.
+//"1.62";	// Bug fix: Don't allow parts/tracks selected by area to be manipulated if a control slider is hiding some of the selection.
+//			// Bug fix: Don't show selected area if both control sliders are moved to Off.
+//			// New feature: Allow wires to cross, and allow up to two wires to be stacked next to each other (but no hole sharing yet).
+//"1.61";	// Improvement: Auto-router respects manually painted track between two pins.
+//			// Allow manual over-painting of auto-routed track, and show
+//			// all auto-routed tracks with hatched lines (including the current selection).
+//			// Split "Paste" and "Tidy" buttons, and only allow "Tidy" on completed circuits.
+//"1.60";	// Bug fix: Since V1.58, connected tracks were not always rendered properly.
+//			// Improvement: Added option to disable "Fast" routing (to try reduce Bad Nodes).
+//"1.59";	// Improvement: Added Key/Mouse Actions dialog under Help menu.
+//"1.58";	// Improvement: Faster routing and connectivity checking.
+//"1.57";	// Improvement: Faster routing algorithm.
+//"1.56";	// Tweaked dialog layouts to better handle 11 point fonts.
+//"1.55";	// Improvement: List recent VRT files in File menu.
+//"1.54";	// Added Zoom buttons to toolbar.
+//			// Changed executable name, folder names, and file names to lowercase.
+//			// Made program search for "tutorials" folder in standard locations.
+//"1.53";	// Improvement: Added Undo/Redo buttons to toolbar.
+//			// Improvement: Allow Undo/Redo in Component Editor mode.
+//"1.52";	// Bug fix: Missing Templates folder would disable Undo/Redo.
+//			// Bug fix: Changing component type using Control Dialog (e.g. from Diode to LED) not working properly.
+//			// History and Templates folders now auto-created in OS/application specific locations.
+//"1.51";	// Bug fix: Floating track pattern could not be placed over unpainted wires on the board.
+//			// Improvement: Made buttons to move component labels use a smaller step size.
+//"1.50";	// Bug fix: Clicking on a floating track pattern should not place floating components.
+//			// Moved the Pad/Track/Hole/Gap controls to the Rendering Options dialog.  Updated the tutorials.
+//"1.49";	// Restrict labels to 2 orientations. (Left to right, or bottom to top).
+//			// Improvement: Add rendering options to show target board area.
+//"1.48";	// Bug fix: Possible crash during auto-routing while moving wires.
+//			// Improvement: Speed up algorithm for routing/connectivity checking.
+//"1.47";	// Bug fix: Version 1.46 would produce duplicate shapes when loading parts from VRT.
+//			// Bug fix: Changing DIP width wasn't changing the component outline.
+//			// New feature: Component editor can define "holes" (i.e. non-paintable grid points).
+//"1.46";	// Bug fix: Fixed error in loaded old VRTs with strip connectors.
+//"1.45";	// Bug fix: Prevent mouse from dragging shapes off screen in the component editor.
+//			// Bug fix: Fix shape selection in the component editor.
+//"1.44";	// Bug fix: Fixed bad TRCD Relay.
+//			// New feature: Added component editor.
+//"1.43";	// Bug fix: Stop potential crash when defining areas for part/track selection.
+			// Improvement: Add toolbar button to select part/tracks by area.
+//"1.42";	// Improvement: Added Rendering dialog controls for component text size.
+//			// Bug fix: Correct footprints for GTR-2 relays.
+//			// Improved outline sizes for relays and Bourns trimpots.
+//"1.41";	// Bug fix: Menu and toolbars were being blanked while drawing rectangles with the "R" key.
+//			// Bug fix: The status of the diagonals mode was not always restored when toggling between vero and non-vero styles.
+//			// Improvement: Prevent copying of textboxes with no text.
+//			// Improvement: Show text box outline in dark grey instead of black, so it can be seen in ground-fill mode.
+//			// Improvement: When zooming in/out, try to keep the view showing the same centre point.
+//			// Improvement: Draw pin labels in black instead of grey so they are easier to read.
+//"1.40";	// Minor improvements: Automatically delete textboxes with no text.
+//			// Show board size in mm in the window title bar.  Show drawn rectangle size in mm in the status bar.
+//			// Color toolbar icons to differentiate track styles / diagonal modes.
+//"1.39";	// Moved some controls from the control dialog to the toolbar.  Reduced heights of control dialog and templates dialog.
+//"1.38";	// Added more component types: TO-39 package, pin strips, terminal blocks, inductor, wide film cap, fuse holder, relays.
+//"1.37";	// Bug fix: Trying to undo "Delete text" could cause a crash.
+//			// New feature: Text color can now be chosen.
+//			// New feature: Hitting "V" key will copy+paste a selected text box.
+//"1.36";	// Bug fix: Buttons in Text Label Editor weren't always reflecting text style.
+//			// Bug fix: Prevent user from selecting text boxes in "Hide Text" mode.
+//			// New feature: Added painting by "flood-fill".
+//"1.35";	// New feature: Replace "Mirror" with "Flip-H" and "Flip-V" options.
+//			// New feature: Add->Text menu item for putting labels on the grid.
+//"1.34";	// Bug fix: Merge was not clearing existing user-defined areas.
+//			// New feature: Added margin control for auto-crop.
+//			// New feature: While the user draws a rectangle, show its size in the status bar.
+//"1.33";	// New feature: Allow horizontal veroboard strips.
+//			// Tweaked color assignment algorithm.
+//"1.32";	// New feature: "File->Open (merge into current)".
+//"1.31";	// Improvement: User-defined areas select tracks as well as components.
+//"1.30";	// Improvement: Duplicating components copies their Value too if it's different to the name.
+//			// Added more component types. (Relays, Switches, Trimpots).
+//			// Changed default lengths of resistors and diodes to 400 mil.
+//			// Updated gEDA/TinyCAD import code for RESISTOR/DIODE/CAP_CERAMIC/CAP_FILM
+//			// so that appending an optional integer number to the footprint name
+//			// sets the length in 100s of mil. (e.g. RESISTOR3 = 300mil)
+//			// Updated gEDA library with resistors and caps of different lengths.
+//			// Added ability to select components/wipe tracks within area (hold down "R" to draw areas).
+//"1.29";	// Added Crystal component type and gEDA library symbol.
+//"1.28";	// Improvements:
+//			// Added "Toggle Grid" and "Toggle Mirror" as View menu items.
+//			// List part types in B.O.M.
+//			// Allow pin labels for TO packages as well as DIPs, SIPs.
+//			// New feature: Added "Parts/Templates Dialog" so user can build a parts library
+//			// for ICs and TO packages (avoids defining pin labels with each new circuit).
+//			// Double-clicking on any listed part adds it to the circuit.
+//"1.27";	// Bug fix: Deleting a component was not immediately updating the Bad Nodes lists.
+//			// Bug fix: V1.26 allowed components to be dragged while user was painting pins.
+//"1.26";	// Bug fix: Holding down "P" and SPACE at the same time would allow mouse move to modify component pins.
+//			// Usability tweak: Holding down SPACE now allows un-painting the board under a placed component pin,
+//			// or painting the board under the pin to match the existing NodeId on the pin.
+//"1.25";	// Usability tweaks:
+//			// Slow down the grid auto-pan/resize when moving components with the mouse.
+//			// Selecting a NodeID in the "Broken" list should also highlight it in the "Floating" list if it's there.
+//			// Added a Spin FV-1 IC and serial EEPROM to the gEDA library.
+//"1.24";	// Added IC Pin Labels dialog.
+//"1.23";	// Fixed memory leak on shutdown.
+//			// Updated Tutorial 19 with info on creating a registry key for MS Windows.
+//			// Added more JFETs to the symbol libraries.//"1.22";	// Added command line options to specify VRT file and path to VeroRoute home directory.
+//			// Support drag and drop of VRT files from file explorer.
+//			// Allow multiple VeroRoute instances to run at the same time.
+//			// Improved error reporting during netlist import.
+//			// Added color saturation slider.
+//			// Changed rendering behaviour when clicking on an item in the Broken list.
+//			// Added gEDA symbol libraries.
+//"1.21";	// Improved rendering speed by avoiding pointless repaints.
+//			// Control dialog rearranged so a checkbox controls ground-fill.
+//			// Draw foil capacitors with thinner shape to better match the footprint.
+//			// Draw floating component text in red.
+//			// Made export to PDF centre on grid bounds instead of circuit bounds.
+//			// Write status bar messages.
+//"1.20";	// Added Grid checkbox.  PDF shows bounding box and can show grid.
+//			// Increased max pins per component to 255.
+//			// When writing to file, append ". vrt", ".pdf", ".png" to filename as needed.
+//"1.19";	// Add separate "Paste" and "Paste+Tidy" buttons for auto-routing.  Updated tutorials.
+//"1.18";	// Bug fix: Info dialog edits weren't treated as changes so "Save" was broken, but "Save As" was OK.
+//"1.17";	// Added ground-fill.
+//"1.16";	// Fixed mouse-wheel behaviour on windows.  Added View menu option to show IC pins as numbers.
+//"1.15";	// Added more Edit menu items.  Check for Tutorials and History folders at start-up.
+//"1.14";	// Added Help menu item to check if a new version is available.
+//"1.13";	// Bug fixes: PDF write was broken since V1.10.  "Add" menu item was enabled when view was mirrored.
+//"1.12";	// Fixed TinyCAD package names for NP capacitors.  Make netlist import allow spaces in Name and Value fields.
+//"1.11";	// Fixed crash on importing unknown package.  Increased maximum number of pins per component to over 200.
+//"1.10";	// Added import of netlist from TinyCAD schematic.  Hide old Import/Export.
+//"1.01";	// Added scroll bars.  Place new components in top-left of visible view and float them if needed.
+//"1.00";	// Disable component text buttons when appropriate.  Tidy code.  Drop Beta.
+//"0.999";	// Bug fix: Fix possible crash if adding new wire while auto-routing is enabled.
+//"0.998";	// Bug fix: After "Paste" auto-routed wire, color should stay on board when wire moved.
+//"0.997";	// Added part type combo.  Added width buttons for DIP gap resizing instead of "E","R" keys.
+//"0.996";	// Bug fix: Deleting grouped components could cause a crash later.  Allow DIP gap resizing with "E","R" keys.
+//"0.995";	// Check if circuit has been saved before launching Tutorials.  Don't auto-raise Info window on Undo/Redo.
+//"0.994";	// Bug fix: Erasing under floating pins while auto-routing.
+//"0.993";	// Routing improvement.
+//"0.992";	// Improve routing.
+//"0.991";	// Bug fix: Redraw when toggling track styles.
+//"0.99";	// Added new part types including multi-pole switches.
+//"0.981";	// Bug fix: Undo/Redo.
+//"0.98";	// Added Undo/Redo.
+//"0.97";	// Added new part types.  Improved TO-92 outline.  Auto-centre when writing to PDF.
+//"0.96";	// Show File menu-shortcuts.  Fixed tutorial description of polarised component Export.
+//"0.95";	// Added save to PNG.
+//"0.94";	// Added B.O.M.
+//"0.93";	// Try auto-generate unique Name when adding new part.
+//"0.92";	// Add Ctrl shortcuts for File menu options.  Changed tutorials.  Fixed origId bug.
+//"0.91";	// Fixed bad write to PDF.  Allow backspace to work as delete.
+//"0.90";	// First release to Sourceforge.

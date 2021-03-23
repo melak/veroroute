@@ -241,8 +241,7 @@ public:
 	bool SetType(const std::string& str)
 	{
 		if ( GetCurrentShapeId() == BAD_ID ) return false;
-		MakeMapShapeStrings();
-		for (const auto& mapObj : mapShapeToStr)
+		for (const auto& mapObj : Shape::GetMapShapeStrings())
 		{
 			if ( mapObj.second == str )
 			{

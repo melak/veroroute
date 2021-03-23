@@ -25,19 +25,6 @@
 
 enum class SHAPE { LINE = 0, RECT, ROUNDED_RECT, ELLIPSE, ARC, CHORD };
 
-static std::map<SHAPE, std::string>	mapShapeToStr;	// Mapping of SHAPE enum to strings
-
-static void MakeMapShapeStrings()
-{
-	if ( !mapShapeToStr.empty() ) return;
-	mapShapeToStr[SHAPE::LINE]			= "Line";
-	mapShapeToStr[SHAPE::RECT]			= "Rectangle";
-	mapShapeToStr[SHAPE::ROUNDED_RECT]	= "Rounded Rectangle";
-	mapShapeToStr[SHAPE::ELLIPSE]		= "Ellipse";
-	mapShapeToStr[SHAPE::ARC]			= "Arc";
-	mapShapeToStr[SHAPE::CHORD]			= "Chord";
-}
-
 class Shape : public Persist
 {
 public:
@@ -224,6 +211,20 @@ public:
 		outStream.Save(m_bDrawFill);	// Added in VRT_VERSION_29
 		m_lineColor.Save(outStream);	// Added in VRT_VERSION_29
 		m_fillColor.Save(outStream);	// Added in VRT_VERSION_29
+	}
+	static const std::map<SHAPE, std::string>& GetMapShapeStrings()
+	{
+		static std::map<SHAPE, std::string>	mapShapeToStr;	// Mapping of SHAPE enum to strings
+		if ( mapShapeToStr.empty() )
+		{
+			mapShapeToStr[SHAPE::LINE]			= "Line";
+			mapShapeToStr[SHAPE::RECT]			= "Rectangle";
+			mapShapeToStr[SHAPE::ROUNDED_RECT]	= "Rounded Rectangle";
+			mapShapeToStr[SHAPE::ELLIPSE]		= "Ellipse";
+			mapShapeToStr[SHAPE::ARC]			= "Arc";
+			mapShapeToStr[SHAPE::CHORD]			= "Chord";
+		}
+		return mapShapeToStr;
 	}
 private:
 	// Data (x1,y1) and (x2,y2) are either

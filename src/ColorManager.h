@@ -30,10 +30,6 @@
 #define MY_LYR_BOT			(MYNUMCOLORS+3)
 #define MY_LYR_TOP			(MYNUMCOLORS+4)
 
-static MyRGB g_color[MYNUMCOLORS] = { MyRGB(0x3C18C8), MyRGB(0xC024F8), MyRGB(0xD26060), MyRGB(0xDCDC58)
-									, MyRGB(0x60C858), MyRGB(0x5896C8), MyRGB(0x6010FF), MyRGB(0xE142D2)
-									, MyRGB(0xE18C30), MyRGB(0xA0C828), MyRGB(0x48C896), MyRGB(0x5080FF) };
-
 // Manager class to handle assignment of colors to nodeIds
 
 const int BAD_COLORID = -1;
@@ -192,7 +188,7 @@ public:
 		else if ( colorId == MY_LYR_TOP )	{ G = 96; B = 192; }
 		else if	( colorId >= 0 && colorId < MYNUMCOLORS )
 		{
-			const MyRGB& rgb = g_color[colorId % MYNUMCOLORS];
+			const MyRGB& rgb = sm_color[colorId % MYNUMCOLORS];
 			rgb.GetRGB(R, G, B);
 			if ( bUseSaturation ) HandleSaturation(R, G, B);
 		}
@@ -266,6 +262,7 @@ public:
 		}
 	}
 private:
+	static MyRGB					sm_color[MYNUMCOLORS];	// Hard-coded colors
 	std::unordered_map<int,int>		m_mapNodeIdToColorId;
 	std::unordered_map<int,MyRGB>	m_mapNodeIdToCustomColor;
 	int								m_iSaturation;		// 0 to 100. At 0 the colors would all fade to white.

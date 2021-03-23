@@ -89,7 +89,8 @@ int main(int argc, char *argv[])
 		tutorialsPathStr = relativeTutorialsPathStr;
 	else	// Search for system wide "tutorials" path
 	{
-		for (auto dataLocationPath : QStandardPaths::standardLocations(QStandardPaths::AppDataLocation))
+		const auto& locationsConst = QStandardPaths::standardLocations(QStandardPaths::AppDataLocation);
+		for (const auto& dataLocationPath : locationsConst)
 		{
 			QDir tutorialsDir(dataLocationPath + QString("/tutorials"));
 			// Take first hit

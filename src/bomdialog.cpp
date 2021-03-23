@@ -115,7 +115,7 @@ void BomDialog::Update()
 			row++;
 			rowQuantity = 1;
 			rowNames = p->GetNameStr();
-			rowTypes = GetFamilyStr( p->GetType() );
+			rowTypes = CompTypes::GetFamilyStr( p->GetType() );
 			if ( !StringHelper::IsEmptyStr(rowTypes) ) rowTypes += ": ";
 			rowTypes += p->GetTypeStr();
 			rowValue = p->GetValueStr();

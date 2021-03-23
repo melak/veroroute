@@ -29,14 +29,14 @@ void FootPrint::BuildDefault(const COMP& type)
 	SetType(type);
 
 	int numRows(0), numCols(0);
-	const std::string pinStr = GetMakeInstructions(m_type, numRows, numCols);
+	const std::string pinStr = CompTypes::GetMakeInstructions(m_type, numRows, numCols);
 
 	const bool bOK = ( pinStr.size() == static_cast<size_t>(numRows * numCols) );	assert( bOK );	// Check string length OK
 	if ( !bOK ) return;
 
 	Allocate(1, numRows, numCols);
 
-	const bool	bPlug	= IsPlug(m_type);	// A "plug" component can plug the gap between rows of IC pins.
+	const bool	bPlug	= CompTypes::IsPlug(m_type);	// A "plug" component can plug the gap between rows of IC pins.
 	const char*	szpins	= pinStr.c_str();
 
 	const int iSize = GetSize();

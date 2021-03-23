@@ -35,7 +35,7 @@ int Board::GetComponentId(int row, int col)	// Pick the most relevant component 
 		for (const auto& mapObj : m_compMgr.GetMapIdToComp())
 		{
 			const Component&	comp	= mapObj.second;
-			const bool			bPlug	= IsPlug( comp.GetType() );
+			const bool			bPlug	= CompTypes::IsPlug( comp.GetType() );
 			const bool			bPlaced = comp.GetIsPlaced();
 			if ( bPlaced != bReqPlaced ) continue;
 			if ( bPlug != bReqPlug ) continue;
@@ -51,7 +51,7 @@ int Board::GetComponentId(int row, int col)	// Pick the most relevant component 
 		Component& trax = m_compMgr.GetTrax();
 		if ( trax.GetSize() > 0 )
 		{
-			const bool bPlug	= IsPlug( trax.GetType() );
+			const bool bPlug	= CompTypes::IsPlug( trax.GetType() );
 			const bool bPlaced	= trax.GetIsPlaced();
 			if ( bPlaced != bReqPlaced ) continue;
 			if ( bPlug != bReqPlug ) continue;
@@ -224,7 +224,7 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 		if ( polygonHelper.m_Dmin < m_dMinSeparation )	// If min for layer is lowest across all layers ...
 			ClearWarnPoints();							// ... wipe all warning points
 
-		for (const auto& p : polygonHelper.m_pWarn) m_warnPoints[k].push_back(p);
+		for (auto& p : const_cast<const QPolygonF&>(polygonHelper.m_pWarn)) m_warnPoints[k].push_back(p);
 		m_dMinSeparation = polygonHelper.m_Dmin;
 	}	// Next layer
 }
@@ -729,8 +729,9 @@ bool Board::GetDisableChangeType()
 	if ( ( GetGroupMgr().GetNumUserComps() != 1 ) || ( GetCompMode() == COMPSMODE::OFF ) ) return true;
 	const Component& comp	= GetUserComponent();
 	const COMP		 eType	= comp.GetType();
-	return !AllowTypeChange(eType, eType);
+	return !CompTypes::AllowTypeChange(eType, eType);
 }
+
 bool Board::GetDisableChangeCustom()
 {
 	if ( GetMirrored() ) return true;

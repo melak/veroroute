@@ -19,19 +19,19 @@
 
 #pragma once
 
-#include <QApplication>
-#include <QMainWindow>
-#include <QDockWidget>
-#include <QListWidgetItem>
 #include <QtGui>
-#include <QWidget>
-#include <QFileDialog>
+#include <QApplication>
 #include <QColorDialog>
-#include <QMessageBox>
+#include <QDockWidget>
+#include <QFileDialog>
 #include <QLabel>
+#include <QListWidgetItem>
+#include <QMainWindow>
+#include <QMessageBox>
 #include <QNetworkAccessManager>
-#include <QNetworkRequest>
 #include <QNetworkReply>
+#include <QNetworkRequest>
+#include <QWidget>
 #include "HistoryManager.h"
 #include "GWriter.h"
 #include "myscrollarea.h"
@@ -521,6 +521,7 @@ private:
 	QString					m_fileName;			// The loaded/saved .vrt file
 	QString					m_pdfFileName;		// The saved PDF file
 	QString					m_gerberFileName;	// The saved Gerber file
+	std::string				m_mouseActionString;// For the undo/redo history
 	std::string				m_localDataPathStr;	// The path to the "history" and "templates" folders
 	std::string				m_tutorialsPathStr;	// The path to the "tutorials" folder and "veroroute.png"
 

@@ -135,7 +135,7 @@ public:
 		// tmp is ***copied*** into the map, and the map component then has its compId set
 		Component& comp = m_mapIdToComp[compId] = tmp;
 		comp.SetId(compId);
-		if ( AllowCustomPCBshapes(comp.GetType()) ) comp.SetDefaultShapes(bUsePCBshapes);
+		if ( CompTypes::AllowCustomPCBshapes(comp.GetType()) ) comp.SetDefaultShapes(bUsePCBshapes);
 		return compId;
 	}
 	void DestroyComp(Component& comp)
@@ -321,7 +321,7 @@ public:
 		for (auto& mapObj : m_mapIdToComp)
 		{
 			Component& comp = mapObj.second;
-			if ( AllowCustomPCBshapes(comp.GetType()) ) comp.SetDefaultShapes(bUsePCBshapes);
+			if ( CompTypes::AllowCustomPCBshapes(comp.GetType()) ) comp.SetDefaultShapes(bUsePCBshapes);
 		}
 	}
 	void Find(const bool bUseName, const bool bExact, const std::string& str)
@@ -445,7 +445,7 @@ private:
 			const COMP& eTypeA = pA->GetType();
 			const COMP& eTypeB = pB->GetType();
 			if ( pA->GetIsPlaced() != pB->GetIsPlaced() ) return pA->GetIsPlaced();	// Render floating components last
-			if ( IsPlug(eTypeA) != IsPlug(eTypeB) ) return IsPlug(eTypeB);			// Render "plug" components last
+			if ( CompTypes::IsPlug(eTypeA) != CompTypes::IsPlug(eTypeB) ) return CompTypes::IsPlug(eTypeB);	// Render "plug" components last
 			return static_cast<int>(eTypeA) < static_cast<int>(eTypeB);
 		}
 	};

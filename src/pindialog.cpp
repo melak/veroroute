@@ -102,7 +102,7 @@ void PinDialog::Update()
 			std::string str;
 			switch( iCol )
 			{
-				case 0:	str = GetDefaultPinLabel(iPinIndex);			break;
+				case 0:	str = CompTypes::GetDefaultPinLabel(iPinIndex);	break;
 				case 1:	str = pComp->GetPinLabel(iPinIndex);			break;
 				case 2:	str = ( iAlign == Qt::AlignLeft  ) ? "L" :
 							  ( iAlign == Qt::AlignRight ) ? "R" :"C";	break;

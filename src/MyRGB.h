@@ -31,11 +31,8 @@ public:
 		m_G = (i & 0xFF); i >>= 8;
 		m_R = (i & 0XFF);
 	}
-	MyRGB(const MyRGB& o) { *this = o; }
-	MyRGB(const QColor& o)
-	{
-		SetRGB(o.red(), o.green(), o.blue());
-	}
+	MyRGB(const MyRGB& o)	{ *this = o; }
+	MyRGB(const QColor& o)	{ SetRGB(o.red(), o.green(), o.blue()); }
 	virtual ~MyRGB() {}
 	MyRGB& operator=(const MyRGB& o)
 	{
@@ -85,6 +82,8 @@ public:
 		outStream.Save(m_B);
 	}
 private:
-	int m_R, m_G, m_B;	// Color
+	int m_R = 0;
+	int m_G = 0;
+	int m_B = 0;
 };
 

@@ -225,9 +225,9 @@ public:
 	void StretchComplex(const COMP& eType, bool bGrow)	// For ICs and switches
 	{
 		assert( GetLyrs() == 1 );	
-		if ( !bGrow && GetCols() == GetMinLength(eType) ) return; 	// Don't shrink to less than min allowed length
-		if (  bGrow && GetCols() == GetMaxLength(eType) ) return; 	// Don't expand to more than max allowed length
-		const int iDelta = GetStretchIncrement(eType);
+		if ( !bGrow && GetCols() == CompTypes::GetMinLength(eType) ) return;	// Don't shrink to less than min allowed length
+		if (  bGrow && GetCols() == CompTypes::GetMaxLength(eType) ) return;	// Don't expand to more than max allowed length
+		const int iDelta = CompTypes::GetStretchIncrement(eType);
 		return Allocate(GetLyrs(), GetRows(), bGrow ? GetCols() + iDelta : GetCols() - iDelta);	// Resize
 	}
 	void StretchWidthIC(bool bGrow)	// For DIPs only

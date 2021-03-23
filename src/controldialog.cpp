@@ -60,9 +60,9 @@ void ControlDialog::SetMainWindow(MainWindow* p)
 	QObject::connect(ui->crop,				SIGNAL(clicked()),			m_pMainWindow,	SLOT(Crop()));
 	QObject::connect(ui->margin,			SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(MarginChanged(int)));
 
-	QObject::connect(ui->nameEdit,			SIGNAL(textChanged(const QString&)),		m_pMainWindow, SLOT(SetCompName(const QString&)));
-	QObject::connect(ui->valueEdit,			SIGNAL(textChanged(const QString&)),		m_pMainWindow, SLOT(SetCompValue(const QString&)));
-	QObject::connect(ui->typeComboBox,		SIGNAL(currentTextChanged(const QString&)),	m_pMainWindow, SLOT(SetCompType(const QString&)));
+	QObject::connect(ui->nameEdit,			SIGNAL(textChanged(QString)),			m_pMainWindow, SLOT(SetCompName(QString)));
+	QObject::connect(ui->valueEdit,			SIGNAL(textChanged(QString)),			m_pMainWindow, SLOT(SetCompValue(QString)));
+	QObject::connect(ui->typeComboBox,		SIGNAL(currentTextChanged(QString)),	m_pMainWindow, SLOT(SetCompType(QString)));
 	QObject::connect(ui->rotateCCW,			SIGNAL(clicked()),			m_pMainWindow,	SLOT(CompRotateCCW()));
 	QObject::connect(ui->rotateCW,			SIGNAL(clicked()),			m_pMainWindow,	SLOT(CompRotateCW()));
 	QObject::connect(ui->grow,				SIGNAL(clicked()),			m_pMainWindow,	SLOT(CompGrow()));
@@ -114,7 +114,7 @@ void ControlDialog::SetListItem(const int nodeId)
 	for (int i = 0; i < pList->count() && !bFound; i++)
 	{
 		const QString& str = pList->item(i)->text();
-		bFound = ( str.left(str.size() - 11).toInt() == nodeId );	// 11 because of " (Floating)" suffix below
+		bFound = ( str.leftRef(str.size() - 11).toInt() == nodeId );	// 11 because of " (Floating)" suffix below
 		if ( bFound ) pList->setCurrentRow(i);
 	}
 	if ( !bFound && pList->count() > 0 ) pList->setCurrentRow(0, QItemSelectionModel::Clear);
@@ -161,11 +161,11 @@ void ControlDialog::UpdateCompControls()	// Component controls
 			else
 			{
 				int index(0);
-				for (const auto& compType : GetListCompTypes())
+				for (const auto& compType : CompTypes::GetListCompTypes())
 				{
-					if ( AllowTypeChange(comp.GetType(), compType) )	// Only put allowed types in combo
+					if ( CompTypes::AllowTypeChange(comp.GetType(), compType) )	// Only put allowed types in combo
 					{
-						ui->typeComboBox->addItem(QString::fromStdString( GetDefaultTypeStr(compType) ));
+						ui->typeComboBox->addItem(QString::fromStdString( CompTypes::GetDefaultTypeStr(compType) ));
 						if ( compType == comp.GetType() ) currentIndex = index;
 						index++;
 					}

@@ -37,7 +37,7 @@ int Board::CreateComponent(int iRow, int iCol, const COMP& eType, const Componen
 	// Try and produce a simple unique Name for the new part if possible
 	char buffer[256] = {'\0'};
 	std::string nameStr;	// We'll use this string for both Name and Value
-	const std::string prefixStr = ( pComp ) ? pComp->GetPrefixStr() : GetDefaultPrefixStr(eType);	// e.g. "C" for capacitors
+	const std::string prefixStr = ( pComp ) ? pComp->GetPrefixStr() : CompTypes::GetDefaultPrefixStr(eType);	// e.g. "C" for capacitors
 	bool bNameExists(true);
 	for (int iSuffix = 1; iSuffix < INT_MAX && bNameExists; iSuffix++)
 	{
@@ -46,7 +46,7 @@ int Board::CreateComponent(int iRow, int iCol, const COMP& eType, const Componen
 		bNameExists = ( m_compMgr.GetComponentIdFromName(nameStr) != BAD_COMPID );
 	}
 
-	const size_t numPins = ( pComp ) ? pComp->GetNumPins() : static_cast<size_t>( GetDefaultNumPins(eType) );
+	const size_t numPins = ( pComp ) ? pComp->GetNumPins() : static_cast<size_t>( CompTypes::GetDefaultNumPins(eType) );
 	std::vector<int> nodeList;
 	nodeList.resize(numPins, BAD_NODEID);
 	Component tmp(nameStr, nameStr, eType, nodeList);
@@ -538,6 +538,7 @@ bool Board::TakeOff(Component& comp)
 	// Find out which wire slots are used before we take off the wire.
 	Element*	pA			= ( bWire ) ? Get(lyr, rowTL, colTL) : nullptr;
 	Element*	pB			= ( bWire ) ? Get(lyr, rowTL+compRows-1, colTL+compCols-1) : nullptr;
+	assert( !bWire || (pA != nullptr && pB != nullptr) );
 	int			iOrigIdA[2]	= {BAD_NODEID, BAD_NODEID};	// 1 per layer
 	int			iOrigIdB[2]	= {BAD_NODEID, BAD_NODEID};	// 1 per layer
 	int			iSlotA(-1), iSlotB(-1), tmpCompId;
@@ -816,9 +817,9 @@ void Board::StretchUserComp(const bool& bGrow)	// Stretch the selected component
 
 		// Work out what the stretch will do to it
 		if ( comp.GetDirection() == 'W' || comp.GetDirection() == 'E' )
-			maxCol += GetStretchIncrement(comp.GetType());
+			maxCol += CompTypes::GetStretchIncrement(comp.GetType());
 		else
-			maxRow += GetStretchIncrement(comp.GetType());
+			maxRow += CompTypes::GetStretchIncrement(comp.GetType());
 
 		if ( maxRow + 1 - GetRows() > 0 )		// If we'll go too far down ...
 			Pan(-(maxRow + 1 - GetRows()), 0);	// ... pan the whole circuit up to make room
@@ -869,7 +870,7 @@ void Board::ChangeTypeUserComp(const COMP& eType)
 	{
 		// Get bottom-right corner of new footprint
 		int numRows(0), numCols(0);
-		GetMakeInstructions(eType, numRows, numCols);
+		CompTypes::GetMakeInstructions(eType, numRows, numCols);
 		if ( comp.GetDirection() == 'N' || comp.GetDirection() == 'S' ) std::swap(numRows, numCols);
 		int maxRow(comp.GetRow() + numRows - 1);
 		int maxCol(comp.GetCol() + numCols - 1);
@@ -881,7 +882,7 @@ void Board::ChangeTypeUserComp(const COMP& eType)
 	}
 
 	// Now change the component type
-	const int  oldPinSeparation	= GetPinSeparation( comp.GetType() );	// For LEDs, and electro caps
+	const int  oldPinSeparation	= CompTypes::GetPinSeparation( comp.GetType() );	// For LEDs, and electro caps
 	const int  oldLength		= ( oldPinSeparation > 0 ) ? oldPinSeparation : comp.GetCols();
 	WipeAutoSetPoints();
 	TakeOff(comp);
@@ -893,7 +894,7 @@ void Board::ChangeTypeUserComp(const COMP& eType)
 	comp.SetDefaultShapes(GetUsePCBshapes());
 	if ( bStretch )
 	{
-		while ( comp.GetCols() < oldLength ) comp.Stretch(true, GetUsePCBshapes());	// true  ==> grow
+		while ( comp.GetCols() < oldLength ) comp.Stretch(true,  GetUsePCBshapes());	// true  ==> grow
 		while ( comp.GetCols() > oldLength ) comp.Stretch(false, GetUsePCBshapes());	// false ==> shrink
 	}
 	PutDown(comp);

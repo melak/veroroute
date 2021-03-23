@@ -256,7 +256,7 @@ bool CompDefiner::GetIsValid() const
 	if ( StringHelper::IsEmptyStr(m_typeStr) ) return false;
 	if ( StringHelper::IsEmptyStr(m_valueStr) ) return false;
 	if ( StringHelper::HasSpaces(m_importStr) ) return false;	// Import string must not have spaces
-	if ( GetTypeFromImportStr(m_importStr) != COMP::INVALID ) return false;	// Reserved string
+	if ( CompTypes::GetTypeFromImportStr(m_importStr) != COMP::INVALID ) return false;	// Reserved string
 	// Following is copied from Board::Import() method.
 	// List of package identifiers for footprints with variable numbers of pins/lengths.
 	const int NUM_VARIABLE_PIN_PARTS = 13;

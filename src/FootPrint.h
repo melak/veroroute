@@ -72,8 +72,8 @@ public:
 			case COMP::BLOCK_200:
 			case COMP::SWITCH_ST:
 			case COMP::SWITCH_DT:
-			case COMP::SWITCH_ST_DIP:	return (  bGrow && GetCols() < GetMaxLength(m_type) )
-											|| ( !bGrow && GetCols() > GetMinLength(m_type) );
+			case COMP::SWITCH_ST_DIP:	return (  bGrow && GetCols() < CompTypes::GetMaxLength(m_type) )
+											|| ( !bGrow && GetCols() > CompTypes::GetMinLength(m_type) );
 			default:					return false;
 		}
 	}
@@ -89,7 +89,7 @@ public:
 	void Stretch(const bool& bGrow)
 	{
 		assert( CanStretch(bGrow) );	// Sanity check.  We should have already checked that we can stretch
-		const bool	bPlug = IsPlug(m_type);
+		const bool	bPlug = CompTypes::IsPlug(m_type);
 		CompElement initVal;
 		assert( initVal.GetPinIndex() == BAD_PININDEX );
 		assert( initVal.GetHoleUse() == HOLE_FREE );

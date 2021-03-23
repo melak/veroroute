@@ -43,8 +43,7 @@ CompDialog::CompDialog(QWidget* parent)
 
 	ui->comboBox_Shape->blockSignals(true);		// Block signals while populating box
 	ui->comboBox_Shape->clear();
-	MakeMapShapeStrings();
-	for (const auto& mapObj : mapShapeToStr)
+	for (const auto& mapObj : Shape::GetMapShapeStrings())
 		ui->comboBox_Shape->addItem(QString::fromStdString( mapObj.second ));
 	ui->comboBox_Shape->blockSignals(false);	// We're done populating, so unblock signals
 
@@ -59,32 +58,32 @@ void CompDialog::SetMainWindow(MainWindow* p)
 {
 	m_pMainWindow = p;
 
-	QObject::connect(ui->lineEdit_Value,	SIGNAL(textChanged(const QString&)),		m_pMainWindow,	SLOT(DefinerSetValueStr(const QString&)));
-	QObject::connect(ui->lineEdit_Prefix,	SIGNAL(textChanged(const QString&)),		m_pMainWindow,	SLOT(DefinerSetPrefixStr(const QString&)));
-	QObject::connect(ui->lineEdit_Type,		SIGNAL(textChanged(const QString&)),		m_pMainWindow,	SLOT(DefinerSetTypeStr(const QString&)));
-	QObject::connect(ui->lineEdit_Import,	SIGNAL(textChanged(const QString&)),		m_pMainWindow,	SLOT(DefinerSetImportStr(const QString&)));
-	QObject::connect(ui->spinBox_Width,		SIGNAL(valueChanged(int)),					m_pMainWindow,	SLOT(DefinerWidthChanged(int)));
-	QObject::connect(ui->spinBox_Height,	SIGNAL(valueChanged(int)),					m_pMainWindow,	SLOT(DefinerHeightChanged(int)));
-	QObject::connect(ui->comboBox_PinShape,	SIGNAL(currentTextChanged(const QString&)),m_pMainWindow,	SLOT(DefinerSetPinShapeType(const QString&)));
-	QObject::connect(ui->checkBox_PinLabels,SIGNAL(toggled(bool)),						m_pMainWindow,	SLOT(DefinerToggledPinLabels(bool)));
-	QObject::connect(ui->custom,			SIGNAL(toggled(bool)),						m_pMainWindow,	SLOT(DefinerToggledCustomFlag(bool)));
-	QObject::connect(ui->padWidth,			SIGNAL(valueChanged(int)),					m_pMainWindow,	SLOT(DefinerPadWidthChanged(int)));
-	QObject::connect(ui->holeWidth,			SIGNAL(valueChanged(int)),					m_pMainWindow,	SLOT(DefinerHoleWidthChanged(int)));
-	QObject::connect(ui->spinBox_PinNumber,	SIGNAL(valueChanged(int)),					m_pMainWindow,	SLOT(DefinerSetPinNumber(int)));
-	QObject::connect(ui->pushButtonRGB,		SIGNAL(clicked()),							m_pMainWindow,	SLOT(DefinerChooseColor()));
-	QObject::connect(ui->pushButtonU,		SIGNAL(clicked()),							m_pMainWindow,	SLOT(DefinerRaise()));
-	QObject::connect(ui->pushButtonD,		SIGNAL(clicked()),							m_pMainWindow,	SLOT(DefinerLower()));
-	QObject::connect(ui->comboBox_Shape,	SIGNAL(currentTextChanged(const QString&)),m_pMainWindow,	SLOT(DefinerSetShapeType(const QString&)));
-	QObject::connect(ui->checkBox_Line,		SIGNAL(toggled(bool)),						m_pMainWindow,	SLOT(DefinerToggleShapeLine(bool)));
-	QObject::connect(ui->checkBox_Fill,		SIGNAL(toggled(bool)),						m_pMainWindow,	SLOT(DefinerToggleShapeFill(bool)));
-	QObject::connect(ui->doubleSpinBox_CX,	SIGNAL(valueChanged(double)),				m_pMainWindow,	SLOT(DefinerSetCX(double)));
-	QObject::connect(ui->doubleSpinBox_CY,	SIGNAL(valueChanged(double)),				m_pMainWindow,	SLOT(DefinerSetCY(double)));
-	QObject::connect(ui->doubleSpinBox_DX,	SIGNAL(valueChanged(double)),				m_pMainWindow,	SLOT(DefinerSetDX(double)));
-	QObject::connect(ui->doubleSpinBox_DY,	SIGNAL(valueChanged(double)),				m_pMainWindow,	SLOT(DefinerSetDY(double)));
-	QObject::connect(ui->doubleSpinBox_A1,	SIGNAL(valueChanged(double)),				m_pMainWindow,	SLOT(DefinerSetA1(double)));
-	QObject::connect(ui->doubleSpinBox_A2,	SIGNAL(valueChanged(double)),				m_pMainWindow,	SLOT(DefinerSetA2(double)));
-	QObject::connect(ui->doubleSpinBox_A3,	SIGNAL(valueChanged(double)),				m_pMainWindow,	SLOT(DefinerSetA3(double)));
-	QObject::connect(ui->pushButton_Build,	SIGNAL(clicked()),							m_pMainWindow,	SLOT(DefinerBuild()));
+	QObject::connect(ui->lineEdit_Value,	SIGNAL(textChanged(QString)),			m_pMainWindow,	SLOT(DefinerSetValueStr(QString)));
+	QObject::connect(ui->lineEdit_Prefix,	SIGNAL(textChanged(QString)),			m_pMainWindow,	SLOT(DefinerSetPrefixStr(QString)));
+	QObject::connect(ui->lineEdit_Type,		SIGNAL(textChanged(QString)),			m_pMainWindow,	SLOT(DefinerSetTypeStr(QString)));
+	QObject::connect(ui->lineEdit_Import,	SIGNAL(textChanged(QString)),			m_pMainWindow,	SLOT(DefinerSetImportStr(QString)));
+	QObject::connect(ui->spinBox_Width,		SIGNAL(valueChanged(int)),				m_pMainWindow,	SLOT(DefinerWidthChanged(int)));
+	QObject::connect(ui->spinBox_Height,	SIGNAL(valueChanged(int)),				m_pMainWindow,	SLOT(DefinerHeightChanged(int)));
+	QObject::connect(ui->comboBox_PinShape,	SIGNAL(currentTextChanged(QString)),	m_pMainWindow,	SLOT(DefinerSetPinShapeType(QString)));
+	QObject::connect(ui->checkBox_PinLabels,SIGNAL(toggled(bool)),					m_pMainWindow,	SLOT(DefinerToggledPinLabels(bool)));
+	QObject::connect(ui->custom,			SIGNAL(toggled(bool)),					m_pMainWindow,	SLOT(DefinerToggledCustomFlag(bool)));
+	QObject::connect(ui->padWidth,			SIGNAL(valueChanged(int)),				m_pMainWindow,	SLOT(DefinerPadWidthChanged(int)));
+	QObject::connect(ui->holeWidth,			SIGNAL(valueChanged(int)),				m_pMainWindow,	SLOT(DefinerHoleWidthChanged(int)));
+	QObject::connect(ui->spinBox_PinNumber,	SIGNAL(valueChanged(int)),				m_pMainWindow,	SLOT(DefinerSetPinNumber(int)));
+	QObject::connect(ui->pushButtonRGB,		SIGNAL(clicked()),						m_pMainWindow,	SLOT(DefinerChooseColor()));
+	QObject::connect(ui->pushButtonU,		SIGNAL(clicked()),						m_pMainWindow,	SLOT(DefinerRaise()));
+	QObject::connect(ui->pushButtonD,		SIGNAL(clicked()),						m_pMainWindow,	SLOT(DefinerLower()));
+	QObject::connect(ui->comboBox_Shape,	SIGNAL(currentTextChanged(QString)),	m_pMainWindow,	SLOT(DefinerSetShapeType(QString)));
+	QObject::connect(ui->checkBox_Line,		SIGNAL(toggled(bool)),					m_pMainWindow,	SLOT(DefinerToggleShapeLine(bool)));
+	QObject::connect(ui->checkBox_Fill,		SIGNAL(toggled(bool)),					m_pMainWindow,	SLOT(DefinerToggleShapeFill(bool)));
+	QObject::connect(ui->doubleSpinBox_CX,	SIGNAL(valueChanged(double)),			m_pMainWindow,	SLOT(DefinerSetCX(double)));
+	QObject::connect(ui->doubleSpinBox_CY,	SIGNAL(valueChanged(double)),			m_pMainWindow,	SLOT(DefinerSetCY(double)));
+	QObject::connect(ui->doubleSpinBox_DX,	SIGNAL(valueChanged(double)),			m_pMainWindow,	SLOT(DefinerSetDX(double)));
+	QObject::connect(ui->doubleSpinBox_DY,	SIGNAL(valueChanged(double)),			m_pMainWindow,	SLOT(DefinerSetDY(double)));
+	QObject::connect(ui->doubleSpinBox_A1,	SIGNAL(valueChanged(double)),			m_pMainWindow,	SLOT(DefinerSetA1(double)));
+	QObject::connect(ui->doubleSpinBox_A2,	SIGNAL(valueChanged(double)),			m_pMainWindow,	SLOT(DefinerSetA2(double)));
+	QObject::connect(ui->doubleSpinBox_A3,	SIGNAL(valueChanged(double)),			m_pMainWindow,	SLOT(DefinerSetA3(double)));
+	QObject::connect(ui->pushButton_Build,	SIGNAL(clicked()),						m_pMainWindow,	SLOT(DefinerBuild()));
 }
 
 bool CompDialog::eventFilter(QObject* object, QEvent* event)

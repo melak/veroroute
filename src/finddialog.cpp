@@ -28,9 +28,9 @@ FindDialog::FindDialog(MainWindow* parent)
 {
 	ui->setupUi(this);
 	ui->radioName->setChecked(true);
-	QObject::connect(ui->radioName,	SIGNAL(toggled(bool)),					this, SLOT(ToggleName(bool)));
-	QObject::connect(ui->checkExact,SIGNAL(toggled(bool)),					this, SLOT(ToggleExact(bool)));
-	QObject::connect(ui->nameEdit,	SIGNAL(textChanged(const QString&)),	this, SLOT(TextChanged(const QString&)));
+	QObject::connect(ui->radioName,	SIGNAL(toggled(bool)),			this, SLOT(ToggleName(bool)));
+	QObject::connect(ui->checkExact,SIGNAL(toggled(bool)),			this, SLOT(ToggleExact(bool)));
+	QObject::connect(ui->nameEdit,	SIGNAL(textChanged(QString)),	this, SLOT(TextChanged(QString)));
 }
 
 FindDialog::~FindDialog()

@@ -94,11 +94,11 @@ void TemplatesDialog::Update()
 			const Component&	comp	= mgr.GetNth(bGeneric, static_cast<size_t>(i));
 			const COMP&			eType	= comp.GetType();
 
-			strType		= comp.GetFullTypeStr();	// e.g. "Film" or "DIP16"
+			strType		= comp.GetFullTypeStr();			// e.g. "Film" or "DIP16"
 			strValue	= comp.GetValueStr();
-			strFull		= GetFamilyStr( eType );	// e.g. "Capacitor"
+			strFull		= CompTypes::GetFamilyStr( eType );	// e.g. "Capacitor"
 			if ( !StringHelper::IsEmptyStr(strFull) ) strFull += ": ";
-			strFull	+= strType;						// e.g. "Capacitor: Film"
+			strFull	+= strType;								// e.g. "Capacitor: Film"
 
 			// Write current row to table.	Note: No memory leak since setItem() takes ownership.
 			if ( bGeneric )

@@ -35,12 +35,15 @@ SOURCES += bomdialog.cpp \
     Board_routing.cpp \
     Board_components.cpp \
     Board_import.cpp \
+    ColorManager.cpp \
+    CompTypes.cpp \
     CompDefiner.cpp \
     Component.cpp \
     CurveList.cpp \
     FootPrint.cpp \  
     GuiControl.cpp \
-    GWriter.cpp
+    GWriter.cpp \
+    SimplexFont.cpp
 
 
 HEADERS  += bomdialog.h \
@@ -61,11 +64,11 @@ HEADERS  += bomdialog.h \
     Board.h \
     ColorManager.h \
     Common.h \
-    Component.h \
+    CompTypes.h \
     CompDefiner.h \
     CompElement.h \
     CompManager.h \    
-    CompTypes.h \
+    Component.h \
     ConnectionMatrix.h \
     CurveList.h \
     Element.h \

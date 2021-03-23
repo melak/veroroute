@@ -36,6 +36,7 @@
 MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorialsPathStr, QWidget* parent)
 : QMainWindow(parent)
 , ui(new Ui::MainWindow)
+, m_mouseActionString("Action")
 , m_localDataPathStr(localDataPathStr.toStdString())
 , m_tutorialsPathStr(tutorialsPathStr.toStdString())
 {
@@ -44,8 +45,8 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	m_historyMgr.SetPathStr(m_localDataPathStr);
 	m_templateMgr.SetPathStr(m_localDataPathStr);
 
-	InitMapsCompTypeToStr();			// Put all comp types into a list ...
-	GetTemplateManager().AddDefaults();	// .. and create default templates
+	CompTypes::InitMapsCompTypeToStr();	// Put all comp types into a list ...
+	GetTemplateManager().AddDefaults();			// .. and create default templates
 
 	ui->setupUi(this);
 
@@ -1184,7 +1185,7 @@ void MainWindow::SetCompType(const QString& str)
 	if ( m_board.GetDisableChangeType() || str.isEmpty() ) return;
 	if ( m_board.GetGroupMgr().GetNumUserComps() != 1 ) return;
 	Component&	comp	= m_board.GetUserComponent();
-	const COMP	eType	= GetTypeFromTypeStr( str.toStdString() );
+	const COMP	eType	= CompTypes::GetTypeFromTypeStr( str.toStdString() );
 	if ( eType == comp.GetType() ) return;	// No change
 	m_board.ChangeTypeUserComp(eType);
 	UpdateHistory("Change part type");

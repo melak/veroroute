@@ -498,8 +498,8 @@ public:
 		for (size_t i = 0; i < GetNumPins(); i++)
 		{
 			if ( m_nodeIdPins[i] != BAD_NODEID ) return true;
-			if ( m_pinLabels[i]  != GetDefaultPinLabel(i) ) return true;
-			if ( m_pinAligns[i]  != GetDefaultPinAlign(i, GetNumPins(), GetType()) ) return true;
+			if ( m_pinLabels[i]  != CompTypes::GetDefaultPinLabel(i) ) return true;
+			if ( m_pinAligns[i]  != CompTypes::GetDefaultPinAlign(i, GetNumPins(), GetType()) ) return true;
 		}
 		return false;
 	}
@@ -555,8 +555,8 @@ public:
 	{
 		for (size_t i = 0; i < GetNumPins(); i++)
 		{
-			m_pinLabels[i] = GetDefaultPinLabel(i);
-			m_pinAligns[i] = GetDefaultPinAlign(i, GetNumPins(), GetType());
+			m_pinLabels[i] = CompTypes::GetDefaultPinLabel(i);
+			m_pinAligns[i] = CompTypes::GetDefaultPinAlign(i, GetNumPins(), GetType());
 		}
 	}
 	Rect GetFootprintRect() const
@@ -628,11 +628,11 @@ public:
 	void SetDefaultStrings(bool bForce = true)
 	{
 		if ( GetPrefixStr().empty() || bForce )
-			SetPrefixStr( GetDefaultPrefixStr( GetType() ) );
+			SetPrefixStr( CompTypes::GetDefaultPrefixStr( GetType() ) );
 		if ( GetTypeStr().empty() || bForce )
-			SetTypeStr( GetDefaultTypeStr( GetType() ) );
+			SetTypeStr( CompTypes::GetDefaultTypeStr( GetType() ) );
 		if ( GetImportStr().empty() || bForce || GetType() != COMP::CUSTOM )
-			SetImportStr( GetDefaultImportStr( GetType() ) );
+			SetImportStr( CompTypes::GetDefaultImportStr( GetType() ) );
 	}
 	void SetDefaultShapes(const bool& bUsePCBshapes = false);
 	void SetDefaultColor();
