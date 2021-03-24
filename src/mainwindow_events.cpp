@@ -65,7 +65,7 @@ void MainWindow::GetRowCol(const QPoint& currentPoint, const int rows, const int
 
 void MainWindow::wheelEvent(QWheelEvent* event)
 {
-#if QT_VERSION >= 0x051400
+#if QT_VERSION >= QT_VERSION_CHECK(5,14,0)
 	m_mousePos = QPoint(static_cast<int>(event->position().x()), static_cast<int>(event->position().y()));
 #else
 	m_mousePos = QPoint(static_cast<int>(event->posF().x()), static_cast<int>(event->posF().y()));
