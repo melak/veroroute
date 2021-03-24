@@ -260,7 +260,7 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 		{
 			GStream& os = m_gWriter.GetStream(k == 0 ? GFILE::GBL : GFILE::GTL);	// Bottom/Top copper layer
 
-			for (auto & polygon : polygonList)
+			for (auto& polygon : polygonList)
 			{
 				const bool bPad	= polygon.m_ePadPen != GPEN::NONE;
 				const bool bTrk	= polygon.m_eTrkPen != GPEN::NONE;
@@ -288,7 +288,7 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 		brush.setColor(color);
 		painter.setBrush(brush);
 
-		for (auto & polygon : polygonList)
+		for (auto& polygon : polygonList)
 		{
 			const bool bTrk	= polygon.m_eTrkPen != GPEN::NONE;
 			const bool bPad	= polygon.m_ePadPen != GPEN::NONE;
@@ -355,17 +355,15 @@ void MainWindow::PaintCompDefiner()	// The paint method in "component editor mod
 	const double	 dTextScale	= W / 24.0;					// For scaling text when zooming
 
 	// Shift comp to near grid centre
-	const int ROWS( def.GetScreenRows() );
-	const int COLS( def.GetScreenCols() );
+	const int ROWS(def.GetScreenRows()), COLS(def.GetScreenCols());
 
 	const Rect rect(def.GetGridRowMin(), def.GetGridRowMax(), def.GetGridColMin(), def.GetGridColMax());
 
 	QPainter painter;
-	const int reqWidth  = W * COLS;
-	const int reqHeight = W * ROWS;
-	if ( m_mainPixmap.width() != reqWidth || m_mainPixmap.height() != reqHeight )
+	const int reqW(W * COLS), reqH(W * ROWS);
+	if ( m_mainPixmap.width() != reqW || m_mainPixmap.height() != reqH )
 	{
-		m_mainPixmap = QPixmap(reqWidth, reqHeight);
+		m_mainPixmap = QPixmap(reqW, reqH);
 		m_mainPixmap.setDevicePixelRatio(1.0);
 	}
 	painter.begin(&m_mainPixmap);	// Paint to main pixmap
@@ -373,7 +371,7 @@ void MainWindow::PaintCompDefiner()	// The paint method in "component editor mod
 	SetQuality(painter);
 
 	m_XCORRECTION = m_YCORRECTION = 0;
-	painter.fillRect(m_XGRIDOFFSET, m_YGRIDOFFSET, reqWidth, reqHeight, Qt::white);
+	painter.fillRect(m_XGRIDOFFSET, m_YGRIDOFFSET, reqW, reqH, Qt::white);
 
 	m_blackPen.setWidth(0);
 	m_whitePen.setWidth(0);
@@ -448,21 +446,20 @@ void MainWindow::PaintCompDefiner()	// The paint method in "component editor mod
 
 	// Draw grid points ==========================================================================
 	if ( board.GetShowGrid() )
-	{
-		for (int j = 0; j < ROWS; j++)	for (int i = 0; i < COLS; i++)
+		for (int j = 0; j < ROWS; j++)
+		for (int i = 0; i < COLS; i++)
 		{
 			GetXY(board, j, i, X, Y);
 			painter.drawPoint(X, Y);
 		}
-	}
 
 	// Draw dashed rect around footprint boundary and along central axes =========================
 	painter.setPen(m_dashPen);
 	painter.setBrush(Qt::NoBrush);
 	painter.drawRect(L, T, R-L, B-T);
 	painter.setPen(m_dotPen);
-	painter.drawLine(0, AXIS_Y, reqWidth, AXIS_Y);
-	painter.drawLine(AXIS_X, 0, AXIS_X, reqHeight);
+	painter.drawLine(0, AXIS_Y, reqW, AXIS_Y);
+	painter.drawLine(AXIS_X, 0, AXIS_X, reqH);
 
 	// Draw pins =================================================================================
 	QFont pinsFont = painter.font();	// Copy of current font
@@ -519,8 +516,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	const bool		 bMonoPCB		= bMono || bPCB;
 	const bool		 bGroundFill	= !bVero && bMonoPCB && board.GetGroundFill();
 	const bool		 bPixmapCache	= !bVero && ( bMono || bColor ) && !bGroundFill && !m_bWritePDF;	// true ==> Faster rendering (Mono/Color modes)
-	const bool		 bDirect		= !bVero && !bPixmapCache && !bGroundFill;			// true ==> Draw track "blobs" and pads directly (PDF/Gerber)
-	const bool		 bExtraTags		= false;											// true ==> Add extra thermal relief tags
+	const bool		 bDirect		= !bVero && !bPixmapCache && !bGroundFill;	// true ==> Draw track "blobs" and pads directly (PDF/Gerber)
+	const bool		 bExtraTags		= false;									// true ==> Add extra thermal relief tags
 	const int&		 layer			= board.GetCurrentLayer();
 	const int&		 groundNodeId	= ( layer == 0 ) ? board.GetGroundNodeId0() :  board.GetGroundNodeId1();
 	const bool		 bWiresAsTracks	= m_bWriteGerber && m_bTwoLayerGerber && board.GetLyrs() == 1;	// true ==> Convert wires to tracks on the top layer
@@ -561,8 +558,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	int gndL, gndR, gndT, gndB;
 	board.CalcGroundFillBounds();
 	board.GetGroundFillBounds(gndL, gndR, gndT, gndB);
-	const int reqWidth  = (gndR - gndL);
-	const int reqHeight = (gndB - gndT);
+	const int reqW(gndR - gndL), reqH(gndB - gndT);
 
 	m_XCORRECTION = -gndL;
 	m_YCORRECTION = -gndT;
@@ -589,9 +585,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	}
 	else
 	{
-		if ( m_mainPixmap.width() != reqWidth || m_mainPixmap.height() != reqHeight )
+		if ( m_mainPixmap.width() != reqW || m_mainPixmap.height() != reqH )
 		{
-			m_mainPixmap = QPixmap(reqWidth, reqHeight);
+			m_mainPixmap = QPixmap(reqW, reqH);
 			m_mainPixmap.setDevicePixelRatio(1.0);
 		}
 		painter.begin(&m_mainPixmap);	// Paint to main pixmap
@@ -602,12 +598,12 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 	if ( board.GetFlipH() )
 	{
-		painter.translate(2*m_XGRIDOFFSET + reqWidth, 0);
+		painter.translate(2*m_XGRIDOFFSET + reqW, 0);
 		painter.scale(-1, 1);	// Mirror L-R
 	}
 	if ( board.GetFlipV() )
 	{
-		painter.translate(0, 2*m_YGRIDOFFSET + reqHeight);
+		painter.translate(0, 2*m_YGRIDOFFSET + reqH);
 		painter.scale(1, -1);	// Mirror T-B
 	}
 
@@ -625,7 +621,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	{
 		// Grow board outline to guarantee separation from tracks and ground
 		const double dEdge = board.GetEdgeWidth();
-		const double R(reqWidth), B(reqHeight);
+		const double R(reqW), B(reqH);
 		const int& X = m_XGRIDOFFSET; const int& Y = m_YGRIDOFFSET;
 		gndPoly << QPointF(X,     Y);		edge << QPointF(X	  - dEdge, Y	 - dEdge);
 		gndPoly << QPointF(X + R, Y);		edge << QPointF(X + R + dEdge, Y	 - dEdge);
@@ -639,7 +635,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	}
 	else
 	{
-		painter.fillRect(m_XGRIDOFFSET, m_YGRIDOFFSET, reqWidth, reqHeight, bGroundFill ? groundFillColor : backgroundColor);
+		painter.fillRect(m_XGRIDOFFSET, m_YGRIDOFFSET, reqW, reqH, bGroundFill ? groundFillColor : backgroundColor);
 	}
 
 	// Draw rect around whole board area =========================================================
@@ -656,13 +652,13 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		painter.setBrush(Qt::NoBrush);
 
 		const int dEdge = static_cast<int>( board.GetEdgeWidth() );
-		painter.drawRect(m_XGRIDOFFSET - dEdge, m_YGRIDOFFSET - dEdge, reqWidth + (dEdge<<1), reqHeight + (dEdge<<1));
+		painter.drawRect(m_XGRIDOFFSET - dEdge, m_YGRIDOFFSET - dEdge, reqW + (dEdge<<1), reqH + (dEdge<<1));
 	}
 
 	// Draw grid points ==========================================================================
 	if ( !bPCB && board.GetShowGrid() )
-	{
-		for (int j = 0; j < board.GetRows(); j++)	for (int i = 0; i < board.GetCols(); i++)
+		for (int j = 0, jMax = board.GetRows(); j < jMax; j++)
+		for (int i = 0, iMax = board.GetCols(); i < iMax; i++)
 		{
 			const Element* pC = board.Get(layer, j, i);
 			if ( trackMode == TRACKMODE::OFF || ( !pC->GetHasPin() && pC->GetNodeId() == BAD_NODEID ) )
@@ -671,7 +667,6 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				painter.drawPoint(X, Y);
 			}
 		}
-	}
 
 	// Draw tracks ===============================================================================
 	if ( bPCB || trackMode != TRACKMODE::OFF )	// Force tracks in PCB mode
@@ -1089,8 +1084,6 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			const bool		 bPinLabels		= !bMonoPCB && (comp.GetPinFlags() & PIN_LABELS) > 0 && board.GetShowPinLabels();
 			const bool		 bRectPins		= !bMonoPCB && (comp.GetPinFlags() & PIN_RECT) > 0;
 			const bool		 bHighlightComp	= board.GetGroupMgr().GetIsUserComp( comp.GetId() );
-			const int		 jComp			= comp.GetRow();
-			const int		 iComp			= comp.GetCol();
 			const bool		 bCustomSize	= comp.GetCustomPads();
 			const int		 iPadWidthMIL	= bCustomSize ? comp.GetPadWidth()  : board.GetPAD_MIL();
 			const int		 iHoleWidthMIL	= bCustomSize ? comp.GetHoleWidth() : board.GetHOLE_MIL();
@@ -1123,20 +1116,17 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				if ( bMark )	// Markers are a special case since they don't actually have a pin !!!
 				{
 					// Only draw markers as holes in ground fill MONO mode and only in places with no track
-					if ( bMono && bGroundFill && board.Get(layer, jComp, iComp)->GetNodeId() == BAD_NODEID )
+					if ( bMono && bGroundFill && board.Get(layer, comp.GetRow(), comp.GetCol())->GetNodeId() == BAD_NODEID )
 					{
-						GetLRTB(board, 100, jComp, iComp, L, R, T, B);	// 100% size square
-						painter.drawPoint((L+R)/2, (T+B)/2);			// A pin is drawn with a circle
+						GetLRTB(board, 100, comp.GetRow(), comp.GetCol(), L, R, T, B);	// 100% size square
+						painter.drawPoint((L+R)/2, (T+B)/2);							// A pin is drawn with a circle
 					}
 				}
 				else			// Regular components/pads/wires ...
 				{
-					for (int jj = 0; jj < comp.GetCompRows(); jj++)
-					for (int ii = 0; ii < comp.GetCompCols(); ii++)
+					for (int jj = 0, jjMax = comp.GetCompRows(), j = comp.GetRow(); jj < jjMax; jj++, j++)
+					for (int ii = 0, iiMax = comp.GetCompCols(), i = comp.GetCol(); ii < iiMax; ii++, i++)
 					{
-						const int j = jComp + jj;
-						const int i = iComp + ii;
-
 						const size_t iPinIndex = comp.GetCompElement(jj,ii)->GetPinIndex();
 						if ( iPinIndex == BAD_PININDEX ) continue;
 
@@ -1282,8 +1272,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					painterTmp.setPen(Qt::NoPen);
 				}
 
-				const int iLoopStart = ( bFill ) ? 0 : 1;
-				for (int iLoop = iLoopStart; iLoop < 2; iLoop++)
+				for (int iLoop = ( bFill ) ? 0 : 1; iLoop < 2; iLoop++)
 				{
 					GPainter* pPainter = ( iLoop == 0 ) ? &painterTmp : &painter;
 
@@ -1308,8 +1297,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						case 'S':	pPainter->rotate(270);	break;
 					}
 
-					const size_t numShapes = comp.GetNumShapes();
-					for (size_t i = 0; i < numShapes; i++)
+					for (size_t i = 0, numShapes = comp.GetNumShapes(); i < numShapes; i++)
 					{
 						const Shape& s = comp.GetShape(i);
 
@@ -1554,16 +1542,11 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			if ( !(bVeroNumber || bVeroLetter) ) continue;
 			const char&		 compDirection	= comp.GetDirection();
 			const bool		 bPlaced		= comp.GetIsPlaced();	// Only unplaced when a label is created by copying another ("V" key)
-			const int		 jComp			= comp.GetRow();
-			const int		 iComp			= comp.GetCol();
 
 			int index(0), length(comp.GetSize());
-			for (int jj = 0; jj < comp.GetCompRows(); jj++)
-			for (int ii = 0; ii < comp.GetCompCols(); ii++, index++)
+			for (int jj = 0, jjMax = comp.GetCompRows(), j = comp.GetRow(); jj < jjMax; jj++, j++)
+			for (int ii = 0, iiMax = comp.GetCompCols(), i = comp.GetCol(); ii < iiMax; ii++, i++, index++)
 			{
-				const int j = jComp + jj;
-				const int i = iComp + ii;
-
 				GetLRTB(board, 100, j, i, L, R, T, B);
 
 				painter.save();
@@ -1663,7 +1646,6 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		painter.restore();
 	}
 
-	
 	if ( !m_bWriteGerber && m_bRuler )
 	{
 		QPointF A,B;

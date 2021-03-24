@@ -217,7 +217,7 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 				if ( bPadB ) for(const auto& a : blobA) polygonHelper.CalcSeparation(padB, a);
 
 				// Blob A to Blob B
-				if ( bCompareBlobs ) for(const auto & a : blobA) for(const auto& b : blobB) polygonHelper.CalcSeparation(a, b);
+				if ( bCompareBlobs ) for(const auto& a : blobA) for(const auto& b : blobB) polygonHelper.CalcSeparation(a, b);
 			}
 		}
 		if ( polygonHelper.m_Dmin > m_dMinSeparation ) continue;
