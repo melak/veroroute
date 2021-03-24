@@ -894,10 +894,10 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					}
 					else if ( iLoop == 1 )	// Draw track "blobs" and pads directly
 					{
-						if ( bBlob ) PaintBlob(board, painter, color, pCentre, pCentreOff, iPerimeterCode, bPad);	// Draw track blob
-						if ( bVia )  PaintVia(board, painter, color, pCentre);										// Draw via same color as track
-						if ( bPad )  PaintPad(board, painter, color, pCentreOff, iPadWidthMIL, iHoleWidthMIL);		// Draw pad same color as track
-						if ( bExtraTags && bPad && nodeId == groundNodeId && nodeId != BAD_NODEID )		// Draw extra thermal relief tags
+						if ( bBlob ) PaintBlob(board, painter, color, pCentre, pCentreOff, iPerimeterCode, bPad);			// Draw track blob
+						if ( bVia )  PaintVia(board, painter, color, pCentre);												// Draw via same color as track
+						if ( bPad )  PaintPad(board, painter, color, pCentreOff, iPadWidthMIL, iHoleWidthMIL);				// Draw pad same color as track
+						if ( bExtraTags && bPad && nodeId == groundNodeId && iPerimeterCode > 0 && nodeId != BAD_NODEID )	// Draw extra thermal relief tags
 						{
 							int iCode(iPerimeterCode);		// Take a copy of the perimeter code
 							const bool bDiagsOK( board.GetDiagsMode() != DIAGSMODE::OFF );	// If bExtraTags gets set true then move this to start of method
