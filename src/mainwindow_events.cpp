@@ -20,6 +20,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "PolygonHelper.h"
+#include <QtGlobal>
 
 static const bool ALLOW_SMART_PAN_WITHOUT_CTRLKEY = true;
 
@@ -64,9 +65,11 @@ void MainWindow::GetRowCol(const QPoint& currentPoint, const int rows, const int
 
 void MainWindow::wheelEvent(QWheelEvent* event)
 {
-	//TODO For Qt 6.0 and later use position() instead of posF()
+#if QT_VERSION >= 0x051400
+	m_mousePos = QPoint(static_cast<int>(event->position().x()), static_cast<int>(event->position().y()));
+#else
 	m_mousePos = QPoint(static_cast<int>(event->posF().x()), static_cast<int>(event->posF().y()));
-//	m_mousePos = QPoint(static_cast<int>(event->position().x()), static_cast<int>(event->position().y()));
+#endif
 
 	if ( GetShiftKeyDown() ) return;	// Ignore wheel events while trying to group components
 	const bool bBack = ( event->angleDelta().y() < 0 );
