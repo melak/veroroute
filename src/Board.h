@@ -673,7 +673,7 @@ public:
 
 		for (const auto& mapObj : m_compMgr.GetMapIdToComp())
 			m_nodeInfoMgr.AddComp(mapObj.second);
-		
+
 		GlueWires();	// Set pointers between wired grid elements
 
 		if ( inStream.GetVersion() < VRT_VERSION_26 )

@@ -1150,6 +1150,21 @@ void Board::FixCorruption()
 		DestroyComponent(comp);
 	}
 
+	bool bBadGrid(false);	// true ==> grid has references to bad components
+	for (int i = 0, iSize = GetSize(); i < iSize && !bBadGrid; i++)
+	{
+		Element* p = GetAt(i);
+		const int& compId	= p->GetCompId();
+		const int& compId2	= p->GetCompId2();
+		bBadGrid = ( compId  != BAD_COMPID && badCompIds.find(compId)  != badCompIds.end() )
+				|| ( compId2 != BAD_COMPID && badCompIds.find(compId2) != badCompIds.end() );
+	}
+	if ( !bBadGrid ) return;
+
+	// The process of floating all components and then unfloating them
+	// can make the wrong competing diagonals be used at some points,
+	// so should only be done if we have a bad grid.
+
 	FloatAllComps();	// Float all components
 
 	// Ensure there are no component related effects on the board elements
