@@ -2,7 +2,8 @@
 
 static const char* szVEROROUTE_VERSION =
 
-"2.12";		// Bug fix: Corrected tab order in Rendering Options and Component Editor dialogs.
+"2.13";		// Bug fix: Code to fix corruption can mess up competing diagonals on boards that are OK.
+//"2.12";	// Bug fix: Corrected tab order in Rendering Options and Component Editor dialogs.
 			// Updated Tutorial 18 with info on applying pad offsets.
 //"2.11";	// Bug fix: The routing changes in V2.09 introduced a bug in the connectivity checking of layouts with wires,
 			//          so fully connected nets that use wires could sometimes be wrongly listed as "Bad Nodes".
