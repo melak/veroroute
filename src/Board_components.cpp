@@ -1142,6 +1142,7 @@ void Board::FixCorruption()
 	// Destroy any components that have an invalid component type
 	std::set<int> badCompIds;
 	m_compMgr.GetBadCompIds(badCompIds);
+	if ( badCompIds.empty() ) return;
 
 	for (const auto& compId : badCompIds)
 	{
