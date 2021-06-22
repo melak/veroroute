@@ -39,10 +39,11 @@ public:
 	{
 		Rect::operator=(o);
 		MyRGB::operator=(o);
-		m_str	= o.m_str;
-		m_size	= o.m_size;
-		m_style	= o.m_style;
-		m_flags	= o.m_flags;
+		m_str		= o.m_str;
+		m_size		= o.m_size;
+		m_style		= o.m_style;
+		m_flagsH	= o.m_flagsH;
+		m_flagsV	= o.m_flagsV;
 		return *this;
 	}
 	bool operator==(const TextRect& o) const
@@ -52,20 +53,23 @@ public:
 			&& m_str	== o.m_str
 			&& m_size	== o.m_size
 			&& m_style	== o.m_style
-			&& m_flags	== o.m_flags;
+			&& m_flagsH	== o.m_flagsH
+			&& m_flagsV	== o.m_flagsV;
 	}
 	bool operator!=(const TextRect& o) const
 	{
 		return !(*this == o);
 	}
-	bool SetStr(const std::string& s)	{ const bool bChanged = (m_str   != s);	m_str   = s; return bChanged; }
-	bool SetSize(const int& i)			{ const bool bChanged = (m_size  != i);	m_size  = i; return bChanged; }
-	bool SetStyle(const int& i)			{ const bool bChanged = (m_style != i);	m_style = i; return bChanged; }
-	bool SetFlags(const int& i)			{ const bool bChanged = (m_flags != i);	m_flags = i; return bChanged; }
+	bool SetStr(const std::string& s)	{ const bool bChanged = (m_str    != s);	m_str    = s; return bChanged; }
+	bool SetSize(const int& i)			{ const bool bChanged = (m_size   != i);	m_size   = i; return bChanged; }
+	bool SetStyle(const int& i)			{ const bool bChanged = (m_style  != i);	m_style  = i; return bChanged; }
+	bool SetFlagsH(const int& i)		{ const bool bChanged = (m_flagsH != i);	m_flagsH = i; return bChanged; }
+	bool SetFlagsV(const int& i)		{ const bool bChanged = (m_flagsV != i);	m_flagsV = i; return bChanged; }
 	const std::string&	GetStr() const		{ return m_str; }
 	const int&			GetSize() const		{ return m_size; }
 	const int&			GetStyle() const	{ return m_style; }
-	const int&			GetFlags() const	{ return m_flags; }
+	const int&			GetFlagsH() const	{ return m_flagsH; }
+	const int&			GetFlagsV() const	{ return m_flagsV; }
 	// Persist interface functions
 	virtual void Load(DataStream& inStream) override
 	{
@@ -73,9 +77,11 @@ public:
 		inStream.Load(m_str);
 		inStream.Load(m_size);
 		inStream.Load(m_style);
-		inStream.Load(m_flags);
+		inStream.Load(m_flagsH);
+		if ( inStream.GetVersion() >= VRT_VERSION_49 )
+			inStream.Load(m_flagsV);	// Added in VRT_VERSION_49
 		if ( inStream.GetVersion() >= VRT_VERSION_15 )
-			MyRGB::Load(inStream);	// Added in VRT_VERSION_15
+			MyRGB::Load(inStream);		// Added in VRT_VERSION_15
 	}
 	virtual void Save(DataStream& outStream) override
 	{
@@ -83,12 +89,14 @@ public:
 		outStream.Save(m_str);
 		outStream.Save(m_size);
 		outStream.Save(m_style);
-		outStream.Save(m_flags);
+		outStream.Save(m_flagsH);
+		outStream.Save(m_flagsV);	// Added in VRT_VERSION_49
 		MyRGB::Save(outStream);		// Added in VRT_VERSION_15
 	}
 private:
 	std::string	m_str;
-	int			m_size	= 9;				// Point size
-	int			m_style	= TEXT_NORMAL;		// Bitfield using TEXT_NORMAL, TEXT_BOLD, TEXT_ITALIC, TEXT_UNDERLINE
-	int			m_flags	= Qt::AlignJustify;	// Qt::AlignLeft,Qt::AlignRight,Qt::AlignHCenter,Qt::AlignJustify
+	int			m_size	= 9;					// Point size
+	int			m_style		= TEXT_NORMAL;		// Bitfield using TEXT_NORMAL, TEXT_BOLD, TEXT_ITALIC, TEXT_UNDERLINE
+	int			m_flagsH	= Qt::AlignJustify;	// Qt::AlignLeft,Qt::AlignRight,Qt::AlignHCenter,Qt::AlignJustify
+	int			m_flagsV	= Qt::AlignTop;		// Qt::AlignTop,Qt::AlignVCenter,Qt::AlignBottom
 };

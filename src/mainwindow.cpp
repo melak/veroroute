@@ -1508,10 +1508,13 @@ void MainWindow::SizeChanged(int i)			{ if ( GetCurrentTextId() != BAD_TEXTID &&
 void MainWindow::ToggleBold()				{ if ( GetCurrentTextId() != BAD_TEXTID && GetCurrentTextRect().SetStyle(GetCurrentTextRect().GetStyle() ^ TEXT_BOLD     ) ){ UpdateTextDialog(); RepaintSkipRouting(); } }
 void MainWindow::ToggleItalic()				{ if ( GetCurrentTextId() != BAD_TEXTID && GetCurrentTextRect().SetStyle(GetCurrentTextRect().GetStyle() ^ TEXT_ITALIC   ) ){ UpdateTextDialog(); RepaintSkipRouting(); } }
 void MainWindow::ToggleUnderline()			{ if ( GetCurrentTextId() != BAD_TEXTID && GetCurrentTextRect().SetStyle(GetCurrentTextRect().GetStyle() ^ TEXT_UNDERLINE) ){ UpdateTextDialog(); RepaintSkipRouting(); } }
-void MainWindow::AlignL()					{ if ( GetCurrentTextId() != BAD_TEXTID && GetCurrentTextRect().SetFlags(Qt::AlignLeft) )									{ UpdateTextDialog(); RepaintSkipRouting(); } }
-void MainWindow::AlignC()					{ if ( GetCurrentTextId() != BAD_TEXTID && GetCurrentTextRect().SetFlags(Qt::AlignHCenter) )								{ UpdateTextDialog(); RepaintSkipRouting(); } }
-void MainWindow::AlignR()					{ if ( GetCurrentTextId() != BAD_TEXTID && GetCurrentTextRect().SetFlags(Qt::AlignRight) )									{ UpdateTextDialog(); RepaintSkipRouting(); } }
-void MainWindow::AlignJ()					{ if ( GetCurrentTextId() != BAD_TEXTID && GetCurrentTextRect().SetFlags(Qt::AlignJustify) )								{ UpdateTextDialog(); RepaintSkipRouting(); } }
+void MainWindow::AlignL()					{ if ( GetCurrentTextId() != BAD_TEXTID && GetCurrentTextRect().SetFlagsH(Qt::AlignLeft) )									{ UpdateTextDialog(); RepaintSkipRouting(); } }
+void MainWindow::AlignC()					{ if ( GetCurrentTextId() != BAD_TEXTID && GetCurrentTextRect().SetFlagsH(Qt::AlignHCenter) )								{ UpdateTextDialog(); RepaintSkipRouting(); } }
+void MainWindow::AlignR()					{ if ( GetCurrentTextId() != BAD_TEXTID && GetCurrentTextRect().SetFlagsH(Qt::AlignRight) )									{ UpdateTextDialog(); RepaintSkipRouting(); } }
+void MainWindow::AlignJ()					{ if ( GetCurrentTextId() != BAD_TEXTID && GetCurrentTextRect().SetFlagsH(Qt::AlignJustify) )								{ UpdateTextDialog(); RepaintSkipRouting(); } }
+void MainWindow::AlignTop()					{ if ( GetCurrentTextId() != BAD_TEXTID && GetCurrentTextRect().SetFlagsV(Qt::AlignTop) )									{ UpdateTextDialog(); RepaintSkipRouting(); } }
+void MainWindow::AlignMid()					{ if ( GetCurrentTextId() != BAD_TEXTID && GetCurrentTextRect().SetFlagsV(Qt::AlignVCenter) )								{ UpdateTextDialog(); RepaintSkipRouting(); } }
+void MainWindow::AlignBot()					{ if ( GetCurrentTextId() != BAD_TEXTID && GetCurrentTextRect().SetFlagsV(Qt::AlignBottom) )								{ UpdateTextDialog(); RepaintSkipRouting(); } }
 void MainWindow::SetText(const QString& s)	{ if ( GetCurrentTextId() != BAD_TEXTID && GetCurrentTextRect().SetStr(s.toStdString()) )									{ UpdateTextDialog(); RepaintSkipRouting(); } }
 void MainWindow::ChooseTextColor()
 {

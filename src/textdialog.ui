@@ -6,19 +6,19 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>370</width>
+    <width>460</width>
     <height>120</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>370</width>
+    <width>460</width>
     <height>120</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>370</width>
+    <width>460</width>
     <height>120</height>
    </size>
   </property>
@@ -30,7 +30,7 @@
     <rect>
      <x>10</x>
      <y>50</y>
-     <width>351</width>
+     <width>441</width>
      <height>61</height>
     </rect>
    </property>
@@ -111,7 +111,7 @@
     <enum>Qt::TabFocus</enum>
    </property>
    <property name="toolTip">
-    <string>Align centre</string>
+    <string>Align horizontal centre</string>
    </property>
    <property name="text">
     <string/>
@@ -322,6 +322,111 @@
     <string>RGB</string>
    </property>
   </widget>
+  <widget class="QPushButton" name="pushButtonTop">
+   <property name="geometry">
+    <rect>
+     <x>360</x>
+     <y>10</y>
+     <width>31</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="focusPolicy">
+    <enum>Qt::TabFocus</enum>
+   </property>
+   <property name="toolTip">
+    <string>Align top</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="icon">
+    <iconset resource="veroroute.qrc">
+     <normaloff>:/images/top.png</normaloff>:/images/top.png</iconset>
+   </property>
+   <property name="iconSize">
+    <size>
+     <width>12</width>
+     <height>12</height>
+    </size>
+   </property>
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="pushButtonMid">
+   <property name="geometry">
+    <rect>
+     <x>390</x>
+     <y>10</y>
+     <width>31</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="focusPolicy">
+    <enum>Qt::TabFocus</enum>
+   </property>
+   <property name="toolTip">
+    <string>Align vertical centre</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="icon">
+    <iconset resource="veroroute.qrc">
+     <normaloff>:/images/mid.png</normaloff>:/images/mid.png</iconset>
+   </property>
+   <property name="iconSize">
+    <size>
+     <width>12</width>
+     <height>12</height>
+    </size>
+   </property>
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="pushButtonBot">
+   <property name="geometry">
+    <rect>
+     <x>420</x>
+     <y>10</y>
+     <width>31</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="focusPolicy">
+    <enum>Qt::TabFocus</enum>
+   </property>
+   <property name="toolTip">
+    <string>Align bottom</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="icon">
+    <iconset resource="veroroute.qrc">
+     <normaloff>:/images/bot.png</normaloff>:/images/bot.png</iconset>
+   </property>
+   <property name="iconSize">
+    <size>
+     <width>12</width>
+     <height>12</height>
+    </size>
+   </property>
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+  </widget>
  </widget>
  <tabstops>
   <tabstop>plainTextEdit</tabstop>
@@ -333,6 +438,9 @@
   <tabstop>pushButtonC</tabstop>
   <tabstop>pushButtonR</tabstop>
   <tabstop>pushButtonJ</tabstop>
+  <tabstop>pushButtonTop</tabstop>
+  <tabstop>pushButtonMid</tabstop>
+  <tabstop>pushButtonBot</tabstop>
   <tabstop>spinBox</tabstop>
  </tabstops>
  <resources>

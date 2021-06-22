@@ -36,6 +36,9 @@ TextDialog::TextDialog(MainWindow* parent)
 	QObject::connect(ui->pushButtonC,	SIGNAL(clicked()),			m_pMainWindow,	SLOT(AlignC()));
 	QObject::connect(ui->pushButtonR,	SIGNAL(clicked()),			m_pMainWindow,	SLOT(AlignR()));
 	QObject::connect(ui->pushButtonJ,	SIGNAL(clicked()),			m_pMainWindow,	SLOT(AlignJ()));
+	QObject::connect(ui->pushButtonTop,	SIGNAL(clicked()),			m_pMainWindow,	SLOT(AlignTop()));
+	QObject::connect(ui->pushButtonMid,	SIGNAL(clicked()),			m_pMainWindow,	SLOT(AlignMid()));
+	QObject::connect(ui->pushButtonBot,	SIGNAL(clicked()),			m_pMainWindow,	SLOT(AlignBot()));
 	QObject::connect(ui->plainTextEdit,	SIGNAL(textChanged()),		this,			SLOT(TextChanged()));
 }
 
@@ -55,10 +58,13 @@ void TextDialog::Update(const TextRect& rect, bool bFull)
 	ui->pushButtonB->setChecked(rect.GetStyle() & TEXT_BOLD);
 	ui->pushButtonI->setChecked(rect.GetStyle() & TEXT_ITALIC);
 	ui->pushButtonU->setChecked(rect.GetStyle() & TEXT_UNDERLINE);
-	ui->pushButtonL->setChecked(rect.GetFlags() == Qt::AlignLeft);
-	ui->pushButtonC->setChecked(rect.GetFlags() == Qt::AlignHCenter);
-	ui->pushButtonR->setChecked(rect.GetFlags() == Qt::AlignRight);
-	ui->pushButtonJ->setChecked(rect.GetFlags() == Qt::AlignJustify);
+	ui->pushButtonL->setChecked(rect.GetFlagsH() == Qt::AlignLeft);
+	ui->pushButtonC->setChecked(rect.GetFlagsH() == Qt::AlignHCenter);
+	ui->pushButtonR->setChecked(rect.GetFlagsH() == Qt::AlignRight);
+	ui->pushButtonJ->setChecked(rect.GetFlagsH() == Qt::AlignJustify);
+	ui->pushButtonTop->setChecked(rect.GetFlagsV() == Qt::AlignTop);
+	ui->pushButtonMid->setChecked(rect.GetFlagsV() == Qt::AlignVCenter);
+	ui->pushButtonBot->setChecked(rect.GetFlagsV() == Qt::AlignBottom);
 	ui->pushButtonRGB->setStyleSheet("border:2px solid " + rect.GetQColor().name());
 	if ( bFull )
 		ui->plainTextEdit->setPlainText( QString::fromStdString(rect.GetStr()) );

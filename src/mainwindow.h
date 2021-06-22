@@ -338,6 +338,9 @@ public slots:
 	void AlignC();
 	void AlignR();
 	void AlignJ();
+	void AlignTop();
+	void AlignMid();
+	void AlignBot();
 	void SetText(const QString&);
 	void ChooseTextColor();
 	// For component editor dialog

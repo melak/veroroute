@@ -1613,7 +1613,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			painter.save();
 			painter.translate((bMono && layer == 0) ? R : L, T);							// Mirror all text boxes in Mono mode for bottom layer
 			painter.scale((bMono && layer == 0) ? -dTextScale : dTextScale, dTextScale);	// Mirror all text boxes in Mono mode for bottom layer
-			painter.drawText(0, 0, textW, textH, Qt::TextWordWrap | rect.GetFlags(), QString::fromStdString(rect.GetStr()));
+			painter.drawText(0, 0, textW, textH, Qt::TextWordWrap | rect.GetFlagsH() | rect.GetFlagsV(), QString::fromStdString(rect.GetStr()));
 			painter.restore();
 
 			if ( mapObj.first == GetCurrentTextId() )
