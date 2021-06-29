@@ -307,6 +307,7 @@ public slots:
 	void SetDiagonalsMin(bool b);
 	void SetDiagonalsMax(bool b);
 	// Rendering options
+	void SetBrightness(int i);
 	void SetTrackWidth(int i);
 	void SetHoleWidth(int i);
 	void SetPadWidth(int i);

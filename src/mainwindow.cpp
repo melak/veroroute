@@ -1475,6 +1475,7 @@ void MainWindow::SetDiagonalsMax(bool b)
 }
 
 // Rendering options
+void MainWindow::SetBrightness(int i)		{ if ( m_board.SetBackgroundColor(MyRGB(i,i,i)) )	{ UpdateHistory("Background brightness change");	DestroyPixmapCache();	RepaintSkipRouting(); } }
 void MainWindow::SetPadWidth(int i)			{ if ( m_board.SetPAD_MIL(i)   ) { UpdateHistory("Pad width change");				UpdateControls();	DestroyPixmapCache();	RepaintSkipRouting(); } }
 void MainWindow::SetTrackWidth(int i)		{ if ( m_board.SetTRACK_MIL(i) ) { UpdateHistory("Track width change");				UpdateControls();	DestroyPixmapCache();	RepaintSkipRouting(); } }
 void MainWindow::SetHoleWidth(int i)		{ if ( m_board.SetHOLE_MIL(i)  ) { UpdateHistory("Hole width change");				UpdateControls();	RepaintSkipRouting(); } }
@@ -1486,6 +1487,7 @@ void MainWindow::SetViaPadWidth(int i)		{ if ( m_board.SetVIAPAD_MIL(i)) { Updat
 void MainWindow::SetViaHoleWidth(int i)		{ if ( m_board.SetVIAHOLE_MIL(i)){ UpdateHistory("Via hole width change");			UpdateControls();	DestroyPixmapCache();	RepaintSkipRouting(); } }
 void MainWindow::SetTextSizeComp(int i)		{ if ( m_board.SetTextSizeComp(i) )		  { UpdateHistory("Text size change (component)");	RepaintSkipRouting(); } }
 void MainWindow::SetTextSizePins(int i)		{ if ( m_board.SetTextSizePins(i) )		  { UpdateHistory("Text size change (pins)");		RepaintSkipRouting(); } }
+
 void MainWindow::SetTargetRows(int i)		{ if ( m_board.SetTargetRows(i) )		  { UpdateHistory("Target board height change");	RepaintSkipRouting(); } }
 void MainWindow::SetTargetCols(int i)		{ if ( m_board.SetTargetCols(i) )		  { UpdateHistory("Target board width change");		RepaintSkipRouting(); } }
 void MainWindow::SetShowTarget(bool b)		{ if ( m_board.SetShowTarget(b) )		  { UpdateHistory("Target board on/off");			RepaintSkipRouting(); } }
@@ -1947,5 +1949,6 @@ QString MainWindow::GetSaveFileName(const QString& caption, const QString& nameF
 
 QColor MainWindow::GetBackgroundColor() const
 {
-	return ( m_board.GetTrackMode() == TRACKMODE::PCB ) ? Qt::black : Qt::white;	// For screen only.  PDF is always white.
+	//TODO Make grey >= 180,180,180
+	return ( m_board.GetTrackMode() == TRACKMODE::PCB ) ? Qt::black : m_board.GetBackgroundColor().GetQColor();	// For screen only.  PDF is always white.
 }

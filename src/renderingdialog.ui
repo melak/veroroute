@@ -30,7 +30,7 @@
     <rect>
      <x>10</x>
      <y>10</y>
-     <width>331</width>
+     <width>131</width>
      <height>51</height>
     </rect>
    </property>
@@ -59,9 +59,9 @@
    <widget class="QRadioButton" name="antiAliasOn">
     <property name="geometry">
      <rect>
-      <x>180</x>
+      <x>70</x>
       <y>22</y>
-      <width>61</width>
+      <width>51</width>
       <height>24</height>
      </rect>
     </property>
@@ -724,6 +724,65 @@
     </property>
     <property name="value">
      <number>20</number>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QGroupBox" name="groupBox_bright">
+   <property name="geometry">
+    <rect>
+     <x>150</x>
+     <y>10</y>
+     <width>191</width>
+     <height>51</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>Background Brightness</string>
+   </property>
+   <widget class="QSlider" name="brightSlider">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>20</y>
+      <width>171</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="mouseTracking">
+     <bool>true</bool>
+    </property>
+    <property name="focusPolicy">
+     <enum>Qt::StrongFocus</enum>
+    </property>
+    <property name="toolTip">
+     <string>Sets the saturation level when using Color mode</string>
+    </property>
+    <property name="minimum">
+     <number>200</number>
+    </property>
+    <property name="maximum">
+     <number>255</number>
+    </property>
+    <property name="singleStep">
+     <number>5</number>
+    </property>
+    <property name="pageStep">
+     <number>0</number>
+    </property>
+    <property name="value">
+     <number>255</number>
+    </property>
+    <property name="sliderPosition">
+     <number>255</number>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+    <property name="tickPosition">
+     <enum>QSlider::NoTicks</enum>
+    </property>
+    <property name="tickInterval">
+     <number>1</number>
     </property>
    </widget>
   </widget>

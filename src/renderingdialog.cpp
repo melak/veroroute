@@ -29,23 +29,24 @@ RenderingDialog::RenderingDialog(MainWindow* parent)
 	ui->setupUi(this);
 
 	ui->antiAliasOn->setChecked(true);
-	QObject::connect(ui->antiAliasOff,	SIGNAL(toggled(bool)),		m_pMainWindow, SLOT(SetAntialiasOff(bool)));
-	QObject::connect(ui->antiAliasOn,	SIGNAL(toggled(bool)),		m_pMainWindow, SLOT(SetAntialiasOn(bool)));
-	QObject::connect(ui->shade,			SIGNAL(toggled(bool)),		m_pMainWindow, SLOT(SetShowTarget(bool)));
-	QObject::connect(ui->comptext,		SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetTextSizeComp(int)));
-	QObject::connect(ui->comppins,		SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetTextSizePins(int)));
-	QObject::connect(ui->spinBox_height,SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetTargetRows(int)));
-	QObject::connect(ui->spinBox_width,	SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetTargetCols(int)));
-	QObject::connect(ui->padWidth,		SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetPadWidth(int)));
-	QObject::connect(ui->trackWidth,	SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetTrackWidth(int)));
-	QObject::connect(ui->holeWidth,		SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetHoleWidth(int)));
-	QObject::connect(ui->gapWidth,		SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetGapWidth(int)));
-	QObject::connect(ui->maskWidth,		SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetMaskWidth(int)));
-	QObject::connect(ui->silkWidth,		SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetSilkWidth(int)));
-	QObject::connect(ui->edgeWidth,		SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetEdgeWidth(int)));
-	QObject::connect(ui->viapadWidth,	SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetViaPadWidth(int)));
-	QObject::connect(ui->viaholeWidth,	SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetViaHoleWidth(int)));
-	QObject::connect(ui->closeTracks,	SIGNAL(toggled(bool)),		m_pMainWindow, SLOT(SetShowCloseTracks(bool)));
+	QObject::connect(ui->antiAliasOff,		SIGNAL(toggled(bool)),		m_pMainWindow, SLOT(SetAntialiasOff(bool)));
+	QObject::connect(ui->antiAliasOn,		SIGNAL(toggled(bool)),		m_pMainWindow, SLOT(SetAntialiasOn(bool)));
+	QObject::connect(ui->brightSlider,		SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetBrightness(int)));
+	QObject::connect(ui->shade,				SIGNAL(toggled(bool)),		m_pMainWindow, SLOT(SetShowTarget(bool)));
+	QObject::connect(ui->comptext,			SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetTextSizeComp(int)));
+	QObject::connect(ui->comppins,			SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetTextSizePins(int)));
+	QObject::connect(ui->spinBox_height,	SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetTargetRows(int)));
+	QObject::connect(ui->spinBox_width,		SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetTargetCols(int)));
+	QObject::connect(ui->padWidth,			SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetPadWidth(int)));
+	QObject::connect(ui->trackWidth,		SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetTrackWidth(int)));
+	QObject::connect(ui->holeWidth,			SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetHoleWidth(int)));
+	QObject::connect(ui->gapWidth,			SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetGapWidth(int)));
+	QObject::connect(ui->maskWidth,			SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetMaskWidth(int)));
+	QObject::connect(ui->silkWidth,			SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetSilkWidth(int)));
+	QObject::connect(ui->edgeWidth,			SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetEdgeWidth(int)));
+	QObject::connect(ui->viapadWidth,		SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetViaPadWidth(int)));
+	QObject::connect(ui->viaholeWidth,		SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetViaHoleWidth(int)));
+	QObject::connect(ui->closeTracks,		SIGNAL(toggled(bool)),		m_pMainWindow, SLOT(SetShowCloseTracks(bool)));
 }
 
 RenderingDialog::~RenderingDialog()
@@ -69,12 +70,14 @@ void RenderingDialog::UpdateControls()
 	const bool bVias			= board.GetViasEnabled();
 	const bool bCloseTrackInfo	= board.GetHaveWarnPoints();
 
+	ui->brightSlider->setValue( board.GetBackgroundColor().GetR() );
 	ui->comptext->setValue( board.GetTextSizeComp() );
 	ui->comppins->setValue( board.GetTextSizePins() );
 	ui->spinBox_height->setValue( board.GetTargetRows() );
 	ui->spinBox_width->setValue( board.GetTargetCols() );
 	ui->shade->setChecked( board.GetShowTarget() );
 	if ( board.GetRenderQuality() == 0 ) ui->antiAliasOff->setChecked(true); else ui->antiAliasOn->setChecked(true);
+	ui->groupBox_bright->setDisabled(bCompEdit || bPCB );
 	ui->groupBox_target->setDisabled(	bCompEdit );
 	ui->comptext->setDisabled(			bCompEdit );
 	ui->comppins->setDisabled(			!bCompEdit && bMonoPCB );

@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include "MyRGB.h"
 #include "TrackElement.h"	// For BAD_NODEID
 #include "Element.h"		// For BAD_COMPID, TRAX_COMPID
 
@@ -42,6 +43,7 @@ public:
 	GuiControl(const GuiControl& o) { *this = o; }
 	GuiControl& operator=(const GuiControl& o)
 	{
+		m_backgroundColor	= o.m_backgroundColor;
 		m_currentLayer		= o.m_currentLayer;
 		m_currentCompId		= o.m_currentCompId;
 		m_currentNodeId		= o.m_currentNodeId;
@@ -93,7 +95,8 @@ public:
 	}
 	bool operator==(const GuiControl& o) const	// Compare persisted info
 	{
-		return	m_currentLayer		== o.m_currentLayer
+		return	m_backgroundColor	== o.m_backgroundColor
+			&&	m_currentLayer		== o.m_currentLayer
 			&&	m_currentCompId		== o.m_currentCompId
 			&&	m_currentNodeId		== o.m_currentNodeId
 			&&	m_groundNodeId0		== o.m_groundNodeId0
@@ -187,6 +190,9 @@ public:
 	// Persist functions
 	virtual void Load(DataStream& inStream) override
 	{
+		m_backgroundColor = MyRGB(0xFFFFFF);
+		if ( inStream.GetVersion() >= VRT_VERSION_50 )
+			m_backgroundColor.Load(inStream);	// Added in VRT_VERSION_50
 		m_currentLayer = 0;
 		if ( inStream.GetVersion() >= VRT_VERSION_34 )
 			inStream.Load(m_currentLayer);		// Added in VRT_VERSION_34
@@ -309,6 +315,7 @@ public:
 	}
 	virtual void Save(DataStream& outStream) override
 	{
+		m_backgroundColor.Save(outStream);	// Added in VRT_VERSION_50
 		outStream.Save(m_currentLayer);		// Added in VRT_VERSION_34
 		outStream.Save(m_currentCompId);
 		outStream.Save(m_currentNodeId);
@@ -357,6 +364,7 @@ public:
 		outStream.Save(m_bVerticalStrips);	// Added in VRT_VERSION_12
 		outStream.Save(m_bCompEdit);		// Added in VRT_VERSION_19
 	}
+	bool SetBackgroundColor(const MyRGB& o)	{ const bool bChanged = m_backgroundColor	!= o; m_backgroundColor	= o; return bChanged;}
 	bool SetCurrentLayer(const int& i)		{ const bool bChanged = m_currentLayer		!= i; m_currentLayer	= i; return bChanged; }
 	bool SetCurrentNodeId(const int& i)		{ const bool bChanged = m_currentNodeId		!= i; m_currentNodeId	= i; return bChanged; }
 	bool SetCurrentCompId(const int& i)		{ const bool bChanged = m_currentCompId		!= i; m_currentCompId	= i; return bChanged; }
@@ -413,6 +421,7 @@ public:
 	bool SetGroundFill(const bool& b)		{ const bool bChanged = m_bGroundFill		!= b; m_bGroundFill		= b; return bChanged; }
 	bool SetVerticalStrips(const bool& b)	{ const bool bChanged = m_bVerticalStrips	!= b; m_bVerticalStrips	= b; return bChanged; }
 	bool SetCompEdit(const bool& b)			{ const bool bChanged = m_bCompEdit			!= b; m_bCompEdit		= b; return bChanged; }
+	const MyRGB&		GetBackgroundColor() const	{ return m_backgroundColor; }
 	const int&			GetCurrentLayer() const		{ return m_currentLayer; }
 	const int&			GetCurrentNodeId() const	{ return m_currentNodeId; }
 	const int&			GetCurrentCompId() const	{ return m_currentCompId; }
@@ -479,6 +488,7 @@ public:
 	}
 	void	CalcBlob(const qreal& W, const QPointF& pC, const QPointF& pCoffset, const int& iPerimeterCode, std::list<MyPolygonF>& out, const bool bHavePad = false, const bool bGap = false) const;
 private:
+	MyRGB		m_backgroundColor	= MyRGB(0xFFFFFF);
 	int			m_currentLayer		= 0;				// Currently selected layer for display
 	int			m_currentCompId		= BAD_COMPID;		// Currently selected component ID
 	int			m_currentNodeId		= BAD_NODEID;		// Currently selected node ID

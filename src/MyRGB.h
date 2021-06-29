@@ -31,6 +31,7 @@ public:
 		m_G = (i & 0xFF); i >>= 8;
 		m_R = (i & 0XFF);
 	}
+	MyRGB(int r, int g, int b) : m_R(r), m_G(g), m_B(b) {}
 	MyRGB(const MyRGB& o)	{ *this = o; }
 	MyRGB(const QColor& o)	{ SetRGB(o.red(), o.green(), o.blue()); }
 	virtual ~MyRGB() {}
@@ -67,6 +68,9 @@ public:
 	{
 		R = m_R; G = m_G; B = m_B;
 	}
+	const int& GetR() const		{ return m_R; }
+	const int& GetG() const		{ return m_G; }
+	const int& GetB() const		{ return m_B; }
 	QColor GetQColor() const	{ return QColor(m_R, m_G, m_B); }
 	// Persist interface functions
 	virtual void Load(DataStream& inStream) override
