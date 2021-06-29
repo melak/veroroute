@@ -1949,6 +1949,5 @@ QString MainWindow::GetSaveFileName(const QString& caption, const QString& nameF
 
 QColor MainWindow::GetBackgroundColor() const
 {
-	//TODO Make grey >= 180,180,180
 	return ( m_board.GetTrackMode() == TRACKMODE::PCB ) ? Qt::black : m_board.GetBackgroundColor().GetQColor();	// For screen only.  PDF is always white.
 }
