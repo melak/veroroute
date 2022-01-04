@@ -197,6 +197,16 @@ void Board::UpdateVias()	// Sets the via flag to true on all candidate vias
 	const bool bViasEnabled		= GetViasEnabled();		// Log vias state
 	SetRoutingEnabled(false);	// Don't build tracks
 	SetViasEnabled(false);		// Disable routing through vias to perform test
+	
+	std::vector<unsigned int> iMH;
+	if ( bViasEnabled )
+	{
+		// Store existing MH values (used for showing connected areas) because Flood() will wipe them
+		iMH.resize( GetSize() );
+		for (int i = 0, iSize = GetSize(); i < iSize; i++)
+			iMH[i] = GetAt(i)->GetMH();
+	}
+
 	for (int i = 0, iSize = ( GetLyrs() == 1 ) ? GetSize() : ( GetSize() / 2 ); i < iSize; i++)	// Loop layer 0 only
 	{
 		Element* p = GetAt(i);
@@ -212,6 +222,14 @@ void Board::UpdateVias()	// Sets the via flag to true on all candidate vias
 		}
 		p->SetIsVia(bIsVia);
 	}
+
+	if ( bViasEnabled )
+	{
+		// Restore MH values
+		for (int i = 0, iSize = GetSize(); i < iSize; i++)
+			GetAt(i)->SetMH( iMH[i] );
+	}
+
 	SetViasEnabled(bViasEnabled);		// Restore vias state
 	SetRoutingEnabled(bRoutingEnabled);	// Restore routing state
 

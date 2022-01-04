@@ -215,6 +215,7 @@ public:
 		assert( iSlot == 0 || iSlot == 1 );
 		auto pBase = GetBase();	if ( pBase == this ) m_pW[iSlot] = p; else pBase->SetW(iSlot, p);
 	}
+	void				SetMH(const unsigned int& iMH)	{ m_MH = iMH ;}
 	const bool&			GetIsMark() const				{ auto pBase = GetBaseConst(); return pBase == this ? m_bIsMark		: pBase->GetIsMark(); }
 	const int&			GetCompId() const				{ auto pBase = GetBaseConst(); return pBase == this ? m_compId		: pBase->GetCompId(); }
 	const int&			GetCompId2() const				{ auto pBase = GetBaseConst(); return pBase == this ? m_compId2		: pBase->GetCompId2(); }
