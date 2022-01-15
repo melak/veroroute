@@ -18,7 +18,6 @@
 */
 
 #include "CurveList.h"
-#include <QPolygon>
 
 Curve::Curve(const QPoint& p, const GPEN& ePen, const int& width) : m_ePen(ePen), m_width(width)
 {
@@ -77,6 +76,12 @@ bool Curve::Splice(Curve* pB)	// Tries to splice curve B to this
 	else if	( back()  == pB->back()  ) { pB->reverse(); }
 	if		( back()  == pB->front() ) { splice(end(), *pB); Compress(); return true; }
 	return false;
+}
+
+void CurveList::Clear()
+{
+	for (auto& p : *this) p->clear();
+	clear();
 }
 
 void CurveList::Sort()

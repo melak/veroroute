@@ -20,9 +20,8 @@
 #pragma once
 
 #include "Common.h"
-
-class QPoint;
-class QPolygon;
+#include <QPoint>
+#include <QPolygon>
 
 // Bits used to construct the GPEN enum
 static const int	BIT_GKO(1),	 BIT_PAD(2), BIT_VIA(4), BIT_TRK(8),
@@ -76,7 +75,7 @@ class CurveList : public std::list<Curve*>
 public:
 	CurveList()		{}
 	~CurveList()	{ Clear(); }
-	void Clear()	{ for (auto& p : *this) p->clear(); clear(); }
+	void Clear();
 	void Sort();
 	void SpliceAll();
 };
