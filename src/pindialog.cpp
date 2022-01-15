@@ -47,16 +47,23 @@ void PinDialog::CellChanged(int row, int col)
 {
 	if ( col == 0 ) return;
 
-	Component*			pComp		= GetUserComp();	assert( pComp );
+	const bool& bCompEdit = m_pMainWindow->m_board.GetCompEdit();
+
+	CompDefiner*	pDef	= bCompEdit ? &m_pMainWindow->m_board.GetCompDefiner() : nullptr;
+	Component*		pComp	= bCompEdit ? nullptr : GetUserComp();
+	assert(pDef != nullptr || pComp != nullptr);
+
 	QTableWidgetItem*	pItemLabel	= ui->tableWidget->item(row, col);
 	const size_t		iPinIndex	= static_cast<size_t>(row);
 	const std::string	strLabel	= pItemLabel->text().toStdString();
 
 	if ( col == 1 )
 	{
-		if ( pComp->GetPinLabel(iPinIndex) != strLabel ) // If changed
+		const std::string& s = pDef ? pDef->GetPinLabel(iPinIndex) : pComp->GetPinLabel(iPinIndex);
+		if ( s != strLabel ) // If changed
 		{
-			pComp->SetPinLabel(iPinIndex, strLabel);
+			if ( pDef  ) pDef->SetPinLabel(iPinIndex, strLabel);
+			if ( pComp ) pComp->SetPinLabel(iPinIndex, strLabel);
 			m_pMainWindow->RepaintSkipRouting();
 		}
 	}
@@ -64,9 +71,11 @@ void PinDialog::CellChanged(int row, int col)
 	{
 		const int iAlign = ( strLabel == "L" || strLabel == "l" ) ? Qt::AlignLeft  :
 						   ( strLabel == "R" || strLabel == "r" ) ? Qt::AlignRight : Qt::AlignHCenter;
-		if ( pComp->GetPinAlign(iPinIndex) != iAlign ) // If changed
+		const int& i = pDef ? pDef->GetPinAlign(iPinIndex) : pComp->GetPinAlign(iPinIndex);
+		if ( i != iAlign ) // If changed
 		{
-			pComp->SetPinAlign(iPinIndex, iAlign);
+			if ( pDef )  pDef->SetPinAlign(iPinIndex, iAlign);
+			if ( pComp ) pComp->SetPinAlign(iPinIndex, iAlign);
 			m_pMainWindow->RepaintSkipRouting();
 		}
 		if ( strLabel != "L" && strLabel != "R" && strLabel != "C" )
@@ -76,8 +85,13 @@ void PinDialog::CellChanged(int row, int col)
 
 void PinDialog::Update()
 {
-	Component*		pComp	= GetUserComp();
-	const size_t	numPins	= ( pComp ) ? pComp->GetNumPins() : 0;
+	const bool& bCompEdit = m_pMainWindow->m_board.GetCompEdit();
+
+	CompDefiner*	pDef	= bCompEdit ? &m_pMainWindow->m_board.GetCompDefiner() : nullptr;
+	Component*		pComp	= bCompEdit ? nullptr : GetUserComp();
+	const size_t	numPins	= pDef ? pDef->GetNumPins() : pComp ? pComp->GetNumPins() : 0;
+	assert(pDef != nullptr || pComp != nullptr || numPins == 0);
+
 	// Set up the table
 	ui->tableWidget->clear();
 	ui->tableWidget->setRowCount(static_cast<int>(numPins));
@@ -96,14 +110,14 @@ void PinDialog::Update()
 	// Populate the table with data
 	for (size_t iPinIndex = 0; iPinIndex < numPins; iPinIndex++)
 	{
-		const int& iAlign = pComp->GetPinAlign(iPinIndex);
+		const int& iAlign = pDef ? pDef->GetPinAlign(iPinIndex) : pComp->GetPinAlign(iPinIndex);
 		for (int iCol = 0; iCol < 3; iCol++)
 		{
 			std::string str;
 			switch( iCol )
 			{
 				case 0:	str = CompTypes::GetDefaultPinLabel(iPinIndex);	break;
-				case 1:	str = pComp->GetPinLabel(iPinIndex);			break;
+				case 1:	str = pDef ? pDef->GetPinLabel(iPinIndex) : pComp->GetPinLabel(iPinIndex);	break;
 				case 2:	str = ( iAlign == Qt::AlignLeft  ) ? "L" :
 							  ( iAlign == Qt::AlignRight ) ? "R" :"C";	break;
 			}

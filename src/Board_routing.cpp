@@ -197,7 +197,7 @@ void Board::UpdateVias()	// Sets the via flag to true on all candidate vias
 	const bool bViasEnabled		= GetViasEnabled();		// Log vias state
 	SetRoutingEnabled(false);	// Don't build tracks
 	SetViasEnabled(false);		// Disable routing through vias to perform test
-	
+
 	std::vector<unsigned int> iMH;
 	if ( bViasEnabled )
 	{

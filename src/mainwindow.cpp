@@ -954,7 +954,7 @@ void MainWindow::ShowRenderingDialog()	{ ShowDlg(m_renderingDlg); }
 void MainWindow::ShowWireDialog()		{ ShowDlg(m_wireDlg); }
 void MainWindow::ShowHotkeysDialog()	{ ShowDlg(m_hotkeysDlg); }
 void MainWindow::ShowInfoDialog()		{ ShowDlg(m_infoDlg); }
-void MainWindow::ShowCompDialog()		{ m_dockControlDlg->hide(); m_pinDlg->hide(); m_findDlg->hide(); ShowDlg(m_dockCompDlg); }
+void MainWindow::ShowCompDialog()		{ m_dockControlDlg->hide(); m_findDlg->hide(); ShowDlg(m_dockCompDlg); }
 void MainWindow::ShowTextDialog()		{ ShowDlg(m_textDlg); }
 void MainWindow::ShowBomDialog()		{ UpdateBOM();				ShowDlg(m_bomDlg); }
 void MainWindow::ShowTemplatesDialog()	{ UpdateTemplatesDialog();	ShowDlg(m_templatesDlg); }
@@ -1591,7 +1591,7 @@ void MainWindow::DefinerWidthChanged(int i)		{ if ( GetCompDefiner().SetWidth(i)
 void MainWindow::DefinerHeightChanged(int i)	{ if ( GetCompDefiner().SetHeight(i)	) { UpdateHistory("Action"); EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
 void MainWindow::DefinerPadWidthChanged(int i)	{ if ( GetCompDefiner().SetPadWidth(i)	) { UpdateHistory("Action"); EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
 void MainWindow::DefinerHoleWidthChanged(int i)	{ if ( GetCompDefiner().SetHoleWidth(i)	) { UpdateHistory("Action"); EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
-void MainWindow::DefinerSetPinNumber(int i)		{ if ( GetCompDefiner().SetPinNumber(i)	) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
+void MainWindow::DefinerSetPinNumber(int i)		{ if ( GetCompDefiner().SetPinNumber(i)	) { UpdateHistory("Action"); EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
 void MainWindow::DefinerIncPinNumber(bool b)	{ if ( GetCompDefiner().IncPinNumber(b)	) { UpdateHistory("Action"); UpdateCompDialog();		 RepaintSkipRouting(); } }	// Called using mouse wheel in view
 void MainWindow::DefinerSetCX(double d)			{ if ( GetCompDefiner().SetCX(d)		) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
 void MainWindow::DefinerSetCY(double d)			{ if ( GetCompDefiner().SetCY(-d)		) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }	// Control assumes CY goes up
@@ -1820,7 +1820,6 @@ void MainWindow::UpdateControls()
 	ui->actionToggleRuler->setChecked( m_bRuler );
 	ui->actionToggleRuler->setText( m_bRuler ? QString("Hide Distance Tool") : QString("Show Distance Tool"));
 
-	ui->actionPinDlg->setEnabled( !bCompEdit );
 	ui->actionControlDlg->setEnabled( !bCompEdit );
 	ui->actionCompDlg->setEnabled( bCompEdit );
 
@@ -1865,7 +1864,7 @@ void MainWindow::UpdateControls()
 
 	UpdateUndoRedoControls();
 }
-void MainWindow::UpdateCompDialog()			{ m_compDlg->Update(); }
+void MainWindow::UpdateCompDialog()			{ m_compDlg->Update(); m_pinDlg->Update(); }
 void MainWindow::EnableCompDialogControls()	{ m_compDlg->EnableControls(); }
 void MainWindow::UpdateBOM()				{ m_bomDlg->Update(); }
 void MainWindow::UpdateTemplatesDialog()	{ m_templatesDlg->Update(); }

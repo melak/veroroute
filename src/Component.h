@@ -185,7 +185,7 @@ public:
 				&& m_bAllowFlyWire		== o.m_bAllowFlyWire
 				&& GetNumPins()			== o.GetNumPins()
 				&& GetNumShapes()		== o.GetNumShapes();
-		for (size_t i = 0; i < GetNumPins() && bOK; i++)
+		for (size_t i = 0, iSize = GetNumPins(); i < iSize && bOK; i++)
 		{
 			bOK =  m_nodeIdPins[i]		== o.m_nodeIdPins[i]
 				&& m_origIdPins1[i]		== o.m_origIdPins1[i]
@@ -196,7 +196,7 @@ public:
 				&& m_pinLabels[i]		== o.m_pinLabels[i]
 				&& m_pinAligns[i]		== o.m_pinAligns[i];
 		}
-		for (size_t i = 0; i < GetNumShapes() && bOK; i++)
+		for (size_t i = 0, iSize = GetNumShapes(); i < iSize && bOK; i++)
 		{
 			bOK = m_shapes[i] == o.m_shapes[i];
 		}
@@ -553,7 +553,7 @@ public:
 	}
 	void SetDefaultPinLabels()
 	{
-		for (size_t i = 0; i < GetNumPins(); i++)
+		for (size_t i = 0, iSize = GetNumPins(); i < iSize; i++)
 		{
 			m_pinLabels[i] = CompTypes::GetDefaultPinLabel(i);
 			m_pinAligns[i] = CompTypes::GetDefaultPinAlign(i, GetNumPins(), GetType());

@@ -76,6 +76,8 @@ public:
 		m_valueStr = m_prefixStr = m_typeStr = m_importStr = "";
 		m_grid.Allocate(1,4,4);
 		m_grid.Clear( Pin(BAD_PINCHAR, SURFACE_FULL, HOLE_FREE) );
+		m_pinLabels.clear();
+		m_pinAligns.clear();
 		m_mapShapes.clear();
 		AddRect();	// Provide a Rect by default
 	}
@@ -92,9 +94,39 @@ public:
 		m_typeStr			= o.m_typeStr;
 		m_importStr			= o.m_importStr;
 		m_grid				= o.m_grid;
+		AllocatePins( o.GetNumPins() );
+		std::copy(o.m_pinLabels.begin(), o.m_pinLabels.end(), m_pinLabels.begin());
+		std::copy(o.m_pinAligns.begin(), o.m_pinAligns.end(), m_pinAligns.begin());
 		m_mapShapes.clear();
 		for (const auto& mapObj : o.m_mapShapes) m_mapShapes.push_back(mapObj);
 		return *this;
+	}
+	size_t GetNumPins() const
+	{
+		return m_pinLabels.size();
+	}
+	void AllocatePins(const size_t numPins)
+	{
+		m_pinLabels.clear();	m_pinLabels.resize(numPins, "");
+		m_pinAligns.clear();	m_pinAligns.resize(numPins, Qt::AlignHCenter);
+		SetDefaultPinLabels();
+	}
+	void ReAllocatePins(const size_t maxPinNumber)
+	{
+		// Take copy of old array values
+		std::vector<std::string>	labels;	labels.resize(GetNumPins());
+		std::vector<int>			aligns;	aligns.resize(GetNumPins());
+		std::copy(m_pinLabels.begin(), m_pinLabels.end(), labels.begin());
+		std::copy(m_pinAligns.begin(), m_pinAligns.end(), aligns.begin());
+		AllocatePins(maxPinNumber);
+		// Use old values in new arrays
+		std::copy(labels.begin(), labels.end(), m_pinLabels.begin());
+		std::copy(aligns.begin(), aligns.end(), m_pinAligns.begin());
+	}
+	void SetDefaultPinLabels()
+	{
+		for (size_t i = 0, iSize = GetNumPins(); i < iSize; i++)
+			m_pinLabels[i] = CompTypes::GetDefaultPinLabel(i);
 	}
 	bool operator==(const CompDefiner& o) const	// Compare persisted info
 	{
@@ -109,8 +141,14 @@ public:
 				&& m_typeStr			== o.m_typeStr
 				&& m_importStr			== o.m_importStr
 				&& m_grid				== o.m_grid
+				&& m_pinLabels.size()	== o.m_pinLabels.size()
+				&& m_pinAligns.size()	== o.m_pinAligns.size()
 				&& m_mapShapes.size()	== o.m_mapShapes.size();
 		if ( !bOK ) return false;
+		for (size_t i = 0, iSize = m_pinLabels.size(); i < iSize; i++)
+			if ( m_pinLabels[i] != o.m_pinLabels[i] ) return false;
+		for (size_t i = 0, iSize = m_pinAligns.size(); i < iSize; i++)
+			if ( m_pinAligns[i] != o.m_pinAligns[i] ) return false;
 		for (auto iterA = m_mapShapes.begin(), iterB = o.m_mapShapes.begin(); iterA != m_mapShapes.end() && iterB != o.m_mapShapes.end(); ++iterA, ++iterB)
 			if ( (*iterA) != (*iterB) ) return false;
 		return true;
@@ -132,6 +170,14 @@ public:
 	bool SetTypeStr(const std::string& s)	{ const bool bChanged = ( m_typeStr			!= s );	m_typeStr			= s; return bChanged; }
 	bool SetImportStr(const std::string& s)	{ const bool bChanged = ( m_importStr		!= s );	m_importStr			= s; return bChanged; }
 	bool SetGrid(const PinGrid& o)			{ const bool bChanged = ( m_grid			!= o );	m_grid				= o; return bChanged; }
+	void SetPinLabel(const size_t& iPinIndex, const std::string& s)
+	{
+		if ( iPinIndex < m_pinLabels.size() ) m_pinLabels[iPinIndex] = s;
+	}
+	void SetPinAlign(const size_t& iPinIndex, const int& i)
+	{
+		if ( iPinIndex < m_pinAligns.size() ) m_pinAligns[iPinIndex] = i;
+	}
 	void AddShape(const int& id, const Shape& o)	{ assert( id != BAD_ID );	m_mapShapes.push_back( IntShape(id, o) ); }
 	const int&				GetCurrentPinId() const		{ return m_currentPinId; }
 	const int&				GetCurrentShapeId() const	{ return m_currentShapeId; }
@@ -144,6 +190,16 @@ public:
 	const std::string&		GetTypeStr() const			{ return m_typeStr; }
 	const std::string&		GetImportStr() const		{ return m_importStr; }
 	const PinGrid&			GetGrid() const				{ return m_grid; }
+	const std::string&		GetPinLabel(const size_t& iPinIndex) const
+	{
+		static const std::string emptyStr("");
+		return ( iPinIndex < m_pinLabels.size() ) ? m_pinLabels[iPinIndex] : emptyStr;
+	}
+	const int&				GetPinAlign(const size_t& iPinIndex) const
+	{
+		static int defaultAlign(Qt::AlignHCenter);
+		return ( iPinIndex < m_pinAligns.size() ) ? m_pinAligns[iPinIndex] : defaultAlign;
+	}
 	std::list<IntShape>&	GetShapes()					{ return m_mapShapes; }
 	Q_DECL_CONSTEXPR static inline int GetMinMargin()	{ return 12; }	// The margin around the footprint on the screen
 	int  GetScreenRows() const	{ return 2 * GetMinMargin() + GetGridRows(); }
@@ -179,6 +235,17 @@ public:
 			if ( m_grid.GetAtConst(i)->GetIsPin() ) count++;
 		return count;
 	}
+	size_t	GetMaxPinNumber() const
+	{
+		size_t maxPinNumber(0);
+		for (int i = 0, iSize = m_grid.GetSize(); i < iSize; i++)
+		{
+			const auto& p = m_grid.GetAtConst(i);
+			if ( p->GetIsPin() )
+				maxPinNumber = std::max(maxPinNumber, p->GetPinIndex() + 1);
+		}
+		return maxPinNumber;
+	}
 	void Build(Component& comp) const;
 	bool SetPinNumber(const int& i)
 	{
@@ -187,6 +254,7 @@ public:
 		o.SetPinIndex( static_cast<size_t>(i - 1) );
 		o.SetSurface( SURFACE_FULL );
 		o.SetHoleUse( HOLE_FULL );
+		ReAllocatePins( GetMaxPinNumber() );
 		return true;
 	}
 	bool IncPinNumber(bool bInc)
@@ -343,6 +411,19 @@ public:
 		inStream.Load(m_importStr);
 		m_grid.Load(inStream);
 
+		unsigned int numPins(0);
+		if ( inStream.GetVersion() >= VRT_VERSION_51 )
+			inStream.Load(numPins);			// Added in VRT_VERSION_51
+		AllocatePins(numPins);
+		if ( inStream.GetVersion() >= VRT_VERSION_51 )
+		{
+			for (unsigned int i = 0; i < numPins; i++)
+			{
+				inStream.Load(m_pinLabels[i]);	// Added in VRT_VERSION_51
+				inStream.Load(m_pinAligns[i]);	// Added in VRT_VERSION_51
+			}
+		}
+
 		unsigned int numShapes(0);
 		inStream.Load(numShapes);
 		m_mapShapes.clear();
@@ -369,6 +450,14 @@ public:
 		outStream.Save(m_importStr);
 		m_grid.Save(outStream);
 
+		const unsigned int numPins = static_cast<unsigned int>( GetNumPins() );
+		outStream.Save(numPins);		// Added in VRT_VERSION_51
+		for (unsigned int i = 0; i < numPins; i++)
+		{
+			outStream.Save(m_pinLabels[i]);	// Added in VRT_VERSION_51
+			outStream.Save(m_pinAligns[i]);	// Added in VRT_VERSION_51
+		}
+
 		const unsigned int numShapes = static_cast<unsigned int>( m_mapShapes.size() );
 		outStream.Save(numShapes);
 		for (auto& mapObj : m_mapShapes)
@@ -388,17 +477,19 @@ private:
 	}
 private:
 	// GUI control
-	int						m_currentPinId;		// Current index into m_grid
-	int						m_currentShapeId;	// Current selected shape
+	int							m_currentPinId;		// Current index into m_grid
+	int							m_currentShapeId;	// Current selected shape
 	// Component description
-	uchar					m_iPinFlags;		// 1 ==> PIN_RECT, 2 ==> PIN_LABELS, 4 ==> PIN_CUSTOM
-	int						m_iPadWidth;		// Used if the PIN_CUSTOM flag is set
-	int						m_iHoleWidth;		// Used if the PIN_CUSTOM flag is set
-	bool					m_bAllowFlyWire;	// true ==> Allow flying wire to pins
-	std::string				m_valueStr;			// Value label (e.g. "MN3004")
-	std::string				m_prefixStr;		// Prefix string (e.g. "IC")
-	std::string				m_typeStr;			// Component type (e.g. "BBD")
-	std::string				m_importStr;		// For Planet/Tango import
-	PinGrid					m_grid;
-	std::list<IntShape>		m_mapShapes;		// "Map" of shapeId to Shape.	Coordinates are RELATIVE to footprint centre.
+	uchar						m_iPinFlags;		// 1 ==> PIN_RECT, 2 ==> PIN_LABELS, 4 ==> PIN_CUSTOM
+	int							m_iPadWidth;		// Used if the PIN_CUSTOM flag is set
+	int							m_iHoleWidth;		// Used if the PIN_CUSTOM flag is set
+	bool						m_bAllowFlyWire;	// true ==> Allow flying wire to pins
+	std::string					m_valueStr;			// Value label (e.g. "MN3004")
+	std::string					m_prefixStr;		// Prefix string (e.g. "IC")
+	std::string					m_typeStr;			// Component type (e.g. "BBD")
+	std::string					m_importStr;		// For Planet/Tango import
+	PinGrid						m_grid;
+	std::vector<std::string>	m_pinLabels;		// Pin labels
+	std::vector<int>			m_pinAligns;		// Pin label alignments (Qt::AlignLeft,Qt::AlignRight,Qt::AlignHCenter)
+	std::list<IntShape>			m_mapShapes;		// "Map" of shapeId to Shape.	Coordinates are RELATIVE to footprint centre.
 };

@@ -493,7 +493,17 @@ void MainWindow::PaintCompDefiner()	// The paint method in "component editor mod
 			painter.setPen(m_blackPen);
 			painter.rotate(270);
 			painter.scale(dTextScale, dTextScale);
-			painter.drawText(0,0,0,0, Qt::TextDontClip | Qt::AlignCenter, CompTypes::GetDefaultPinLabel(p->GetPinIndex()).c_str());
+			const size_t pinIndex = p->GetPinIndex();
+			std::string strPinLabel = ( pinIndex < def.GetNumPins() ) ? def.GetPinLabel(pinIndex) : CompTypes::GetDefaultPinLabel(pinIndex);
+			int iFlag = ( pinIndex < def.GetNumPins() ) ? def.GetPinAlign(pinIndex) : Qt::AlignCenter;
+			if ( iFlag == Qt::AlignLeft || iFlag == Qt::AlignRight )
+			{
+				const bool bLeft = ( iFlag == Qt::AlignLeft );
+				painter.translate(bLeft ? -C/2 : C/2, 0);
+			}
+			iFlag |= ( Qt::TextDontClip | Qt::AlignVCenter );
+
+			painter.drawText(0,0,0,0, iFlag, strPinLabel.c_str());
 		}
 		painter.restore();
 	}

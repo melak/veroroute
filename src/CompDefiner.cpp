@@ -57,6 +57,14 @@ void CompDefiner::Populate(const Component& o)
 		}
 	}
 
+	// Copy pin labels
+	AllocatePins( o.GetNumPins() );
+	for (size_t i = 0, iSize = GetNumPins(); i < iSize; i++)
+	{
+		SetPinLabel(i, o.GetPinLabel(i));
+		SetPinAlign(i, o.GetPinAlign(i));
+	}
+
 	// Copy shapes
 	m_mapShapes.clear();
 	int iShapeId(0);
@@ -87,12 +95,18 @@ void CompDefiner::Build(Component& comp) const
 	for (int i = 0, iSize = m_grid.GetSize(); i < iSize; i++)
 		comp.GetAt(i)->Pin::operator=( *m_grid.GetAtConst(i) );
 
+	// Copy pin labels
+	comp.AllocatePins( GetNumTruePins() );
+	for (size_t i = 0, iSize = GetNumPins(); i < iSize; i++)
+	{
+		comp.SetPinLabel(i, GetPinLabel(i));
+		comp.SetPinAlign(i, GetPinAlign(i));
+	}
+
 	// Copy shapes
 	assert( comp.GetNumShapes() == 0 );
 	for (const auto& mapObj : m_mapShapes)
 		comp.AddOne(mapObj.second);
-
-	comp.AllocatePins( GetNumTruePins() );
 }
 
 void CompDefiner::MoveCurrentShape(const double& dDown, const double& dRight)

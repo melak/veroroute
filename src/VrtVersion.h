@@ -50,4 +50,5 @@ static const int VRT_VERSION_47 = 47;	// Added component attribute to allow flyi
 static const int VRT_VERSION_48 = 48;	// Added board setting to show/hide flying wires
 static const int VRT_VERSION_49 = 49;	// Added vertical alignment flag to text boxes
 static const int VRT_VERSION_50 = 50;	// Added background color property
-static const int VRT_VERSION_CURRENT = VRT_VERSION_50;
+static const int VRT_VERSION_51 = 51;	// Added pinlabels to component editor
+static const int VRT_VERSION_CURRENT = VRT_VERSION_51;
