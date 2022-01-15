@@ -99,8 +99,9 @@ void Component::SetDefaultPinFlags()
 		case COMP::VERO_NUMBER:
 		case COMP::VERO_LETTER:
 		case COMP::CUSTOM:
-		case COMP::TRACKS:	return;
-		default:	assert(GetType() == COMP::INVALID);	return;	// Unhandled eType
+		case COMP::TRACKS:
+		case COMP::INVALID:		return;
+		default:	assert(0);	return;	// Unhandled eType
 	}
 }
 
@@ -395,7 +396,8 @@ void Component::SetDefaultColor()
 		case COMP::STRIP_100:				return SetFillColor(MyRGB(0xFFFFDF));
 		case COMP::BLOCK_100:				return SetFillColor(MyRGB(0xFFFFDF));
 		case COMP::BLOCK_200:				return SetFillColor(MyRGB(0xFFFFDF));
-		default:	assert(GetType() == COMP::INVALID);	return;// Unhandled eType
+		case COMP::INVALID:		return;
+		default:	assert(0);	return;	// Unhandled eType
 	}
 }
 

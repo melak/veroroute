@@ -773,7 +773,7 @@ bool Board::ConfirmDestroyUserComps()	// returns false if user-group is empty or
 			case COMP::VERO_LETTER:
 			case COMP::WIRE:
 			case COMP::MARK:	continue;
-			default:	assert(eType == COMP::INVALID);	return true;
+			default:	assert(eType != COMP::INVALID);	return true;
 		}
 	}
 	return false;

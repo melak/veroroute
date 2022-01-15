@@ -190,7 +190,7 @@ struct CompTypes
 		UpdateMaps(COMP::FUSE_HOLDER,			"Fuse Holder",					"FUSE_HOLDER");
 		UpdateMaps(COMP::VERO_NUMBER,			"Vero Numbers",					"");	// No import string
 		UpdateMaps(COMP::VERO_LETTER,			"Vero Letters",					"");	// No import string
-		UpdateMaps(COMP::CUSTOM,				"Custom",						"");	// No import string (user-defined shapes have their own strings)
+		UpdateMaps(COMP::CUSTOM,				"Custom",						"");	// No import string (user-defined parts have their own strings)
 		UpdateMaps(COMP::TRACKS,				"Tracks",						"");	// No import string
 	}
 	static const std::list<COMP>& GetListCompTypes()
