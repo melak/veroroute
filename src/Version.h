@@ -2,7 +2,9 @@
 
 static const char* szVEROROUTE_VERSION =
 
-"2.15";		// Improvement: Added background brightness to Rendering Options.
+"2.16";		// Bug fix: When vias are enabled, connectivity info was wiped when zooming or changing sliders, leading to erroneous hatched lines being displayed.
+			// Improvement: The Pin Label dialog can now also be used in Component Editor mode.
+//"2.15";	// Improvement: Added background brightness to Rendering Options.
 //"2.14";	// Improvement: Added vertical alignment options to text boxes.
 //"2.13";	// Bug fix: Code to fix corruption can mess up competing diagonals on boards that are OK.
 //"2.12";	// Bug fix: Corrected tab order in Rendering Options and Component Editor dialogs.
