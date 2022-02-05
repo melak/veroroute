@@ -618,7 +618,7 @@ bool Board::TakeOff(Component& comp)
 			}
 		}
 	}
-	if ( bWire )	// Handle wires ends
+	if ( pA != nullptr && pB != nullptr )	// Handle wires ends
 	{
 		const bool bAllLyrs(true);
 
