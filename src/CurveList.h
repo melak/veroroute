@@ -24,8 +24,8 @@
 #include <QPolygon>
 
 // Bits used to construct the GPEN enum
-static const int	BIT_GKO(1),	 BIT_PAD(2), BIT_VIA(4), BIT_TRK(8),
-					BIT_SLK(16), BIT_GAP(32), BIT_MSK(64), BIT_HLE(128);
+static const int	BIT_GKO(1),	 BIT_PAD(2), BIT_VIA(4), BIT_TRK(8), BIT_TAG(16),
+					BIT_SLK(32), BIT_GAP(64), BIT_MSK(128), BIT_HLE(256);
 
 // The GPEN enum defines "pen" types for writing to Gerber/Excellon files
 enum class GPEN
@@ -35,6 +35,7 @@ enum class GPEN
 	PAD		= BIT_PAD,				// Used for pad
 	VIA		= BIT_VIA,				// Used for via
 	TRK		= BIT_TRK,				// Used for track
+	TAG		= BIT_TAG,				// Used for thermal relief tags
 	SLK		= BIT_SLK,				// Used for silkscreen
 	PAD_GAP	= BIT_PAD | BIT_GAP,	// Used for gap around a pad
 	VIA_GAP	= BIT_VIA | BIT_GAP,	// Used for gap around a via

@@ -1,5 +1,5 @@
 V2.16  Bug fix: When vias are enabled, connectivity info was wiped when zooming or changing sliders, leading to erroneous hatched lines being displayed.
-	   Improvement: The Pin Label dialog can now also be used in Component Editor mode.
+       Improvement: The Pin Label dialog can now also be used in Component Editor mode.
 V2.15  Improvement: Added background brightness to Rendering Options.
 V2.14  Improvement: Added vertical alignment options to text boxes.
 V2.13  Bug fix: Code to fix corruption can mess up competing diagonals on boards that are OK.

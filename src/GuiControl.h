@@ -57,6 +57,7 @@ public:
 		m_GRIDPIXELS		= o.m_GRIDPIXELS;
 		m_PAD_MIL			= o.m_PAD_MIL;
 		m_TRACK_MIL			= o.m_TRACK_MIL;
+		m_TAG_MIL			= o.m_TAG_MIL;
 		m_HOLE_MIL			= o.m_HOLE_MIL;
 		m_GAP_MIL			= o.m_GAP_MIL;
 		m_MASK_MIL			= o.m_MASK_MIL;
@@ -109,6 +110,7 @@ public:
 			&&	m_GRIDPIXELS		== o.m_GRIDPIXELS
 			&&	m_PAD_MIL			== o.m_PAD_MIL
 			&&	m_TRACK_MIL			== o.m_TRACK_MIL
+			&&	m_TAG_MIL			== o.m_TAG_MIL
 			&&	m_HOLE_MIL			== o.m_HOLE_MIL
 			&&	m_GAP_MIL			== o.m_GAP_MIL
 			&&	m_MASK_MIL			== o.m_MASK_MIL
@@ -220,6 +222,9 @@ public:
 		inStream.Load(m_GRIDPIXELS);
 		inStream.Load(m_PAD_MIL);
 		inStream.Load(m_TRACK_MIL);
+		m_TAG_MIL = m_TRACK_MIL;
+		if ( inStream.GetVersion() >= VRT_VERSION_52 )
+			inStream.Load(m_TAG_MIL);			// Added in VRT_VERSION_52
 		inStream.Load(m_HOLE_MIL);
 		m_GAP_MIL = 10;
 		if ( inStream.GetVersion() >= VRT_VERSION_3 )
@@ -329,6 +334,7 @@ public:
 		outStream.Save(m_GRIDPIXELS);
 		outStream.Save(m_PAD_MIL);
 		outStream.Save(m_TRACK_MIL);
+		outStream.Save(m_TAG_MIL);			// Added in VRT_VERSION_52
 		outStream.Save(m_HOLE_MIL);
 		outStream.Save(m_GAP_MIL);			// Added in VRT_VERSION_3
 		outStream.Save(m_MASK_MIL);			// Added in VRT_VERSION_32
@@ -380,6 +386,7 @@ public:
 											  if ( bChanged && GetHOLE_MIL() > i-8 ) SetHOLE_MIL( i-8 );		// 8 ==> minimum annular ring = 4 mil
 											  return bChanged; }
 	bool SetTRACK_MIL(const int& i)			{ const bool bChanged = m_TRACK_MIL			!= i; m_TRACK_MIL		= i; return bChanged; }
+	bool SetTAG_MIL(const int& i)			{ const bool bChanged = m_TAG_MIL			!= i; m_TAG_MIL			= i; return bChanged; }
 	bool SetHOLE_MIL(const int& i)			{ const bool bChanged = m_HOLE_MIL			!= i; m_HOLE_MIL		= i;
 											  if ( bChanged && GetPAD_MIL() < i+8 ) SetPAD_MIL( i+8 );			// 8 ==> minimum annular ring = 4 mil
 											  return bChanged; }
@@ -435,6 +442,7 @@ public:
 	const int&			GetGRIDPIXELS() const		{ return m_GRIDPIXELS; }
 	const int&			GetPAD_MIL() const			{ return m_PAD_MIL; }
 	const int&			GetTRACK_MIL() const		{ return m_TRACK_MIL; }
+	const int&			GetTAG_MIL() const			{ return m_TAG_MIL; }
 	const int&			GetHOLE_MIL() const			{ return m_HOLE_MIL; }
 	const int&			GetGAP_MIL() const			{ return m_GAP_MIL; }
 	const int&			GetMASK_MIL() const			{ return m_MASK_MIL; }
@@ -470,15 +478,17 @@ public:
 	const bool&			GetVerticalStrips() const	{ return m_bVerticalStrips; }
 	const bool&			GetCompEdit() const			{ return m_bCompEdit; }
 	// Helpers
-	bool	GetUsePCBshapes()			{ return GetTrackMode() == TRACKMODE::PCB; }
-	bool	GetMirrored() const			{ return GetFlipH() || GetFlipV(); }
-	bool	SetTrackSliderValue(int i)	{ const bool bChanged = ( GetTrackSliderValue() != i ); SetTrackMode( static_cast<TRACKMODE>(i) ); return bChanged; }
-	bool	SetCompSliderValue(int i)	{ const bool bChanged = ( GetCompSliderValue()  != i ); SetCompMode(  static_cast<COMPSMODE>(i) ); return bChanged; }
-	int		GetTrackSliderValue() const	{ return static_cast<int>(GetTrackMode()); }
-	int		GetCompSliderValue() const	{ return static_cast<int>(GetCompMode());  }
-	double	GetSilkWidth() const		{ return std::max(1.0, GetGRIDPIXELS() * GetSILK_MIL() * 0.010 );  }	// Silk-screen pen width in pixels
-	double	GetEdgeWidth() const		{ return std::max(1.0, GetGRIDPIXELS() * GetEDGE_MIL() * 0.010 );  }	// Board edge margin in pixels
-	int		GetHalfPixelsFromMIL(const int& iMIL) const
+	bool		SetGroundNodeId()				{ return ( GetCurrentLayer() == 0 ) ? SetGroundNodeId0( GetCurrentNodeId() ) : SetGroundNodeId1( GetCurrentNodeId() ); }
+	const int&	GetGroundNodeId(int lyr) const	{ return ( lyr == 0 ) ? GetGroundNodeId0() : GetGroundNodeId1(); }
+	bool		GetUsePCBshapes()				{ return GetTrackMode() == TRACKMODE::PCB; }
+	bool		GetMirrored() const				{ return GetFlipH() || GetFlipV(); }
+	bool		SetTrackSliderValue(int i)		{ const bool bChanged = ( GetTrackSliderValue() != i ); SetTrackMode( static_cast<TRACKMODE>(i) ); return bChanged; }
+	bool		SetCompSliderValue(int i)		{ const bool bChanged = ( GetCompSliderValue()  != i ); SetCompMode(  static_cast<COMPSMODE>(i) ); return bChanged; }
+	int			GetTrackSliderValue() const		{ return static_cast<int>(GetTrackMode()); }
+	int			GetCompSliderValue() const		{ return static_cast<int>(GetCompMode());  }
+	double		GetSilkWidth() const			{ return std::max(1.0, GetGRIDPIXELS() * GetSILK_MIL() * 0.010 );  }	// Silk-screen pen width in pixels
+	double		GetEdgeWidth() const			{ return std::max(1.0, GetGRIDPIXELS() * GetEDGE_MIL() * 0.010 );  }	// Board edge margin in pixels
+	int			GetHalfPixelsFromMIL(const int& iMIL) const
 	{
 		return std::max(1, static_cast<int> (GetGRIDPIXELS() * iMIL	* 0.005 ));
 	}
@@ -486,7 +496,7 @@ public:
 	{
 		return std::max(1, static_cast<int> (GetGRIDPIXELS() * iMIL	* 0.010 ));
 	}
-	void	CalcBlob(const qreal& W, const QPointF& pC, const QPointF& pCoffset, const int& iPerimeterCode, std::list<MyPolygonF>& out, const bool bHavePad = false, const bool bGap = false) const;
+	void	CalcBlob(const qreal& W, const QPointF& pC, const QPointF& pCoffset, const int& iPerimeterCode, std::list<MyPolygonF>& out, const bool bHavePad, const bool bIsGnd, const bool bGap = false) const;
 private:
 	MyRGB		m_backgroundColor	= MyRGB(0xFFFFFF);
 	int			m_currentLayer		= 0;				// Currently selected layer for display
@@ -502,6 +512,7 @@ private:
 	int			m_GRIDPIXELS		= 24;				// Default 24 pixels per grid square (i.e. per 100 mil)
 	int			m_PAD_MIL			= 60;				// Range 50 to 98
 	int			m_TRACK_MIL			= 24;				// Range 12 to 50
+	int			m_TAG_MIL			= 12;				// Range 12 to 50 (Same range as m_TRACK_MIL for backward compatibility)
 	int			m_HOLE_MIL			= 34;				// Range 20 to 40
 	int			m_GAP_MIL			= 10;				// Range  5 to 30
 	int			m_MASK_MIL			= 4;				// Range  0 to 10

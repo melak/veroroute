@@ -1121,8 +1121,7 @@ void MainWindow::SetFill(bool b)
 {
 	if ( m_board.SetGroundFill(b) )
 	{
-		if ( b && m_board.GetCurrentLayer() == 0 ) m_board.SetGroundNodeId0( m_board.GetCurrentNodeId() );
-		if ( b && m_board.GetCurrentLayer() == 1 ) m_board.SetGroundNodeId1( m_board.GetCurrentNodeId() );
+		if ( b ) m_board.SetGroundNodeId();
 		UpdateHistory("Toggle ground-fill");
 		UpdateControls();
 		RepaintSkipRouting();
@@ -1478,6 +1477,7 @@ void MainWindow::SetDiagonalsMax(bool b)
 void MainWindow::SetBrightness(int i)		{ if ( m_board.SetBackgroundColor(MyRGB(i,i,i)) )	{ UpdateHistory("Background brightness change");	DestroyPixmapCache();	RepaintSkipRouting(); } }
 void MainWindow::SetPadWidth(int i)			{ if ( m_board.SetPAD_MIL(i)   ) { UpdateHistory("Pad width change");				UpdateControls();	DestroyPixmapCache();	RepaintSkipRouting(); } }
 void MainWindow::SetTrackWidth(int i)		{ if ( m_board.SetTRACK_MIL(i) ) { UpdateHistory("Track width change");				UpdateControls();	DestroyPixmapCache();	RepaintSkipRouting(); } }
+void MainWindow::SetTagWidth(int i)			{ if ( m_board.SetTAG_MIL(i) )   { UpdateHistory("Thermal width change");			UpdateControls();	DestroyPixmapCache();	RepaintSkipRouting(); } }
 void MainWindow::SetHoleWidth(int i)		{ if ( m_board.SetHOLE_MIL(i)  ) { UpdateHistory("Hole width change");				UpdateControls();	RepaintSkipRouting(); } }
 void MainWindow::SetGapWidth(int i)			{ if ( m_board.SetGAP_MIL(i)   ) { UpdateHistory("Gap width change");				UpdateControls();	RepaintSkipRouting(); } }
 void MainWindow::SetMaskWidth(int i)		{ if ( m_board.SetMASK_MIL(i)  ) { UpdateHistory("Solder mask margin change");		UpdateControls();	RepaintSkipRouting(); } }

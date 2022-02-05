@@ -20,7 +20,7 @@
 #include "GuiControl.h"
 #include "PolygonHelper.h"
 
-void GuiControl::CalcBlob(const qreal& W, const QPointF& pC, const QPointF& pCoffset, const int& iPerimeterCode, std::list<MyPolygonF>& out, const bool bHavePad, const bool bGap) const
+void GuiControl::CalcBlob(const qreal& W, const QPointF& pC, const QPointF& pCoffset, const int& iPerimeterCode, std::list<MyPolygonF>& out, const bool bHavePad, const bool bIsGnd, const bool bGap) const
 {
 	// Given a grid point (pC) and its perimeter code, this method populates "out" with a
 	// description of the local track pattern at the grid point (or "blob").
@@ -32,10 +32,11 @@ void GuiControl::CalcBlob(const qreal& W, const QPointF& pC, const QPointF& pCof
 	const qreal	C				= W * 0.5;	// Half square width
 	const qreal	padWidth		= 0.01 * ( GetPAD_MIL()	  + 2 * ( bGap ? GetGAP_MIL() : 0 ) );
 	const qreal	trkWidth		= 0.01 * ( GetTRACK_MIL() + 2 * ( bGap ? GetGAP_MIL() : 0 ) );
+	const qreal	tagWidth		= 0.01 * ( GetTAG_MIL()	  + 2 * ( bGap ? GetGAP_MIL() : 0 ) );
 	const GPEN	padPen			= bGap ? GPEN::PAD_GAP : GPEN::PAD;
-	const GPEN	trkPen			= bGap ? GPEN::TRK_GAP : GPEN::TRK;
+	const GPEN	trkPen			= bGap ? GPEN::TRK_GAP : bIsGnd ? GPEN::TAG : GPEN::TRK;
 	const bool&	bCurvedTracks	= GetCurvedTracks();
-	const bool&	bFatTracks		= !bCurvedTracks && GetFatTracks();
+	const bool&	bFatTracks		= !bCurvedTracks && !bIsGnd && GetFatTracks();
 	const bool	bLeg			= ( iPerimeterCode > 0 ) && pCoffset != pC;
 
 	// Clockwise-ordered array of perimeter points around the square, starting at left...
@@ -121,7 +122,7 @@ void GuiControl::CalcBlob(const qreal& W, const QPointF& pC, const QPointF& pCof
 	const bool bVariTracks = N > 0 && !bClosed && bFatTracks && padWidth > trkWidth;
 	polygon.m_eTrkPen	= trkPen;
 	polygon.m_ePadPen	= bVariTracks ? padPen : GPEN::NONE;
-	polygon.m_radiusTrk	= trkWidth * 0.5;
+	polygon.m_radiusTrk	= ( bIsGnd ? tagWidth : trkWidth ) * 0.5;
 	polygon.m_radiusPad	= bVariTracks ? ( padWidth * 0.5 ) : 0;
 	polygon.m_bClosed	= bClosed;
 	out.push_back(polygon);
@@ -130,7 +131,7 @@ void GuiControl::CalcBlob(const qreal& W, const QPointF& pC, const QPointF& pCof
 	{
 		polygon.m_eTrkPen	= trkPen;
 		polygon.m_ePadPen	= GPEN::NONE;
-		polygon.m_radiusTrk	= trkWidth * 0.5;
+		polygon.m_radiusTrk	= ( bIsGnd ? tagWidth : trkWidth ) * 0.5;
 		polygon.m_radiusPad	= 0;
 		polygon.m_bClosed	= false;
 		polygon.clear();

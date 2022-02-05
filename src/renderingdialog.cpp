@@ -39,6 +39,7 @@ RenderingDialog::RenderingDialog(MainWindow* parent)
 	QObject::connect(ui->spinBox_width,		SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetTargetCols(int)));
 	QObject::connect(ui->padWidth,			SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetPadWidth(int)));
 	QObject::connect(ui->trackWidth,		SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetTrackWidth(int)));
+	QObject::connect(ui->tagWidth,			SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetTagWidth(int)));
 	QObject::connect(ui->holeWidth,			SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetHoleWidth(int)));
 	QObject::connect(ui->gapWidth,			SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetGapWidth(int)));
 	QObject::connect(ui->maskWidth,			SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetMaskWidth(int)));
@@ -83,6 +84,7 @@ void RenderingDialog::UpdateControls()
 	ui->comppins->setDisabled(			!bCompEdit && bMonoPCB );
 	ui->padWidth->setDisabled(			bCompEdit || bNoTrackOptions || bVero );
 	ui->trackWidth->setDisabled(		bCompEdit || bNoTrackOptions || bVero );
+	ui->tagWidth->setDisabled(			bCompEdit || bNoTrackOptions || bVero || !bMonoPCB || !bGndFill );
 	ui->holeWidth->setDisabled(			bCompEdit || bNoTrackOptions || bVero );
 	ui->viapadWidth->setDisabled(		bCompEdit || bNoTrackOptions || bVero || !bVias );
 	ui->viaholeWidth->setDisabled(		bCompEdit || bNoTrackOptions || bVero || !bVias );
@@ -94,6 +96,7 @@ void RenderingDialog::UpdateControls()
 	ui->label_comppins->setDisabled(	!bCompEdit && bMonoPCB );
 	ui->label_pad->setDisabled(			bCompEdit || bNoTrackOptions || bVero );
 	ui->label_track->setDisabled(		bCompEdit || bNoTrackOptions || bVero );
+	ui->label_tag->setDisabled(			bCompEdit || bNoTrackOptions || bVero || !bMonoPCB || !bGndFill );
 	ui->label_hole->setDisabled(		bCompEdit || bNoTrackOptions || bVero );
 	ui->label_viapad->setDisabled(		bCompEdit || bNoTrackOptions || bVero || !bVias );
 	ui->label_viahole->setDisabled(		bCompEdit || bNoTrackOptions || bVero || !bVias );
@@ -108,6 +111,7 @@ void RenderingDialog::UpdateControls()
 
 	ui->padWidth->setValue(		board.GetPAD_MIL()		);
 	ui->trackWidth->setValue(	board.GetTRACK_MIL()	);
+	ui->tagWidth->setValue(		board.GetTAG_MIL()		);
 	ui->holeWidth->setValue(	board.GetHOLE_MIL()		);
 	ui->gapWidth->setValue(		board.GetGAP_MIL()		);
 	ui->maskWidth->setValue(	board.GetMASK_MIL()		);

@@ -51,4 +51,5 @@ static const int VRT_VERSION_48 = 48;	// Added board setting to show/hide flying
 static const int VRT_VERSION_49 = 49;	// Added vertical alignment flag to text boxes
 static const int VRT_VERSION_50 = 50;	// Added background color property
 static const int VRT_VERSION_51 = 51;	// Added pinlabels to component editor
-static const int VRT_VERSION_CURRENT = VRT_VERSION_51;
+static const int VRT_VERSION_52 = 52;	// Added thermal relief tag size
+static const int VRT_VERSION_CURRENT = VRT_VERSION_52;

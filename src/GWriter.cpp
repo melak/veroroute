@@ -180,6 +180,7 @@ void GStream::MakeApertures()	// Make "pens" for current stream
 	std::list<int>	pads;	  m_pBoard->GetPadWidths_MIL(pads, padDefault);
 	const int		via		= m_pBoard->GetVIAPAD_MIL();
 	const int		trk		= m_pBoard->GetTRACK_MIL();
+	const int		tag		= m_pBoard->GetTAG_MIL();
 	const int		gap		= m_pBoard->GetGAP_MIL();
 	const int		msk		= m_pBoard->GetMASK_MIL();
 	const int		slk		= m_pBoard->GetSILK_MIL();
@@ -200,6 +201,8 @@ void GStream::MakeApertures()	// Make "pens" for current stream
 				m_ePenList.push_back( GPenInfo(GPEN::VIA, via, code++, " is for via-pads") );
 			if ( true )
 				m_ePenList.push_back( GPenInfo(GPEN::TRK, trk, code++, " is for tracks") );
+			if ( true )
+				m_ePenList.push_back( GPenInfo(GPEN::TAG, tag, code++, " is for tracks") );
 			if ( !m_pBoard->GetGroundFill() ) break;
 			for (const auto& pad : pads)
 				m_ePenList.push_back( GPenInfo(GPEN::PAD_GAP, pad + 2 * gap, code++, " is for separating pads from fill", pad != padDefault) );

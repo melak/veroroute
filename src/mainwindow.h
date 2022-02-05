@@ -309,6 +309,7 @@ public slots:
 	// Rendering options
 	void SetBrightness(int i);
 	void SetTrackWidth(int i);
+	void SetTagWidth(int i);
 	void SetHoleWidth(int i);
 	void SetPadWidth(int i);
 	void SetGapWidth(int i);
@@ -395,7 +396,7 @@ private:
 	void PaintPad(const GuiControl& guiCtrl, QPainter& painter,  const QColor& color, const QPointF& pC, const int& iPadWidthMIL = 0, const int& iHoleWidth_MIL = 0, const bool& bGap = false);	// Helper
 	void PaintTag(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, const int& iPadWidthMIL, const int& iNbr, const int& iLyr);
 	void PaintDiag(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pCorner, bool bLT);
-	void PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, const QPointF& pCoffset, const int& iPerimeterCode, const bool bHavePad = false, const bool bGap = false);	// Helper
+	void PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, const QPointF& pCoffset, const int& iPerimeterCode, const bool bHavePad, const bool bIsGnd, const bool bGap = false);	// Helper
 	void PaintBoard();
 	void PaintCompDefiner();
 	void HandleRouting();

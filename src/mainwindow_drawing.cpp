@@ -94,6 +94,7 @@ void MainWindow::CreatePixmapCache(const GuiControl& guiCtrl, ColorManager& colo
 		}
 	}
 	const QColor backgroundColor = GetBackgroundColor();
+	const bool bHavePad(false), bIsGnd(false);
 	for (int i = 0; i < 256; i++)	// Loop all possible perimeter codes
 	{
 		m_ppPixmapBlob[i] = new QPixmap(2*m_radPixmapBlob, 2*m_radPixmapBlob);
@@ -101,7 +102,7 @@ void MainWindow::CreatePixmapCache(const GuiControl& guiCtrl, ColorManager& colo
 
 		painter.begin(m_ppPixmapBlob[i]);
 		const QPointF pC(m_radPixmapBlob, m_radPixmapBlob);
-		PaintBlob(guiCtrl, painter, Qt::black, pC, pC, i);
+		PaintBlob(guiCtrl, painter, Qt::black, pC, pC, i, bHavePad, bIsGnd);
 		painter.end();
 
 		// Now turn the black blob area transparent, so we can overlay it over colored nodes.
@@ -213,16 +214,16 @@ void MainWindow::PaintTag(const GuiControl& guiCtrl, QPainter& painter, const QC
 		polygon.push_back(pD);
 		switch(iLyr)
 		{
-			case 0:	m_gWriter.GetStream(GFILE::GBL).AddTrack(polygon, GPEN::TRK); break;	// Bottom copper layer
-			case 1:	m_gWriter.GetStream(GFILE::GTL).AddTrack(polygon, GPEN::TRK); break;	// Top    copper layer
+			case 0:	m_gWriter.GetStream(GFILE::GBL).AddTrack(polygon, GPEN::TAG); break;	// Bottom copper layer
+			case 1:	m_gWriter.GetStream(GFILE::GTL).AddTrack(polygon, GPEN::TAG); break;	// Top    copper layer
 		}
 	}
 	else
 	{
-		const int trackWidth = guiCtrl.GetHalfPixelsFromMIL( guiCtrl.GetTRACK_MIL() ) << 1;
+		const int tagWidth = guiCtrl.GetHalfPixelsFromMIL( guiCtrl.GetTAG_MIL() ) << 1;
 		static QPen	pen(Qt::black, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 		pen.setColor(color);
-		pen.setWidth(trackWidth);
+		pen.setWidth(tagWidth);
 		painter.setPen(pen);
 		painter.setBrush(Qt::NoBrush);
 		painter.drawLine(pC, pD);
@@ -231,6 +232,7 @@ void MainWindow::PaintTag(const GuiControl& guiCtrl, QPainter& painter, const QC
 
 void MainWindow::PaintDiag(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pCorner, bool bLT)
 {
+	// Only use this method for pixmap based track rendering
 	const int&	H			= m_radPixmapDiag;
 	const int	trackWidth	= guiCtrl.GetHalfPixelsFromMIL( guiCtrl.GetTRACK_MIL() ) << 1;	// Track width in pixels
 
@@ -245,14 +247,10 @@ void MainWindow::PaintDiag(const GuiControl& guiCtrl, QPainter& painter, const Q
 		painter.drawLine(pCorner + QPointF(-H, H), pCorner + QPointF(H,-H));
 }
 
-void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, const QPointF& pCoffset, const int& iPerimeterCode, const bool bHavePad, const bool bGap)
+void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, const QPointF& pCoffset, const int& iPerimeterCode, const bool bHavePad, const bool bIsGnd, const bool bGap)
 {
-	const int	gapWidth	= bGap ? guiCtrl.GetPixelsFromMIL( guiCtrl.GetGAP_MIL() ) : 0;
-	const int	padWidth	= ( guiCtrl.GetHalfPixelsFromMIL( guiCtrl.GetPAD_MIL() )   + gapWidth ) << 1;	// Pad width in pixels
-	const int	trackWidth	= ( guiCtrl.GetHalfPixelsFromMIL( guiCtrl.GetTRACK_MIL() ) + gapWidth ) << 1;	// Track width in pixels
-
 	std::list<MyPolygonF> polygonList;
-	guiCtrl.CalcBlob(guiCtrl.GetGRIDPIXELS(), pC, pCoffset, iPerimeterCode, polygonList, bHavePad, bGap);	// Populate polygonList
+	guiCtrl.CalcBlob(guiCtrl.GetGRIDPIXELS(), pC, pCoffset, iPerimeterCode, polygonList, bHavePad, bIsGnd, bGap);	// Populate polygonList
 
 	if ( m_bWriteGerber )	// Write to Gerber
 	{
@@ -282,6 +280,10 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 	}
 	else	// Draw to pixmap
 	{
+		const int	gapWidth	= bGap ? guiCtrl.GetPixelsFromMIL( guiCtrl.GetGAP_MIL() ) : 0;
+		const int	padWidth	= ( guiCtrl.GetHalfPixelsFromMIL( guiCtrl.GetPAD_MIL() )   + gapWidth ) << 1;	// Pad width in pixels
+		const int	trackWidth	= ( guiCtrl.GetHalfPixelsFromMIL( bIsGnd ? guiCtrl.GetTAG_MIL() : guiCtrl.GetTRACK_MIL() ) + gapWidth ) << 1;	// Track width in pixels
+
 		static QPen		pen(Qt::black, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 		static QBrush	brush(Qt::black,  Qt::SolidPattern);
 		pen.setColor(color);
@@ -529,7 +531,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	const bool		 bDirect		= !bVero && !bPixmapCache && !bGroundFill;	// true ==> Draw track "blobs" and pads directly (PDF/Gerber)
 	const bool		 bExtraTags		= false;									// true ==> Add extra thermal relief tags
 	const int&		 layer			= board.GetCurrentLayer();
-	const int&		 groundNodeId	= ( layer == 0 ) ? board.GetGroundNodeId0() :  board.GetGroundNodeId1();
+	const int&		 groundNodeId	= board.GetGroundNodeId(layer);
 	const bool		 bWiresAsTracks	= m_bWriteGerber && m_bTwoLayerGerber && board.GetLyrs() == 1;	// true ==> Convert wires to tracks on the top layer
 	const int&		 W				= board.GetGRIDPIXELS();		// Square width in pixels
 	const int		 C				= W >> 1;						// Half square width in pixels
@@ -884,25 +886,26 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					}
 					else if (  bCustomSize || bPadOffset )	// Custom/offset stuff ...
 					{
-						if ( bBlob ) PaintBlob(board, painter, color, pCentre, pCentreOff, iPerimeterCode, bPad);
+						if ( bBlob ) PaintBlob(board, painter, color, pCentre, pCentreOff, iPerimeterCode, bPad, false);
 						if ( bPad )  PaintPad(board, painter, color, pCentreOff, iPadWidthMIL, iHoleWidthMIL);
 					}
 				}
 				if ( bGroundFill )	// Draw track "blobs" and pads directly (PDF/Gerber)
 				{
+					const bool bIsGnd = ( nodeId == groundNodeId );
 					if ( iLoop == 0 )
 					{
-						if ( nodeId != groundNodeId && bBlob )	// Only the non-ground tracks have a "white" surround
-							PaintBlob(board, painter, backgroundColor, pCentre, pCentreOff, iPerimeterCode, bPad, true);		// Draw fat "white" track blob
-						if ( bVia ) PaintVia(board, painter, backgroundColor, pCentre, true);									// Draw fat "white" via
-						if ( bPad ) PaintPad(board, painter, backgroundColor, pCentreOff, iPadWidthMIL, iHoleWidthMIL, true);	// Draw fat "white" pad
+						if ( !bIsGnd && bBlob )	// Only the non-ground tracks have a "white" surround
+							PaintBlob(board, painter, backgroundColor, pCentre, pCentreOff, iPerimeterCode, bPad, bIsGnd, true);	// Draw fat "white" track blob
+						if ( bVia ) PaintVia(board, painter, backgroundColor, pCentre, true);										// Draw fat "white" via
+						if ( bPad ) PaintPad(board, painter, backgroundColor, pCentreOff, iPadWidthMIL, iHoleWidthMIL, true);		// Draw fat "white" pad
 					}
 					else if ( iLoop == 1 )	// Draw track "blobs" and pads directly
 					{
-						if ( bBlob ) PaintBlob(board, painter, color, pCentre, pCentreOff, iPerimeterCode, bPad);			// Draw track blob
+						if ( bBlob ) PaintBlob(board, painter, color, pCentre, pCentreOff, iPerimeterCode, bPad, bIsGnd);	// Draw track blob
 						if ( bVia )  PaintVia(board, painter, color, pCentre);												// Draw via same color as track
 						if ( bPad )  PaintPad(board, painter, color, pCentreOff, iPadWidthMIL, iHoleWidthMIL);				// Draw pad same color as track
-						if ( bExtraTags && bPad && nodeId == groundNodeId && iPerimeterCode > 0 && nodeId != BAD_NODEID )	// Draw extra thermal relief tags
+						if ( bExtraTags && bPad && bIsGnd && iPerimeterCode > 0 && nodeId != BAD_NODEID )	// Draw extra thermal relief tags
 						{
 							int iCode(iPerimeterCode);		// Take a copy of the perimeter code
 							const bool bDiagsOK( board.GetDiagsMode() != DIAGSMODE::OFF );	// If bExtraTags gets set true then move this to start of method
@@ -929,9 +932,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				{
 					if ( iLoop == 0 )
 					{
-						if ( bBlob ) PaintBlob(board, painter, color, pCentre, pCentreOff, iPerimeterCode, bPad);	// Draw track blob
-						if ( bVia )  PaintVia(board, painter, color, pCentre);										// Draw via same color as track
-						if ( bPad )  PaintPad(board, painter, color, pCentreOff, iPadWidthMIL, iHoleWidthMIL);		// Draw pad same color as track
+						if ( bBlob ) PaintBlob(board, painter, color, pCentre, pCentreOff, iPerimeterCode, bPad, false);	// Draw track blob
+						if ( bVia )  PaintVia(board, painter, color, pCentre);												// Draw via same color as track
+						if ( bPad )  PaintPad(board, painter, color, pCentreOff, iPadWidthMIL, iHoleWidthMIL);				// Draw pad same color as track
 					}
 					else if ( bDrawGrey )
 					{
