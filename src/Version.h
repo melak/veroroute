@@ -2,7 +2,8 @@
 
 static const char* szVEROROUTE_VERSION =
 
-"2.16";		// Bug fix: When vias are enabled, connectivity info was wiped when zooming or changing sliders, leading to erroneous hatched lines being displayed.
+"2.17";		// Improvement: When using ground-fill, the width of the thermal relief tags connecting pads to the ground-fill can be set in the Rendering Options.
+//"2.16"	// Bug fix: When vias are enabled, connectivity info was wiped when zooming or changing sliders, leading to erroneous hatched lines being displayed.
 			// Improvement: The Pin Label dialog can now also be used in Component Editor mode.
 //"2.15";	// Improvement: Added background brightness to Rendering Options.
 //"2.14";	// Improvement: Added vertical alignment options to text boxes.
