@@ -907,16 +907,20 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						if ( bPad )  PaintPad(board, painter, color, pCentreOff, iPadWidthMIL, iHoleWidthMIL);				// Draw pad same color as track
 						if ( bExtraTags && bPad && bIsGnd && iPerimeterCode > 0 && nodeId != BAD_NODEID )	// Draw extra thermal relief tags
 						{
+							//TODO This code for extra tags is not used at the moment because it bypasses the mechanism for calculating
+							// minimum track separation.  Tag creation should be part of CalcBlob(), so we should pass CalcBlob()
+							// an 8-bit "tag code" that can be used alongside the "perimeter code".
+
 							int iCode(iPerimeterCode);		// Take a copy of the perimeter code
 							const bool bDiagsOK( board.GetDiagsMode() != DIAGSMODE::OFF );	// If bExtraTags gets set true then move this to start of method
 							for (int iDiag = 0, iDiagMax = ( bDiagsOK ) ? 2 : 1; iDiag < iDiagMax; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
 							for (int iNbr = iDiag; iNbr < 8; iNbr += 2)	// Even/Odd iNbr ==> Non-diagonal/Diagonal
 							{
-								const Element* pNbr = pC->GetNbr(iNbr);
-								if ( pNbr->GetNodeId() != BAD_NODEID ) continue;	// Skip if direction is not empty
-								if ( pC->IsBlocked(iNbr, nodeId) ) continue;		// Skip is direction is blocked
-								if ( ReadCodeBit((iNbr+1)%8 , iCode) ) continue;	// Skip if adjacent CW  direction already has connection
-								if ( ReadCodeBit((iNbr+7)%8, iCode) ) continue;		// Skip if adjacent CCW direction already has connection
+								const int iNbrNodeId = pC->GetNbr(iNbr)->GetNodeId();
+								if ( iNbrNodeId != BAD_NODEID && iNbrNodeId != nodeId ) continue;	// Skip if direction is not empty, or has non-ground NodeID
+								if ( pC->IsBlocked(iNbr, nodeId) ) continue;						// Skip is direction is blocked
+								if ( ReadCodeBit((iNbr+1)%8 , iCode) ) continue;					// Skip if adjacent CW  direction already has connection
+								if ( ReadCodeBit((iNbr+7)%8, iCode) ) continue;						// Skip if adjacent CCW direction already has connection
 								SetCodeBit(iNbr, iCode);	// Update the copy of the perimeter code
 								PaintTag(board, painter, color, pCentre, iPadWidthMIL, iNbr, layer);	// Draw tag to ground fill
 							}
