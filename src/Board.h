@@ -234,6 +234,27 @@ public:
 		return iCode;
 	}
 
+	int GetTagCode(const Element* p, const int& iPerimeterCode) const	// Helper for the GUI "blobs"
+	{
+		const bool bExtraTags = false;	//TODO Set true to add extra thermal relief tags
+		if  ( !bExtraTags ) return 0;
+		if ( iPerimeterCode == 0 ) return 0;	// Don't make extra tags if there are no tags at all
+		int iTagCode(iPerimeterCode);			// Take a copy of the perimeter code
+		const int	iGndNodeId	= p->GetNodeId();
+		const bool	bDiagsOK	= GetDiagsMode() != DIAGSMODE::OFF;
+		for (int iDiag = 0, iDiagMax = ( bDiagsOK ) ? 2 : 1; iDiag < iDiagMax; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
+		for (int iNbr = iDiag; iNbr < 8; iNbr += 2)	// Even/Odd iNbr ==> Non-diagonal/Diagonal
+		{
+			const int iNbrNodeId = p->GetNbr(iNbr)->GetNodeId();
+			if ( iNbrNodeId != BAD_NODEID && iNbrNodeId != iGndNodeId ) continue;	// Skip if direction is not empty, or has non-ground NodeID
+			if ( p->IsBlocked(iNbr, iGndNodeId) ) continue;							// Skip is direction is blocked
+			if ( ReadCodeBit((iNbr+1)%8 , iTagCode) ) continue;						// Skip if adjacent CW  direction already has connection
+			if ( ReadCodeBit((iNbr+7)%8, iTagCode) ) continue;						// Skip if adjacent CCW direction already has connection
+			SetCodeBit(iNbr, iTagCode);	// Update the tag code
+		}
+		return iTagCode;
+	}
+
 	void GlueWires()	// Set pointers between wired grid elements
 	{
 		for (const auto& mapObj : m_compMgr.GetMapIdToComp())	// Iterate components

@@ -20,7 +20,10 @@
 #include "GuiControl.h"
 #include "PolygonHelper.h"
 
-void GuiControl::CalcBlob(const qreal& W, const QPointF& pC, const QPointF& pCoffset, const int& iPerimeterCode, std::list<MyPolygonF>& out, const bool bHavePad, const bool bIsGnd, const bool bGap) const
+void GuiControl::CalcBlob(const qreal& W, const QPointF& pC, const QPointF& pCoffset,
+						  const int& iPadWidthMIL, const int& iPerimeterCode, const int& iTagCode,
+						  std::list<MyPolygonF>& out,
+						  const bool bHavePad, const bool bIsGnd, const bool bGap) const
 {
 	// Given a grid point (pC) and its perimeter code, this method populates "out" with a
 	// description of the local track pattern at the grid point (or "blob").
@@ -166,6 +169,39 @@ void GuiControl::CalcBlob(const qreal& W, const QPointF& pC, const QPointF& pCof
 				polygon << pC << p[iNbr];
 				out.push_back(polygon);
 			}
+		}
+	}
+	if ( iTagCode > 0 )	// Draw extra thermal relief tags
+	{
+		assert( bIsGnd );
+		polygon.m_eTrkPen	= trkPen;
+		polygon.m_ePadPen	= GPEN::NONE;
+		polygon.m_radiusTrk	= tagWidth * 0.5;
+		polygon.m_radiusPad	= 0;
+		polygon.m_bClosed	= false;
+
+		const int	i = ( iPadWidthMIL == 0 ) ? GetPAD_MIL() : iPadWidthMIL;
+		const qreal	X = W * 0.01 * ( i * 0.5 + GetGAP_MIL() );
+		const qreal	D = static_cast<int>( X * sqrt(0.5) );
+		for (int iNbr = 0; iNbr < 8; iNbr++)
+		{
+			if ( !ReadCodeBit(iNbr, iTagCode) ) continue;
+
+			QPointF pD(pC);	// The other end of the tag
+			switch( iNbr)
+			{
+				case NBR_L:		pD += QPointF(-X,  0);	break;
+				case NBR_LT:	pD += QPointF(-D, -D);	break;
+				case NBR_T:		pD += QPointF( 0, -X);	break;
+				case NBR_RT:	pD += QPointF( D, -D);	break;
+				case NBR_R:		pD += QPointF( X,  0);	break;
+				case NBR_RB:	pD += QPointF( D,  D);	break;
+				case NBR_B:		pD += QPointF( 0,  X);	break;
+				case NBR_LB:	pD += QPointF(-D,  D);	break;
+			}
+			polygon.clear();
+			polygon << pC << pD;
+			out.push_back(polygon);
 		}
 	}
 }

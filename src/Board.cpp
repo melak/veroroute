@@ -147,19 +147,19 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 			const int&		nodeIdA		= pA->GetNodeId();
 			const bool		bHasPinA	= pA->GetHasPin();
 			if ( nodeIdA == BAD_NODEID && !bHasPinA ) continue;	// Skip if no track and no pin
-			const bool		bIsGndA		= GetGroundFill() && nodeIdA == GetGroundNodeId(k);
+			const bool		bIsGndA		= GetGroundFill() && nodeIdA == GetGroundNodeId(k) && nodeIdA != BAD_NODEID;
 
 			MyPointF pointA(i, j, 0.005 * GetTRACK_MIL());	// The blob centre for pA (note: track radius !!!)
 			MyPointF padA(pointA);							// The pad centre for pA (pad radius will be set below)
 			bool	 bPadA(true);							// Set false if there is no pad at pA
-
+			int		 iPadWidthMIL_A(0);						// Needed for tag length
 			if ( pA->GetHasWire() )
 				padA.m_radius = 0.005 * GetPAD_MIL();	// No custom pad size for wires
 			else if ( bHasPinA )
 			{
 				const Component& comp	= m_compMgr.GetComponentById( pA->GetCompId() );	// Non-wire part must use slot 0
-				// Handle custom pad sizes
-				padA.m_radius = 0.005 * ( comp.GetCustomPads() ? comp.GetPadWidth() : GetPAD_MIL() );
+				iPadWidthMIL_A = comp.GetCustomPads() ? comp.GetPadWidth() : GetPAD_MIL();	// Handle custom pad sizes
+				padA.m_radius = 0.005 * iPadWidthMIL_A;
 				// Handle pad offsets
 				comp.GetCompPinOffsets(pA->GetPinIndex(), Xmil, Ymil);
 				padA += QPointF(0.01 * Xmil, 0.01 * Ymil);
@@ -170,7 +170,9 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 				bPadA = false;
 
 			std::list<MyPolygonF> blobA;	// Blob A points (in units of grid squares)
-			CalcBlob(1, pointA, padA, GetPerimeterCode(pA), blobA, bHasPinA, bIsGndA);	// 1 ==> scale of 1 grid square
+			const int iPerimeterCodeA	= GetPerimeterCode(pA);
+			const int iTagCodeA			= ( bPadA && bIsGndA ) ? GetTagCode(pA, iPerimeterCodeA) : 0;
+			CalcBlob(1, pointA, padA, iPadWidthMIL_A, iPerimeterCodeA, iTagCodeA, blobA, bHasPinA, bIsGndA);	// 1 ==> scale of 1 grid square
 
 			// Only need to loop half the directions in the following loop (the i,j scan takes care of the other half)
 			for (int jj = std::max(minRow,j-nRings); jj <= j; jj++)
@@ -182,19 +184,20 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 				const bool		bHasPinB	= pB->GetHasPin();
 				if ( nodeIdB == BAD_NODEID && !bHasPinB ) continue;	// Skip if no track and no pin
 				if ( nodeIdB == nodeIdA ) continue;
-				const bool		bIsGndB		= GetGroundFill() && nodeIdB == GetGroundNodeId(k);
+				const bool		bIsGndB		= GetGroundFill() && nodeIdB == GetGroundNodeId(k) && nodeIdB != BAD_NODEID;
 
 				MyPointF pointB(ii, jj, 0.005 * GetTRACK_MIL());	// The blob centre for pB (note: track radius !!!)
 				MyPointF padB(pointB);								// The pad centre for pB (pad radius will be set below)
 				bool	 bPadB(true);								// Set false if there is no pad at pB
+				int		 iPadWidthMIL_B(0);
 
 				if ( pB->GetHasWire() )
 					padB.m_radius = 0.005 * GetPAD_MIL();	// No custom pad size for wires
 				else if ( bHasPinB )
 				{
 					const Component& comp	= m_compMgr.GetComponentById( pB->GetCompId() );	// Non-wire part must use slot 0
-					// Handle custom pad sizes
-					padB.m_radius = 0.005 * ( comp.GetCustomPads() ? comp.GetPadWidth() : GetPAD_MIL() );
+					iPadWidthMIL_B = comp.GetCustomPads() ? comp.GetPadWidth() : GetPAD_MIL();	// Handle custom pad sizes
+					padB.m_radius = 0.005 * iPadWidthMIL_B;
 					// Handle pad offsets
 					comp.GetCompPinOffsets(pB->GetPinIndex(), Xmil, Ymil);
 					padB += QPointF(0.01 * Xmil, 0.01 * Ymil);
@@ -205,7 +208,9 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 					bPadB = false;
 
 				std::list<MyPolygonF> blobB;	// Blob B points (in units of grid squares)
-				CalcBlob(1, pointB, padB, GetPerimeterCode(pB), blobB, bHasPinB, bIsGndB);	// 1 ==> scale of 1 grid square
+				const int iPerimeterCodeB	= GetPerimeterCode(pB);
+				const int iTagCodeB			= ( bPadB && bIsGndB ) ? GetTagCode(pB, iPerimeterCodeB) : 0;
+				CalcBlob(1, pointB, padB, iPadWidthMIL_B, iPerimeterCodeB, iTagCodeB, blobB, bHasPinB, bIsGndB);	// 1 ==> scale of 1 grid square
 
 				const bool bCompareBlobs = !bStandardBlobs || ( abs(jj - j) < 2 && abs(ii - i) < 2 );	// Standard blobs ==> just consider neighbouring grid points
 
