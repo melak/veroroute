@@ -257,7 +257,7 @@ void Board::CalcGroundFillBounds()
 			const int	 compId		= p->GetCompId();	assert( compId != BAD_COMPID );
 			const size_t pinIndex	= p->GetPinIndex();	assert( pinIndex != BAD_PININDEX );
 
-			Component&	comp	= m_compMgr.GetComponentById( compId );
+			const Component& comp	= m_compMgr.GetComponentById( compId );
 			int Xmil(0), Ymil(0);	// Pad offsets
 			comp.GetCompPinOffsets(pinIndex, Xmil, Ymil);
 

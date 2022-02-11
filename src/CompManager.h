@@ -96,17 +96,13 @@ public:
 		}
 		return BAD_COMPID;
 	}
+	const Component& GetComponentById(const int& compId) const
+	{
+		return LookupCompById(compId);
+	}
 	Component& GetComponentById(const int& compId)
 	{
-		if ( compId == TRAX_COMPID ) return m_trax;
-
-		auto iter = m_mapIdToComp.find(compId);
-		if ( iter != m_mapIdToComp.end() ) return iter->second;
-
-		// Should not really get here!!!  Use assert() to check the returned component type is valid.
-		Component& comp = m_mapIdToComp[compId];	// This creates a blank component and puts it in the map
-		comp.SetId(compId);	// Even a blank component should have the correct compId
-		return comp;
+		return const_cast<Component&> ( LookupCompById(compId) );
 	}
 	bool GetAllowFlyWire(const int& compId) const
 	{
@@ -422,6 +418,18 @@ private:
 	{
 		return m_mapIdToComp.find(compId) != m_mapIdToComp.end();
 	}
+	const Component& LookupCompById(const int& compId) const
+	{
+		if ( compId == TRAX_COMPID ) return m_trax;
+
+		auto iter = m_mapIdToComp.find(compId);
+		if ( iter != m_mapIdToComp.end() ) return iter->second;
+
+		// Should not really get here!!!  Use assert() to check the returned component type is valid.
+		Component& comp = m_mapIdToComp[compId];	// This creates a blank component and puts it in the map
+		comp.SetId(compId);	// Even a blank component should have the correct compId
+		return comp;
+	}
 	struct IsEarlierWire
 	{
 		bool operator()(const Component* pA, const Component* pB) const
@@ -450,7 +458,7 @@ private:
 		}
 	};
 private:
-	std::unordered_map<int, Component>				m_mapIdToComp;		// The components (indexed by compId)
+	mutable std::unordered_map<int, Component>		m_mapIdToComp;		// The components (indexed by compId).  Mutable because of LookupCompById()
 	Component										m_trax;				// The "trax" component
 	// Helpers. Don't persist.
 	std::unordered_map<const Component*, WireInfo>	m_mapWireToInfo;	// For handling overlaid / crossing wires

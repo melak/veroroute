@@ -200,7 +200,15 @@ public:
 		return bChanged;
 	}
 
-	int GetPerimeterCode(const Element* p)	// Helper for the GUI "blobs"
+	int GetLayerPref(const Element* p) const
+	{
+		assert( GetLyrs() == 2 && p && p->GetHasPin() && !p->GetHasWire() );
+		const int&		compId		= p->GetCompId();		assert(compId != BAD_COMPID);
+		const size_t	pinIndex	= p->GetPinIndex();		assert(pinIndex != BAD_PININDEX);
+		return m_compMgr.GetComponentById(compId).GetLayerPref(pinIndex);
+	}
+
+	int GetPerimeterCode(const Element* p) const	// Helper for the GUI "blobs"
 	{
 		const bool	bDiagsOK	= GetDiagsMode() != DIAGSMODE::OFF;
 		const bool	bMinDiags	= GetDiagsMode() == DIAGSMODE::MIN;
@@ -210,21 +218,17 @@ public:
 		// For a 2-layer board, modify perimeter code to handle pin layer preferences
 		if ( GetLyrs() == 1 || !p->GetHasPin() || p->GetHasWire() ) return iCode;
 
-		const bool		bBottomLayer	= p->IsLayer0();	// true ==> p is on bottom layer
-		const int&		compId			= p->GetCompId();		assert(compId != BAD_COMPID);
-		const size_t	pinIndex		= p->GetPinIndex();		assert(pinIndex != BAD_PININDEX);
-		const int		iLayerPrefP		= m_compMgr.GetComponentById(compId).GetLayerPref(pinIndex);
+		const bool	bBottomLayer	= p->IsLayer0();	// true ==> p is on bottom layer
+		const int	iLayerPrefP		= GetLayerPref(p);
 
-		for (int iNbr = 0; iNbr < 8; iNbr ++)
+		for (int iNbr = 0; iNbr < 8; iNbr ++)	// Loob nbrs in layer
 		{
 			if ( !ReadCodeBit(iNbr, iCode) ) continue;
 
 			const Element* q = p->GetNbr(iNbr);
 			if ( !q->GetHasPin() || q->GetHasWire() ) continue;
 
-			const int&		compId		= q->GetCompId();		assert(compId != BAD_COMPID);
-			const size_t	pinIndex	= q->GetPinIndex();		assert(pinIndex != BAD_PININDEX);
-			const int		iLayerPrefQ	= m_compMgr.GetComponentById(compId).GetLayerPref(pinIndex);
+			const int iLayerPrefQ = GetLayerPref(q);
 
 			const bool bOK = ( iLayerPrefP == LAYER_X && iLayerPrefQ == LAYER_X ) ||
 							 ( bBottomLayer ? ( iLayerPrefP == LAYER_B || iLayerPrefQ == LAYER_B )
@@ -239,20 +243,54 @@ public:
 		const bool bExtraTags = false;	//TODO Set true to add extra thermal relief tags
 		if  ( !bExtraTags ) return 0;
 		if ( iPerimeterCode == 0 ) return 0;	// Don't make extra tags if there are no tags at all
-		int iTagCode(iPerimeterCode);			// Take a copy of the perimeter code
-		const int	iGndNodeId	= p->GetNodeId();
-		const bool	bDiagsOK	= GetDiagsMode() != DIAGSMODE::OFF;
-		for (int iDiag = 0, iDiagMax = ( bDiagsOK ) ? 2 : 1; iDiag < iDiagMax; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
-		for (int iNbr = iDiag; iNbr < 8; iNbr += 2)	// Even/Odd iNbr ==> Non-diagonal/Diagonal
+
+		const int	iGndNodeId		= p->GetNodeId();
+		const bool	bBottomLayer	= p->IsLayer0();	// true ==> p is on bottom layer			
+		const int	iLayerPrefP		= ( GetLyrs() == 1 || !p->GetHasPin() || p->GetHasWire() ) ? LAYER_X : GetLayerPref(p);
+
+		int iCandidateTagBits(0);
+		for (int iNbr = 0; iNbr < 8; iNbr ++)	// Loob nbrs in layer
 		{
-			const int iNbrNodeId = p->GetNbr(iNbr)->GetNodeId();
+			const Element*	q		= p->GetNbr(iNbr);
+			const int	iNbrNodeId	= q->GetNodeId();
+
+			if ( ReadCodeBit(iNbr , iPerimeterCode) ) continue;			// Skip if direction already has connection
+			if ( ReadCodeBit((iNbr+1)%8 , iPerimeterCode) ) continue;	// Skip if adjacent CW  direction already has connection
+			if ( ReadCodeBit((iNbr+7)%8, iPerimeterCode) ) continue;	// Skip if adjacent CCW direction already has connection
 			if ( iNbrNodeId != BAD_NODEID && iNbrNodeId != iGndNodeId ) continue;	// Skip if direction is not empty, or has non-ground NodeID
 			if ( p->IsBlocked(iNbr, iGndNodeId) ) continue;							// Skip is direction is blocked
-			if ( ReadCodeBit((iNbr+1)%8 , iTagCode) ) continue;						// Skip if adjacent CW  direction already has connection
-			if ( ReadCodeBit((iNbr+7)%8, iTagCode) ) continue;						// Skip if adjacent CCW direction already has connection
-			SetCodeBit(iNbr, iTagCode);	// Update the tag code
+
+			const int	iLayerPrefQ	= ( GetLyrs() == 1 || !q->GetHasPin() || q->GetHasWire() ) ? LAYER_X : GetLayerPref(q);
+
+			const bool bOK = ( iLayerPrefP == LAYER_X && iLayerPrefQ == LAYER_X ) ||
+							 ( bBottomLayer ? ( iLayerPrefP == LAYER_B || iLayerPrefQ == LAYER_B )
+											: ( iLayerPrefP == LAYER_T || iLayerPrefQ == LAYER_T ) );
+			if ( bOK ) SetCodeBit(iNbr, iCandidateTagBits);	// Update iCandidateTagBits
 		}
-		return iTagCode;
+		if ( iCandidateTagBits == 0 ) return 0;	// No candidate tag bits, so we're done
+
+		// Choose a subset of the candidate tag bits
+		assert(iCandidateTagBits != CODEBITS_LYR);	// There must be at least one blank bit
+
+		int iBlank(0);	// Find position of first blank bit in iCandidateTagBits
+		for (; iBlank < 8; iBlank++)
+			if ( !ReadCodeBit(iBlank, iCandidateTagBits) )
+				break;
+
+		int iTagBits(0);	// The chosen subset of iCandidateTagBits
+		bool bIsBlankCCW(true);
+		for (int i = iBlank + 1, iEnd = iBlank + 9; i < iEnd; i++)
+		{
+			const int iNbr = i % 8;
+			if ( bIsBlankCCW && ReadCodeBit(iNbr, iCandidateTagBits) )	// If bit is set and preceeding bit is blank
+			{
+				SetCodeBit(iNbr, iTagBits);
+				bIsBlankCCW = false;
+			}
+			else
+				bIsBlankCCW = true;
+		}
+		return iTagBits;
 	}
 
 	void GlueWires()	// Set pointers between wired grid elements

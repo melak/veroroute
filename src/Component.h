@@ -41,7 +41,7 @@ class CompManager;
 class Component : public FootPrint
 {
 public:
-	Component()	: FootPrint() { Clear(); }
+	Component() : FootPrint() { Clear(); }
 	virtual ~Component() override {}
 	Component(const Component& o) : FootPrint() { *this = o; }
 	void Clear()
