@@ -2,7 +2,10 @@
 
 static const char* szVEROROUTE_VERSION =
 
-"2.17";		// Improvement: When using ground-fill, the width of the thermal relief tags connecting pads to the ground-fill can be set in the Rendering Options.
+"2.18";		// Bug fix: Pin layer preference logic for PCBs was not properly handling diagonal connections, so
+			//			diagonally adjacent pins that were electrically connected might not have a connection drawn on either layer.
+			// New feature: Extra thermal relief tags are produced by default when producing PCBs with ground pours.
+//"2.17";	// Improvement: When using ground-fill, the width of the thermal relief tags connecting pads to the ground-fill can be set in the Rendering Options.
 //"2.16"	// Bug fix: When vias are enabled, connectivity info was wiped when zooming or changing sliders, leading to erroneous hatched lines being displayed.
 			// Improvement: The Pin Label dialog can now also be used in Component Editor mode.
 //"2.15";	// Improvement: Added background brightness to Rendering Options.
