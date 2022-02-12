@@ -48,8 +48,9 @@ Q_DECL_CONSTEXPR static inline bool ReadCodeBit(const int& NBR, const int& iCode
 static inline void SetCodeBit(const int& NBR, int& iCode)		{ iCode |=  (1<<NBR); }
 static inline void ClearCodeBit(const int& NBR, int& iCode)		{ iCode &= ~(1<<NBR); }
 static inline void ToggleCodeBit(const int& NBR, int& iCode)	{ iCode ^=  (1<<NBR); }
-static const int CODEBITS_LYR = 0xFF;	// All neighbours in same layer
-static const int CODEBITS_ALL = 0x1FF;	// All neighbours in same layer + the neighbour in the layer above/below
+static const int CODEBITS_DIAGS	= 0xAA;		// All diagonal neighbours in same layer
+static const int CODEBITS_LYR	= 0xFF;		// All neighbours in same layer
+static const int CODEBITS_ALL	= 0x1FF;	// All neighbours in same layer + the neighbour in the layer above/below
 
 // Flag is a bitfield describing the status of the nodeId at point.
 // USERSET points will not have their nodeId modified during the auto-routing.

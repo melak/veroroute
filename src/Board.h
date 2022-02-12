@@ -213,17 +213,23 @@ public:
 		const bool	bDiagsOK	= GetDiagsMode() != DIAGSMODE::OFF;
 		const bool	bMinDiags	= GetDiagsMode() == DIAGSMODE::MIN;
 
+		// Get track perimeter code on this layer (without any layer preferences)
 		int iCode = p->GetPerimeterCode(bDiagsOK, bMinDiags);	// 0 to 255
 
-		// For a 2-layer board, modify perimeter code to handle pin layer preferences
+		// For a 2-layer board, modify the track perimeter code on this layer to account for pin layer preferences
+		// Only true components (not wires) can have a pin layer preference.
 		if ( GetLyrs() == 1 || !p->GetHasPin() || p->GetHasWire() ) return iCode;
+
+		// Get track perimeter code on other layer (without any layer preferences)
+		const int	iCodeOther = p->GetNbr(NBR_X)->GetPerimeterCode(bDiagsOK, bMinDiags);	// 0 to 255
 
 		const bool	bBottomLayer	= p->IsLayer0();	// true ==> p is on bottom layer
 		const int	iLayerPrefP		= GetLayerPref(p);
 
-		for (int iNbr = 0; iNbr < 8; iNbr ++)	// Loob nbrs in layer
+		for (int iNbr = 0; iNbr < 8; iNbr ++)	// Loop nbrs in layer
 		{
-			if ( !ReadCodeBit(iNbr, iCode) ) continue;
+			// Only directions that are used in BOTH layers can be affected by layer preference
+			if ( !ReadCodeBit(iNbr, iCode) || !ReadCodeBit(iNbr, iCodeOther) ) continue;
 
 			const Element* q = p->GetNbr(iNbr);
 			if ( !q->GetHasPin() || q->GetHasWire() ) continue;
@@ -242,14 +248,13 @@ public:
 	{
 		const bool bExtraTags = false;	//TODO Set true to add extra thermal relief tags
 		if  ( !bExtraTags ) return 0;
-		if ( iPerimeterCode == 0 ) return 0;	// Don't make extra tags if there are no tags at all
 
 		const int	iGndNodeId		= p->GetNodeId();
 		const bool	bBottomLayer	= p->IsLayer0();	// true ==> p is on bottom layer			
 		const int	iLayerPrefP		= ( GetLyrs() == 1 || !p->GetHasPin() || p->GetHasWire() ) ? LAYER_X : GetLayerPref(p);
 
 		int iCandidateTagBits(0);
-		for (int iNbr = 0; iNbr < 8; iNbr ++)	// Loob nbrs in layer
+		for (int iNbr = 0; iNbr < 8; iNbr ++)	// Loop nbrs in layer
 		{
 			const Element*	q		= p->GetNbr(iNbr);
 			const int	iNbrNodeId	= q->GetNodeId();
@@ -267,10 +272,11 @@ public:
 											: ( iLayerPrefP == LAYER_T || iLayerPrefQ == LAYER_T ) );
 			if ( bOK ) SetCodeBit(iNbr, iCandidateTagBits);	// Update iCandidateTagBits
 		}
-		if ( iCandidateTagBits == 0 ) return 0;	// No candidate tag bits, so we're done
 
-		// Choose a subset of the candidate tag bits
-		assert(iCandidateTagBits != CODEBITS_LYR);	// There must be at least one blank bit
+		if ( iCandidateTagBits == 0 ) return 0;							// No candidate tags, so we're done
+		if ( iCandidateTagBits == CODEBITS_LYR ) return CODEBITS_DIAGS;	// All tags are allowed, so just use the 4 diagonals
+
+		// Select a subset of the iCandidateTagBits
 
 		int iBlank(0);	// Find position of first blank bit in iCandidateTagBits
 		for (; iBlank < 8; iBlank++)
@@ -282,7 +288,7 @@ public:
 		for (int i = iBlank + 1, iEnd = iBlank + 9; i < iEnd; i++)
 		{
 			const int iNbr = i % 8;
-			if ( bIsBlankCCW && ReadCodeBit(iNbr, iCandidateTagBits) )	// If bit is set and preceeding bit is blank
+			if ( bIsBlankCCW && ReadCodeBit(iNbr, iCandidateTagBits) )	// If bit is set, and preceeding bit is blank
 			{
 				SetCodeBit(iNbr, iTagBits);
 				bIsBlankCCW = false;
