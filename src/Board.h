@@ -221,7 +221,9 @@ public:
 		if ( GetLyrs() == 1 || !p->GetHasPin() || p->GetHasWire() ) return iCode;
 
 		// Get track perimeter code on other layer (without any layer preferences)
-		const int	iCodeOther = p->GetNbr(NBR_X)->GetPerimeterCode(bDiagsOK, bMinDiags);	// 0 to 255
+		// Use "false" instead of "bMinDiags" because we are interested in the local
+		// connectivity in the other layer rather than its displayed track pattern.
+		const int	iCodeOther = p->GetNbr(NBR_X)->GetPerimeterCode(bDiagsOK, false);	// 0 to 255
 
 		const bool	bBottomLayer	= p->IsLayer0();	// true ==> p is on bottom layer
 		const int	iLayerPrefP		= GetLayerPref(p);
@@ -246,9 +248,6 @@ public:
 
 	int GetTagCode(const Element* p, const int& iPerimeterCode) const	// Helper for the GUI "blobs"
 	{
-		const bool bExtraTags = false;	//TODO Set true to add extra thermal relief tags
-		if  ( !bExtraTags ) return 0;
-
 		const int	iGndNodeId		= p->GetNodeId();
 		const bool	bBottomLayer	= p->IsLayer0();	// true ==> p is on bottom layer			
 		const int	iLayerPrefP		= ( GetLyrs() == 1 || !p->GetHasPin() || p->GetHasWire() ) ? LAYER_X : GetLayerPref(p);
