@@ -2,7 +2,9 @@
 
 static const char* szVEROROUTE_VERSION =
 
-"2.18";		// Bug fix: Pin layer preference logic for PCBs was not properly handling diagonal connections, so
+"2.19";		// Bug fix: The grid did not properly resize itself when the user tried to add a component or text box that
+			//			was wider/taller than the current grid size, leading to a corrupted layout.
+//"2.18";	// Bug fix: Pin layer preference logic for PCBs was not properly handling diagonal connections, so
 			//			diagonally adjacent pins that were electrically connected might not have a connection drawn on either layer.
 			// New feature: Extra thermal relief tags are produced by default when producing PCBs with ground pours.
 //"2.17";	// Improvement: When using ground-fill, the width of the thermal relief tags connecting pads to the ground-fill can be set in the Rendering Options.
