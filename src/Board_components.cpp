@@ -96,7 +96,8 @@ int Board::AddComponent(int iRow, int iCol, const Component& tmp, bool bDoPlace)
 
 		iRow = std::max(0, std::min(GetRows()-1, iRow));
 		iCol = std::max(0, std::min(GetCols()-1, iCol));
-		const int incRows(iRow + comp.GetRows() - GetRows()), incCols(iCol + comp.GetCols() - GetCols());
+		const int incRows = std::max(iRow + comp.GetRows() - GetRows(), 0);
+		const int incCols = std::max(iCol + comp.GetCols() - GetCols(), 0);
 		if ( incRows > 0 || incCols > 0 )
 			GrowThenPan(0, incRows, incCols, 0, 0);
 
@@ -144,7 +145,8 @@ void Board::AddTextBox(int iRow, int iCol)
 		rect.Move(iRow - rect.m_rowMin, iCol - rect.m_colMin); // Move it to the top left of the view
 	}
 
-	const int incRows(iRow + rect.GetRows() - GetRows()), incCols(iCol + rect.GetCols() - GetCols());
+	const int incRows = std::max(iRow + rect.GetRows() - GetRows(), 0);
+	const int incCols = std::max(iCol + rect.GetCols() - GetCols(), 0);
 	if ( incRows > 0 || incCols > 0 )
 		GrowThenPan(0, incRows, incCols, 0, 0);
 }
