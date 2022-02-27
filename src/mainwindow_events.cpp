@@ -90,7 +90,7 @@ void MainWindow::wheelEvent(QWheelEvent* event)
 bool MainWindow::CanModifyRuler() const
 {
 	return m_bRuler && !( m_board.GetCompEdit() || GetCtrlKeyDown() || GetShiftKeyDown() || GetResizingText() ||
-						  GetDefiningRect() || GetPaintPins() || GetPaintBoard() || GetPaintFlood() || GetPaintLyrPref() );
+						  GetDefiningRect() || GetPaintPins() || GetErasePins() || GetPaintBoard() || GetEraseBoard() || GetPaintFlood() );
 }
 
 void MainWindow::mousePressEvent(QMouseEvent* event)
@@ -226,7 +226,7 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 	// Cursor modification
 	if ( GetCtrlKeyDown() )
 		centralWidget()->setCursor(Qt::ClosedHandCursor);
-	else if ( GetPaintPins() || GetPaintBoard() || GetPaintFlood() || GetPaintLyrPref() )
+	else if ( GetPaintPins() || GetErasePins() || GetPaintBoard() || GetEraseBoard() || GetPaintFlood() )
 		centralWidget()->setCursor(Qt::CrossCursor);
 	else if ( GetResizingText() )
 		centralWidget()->setCursor(Qt::SizeFDiagCursor);
@@ -243,57 +243,55 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 	if ( GetCurrentTextId() != BAD_TEXTID )
 		return RepaintWithRouting();	// Don't modify nodeId or paint if editing text
 
-	if ( GetPaintPins() || GetPaintBoard() || GetPaintFlood() || GetPaintLyrPref() )
+	if ( GetPaintFlood() )
 	{
 		if ( m_bLeftClick )		// Paint
 		{
-			if ( GetPaintLyrPref() )
-			{
-				const bool bChanged = m_board.ToggleLyrPref(layer, m_gridRow, m_gridCol, false);	// false ==> toggle
-				if ( !bChanged ) return;
-				m_mouseActionString = "Toggle pin layer preference";
-			}
-			else 
-			{
-				if ( GetCurrentNodeId() == BAD_NODEID )	// If trying to left-click paint an BAD_NODEID ...
-					SetCurrentNodeId( m_board.GetNewNodeId() ); // ... use a new NodeId instead
+			if ( GetCurrentNodeId() == BAD_NODEID )			// If trying to left-click paint a BAD_NODEID ...
+				SetCurrentNodeId( m_board.GetNewNodeId() );	// ... use a new NodeId instead
 
-				m_board.GetColorMgr().ReAssignColors();	// Forces colors to be worked out again
-				if ( GetPaintFlood() )
-				{
-					assert( GetCurrentNodeId() != BAD_NODEID );
-					assert( !m_board.GetRoutingEnabled() );	// Sanity check
+			m_board.GetColorMgr().ReAssignColors();	// Forces colors to be worked out again
 
-					const int tmp = GetCurrentNodeId();	// Need to temporarily change current nodeId for HandleRouting()
-					SetCurrentNodeId( m_board.Get(layer, m_gridRow, m_gridCol)->GetNodeId() );
-					HandleRouting();		// Work out MH distances for the flood
-					SetCurrentNodeId(tmp);	// Restore current nodeId
+			assert( GetCurrentNodeId() != BAD_NODEID );
+			assert( !m_board.GetRoutingEnabled() );	// Sanity check
 
-					m_board.FloodNodeId( GetCurrentNodeId() );
-					m_mouseActionString = "Paint (flood)";
-				}
-				else
-				{
-					const bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, GetCurrentNodeId(), GetPaintPins());
-					if ( !bChanged ) return;
-					m_mouseActionString = "Paint";
-				}
-			}
+			const int tmp = GetCurrentNodeId();	// Need to temporarily change current nodeId for HandleRouting()
+			SetCurrentNodeId( m_board.Get(layer, m_gridRow, m_gridCol)->GetNodeId() );
+			HandleRouting();		// Work out MH distances for the flood
+			SetCurrentNodeId(tmp);	// Restore current nodeId
+
+			m_board.FloodNodeId( GetCurrentNodeId() );
+			m_mouseActionString = "Paint (flood)";
 		}
-		if ( m_bRightClick )	// Unpaint (i.e. erase)
+	}
+	else if ( GetPaintPins() || GetErasePins() || GetPaintBoard() || GetEraseBoard() )
+	{
+//TODO Comment out code here for testing Android GUI approach on desktop build
+#ifdef Q_OS_ANDROID
+		if ( GetPaintPins() || GetPaintBoard() )	// Paint
+#else
+		if ( m_bLeftClick )	// Paint
+#endif
 		{
-			if ( GetPaintLyrPref() )
-			{
-				const bool bChanged = m_board.ToggleLyrPref(layer, m_gridRow, m_gridCol, true);	// true ==> reset
-				if ( !bChanged ) return;
-				m_mouseActionString = "Clear pin layer preference";
-			}
-			else
-			{
-				const bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, BAD_NODEID, GetPaintPins());
-				if ( !bChanged ) return;
-				m_mouseActionString = "Erase";
-			}
+			if ( GetCurrentNodeId() == BAD_NODEID )			// If trying to left-click paint a BAD_NODEID ...
+				SetCurrentNodeId( m_board.GetNewNodeId() );	// ... use a new NodeId instead
+
+			m_board.GetColorMgr().ReAssignColors();	// Forces colors to be worked out again
+
+			const bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, GetCurrentNodeId(), GetPaintPins() || GetErasePins());
+			if ( !bChanged ) return;
+			m_mouseActionString = "Paint";
+		}
+//TODO Comment out code here for testing Android GUI approach on desktop build
+#ifdef Q_OS_ANDROID
+		if ( GetErasePins() || GetEraseBoard() )	// Erase
+#else
+		if ( m_bRightClick )	// Erase
+#endif
+		{
+			const bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, BAD_NODEID, GetPaintPins() || GetErasePins());
+			if ( !bChanged ) return;
+			m_mouseActionString = "Erase";
 		}
 	}
 	else	// Set/Unset current nodeId from board
@@ -329,9 +327,24 @@ void MainWindow::mouseDoubleClickEvent(QMouseEvent* event)
 	// Cursor modification
 	centralWidget()->setCursor(Qt::CrossCursor);
 
+	// Handle changing layer preference for PCBs via double clicks
+	if ( m_board.GetTrackMode() == TRACKMODE::PCB && m_board.GetLyrs() == 2 )
+	{
+		if ( hypot(dRow - 0.5, dCol - 0.5) < 0.25 )	// Only consider clicks that are close to the grid point
+		{
+			if ( m_board.ToggleLyrPref(m_board.GetCurrentLayer(), m_gridRow, m_gridCol) )
+			{
+				UpdateHistory("Change pin layer preference");
+				return;
+			}
+		}
+	}
+
+	// Handle competing diagonals ...
 	const int	dR = ( dRow > 0.5 ) ? 1 : 0;	// Correct row, col to account for crossing ...
 	const int	dC = ( dCol > 0.5 ) ? 1 : 0;	// ... point being near corner of element
 	const int&	layer	 = m_board.GetCurrentLayer();
+
 	const bool	bSwapped = m_board.Get(layer, m_gridRow + dR, m_gridCol + dC)->SwapDiagLinks();
 	if ( bSwapped )
 	{
@@ -354,8 +367,8 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 	const int&			W			= m_board.GetGRIDPIXELS();
 	const int&			layer		= m_board.GetCurrentLayer();
 
-	if ( GetPaintPins() || GetPaintFlood() ) return;	// Ignore mouse move while painting pins or flooding
-	if ( GetShiftKeyDown() ) return;					// Ignore mouse move while trying to group components
+	if ( GetPaintPins() || GetErasePins() || GetPaintFlood() ) return;	// Ignore mouse move while painting pins or flooding
+	if ( GetShiftKeyDown() ) return;									// Ignore mouse move while trying to group components
 
 	bool bSmartPan = GetCtrlKeyDown();
 
@@ -365,7 +378,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 		centralWidget()->setCursor(Qt::ClosedHandCursor);
 	else if ( GetDefiningRect() || GetResizingText() )
 		centralWidget()->setCursor(Qt::SizeFDiagCursor);
-	else if ( GetPaintBoard() )
+	else if ( GetPaintBoard() || GetEraseBoard() )
 		centralWidget()->setCursor(Qt::CrossCursor);
 	else if ( GetCurrentTextId() != BAD_TEXTID && m_bMouseClick )
 		centralWidget()->setCursor(Qt::ClosedHandCursor);
@@ -409,29 +422,34 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 			UpdateCompDialog();
 		}
 	}
-	else if ( !bSmartPan && GetPaintLyrPref() && m_bRightClick )
-	{
-		const bool bChanged = m_board.ToggleLyrPref(layer, m_gridRow, m_gridCol, true);	// true ==> reset
-		if ( !bChanged ) return;
-		m_mouseActionString = "Clear pin layer preference";
-	}
 	else if ( !bSmartPan && GetDefiningRect() )
 	{
 		m_board.GetRectMgr().UpdateNewRect(m_gridRow, m_gridCol);
 		SelectAllInRects();
 	}
-	else if ( !bSmartPan && GetPaintBoard() && trackMode != TRACKMODE::OFF )	// (Un)Paint nodeId on board but NOT pins
+	else if ( !bSmartPan && ( GetPaintBoard() || GetEraseBoard() ) && trackMode != TRACKMODE::OFF )	// (Un)Paint nodeId on board but NOT pins
 	{
-		assert( !GetPaintPins() && !GetPaintFlood() );	// Sanity check
+		assert( !GetPaintPins() && !GetErasePins() && !GetPaintFlood() );	// Sanity check
+//TODO Comment out code here for testing Android GUI approach on desktop build
+#ifdef Q_OS_ANDROID
+		if ( GetPaintBoard() )	// Paint
+#else
 		if ( m_bLeftClick )		// Paint
+#endif
 		{
-			const bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, GetCurrentNodeId(), GetPaintPins());	// Only allow paint board (not pins)
+			const bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, GetCurrentNodeId(), false);	// false ==> Only allow paint board (not pins)
 			if ( !bChanged ) return;	// No change
 			m_mouseActionString = "Paint";
 		}
+
+//TODO Comment out code here for testing Android GUI approach on desktop build
+#ifdef Q_OS_ANDROID
+		if ( GetEraseBoard() )	// Erase
+#else
 		if ( m_bRightClick )	// Erase
+#endif
 		{
-			const bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, BAD_NODEID, GetPaintPins());		// Only allow paint board (not pins)
+			const bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, BAD_NODEID, false);	// false ==> Only allow erase board (not pins)
 			if ( !bChanged ) return;	// No change
 			m_mouseActionString = "Erase";
 		}
@@ -565,7 +583,7 @@ void MainWindow::mouseReleaseEvent(QMouseEvent* event)
 		ShowCurrentRectSize();
 		return RepaintSkipRouting();
 	}
-	if ( GetPaintPins() || GetPaintBoard() || GetPaintFlood() || GetPaintLyrPref() )
+	if ( GetPaintPins() || GetErasePins() || GetPaintBoard() || GetEraseBoard() || GetPaintFlood() )
 		centralWidget()->setCursor(Qt::CrossCursor);
 	else
 		centralWidget()->setCursor(Qt::OpenHandCursor);
@@ -683,15 +701,13 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
 		// Only one flag for paint-board/paint-pins/paint-flood must be true
 		switch( event->key() )
 		{
-			case Qt::Key_P:		if ( trackMode == TRACKMODE::OFF || compMode == COMPSMODE::OFF || GetPaintBoard() || GetPaintFlood() || GetPaintLyrPref() ) return;
+			case Qt::Key_P:		if ( trackMode == TRACKMODE::OFF || compMode == COMPSMODE::OFF || GetPaintBoard() || GetEraseBoard() || GetPaintFlood() ) return;
 								SetPaintPins(true);		break;
-			case Qt::Key_Space:	if ( trackMode == TRACKMODE::OFF || GetPaintPins() || GetPaintFlood() || GetPaintLyrPref() ) return;
+			case Qt::Key_Space:	if ( trackMode == TRACKMODE::OFF || GetPaintPins() || GetErasePins() || GetPaintFlood() ) return;
 								SetPaintBoard(true);	break;
-			case Qt::Key_F:		if ( trackMode == TRACKMODE::OFF || compMode == COMPSMODE::OFF || GetPaintBoard() || GetPaintPins() || GetPaintLyrPref() ) return;
+			case Qt::Key_F:		if ( trackMode == TRACKMODE::OFF || compMode == COMPSMODE::OFF || GetPaintBoard() || GetEraseBoard() || GetPaintPins() || GetErasePins() ) return;
 								if ( m_board.GetRoutingEnabled() ) return;
 								SetPaintFlood(true);	break;
-			case Qt::Key_T:		if ( trackMode != TRACKMODE::PCB || m_board.GetLyrs() == 1 || GetPaintBoard() || GetPaintPins() || GetPaintFlood() ) return;
-								SetPaintLyrPref(true);	break;
 			case Qt::Key_W:		WipeTracks();	break;
 		}
 	}
@@ -721,7 +737,6 @@ void MainWindow::keyReleaseEvent(QKeyEvent* event)
 			case Qt::Key_R:		SetDefiningRect(false);	break;
 			case Qt::Key_P:		SetPaintPins(false);	break;
 			case Qt::Key_F:		SetPaintFlood(false);	break;
-			case Qt::Key_T:		SetPaintLyrPref(false);	break;
 			case Qt::Key_Space:	SetPaintBoard(false);	break;
 			default:
 				if ( GetCurrentTextId() != BAD_TEXTID && m_bMouseClick )
@@ -794,26 +809,42 @@ void MainWindow::dropEvent(QDropEvent *e)
 
 void MainWindow::SetPaintPins(bool b)
 {
-	m_bPaintPins	= b;
+	if ( b == GetPaintPins() ) return;
+	m_eMouseMode = ( b ) ? MOUSE_MODE::PAINT_PINS : MOUSE_MODE::SELECT;
+	centralWidget()->setCursor(b ? Qt::CrossCursor : Qt::OpenHandCursor);
+}
+void MainWindow::SetErasePins(bool b)
+{
+	if ( b == GetErasePins() ) return;
+	m_eMouseMode = ( b ) ? MOUSE_MODE::ERASE_PINS : MOUSE_MODE::SELECT;
 	centralWidget()->setCursor(b ? Qt::CrossCursor : Qt::OpenHandCursor);
 }
 void MainWindow::SetPaintBoard(bool b)
 {
-	m_bPaintBoard	= b;
+	if ( b == GetPaintBoard() ) return;
+	m_eMouseMode = ( b ) ? MOUSE_MODE::PAINT_GRID : MOUSE_MODE::SELECT;;
+	centralWidget()->setCursor(b ? Qt::CrossCursor : Qt::OpenHandCursor);
+}
+void MainWindow::SetEraseBoard(bool b)
+{
+	if ( b == GetEraseBoard() ) return;
+	m_eMouseMode = ( b ) ? MOUSE_MODE::ERASE_GRID : MOUSE_MODE::SELECT;;
 	centralWidget()->setCursor(b ? Qt::CrossCursor : Qt::OpenHandCursor);
 }
 void MainWindow::SetPaintFlood(bool b)
 {
-	m_bPaintFlood	= b;
-	centralWidget()->setCursor(b ? Qt::CrossCursor : Qt::OpenHandCursor);
-}
-void MainWindow::SetPaintLyrPref(bool b)
-{
-	m_bPaintLyrPref	= b;
+	if ( b == GetPaintFlood() ) return;
+	m_eMouseMode = ( b ) ? MOUSE_MODE::PAINT_FLOOD : MOUSE_MODE::SELECT;
 	centralWidget()->setCursor(b ? Qt::CrossCursor : Qt::OpenHandCursor);
 }
 void MainWindow::SetDefiningRect(bool b)
 {
-	m_bDefiningRect	= b;
+	if ( b == GetDefiningRect() ) return;
+	m_eMouseMode = ( b ) ? MOUSE_MODE::DEFINE_RECT : MOUSE_MODE::SELECT;
 	centralWidget()->setCursor(b ? Qt::SizeFDiagCursor : Qt::OpenHandCursor);
+}
+void MainWindow::SetResizingText(bool b)
+{
+	if ( b == GetResizingText() ) return;
+	m_eMouseMode = ( b ) ? MOUSE_MODE::RESIZE_TEXT : MOUSE_MODE::SELECT;
 }

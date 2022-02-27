@@ -36,6 +36,10 @@
 #include "GWriter.h"
 #include "myscrollarea.h"
 
+#ifndef Q_OS_ANDROID
+#define USE_PIXMAP_CACHE
+#endif
+
 namespace Ui { class MainWindow; }
 
 class ControlDialog;
@@ -69,6 +73,18 @@ class MainWindow : public QMainWindow
 	Q_OBJECT
 
 public:
+	enum class MOUSE_MODE
+	{
+		SELECT			= 0,	// Select objects (parts, text boxes, etc)
+		PAINT_PINS		= 1,	// Paint component pins (and the board)
+		ERASE_PINS		= 2,	// Erase component pins (and the board)
+		PAINT_GRID		= 3,	// Paint grid points only (not component pins)
+		ERASE_GRID		= 4,	// Erase grid points only (not component pins)
+		PAINT_FLOOD		= 5,	// Flood-fill all connected tracks & pins
+		DEFINE_RECT		= 6,	// Define grey rectangle areas
+		RESIZE_TEXT		= 7		// Resize text rectangle
+	};
+
 	explicit MainWindow(const QString& localDataPathStr, const QString& tutorialsPathStr, QWidget* parent = nullptr);
 	~MainWindow();
 
@@ -90,20 +106,24 @@ public:
 
 	const bool&	GetCtrlKeyDown() const	{ return m_bCtrlKeyDown;	}
 	const bool&	GetShiftKeyDown() const	{ return m_bShiftKeyDown;	}
-	const bool&	GetPaintPins() const	{ return m_bPaintPins;		}
-	const bool&	GetPaintBoard() const	{ return m_bPaintBoard;		}
-	const bool&	GetPaintFlood() const	{ return m_bPaintFlood;		}
-	const bool&	GetPaintLyrPref() const	{ return m_bPaintLyrPref;	}
-	const bool&	GetDefiningRect() const	{ return m_bDefiningRect;	}
-	const bool&	GetResizingText() const	{ return m_bResizingText;	}
+
+	bool		GetPaintPins() const	{ return m_eMouseMode == MOUSE_MODE::PAINT_PINS; }
+	bool		GetErasePins() const	{ return m_eMouseMode == MOUSE_MODE::ERASE_PINS; }
+	bool		GetPaintBoard() const	{ return m_eMouseMode == MOUSE_MODE::PAINT_GRID; }
+	bool		GetEraseBoard() const	{ return m_eMouseMode == MOUSE_MODE::ERASE_GRID; }
+	bool		GetPaintFlood() const	{ return m_eMouseMode == MOUSE_MODE::PAINT_FLOOD; }
+	bool		GetDefiningRect() const	{ return m_eMouseMode == MOUSE_MODE::DEFINE_RECT; }
+	bool		GetResizingText() const	{ return m_eMouseMode == MOUSE_MODE::RESIZE_TEXT; }
+
 	void		SetCtrlKeyDown(bool b)	{ m_bCtrlKeyDown	= b; }
 	void		SetShiftKeyDown(bool b)	{ m_bShiftKeyDown	= b; }
 	void		SetPaintPins(bool b);
+	void		SetErasePins(bool b);
 	void		SetPaintBoard(bool b);
+	void		SetEraseBoard(bool b);
 	void		SetPaintFlood(bool b);
-	void		SetPaintLyrPref(bool b);
 	void		SetDefiningRect(bool b);
-	void		SetResizingText(bool b)	{ m_bResizingText	= b; }
+	void		SetResizingText(bool b);
 protected:
 	void paintEvent(QPaintEvent* event);
 	void wheelEvent(QWheelEvent* event);
@@ -159,6 +179,12 @@ public slots:
 	void ToggleDiagsMax();
 	void ToggleFill();
 	void ToggleSelectArea();
+	void TogglePaintGrid();
+	void ToggleEraseGrid();
+	void TogglePaintPins();
+	void ToggleErasePins();
+	void TogglePaintFlood();
+	void ResetMouseMode();
 	// Edit menu items
 	void Undo();
 	void Redo();
@@ -214,6 +240,7 @@ public slots:
 	void AddVeroLetters()		{ AddPart(COMP::VERO_LETTER); }
 	void AddTextBox()
 	{
+		ResetMouseMode();
 		SetCurrentTextId(BAD_TEXTID);
 		int iRow, iCol;
 		GetFirstRowCol(iRow, iCol);
@@ -389,12 +416,14 @@ public slots:
 	void DefinerLower();
 private:
 	void DestroyPixmapCache();
+#ifdef USE_PIXMAP_CACHE
 	void CreatePixmapCache(const GuiControl& guiCtrl, ColorManager& colorManager);
+	void PaintDiag(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pCorner, bool bLT);
+#endif
 	void PaintViaGrey(const GuiControl& guiCtrl, QPainter& painter, const QPointF& pC);
 	void PaintPadGrey(const GuiControl& guiCtrl, QPainter& painter, QPen& pen, const QPointF& pC, const int& iPadWidthMIL = 0);
 	void PaintVia(const GuiControl& guiCtrl, QPainter& painter,  const QColor& color, const QPointF& pC, const bool& bGap = false);	// Helper
 	void PaintPad(const GuiControl& guiCtrl, QPainter& painter,  const QColor& color, const QPointF& pC, const int& iPadWidthMIL = 0, const int& iHoleWidth_MIL = 0, const bool& bGap = false);	// Helper
-	void PaintDiag(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pCorner, bool bLT);
 	void PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, const QPointF& pCoffset,
 				   const int& iPadWidthMIL, const int& iPerimeterCode, const int& iTagCode,
 				   const bool bHavePad, const bool bIsGnd, const bool bGap = false);	// Helper
@@ -423,6 +452,8 @@ private:
 	{
 		if ( m_board.GetCompEdit() ) return;	// Do nothing in component editor mode
 
+		ResetMouseMode();
+
 		int iRow, iCol;
 		GetFirstRowCol(iRow, iCol);
 		const int compId = m_board.CreateComponent(iRow, iCol, eType);
@@ -437,6 +468,8 @@ private:
 	void AddFromTemplate(const Component& compTemp)
 	{
 		if ( m_board.GetCompEdit() ) return;	// Do nothing in component editor mode
+
+		ResetMouseMode();
 
 		int iRow, iCol;
 		GetFirstRowCol(iRow, iCol);
@@ -485,7 +518,7 @@ private:
 	// Pens
 	QPen	m_rulerPen;
 	QPen	m_backgroundPen;
-	QPen	m_darkGreyPen;
+	QPen	m_greyPen;
 	QPen	m_blackPen;
 	QPen	m_whitePen;
 	QPen	m_redPen;
@@ -532,6 +565,7 @@ private:
 	std::string				m_tutorialsPathStr;	// The path to the "tutorials" folder and "veroroute.png"
 
 	// Cached pixmaps containing pre-colored pads and blobs.
+#ifdef USE_PIXMAP_CACHE
 	QPixmap**	m_ppPixmapPad		= nullptr;	// A pad in the host element
 	QPixmap**	m_ppPixmapVia		= nullptr;	// A via in the host element
 	QPixmap**	m_ppPixmapDiag		= nullptr;	// For filling small diagonal gaps not covered by blob pixmaps
@@ -542,6 +576,7 @@ private:
 	int			m_radPixmapVia		= 0;		// ...
 	int			m_radPixmapDiag		= 0;		// ...
 	int			m_radPixmapBlob		= 0;		// ...
+#endif
 	QPoint		m_mousePos;
 	bool		m_bRepaint			= false;	// Flag to make paintEvent() do something useful
 	bool		m_bMouseClick		= false;	// Flag of click beginning
@@ -549,12 +584,9 @@ private:
 	bool		m_bRightClick		= false;
 	bool		m_bCtrlKeyDown		= false;
 	bool		m_bShiftKeyDown		= false;
-	bool		m_bPaintPins		= false;	// true ==> allow paint the component pins (and the board)
-	bool		m_bPaintBoard		= false;	// true ==> allow paint the board only (not the component pins)
-	bool		m_bPaintFlood		= false;	// true ==> allow flood-fill all connected tracks & pins
-	bool		m_bPaintLyrPref		= false;	// true ==> allow paint layer preference to pins
-	bool		m_bDefiningRect		= false;	// true ==> user is defining a rectangle
-	bool		m_bResizingText		= false;	// true ==> user is resizing a text rectangle
+
+	MOUSE_MODE	m_eMouseMode		= MOUSE_MODE::SELECT;
+
 	bool		m_bWritePDF			= false;	// true ==> draw to PDF file instead of screen
 	bool		m_bWriteGerber		= false;	// true ==> draw to Gerber file instead of screen
 	bool		m_bTwoLayerGerber	= false;	// true ==> 2-layer Gerber output instead of 1-layer

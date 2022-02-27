@@ -71,7 +71,7 @@
     <rect>
      <x>269</x>
      <y>610</y>
-     <width>321</width>
+     <width>281</width>
      <height>24</height>
     </rect>
    </property>
@@ -172,6 +172,19 @@
    </property>
    <property name="text">
     <string>Save to VRT file</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="pushButtonOK">
+   <property name="geometry">
+    <rect>
+     <x>560</x>
+     <y>610</y>
+     <width>31</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>OK</string>
    </property>
   </widget>
  </widget>

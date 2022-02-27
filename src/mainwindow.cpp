@@ -102,9 +102,28 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	m_pinDlg		= new PinDialog(this);
 	m_findDlg		= new FindDialog(this);
 
-	m_templatesDlg->move(940,50);
+#ifdef Q_OS_ANDROID
+	ui->menuBar->setNativeMenuBar(false);
+	ui->toolBar->setIconSize(QSize(36,36));		// 36x36 instead of 24x24
+	ui->toolBar->setMovable(false);				// Keep docked
+	ui->toolBar_2->setIconSize(QSize(36,36));	// 36x36 instead of 24x24
+	ui->toolBar_2->setMovable(false);			// Keep docked
+	ui->actionHotkeysDlg->setVisible(false);	// Hide dialog listing key/mouse actions
+	ui->actionUpdateCheck->setVisible(false);	// Hide update check (until SSL support added)
+#endif
+
+#ifndef Q_OS_ANDROID
 	move(50,50);
+	m_templatesDlg->move(940,50);
 	m_infoDlg->move(940,50);
+
+//TODO Comment out next code block for testing Android GUI approach on desktop build
+	ui->actionPaintPins->setVisible(false);
+	ui->actionErasePins->setVisible(false);
+	ui->actionPaintGrid->setVisible(false);
+	ui->actionEraseGrid->setVisible(false);
+	ui->actionPaintFlood->setVisible(false);
+#endif
 
 	// Do multipart status bar
 	m_labelStatus		= new QLabel("Left", this);
@@ -113,7 +132,7 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 
 	m_rulerPen			= QPen(QColor(255,255,0,192), 0,	Qt::SolidLine, Qt::FlatCap);	// using alpha
 	m_backgroundPen		= QPen(Qt::white, 0,				Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
-	m_darkGreyPen		= QPen(QColor(96,96,96,255), 0,		Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+	m_greyPen			= QPen(QColor(140,140,140,255), 0,	Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 	m_blackPen			= QPen(Qt::black, 0,				Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 	m_whitePen			= QPen(Qt::white, 0,				Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 	m_redPen			= QPen(Qt::red, 0,					Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
@@ -238,6 +257,11 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	QObject::connect(ui->actionAddEllipse,				SIGNAL(triggered()), this, SLOT(DefinerAddEllipse()));
 	QObject::connect(ui->actionAddArc,					SIGNAL(triggered()), this, SLOT(DefinerAddArc()));
 	QObject::connect(ui->actionAddChord,				SIGNAL(triggered()), this, SLOT(DefinerAddChord()));
+	QObject::connect(ui->actionPaintGrid,				SIGNAL(triggered()), this, SLOT(TogglePaintGrid()));
+	QObject::connect(ui->actionEraseGrid,				SIGNAL(triggered()), this, SLOT(ToggleEraseGrid()));
+	QObject::connect(ui->actionPaintPins,				SIGNAL(triggered()), this, SLOT(TogglePaintPins()));
+	QObject::connect(ui->actionErasePins,				SIGNAL(triggered()), this, SLOT(ToggleErasePins()));
+	QObject::connect(ui->actionPaintFlood,				SIGNAL(triggered()), this, SLOT(TogglePaintFlood()));
 	m_fileName.clear();
 	CheckFolders();
 	ResetHistory("Empty");
@@ -349,7 +373,8 @@ void MainWindow::ResetView(bool bTutorial)
 {
 	m_mousePos = QPoint(0,0);
 	m_bMouseClick	= m_bLeftClick	= m_bRightClick = m_bCtrlKeyDown  = m_bShiftKeyDown	= false;
-	m_bPaintPins	= m_bPaintBoard	= m_bPaintFlood = m_bPaintLyrPref = m_bDefiningRect = m_bResizingText = m_bWritePDF = m_bWriteGerber = m_bTwoLayerGerber = false;
+	m_eMouseMode = MOUSE_MODE::SELECT;
+	m_bWritePDF = m_bWriteGerber = m_bTwoLayerGerber = false;
 	m_XGRIDOFFSET	= m_YGRIDOFFSET	= m_XCORRECTION = m_YCORRECTION = 0;
 
 	// Try to set m_gridRow, m_gridCol to match the current NodeId in the board
@@ -1156,6 +1181,43 @@ void MainWindow::ToggleDiagsMax()		{ if ( m_board.GetDiagsMode() == DIAGSMODE::M
 void MainWindow::ToggleFill()			{ SetFill( !m_board.GetGroundFill() ); }
 void MainWindow::ToggleSelectArea()		{ SetDefiningRect( !GetDefiningRect() ); }
 
+void MainWindow::TogglePaintGrid()
+{
+	SetPaintBoard( !GetPaintBoard() );
+	m_board.GetRectMgr().Clear();
+	UpdateControls();
+}
+void MainWindow::ToggleEraseGrid()
+{
+	SetEraseBoard( !GetEraseBoard() );
+	m_board.GetRectMgr().Clear();
+	UpdateControls();
+}
+void MainWindow::TogglePaintPins()
+{
+	SetPaintPins( !GetPaintPins() );
+	m_board.GetRectMgr().Clear();
+	UpdateControls();
+}
+void MainWindow::ToggleErasePins()
+{
+	SetErasePins( !GetErasePins() );
+	m_board.GetRectMgr().Clear();
+	UpdateControls();
+}
+void MainWindow::TogglePaintFlood()
+{
+	SetPaintFlood( !GetPaintFlood() );
+	m_board.GetRectMgr().Clear();
+	UpdateControls();
+}
+void MainWindow::ResetMouseMode()
+{
+	m_eMouseMode = MOUSE_MODE::SELECT;
+	m_board.GetRectMgr().Clear();
+	UpdateControls();
+}
+
 // Part controls
 void MainWindow::SetCompName(const QString& str)
 {
@@ -1339,7 +1401,7 @@ void MainWindow::Paste()		// On hitting the Paste button ...
 	if ( !m_board.GetRoutingEnabled() ) return;
 	m_board.PasteTracks(false);	// false ==> Don't wipe redundant track portions
 	if ( m_board.GetVeroTracks() )  m_board.AutoFillVero();
-	SetDefiningRect( false );
+	ResetMouseMode();
 	UpdateHistory("Paste Track");
 	UpdateControls();
 	RepaintWithListNodes();
@@ -1349,7 +1411,7 @@ void MainWindow::Tidy()			// On hitting the Paste+Tidy button ...
 	if ( m_board.GetRoutingEnabled() ) return;
 	m_board.PasteTracks(true);	// true ==> Wipe redundant track portions
 	if ( m_board.GetVeroTracks() ) m_board.AutoFillVero();
-	SetDefiningRect( false );
+	ResetMouseMode();
 	UpdateHistory("Tidy Tracks");
 	UpdateControls();
 	RepaintWithListNodes();
@@ -1358,7 +1420,7 @@ void MainWindow::WipeTracks()	// On hitting the Wipe All button ...
 {
 	if ( m_board.GetDisableWipe() ) return;
 	m_board.WipeTracks();
-	SetDefiningRect( false );
+	ResetMouseMode();
 	UpdateHistory("Wipe Tracks");
 	UpdateControls();
 	RepaintWithListNodes();
@@ -1851,6 +1913,18 @@ void MainWindow::UpdateControls()
 	ui->actionAddEllipse->setEnabled(		bCompEdit );
 	ui->actionAddArc->setEnabled(			bCompEdit );
 	ui->actionAddChord->setEnabled(			bCompEdit );
+
+	ui->actionPaintGrid->setEnabled(	!bCompEdit && !bNoTracks );
+	ui->actionEraseGrid->setEnabled(	!bCompEdit && !bNoTracks );
+	ui->actionPaintPins->setEnabled(	!bCompEdit && !bNoTracks && m_board.GetCompMode() != COMPSMODE::OFF);
+	ui->actionErasePins->setEnabled(	!bCompEdit && !bNoTracks && m_board.GetCompMode() != COMPSMODE::OFF);
+	ui->actionPaintFlood->setEnabled(	!bCompEdit && !bNoTracks && m_board.GetCompMode() != COMPSMODE::OFF);
+
+	ui->actionPaintPins->setChecked(	m_eMouseMode == MOUSE_MODE::PAINT_PINS );
+	ui->actionErasePins->setChecked(	m_eMouseMode == MOUSE_MODE::ERASE_PINS);
+	ui->actionPaintGrid->setChecked(	m_eMouseMode == MOUSE_MODE::PAINT_GRID);
+	ui->actionEraseGrid->setChecked(	m_eMouseMode == MOUSE_MODE::ERASE_GRID);
+	ui->actionPaintFlood->setChecked(	m_eMouseMode == MOUSE_MODE::PAINT_FLOOD);
 
 	UpdateTextDialog(true);	// true ==> full
 

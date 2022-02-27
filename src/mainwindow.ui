@@ -45,7 +45,7 @@
      <x>0</x>
      <y>0</y>
      <width>1024</width>
-     <height>27</height>
+     <height>26</height>
     </rect>
    </property>
    <property name="focusPolicy">
@@ -274,8 +274,8 @@
    </property>
    <property name="minimumSize">
     <size>
-     <width>200</width>
-     <height>40</height>
+     <width>0</width>
+     <height>0</height>
     </size>
    </property>
    <property name="maximumSize">
@@ -295,6 +295,12 @@
    </property>
    <property name="allowedAreas">
     <set>Qt::TopToolBarArea</set>
+   </property>
+   <property name="iconSize">
+    <size>
+     <width>24</width>
+     <height>24</height>
+    </size>
    </property>
    <property name="floatable">
     <bool>true</bool>
@@ -329,6 +335,14 @@
    <addaction name="actionFill"/>
    <addaction name="separator"/>
    <addaction name="actionSelectArea"/>
+   <addaction name="separator"/>
+   <addaction name="separator"/>
+   <addaction name="actionPaintGrid"/>
+   <addaction name="actionEraseGrid"/>
+   <addaction name="separator"/>
+   <addaction name="actionPaintPins"/>
+   <addaction name="actionErasePins"/>
+   <addaction name="actionPaintFlood"/>
   </widget>
   <widget class="QToolBar" name="toolBar_2">
    <property name="minimumSize">
@@ -1298,6 +1312,81 @@
    </property>
    <property name="toolTip">
     <string>Distance Tool (On/Off)</string>
+   </property>
+  </action>
+  <action name="actionPaintGrid">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="veroroute.qrc">
+     <normaloff>:/images/paintgrid.png</normaloff>:/images/paintgrid.png</iconset>
+   </property>
+   <property name="text">
+    <string>Toggle Paint Grid Points</string>
+   </property>
+   <property name="toolTip">
+    <string>Toggle Paint Grid Point</string>
+   </property>
+  </action>
+  <action name="actionEraseGrid">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="veroroute.qrc">
+     <normaloff>:/images/erasegrid.png</normaloff>:/images/erasegrid.png</iconset>
+   </property>
+   <property name="text">
+    <string>Toggle Erase Grid Points</string>
+   </property>
+   <property name="toolTip">
+    <string>Toggle Erase Grid Point</string>
+   </property>
+  </action>
+  <action name="actionPaintPins">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="veroroute.qrc">
+     <normaloff>:/images/paintpins.png</normaloff>:/images/paintpins.png</iconset>
+   </property>
+   <property name="text">
+    <string>Toggle Paint Pins</string>
+   </property>
+   <property name="toolTip">
+    <string>Toggle Paint Pins</string>
+   </property>
+  </action>
+  <action name="actionErasePins">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="veroroute.qrc">
+     <normaloff>:/images/erasepins.png</normaloff>:/images/erasepins.png</iconset>
+   </property>
+   <property name="text">
+    <string>Toggle Erase Pins</string>
+   </property>
+   <property name="toolTip">
+    <string>Toggle Erase Pins</string>
+   </property>
+  </action>
+  <action name="actionPaintFlood">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="veroroute.qrc">
+     <normaloff>:/images/paintflood.png</normaloff>:/images/paintflood.png</iconset>
+   </property>
+   <property name="text">
+    <string>Toggle Flood Fill Track</string>
+   </property>
+   <property name="toolTip">
+    <string>Toggle Flood Fill Track</string>
    </property>
   </action>
  </widget>

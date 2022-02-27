@@ -631,6 +631,19 @@
      <number>46</number>
     </property>
    </widget>
+   <widget class="QPushButton" name="pushButtonOK">
+    <property name="geometry">
+     <rect>
+      <x>290</x>
+      <y>210</y>
+      <width>31</width>
+      <height>24</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>OK</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QGroupBox" name="groupBox_pcb">
    <property name="geometry">

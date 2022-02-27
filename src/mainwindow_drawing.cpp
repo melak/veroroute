@@ -24,6 +24,7 @@
 
 void MainWindow::DestroyPixmapCache()
 {
+#ifdef USE_PIXMAP_CACHE
 	if ( m_ppPixmapPad )	for (int i = 0; i <     NUM_PIXMAP_COLORS; i++)	delete m_ppPixmapPad[i];
 	if ( m_ppPixmapVia )	for (int i = 0; i <     NUM_PIXMAP_COLORS; i++)	delete m_ppPixmapVia[i];
 	if ( m_ppPixmapDiag )	for (int i = 0; i < 2 * NUM_PIXMAP_COLORS; i++)	delete m_ppPixmapDiag[i];
@@ -34,8 +35,10 @@ void MainWindow::DestroyPixmapCache()
 	delete[] m_ppPixmapBlob;	m_ppPixmapBlob	= nullptr;
 	delete   m_pPixmapDiagLT;	m_pPixmapDiagLT = nullptr;
 	delete   m_pPixmapDiagRT;	m_pPixmapDiagRT = nullptr;
+#endif
 }
 
+#ifdef USE_PIXMAP_CACHE
 void MainWindow::CreatePixmapCache(const GuiControl& guiCtrl, ColorManager& colorMgr)
 {
 	if ( m_ppPixmapPad ) return;	// Cache exists
@@ -114,6 +117,24 @@ void MainWindow::CreatePixmapCache(const GuiControl& guiCtrl, ColorManager& colo
 	releaseMouse();
 }
 
+void MainWindow::PaintDiag(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pCorner, bool bLT)
+{
+	// Only use this method for pixmap based track rendering
+	const int&	H			= m_radPixmapDiag;
+	const int	trackWidth	= guiCtrl.GetHalfPixelsFromMIL( guiCtrl.GetTRACK_MIL() ) << 1;	// Track width in pixels
+
+	static QPen	pen(Qt::black, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+	pen.setColor(color);
+	pen.setWidth(trackWidth);
+	painter.setPen(pen);
+	painter.setBrush(Qt::NoBrush);
+	if ( bLT )
+		painter.drawLine(pCorner + QPointF(-H,-H), pCorner + QPointF(H, H));
+	else // bRT
+		painter.drawLine(pCorner + QPointF(-H, H), pCorner + QPointF(H,-H));
+}
+#endif
+
 void MainWindow::PaintViaGrey(const GuiControl& guiCtrl, QPainter& painter, const QPointF& pC)
 {
 	assert(!m_bWriteGerber);
@@ -188,23 +209,6 @@ void MainWindow::PaintPad(const GuiControl& guiCtrl, QPainter& painter, const QC
 		painter.setBrush(Qt::NoBrush);
 		painter.drawPoint(pC);
 	}
-}
-
-void MainWindow::PaintDiag(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pCorner, bool bLT)
-{
-	// Only use this method for pixmap based track rendering
-	const int&	H			= m_radPixmapDiag;
-	const int	trackWidth	= guiCtrl.GetHalfPixelsFromMIL( guiCtrl.GetTRACK_MIL() ) << 1;	// Track width in pixels
-
-	static QPen	pen(Qt::black, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
-	pen.setColor(color);
-	pen.setWidth(trackWidth);
-	painter.setPen(pen);
-	painter.setBrush(Qt::NoBrush);
-	if ( bLT )
-		painter.drawLine(pCorner + QPointF(-H,-H), pCorner + QPointF(H, H));
-	else // bRT
-		painter.drawLine(pCorner + QPointF(-H, H), pCorner + QPointF(H,-H));
 }
 
 void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, const QPointF& pCoffset,
@@ -489,7 +493,11 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	const bool		 bPCB			= trackMode == TRACKMODE::PCB;
 	const bool		 bMonoPCB		= bMono || bPCB;
 	const bool		 bGroundFill	= !bVero && bMonoPCB && board.GetGroundFill();
+#ifdef USE_PIXMAP_CACHE
 	const bool		 bPixmapCache	= !bVero && ( bMono || bColor ) && !bGroundFill && !m_bWritePDF;	// true ==> Faster rendering (Mono/Color modes)
+#else
+	const bool		 bPixmapCache	= false;
+#endif
 	const bool		 bDirect		= !bVero && !bPixmapCache && !bGroundFill;	// true ==> Draw track "blobs" and pads directly (PDF/Gerber)
 	const int&		 layer			= board.GetCurrentLayer();
 	const int&		 groundNodeId	= board.GetGroundNodeId(layer);
@@ -514,8 +522,10 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 	colorMgr.SetSaturation( board.GetSaturation() );			// Must do this BEFORE making pixmaps
 	colorMgr.SetFillSaturation( board.GetFillSaturation() );	// Must do this BEFORE making pixmaps
+#ifdef USE_PIXMAP_CACHE
 	if ( bPixmapCache )
 		CreatePixmapCache(board, colorMgr);	// Builds pixmaps if the cache is empty
+#endif
 
 	board.CalculateColors();	// Work out best way to color things
 
@@ -731,7 +741,6 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 												&&	iEffColorId != MY_LYR_BOT	&&	iEffColorId != MY_LYR_TOP;
 				const QColor color				= bAllowCustomColor ? colorMgr.GetColorFromNodeId(nodeId)
 																	: colorMgr.GetPixmapColor(iEffColorId);
-				const bool	 bCustomColor		= bAllowCustomColor && colorMgr.GetIsFixed(nodeId);
 
 				GetLRTB(board, 100, j, i, L, R, T, B);	// 100% size square
 				const int X((L+R)/2), Y((T+B)/2);
@@ -788,7 +797,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				}
 				if ( bPixmapCache )	// Draw track "blobs" and pads using pre-calculated pixmaps for speed
 				{
+#ifdef USE_PIXMAP_CACHE
 					assert( !bPCB );
+					const bool bCustomColor = bAllowCustomColor && colorMgr.GetIsFixed(nodeId);
 					if ( iLoop == 0 )
 					{
 						painter.setPen(Qt::NoPen);
@@ -852,6 +863,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						if ( bBlob ) PaintBlob(board, painter, color, pCentre, pCentreOff, iPadWidthMIL, iPerimeterCode, iTagCode, bPad, false);
 						if ( bPad )  PaintPad(board, painter, color, pCentreOff, iPadWidthMIL, iHoleWidthMIL);
 					}
+#endif	// USE_PIXMAP_CACHE
 				}
 				if ( bGroundFill )	// Draw track "blobs" and pads directly (PDF/Gerber)
 				{
@@ -1067,8 +1079,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					penPlaced.setWidth(0);		// For pin labels
 					m_orangePen.setWidth(0);	// For pin labels and pins
 					m_redPen.setWidth(0);		// For pin labels and pins
-					m_darkGreyPen.setWidth(0);	// For pins
-					painter.setPen(bFound ? m_orangePen : bPlaced ? m_darkGreyPen : m_redPen);
+					m_greyPen.setWidth(0);		// For pins
+					painter.setPen(bFound ? m_orangePen : bPlaced ? m_greyPen : m_redPen);
 				}
 				painter.setBrush(Qt::NoBrush);
 

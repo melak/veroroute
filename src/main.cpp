@@ -38,6 +38,10 @@ void helpmsg()
 
 int main(int argc, char *argv[])
 {
+#ifdef Q_OS_ANDROID
+	QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+#endif
+
 	QString	pathStr(".");	// By default, take the home directory to be the current one
 
 	for (int i = 1; i < argc; i++)

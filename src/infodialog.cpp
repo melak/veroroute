@@ -27,11 +27,18 @@ InfoDialog::InfoDialog(MainWindow* parent)
 , m_pMainWindow(parent)
 {
 	ui->setupUi(this);
+#ifndef Q_OS_ANDROID
+	ui->pushButtonOK->hide();
+	ui->prev->move(ui->prev->x() + 30, ui->prev->y());
+	ui->reload->move(ui->reload->x() + 30, ui->reload->y());
+	ui->next->move(ui->next->x() + 30, ui->next->y());
+#endif
 	ShowButtons(false);
 	QObject::connect(ui->plainTextEdit,	SIGNAL(textChanged()),	this,			SLOT(TextChanged()));
 	QObject::connect(ui->prev,			SIGNAL(clicked()),		m_pMainWindow,	SLOT(LoadPrevTutorial()));
 	QObject::connect(ui->reload,		SIGNAL(clicked()),		m_pMainWindow,	SLOT(LoadTutorial()));
 	QObject::connect(ui->next,			SIGNAL(clicked()),		m_pMainWindow,	SLOT(LoadNextTutorial()));
+	QObject::connect(ui->pushButtonOK,	SIGNAL(clicked()),		this,			SLOT(hide()));
 }
 
 InfoDialog::~InfoDialog()

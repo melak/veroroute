@@ -27,10 +27,15 @@ FindDialog::FindDialog(MainWindow* parent)
 , m_pMainWindow(parent)
 {
 	ui->setupUi(this);
+#ifndef Q_OS_ANDROID
+	ui->pushButtonOK->hide();
+	ui->nameEdit->resize(ui->nameEdit->width() + 40, ui->nameEdit->height());
+#endif
 	ui->radioName->setChecked(true);
-	QObject::connect(ui->radioName,	SIGNAL(toggled(bool)),			this, SLOT(ToggleName(bool)));
-	QObject::connect(ui->checkExact,SIGNAL(toggled(bool)),			this, SLOT(ToggleExact(bool)));
-	QObject::connect(ui->nameEdit,	SIGNAL(textChanged(QString)),	this, SLOT(TextChanged(QString)));
+	QObject::connect(ui->radioName,		SIGNAL(toggled(bool)),			this,	SLOT(ToggleName(bool)));
+	QObject::connect(ui->checkExact,	SIGNAL(toggled(bool)),			this,	SLOT(ToggleExact(bool)));
+	QObject::connect(ui->nameEdit,		SIGNAL(textChanged(QString)),	this,	SLOT(TextChanged(QString)));
+	QObject::connect(ui->pushButtonOK,	SIGNAL(clicked()),				this,	SLOT(hide()));
 }
 
 FindDialog::~FindDialog()

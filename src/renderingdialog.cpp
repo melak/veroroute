@@ -28,26 +28,34 @@ RenderingDialog::RenderingDialog(MainWindow* parent)
 {
 	ui->setupUi(this);
 
+#ifndef Q_OS_ANDROID
+	ui->pushButtonOK->hide();
+#endif
+
 	ui->antiAliasOn->setChecked(true);
-	QObject::connect(ui->antiAliasOff,		SIGNAL(toggled(bool)),		m_pMainWindow, SLOT(SetAntialiasOff(bool)));
-	QObject::connect(ui->antiAliasOn,		SIGNAL(toggled(bool)),		m_pMainWindow, SLOT(SetAntialiasOn(bool)));
-	QObject::connect(ui->brightSlider,		SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetBrightness(int)));
-	QObject::connect(ui->shade,				SIGNAL(toggled(bool)),		m_pMainWindow, SLOT(SetShowTarget(bool)));
-	QObject::connect(ui->comptext,			SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetTextSizeComp(int)));
-	QObject::connect(ui->comppins,			SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetTextSizePins(int)));
-	QObject::connect(ui->spinBox_height,	SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetTargetRows(int)));
-	QObject::connect(ui->spinBox_width,		SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetTargetCols(int)));
-	QObject::connect(ui->padWidth,			SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetPadWidth(int)));
-	QObject::connect(ui->trackWidth,		SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetTrackWidth(int)));
-	QObject::connect(ui->tagWidth,			SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetTagWidth(int)));
-	QObject::connect(ui->holeWidth,			SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetHoleWidth(int)));
-	QObject::connect(ui->gapWidth,			SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetGapWidth(int)));
-	QObject::connect(ui->maskWidth,			SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetMaskWidth(int)));
-	QObject::connect(ui->silkWidth,			SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetSilkWidth(int)));
-	QObject::connect(ui->edgeWidth,			SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetEdgeWidth(int)));
-	QObject::connect(ui->viapadWidth,		SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetViaPadWidth(int)));
-	QObject::connect(ui->viaholeWidth,		SIGNAL(valueChanged(int)),	m_pMainWindow, SLOT(SetViaHoleWidth(int)));
-	QObject::connect(ui->closeTracks,		SIGNAL(toggled(bool)),		m_pMainWindow, SLOT(SetShowCloseTracks(bool)));
+	QObject::connect(ui->antiAliasOff,		SIGNAL(toggled(bool)),		m_pMainWindow,	SLOT(SetAntialiasOff(bool)));
+	QObject::connect(ui->antiAliasOn,		SIGNAL(toggled(bool)),		m_pMainWindow,	SLOT(SetAntialiasOn(bool)));
+	QObject::connect(ui->brightSlider,		SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SetBrightness(int)));
+	QObject::connect(ui->shade,				SIGNAL(toggled(bool)),		m_pMainWindow,	SLOT(SetShowTarget(bool)));
+	QObject::connect(ui->comptext,			SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SetTextSizeComp(int)));
+	QObject::connect(ui->comppins,			SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SetTextSizePins(int)));
+	QObject::connect(ui->spinBox_height,	SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SetTargetRows(int)));
+	QObject::connect(ui->spinBox_width,		SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SetTargetCols(int)));
+	QObject::connect(ui->padWidth,			SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SetPadWidth(int)));
+	QObject::connect(ui->trackWidth,		SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SetTrackWidth(int)));
+	QObject::connect(ui->tagWidth,			SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SetTagWidth(int)));
+	QObject::connect(ui->holeWidth,			SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SetHoleWidth(int)));
+	QObject::connect(ui->gapWidth,			SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SetGapWidth(int)));
+	QObject::connect(ui->maskWidth,			SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SetMaskWidth(int)));
+	QObject::connect(ui->silkWidth,			SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SetSilkWidth(int)));
+	QObject::connect(ui->edgeWidth,			SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SetEdgeWidth(int)));
+	QObject::connect(ui->viapadWidth,		SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SetViaPadWidth(int)));
+	QObject::connect(ui->viaholeWidth,		SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SetViaHoleWidth(int)));
+	QObject::connect(ui->closeTracks,		SIGNAL(toggled(bool)),		m_pMainWindow,	SLOT(SetShowCloseTracks(bool)));
+	QObject::connect(ui->pushButtonOK,		SIGNAL(clicked()),			this,			SLOT(hide()));
+#ifdef Q_OS_ANDROID
+	ui->brightSlider->setTabletTracking(true);
+#endif
 }
 
 RenderingDialog::~RenderingDialog()

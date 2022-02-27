@@ -47,6 +47,13 @@ ControlDialog::ControlDialog(QWidget* parent)
 	ui->textR->setText(QChar(0x25b6));
 	ui->textT->setText(QChar(0x25b2));
 	ui->textB->setText(QChar(0x25bc));
+
+#ifdef Q_OS_ANDROID
+	ui->trackSlider->setTabletTracking(true);
+	ui->saturationSlider->setTabletTracking(true);
+	ui->compSlider->setTabletTracking(true);
+	ui->fillSlider->setTabletTracking(true);
+#endif
 }
 
 void ControlDialog::SetMainWindow(MainWindow* p)

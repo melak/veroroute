@@ -176,28 +176,21 @@ public:
 		}
 	}
 
-	bool ToggleLyrPref(int iLyr, int iRow, int iCol, bool bReset)
+	bool ToggleLyrPref(int iLyr, int iRow, int iCol)
 	{
 		Element* p = Get(iLyr, iRow, iCol);
-		if ( !p->GetHasPin() || p->GetHasWire() ) return false;	// Want pins only.  Hole sharing wires could contradict each other, so ignore them
+		if ( !p->GetHasPin() || p->GetHasWire() ) return false;	// Want pins only.  Wires sharing a hole could contradict each other, so ignore all wires
 
 		const int&		compId		= p->GetCompId();	assert(compId != BAD_COMPID);
 		const size_t	pinIndex	= p->GetPinIndex();	assert(pinIndex != BAD_PININDEX);
 		Component&		comp		= m_compMgr.GetComponentById(compId);
-		const uchar		oldPref		= comp.GetLayerPref(pinIndex);
-		uchar			newPref(LAYER_X);
-		if ( !bReset )
+		switch( comp.GetLayerPref(pinIndex) )
 		{
-			switch( oldPref )
-			{
-				case LAYER_X:	newPref = ( iLyr == 0 ) ? LAYER_B : LAYER_T;	break;
-				case LAYER_B:	newPref = LAYER_T;	break;
-				case LAYER_T:	newPref = LAYER_B;	break;
-			}
+			case LAYER_X:	comp.SetLayerPref(pinIndex, LAYER_B);	break;
+			case LAYER_B:	comp.SetLayerPref(pinIndex, LAYER_T);	break;
+			case LAYER_T:	comp.SetLayerPref(pinIndex, LAYER_X);	break;
 		}
-		const bool bChanged = ( newPref != oldPref );
-		if ( bChanged ) comp.SetLayerPref(pinIndex, newPref);
-		return bChanged;
+		return true;
 	}
 
 	int GetLayerPref(const Element* p) const
@@ -243,6 +236,9 @@ public:
 											: ( iLayerPrefP == LAYER_T || iLayerPrefQ == LAYER_T ) );
 			if ( !bOK ) ClearCodeBit(iNbr, iCode);
 		}
+#ifdef FORCE_X_THERMALS
+		if ( GetTrackMode() == TRACKMODE::PCB && GetGroundFill() && GetGroundNodeId( bBottomLayer ? 0 : 1 ) == p->GetNodeId() ) return 0;	// Hack to force "X" shaped thermal reliefs
+#endif
 		return iCode;
 	}
 
@@ -273,6 +269,9 @@ public:
 		}
 
 		if ( iCandidateTagBits == 0 ) return 0;							// No candidate tags, so we're done
+#ifdef FORCE_X_THERMALS
+		return CODEBITS_DIAGS;	// Hack to force "X" shaped thermal reliefs
+#endif
 		if ( iCandidateTagBits == CODEBITS_LYR ) return CODEBITS_DIAGS;	// All tags are allowed, so just use the 4 diagonals
 
 		// Select a subset of the iCandidateTagBits

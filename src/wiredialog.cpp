@@ -27,8 +27,12 @@ WireDialog::WireDialog(MainWindow* parent)
 , m_pMainWindow(parent)
 {
 	ui->setupUi(this);
-	QObject::connect(ui->checkBox_share,	SIGNAL(toggled(bool)),	m_pMainWindow, SLOT(SetWireShare(bool)));
-	QObject::connect(ui->checkBox_cross,	SIGNAL(toggled(bool)),	m_pMainWindow, SLOT(SetWireCross(bool)));
+#ifndef Q_OS_ANDROID
+	ui->pushButtonOK->hide();
+#endif
+	QObject::connect(ui->checkBox_share,	SIGNAL(toggled(bool)),	m_pMainWindow,	SLOT(SetWireShare(bool)));
+	QObject::connect(ui->checkBox_cross,	SIGNAL(toggled(bool)),	m_pMainWindow,	SLOT(SetWireCross(bool)));
+	QObject::connect(ui->pushButtonOK,		SIGNAL(clicked()),		this,			SLOT(hide()));
 }
 
 WireDialog::~WireDialog()

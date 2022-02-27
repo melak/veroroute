@@ -27,8 +27,11 @@ BomDialog::BomDialog(MainWindow* parent)
 , m_pMainWindow(parent)
 {
 	ui->setupUi(this);
-
+#ifndef Q_OS_ANDROID
+	ui->pushButtonOK->hide();
+#endif
 	QObject::connect(ui->pushButton,	SIGNAL(clicked()),	this,	SLOT(WriteToFile()));
+	QObject::connect(ui->pushButtonOK,	SIGNAL(clicked()),	this,	SLOT(hide()));
 }
 
 BomDialog::~BomDialog()

@@ -84,7 +84,7 @@
      <rect>
       <x>10</x>
       <y>70</y>
-      <width>321</width>
+      <width>281</width>
       <height>24</height>
      </rect>
     </property>
@@ -93,6 +93,19 @@
     </property>
     <property name="toolTip">
      <string>Search for parts containing this text</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButtonOK">
+    <property name="geometry">
+     <rect>
+      <x>300</x>
+      <y>70</y>
+      <width>31</width>
+      <height>24</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>OK</string>
     </property>
    </widget>
   </widget>

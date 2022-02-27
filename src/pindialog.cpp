@@ -27,8 +27,12 @@ PinDialog::PinDialog(MainWindow* parent)
 , m_pMainWindow(parent)
 {
 	ui->setupUi(this);
-
+#ifndef Q_OS_ANDROID
+	ui->pushButtonOK->hide();
+	ui->tableWidget->resize(ui->tableWidget->width(), ui->tableWidget->height() + 30);
+#endif
 	QObject::connect(ui->tableWidget,	SIGNAL(cellChanged(int,int)),	this,	SLOT(CellChanged(int,int)));
+	QObject::connect(ui->pushButtonOK,	SIGNAL(clicked()),				this,	SLOT(hide()));
 }
 
 PinDialog::~PinDialog()

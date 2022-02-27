@@ -119,10 +119,18 @@ RESOURCES     = veroroute.qrc
 
 DESTDIR = ..
 
+# For Android builds use the following ...
+# DISTFILES += android-sources/AndroidManifest.xml
 DISTFILES +=
 
 QMAKE_INSTALL_FILE    = install -m 644
 QMAKE_INSTALL_PROGRAM = install -m 755
+
+# For Android builds add the following ...
+# ANDROID_PACKAGE_SOURCE_DIR = $$PWD/android-sources
+
+# For Android builds, we don't want the whole unix section.  Just the following INSTALLS line ...
+# INSTALLS += target
 
 unix {
     target.path = $${PREFIX}/bin/
