@@ -243,6 +243,8 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 	if ( GetCurrentTextId() != BAD_TEXTID )
 		return RepaintWithRouting();	// Don't modify nodeId or paint if editing text
 
+	const Element* pC = m_board.Get(layer, m_gridRow, m_gridCol);
+
 	if ( GetPaintFlood() )
 	{
 		if ( m_bLeftClick )		// Paint
@@ -256,7 +258,7 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 			assert( !m_board.GetRoutingEnabled() );	// Sanity check
 
 			const int tmp = GetCurrentNodeId();	// Need to temporarily change current nodeId for HandleRouting()
-			SetCurrentNodeId( m_board.Get(layer, m_gridRow, m_gridCol)->GetNodeId() );
+			SetCurrentNodeId( pC->GetNodeId() );
 			HandleRouting();		// Work out MH distances for the flood
 			SetCurrentNodeId(tmp);	// Restore current nodeId
 
@@ -268,9 +270,31 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 	{
 //TODO Comment out code here for testing Android GUI approach on desktop build
 #ifdef Q_OS_ANDROID
-		if ( GetPaintPins() || GetPaintBoard() )	// Paint
+		const bool bClickedValidNodeID = pC->GetNodeId() != BAD_NODEID;
+		if ( bClickedValidNodeID && GetPaintBoard() && pC->GetHasPin() )	// If we're painting board and clicked on a pin with a valid nodeID
+		{
+			SetCurrentNodeId( pC->GetNodeId() );	// ... then change current nodeID to that of the pin
+			m_mouseActionString = "Select NodeId";
+		}
+		else if ( bClickedValidNodeID && GetPaintBoard() && pC->GetNodeId() == GetCurrentNodeId() )	// If we're painting board and clicked on a point with matching valid nodeID
+		{
+			const bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, BAD_NODEID, false);	// ... then erase the point instead of painting it
+			if ( !bChanged ) return;
+			m_mouseActionString = "Erase";
+		}
+		/* A bit too easy to mess up with this block
+		else if ( bClickedValidNodeID && GetPaintPins() && pC->GetHasPin() && pC->GetNodeId() == GetCurrentNodeId() )	// If we're painting pins and clicked on a pin with matching valid nodeID
+		{
+			const bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, BAD_NODEID, true);	// .. then erase the pin instead of painting it
+			if ( !bChanged ) return;
+			m_mouseActionString = "Erase";
+		}*/
+#endif
+//TODO Comment out code here for testing Android GUI approach on desktop build
+#ifdef Q_OS_ANDROID
+		else if ( GetPaintPins() || GetPaintBoard() )	// Paint
 #else
-		if ( m_bLeftClick )	// Paint
+		else if ( m_bLeftClick )	// Paint
 #endif
 		{
 			if ( GetCurrentNodeId() == BAD_NODEID )			// If trying to left-click paint a BAD_NODEID ...
@@ -284,9 +308,9 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 		}
 //TODO Comment out code here for testing Android GUI approach on desktop build
 #ifdef Q_OS_ANDROID
-		if ( GetErasePins() || GetEraseBoard() )	// Erase
+		else if ( GetErasePins() || GetEraseBoard() )	// Erase
 #else
-		if ( m_bRightClick )	// Erase
+		else if ( m_bRightClick )	// Erase
 #endif
 		{
 			const bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, BAD_NODEID, GetPaintPins() || GetErasePins());
@@ -297,7 +321,7 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 	else	// Set/Unset current nodeId from board
 	{
 		if ( m_bLeftClick )
-			SetCurrentNodeId( m_board.Get(layer, m_gridRow, m_gridCol)->GetNodeId() );
+			SetCurrentNodeId( pC->GetNodeId() );
 		if ( m_bRightClick )
 			SetCurrentNodeId( BAD_NODEID );
 		if ( m_bLeftClick || m_bRightClick )
