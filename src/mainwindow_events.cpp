@@ -289,12 +289,13 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 			if ( !bChanged ) return;
 			m_mouseActionString = "Erase";
 		}*/
+		else
 #endif
 //TODO Comment out code here for testing Android GUI approach on desktop build
 #ifdef Q_OS_ANDROID
-		else if ( GetPaintPins() || GetPaintBoard() )	// Paint
+		if ( GetPaintPins() || GetPaintBoard() )	// Paint
 #else
-		else if ( m_bLeftClick )	// Paint
+		if ( m_bLeftClick )	// Paint
 #endif
 		{
 			if ( GetCurrentNodeId() == BAD_NODEID )			// If trying to left-click paint a BAD_NODEID ...
