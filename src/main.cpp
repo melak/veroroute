@@ -83,6 +83,9 @@ int main(int argc, char *argv[])
 	QDir templatesDir(appDataPathStr + QString("/templates"));
 	if ( !templatesDir.exists() ) templatesDir.mkpath(".");
 
+#ifdef Q_OS_ANDROID
+	QString tutorialsPathStr = "assets:/";
+#else
 	// Fallback "tutorials" path should be in same folder as the exe (until distribution method for Windows changes)
 	QString tutorialsPathStr = pathStr;
 
@@ -105,6 +108,7 @@ int main(int argc, char *argv[])
 			}
 		}
 	}
+#endif
 
 	// Spawn main window
 	MainWindow w( appDataPathStr, tutorialsPathStr );

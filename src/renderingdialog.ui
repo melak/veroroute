@@ -7,19 +7,19 @@
     <x>0</x>
     <y>0</y>
     <width>350</width>
-    <height>620</height>
+    <height>630</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
     <width>350</width>
-    <height>590</height>
+    <height>630</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
     <width>350</width>
-    <height>620</height>
+    <height>630</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -31,7 +31,7 @@
      <x>10</x>
      <y>10</y>
      <width>131</width>
-     <height>51</height>
+     <height>61</height>
     </rect>
    </property>
    <property name="title">
@@ -41,7 +41,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>22</y>
+      <y>30</y>
       <width>61</width>
       <height>24</height>
      </rect>
@@ -60,7 +60,7 @@
     <property name="geometry">
      <rect>
       <x>70</x>
-      <y>22</y>
+      <y>30</y>
       <width>51</width>
       <height>24</height>
      </rect>
@@ -80,7 +80,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>170</y>
+     <y>180</y>
      <width>331</width>
      <height>61</height>
     </rect>
@@ -163,7 +163,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>70</y>
+     <y>80</y>
      <width>331</width>
      <height>91</height>
     </rect>
@@ -268,7 +268,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>240</y>
+     <y>250</y>
      <width>331</width>
      <height>241</height>
     </rect>
@@ -533,7 +533,6 @@
     </property>
     <property name="font">
      <font>
-      <weight>50</weight>
       <italic>true</italic>
       <bold>false</bold>
      </font>
@@ -556,7 +555,6 @@
     </property>
     <property name="font">
      <font>
-      <weight>50</weight>
       <italic>true</italic>
       <bold>false</bold>
      </font>
@@ -649,7 +647,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>490</y>
+     <y>500</y>
      <width>331</width>
      <height>121</height>
     </rect>
@@ -787,29 +785,36 @@
      <x>150</x>
      <y>10</y>
      <width>191</width>
-     <height>51</height>
+     <height>61</height>
     </rect>
    </property>
    <property name="title">
-    <string>Background Brightness</string>
+    <string>Background</string>
    </property>
-   <widget class="QSlider" name="brightSlider">
+   <widget class="QLabel" name="label_brightness">
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>20</y>
-      <width>171</width>
-      <height>20</height>
+      <y>30</y>
+      <width>91</width>
+      <height>24</height>
      </rect>
     </property>
-    <property name="mouseTracking">
-     <bool>true</bool>
+    <property name="text">
+     <string>Brightness</string>
     </property>
-    <property name="focusPolicy">
-     <enum>Qt::StrongFocus</enum>
+   </widget>
+   <widget class="QSpinBox" name="spinBox_bright">
+    <property name="geometry">
+     <rect>
+      <x>120</x>
+      <y>30</y>
+      <width>61</width>
+      <height>24</height>
+     </rect>
     </property>
     <property name="toolTip">
-     <string>Sets the saturation level when using Color mode</string>
+     <string>Height of target board</string>
     </property>
     <property name="minimum">
      <number>200</number>
@@ -820,23 +825,8 @@
     <property name="singleStep">
      <number>5</number>
     </property>
-    <property name="pageStep">
-     <number>0</number>
-    </property>
     <property name="value">
      <number>255</number>
-    </property>
-    <property name="sliderPosition">
-     <number>255</number>
-    </property>
-    <property name="orientation">
-     <enum>Qt::Horizontal</enum>
-    </property>
-    <property name="tickPosition">
-     <enum>QSlider::NoTicks</enum>
-    </property>
-    <property name="tickInterval">
-     <number>1</number>
     </property>
    </widget>
   </widget>

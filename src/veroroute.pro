@@ -129,8 +129,34 @@ QMAKE_INSTALL_PROGRAM = install -m 755
 # For Android builds add the following ...
 # ANDROID_PACKAGE_SOURCE_DIR = $$PWD/android-sources
 
-# For Android builds, we don't want the whole unix section.  Just the following INSTALLS line ...
-# INSTALLS += target
+# For Android builds, we don't want the whole unix section.  Just the following section ...
+#android {
+#    assets.files = ../tutorials/tutorial_0.vrt \
+#                   ../tutorials/tutorial_1.vrt \
+#                   ../tutorials/tutorial_2.vrt \
+#                   ../tutorials/tutorial_3.vrt \
+#                   ../tutorials/tutorial_4.vrt \
+#                   ../tutorials/tutorial_5.vrt \
+#                   ../tutorials/tutorial_6.vrt \
+#                   ../tutorials/tutorial_7.vrt \
+#                   ../tutorials/tutorial_8.vrt \
+#                   ../tutorials/tutorial_9.vrt \
+#                   ../tutorials/tutorial_10.vrt \
+#                   ../tutorials/tutorial_11.vrt \
+#                   ../tutorials/tutorial_12.vrt \
+#                   ../tutorials/tutorial_13.vrt \
+#                   ../tutorials/tutorial_14.vrt \
+#                   ../tutorials/tutorial_15.vrt \
+#                   ../tutorials/tutorial_16.vrt \
+#                   ../tutorials/tutorial_17.vrt \
+#                   ../tutorials/tutorial_18.vrt \
+#                   ../tutorials/tutorial_19.vrt \
+#                   ../tutorials/tutorial_20.vrt \
+#                   ../tutorials/tutorial_21.vrt \
+#                   ../tutorials/tutorial_22.vrt
+#    assets.path = /assets/tutorials/
+#INSTALLS += target assets
+#}
 
 unix {
     target.path = $${PREFIX}/bin/

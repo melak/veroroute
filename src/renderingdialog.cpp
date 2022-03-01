@@ -35,7 +35,7 @@ RenderingDialog::RenderingDialog(MainWindow* parent)
 	ui->antiAliasOn->setChecked(true);
 	QObject::connect(ui->antiAliasOff,		SIGNAL(toggled(bool)),		m_pMainWindow,	SLOT(SetAntialiasOff(bool)));
 	QObject::connect(ui->antiAliasOn,		SIGNAL(toggled(bool)),		m_pMainWindow,	SLOT(SetAntialiasOn(bool)));
-	QObject::connect(ui->brightSlider,		SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SetBrightness(int)));
+	QObject::connect(ui->spinBox_bright,	SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SetBrightness(int)));
 	QObject::connect(ui->shade,				SIGNAL(toggled(bool)),		m_pMainWindow,	SLOT(SetShowTarget(bool)));
 	QObject::connect(ui->comptext,			SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SetTextSizeComp(int)));
 	QObject::connect(ui->comppins,			SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SetTextSizePins(int)));
@@ -53,9 +53,6 @@ RenderingDialog::RenderingDialog(MainWindow* parent)
 	QObject::connect(ui->viaholeWidth,		SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SetViaHoleWidth(int)));
 	QObject::connect(ui->closeTracks,		SIGNAL(toggled(bool)),		m_pMainWindow,	SLOT(SetShowCloseTracks(bool)));
 	QObject::connect(ui->pushButtonOK,		SIGNAL(clicked()),			this,			SLOT(hide()));
-#ifdef Q_OS_ANDROID
-	ui->brightSlider->setTabletTracking(true);
-#endif
 }
 
 RenderingDialog::~RenderingDialog()
@@ -79,7 +76,7 @@ void RenderingDialog::UpdateControls()
 	const bool bVias			= board.GetViasEnabled();
 	const bool bCloseTrackInfo	= board.GetHaveWarnPoints();
 
-	ui->brightSlider->setValue( board.GetBackgroundColor().GetR() );
+	ui->spinBox_bright->setValue( board.GetBackgroundColor().GetR() );
 	ui->comptext->setValue( board.GetTextSizeComp() );
 	ui->comppins->setValue( board.GetTextSizePins() );
 	ui->spinBox_height->setValue( board.GetTargetRows() );

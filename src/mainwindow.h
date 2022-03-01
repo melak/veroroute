@@ -544,6 +544,7 @@ private:
 	MyScrollArea*			m_scrollArea		= nullptr;	// The mainwindow contains a scrollable area ...
 	QLabel*					m_label				= nullptr;	// ... for a QLabel widget that ...
 	QPixmap					m_mainPixmap;					// ... contains a pixmap image of the whole board
+	QLabel*					m_labelInfo			= nullptr;	// For permanent status bar text
 	QLabel*					m_labelStatus		= nullptr;	// For permanent status bar text
 	QDockWidget*			m_dockControlDlg	= nullptr;
 	QDockWidget*			m_dockCompDlg		= nullptr;

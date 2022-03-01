@@ -108,6 +108,7 @@
     <addaction name="actionGroup"/>
     <addaction name="actionUngroup"/>
     <addaction name="separator"/>
+    <addaction name="actionSelectArea"/>
     <addaction name="actionSelectAll"/>
     <addaction name="separator"/>
     <addaction name="actionDelete"/>
@@ -246,10 +247,24 @@
     <addaction name="actionSwitchLayer"/>
     <addaction name="actionToggleVias"/>
    </widget>
+   <widget class="QMenu" name="menuTrack_Style">
+    <property name="title">
+     <string>Track Style</string>
+    </property>
+    <addaction name="actionFat"/>
+    <addaction name="actionThin"/>
+    <addaction name="actionCurved"/>
+    <addaction name="actionVeroV"/>
+    <addaction name="actionVeroH"/>
+    <addaction name="actionDiagsMin"/>
+    <addaction name="actionDiagsMax"/>
+    <addaction name="actionFill"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuAdd"/>
    <addaction name="menuView"/>
+   <addaction name="menuTrack_Style"/>
    <addaction name="menuWindow"/>
    <addaction name="menuLayers"/>
    <addaction name="menuHelp"/>
@@ -993,7 +1008,7 @@
      <normaloff>:/images/verov.png</normaloff>:/images/verov.png</iconset>
    </property>
    <property name="text">
-    <string>VeroV</string>
+    <string>Vero (Vertical)</string>
    </property>
    <property name="toolTip">
     <string>Vero track style (vertical strips)</string>
@@ -1008,7 +1023,7 @@
      <normaloff>:/images/veroh.png</normaloff>:/images/veroh.png</iconset>
    </property>
    <property name="text">
-    <string>VeroH</string>
+    <string>Vero (Horizontal)</string>
    </property>
    <property name="toolTip">
     <string>Vero track style (horizontal strips)</string>
@@ -1053,7 +1068,7 @@
      <normaloff>:/images/diagsmin.png</normaloff>:/images/diagsmin.png</iconset>
    </property>
    <property name="text">
-    <string>DiagsMin</string>
+    <string>Diagonals (Min)</string>
    </property>
    <property name="toolTip">
     <string>Diagonals (min)</string>
@@ -1068,7 +1083,7 @@
      <normaloff>:/images/diagsmax.png</normaloff>:/images/diagsmax.png</iconset>
    </property>
    <property name="text">
-    <string>DiagsMax</string>
+    <string>Diagonals (Max)</string>
    </property>
    <property name="toolTip">
     <string>Diagonals (max)</string>
@@ -1083,10 +1098,10 @@
      <normaloff>:/images/fill.png</normaloff>:/images/fill.png</iconset>
    </property>
    <property name="text">
-    <string>Fill</string>
+    <string>Ground Fill</string>
    </property>
    <property name="toolTip">
-    <string>Ground Fill using selected NodeId</string>
+    <string>Ground Fill using selected Net</string>
    </property>
   </action>
   <action name="actionSelectArea">
@@ -1098,7 +1113,7 @@
      <normaloff>:/images/area.png</normaloff>:/images/area.png</iconset>
    </property>
    <property name="text">
-    <string>SelectArea</string>
+    <string>Select Parts/Tracks by Area</string>
    </property>
    <property name="toolTip">
     <string>Select parts/tracks by area</string>

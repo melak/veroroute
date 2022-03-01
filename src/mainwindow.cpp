@@ -112,7 +112,9 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	ui->actionUpdateCheck->setVisible(false);	// Hide update check (until SSL support added)
 #endif
 
-#ifndef Q_OS_ANDROID
+#ifdef Q_OS_ANDROID
+	m_infoDlg->move(595,65);
+#else
 	move(50,50);
 	m_templatesDlg->move(940,50);
 	m_infoDlg->move(940,50);
@@ -126,9 +128,13 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 #endif
 
 	// Do multipart status bar
-	m_labelStatus		= new QLabel("Left", this);
+	m_labelInfo			= new QLabel("Board Size", this);
+	m_labelInfo->setFrameStyle(QFrame::NoFrame);
+	ui->statusBar->insertPermanentWidget(0, m_labelInfo, 0);
+
+	m_labelStatus		= new QLabel("Board Layer", this);
 	m_labelStatus->setFrameStyle(QFrame::NoFrame);
-	ui->statusBar->addPermanentWidget(m_labelStatus, 0);
+	ui->statusBar->insertPermanentWidget(1, m_labelStatus, 0);	//ui->statusBar->addPermanentWidget(m_labelStatus, 0);
 
 	m_rulerPen			= QPen(QColor(255,255,0,192), 0,	Qt::SolidLine, Qt::FlatCap);	// using alpha
 	m_backgroundPen		= QPen(Qt::white, 0,				Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
@@ -286,6 +292,7 @@ MainWindow::~MainWindow()
 	delete m_pinDlg;
 	delete m_findDlg;
 	delete m_labelStatus;
+	delete m_labelInfo;
 	delete m_label;
 	delete m_scrollArea;
 	delete ui;
@@ -1796,12 +1803,6 @@ void MainWindow::UpdateWindowTitle()
 {
 	const bool bCompEdit = m_board.GetCompEdit();	// true ==> Component Editor mode
 	QString title = ( bCompEdit ) ? "Component Editor Mode" : ( m_fileName.isEmpty() ) ? "Untitled" : m_fileName;
-	if ( !bCompEdit )
-	{
-		char buffer[256] = {'\0'};
-		sprintf(buffer, "    (%d x %d)     (%gmm x %gmm)", m_board.GetRows(), m_board.GetCols(), m_board.GetRows()*2.54, m_board.GetCols()*2.54);
-		title += buffer;
-	}
 	setWindowTitle(title);
 }
 
@@ -1854,9 +1855,23 @@ void MainWindow::UpdateControls()
 	ui->actionToggleVias->setText(		m_board.GetLyrs() != 1 && m_board.GetViasEnabled() ? QString("Disable Vias") : QString("Enable Vias") );
 	ui->actionSwitchLayer->setText(		m_board.GetCurrentLayer() == 0 ? QString("Switch to Top Layer") : QString("Switch to Bottom Layer") );
 	ui->actionSwitchLayer->setIcon(		m_board.GetCurrentLayer() == 0 ? QIcon(":/images/layertop.png") : QIcon(":/images/layerbot.png"));
-	if ( bCompEdit ) m_labelStatus->hide(); else m_labelStatus->show();
-	m_labelStatus->setText(m_board.GetCurrentLayer() == 0 ? QString("   Layer = Bottom   ") : QString("   Layer = Top   "));
+	if ( bCompEdit )
+	{
+		m_labelInfo->hide();
+		m_labelStatus->hide();
+	}
+	else
+	{
+		QString title;
+		char buffer[256] = {'\0'};
+		sprintf(buffer, "Board Size = %gin x %gin  (%gmm x %gmm)", m_board.GetRows()*0.1, m_board.GetCols()*0.1, m_board.GetRows()*2.54, m_board.GetCols()*2.54);
+		title += buffer;
+		m_labelInfo->setText( title );
+		m_labelInfo->show();
 
+		m_labelStatus->setText(m_board.GetCurrentLayer() == 0 ? QString("   Layer = Bottom   ") : QString("   Layer = Top   "));
+		m_labelStatus->show();
+	}
 	ui->actionCopy->setEnabled( bTextOK || bCompOK );
 	if ( bTextOK )	// Text Box takes precedence over comps
 		ui->actionCopy->setText( QString("Copy+Paste selected Text Box") );

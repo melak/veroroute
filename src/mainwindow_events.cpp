@@ -294,6 +294,10 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 			if ( !bChanged ) return;
 			m_mouseActionString = "Erase";
 		}*/
+		else if ( ( GetPaintPins() || GetErasePins() ) && !(pC->GetHasPin() && !pC->GetHasWire()) )	// Restrict painting/erasing pins to true pins (not wires)
+		{
+			return;
+		}
 		else
 #endif
 //TODO Comment out code here for testing Android GUI approach on desktop build
@@ -344,8 +348,16 @@ void MainWindow::mouseDoubleClickEvent(QMouseEvent* event)
 	m_mousePos = event->pos();
 	if ( m_board.GetMirrored() ) return;
 	if ( m_board.GetCompEdit() ) return;
-	if ( m_board.GetTrackMode() == TRACKMODE::OFF ) return;
 	if ( GetCtrlKeyDown() || GetShiftKeyDown() ) return;
+#ifdef Q_OS_ANDROID
+	if ( GetDefiningRect() )
+	{
+		SetDefiningRect(false);	// Quit rectangle mode
+		UpdateControls();
+		return;
+	}
+#endif
+	if ( m_board.GetTrackMode() == TRACKMODE::OFF ) return;
 
 	if ( GetCurrentTextId() != BAD_TEXTID )
 		return ShowTextDialog();
@@ -358,7 +370,7 @@ void MainWindow::mouseDoubleClickEvent(QMouseEvent* event)
 	// Cursor modification
 	centralWidget()->setCursor(Qt::CrossCursor);
 
-	// Handle changing layer preference for PCBs via double clicks
+	// Handle changing layer preference for PCBs via double-clicking on a component pin
 	if ( m_board.GetTrackMode() == TRACKMODE::PCB && m_board.GetLyrs() == 2 )
 	{
 		if ( hypot(dRow - 0.5, dCol - 0.5) < 0.25 )	// Only consider clicks that are close to the grid point
@@ -370,6 +382,24 @@ void MainWindow::mouseDoubleClickEvent(QMouseEvent* event)
 			}
 		}
 	}
+
+//TODO Comment out code here for testing Android GUI approach on desktop build
+#ifdef Q_OS_ANDROID
+	// Handle leaving PaintBoard mode via double-clicking on a component pin
+	if ( GetPaintBoard() && GetCurrentNodeId() != BAD_NODEID )
+	{
+		if ( hypot(dRow - 0.5, dCol - 0.5) < 0.25 )	// Only consider clicks that are close to the grid point
+		{
+			const Element* pC = m_board.Get(m_board.GetCurrentLayer(), m_gridRow, m_gridCol);
+			if ( pC->GetHasPin() && !pC->GetHasWire() && pC->GetNodeId() == GetCurrentNodeId() )
+			{
+				SetCurrentNodeId(BAD_NODEID);
+				SetPaintBoard(false);
+				return;
+			}
+		}
+	}
+#endif
 
 	// Handle competing diagonals ...
 	const int	dR = ( dRow > 0.5 ) ? 1 : 0;	// Correct row, col to account for crossing ...
