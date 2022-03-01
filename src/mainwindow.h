@@ -92,8 +92,8 @@ public:
 	void CheckFolders();
 	// Helper for mouse
 	void GetPixMapXY(const QPoint& currentPoint, int& pixmapX, int& pixmapY) const;
-	void GetRowCol(const QPoint& currentPoint, int& row, int& col, double& deltaRow, double& deltaCol) const;
-	void GetRowCol(const QPoint& currentPoint, const int rows, const int cols, int& row, int& col, double& deltaRow, double& deltaCol) const;
+	bool GetRowCol(const QPoint& currentPoint, int& row, int& col, double& deltaRow, double& deltaCol) const;
+	bool GetRowCol(const QPoint& currentPoint, const int rows, const int cols, int& row, int& col, double& deltaRow, double& deltaCol) const;
 
 	// Helpers for rendering
 	void GetFirstRowCol(int& iRow, int& iCol) const;
@@ -282,9 +282,15 @@ public slots:
 	void ShowDlg(QWidget* p);
 
 	// View controls
-	void TrackSliderChanged(int i);
+	void TrackSliderChanged(int i);	// Actually a helper for the following 3 checkboxes
+	void CheckBoxMonoChanged(bool b);
+	void CheckBoxColorChanged(bool b);
+	void CheckBoxPcbChanged(bool b);
 	void SaturationSliderChanged(int i);
-	void CompSliderChanged(int i);
+	void CompSliderChanged(int i);	// Actually a helper for the following 3 checkboxes
+	void CheckBoxLineChanged(bool b);
+	void CheckBoxNameChanged(bool b);
+	void CheckBoxValueChanged(bool b);
 	void FillSliderChanged(int i);
 	void MarginChanged(int i);
 	void SetShowGrid(bool b);

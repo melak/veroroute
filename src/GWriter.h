@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include <QTextStream>
+#include <QFile>
 #include "CurveList.h"
 
 class QPointF;
@@ -37,7 +39,7 @@ struct GPenInfo
 	GPenInfo(const GPEN& ePen = GPEN::NONE,
 			 const int& iWidth = 0,
 			 const int& iCode = 0,
-			 const std::string& comment = "",
+			 const QString& comment = "",
 			 const bool& bCustom = false)
 	: m_ePen(ePen), m_iWidth(iWidth), m_iCode(iCode), m_comment(comment), m_bCustom(bCustom) {}
 	GPenInfo(const GPenInfo& o) { *this = o; }
@@ -62,11 +64,11 @@ struct GPenInfo
 	{
 		return !(*this == o);
 	}
-	GPEN		m_ePen;
-	int			m_iWidth;
-	int			m_iCode;	// Aperture/Tool code	// e.g. "10" for D10 or T10
-	std::string m_comment;
-	bool		m_bCustom;
+	GPEN	m_ePen;
+	int		m_iWidth;
+	int		m_iCode;	// Aperture/Tool code	// e.g. "10" for D10 or T10
+	QString	m_comment;
+	bool	m_bCustom;
 };
 
 // Wrapper for a stream to a Gerber file
@@ -77,7 +79,7 @@ public:
 	~GStream()	{ Close(); Clear(); }
 	void Clear();
 	void Close();
-	bool Open(const char* fileName, const GFILE& eType, const bool& bMetric, const Board& board, const bool& bVias, const QString& UTC);
+	bool Open(const QString& fileName, const GFILE& eType, const bool& bMetric, const Board& board, const bool& bVias, const QString& UTC);
 	void Drill(const QPoint& pF);
 	void SetPolarity(const GPOLARITY& ePolarity, bool bCheckOK = true);
 	void AddPad(const QPointF& pF, const GPEN& ePen, const int& w = 0);				// Add to m_pads buffer
@@ -99,8 +101,9 @@ private:
 	void MakeDrills();
 	void MakeApertures();
 	void LinearInterpolation();
-	void Comment(const char* sz);
+	void Comment(const QString& str);
 	void EndLine();
+	void QtEndline();
 	bool GetOK() const;
 	void SetPen(const GPEN& ePen, const int& w);
 	void Flash(const QPoint& p);
@@ -114,8 +117,8 @@ private:
 	void WriteDrillOrdinate(const int& iDeciMils);
 	void GetQPoint(const QPointF& in, QPoint& out) const;		// Convert float to integer
 	void GetQPolygon(const QPolygonF& in, QPolygon& out) const;	// Convert float to integer
-	std::string MilToInch(const int& iMil, const bool& bLZ = false) const;
-	std::string MilToMM(const int& iMil, const bool& bLZ = false) const;
+	QString MilToInch(const int& iMil, const bool& bLZ = false) const;
+	QString MilToMM(const int& iMil, const bool& bLZ = false) const;
 	// Data
 	GFILE				m_eType		= GFILE::GBL;	// GKO, GBL, GBS, GTL, GTS, GTO
 	GPEN				m_ePen		= GPEN::NONE;
@@ -135,7 +138,8 @@ private:
 	CurveList			m_regions;	// Drawn with zero width pen. For filling gaps between tracks.
 	CurveList			m_holes;	// Pad/Via holes
 	// The output stream
-	std::ofstream		m_os;
+	QFile				m_file;
+	QTextStream			m_os;
 };
 
 // Wrapper for handling a set of Gerber files
@@ -144,7 +148,7 @@ class GWriter
 public:
 	GWriter()	{}
 	~GWriter()	{ Close(); }
-	bool		Open(const char* fileName, const Board& board, const bool& bVias, const bool& bTwoLayerGerber, const bool& bMetric);
+	bool		Open(const QString& fileName, const Board& board, const bool& bVias, const bool& bTwoLayerGerber, const bool& bMetric);
 	void		Close();
 	GStream&	GetStream(const GFILE& eType);
 private:

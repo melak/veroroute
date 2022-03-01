@@ -606,7 +606,13 @@ void MainWindow::Save()
 		m_infoDlg->Update();	// Don't need a ResetView() but MUST update the initial string for the info dialog
 	}
 	else
+	{
+#ifdef Q_OS_ANDROID
+		return SaveAs();	// Ask for explicit permission
+#else
 		QMessageBox::information(this, tr("Unable to save file"), tr(fileNameStr.c_str()));
+#endif
+	}
 }
 
 void MainWindow::SaveAs()
@@ -694,7 +700,7 @@ void MainWindow::ImportOrcad()
 
 void MainWindow::WritePDF()
 {
-	m_pdfFileName = GetSaveFileName(tr("Choose a PDF File"), tr("PDF (*.pdf);;All Files (*)"), QString("pdf"));
+	m_pdfFileName = GetSaveFileName(tr("Choose a PDF file"), tr("PDF (*.pdf);;All Files (*)"), QString("pdf"));
 	if ( !m_pdfFileName.isEmpty() )
 	{
 		ui->statusBar->showMessage( tr("Exporting to PDF..."), 500 );
@@ -721,10 +727,15 @@ void MainWindow::WriteGerber(const bool& bTwoLayerGerber, const bool& bMetric)
 	m_bTwoLayerGerber = bTwoLayerGerber;
 	m_board.SetHoleType(m_bTwoLayerGerber ? HOLETYPE::PTH : HOLETYPE::NPTH);
 
-	m_gerberFileName = GetSaveFileName(tr("Choose a Gerber File Prefix"), tr("All Files (*)"), QString(""));
+	m_gerberFileName = GetSaveFileName(tr("Choose a Gerber file prefix"), tr("All Files (*)"), QString(""));
+
 	if ( !m_gerberFileName.isEmpty() )
 	{
+#ifdef Q_OS_ANDROID
+		ui->statusBar->showMessage( tr("Exporting to Gerber.  This can be very SLOW.  Please wait..."), 500 );
+#else
 		ui->statusBar->showMessage( tr("Exporting to Gerber..."), 500 );
+#endif
 
 		const int oldGridPixels		= m_board.GetGRIDPIXELS();
 		const int gerberGridPixels	= 1000;	// Gerber file had 4 decimal places per inch
@@ -737,7 +748,7 @@ void MainWindow::WriteGerber(const bool& bTwoLayerGerber, const bool& bMetric)
 		const bool bWireVias	= m_bTwoLayerGerber && m_board.GetLyrs() == 1 && m_board.GetCompMgr().GetHavePlacedWires();
 		const bool bVias		= m_board.GetHasVias() || bWireVias;
 
-		if ( m_gWriter.Open(m_gerberFileName.toStdString().c_str(), m_board, bVias, m_bTwoLayerGerber, bMetric) )
+		if ( m_gWriter.Open(m_gerberFileName, m_board, bVias, m_bTwoLayerGerber, bMetric) )
 		{
 			const int origlayer = m_board.GetCurrentLayer();
 			for (int lyr = 0, lyrs = m_board.GetLyrs(); lyr < lyrs; lyr++)
@@ -779,7 +790,7 @@ void MainWindow::ClearRecentFiles()
 
 void MainWindow::WritePNG()
 {
-	const QString fileName = GetSaveFileName(tr("Choose a PNG File"), tr("PNG (*.png);;All Files (*)"), QString("png"));
+	const QString fileName = GetSaveFileName(tr("Choose a PNG file"), tr("PNG (*.png);;All Files (*)"), QString("png"));
 	if ( !fileName.isEmpty() )
 	{
 		ui->statusBar->showMessage( tr("Exporting to PNG..."), 500 );
@@ -1133,8 +1144,14 @@ void MainWindow::HandleNetworkReply(QNetworkReply* pReply)
 
 // View controls (Update history BEFORE calling UpdateControls() since that triggers more history writes)
 void MainWindow::TrackSliderChanged(int i)		{ if ( m_board.SetTrackSliderValue(i) )	{ UpdateHistory("Track slider change");		UpdateControls(); DestroyPixmapCache(); RepaintSkipRouting(); m_board.CustomPCBshapes(); } }
+void MainWindow::CheckBoxMonoChanged(bool b)	{ if ( b != (m_board.GetTrackSliderValue() == 1) ) TrackSliderChanged(b ? 1 : 0); }
+void MainWindow::CheckBoxColorChanged(bool b)	{ if ( b != (m_board.GetTrackSliderValue() == 2) ) TrackSliderChanged(b ? 2 : 0); }
+void MainWindow::CheckBoxPcbChanged(bool b)		{ if ( b != (m_board.GetTrackSliderValue() == 3) ) TrackSliderChanged(b ? 3 : 0); }
 void MainWindow::SaturationSliderChanged(int i) { if ( m_board.SetSaturation(i) )		{ UpdateHistory("Saturation change");		UpdateControls(); DestroyPixmapCache(); RepaintSkipRouting(); } }
 void MainWindow::CompSliderChanged(int i)		{ if ( m_board.SetCompSliderValue(i) )	{ UpdateHistory("Part slider change");		UpdateControls(); RepaintSkipRouting(); } }
+void MainWindow::CheckBoxLineChanged(bool b)	{ if ( b != (m_board.GetCompSliderValue() == 1) ) CompSliderChanged(b ? 1 : 0); }
+void MainWindow::CheckBoxNameChanged(bool b)	{ if ( b != (m_board.GetCompSliderValue() == 2) ) CompSliderChanged(b ? 2 : 0); }
+void MainWindow::CheckBoxValueChanged(bool b)	{ if ( b != (m_board.GetCompSliderValue() == 3) ) CompSliderChanged(b ? 3 : 0); }
 void MainWindow::FillSliderChanged(int i)		{ if ( m_board.SetFillSaturation(i) )	{ UpdateHistory("Fill opacity change");		UpdateControls(); DestroyPixmapCache();	RepaintSkipRouting(); } }
 void MainWindow::SetShowGrid(bool b)			{ if ( m_board.SetShowGrid(b) )			{ UpdateHistory("Toggle grid");				UpdateControls(); RepaintSkipRouting(); } }
 void MainWindow::SetShowText(bool b)			{ if ( m_board.SetShowText(b) )			{ UpdateHistory("Toggle text");				UpdateControls(); RepaintSkipRouting(); } }

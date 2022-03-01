@@ -41,12 +41,12 @@ void MainWindow::GetPixMapXY(const QPoint& currentPoint, int& pixmapX, int& pixm
 	pixmapY += gndT;
 }
 
-void MainWindow::GetRowCol(const QPoint& currentPoint, int& row, int& col, double& deltaRow, double& deltaCol) const
+bool MainWindow::GetRowCol(const QPoint& currentPoint, int& row, int& col, double& deltaRow, double& deltaCol) const
 {
-	GetRowCol(currentPoint, m_board.GetRows(), m_board.GetCols(), row, col, deltaRow, deltaCol);
+	return GetRowCol(currentPoint, m_board.GetRows(), m_board.GetCols(), row, col, deltaRow, deltaCol);
 }
 
-void MainWindow::GetRowCol(const QPoint& currentPoint, const int rows, const int cols, int& row, int& col, double& deltaRow, double& deltaCol) const
+bool MainWindow::GetRowCol(const QPoint& currentPoint, const int rows, const int cols, int& row, int& col, double& deltaRow, double& deltaCol) const
 {
 	const int& W = m_board.GetGRIDPIXELS();	// Square width in pixels
 
@@ -59,8 +59,10 @@ void MainWindow::GetRowCol(const QPoint& currentPoint, const int rows, const int
 	col		 = pixmapX / W;
 	deltaRow -= row;	// We just want an error in terms of grid squares
 	deltaCol -= col;
+	const bool bInGrid = ( row >= 0 && row < rows ) && ( col >= 0 && col < cols);
 	row = std::max(0, std::min(rows-1, row));
 	col = std::max(0, std::min(cols-1, col));
+	return bInGrid;
 }
 
 void MainWindow::wheelEvent(QWheelEvent* event)
@@ -113,7 +115,10 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 	if ( m_board.GetCompEdit() )
 		GetRowCol(event->pos(), compDefiner.GetScreenRows(), compDefiner.GetScreenCols(), m_gridRow, m_gridCol, dRow, dCol);
 	else
-		GetRowCol(event->pos(), m_gridRow, m_gridCol, dRow, dCol);
+	{
+		const bool bInGrid = GetRowCol(event->pos(), m_gridRow, m_gridCol, dRow, dCol);
+		if ( !bInGrid) return;
+	}
 
 	if ( m_bLeftClick && CanModifyRuler() )
 	{
@@ -347,7 +352,8 @@ void MainWindow::mouseDoubleClickEvent(QMouseEvent* event)
 
 	// Get row col
 	double dRow(0), dCol(0);	// Fractional correction to row, col for SwapDiagLinks() call
-	GetRowCol(event->pos(), m_gridRow, m_gridCol, dRow, dCol);
+	const bool bInGrid = GetRowCol(event->pos(), m_gridRow, m_gridCol, dRow, dCol);
+	if ( !bInGrid ) return;
 
 	// Cursor modification
 	centralWidget()->setCursor(Qt::CrossCursor);

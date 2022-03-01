@@ -47,23 +47,20 @@ ControlDialog::ControlDialog(QWidget* parent)
 	ui->textR->setText(QChar(0x25b6));
 	ui->textT->setText(QChar(0x25b2));
 	ui->textB->setText(QChar(0x25bc));
-
-#ifdef Q_OS_ANDROID
-	ui->trackSlider->setTabletTracking(true);
-	ui->saturationSlider->setTabletTracking(true);
-	ui->compSlider->setTabletTracking(true);
-	ui->fillSlider->setTabletTracking(true);
-#endif
 }
 
 void ControlDialog::SetMainWindow(MainWindow* p)
 {
 	m_pMainWindow = p;
 
-	QObject::connect(ui->trackSlider,		SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(TrackSliderChanged(int)));
-	QObject::connect(ui->saturationSlider,	SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SaturationSliderChanged(int)));
-	QObject::connect(ui->compSlider,		SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(CompSliderChanged(int)));
-	QObject::connect(ui->fillSlider,		SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(FillSliderChanged(int)));
+	QObject::connect(ui->checkBoxMono,		SIGNAL(toggled(bool)),		m_pMainWindow,	SLOT(CheckBoxMonoChanged(bool)));
+	QObject::connect(ui->checkBoxColor,		SIGNAL(toggled(bool)),		m_pMainWindow,	SLOT(CheckBoxColorChanged(bool)));
+	QObject::connect(ui->checkBoxPCB,		SIGNAL(toggled(bool)),		m_pMainWindow,	SLOT(CheckBoxPcbChanged(bool)));
+	QObject::connect(ui->saturation,		SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SaturationSliderChanged(int)));
+	QObject::connect(ui->checkBoxLine,		SIGNAL(toggled(bool)),		m_pMainWindow,	SLOT(CheckBoxLineChanged(bool)));
+	QObject::connect(ui->checkBoxName,		SIGNAL(toggled(bool)),		m_pMainWindow,	SLOT(CheckBoxNameChanged(bool)));
+	QObject::connect(ui->checkBoxValue,		SIGNAL(toggled(bool)),		m_pMainWindow,	SLOT(CheckBoxValueChanged(bool)));
+	QObject::connect(ui->fill,				SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(FillSliderChanged(int)));
 	QObject::connect(ui->crop,				SIGNAL(clicked()),			m_pMainWindow,	SLOT(Crop()));
 	QObject::connect(ui->margin,			SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(MarginChanged(int)));
 
@@ -267,15 +264,24 @@ void ControlDialog::UpdateControls()	// Non-component controls
 	ui->fast->setDisabled( bCompEdit );
 	ui->wipe->setDisabled( bCompEdit || board.GetDisableWipe() );
 
-	// Do sliders last (they can trigger a redraw)
-	ui->trackSlider->setEnabled( !bCompEdit );
-	ui->saturationSlider->setEnabled( !bCompEdit && bColor );
-	ui->compSlider->setEnabled( !bCompEdit );
-	ui->fillSlider->setEnabled( !bCompEdit && bComps && ( bColor || bNoTracks) );
-	ui->trackSlider->setValue( board.GetTrackSliderValue() );
-	ui->saturationSlider->setValue( board.GetSaturation() );
-	ui->compSlider->setValue( board.GetCompSliderValue() );
-	ui->fillSlider->setValue( board.GetFillSaturation() );
+	// Do track and component "sliders" last (they can trigger a redraw)
+	ui->checkBoxMono->setEnabled(  !bCompEdit );
+	ui->checkBoxColor->setEnabled( !bCompEdit );
+	ui->checkBoxPCB->setEnabled(   !bCompEdit );
+	ui->checkBoxLine->setEnabled(  !bCompEdit );
+	ui->checkBoxName->setEnabled(  !bCompEdit );
+	ui->checkBoxValue->setEnabled( !bCompEdit );
+	ui->saturation->setEnabled( !bCompEdit && bColor );
+	ui->fill->setEnabled( !bCompEdit && bComps && ( bColor || bNoTracks) );
+
+	ui->checkBoxMono->setChecked(  board.GetTrackSliderValue() == 1 );
+	ui->checkBoxColor->setChecked( board.GetTrackSliderValue() == 2 );
+	ui->checkBoxPCB->setChecked(   board.GetTrackSliderValue() == 3 );
+	ui->checkBoxLine->setChecked(  board.GetCompSliderValue()  == 1 );
+	ui->checkBoxName->setChecked(  board.GetCompSliderValue()  == 2 );
+	ui->checkBoxValue->setChecked( board.GetCompSliderValue()  == 3 );
+	ui->saturation->setValue( board.GetSaturation() );
+	ui->fill->setValue( board.GetFillSaturation() );
 
 	const bool bNodeIdOK = board.GetCurrentNodeId() != BAD_NODEID;
 	ui->autoColor->setEnabled( bColor && bNodeIdOK );

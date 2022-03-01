@@ -162,7 +162,7 @@
     </rect>
    </property>
    <property name="focusPolicy">
-    <enum>Qt::NoFocus</enum>
+    <enum>Qt::TabFocus</enum>
    </property>
    <property name="toolTip">
     <string>Nodes with open-circuits</string>
@@ -191,7 +191,7 @@
     </rect>
    </property>
    <property name="focusPolicy">
-    <enum>Qt::NoFocus</enum>
+    <enum>Qt::TabFocus</enum>
    </property>
    <property name="toolTip">
     <string>Rotate counter-clockwise (Z-key)</string>
@@ -226,7 +226,7 @@
     </rect>
    </property>
    <property name="focusPolicy">
-    <enum>Qt::NoFocus</enum>
+    <enum>Qt::TabFocus</enum>
    </property>
    <property name="toolTip">
     <string>Rotate clockwise (X-key)</string>
@@ -261,7 +261,7 @@
     </rect>
    </property>
    <property name="focusPolicy">
-    <enum>Qt::NoFocus</enum>
+    <enum>Qt::TabFocus</enum>
    </property>
    <property name="toolTip">
     <string>Decrease length (Mouse wheel)</string>
@@ -289,7 +289,7 @@
     </rect>
    </property>
    <property name="focusPolicy">
-    <enum>Qt::NoFocus</enum>
+    <enum>Qt::TabFocus</enum>
    </property>
    <property name="toolTip">
     <string>Increase length (Mouse wheel)</string>
@@ -311,9 +311,9 @@
    <property name="geometry">
     <rect>
      <x>0</x>
-     <y>515</y>
+     <y>520</y>
      <width>71</width>
-     <height>21</height>
+     <height>10</height>
     </rect>
    </property>
    <property name="frameShadow">
@@ -330,9 +330,9 @@
    <property name="geometry">
     <rect>
      <x>0</x>
-     <y>380</y>
+     <y>385</y>
      <width>91</width>
-     <height>21</height>
+     <height>10</height>
     </rect>
    </property>
    <property name="frameShadow">
@@ -396,9 +396,9 @@
    <property name="geometry">
     <rect>
      <x>180</x>
-     <y>380</y>
+     <y>385</y>
      <width>91</width>
-     <height>21</height>
+     <height>10</height>
     </rect>
    </property>
    <property name="frameShadow">
@@ -418,9 +418,9 @@
    <property name="geometry">
     <rect>
      <x>200</x>
-     <y>515</y>
+     <y>520</y>
      <width>71</width>
-     <height>21</height>
+     <height>10</height>
     </rect>
    </property>
    <property name="frameShadow">
@@ -437,9 +437,9 @@
    <property name="geometry">
     <rect>
      <x>0</x>
-     <y>145</y>
+     <y>150</y>
      <width>101</width>
-     <height>21</height>
+     <height>10</height>
     </rect>
    </property>
    <property name="frameShadow">
@@ -478,9 +478,9 @@
    <property name="geometry">
     <rect>
      <x>170</x>
-     <y>145</y>
+     <y>150</y>
      <width>101</width>
-     <height>20</height>
+     <height>10</height>
     </rect>
    </property>
    <property name="frameShadow">
@@ -496,50 +496,13 @@
     <enum>Qt::Horizontal</enum>
    </property>
   </widget>
-  <widget class="QSlider" name="trackSlider">
-   <property name="geometry">
-    <rect>
-     <x>5</x>
-     <y>20</y>
-     <width>141</width>
-     <height>20</height>
-    </rect>
-   </property>
-   <property name="mouseTracking">
-    <bool>true</bool>
-   </property>
-   <property name="focusPolicy">
-    <enum>Qt::StrongFocus</enum>
-   </property>
-   <property name="toolTip">
-    <string>Controls how tracks are displayed</string>
-   </property>
-   <property name="maximum">
-    <number>3</number>
-   </property>
-   <property name="pageStep">
-    <number>0</number>
-   </property>
-   <property name="sliderPosition">
-    <number>2</number>
-   </property>
-   <property name="orientation">
-    <enum>Qt::Horizontal</enum>
-   </property>
-   <property name="tickPosition">
-    <enum>QSlider::NoTicks</enum>
-   </property>
-   <property name="tickInterval">
-    <number>1</number>
-   </property>
-  </widget>
   <widget class="Line" name="line_1">
    <property name="geometry">
     <rect>
      <x>0</x>
-     <y>0</y>
+     <y>5</y>
      <width>101</width>
-     <height>21</height>
+     <height>10</height>
     </rect>
    </property>
    <property name="frameShadow">
@@ -556,9 +519,9 @@
    <property name="geometry">
     <rect>
      <x>170</x>
-     <y>0</y>
+     <y>5</y>
      <width>101</width>
-     <height>20</height>
+     <height>10</height>
     </rect>
    </property>
    <property name="frameShadow">
@@ -635,7 +598,7 @@
     </rect>
    </property>
    <property name="focusPolicy">
-    <enum>Qt::NoFocus</enum>
+    <enum>Qt::TabFocus</enum>
    </property>
    <property name="toolTip">
     <string>Move text label left</string>
@@ -663,7 +626,7 @@
     </rect>
    </property>
    <property name="focusPolicy">
-    <enum>Qt::NoFocus</enum>
+    <enum>Qt::TabFocus</enum>
    </property>
    <property name="toolTip">
     <string>Move text label right</string>
@@ -691,7 +654,7 @@
     </rect>
    </property>
    <property name="focusPolicy">
-    <enum>Qt::NoFocus</enum>
+    <enum>Qt::TabFocus</enum>
    </property>
    <property name="toolTip">
     <string>Move text label up</string>
@@ -719,7 +682,7 @@
     </rect>
    </property>
    <property name="focusPolicy">
-    <enum>Qt::NoFocus</enum>
+    <enum>Qt::TabFocus</enum>
    </property>
    <property name="toolTip">
     <string>Move text label down</string>
@@ -747,162 +710,13 @@
     </rect>
    </property>
    <property name="focusPolicy">
-    <enum>Qt::NoFocus</enum>
+    <enum>Qt::TabFocus</enum>
    </property>
    <property name="toolTip">
     <string>Move text label to default position</string>
    </property>
    <property name="text">
     <string>Centre</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_15">
-   <property name="geometry">
-    <rect>
-     <x>-5</x>
-     <y>42</y>
-     <width>41</width>
-     <height>20</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Off</string>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignCenter</set>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_18">
-   <property name="geometry">
-    <rect>
-     <x>27</x>
-     <y>42</y>
-     <width>51</width>
-     <height>20</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Mono</string>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignCenter</set>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_19">
-   <property name="geometry">
-    <rect>
-     <x>65</x>
-     <y>42</y>
-     <width>61</width>
-     <height>20</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Color</string>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignCenter</set>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_20">
-   <property name="geometry">
-    <rect>
-     <x>125</x>
-     <y>87</y>
-     <width>51</width>
-     <height>20</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Value</string>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignCenter</set>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_21">
-   <property name="geometry">
-    <rect>
-     <x>75</x>
-     <y>87</y>
-     <width>51</width>
-     <height>20</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Name</string>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignCenter</set>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_22">
-   <property name="geometry">
-    <rect>
-     <x>35</x>
-     <y>87</y>
-     <width>41</width>
-     <height>20</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Line</string>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignCenter</set>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_23">
-   <property name="geometry">
-    <rect>
-     <x>-5</x>
-     <y>87</y>
-     <width>41</width>
-     <height>20</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Off</string>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignCenter</set>
-   </property>
-  </widget>
-  <widget class="QSlider" name="compSlider">
-   <property name="geometry">
-    <rect>
-     <x>5</x>
-     <y>65</y>
-     <width>151</width>
-     <height>20</height>
-    </rect>
-   </property>
-   <property name="mouseTracking">
-    <bool>true</bool>
-   </property>
-   <property name="focusPolicy">
-    <enum>Qt::StrongFocus</enum>
-   </property>
-   <property name="toolTip">
-    <string>Controls how parts are displayed</string>
-   </property>
-   <property name="maximum">
-    <number>3</number>
-   </property>
-   <property name="pageStep">
-    <number>0</number>
-   </property>
-   <property name="sliderPosition">
-    <number>3</number>
-   </property>
-   <property name="orientation">
-    <enum>Qt::Horizontal</enum>
-   </property>
-   <property name="tickPosition">
-    <enum>QSlider::NoTicks</enum>
-   </property>
-   <property name="tickInterval">
-    <number>1</number>
    </property>
   </widget>
   <widget class="QLabel" name="label_width">
@@ -931,7 +745,7 @@
     </rect>
    </property>
    <property name="focusPolicy">
-    <enum>Qt::NoFocus</enum>
+    <enum>Qt::TabFocus</enum>
    </property>
    <property name="toolTip">
     <string>Decrease DIP width</string>
@@ -959,7 +773,7 @@
     </rect>
    </property>
    <property name="focusPolicy">
-    <enum>Qt::NoFocus</enum>
+    <enum>Qt::TabFocus</enum>
    </property>
    <property name="toolTip">
     <string>Increase DIP width</string>
@@ -1024,74 +838,28 @@
     <string>Wipe All Tracks</string>
    </property>
   </widget>
-  <widget class="QSlider" name="saturationSlider">
-   <property name="geometry">
-    <rect>
-     <x>170</x>
-     <y>20</y>
-     <width>91</width>
-     <height>20</height>
-    </rect>
-   </property>
-   <property name="mouseTracking">
-    <bool>true</bool>
-   </property>
-   <property name="focusPolicy">
-    <enum>Qt::StrongFocus</enum>
-   </property>
-   <property name="toolTip">
-    <string>Sets the saturation level when using Color mode</string>
-   </property>
-   <property name="minimum">
-    <number>20</number>
-   </property>
-   <property name="maximum">
-    <number>100</number>
-   </property>
-   <property name="singleStep">
-    <number>10</number>
-   </property>
-   <property name="pageStep">
-    <number>0</number>
-   </property>
-   <property name="value">
-    <number>100</number>
-   </property>
-   <property name="sliderPosition">
-    <number>100</number>
-   </property>
-   <property name="orientation">
-    <enum>Qt::Horizontal</enum>
-   </property>
-   <property name="tickPosition">
-    <enum>QSlider::NoTicks</enum>
-   </property>
-   <property name="tickInterval">
-    <number>1</number>
-   </property>
-  </widget>
   <widget class="QLabel" name="label_saturation">
    <property name="geometry">
     <rect>
-     <x>170</x>
-     <y>42</y>
-     <width>91</width>
-     <height>20</height>
+     <x>108</x>
+     <y>85</y>
+     <width>101</width>
+     <height>24</height>
     </rect>
    </property>
    <property name="text">
     <string>Saturation</string>
    </property>
    <property name="alignment">
-    <set>Qt::AlignCenter</set>
+    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
    </property>
   </widget>
   <widget class="QLabel" name="label_margin">
    <property name="geometry">
     <rect>
-     <x>135</x>
+     <x>108</x>
      <y>115</y>
-     <width>61</width>
+     <width>101</width>
      <height>24</height>
     </rect>
    </property>
@@ -1105,9 +873,9 @@
   <widget class="QSpinBox" name="margin">
    <property name="geometry">
     <rect>
-     <x>200</x>
+     <x>213</x>
      <y>115</y>
-     <width>64</width>
+     <width>51</width>
      <height>24</height>
     </rect>
    </property>
@@ -1147,84 +915,6 @@
    </property>
    <property name="text">
     <string>Fast</string>
-   </property>
-  </widget>
-  <widget class="QSlider" name="fillSlider">
-   <property name="geometry">
-    <rect>
-     <x>180</x>
-     <y>65</y>
-     <width>81</width>
-     <height>20</height>
-    </rect>
-   </property>
-   <property name="mouseTracking">
-    <bool>true</bool>
-   </property>
-   <property name="focusPolicy">
-    <enum>Qt::StrongFocus</enum>
-   </property>
-   <property name="toolTip">
-    <string>Sets the opacity of component fill</string>
-   </property>
-   <property name="minimum">
-    <number>0</number>
-   </property>
-   <property name="maximum">
-    <number>100</number>
-   </property>
-   <property name="singleStep">
-    <number>10</number>
-   </property>
-   <property name="pageStep">
-    <number>0</number>
-   </property>
-   <property name="value">
-    <number>0</number>
-   </property>
-   <property name="sliderPosition">
-    <number>0</number>
-   </property>
-   <property name="orientation">
-    <enum>Qt::Horizontal</enum>
-   </property>
-   <property name="tickPosition">
-    <enum>QSlider::NoTicks</enum>
-   </property>
-   <property name="tickInterval">
-    <number>1</number>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_fill">
-   <property name="geometry">
-    <rect>
-     <x>180</x>
-     <y>87</y>
-     <width>81</width>
-     <height>20</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Fill</string>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignCenter</set>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_16">
-   <property name="geometry">
-    <rect>
-     <x>115</x>
-     <y>42</y>
-     <width>41</width>
-     <height>20</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>PCB</string>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignCenter</set>
    </property>
   </widget>
   <widget class="QSpinBox" name="padWidth">
@@ -1385,14 +1075,224 @@
     <string>Selected Node</string>
    </property>
   </widget>
+  <widget class="QCheckBox" name="checkBoxMono">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>20</y>
+     <width>91</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Mono</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="checkBoxColor">
+   <property name="geometry">
+    <rect>
+     <x>105</x>
+     <y>20</y>
+     <width>91</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Color</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="checkBoxPCB">
+   <property name="geometry">
+    <rect>
+     <x>200</x>
+     <y>20</y>
+     <width>71</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>PCB</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="checkBoxLine">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>50</y>
+     <width>91</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Line</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="checkBoxName">
+   <property name="geometry">
+    <rect>
+     <x>105</x>
+     <y>50</y>
+     <width>91</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Name</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="checkBoxValue">
+   <property name="geometry">
+    <rect>
+     <x>200</x>
+     <y>50</y>
+     <width>71</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Value</string>
+   </property>
+  </widget>
+  <widget class="QSpinBox" name="fill">
+   <property name="geometry">
+    <rect>
+     <x>53</x>
+     <y>85</y>
+     <width>51</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="focusPolicy">
+    <enum>Qt::StrongFocus</enum>
+   </property>
+   <property name="toolTip">
+    <string>Auto-crop margin (grid points)</string>
+   </property>
+   <property name="minimum">
+    <number>0</number>
+   </property>
+   <property name="maximum">
+    <number>100</number>
+   </property>
+   <property name="singleStep">
+    <number>10</number>
+   </property>
+   <property name="value">
+    <number>0</number>
+   </property>
+  </widget>
+  <widget class="QSpinBox" name="saturation">
+   <property name="geometry">
+    <rect>
+     <x>213</x>
+     <y>85</y>
+     <width>51</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="focusPolicy">
+    <enum>Qt::StrongFocus</enum>
+   </property>
+   <property name="toolTip">
+    <string>Auto-crop margin (grid points)</string>
+   </property>
+   <property name="minimum">
+    <number>20</number>
+   </property>
+   <property name="maximum">
+    <number>100</number>
+   </property>
+   <property name="singleStep">
+    <number>10</number>
+   </property>
+   <property name="value">
+    <number>20</number>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_fill">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>85</y>
+     <width>37</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Fill</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+   </property>
+  </widget>
+  <widget class="Line" name="line_9">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>44</y>
+     <width>271</width>
+     <height>2</height>
+    </rect>
+   </property>
+   <property name="frameShadow">
+    <enum>QFrame::Sunken</enum>
+   </property>
+   <property name="lineWidth">
+    <number>1</number>
+   </property>
+   <property name="orientation">
+    <enum>Qt::Horizontal</enum>
+   </property>
+  </widget>
+  <widget class="Line" name="line_10">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>74</y>
+     <width>271</width>
+     <height>2</height>
+    </rect>
+   </property>
+   <property name="frameShadow">
+    <enum>QFrame::Sunken</enum>
+   </property>
+   <property name="lineWidth">
+    <number>1</number>
+   </property>
+   <property name="orientation">
+    <enum>Qt::Horizontal</enum>
+   </property>
+  </widget>
  </widget>
  <tabstops>
+  <tabstop>checkBoxMono</tabstop>
+  <tabstop>checkBoxColor</tabstop>
+  <tabstop>checkBoxPCB</tabstop>
+  <tabstop>checkBoxLine</tabstop>
+  <tabstop>checkBoxName</tabstop>
+  <tabstop>checkBoxValue</tabstop>
+  <tabstop>fill</tabstop>
+  <tabstop>saturation</tabstop>
+  <tabstop>crop</tabstop>
+  <tabstop>margin</tabstop>
   <tabstop>nameEdit</tabstop>
   <tabstop>valueEdit</tabstop>
   <tabstop>typeComboBox</tabstop>
+  <tabstop>rotateCCW</tabstop>
+  <tabstop>rotateCW</tabstop>
+  <tabstop>shrink</tabstop>
+  <tabstop>grow</tabstop>
+  <tabstop>shrink_2</tabstop>
+  <tabstop>grow_2</tabstop>
+  <tabstop>textL</tabstop>
+  <tabstop>textR</tabstop>
+  <tabstop>textC</tabstop>
+  <tabstop>textT</tabstop>
+  <tabstop>textB</tabstop>
   <tabstop>custom</tabstop>
   <tabstop>padWidth</tabstop>
   <tabstop>holeWidth</tabstop>
+  <tabstop>brokenList</tabstop>
   <tabstop>autoColor</tabstop>
   <tabstop>setColor</tabstop>
   <tabstop>autoRoute</tabstop>
@@ -1400,12 +1300,6 @@
   <tabstop>paste</tabstop>
   <tabstop>tidy</tabstop>
   <tabstop>wipe</tabstop>
-  <tabstop>trackSlider</tabstop>
-  <tabstop>saturationSlider</tabstop>
-  <tabstop>compSlider</tabstop>
-  <tabstop>fillSlider</tabstop>
-  <tabstop>crop</tabstop>
-  <tabstop>margin</tabstop>
  </tabstops>
  <resources/>
  <connections/>

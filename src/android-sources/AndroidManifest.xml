@@ -74,4 +74,8 @@
 	<!-- For adding service(s) please check: https://wiki.qt.io/AndroidServices -->
     </application>
 
+<!-- %%INSERT_PERMISSIONS -->
+<!-- %%INSERT_FEATURES -->
+<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+<uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/>
 </manifest>

@@ -21,7 +21,9 @@
 #include "Board.h"
 #include "GWriter.h"
 #include <QPolygonF>
+#include <QFileDialog>
 #include <QTimeZone>
+#include <QtGlobal>
 
 static const bool	FULL_LINE	= false;	// Set to true to force each Gerber line to be written in long format
 static const bool	XNC_FORMAT	= true;		// true ==> XNC Format / Excellon Format 2.		false ==> Excellon Format 1.
@@ -43,14 +45,15 @@ void GStream::Clear()
 }
 void GStream::Close()
 {
-	if ( !m_os.is_open() ) return;
+	if ( !m_file.exists() ) return;
 	switch( m_eType )
 	{
-		case GFILE::DRL:	m_os << "M30";	EndLine();	return m_os.close();	// End of program
-		default:			m_os << "M02";	EndLine();	return m_os.close();	// End of file
+		case GFILE::DRL:	m_os << "M30";	EndLine();	return m_file.close();	// End of program
+		default:			m_os << "M02";	EndLine();	return m_file.close();	// End of file
 	}
 }
-bool GStream::Open(const char* fileName, const GFILE& eType, const bool& bMetric, const Board& board, const bool& bVias, const QString& UTC)
+
+bool GStream::Open(const QString& fileName, const GFILE& eType, const bool& bMetric, const Board& board, const bool& bVias, const QString& UTC)
 {
 	Clear();
 	m_eType		= eType;
@@ -58,33 +61,59 @@ bool GStream::Open(const char* fileName, const GFILE& eType, const bool& bMetric
 	m_pBoard	= &board;
 	m_bVias		= bVias;
 
-	std::string str(fileName);
+	QString str(fileName);
+	QString suffix;
 	switch( m_eType )
 	{
-		case GFILE::GKO: str += ".GKO";	break;
-		case GFILE::GBL: str += ".GBL";	break;
-		case GFILE::GBS: str += ".GBS";	break;
-		case GFILE::GBO: str += ".GBO";	break;
-		case GFILE::GTL: str += ".GTL";	break;
-		case GFILE::GTS: str += ".GTS";	break;
-		case GFILE::GTO: str += ".GTO";	break;
-		case GFILE::DRL: str += ".DRL";	break;
+		case GFILE::GKO: suffix = ".GKO";	break;
+		case GFILE::GBL: suffix = ".GBL";	break;
+		case GFILE::GBS: suffix = ".GBS";	break;
+		case GFILE::GBO: suffix = ".GBO";	break;
+		case GFILE::GTL: suffix = ".GTL";	break;
+		case GFILE::GTS: suffix = ".GTS";	break;
+		case GFILE::GTO: suffix = ".GTO";	break;
+		case GFILE::DRL: suffix = ".DRL";	break;
 	}
-	m_os.open(str.c_str(), std::ios::out);
+	str += suffix;
 
-	WriteHeader(UTC);
-	LinearInterpolation();
-	SetPolarity(GPOLARITY::DARK, false);	// false ==> skip GetOK() checks
-	return m_os.is_open();
+#ifdef Q_OS_ANDROID
+	// Ask user to confirm each Gerber file to get write permission from Android
+
+	QFileInfo info(str);
+	str = info.fileName();	// Try strip out as much of the Android path from str as we can
+
+	QFileDialog fileDialog(nullptr, str);
+	fileDialog.setAcceptMode(QFileDialog::AcceptSave);
+	fileDialog.setNameFilter(suffix);
+	fileDialog.setDefaultSuffix(suffix);
+
+	if ( fileDialog.exec() )
+	{
+		QStringList fileNames = fileDialog.selectedFiles();
+		if ( !fileNames.isEmpty() ) str = fileNames.at(0);
+	}
+#endif
+
+	m_file.setFileName( str ) ;
+	const bool bOK = m_file.open(QIODevice::WriteOnly);
+	if ( bOK )
+	{
+		m_os.setDevice(&m_file);
+
+		WriteHeader(UTC);
+		LinearInterpolation();
+		SetPolarity(GPOLARITY::DARK, false);	// false ==> skip GetOK() checks
+	}
+	return bOK;
 }
 void GStream::WriteHeader(const QString& UTC)	// Write header for current stream
 {
-	if ( !m_os.is_open() ) return;
+	if ( !m_file.exists() ) return;
 	assert( m_pBoard->GetGRIDPIXELS() == 1000 );	// ==> 4 decimal places per inch
-	std::string	strLayer	= std::string("Layer: ");
-	std::string	strProgram	= std::string("VeroRoute V") + std::string(szVEROROUTE_VERSION);
-	std::string	strUTC		= UTC.toStdString();
-	std::string	strGen		= std::string("Gerber Generator version 0.7");
+	QString	strLayer	= "Layer: ";
+	QString	strProgram	= "VeroRoute V" + QString(szVEROROUTE_VERSION);
+	QString	strUTC		= QString::fromStdString( UTC.toStdString() );
+	QString	strGen		= QString("Gerber Generator version 0.8");
 	switch(m_eType)
 	{
 		case GFILE::GKO: strLayer += "BoardOutline";			break;
@@ -96,10 +125,10 @@ void GStream::WriteHeader(const QString& UTC)	// Write header for current stream
 		case GFILE::GTO: strLayer += "TopSilkLayer";			break;
 		case GFILE::DRL: strLayer += ( m_pBoard->GetHoleType() == HOLETYPE::PTH ) ? "Drill_PTH" : "Drill_NPTH";	break;
 	}
-	Comment(strLayer.c_str());
-	Comment(strProgram.c_str());
-	Comment(strUTC.c_str());
-	Comment(strGen.c_str());
+	Comment(strLayer);
+	Comment(strProgram);
+	Comment(strUTC);
+	Comment(strGen);
 
 	if ( m_eType == GFILE::DRL )
 	{
@@ -124,22 +153,22 @@ void GStream::WriteHeader(const QString& UTC)	// Write header for current stream
 		{
 			Comment("Dimensions in mm");
 			Comment("Leading zeros omitted, Absolute positions, 4 integer and 6 decimal");
-			m_os << "%MOMM*%"		<< std::endl;	// MOMM ==> Millimetres
-			m_os << "%FSLAX46Y46*%"	<< std::endl;
+			m_os << "%MOMM*%";			QtEndline();	// MOMM ==> Millimetres
+			m_os << "%FSLAX46Y46*%";	QtEndline();
 		}
 		else
 		{
 			Comment("Dimensions in inches");
 			Comment("Leading zeros omitted, Absolute positions, 2 integer and 4 decimal");
-			m_os << "%MOIN*%"		<< std::endl;	// MOIN ==> Inches
-			m_os << "%FSLAX24Y24*%"	<< std::endl;
+			m_os << "%MOIN*%";			QtEndline();	// MOIN ==> Inches
+			m_os << "%FSLAX24Y24*%";	QtEndline();
 		}
 		MakeApertures();
 	}
 }
 void GStream::MakeDrills()
 {
-	assert( m_os.is_open() && m_eType == GFILE::DRL );
+	assert( m_file.exists() && m_eType == GFILE::DRL );
 
 	int				holeDefault;	// Default hole width
 	std::list<int>	holes;	  m_pBoard->GetHoleWidths_MIL(holes, holeDefault);
@@ -156,9 +185,9 @@ void GStream::MakeDrills()
 	const bool bLZ(true);	// Include leading zeros
 	for (const auto& o : m_ePenList)
 	{
-		std::string codeStr("T");
+		QString codeStr("T");
 		if ( o.m_iCode < 10 ) codeStr += "0";	// Add leading zero
-		codeStr += std::to_string(o.m_iCode);
+		codeStr += QString::fromStdString( std::to_string(o.m_iCode) );
 
 		if ( m_bMetric )
 		{
@@ -174,7 +203,7 @@ void GStream::MakeDrills()
 }
 void GStream::MakeApertures()	// Make "pens" for current stream
 {
-	assert( m_os.is_open() && m_eType != GFILE::DRL);
+	assert( m_file.exists() && m_eType != GFILE::DRL);
 
 	int				padDefault;	// Default pad width
 	std::list<int>	pads;	  m_pBoard->GetPadWidths_MIL(pads, padDefault);
@@ -227,44 +256,53 @@ void GStream::MakeApertures()	// Make "pens" for current stream
 	// Write aperture list to file
 	for (const auto& o : m_ePenList)
 	{
-		std::string codeStr("D");
+		QString codeStr("D");
 		assert(o.m_iCode >= 10);
 		if ( o.m_iCode < 10 ) codeStr += "0";	// Add leading zero
-		codeStr += std::to_string(o.m_iCode);
+		codeStr += QString::fromStdString( std::to_string(o.m_iCode) );
 
-		if ( !o.m_comment.empty() )
+		if ( !o.m_comment.isEmpty() )
 		{
-			std::string str = std::string("Aperture ") + codeStr + o.m_comment;
-			Comment( str.c_str() );
+			QString str = "Aperture " + codeStr + o.m_comment;
+			Comment( str );
 		}
 		if ( m_bMetric )
-			m_os << "%AD" << codeStr << "C," << MilToMM(o.m_iWidth) << "*%" << std::endl;
+			m_os << "%AD" << codeStr << "C," << MilToMM(o.m_iWidth) << "*%";
 		else
-			m_os << "%AD" << codeStr << "C," << MilToInch(o.m_iWidth) << "*%" << std::endl;
+			m_os << "%AD" << codeStr << "C," << MilToInch(o.m_iWidth) << "*%";
+		QtEndline();
 	}
 }
 void GStream::LinearInterpolation()
 {
-	if ( !m_os.is_open() || m_eType == GFILE::DRL ) return;
+	if ( !m_file.exists() || m_eType == GFILE::DRL ) return;
 	m_os << "G01";
 	EndLine();
 }
-void GStream::Comment(const char* sz)
+void GStream::Comment(const QString& str)
 {
-	if ( !m_os.is_open() ) return;
+	if ( !m_file.exists() ) return;
 	if ( m_eType == GFILE::DRL )
-		m_os << ";" << sz;
+		m_os << ";" << str;
 	else
-		m_os << "G04 " << sz << " ";
+		m_os << "G04 " << str << " ";
 	EndLine();
 }
 void GStream::EndLine()
 {
-	if ( !m_os.is_open() ) return;
-	if ( m_eType == GFILE::DRL )
-		m_os << std::endl;
-	else
-		m_os << "*" << std::endl;
+	if ( !m_file.exists() ) return;
+	if ( m_eType != GFILE::DRL )
+		m_os << "*";
+	QtEndline();
+}
+void GStream::QtEndline()
+{
+	if ( !m_file.exists() ) return;
+#if QT_VERSION >= QT_VERSION_CHECK(5,14,0)
+	m_os << Qt::endl;
+#else
+	m_os << endl;
+#endif
 }
 bool GStream::GetOK() const
 {
@@ -283,22 +321,22 @@ bool GStream::GetOK() const
 }
 void GStream::SetPolarity(const GPOLARITY& ePolarity, bool bCheckOK)
 {
-	if ( !m_os.is_open() || m_ePolarity == ePolarity || m_eType == GFILE::DRL ) return;
+	if ( !m_file.exists() || m_ePolarity == ePolarity || m_eType == GFILE::DRL ) return;
 	if ( bCheckOK && !GetOK() ) return;
 	m_ePolarity = ePolarity;
 	switch( m_ePolarity )
 	{
 		case GPOLARITY::UNKNOWN:	return;
-		case GPOLARITY::DARK:		m_os << "%LPD*%" << std::endl;	return;
-		case GPOLARITY::CLEAR:		m_os << "%LPC*%" << std::endl;	return;
+		case GPOLARITY::DARK:		m_os << "%LPD*%";	QtEndline();	return;
+		case GPOLARITY::CLEAR:		m_os << "%LPC*%";	QtEndline();	return;
 	}
 }
 void GStream::Drill(const QPoint& p)
 {
-	if ( !GetOK() || !m_os.is_open() || m_eType != GFILE::DRL ) return;
+	if ( !GetOK() || !m_file.exists() || m_eType != GFILE::DRL ) return;
 	m_os << "X";  WriteDrillOrdinate( p.x() );
 	m_os << "Y";  WriteDrillOrdinate( p.y() );
-	m_os << std::endl;
+	QtEndline();;
 }
 void GStream::AddPad(const QPointF& pF, const GPEN& ePen, const int& w)		// Add to m_pads buffer for later writing to file
 {
@@ -392,7 +430,7 @@ void GStream::DrawBuffers()
 }
 void GStream::Region(const Curve& curve)	// A filled closed curve (with zero width pen)
 {
-	if ( !m_os.is_open() || m_eType == GFILE::DRL ) return;
+	if ( !m_file.exists() || m_eType == GFILE::DRL ) return;
 	assert( curve.m_ePen == GPEN::NONE );
 	if ( curve.size() < 3 ) return;	// Region must have >= 3 points
 	m_os << "G36";	EndLine();		// "Begin region"
@@ -415,7 +453,7 @@ void GStream::OutLine(const Curve& curve, bool bForceClose)	// Outline of a curv
 }
 void GStream::SetPen(const GPEN& ePen, const int& w)
 {
-	if ( !m_os.is_open() ) return;
+	if ( !m_file.exists() ) return;
 	assert( m_pBoard );
 
 	int penWidth(w);
@@ -452,7 +490,7 @@ void GStream::SetPen(const GPEN& ePen, const int& w)
 }
 void GStream::Flash(const QPoint& p)
 {
-	if ( !m_os.is_open() ) return;
+	if ( !m_file.exists() ) return;
 	if ( m_eType == GFILE::DRL ) return Drill(p);
 	WriteXY(p, FULL_LINE);
 	m_os << "D03";		// Always specify D03 code
@@ -460,7 +498,7 @@ void GStream::Flash(const QPoint& p)
 }
 void GStream::Move(const QPoint& p)
 {
-	if ( !m_os.is_open() || m_eType == GFILE::DRL ) return;
+	if ( !m_file.exists() || m_eType == GFILE::DRL ) return;
 	if ( m_iLastX == p.x() && m_iLastY == p.y() ) return;
 	WriteXY(p, FULL_LINE);
 	m_os << "D02";		// Always specify D02 code
@@ -468,7 +506,7 @@ void GStream::Move(const QPoint& p)
 }
 void GStream::Draw(const QPoint& p)
 {
-	if ( !m_os.is_open() || m_eType == GFILE::DRL ) return;
+	if ( !m_file.exists() || m_eType == GFILE::DRL ) return;
 	if ( m_iLastX == p.x() && m_iLastY == p.y() ) return;
 	WriteXY(p, FULL_LINE);
 	m_os << "D01";		// Always specify D01 code
@@ -482,7 +520,7 @@ void GStream::Line(const QPoint& pA, const QPoint& pB)
 void GStream::WriteXY(const QPoint& p,  const bool& bFullLine)
 {
 	// p has deciMil units (since GRIDPIXELS == 1000 for Gerber Export)
-	if ( !m_os.is_open() ) return;
+	if ( !m_file.exists() ) return;
 	const int ix = ( m_bMetric ) ? ( 2540 * p.x() ) : p.x();	// metric ==> convert deciMil to nanometres
 	const int iy = ( m_bMetric ) ? ( 2540 * p.y() ) : p.y();	// metric ==> convert deciMil to nanometres
 	if ( bFullLine || m_iLastX != ix ) m_os << "X" << ix;
@@ -492,7 +530,7 @@ void GStream::WriteXY(const QPoint& p,  const bool& bFullLine)
 }
 void GStream::WriteDrillOrdinate(const int& iDeciMils)
 {
-	if ( !m_os.is_open() || m_eType != GFILE::DRL ) return;
+	if ( !m_file.exists() || m_eType != GFILE::DRL ) return;
 	m_os << ( iDeciMils >= 0 ? "+" : "-" );	// Write sign
 	if ( m_bMetric )	// Writes mm in format AAAABBBBBB
 	{
@@ -521,24 +559,24 @@ void GStream::WriteDrillOrdinate(const int& iDeciMils)
 		m_os << iAbs;
 	}
 }
-std::string GStream::MilToInch(const int& iMil, const bool& bLZ) const	// Get inches in format AA.BBBB (for defining drills and apertures)
+QString GStream::MilToInch(const int& iMil, const bool& bLZ) const	// Get inches in format AA.BBBB (for defining drills and apertures)
 {
-	std::string str;
+	QString str;
 	const int i		 = iMil * 10;				// deciMil
 	const int inches = i / 10000;
 	const int remain = i - 10000 * inches;
 	assert( inches < 100 && remain < 10000 );	// i.e. AA.BBBB
 	if ( bLZ && inches < 10 ) str += "0";		// bLZ ==> Add leading zeros
-	str += std::to_string(inches) + ".";
+	str += QString::fromStdString( std::to_string(inches) + "." );
 	if ( remain < 1000 ) str += "0";
 	if ( remain < 100  ) str += "0";
 	if ( remain < 10   ) str += "0";
-	str += std::to_string(remain);
+	str += QString::fromStdString( std::to_string(remain) );
 	return str;
 }
-std::string GStream::MilToMM(const int& iMil, const bool& bLZ) const	// Get mm in format AAAA.BBBBBB (for defining drills and apertures)
+QString GStream::MilToMM(const int& iMil, const bool& bLZ) const	// Get mm in format AAAA.BBBBBB (for defining drills and apertures)
 {
-	std::string str;
+	QString str;
 	const int i		 = iMil * 25400;			// nanometres
 	const int mm	 = i / 1000000;
 	const int remain = i - 1000000 * mm;
@@ -546,13 +584,13 @@ std::string GStream::MilToMM(const int& iMil, const bool& bLZ) const	// Get mm i
 	if ( bLZ && mm < 1000 ) str += "0";			// bLZ ==> Add leading zeros
 	if ( bLZ && mm < 100  ) str += "0";			// bLZ ==> Add leading zeros
 	if ( bLZ && mm < 10   ) str += "0";			// bLZ ==> Add leading zeros
-	str += std::to_string(mm) + ".";
+	str += QString::fromStdString( std::to_string(mm) + "." );
 	if ( remain < 100000 ) str += "0";
 	if ( remain < 10000  ) str += "0";
 	if ( remain < 1000   ) str += "0";
 	if ( remain < 100    ) str += "0";
 	if ( remain < 10     ) str += "0";
-	str += std::to_string(remain);
+	str += QString::fromStdString( std::to_string(remain) );
 	return str;
 }
 void GStream::GetQPoint(const QPointF& in, QPoint& out) const
@@ -570,13 +608,13 @@ void GStream::GetQPolygon(const QPolygonF& in, QPolygon& out) const
 }
 
 // Wrapper for handling a set of Gerber files
-bool GWriter::Open(const char* fileName, const Board& board, const bool& bVias, const bool& bTwoLayerGerber, const bool& bMetric)
+bool GWriter::Open(const QString& fileName, const Board& board, const bool& bVias, const bool& bTwoLayerGerber, const bool& bMetric)
 {
 	QDateTime	local(QDateTime::currentDateTime());
 	QString		UTC = local.toTimeSpec(Qt::UTC).toString(Qt::ISODate);
 
 	// Open all Gerber files for writing
-	bool bOK(fileName != nullptr);
+	bool bOK(!fileName.isEmpty());
 	for (int i = 0; i < NUM_STREAMS && bOK; i++)
 	{
 		if ( GFILE(i) == GFILE::GTL && !bTwoLayerGerber ) continue;

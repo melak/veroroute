@@ -20,6 +20,7 @@
 #include "bomdialog.h"
 #include "ui_bomdialog.h"
 #include "mainwindow.h"
+#include <QtGlobal>
 
 BomDialog::BomDialog(MainWindow* parent)
 : QDialog(parent)
@@ -154,33 +155,47 @@ void BomDialog::Update()
 
 void BomDialog::WriteToFile()
 {
-	QString fileName = QFileDialog::getSaveFileName(this, tr("Save file as"), ""/*directory*/,	tr("Text (*.txt);;All Files (*)"));
+	const QString fileName = m_pMainWindow->GetSaveFileName(tr("Choose a TXT file"), tr("Text (*.txt);;All Files (*)"), QString("txt"));
 	if ( !fileName.isEmpty() )
 	{
-		const std::string fileNameStr = fileName.toStdString();
+		QFile file;
+		file.setFileName( fileName ) ;
 
-		std::ofstream outStream;
-		outStream.open(fileNameStr.c_str(), std::ios::out);
-		const bool bOK = outStream.is_open();
+		QTextStream os;
+		const bool bOK = file.open(QIODevice::WriteOnly);
 		if ( bOK )
 		{
-			outStream << "Name" << "\t" << "Type" << "\t" << "Value" << "\t" << "Quantity" << std::endl;
+			os.setDevice(&file);
+
+#if QT_VERSION >= QT_VERSION_CHECK(5,14,0)
+			os << "Name" << "\t" << "Type" << "\t" << "Value" << "\t" << "Quantity" << Qt::endl;
+#else
+			os << "Name" << "\t" << "Type" << "\t" << "Value" << "\t" << "Quantity" << endl;
+#endif
 			const int numRows = ui->tableWidget->rowCount();
 			const int numCols = ui->tableWidget->columnCount();
 			for (int i = 0; i < numRows; i++)
 			{
 				for(int j = 0; j < numCols; j++)
 				{
-					outStream << ui->tableWidget->item(i,j)->text().toStdString();
-					if ( j != numCols - 1 ) outStream << "\t";
+					os << ui->tableWidget->item(i,j)->text();
+					if ( j != numCols - 1 ) os << "\t";
 				}
-				outStream << std::endl;
+#if QT_VERSION >= QT_VERSION_CHECK(5,14,0)
+				os << Qt::endl;
+#else
+				os << endl;
+#endif
 			}
-			outStream << std::endl;
-			outStream.close();
+#if QT_VERSION >= QT_VERSION_CHECK(5,14,0)
+			os << Qt::endl;
+#else
+			os << endl;
+#endif
+			file.close();
 		}
 		else
-			QMessageBox::information(this, tr("Unable to save file"), tr(fileNameStr.c_str()));
+			QMessageBox::information(this, tr("Unable to save file"), fileName);
 	}
 }
 
