@@ -260,11 +260,22 @@
     <addaction name="actionDiagsMax"/>
     <addaction name="actionFill"/>
    </widget>
+   <widget class="QMenu" name="menuPaint">
+    <property name="title">
+     <string>Paint</string>
+    </property>
+    <addaction name="actionPaintGrid"/>
+    <addaction name="actionEraseGrid"/>
+    <addaction name="actionPaintPins"/>
+    <addaction name="actionErasePins"/>
+    <addaction name="actionPaintFlood"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuAdd"/>
    <addaction name="menuView"/>
    <addaction name="menuTrack_Style"/>
+   <addaction name="menuPaint"/>
    <addaction name="menuWindow"/>
    <addaction name="menuLayers"/>
    <addaction name="menuHelp"/>
@@ -354,6 +365,7 @@
    <addaction name="separator"/>
    <addaction name="actionPaintGrid"/>
    <addaction name="actionEraseGrid"/>
+   <addaction name="separator"/>
    <addaction name="separator"/>
    <addaction name="actionPaintPins"/>
    <addaction name="actionErasePins"/>
@@ -1338,10 +1350,10 @@
      <normaloff>:/images/paintgrid.png</normaloff>:/images/paintgrid.png</iconset>
    </property>
    <property name="text">
-    <string>Toggle Paint Grid Points</string>
+    <string>Paint Track</string>
    </property>
    <property name="toolTip">
-    <string>Toggle Paint Grid Point</string>
+    <string>Paint Track</string>
    </property>
   </action>
   <action name="actionEraseGrid">
@@ -1353,10 +1365,10 @@
      <normaloff>:/images/erasegrid.png</normaloff>:/images/erasegrid.png</iconset>
    </property>
    <property name="text">
-    <string>Toggle Erase Grid Points</string>
+    <string>Erase Track</string>
    </property>
    <property name="toolTip">
-    <string>Toggle Erase Grid Point</string>
+    <string>Erase Track</string>
    </property>
   </action>
   <action name="actionPaintPins">
@@ -1368,10 +1380,10 @@
      <normaloff>:/images/paintpins.png</normaloff>:/images/paintpins.png</iconset>
    </property>
    <property name="text">
-    <string>Toggle Paint Pins</string>
+    <string>Paint Pins</string>
    </property>
    <property name="toolTip">
-    <string>Toggle Paint Pins</string>
+    <string>Paint Pins</string>
    </property>
   </action>
   <action name="actionErasePins">
@@ -1383,10 +1395,10 @@
      <normaloff>:/images/erasepins.png</normaloff>:/images/erasepins.png</iconset>
    </property>
    <property name="text">
-    <string>Toggle Erase Pins</string>
+    <string>Erase Pins</string>
    </property>
    <property name="toolTip">
-    <string>Toggle Erase Pins</string>
+    <string>Erase Pins</string>
    </property>
   </action>
   <action name="actionPaintFlood">
@@ -1398,10 +1410,10 @@
      <normaloff>:/images/paintflood.png</normaloff>:/images/paintflood.png</iconset>
    </property>
    <property name="text">
-    <string>Toggle Flood Fill Track</string>
+    <string>Flood Track and Pins</string>
    </property>
    <property name="toolTip">
-    <string>Toggle Flood Fill Track</string>
+    <string>Flood Track and Pins</string>
    </property>
   </action>
  </widget>

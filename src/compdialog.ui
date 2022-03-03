@@ -326,7 +326,7 @@
     <rect>
      <x>5</x>
      <y>245</y>
-     <width>135</width>
+     <width>251</width>
      <height>24</height>
     </rect>
    </property>
@@ -345,12 +345,12 @@
     <rect>
      <x>10</x>
      <y>270</y>
-     <width>95</width>
+     <width>61</width>
      <height>24</height>
     </rect>
    </property>
    <property name="text">
-    <string>Pin Number</string>
+    <string>Pin #</string>
    </property>
    <property name="alignment">
     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -359,7 +359,7 @@
   <widget class="QSpinBox" name="spinBox_PinNumber">
    <property name="geometry">
     <rect>
-     <x>110</x>
+     <x>74</x>
      <y>270</y>
      <width>61</width>
      <height>24</height>
@@ -1016,6 +1016,37 @@
     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
    </property>
   </widget>
+  <widget class="QComboBox" name="comboBox_Surface">
+   <property name="geometry">
+    <rect>
+     <x>204</x>
+     <y>268</y>
+     <width>61</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>8</pointsize>
+    </font>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_Surface">
+   <property name="geometry">
+    <rect>
+     <x>140</x>
+     <y>270</y>
+     <width>64</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Surface</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+   </property>
+  </widget>
  </widget>
  <tabstops>
   <tabstop>lineEdit_Type</tabstop>
@@ -1030,6 +1061,7 @@
   <tabstop>spinBox_Width</tabstop>
   <tabstop>spinBox_Height</tabstop>
   <tabstop>spinBox_PinNumber</tabstop>
+  <tabstop>comboBox_Surface</tabstop>
   <tabstop>checkBox_Line</tabstop>
   <tabstop>checkBox_Fill</tabstop>
   <tabstop>pushButtonU</tabstop>

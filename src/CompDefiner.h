@@ -252,8 +252,8 @@ public:
 		if ( GetCurrentPinId() == BAD_ID ) return false;
 		auto& o =  GetCurrentPin();
 		o.SetPinIndex( static_cast<size_t>(i - 1) );
-		o.SetSurface( SURFACE_FULL );
-		o.SetHoleUse( HOLE_FULL );
+		o.SetSurface(SURFACE_FULL);
+		o.SetHoleUse(HOLE_FULL);
 		ReAllocatePins( GetMaxPinNumber() );
 		return true;
 	}
@@ -262,6 +262,7 @@ public:
 		if ( GetCurrentPinId() == BAD_ID ) return false;
 		auto& o = GetCurrentPin();
 		const size_t iPinIndex = o.GetPinIndex();
+		// If we end up with a valid pinIndex (>= 0 and <= 254) then set HOLE_FULL, else set HOLE_FREE
 		if ( bInc )
 		{
 			if ( iPinIndex == BAD_PININDEX )
@@ -298,7 +299,7 @@ public:
 				o.SetPinIndex(iPinIndex-1);
 				o.SetHoleUse(HOLE_FULL);
 			}
-			else
+			else	// iPinIndex == 0
 			{
 				o.SetPinIndex(BAD_PININDEX);
 				o.SetHoleUse(HOLE_FREE);
@@ -306,15 +307,34 @@ public:
 			return true;
 		}
 	}
+	bool SetSurface(const std::string& str)
+	{
+		if ( GetCurrentPinId() == BAD_ID ) return false;
+		auto& o = GetCurrentPin();
+		for (const auto& mapObj : Pin::GetMapSurfaceStrings())
+		{
+			if ( mapObj.second == str )
+			{
+				const bool bChanged = o.GetSurface() != mapObj.first;
+				if ( bChanged )
+					o.SetSurface(mapObj.first);
+				return bChanged;
+			}
+		}
+		return false;
+	}
 	bool SetType(const std::string& str)
 	{
 		if ( GetCurrentShapeId() == BAD_ID ) return false;
+		auto& o = GetCurrentShape();
 		for (const auto& mapObj : Shape::GetMapShapeStrings())
 		{
 			if ( mapObj.second == str )
 			{
-				GetCurrentShape().SetType(mapObj.first);
-				return true;
+				const bool bChanged = o.GetType() != mapObj.first;
+				if ( bChanged )
+					o.SetType(mapObj.first);
+				return bChanged;
 			}
 		}
 		return false;

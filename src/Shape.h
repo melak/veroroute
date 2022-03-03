@@ -214,7 +214,7 @@ public:
 	}
 	static const std::map<SHAPE, std::string>& GetMapShapeStrings()
 	{
-		static std::map<SHAPE, std::string>	mapShapeToStr;	// Mapping of SHAPE enum to strings
+		static std::map<SHAPE, std::string>	mapShapeToStr;
 		if ( mapShapeToStr.empty() )
 		{
 			mapShapeToStr[SHAPE::LINE]			= "Line";
@@ -225,6 +225,20 @@ public:
 			mapShapeToStr[SHAPE::CHORD]			= "Chord";
 		}
 		return mapShapeToStr;
+	}
+	static const std::list<std::string>& GetListShapeStrings()
+	{
+		static std::list<std::string>	listShapeStr;	// Use for populating combo boxes
+		if ( listShapeStr.empty() )
+		{
+			listShapeStr.push_back("Line");
+			listShapeStr.push_back("Rectangle");
+			listShapeStr.push_back("Rounded Rectangle");
+			listShapeStr.push_back("Ellipse");
+			listShapeStr.push_back("Arc");
+			listShapeStr.push_back("Chord");
+		}
+		return listShapeStr;
 	}
 private:
 	// Data (x1,y1) and (x2,y2) are either

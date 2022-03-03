@@ -43,9 +43,14 @@ CompDialog::CompDialog(QWidget* parent)
 
 	ui->comboBox_Shape->blockSignals(true);		// Block signals while populating box
 	ui->comboBox_Shape->clear();
-	for (const auto& mapObj : Shape::GetMapShapeStrings())
-		ui->comboBox_Shape->addItem(QString::fromStdString( mapObj.second ));
+	for (const auto& str : Shape::GetListShapeStrings())
+		ui->comboBox_Shape->addItem(QString::fromStdString( str ));
 	ui->comboBox_Shape->blockSignals(false);	// We're done populating, so unblock signals
+
+	ui->comboBox_Surface->blockSignals(true);	// Block signals while populating box
+	for (const auto& str : Pin::GetListSurfaceStrings())
+		ui->comboBox_Surface->addItem(QString::fromStdString( str ));
+	ui->comboBox_Surface->blockSignals(false);	// We're done populating, so unblock signals
 
 	ui->comboBox_PinShape->blockSignals(true);	// Block signals while populating box
 	ui->comboBox_PinShape->clear();
@@ -70,6 +75,7 @@ void CompDialog::SetMainWindow(MainWindow* p)
 	QObject::connect(ui->padWidth,			SIGNAL(valueChanged(int)),				m_pMainWindow,	SLOT(DefinerPadWidthChanged(int)));
 	QObject::connect(ui->holeWidth,			SIGNAL(valueChanged(int)),				m_pMainWindow,	SLOT(DefinerHoleWidthChanged(int)));
 	QObject::connect(ui->spinBox_PinNumber,	SIGNAL(valueChanged(int)),				m_pMainWindow,	SLOT(DefinerSetPinNumber(int)));
+	QObject::connect(ui->comboBox_Surface,	SIGNAL(currentTextChanged(QString)),	m_pMainWindow,	SLOT(DefinerSetSurface(QString)));
 	QObject::connect(ui->pushButtonRGB,		SIGNAL(clicked()),						m_pMainWindow,	SLOT(DefinerChooseColor()));
 	QObject::connect(ui->pushButtonU,		SIGNAL(clicked()),						m_pMainWindow,	SLOT(DefinerRaise()));
 	QObject::connect(ui->pushButtonD,		SIGNAL(clicked()),						m_pMainWindow,	SLOT(DefinerLower()));
@@ -127,16 +133,19 @@ void CompDialog::Update()
 	ui->padWidth->setValue( def.GetPadWidth() );
 	ui->holeWidth->setValue( def.GetHoleWidth() );
 
+	const Pin& pin = def.GetCurrentPin();
 	if ( bValidPinId )
 	{
-		const Pin& pin = def.GetCurrentPin();
 		ui->spinBox_PinNumber->setValue( static_cast<int>(pin.GetPinIndex() + 1) );
+		ui->comboBox_Surface->setCurrentIndex( pin.GetSurface() == SURFACE_FULL ? 0 :
+											   pin.GetSurface() == SURFACE_FREE ? 1 : 2 );	// Set to match order in which combo was populated
 	}
+
 	MyRGB rgb;
 	if ( bValidShapeId )
 	{
 		const Shape& s = def.GetCurrentShape();
-		ui->comboBox_Shape->setCurrentIndex( static_cast<int>( s.GetType() ) );
+		ui->comboBox_Shape->setCurrentIndex( static_cast<int>( s.GetType() ) );	// Works because SHAPE enum (0,1,2,...) matches how combo was populated
 		ui->checkBox_Line->setChecked( s.GetDrawLine() );
 		ui->checkBox_Fill->setChecked( s.GetDrawFill() );
 		ui->doubleSpinBox_CX->setValue(  s.GetCX() );
@@ -188,6 +197,7 @@ void CompDialog::EnableControls()	// Enable/disable controls
 
 	ui->label_PinNumber->setEnabled( bValidPinId );
 	ui->spinBox_PinNumber->setEnabled( bValidPinId );
+	ui->comboBox_Surface->setEnabled( bValidPinId && !def.GetCurrentPin().GetIsPin() );
 	ui->label_CX->setEnabled( bValidShapeId );
 	ui->label_CY->setEnabled( bValidShapeId );
 	ui->label_DX->setEnabled( bValidShapeId );

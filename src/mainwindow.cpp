@@ -104,9 +104,9 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 
 #ifdef Q_OS_ANDROID
 	ui->menuBar->setNativeMenuBar(false);
-	ui->toolBar->setIconSize(QSize(36,36));		// 36x36 instead of 24x24
+	ui->toolBar->setIconSize(QSize(30,30));		// 30x30 instead of 24x24
 	ui->toolBar->setMovable(false);				// Keep docked
-	ui->toolBar_2->setIconSize(QSize(36,36));	// 36x36 instead of 24x24
+	ui->toolBar_2->setIconSize(QSize(30,30));	// 30x30 instead of 24x24
 	ui->toolBar_2->setMovable(false);			// Keep docked
 	ui->actionHotkeysDlg->setVisible(false);	// Hide dialog listing key/mouse actions
 	ui->actionUpdateCheck->setVisible(false);	// Hide update check (until SSL support added)
@@ -120,6 +120,7 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	m_infoDlg->move(940,50);
 
 //TODO Comment out next code block for testing Android GUI approach on desktop build
+	ui->menuPaint->menuAction()->setVisible(false);
 	ui->actionPaintPins->setVisible(false);
 	ui->actionErasePins->setVisible(false);
 	ui->actionPaintGrid->setVisible(false);
@@ -1673,19 +1674,20 @@ void MainWindow::DefinerToggleShapeFill(bool b)
 		RepaintSkipRouting();
 	}
 }
-void MainWindow::DefinerWidthChanged(int i)		{ if ( GetCompDefiner().SetWidth(i)		) { UpdateHistory("Action"); EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
-void MainWindow::DefinerHeightChanged(int i)	{ if ( GetCompDefiner().SetHeight(i)	) { UpdateHistory("Action"); EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
-void MainWindow::DefinerPadWidthChanged(int i)	{ if ( GetCompDefiner().SetPadWidth(i)	) { UpdateHistory("Action"); EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
-void MainWindow::DefinerHoleWidthChanged(int i)	{ if ( GetCompDefiner().SetHoleWidth(i)	) { UpdateHistory("Action"); EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
-void MainWindow::DefinerSetPinNumber(int i)		{ if ( GetCompDefiner().SetPinNumber(i)	) { UpdateHistory("Action"); EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
-void MainWindow::DefinerIncPinNumber(bool b)	{ if ( GetCompDefiner().IncPinNumber(b)	) { UpdateHistory("Action"); UpdateCompDialog();		 RepaintSkipRouting(); } }	// Called using mouse wheel in view
-void MainWindow::DefinerSetCX(double d)			{ if ( GetCompDefiner().SetCX(d)		) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
-void MainWindow::DefinerSetCY(double d)			{ if ( GetCompDefiner().SetCY(-d)		) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }	// Control assumes CY goes up
-void MainWindow::DefinerSetDX(double d)			{ if ( GetCompDefiner().SetDX(d)		) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
-void MainWindow::DefinerSetDY(double d)			{ if ( GetCompDefiner().SetDY(d)		) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
-void MainWindow::DefinerSetA1(double d)			{ if ( GetCompDefiner().SetA1(d)		) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
-void MainWindow::DefinerSetA2(double d)			{ if ( GetCompDefiner().SetA2(d)		) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
-void MainWindow::DefinerSetA3(double d)			{ if ( GetCompDefiner().SetA3(d)		) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
+void MainWindow::DefinerWidthChanged(int i)				{ if ( GetCompDefiner().SetWidth(i)		) { UpdateHistory("Action"); EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
+void MainWindow::DefinerHeightChanged(int i)			{ if ( GetCompDefiner().SetHeight(i)	) { UpdateHistory("Action"); EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
+void MainWindow::DefinerPadWidthChanged(int i)			{ if ( GetCompDefiner().SetPadWidth(i)	) { UpdateHistory("Action"); EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
+void MainWindow::DefinerHoleWidthChanged(int i)			{ if ( GetCompDefiner().SetHoleWidth(i)	) { UpdateHistory("Action"); EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
+void MainWindow::DefinerSetPinNumber(int i)				{ if ( GetCompDefiner().SetPinNumber(i)	) { UpdateHistory("Action"); EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
+void MainWindow::DefinerIncPinNumber(bool b)			{ if ( GetCompDefiner().IncPinNumber(b)	) { UpdateHistory("Action"); EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }	// Called using mouse wheel in view
+void MainWindow::DefinerSetSurface(const QString& str)	{ if ( GetCompDefiner().SetSurface(str.toStdString()) ) { UpdateHistory("Action"); EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
+void MainWindow::DefinerSetCX(double d)	{ if ( GetCompDefiner().SetCX(d)	) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
+void MainWindow::DefinerSetCY(double d)	{ if ( GetCompDefiner().SetCY(-d)	) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }	// Control assumes CY goes up
+void MainWindow::DefinerSetDX(double d)	{ if ( GetCompDefiner().SetDX(d)	) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
+void MainWindow::DefinerSetDY(double d)	{ if ( GetCompDefiner().SetDY(d)	) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
+void MainWindow::DefinerSetA1(double d)	{ if ( GetCompDefiner().SetA1(d)	) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
+void MainWindow::DefinerSetA2(double d)	{ if ( GetCompDefiner().SetA2(d)	) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
+void MainWindow::DefinerSetA3(double d)	{ if ( GetCompDefiner().SetA3(d)	) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
 void MainWindow::DefinerBuild()
 {
 	assert( GetCompDefiner().GetIsValid() );

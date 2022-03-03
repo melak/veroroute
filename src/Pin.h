@@ -137,6 +137,29 @@ public:
 	bool		 GetIsPin() const				{ return m_pinChar != BAD_PINCHAR; }
 	bool		 GetIsHole() const				{ return m_surface == SURFACE_HOLE; }
 
+	static const std::map<uchar, std::string>& GetMapSurfaceStrings()
+	{
+		static std::map<uchar, std::string>	mapSurfaceToStr;	// Mapping of SURFACE to strings for Component Editor
+		if ( mapSurfaceToStr.empty() )
+		{
+			mapSurfaceToStr[SURFACE_FULL]	= "Full";
+			mapSurfaceToStr[SURFACE_FREE]	= "Free";
+			mapSurfaceToStr[SURFACE_HOLE]	= "Hole";
+		}
+		return mapSurfaceToStr;
+	}
+	static const std::list<std::string>& GetListSurfaceStrings()
+	{
+		static std::list<std::string>	listSurfaceStr;	// Use for populating combo boxes in Component Editor
+		if ( listSurfaceStr.empty() )
+		{
+			listSurfaceStr.push_back("Full");
+			listSurfaceStr.push_back("Free");
+			listSurfaceStr.push_back("Hole");
+		}
+		return listSurfaceStr;
+	}
+
 	// Merge interface functions
 	virtual void UpdateMergeOffsets(MergeOffsets&) override
 	{

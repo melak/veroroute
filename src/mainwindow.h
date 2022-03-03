@@ -401,6 +401,7 @@ public slots:
 	void DefinerToggleShapeFill(bool b);
 	void DefinerSetPinNumber(int i);
 	void DefinerIncPinNumber(bool b);
+	void DefinerSetSurface(const QString& str);
 	void DefinerSetShapeType(const QString& str);
 	void DefinerSetCX(double d);
 	void DefinerSetCY(double d);
