@@ -27,7 +27,7 @@ TextDialog::TextDialog(MainWindow* parent)
 , m_pMainWindow(parent)
 {
 	ui->setupUi(this);
-#ifndef Q_OS_ANDROID
+#ifndef VEROROUTE_ANDROID
 	ui->pushButtonOK->hide();
 	ui->plainTextEdit->resize(ui->plainTextEdit->width() + 40, ui->plainTextEdit->height());
 #endif
@@ -82,12 +82,16 @@ void TextDialog::TextChanged()
 
 void TextDialog::keyPressEvent(QKeyEvent* event)
 {
+#ifndef VEROROUTE_ANDROID
 	m_pMainWindow->specialKeyPressEvent(event);
+#endif
 	QDialog::keyPressEvent(event);
 }
 
 void TextDialog::keyReleaseEvent(QKeyEvent* event)
 {
+#ifndef VEROROUTE_ANDROID
 	m_pMainWindow->commonKeyReleaseEvent(event);
+#endif
 	QDialog::keyReleaseEvent(event);
 }

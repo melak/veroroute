@@ -38,12 +38,16 @@ int Board::CreateComponent(int iRow, int iCol, const COMP& eType, const Componen
 	char buffer[256] = {'\0'};
 	std::string nameStr;	// We'll use this string for both Name and Value
 	const std::string prefixStr = ( pComp ) ? pComp->GetPrefixStr() : CompTypes::GetDefaultPrefixStr(eType);	// e.g. "C" for capacitors
-	bool bNameExists(true);
-	for (int iSuffix = 1; iSuffix < INT_MAX && bNameExists; iSuffix++)
+	if ( !prefixStr.empty() )
 	{
-		sprintf(buffer,"%s%d", prefixStr.c_str(), iSuffix);
-		nameStr = buffer;	// e.g. "C1"
-		bNameExists = ( m_compMgr.GetComponentIdFromName(nameStr) != BAD_COMPID );
+		// Append number to prefixStr
+		bool bNameExists(true);
+		for (int iSuffix = 1; iSuffix < INT_MAX && bNameExists; iSuffix++)
+		{
+			sprintf(buffer,"%s%d", prefixStr.c_str(), iSuffix);
+			nameStr = buffer;	// e.g. "C1"
+			bNameExists = ( m_compMgr.GetComponentIdFromName(nameStr) != BAD_COMPID );
+		}
 	}
 
 	const size_t numPins = ( pComp ) ? pComp->GetNumPins() : static_cast<size_t>( CompTypes::GetDefaultNumPins(eType) );

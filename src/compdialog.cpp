@@ -57,6 +57,14 @@ CompDialog::CompDialog(QWidget* parent)
 	ui->comboBox_PinShape->addItem(QString("Circle"));
 	ui->comboBox_PinShape->addItem(QString("Rectangle"));
 	ui->comboBox_PinShape->blockSignals(false);	// We're done populating, so unblock signals
+
+#ifdef VEROROUTE_ANDROID
+	QFont tmp = ui->comboBox_PinShape->font();
+	tmp.setPointSize(12);
+	ui->comboBox_PinShape->setFont(tmp);
+	ui->comboBox_Surface->setFont(tmp);
+	ui->comboBox_Shape->setFont(tmp);
+#endif
 }
 
 void CompDialog::SetMainWindow(MainWindow* p)
@@ -254,12 +262,16 @@ void CompDialog::mouseReleaseEvent(QMouseEvent* event)
 
 void CompDialog::keyPressEvent(QKeyEvent* event)
 {
+#ifndef VEROROUTE_ANDROID
 	m_pMainWindow->specialKeyPressEvent(event);
+#endif
 	QWidget::keyPressEvent(event);
 }
 
 void CompDialog::keyReleaseEvent(QKeyEvent* event)
 {
+#ifndef VEROROUTE_ANDROID
 	m_pMainWindow->commonKeyReleaseEvent(event);
+#endif
 	QWidget::keyReleaseEvent(event);
 }

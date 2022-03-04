@@ -97,6 +97,7 @@ HEADERS  += bomdialog.h \
     TextManager.h \
     TrackElement.h \
     Transform.h \
+    VeroRouteAndroid.h \
     Version.h \
     VrtVersion.h
    

@@ -1420,8 +1420,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			const char&		 compDirection	= comp.GetDirection();
 			const bool		 bMark			= compType == COMP::MARK;
 			const bool		 bWire			= compType == COMP::WIRE;
+			const bool		 bPadFlyingWire	= compType == COMP::PAD_FLYINGWIRE;
 			const bool		 bVeroLabel		= compType == COMP::VERO_NUMBER || compType == COMP::VERO_LETTER;
-			if ( bMark || bWire || bVeroLabel ) continue;
+			if ( bMark || bWire || bPadFlyingWire || bVeroLabel ) continue;
 			const bool		 bPlaced		= comp.GetIsPlaced();
 			if ( m_bWriteGerber && !bPlaced ) continue;		// Don't write floating components to Gerber
 			const bool		 bFound			= compMgr.GetFound( comp.GetId() );

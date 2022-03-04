@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include "VeroRouteAndroid.h"
 #include <QtGui>
 #include <QApplication>
 #include <QColorDialog>
@@ -36,7 +37,7 @@
 #include "GWriter.h"
 #include "myscrollarea.h"
 
-#ifndef Q_OS_ANDROID
+#ifndef VEROROUTE_ANDROID
 #define USE_PIXMAP_CACHE
 #endif
 
@@ -82,7 +83,8 @@ public:
 		ERASE_GRID		= 4,	// Erase grid points only (not component pins)
 		PAINT_FLOOD		= 5,	// Flood-fill all connected tracks & pins
 		DEFINE_RECT		= 6,	// Define grey rectangle areas
-		RESIZE_TEXT		= 7		// Resize text rectangle
+		RESIZE_TEXT		= 7,	// Resize text rectangle
+		SMART_PAN		= 8		// Move whole layout and resize/crop grid
 	};
 
 	explicit MainWindow(const QString& localDataPathStr, const QString& tutorialsPathStr, QWidget* parent = nullptr);
@@ -114,6 +116,7 @@ public:
 	bool		GetPaintFlood() const	{ return m_eMouseMode == MOUSE_MODE::PAINT_FLOOD; }
 	bool		GetDefiningRect() const	{ return m_eMouseMode == MOUSE_MODE::DEFINE_RECT; }
 	bool		GetResizingText() const	{ return m_eMouseMode == MOUSE_MODE::RESIZE_TEXT; }
+	bool		GetSmartPan() const		{ return m_eMouseMode == MOUSE_MODE::SMART_PAN || GetCtrlKeyDown(); }
 
 	void		SetCtrlKeyDown(bool b)	{ m_bCtrlKeyDown	= b; }
 	void		SetShiftKeyDown(bool b)	{ m_bShiftKeyDown	= b; }
@@ -124,6 +127,7 @@ public:
 	void		SetPaintFlood(bool b);
 	void		SetDefiningRect(bool b);
 	void		SetResizingText(bool b);
+	void		SetSmartPan(bool b);
 protected:
 	void paintEvent(QPaintEvent* event);
 	void wheelEvent(QWheelEvent* event);
@@ -131,11 +135,13 @@ protected:
 	void mouseDoubleClickEvent(QMouseEvent* event);
 	void mouseMoveEvent(QMouseEvent* event);
 	void mouseReleaseEvent(QMouseEvent* event);
+#ifndef VEROROUTE_ANDROID
 	void keyPressEvent(QKeyEvent* event);
 	void keyReleaseEvent(QKeyEvent* event);
 	void commonKeyPressEvent(QKeyEvent* event);		// So child dialogs can relay Ctrl and Shift to the main window
 	void commonKeyReleaseEvent(QKeyEvent* event);	// So child dialogs can relay Ctrl and Shift to the main window
 	void specialKeyPressEvent(QKeyEvent* event);	// So child dialogs can do Ctrl+Q etc
+#endif
 	void dragEnterEvent(QDragEnterEvent *e);
 	void dropEvent(QDropEvent *e);
 public slots:
@@ -188,6 +194,7 @@ public slots:
 	// Edit menu items
 	void Undo();
 	void Redo();
+	void SmartPanOn();
 	void Copy();
 	void Group();
 	void Ungroup();

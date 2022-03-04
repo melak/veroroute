@@ -27,7 +27,7 @@ WireDialog::WireDialog(MainWindow* parent)
 , m_pMainWindow(parent)
 {
 	ui->setupUi(this);
-#ifndef Q_OS_ANDROID
+#ifndef VEROROUTE_ANDROID
 	ui->pushButtonOK->hide();
 #endif
 	QObject::connect(ui->checkBox_share,	SIGNAL(toggled(bool)),	m_pMainWindow,	SLOT(SetWireShare(bool)));
@@ -49,12 +49,16 @@ void WireDialog::UpdateControls()
 
 void WireDialog::keyPressEvent(QKeyEvent* event)
 {
+#ifndef VEROROUTE_ANDROID
 	m_pMainWindow->specialKeyPressEvent(event);
+#endif
 	QDialog::keyPressEvent(event);
 }
 
 void WireDialog::keyReleaseEvent(QKeyEvent* event)
 {
+#ifndef VEROROUTE_ANDROID
 	m_pMainWindow->commonKeyReleaseEvent(event);
+#endif
 	QDialog::keyReleaseEvent(event);
 }

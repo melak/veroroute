@@ -91,7 +91,7 @@ void MainWindow::wheelEvent(QWheelEvent* event)
 
 bool MainWindow::CanModifyRuler() const
 {
-	return m_bRuler && !( m_board.GetCompEdit() || GetCtrlKeyDown() || GetShiftKeyDown() || GetResizingText() ||
+	return m_bRuler && !( m_board.GetCompEdit() || GetSmartPan() || GetShiftKeyDown() || GetResizingText() ||
 						  GetDefiningRect() || GetPaintPins() || GetErasePins() || GetPaintBoard() || GetEraseBoard() || GetPaintFlood() );
 }
 
@@ -106,8 +106,12 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 	const int&			layer		= m_board.GetCurrentLayer();
 
 	m_bMouseClick	= true;		// Set the flag meaning "click begin"
+#ifdef VEROROUTE_ANDROID
+	m_bLeftClick	= m_bRightClick = true;	// Making the point that there is no difference between left/right clicks in the Android version of the app
+#else
 	m_bLeftClick	= ( event->button() & Qt::LeftButton );
 	m_bRightClick	= ( event->button() & Qt::RightButton );
+#endif
 
 	// Get row col
 	double dRow(0), dCol(0);	// Fractional correction to row, col for SwapDiagLinks() call
@@ -120,7 +124,7 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 		if ( !bInGrid) return;
 	}
 
-	if ( m_bLeftClick && CanModifyRuler() )
+	if ( CanModifyRuler() )
 	{
 		const QPoint current(m_gridCol, m_gridRow);
 		if      ( current == m_rulerA ) m_bModifyRulerA = false;	// Do nothing, but prefer end B next time
@@ -155,7 +159,11 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 	}
 	if ( GetDefiningRect() )
 	{
-		if ( m_bLeftClick)	// Only define rectangles using left-click
+#ifdef VEROROUTE_ANDROID
+		if ( m_bMouseClick )
+#else
+		if ( m_bLeftClick )	// Only define rectangles using left-click
+#endif
 		{
 			centralWidget()->setCursor(Qt::SizeFDiagCursor);
 			m_board.GetRectMgr().StartNewRect(m_gridRow, m_gridCol);
@@ -163,20 +171,22 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 			UpdateHistory("Select parts in area(s)");
 			ShowCurrentRectSize();
 		}
+#ifndef VEROROUTE_ANDROID
 		else				// Right/middle click quits rectangle mode
 		{
 			SetDefiningRect( false );
 			UpdateControls();
 		}
+#endif
 		return RepaintSkipRouting();
 	}
 
-	if ( !GetCtrlKeyDown() && !GetShiftKeyDown() )
+	if ( !GetSmartPan() && !GetShiftKeyDown() )
 		m_board.GetRectMgr().Clear();
 
 	SetResizingText(false);
 
-	if ( !GetCtrlKeyDown() )	// If not grabbing the board ...
+	if ( !GetSmartPan() )	// If not grabbing the board ...
 	{
 		// Text box selection
 		if ( m_board.GetShowText() && m_board.GetTrackMode() != TRACKMODE::PCB )
@@ -229,7 +239,7 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 	}
 
 	// Cursor modification
-	if ( GetCtrlKeyDown() )
+	if ( GetSmartPan() )
 		centralWidget()->setCursor(Qt::ClosedHandCursor);
 	else if ( GetPaintPins() || GetErasePins() || GetPaintBoard() || GetEraseBoard() || GetPaintFlood() )
 		centralWidget()->setCursor(Qt::CrossCursor);
@@ -237,13 +247,11 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 		centralWidget()->setCursor(Qt::SizeFDiagCursor);
 	else if ( GetCurrentTextId() != BAD_TEXTID || GetCurrentCompId() != BAD_COMPID )
 		centralWidget()->setCursor(Qt::ClosedHandCursor);
-	else if ( ALLOW_SMART_PAN_WITHOUT_CTRLKEY && m_bRightClick )
-		centralWidget()->setCursor(Qt::ClosedHandCursor);
 	else
 		centralWidget()->setCursor(Qt::OpenHandCursor);
 
 	// Painting/Unpainting the component pins or board
-	if ( GetShiftKeyDown() || GetCtrlKeyDown() || trackMode == TRACKMODE::OFF ) return;
+	if ( GetSmartPan() || GetShiftKeyDown() || trackMode == TRACKMODE::OFF ) return;
 
 	if ( GetCurrentTextId() != BAD_TEXTID )
 		return RepaintWithRouting();	// Don't modify nodeId or paint if editing text
@@ -252,7 +260,11 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 
 	if ( GetPaintFlood() )
 	{
-		if ( m_bLeftClick )		// Paint
+#ifdef VEROROUTE_ANDROID
+		if ( m_bMouseClick )
+#else
+		if ( m_bLeftClick )	// Only define rectangles using left-click
+#endif
 		{
 			if ( GetCurrentNodeId() == BAD_NODEID )			// If trying to left-click paint a BAD_NODEID ...
 				SetCurrentNodeId( m_board.GetNewNodeId() );	// ... use a new NodeId instead
@@ -273,13 +285,12 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 	}
 	else if ( GetPaintPins() || GetErasePins() || GetPaintBoard() || GetEraseBoard() )
 	{
-//TODO Comment out code here for testing Android GUI approach on desktop build
-#ifdef Q_OS_ANDROID
+#ifdef VEROROUTE_ANDROID
 		const bool bClickedValidNodeID = pC->GetNodeId() != BAD_NODEID;
 		if ( bClickedValidNodeID && GetPaintBoard() && pC->GetHasPin() )	// If we're painting board and clicked on a pin with a valid nodeID
 		{
 			SetCurrentNodeId( pC->GetNodeId() );	// ... then change current nodeID to that of the pin
-			m_mouseActionString = "Select NodeId";
+			m_mouseActionString = "Select Net";
 		}
 		else if ( bClickedValidNodeID && GetPaintBoard() && pC->GetNodeId() == GetCurrentNodeId() )	// If we're painting board and clicked on a point with matching valid nodeID
 		{
@@ -300,8 +311,8 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 		}
 		else
 #endif
-//TODO Comment out code here for testing Android GUI approach on desktop build
-#ifdef Q_OS_ANDROID
+
+#ifdef VEROROUTE_ANDROID
 		if ( GetPaintPins() || GetPaintBoard() )	// Paint
 #else
 		if ( m_bLeftClick )	// Paint
@@ -316,8 +327,8 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 			if ( !bChanged ) return;
 			m_mouseActionString = "Paint";
 		}
-//TODO Comment out code here for testing Android GUI approach on desktop build
-#ifdef Q_OS_ANDROID
+
+#ifdef VEROROUTE_ANDROID
 		else if ( GetErasePins() || GetEraseBoard() )	// Erase
 #else
 		else if ( m_bRightClick )	// Erase
@@ -330,12 +341,15 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 	}
 	else	// Set/Unset current nodeId from board
 	{
+#ifdef VEROROUTE_ANDROID
+		SetCurrentNodeId( pC->GetNodeId() );
+#else
 		if ( m_bLeftClick )
 			SetCurrentNodeId( pC->GetNodeId() );
 		if ( m_bRightClick )
 			SetCurrentNodeId( BAD_NODEID );
-		if ( m_bLeftClick || m_bRightClick )
-			m_mouseActionString = ( GetCurrentNodeId() == BAD_NODEID) ? "Unselect NodeId" : "Select NodeId";
+#endif
+		m_mouseActionString = ( GetCurrentNodeId() == BAD_NODEID) ? "Unselect Net" : "Select Net";
 	}
 
 	m_board.WipeAutoSetPoints();
@@ -348,15 +362,18 @@ void MainWindow::mouseDoubleClickEvent(QMouseEvent* event)
 	m_mousePos = event->pos();
 	if ( m_board.GetMirrored() ) return;
 	if ( m_board.GetCompEdit() ) return;
-	if ( GetCtrlKeyDown() || GetShiftKeyDown() ) return;
-#ifdef Q_OS_ANDROID
+
+	if ( GetSmartPan() || GetShiftKeyDown() ) return;
+
+#ifdef VEROROUTE_ANDROID
 	if ( GetDefiningRect() )
 	{
-		SetDefiningRect(false);	// Quit rectangle mode
+		SetDefiningRect(false);	// Quit define rectangles mode
 		UpdateControls();
 		return;
 	}
 #endif
+
 	if ( m_board.GetTrackMode() == TRACKMODE::OFF ) return;
 
 	if ( GetCurrentTextId() != BAD_TEXTID )
@@ -383,8 +400,7 @@ void MainWindow::mouseDoubleClickEvent(QMouseEvent* event)
 		}
 	}
 
-//TODO Comment out code here for testing Android GUI approach on desktop build
-#ifdef Q_OS_ANDROID
+#ifdef VEROROUTE_ANDROID
 	// Handle leaving PaintBoard mode via double-clicking on a component pin
 	if ( GetPaintBoard() && GetCurrentNodeId() != BAD_NODEID )
 	{
@@ -431,11 +447,9 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 	if ( GetPaintPins() || GetErasePins() || GetPaintFlood() ) return;	// Ignore mouse move while painting pins or flooding
 	if ( GetShiftKeyDown() ) return;									// Ignore mouse move while trying to group components
 
-	bool bSmartPan = GetCtrlKeyDown();
-
 	if ( m_board.GetCompEdit() && GetCurrentShapeId() != BAD_ID && m_bMouseClick )
 		centralWidget()->setCursor(Qt::ClosedHandCursor);
-	else if ( bSmartPan )
+	else if ( GetSmartPan() )
 		centralWidget()->setCursor(Qt::ClosedHandCursor);
 	else if ( GetDefiningRect() || GetResizingText() )
 		centralWidget()->setCursor(Qt::SizeFDiagCursor);
@@ -444,8 +458,6 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 	else if ( GetCurrentTextId() != BAD_TEXTID && m_bMouseClick )
 		centralWidget()->setCursor(Qt::ClosedHandCursor);
 	else if ( GetCurrentCompId() != BAD_COMPID && m_bMouseClick )
-		centralWidget()->setCursor(Qt::ClosedHandCursor);
-	else if ( ALLOW_SMART_PAN_WITHOUT_CTRLKEY && m_bRightClick )
 		centralWidget()->setCursor(Qt::ClosedHandCursor);
 	else
 		centralWidget()->setCursor(Qt::OpenHandCursor);
@@ -483,16 +495,15 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 			UpdateCompDialog();
 		}
 	}
-	else if ( !bSmartPan && GetDefiningRect() )
+	else if ( !GetSmartPan() && GetDefiningRect() )
 	{
 		m_board.GetRectMgr().UpdateNewRect(m_gridRow, m_gridCol);
 		SelectAllInRects();
 	}
-	else if ( !bSmartPan && ( GetPaintBoard() || GetEraseBoard() ) && trackMode != TRACKMODE::OFF )	// (Un)Paint nodeId on board but NOT pins
+	else if ( !GetSmartPan() && ( GetPaintBoard() || GetEraseBoard() ) && trackMode != TRACKMODE::OFF )	// (Un)Paint nodeId on board but NOT pins
 	{
 		assert( !GetPaintPins() && !GetErasePins() && !GetPaintFlood() );	// Sanity check
-//TODO Comment out code here for testing Android GUI approach on desktop build
-#ifdef Q_OS_ANDROID
+#ifdef VEROROUTE_ANDROID
 		if ( GetPaintBoard() )	// Paint
 #else
 		if ( m_bLeftClick )		// Paint
@@ -503,8 +514,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 			m_mouseActionString = "Paint";
 		}
 
-//TODO Comment out code here for testing Android GUI approach on desktop build
-#ifdef Q_OS_ANDROID
+#ifdef VEROROUTE_ANDROID
 		if ( GetEraseBoard() )	// Erase
 #else
 		if ( m_bRightClick )	// Erase
@@ -517,7 +527,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 		m_board.WipeAutoSetPoints();
 		m_board.PlaceFloaters();	// See if we can now place floating components down
 	}
-	else if ( !bSmartPan && GetCurrentTextId() != BAD_TEXTID )
+	else if ( !GetSmartPan() && GetCurrentTextId() != BAD_TEXTID )
 	{
 		int pixmapX(0), pixmapY(0);
 		GetPixMapXY(event->pos(), pixmapX, pixmapY);
@@ -550,7 +560,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 		}
 		m_mouseActionString = ( GetResizingText() ) ? "Resize text box" : "Move text box";
 	}
-	else if ( !bSmartPan && GetCurrentCompId() != BAD_COMPID && compMode != COMPSMODE::OFF )	// Move user-group components
+	else if ( !GetSmartPan() && GetCurrentCompId() != BAD_COMPID && compMode != COMPSMODE::OFF )	// Move user-group components
 	{
 		int pixmapX(0), pixmapY(0);
 		GetPixMapXY(event->pos(), pixmapX, pixmapY);
@@ -575,8 +585,10 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 		}
 		m_mouseActionString = "Move part(s)";
 	}
-	else if ( bSmartPan || (ALLOW_SMART_PAN_WITHOUT_CTRLKEY && m_bRightClick) )
+	else if ( GetSmartPan() || ( ALLOW_SMART_PAN_WITHOUT_CTRLKEY && !CanModifyRuler() ) )	// If we're not moving anything else, we can smart pan
 	{
+		centralWidget()->setCursor(Qt::ClosedHandCursor);	// Needed for the case when GetSmartPan() returns false
+
 		int pixmapX(0), pixmapY(0);
 		GetPixMapXY(event->pos(), pixmapX, pixmapY);
 
@@ -586,12 +598,10 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 		if ( deltaCol == 0 ) { if ( pixmapX < W ) deltaCol = -1; }
 		if ( deltaRow == 0 && deltaCol == 0 ) return;	// No change
 		m_board.SmartPan(deltaRow, deltaCol);	// Pan whole circuit w.r.t. grid area, growing/shrinking as needed
-		m_mouseActionString = "Smart move/grow/crop";
+		m_mouseActionString = "Move whole layout";
 	}
-	else
-		return;
 
-	if ( m_bLeftClick && CanModifyRuler() )
+	if ( CanModifyRuler() )
 	{
 		const QPoint old(oldCol, oldRow);
 		const QPoint current(m_gridCol, m_gridRow);
@@ -621,6 +631,11 @@ void MainWindow::mouseReleaseEvent(QMouseEvent* event)
 	releaseMouse();
 
 	if ( m_board.GetMirrored() ) return;
+
+#ifdef VEROROUTE_ANDROID
+	if ( GetSmartPan() )
+		SetSmartPan(false);
+#endif
 
 	m_bMouseClick = false;
 
@@ -654,6 +669,7 @@ void MainWindow::mouseReleaseEvent(QMouseEvent* event)
 	RepaintWithListNodes();
 }
 
+#ifndef VEROROUTE_ANDROID
 void MainWindow::keyPressEvent(QKeyEvent* event)
 {
 	commonKeyPressEvent(event);
@@ -845,6 +861,7 @@ void MainWindow::specialKeyPressEvent(QKeyEvent* event)		// So child dialogs can
 		case Qt::Key_Q:	return Quit();
 	}
 }
+#endif
 
 void MainWindow::dragEnterEvent(QDragEnterEvent *e)
 {
@@ -908,4 +925,10 @@ void MainWindow::SetResizingText(bool b)
 {
 	if ( b == GetResizingText() ) return;
 	m_eMouseMode = ( b ) ? MOUSE_MODE::RESIZE_TEXT : MOUSE_MODE::SELECT;
+}
+void MainWindow::SetSmartPan(bool b)
+{
+	if ( b == GetSmartPan() ) return;
+	m_eMouseMode = ( b ) ? MOUSE_MODE::SMART_PAN : MOUSE_MODE::SELECT;
+	centralWidget()->setCursor(Qt::OpenHandCursor);
 }

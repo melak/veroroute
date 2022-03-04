@@ -27,7 +27,7 @@ FindDialog::FindDialog(MainWindow* parent)
 , m_pMainWindow(parent)
 {
 	ui->setupUi(this);
-#ifndef Q_OS_ANDROID
+#ifndef VEROROUTE_ANDROID
 	ui->pushButtonOK->hide();
 	ui->nameEdit->resize(ui->nameEdit->width() + 40, ui->nameEdit->height());
 #endif
@@ -75,12 +75,16 @@ void FindDialog::closeEvent(QCloseEvent* event)
 
 void FindDialog::keyPressEvent(QKeyEvent* event)
 {
+#ifndef VEROROUTE_ANDROID
 	m_pMainWindow->specialKeyPressEvent(event);
+#endif
 	QDialog::keyPressEvent(event);
 }
 
 void FindDialog::keyReleaseEvent(QKeyEvent* event)
 {
+#ifndef VEROROUTE_ANDROID
 	m_pMainWindow->commonKeyReleaseEvent(event);
+#endif
 	QDialog::keyReleaseEvent(event);
 }

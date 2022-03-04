@@ -92,12 +92,16 @@ void HotkeysDialog::Setup()
 
 void HotkeysDialog::keyPressEvent(QKeyEvent* event)
 {
+#ifndef VEROROUTE_ANDROID
 	m_pMainWindow->specialKeyPressEvent(event);
+#endif
 	QDialog::keyPressEvent(event);
 }
 
 void HotkeysDialog::keyReleaseEvent(QKeyEvent* event)
 {
+#ifndef VEROROUTE_ANDROID
 	m_pMainWindow->commonKeyReleaseEvent(event);
+#endif
 	QDialog::keyReleaseEvent(event);
 }

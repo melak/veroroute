@@ -102,7 +102,7 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	m_pinDlg		= new PinDialog(this);
 	m_findDlg		= new FindDialog(this);
 
-#ifdef Q_OS_ANDROID
+#ifdef VEROROUTE_ANDROID
 	ui->menuBar->setNativeMenuBar(false);
 	ui->toolBar->setIconSize(QSize(30,30));		// 30x30 instead of 24x24
 	ui->toolBar->setMovable(false);				// Keep docked
@@ -110,21 +110,39 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	ui->toolBar_2->setMovable(false);			// Keep docked
 	ui->actionHotkeysDlg->setVisible(false);	// Hide dialog listing key/mouse actions
 	ui->actionUpdateCheck->setVisible(false);	// Hide update check (until SSL support added)
+	// Remove keyboard shortcuts for actions
+	ui->actionNew->setShortcut(QKeySequence());
+	ui->actionOpen->setShortcut(QKeySequence());
+	ui->actionSave->setShortcut(QKeySequence());
+	ui->actionSave_As->setShortcut(QKeySequence());
+	ui->actionMerge->setShortcut(QKeySequence());
+	ui->actionQuit->setShortcut(QKeySequence());
+	ui->actionZoom_In->setShortcut(QKeySequence());
+	ui->actionZoom_Out->setShortcut(QKeySequence());
+	ui->actionUndo->setShortcut(QKeySequence());
+	ui->actionRedo->setShortcut(QKeySequence());
+	ui->actionFind->setShortcut(QKeySequence());
+	ui->actionCopy->setShortcut(QKeySequence());
+	ui->actionGroup->setShortcut(QKeySequence());
+	ui->actionUngroup->setShortcut(QKeySequence());
+	ui->actionSelectAll->setShortcut(QKeySequence());
+	ui->actionDelete->setShortcut(QKeySequence());
+	ui->actionSwitchLayer->setShortcut(QKeySequence());
 #endif
 
-#ifdef Q_OS_ANDROID
+#ifdef VEROROUTE_ANDROID
 	m_infoDlg->move(595,65);
+	ui->toolBar->insertSeparator(ui->actionFat);
 #else
 	move(50,50);
 	m_templatesDlg->move(940,50);
 	m_infoDlg->move(940,50);
-
-//TODO Comment out next code block for testing Android GUI approach on desktop build
 	ui->menuPaint->menuAction()->setVisible(false);
-	ui->actionPaintPins->setVisible(false);
-	ui->actionErasePins->setVisible(false);
+	ui->actionSmartPan->setVisible(false);
 	ui->actionPaintGrid->setVisible(false);
 	ui->actionEraseGrid->setVisible(false);
+	ui->actionPaintPins->setVisible(false);
+	ui->actionErasePins->setVisible(false);
 	ui->actionPaintFlood->setVisible(false);
 #endif
 
@@ -188,6 +206,7 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	QObject::connect(ui->actionSelectArea,				SIGNAL(triggered()), this, SLOT(ToggleSelectArea()));
 	QObject::connect(ui->actionUndo,					SIGNAL(triggered()), this, SLOT(Undo()));
 	QObject::connect(ui->actionRedo,					SIGNAL(triggered()), this, SLOT(Redo()));
+	QObject::connect(ui->actionSmartPan,				SIGNAL(triggered()), this, SLOT(SmartPanOn()));
 	QObject::connect(ui->actionFind,					SIGNAL(triggered()), this, SLOT(ShowFindDialog()));
 	QObject::connect(ui->actionCopy,					SIGNAL(triggered()), this, SLOT(Copy()));
 	QObject::connect(ui->actionGroup,					SIGNAL(triggered()), this, SLOT(Group()));
@@ -615,7 +634,7 @@ void MainWindow::Save()
 	}
 	else
 	{
-#ifdef Q_OS_ANDROID
+#ifdef VEROROUTE_ANDROID
 		return SaveAs();	// Ask for explicit permission
 #else
 		QMessageBox::information(this, tr("Unable to save file"), tr(fileNameStr.c_str()));
@@ -739,7 +758,7 @@ void MainWindow::WriteGerber(const bool& bTwoLayerGerber, const bool& bMetric)
 
 	if ( !m_gerberFileName.isEmpty() )
 	{
-#ifdef Q_OS_ANDROID
+#ifdef VEROROUTE_ANDROID
 		ui->statusBar->showMessage( tr("Exporting to Gerber.  This can be very SLOW.  Please wait..."), 500 );
 #else
 		ui->statusBar->showMessage( tr("Exporting to Gerber..."), 500 );
@@ -894,6 +913,12 @@ void MainWindow::Redo()
 	}
 	m_historyMgr.UnLock();
 }
+
+void MainWindow::SmartPanOn()
+{
+	SetSmartPan(true);
+}
+
 void MainWindow::Copy()
 {
 	if ( GetCurrentTextId() != BAD_TEXTID )
@@ -1209,8 +1234,10 @@ void MainWindow::ToggleSelectArea()		{ SetDefiningRect( !GetDefiningRect() ); }
 void MainWindow::TogglePaintGrid()
 {
 	SetPaintBoard( !GetPaintBoard() );
+	if ( !GetPaintBoard() ) SetCurrentNodeId(BAD_NODEID);	// If we've stopped painting, clear current nodeId
 	m_board.GetRectMgr().Clear();
 	UpdateControls();
+	if ( !GetPaintBoard() ) RepaintSkipRouting();
 }
 void MainWindow::ToggleEraseGrid()
 {
@@ -1221,8 +1248,10 @@ void MainWindow::ToggleEraseGrid()
 void MainWindow::TogglePaintPins()
 {
 	SetPaintPins( !GetPaintPins() );
+	if ( !GetPaintPins() ) SetCurrentNodeId(BAD_NODEID);	// If we've stopped painting, clear current nodeId
 	m_board.GetRectMgr().Clear();
 	UpdateControls();
+	if ( !GetPaintPins() ) RepaintSkipRouting();
 }
 void MainWindow::ToggleErasePins()
 {
@@ -1233,8 +1262,10 @@ void MainWindow::ToggleErasePins()
 void MainWindow::TogglePaintFlood()
 {
 	SetPaintFlood( !GetPaintFlood() );
+	if ( !GetPaintFlood() ) SetCurrentNodeId(BAD_NODEID);	// If we've stopped painting, clear current nodeId
 	m_board.GetRectMgr().Clear();
 	UpdateControls();
+	if ( !GetPaintFlood() ) RepaintSkipRouting();
 }
 void MainWindow::ResetMouseMode()
 {
@@ -1939,6 +1970,8 @@ void MainWindow::UpdateControls()
 	ui->actionFill->setChecked( m_board.GetGroundFill() );
 
 	ui->actionSelectArea->setChecked( !bCompEdit && GetDefiningRect() );
+
+	ui->actionSmartPan->setEnabled( !bCompEdit );
 
 	ui->actionEditor->setChecked(			bCompEdit );
 	ui->actionAddLine->setEnabled(			bCompEdit );

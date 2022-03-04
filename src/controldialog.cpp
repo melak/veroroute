@@ -47,6 +47,12 @@ ControlDialog::ControlDialog(QWidget* parent)
 	ui->textR->setText(QChar(0x25b6));
 	ui->textT->setText(QChar(0x25b2));
 	ui->textB->setText(QChar(0x25bc));
+
+#ifdef VEROROUTE_ANDROID
+	QFont tmp = ui->typeComboBox->font();
+	tmp.setPointSize(12);
+	ui->typeComboBox->setFont(tmp);
+#endif
 }
 
 void ControlDialog::SetMainWindow(MainWindow* p)
@@ -324,14 +330,18 @@ void ControlDialog::mouseReleaseEvent(QMouseEvent* event)
 
 void ControlDialog::keyPressEvent(QKeyEvent* event)
 {
+#ifndef VEROROUTE_ANDROID
 	m_pMainWindow->specialKeyPressEvent(event);
+#endif
 	QWidget::keyPressEvent(event);
 	event->accept();
 }
 
 void ControlDialog::keyReleaseEvent(QKeyEvent* event)
 {
+#ifndef VEROROUTE_ANDROID
 	m_pMainWindow->commonKeyReleaseEvent(event);
+#endif
 	QWidget::keyReleaseEvent(event);
 	event->accept();
 }

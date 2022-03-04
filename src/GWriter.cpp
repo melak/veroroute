@@ -17,6 +17,7 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "VeroRouteAndroid.h"
 #include "Version.h"
 #include "Board.h"
 #include "GWriter.h"
@@ -76,7 +77,7 @@ bool GStream::Open(const QString& fileName, const GFILE& eType, const bool& bMet
 	}
 	str += suffix;
 
-#ifdef Q_OS_ANDROID
+#ifdef VEROROUTE_ANDROID
 	// Ask user to confirm each Gerber file to get write permission from Android
 
 	QFileInfo info(str);

@@ -27,7 +27,7 @@ PinDialog::PinDialog(MainWindow* parent)
 , m_pMainWindow(parent)
 {
 	ui->setupUi(this);
-#ifndef Q_OS_ANDROID
+#ifndef VEROROUTE_ANDROID
 	ui->pushButtonOK->hide();
 	ui->tableWidget->resize(ui->tableWidget->width(), ui->tableWidget->height() + 30);
 #endif
@@ -141,12 +141,16 @@ void PinDialog::Update()
 
 void PinDialog::keyPressEvent(QKeyEvent* event)
 {
+#ifndef VEROROUTE_ANDROID
 	m_pMainWindow->specialKeyPressEvent(event);
+#endif
 	QDialog::keyPressEvent(event);
 }
 
 void PinDialog::keyReleaseEvent(QKeyEvent* event)
 {
+#ifndef VEROROUTE_ANDROID
 	m_pMainWindow->commonKeyReleaseEvent(event);
+#endif
 	QDialog::keyReleaseEvent(event);
 }

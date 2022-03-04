@@ -101,6 +101,8 @@
     <addaction name="actionUndo"/>
     <addaction name="actionRedo"/>
     <addaction name="separator"/>
+    <addaction name="actionSmartPan"/>
+    <addaction name="separator"/>
     <addaction name="actionFind"/>
     <addaction name="separator"/>
     <addaction name="actionCopy"/>
@@ -256,8 +258,10 @@
     <addaction name="actionCurved"/>
     <addaction name="actionVeroV"/>
     <addaction name="actionVeroH"/>
+    <addaction name="separator"/>
     <addaction name="actionDiagsMin"/>
     <addaction name="actionDiagsMax"/>
+    <addaction name="separator"/>
     <addaction name="actionFill"/>
    </widget>
    <widget class="QMenu" name="menuPaint">
@@ -274,8 +278,8 @@
    <addaction name="menuEdit"/>
    <addaction name="menuAdd"/>
    <addaction name="menuView"/>
-   <addaction name="menuTrack_Style"/>
    <addaction name="menuPaint"/>
+   <addaction name="menuTrack_Style"/>
    <addaction name="menuWindow"/>
    <addaction name="menuLayers"/>
    <addaction name="menuHelp"/>
@@ -338,8 +342,10 @@
     <bool>false</bool>
    </attribute>
    <addaction name="actionSwitchLayer"/>
+   <addaction name="separator"/>
    <addaction name="actionUndo"/>
    <addaction name="actionRedo"/>
+   <addaction name="separator"/>
    <addaction name="actionZoom_In"/>
    <addaction name="actionZoom_Out"/>
    <addaction name="separator"/>
@@ -349,6 +355,11 @@
    <addaction name="actionToggleFlipH"/>
    <addaction name="actionToggleFlipV"/>
    <addaction name="separator"/>
+   <addaction name="actionPaintGrid"/>
+   <addaction name="actionEraseGrid"/>
+   <addaction name="actionPaintPins"/>
+   <addaction name="actionErasePins"/>
+   <addaction name="actionPaintFlood"/>
    <addaction name="actionFat"/>
    <addaction name="actionThin"/>
    <addaction name="actionCurved"/>
@@ -361,15 +372,6 @@
    <addaction name="actionFill"/>
    <addaction name="separator"/>
    <addaction name="actionSelectArea"/>
-   <addaction name="separator"/>
-   <addaction name="separator"/>
-   <addaction name="actionPaintGrid"/>
-   <addaction name="actionEraseGrid"/>
-   <addaction name="separator"/>
-   <addaction name="separator"/>
-   <addaction name="actionPaintPins"/>
-   <addaction name="actionErasePins"/>
-   <addaction name="actionPaintFlood"/>
   </widget>
   <widget class="QToolBar" name="toolBar_2">
    <property name="minimumSize">
@@ -1410,10 +1412,15 @@
      <normaloff>:/images/paintflood.png</normaloff>:/images/paintflood.png</iconset>
    </property>
    <property name="text">
-    <string>Flood Track and Pins</string>
+    <string>Flood Pins and Track</string>
    </property>
    <property name="toolTip">
-    <string>Flood Track and Pins</string>
+    <string>Flood Pins and Track</string>
+   </property>
+  </action>
+  <action name="actionSmartPan">
+   <property name="text">
+    <string>Move whole Layout</string>
    </property>
   </action>
  </widget>

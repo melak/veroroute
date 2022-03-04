@@ -27,7 +27,7 @@ InfoDialog::InfoDialog(MainWindow* parent)
 , m_pMainWindow(parent)
 {
 	ui->setupUi(this);
-#ifndef Q_OS_ANDROID
+#ifndef VEROROUTE_ANDROID
 	ui->pushButtonOK->hide();
 	ui->prev->move(ui->prev->x() + 30, ui->prev->y());
 	ui->reload->move(ui->reload->x() + 30, ui->reload->y());
@@ -87,6 +87,7 @@ bool InfoDialog::GetIsModified()
 void InfoDialog::keyPressEvent(QKeyEvent* event)
 {
 	// In tutorial mode, forward event to main window (apart from special cases)
+#ifndef VEROROUTE_ANDROID
 	bool bForwardToMainWindow = ui->plainTextEdit->isReadOnly();
 	switch( event->key() )
 	{
@@ -100,14 +101,17 @@ void InfoDialog::keyPressEvent(QKeyEvent* event)
 	if ( bForwardToMainWindow )
 		return m_pMainWindow->keyPressEvent(event);
 	m_pMainWindow->specialKeyPressEvent(event);
+#endif
 	QDialog::keyPressEvent(event);
 }
 
 void InfoDialog::keyReleaseEvent(QKeyEvent* event)
 {
+#ifndef VEROROUTE_ANDROID
 	// In tutorial mode, forward event to main window
 	if ( ui->plainTextEdit->isReadOnly() )
 		return m_pMainWindow->keyReleaseEvent(event);
 	m_pMainWindow->commonKeyReleaseEvent(event);
+#endif
 	QDialog::keyReleaseEvent(event);
 }

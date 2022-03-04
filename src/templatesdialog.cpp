@@ -30,7 +30,7 @@ TemplatesDialog::TemplatesDialog(MainWindow* parent)
 , m_iRowR(-1)
 {
 	ui->setupUi(this);
-#ifndef Q_OS_ANDROID
+#ifndef VEROROUTE_ANDROID
 	ui->pushButtonOK->hide();
 	ui->pushButton_2->resize(ui->pushButton_2->width() + 40, ui->pushButton_2->height());
 #endif
@@ -291,12 +291,16 @@ void TemplatesDialog::AddTemplatesFromBoard(Board& board, bool bAllComps, bool b
 
 void TemplatesDialog::keyPressEvent(QKeyEvent* event)
 {
+#ifndef VEROROUTE_ANDROID
 	m_pMainWindow->specialKeyPressEvent(event);
+#endif
 	QDialog::keyPressEvent(event);
 }
 
 void TemplatesDialog::keyReleaseEvent(QKeyEvent* event)
 {
+#ifndef VEROROUTE_ANDROID
 	m_pMainWindow->commonKeyReleaseEvent(event);
+#endif
 	QDialog::keyReleaseEvent(event);
 }

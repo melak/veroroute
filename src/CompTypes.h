@@ -381,8 +381,8 @@ struct CompTypes
 		switch( eType )
 		{
 			case COMP::MARK:				return "Marker";
-			case COMP::PAD:
-			case COMP::PAD_FLYINGWIRE:		return "Pad";
+			case COMP::PAD:					return "Pad";
+			case COMP::PAD_FLYINGWIRE:		return "Wire_Pad";
 			case COMP::WIRE:				return "Wire";
 			case COMP::RESISTOR:			return "R";
 			case COMP::INDUCTOR:			return "L";
@@ -520,9 +520,9 @@ struct CompTypes
 			case COMP::PAD					: rows = 1; cols = 1;  return "1";
 			case COMP::PAD_FLYINGWIRE		: rows = 1; cols = 1;  return "1";
 			case COMP::WIRE					: rows = 1; cols = 3;  return "1+2";
-			case COMP::RESISTOR				: rows = 1; cols = 5;  return "1+++2";
-			case COMP::INDUCTOR				: rows = 1; cols = 5;  return "1+++2";
-			case COMP::DIODE				: rows = 1; cols = 5;  return "1+++2";
+			case COMP::RESISTOR				: rows = 1; cols = 4;  return "1++2";
+			case COMP::INDUCTOR				: rows = 1; cols = 4;  return "1++2";
+			case COMP::DIODE				: rows = 1; cols = 4;  return "1++2";
 			case COMP::LED					: rows = 1; cols = 2;  return "12";
 			case COMP::CAP_CERAMIC			:
 			case COMP::CAP_FILM				: rows = 1; cols = 3;  return "1+2";
