@@ -53,6 +53,7 @@ class CompDialog;
 class TextDialog;
 class BomDialog;
 class PinDialog;
+class PadOffsetDialog;
 class FindDialog;
 
 const size_t MAX_RECENT_FILES = 10;
@@ -69,6 +70,7 @@ class MainWindow : public QMainWindow
 	friend class TextDialog;
 	friend class BomDialog;
 	friend class PinDialog;
+	friend class PadOffsetDialog;
 	friend class FindDialog;
 
 	Q_OBJECT
@@ -268,6 +270,8 @@ public slots:
 	void ShowTextDialog();
 	void ShowBomDialog();
 	void ShowPinDialog();
+	void ShowPadOffsetDialog();
+	void HidePadOffsetDialog();
 	void ShowFindDialog();
 	void ShowAbout();
 	void ShowSupport();
@@ -325,6 +329,12 @@ public slots:
 	void CompTextR()		{ CompTextMove(0,  1); }
 	void CompTextT()		{ CompTextMove(-1, 0); }
 	void CompTextB()		{ CompTextMove( 1, 0); }
+	// Pin Shift
+	void PadCentre()		{ PadMove(0,  0); }
+	void PadMoveL()			{ PadMove(0, -1); }
+	void PadMoveR()			{ PadMove(0,  1); }
+	void PadMoveT()			{ PadMove(-1, 0); }
+	void PadMoveB()			{ PadMove( 1, 0); }
 	// Bad Nodes lists
 	void SetNodeId(QListWidgetItem* item);
 	void ListNodes(bool bRebuild = true);
@@ -500,6 +510,8 @@ private:
 	void CompStretch(const bool& bGrow);
 	void CompStretchWidth(const bool& bGrow);
 	void CompTextMove(const int& deltaRow, const int& deltaCol);
+	void PadMove(const int& deltaRowMil, const int& deltaColMil);
+	void ShowPadInfo();
 
 	// GUI update
 	void UpdateRecentFiles(const QString* pFileName, bool bAdd);
@@ -566,6 +578,7 @@ private:
 	BomDialog*				m_bomDlg			= nullptr;
 	TemplatesDialog*		m_templatesDlg		= nullptr;
 	PinDialog*				m_pinDlg			= nullptr;
+	PadOffsetDialog*		m_padOffsetDlg		= nullptr;
 	FindDialog*				m_findDlg			= nullptr;
 
 	Board					m_board;			// *** The main object ***

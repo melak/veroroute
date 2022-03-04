@@ -447,6 +447,8 @@ public:
 	}
 	void IncCompPinOffsets(const size_t& iPinIndex, const int& dX, const int& dY)
 	{
+		if ( dX == 0 && dY == 0 )
+			return SetCompPinOffsets(iPinIndex, 0, 0);	// Reset
 		int Xmil, Ymil;
 		GetCompPinOffsets(iPinIndex, Xmil, Ymil);
 		SetCompPinOffsets(iPinIndex, Xmil + dX, Ymil + dY);

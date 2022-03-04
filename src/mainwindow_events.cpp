@@ -22,11 +22,15 @@
 #include "PolygonHelper.h"
 #include <QtGlobal>
 
-static const bool ALLOW_SMART_PAN_WITHOUT_CTRLKEY = true;
+static const bool ALLOW_DELAY_BASED_SMART_PAN = true;
+static const bool ALLOW_DELAY_BASED_PAD_SHIFT = true;
 
 // Following 2 are to slow down the auto-panning while moving components with the mouse
 static std::chrono::steady_clock::time_point g_lastAutoPanTime;
 static bool g_bHaveAutoPanned = false;
+
+static std::chrono::steady_clock::time_point g_lastMouseClickTime;	// For implementation of ALLOW_DELAY_BASED_SMART_PAN / ALLOW_DELAY_BASED_PAD_SHIFT
+static bool g_bPinClicked = false;									// For implementation of ALLOW_DELAY_BASED_PAD_SHIFT
 
 void MainWindow::GetPixMapXY(const QPoint& currentPoint, int& pixmapX, int& pixmapY) const
 {
@@ -97,6 +101,8 @@ bool MainWindow::CanModifyRuler() const
 
 void MainWindow::mousePressEvent(QMouseEvent* event)
 {
+	g_bPinClicked = false;
+
 	m_mousePos = event->pos();
 	if ( m_board.GetMirrored() ) return;
 
@@ -124,19 +130,6 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 		if ( !bInGrid) return;
 	}
 
-	if ( CanModifyRuler() )
-	{
-		const QPoint current(m_gridCol, m_gridRow);
-		if      ( current == m_rulerA ) m_bModifyRulerA = false;	// Do nothing, but prefer end B next time
-		else if ( current == m_rulerB ) m_bModifyRulerA = true;		// Do nothing, but prefer end A next time
-		else
-		{
-			if ( m_bModifyRulerA )	m_rulerA = current;
-			else					m_rulerB = current;
-			m_bModifyRulerA = !m_bModifyRulerA;
-		}
-	}
-
 	if ( m_board.GetCompEdit() )
 	{
 		// Pin/Shape selection
@@ -157,6 +150,32 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 		UpdateCompDialog();
 		return RepaintSkipRouting();
 	}
+
+	// Cursor modification
+	if ( GetSmartPan() )
+		centralWidget()->setCursor(Qt::ClosedHandCursor);
+	else if ( GetPaintPins() || GetErasePins() || GetPaintBoard() || GetEraseBoard() || GetPaintFlood() )
+		centralWidget()->setCursor(Qt::CrossCursor);
+	else if ( GetResizingText() )
+		centralWidget()->setCursor(Qt::SizeFDiagCursor);
+	else if ( GetCurrentTextId() != BAD_TEXTID || GetCurrentCompId() != BAD_COMPID )
+		centralWidget()->setCursor(Qt::ClosedHandCursor);
+	else
+		centralWidget()->setCursor(Qt::OpenHandCursor);
+
+	if ( CanModifyRuler() )
+	{
+		const QPoint current(m_gridCol, m_gridRow);
+		if      ( current == m_rulerA ) m_bModifyRulerA = false;	// Do nothing, but prefer end B next time
+		else if ( current == m_rulerB ) m_bModifyRulerA = true;		// Do nothing, but prefer end A next time
+		else
+		{
+			if ( m_bModifyRulerA )	m_rulerA = current;
+			else					m_rulerB = current;
+			m_bModifyRulerA = !m_bModifyRulerA;
+		}
+	}
+
 	if ( GetDefiningRect() )
 	{
 #ifdef VEROROUTE_ANDROID
@@ -237,18 +256,6 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 			}
 		}
 	}
-
-	// Cursor modification
-	if ( GetSmartPan() )
-		centralWidget()->setCursor(Qt::ClosedHandCursor);
-	else if ( GetPaintPins() || GetErasePins() || GetPaintBoard() || GetEraseBoard() || GetPaintFlood() )
-		centralWidget()->setCursor(Qt::CrossCursor);
-	else if ( GetResizingText() )
-		centralWidget()->setCursor(Qt::SizeFDiagCursor);
-	else if ( GetCurrentTextId() != BAD_TEXTID || GetCurrentCompId() != BAD_COMPID )
-		centralWidget()->setCursor(Qt::ClosedHandCursor);
-	else
-		centralWidget()->setCursor(Qt::OpenHandCursor);
 
 	// Painting/Unpainting the component pins or board
 	if ( GetSmartPan() || GetShiftKeyDown() || trackMode == TRACKMODE::OFF ) return;
@@ -350,7 +357,12 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 			SetCurrentNodeId( BAD_NODEID );
 #endif
 		m_mouseActionString = ( GetCurrentNodeId() == BAD_NODEID) ? "Unselect Net" : "Select Net";
+
+		if ( ALLOW_DELAY_BASED_PAD_SHIFT && pC->GetHasPin() && !pC->GetHasWire() )
+			g_bPinClicked = true;
 	}
+
+	g_lastMouseClickTime = std::chrono::steady_clock::now();
 
 	m_board.WipeAutoSetPoints();
 	m_board.PlaceFloaters();	// See if we can now place floating components down
@@ -359,6 +371,8 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 
 void MainWindow::mouseDoubleClickEvent(QMouseEvent* event)
 {
+	g_bPinClicked = false;
+
 	m_mousePos = event->pos();
 	if ( m_board.GetMirrored() ) return;
 	if ( m_board.GetCompEdit() ) return;
@@ -435,6 +449,8 @@ void MainWindow::mouseDoubleClickEvent(QMouseEvent* event)
 
 void MainWindow::mouseMoveEvent(QMouseEvent* event)
 {
+	g_bPinClicked = false;
+
 	m_mousePos = event->pos();
 	if ( m_board.GetMirrored() ) return;
 	if ( !m_bMouseClick ) return;
@@ -446,6 +462,16 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 
 	if ( GetPaintPins() || GetErasePins() || GetPaintFlood() ) return;	// Ignore mouse move while painting pins or flooding
 	if ( GetShiftKeyDown() ) return;									// Ignore mouse move while trying to group components
+
+	if ( ALLOW_DELAY_BASED_SMART_PAN
+		 && !m_board.GetCompEdit() && !GetDefiningRect() && !GetPaintBoard() && !GetEraseBoard() && !CanModifyRuler()
+		 && GetCurrentTextId() == BAD_TEXTID && GetCurrentCompId() == BAD_COMPID )
+	{
+		const auto elapsed		= std::chrono::steady_clock::now() - g_lastMouseClickTime;
+		const auto duration_ms	= std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
+		if ( duration_ms > 500 )	// ... Force smart pan after 500 ms of last mouse click
+			SetSmartPan(true);
+	}
 
 	if ( m_board.GetCompEdit() && GetCurrentShapeId() != BAD_ID && m_bMouseClick )
 		centralWidget()->setCursor(Qt::ClosedHandCursor);
@@ -585,10 +611,8 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 		}
 		m_mouseActionString = "Move part(s)";
 	}
-	else if ( GetSmartPan() || ( ALLOW_SMART_PAN_WITHOUT_CTRLKEY && !CanModifyRuler() ) )	// If we're not moving anything else, we can smart pan
+	else if ( GetSmartPan() )	// If we're not moving anything else, we can smart pan
 	{
-		centralWidget()->setCursor(Qt::ClosedHandCursor);	// Needed for the case when GetSmartPan() returns false
-
 		int pixmapX(0), pixmapY(0);
 		GetPixMapXY(event->pos(), pixmapX, pixmapY);
 
@@ -627,15 +651,22 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 
 void MainWindow::mouseReleaseEvent(QMouseEvent* event)
 {
+	bool bShowPadOffsetDialog(false);
+	if ( g_bPinClicked )
+	{
+		const auto elapsed		= std::chrono::steady_clock::now() - g_lastMouseClickTime;
+		const auto duration_ms	= std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
+		bShowPadOffsetDialog = ( duration_ms >= 1000 );
+	}
+	g_bPinClicked = false;
+
 	m_mousePos = event->pos();
 	releaseMouse();
 
-	if ( m_board.GetMirrored() ) return;
-
-#ifdef VEROROUTE_ANDROID
 	if ( GetSmartPan() )
 		SetSmartPan(false);
-#endif
+
+	if ( m_board.GetMirrored() ) return;
 
 	m_bMouseClick = false;
 
@@ -667,14 +698,20 @@ void MainWindow::mouseReleaseEvent(QMouseEvent* event)
 	UpdateHistory(m_mouseActionString);
 	UpdateControls();
 	RepaintWithListNodes();
+
+	if ( bShowPadOffsetDialog )
+		ShowPadOffsetDialog();
 }
 
 #ifndef VEROROUTE_ANDROID
 void MainWindow::keyPressEvent(QKeyEvent* event)
 {
+	g_bPinClicked = false;
+
 	commonKeyPressEvent(event);
 
-	// Pin offsets (Ctrl + Cursor keys)
+	// Pad offsets (Ctrl + Cursor keys)	// Deprecated this as it does not write to history, and we really only want to do that at the end when Ctrl key is released
+	/*
 	if ( GetCtrlKeyDown() && !m_board.GetVeroTracks() && !m_board.GetCompEdit() )
 	{
 		const Element* pC =  m_board.Get(0, m_gridRow, m_gridCol);
@@ -702,6 +739,7 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
 			return RepaintSkipRouting();
 		}
 	}
+	*/
 	if ( GetCtrlKeyDown() ) return;		// Try to keep Ctrl key input handled by menu items
 	if ( GetShiftKeyDown() ) return;	// Ignore other key presses while trying to group components
 
@@ -800,7 +838,12 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
 
 void MainWindow::keyReleaseEvent(QKeyEvent* event)
 {
+	g_bPinClicked = false;
+
 	commonKeyReleaseEvent(event);
+
+	if ( GetSmartPan() )
+		SetSmartPan(false);
 
 	if ( m_board.GetMirrored() ) return;
 	if ( event->isAutoRepeat() ) return;
@@ -831,6 +874,8 @@ void MainWindow::keyReleaseEvent(QKeyEvent* event)
 
 void MainWindow::commonKeyPressEvent(QKeyEvent* event)		// So child dialogs can relay Ctrl and Shift to the main window
 {
+	g_bPinClicked = false;
+
 	switch( event->key() )
 	{
 		case Qt::Key_Shift:		return SetShiftKeyDown(true);
@@ -841,6 +886,8 @@ void MainWindow::commonKeyPressEvent(QKeyEvent* event)		// So child dialogs can 
 
 void MainWindow::commonKeyReleaseEvent(QKeyEvent* event)	// So child dialogs can relay Ctrl and Shift to the main window
 {
+	g_bPinClicked = false;
+
 	switch( event->key() )
 	{
 		case Qt::Key_Shift:		return SetShiftKeyDown(false);

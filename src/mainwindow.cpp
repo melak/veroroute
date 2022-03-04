@@ -30,6 +30,7 @@
 #include "bomdialog.h"
 #include "templatesdialog.h"
 #include "pindialog.h"
+#include "padoffsetdialog.h"
 #include "finddialog.h"
 #include "PolygonHelper.h"
 
@@ -100,6 +101,7 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	m_bomDlg		= new BomDialog(this);
 	m_templatesDlg	= new TemplatesDialog(this);
 	m_pinDlg		= new PinDialog(this);
+	m_padOffsetDlg	= new PadOffsetDialog(this);
 	m_findDlg		= new FindDialog(this);
 
 #ifdef VEROROUTE_ANDROID
@@ -310,6 +312,7 @@ MainWindow::~MainWindow()
 	delete m_infoDlg;
 	delete m_bomDlg;
 	delete m_pinDlg;
+	delete m_padOffsetDlg;
 	delete m_findDlg;
 	delete m_labelStatus;
 	delete m_labelInfo;
@@ -1028,6 +1031,28 @@ void MainWindow::ShowTextDialog()		{ ShowDlg(m_textDlg); }
 void MainWindow::ShowBomDialog()		{ UpdateBOM();				ShowDlg(m_bomDlg); }
 void MainWindow::ShowTemplatesDialog()	{ UpdateTemplatesDialog();	ShowDlg(m_templatesDlg); }
 void MainWindow::ShowPinDialog()		{ m_pinDlg->Update();		ShowDlg(m_pinDlg); }
+void MainWindow::ShowPadOffsetDialog()
+{
+	ShowPadInfo();
+
+	ShowDlg(m_padOffsetDlg);	// Show it ...
+
+	// ... then try to it centre on the lower toolbar
+	QRect R = geometry();
+	QRect r = ui->toolBar_2->geometry();
+	QRect d = m_padOffsetDlg->geometry();
+	const int titleBarHeight = d.y() - m_padOffsetDlg->pos().y();
+	const int buttonHeight	 = 24;	// From ui file
+
+	m_padOffsetDlg->move(R.x() + r.x() + 400, R.y() + r.y() - titleBarHeight + ( r.height() - buttonHeight ) / 2);
+}
+void MainWindow::HidePadOffsetDialog()
+{
+	ui->statusBar->showMessage(QString(""));
+	UpdateHistory("Apply pad offsets");
+	m_padOffsetDlg->hide();
+}
+
 void MainWindow::ShowFindDialog()		{ ShowDlg(m_findDlg); }
 
 // Layers menu items
@@ -1387,6 +1412,40 @@ void MainWindow::CompTextMove(const int& deltaRow, const int& deltaCol)
 
 	RepaintSkipRouting();
 }
+
+void MainWindow::PadMove(const int& deltaRowMil, const int& deltaColMil)
+{
+	// Pad offsets
+	if ( m_board.GetVeroTracks() || m_board.GetCompEdit() ) return;
+
+	const Element* pC =  m_board.Get(0, m_gridRow, m_gridCol);
+	if ( !pC->GetHasPin() || pC->GetHasWire() ) return;	// Wires can share holes so cannot have offset pads
+
+	Component&		comp		= m_board.GetCompMgr().GetComponentById( pC->GetCompId() );
+	const size_t	pinIndex	= pC->GetPinIndex();
+
+	comp.IncCompPinOffsets(pinIndex, deltaColMil, deltaRowMil);
+
+	ShowPadInfo();
+	return RepaintWithRouting();
+}
+
+void MainWindow::ShowPadInfo()
+{
+	const Element* pC =  m_board.Get(0, m_gridRow, m_gridCol);
+	if ( !pC->GetHasPin() || pC->GetHasWire() )	return;	// Wires can share holes so cannot have offset pads
+
+	const Component&	comp		= m_board.GetCompMgr().GetComponentById( pC->GetCompId() );
+	const size_t		pinIndex	= pC->GetPinIndex();
+
+	int X,Y;
+	comp.GetCompPinOffsets(pinIndex, X, Y);	// Get offsets in mil
+
+	char buffer[256] = {'\0'};
+	sprintf(buffer,"(X, Y) pad offset = (%d, %d) mil,    (%.4f, %.4f) mm", X, Y, X * 0.0254, Y * 0.0254);
+	ui->statusBar->showMessage(QString(buffer));
+}
+
 
 // Bad Nodes lists
 void MainWindow::SetNodeId(QListWidgetItem* item)

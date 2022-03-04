@@ -26,6 +26,7 @@ SOURCES += bomdialog.cpp \
     mainwindow.cpp \
     mainwindow_drawing.cpp \
     mainwindow_events.cpp \
+    padoffsetdialog.cpp \
     pindialog.cpp \
     renderingdialog.cpp \
     templatesdialog.cpp \
@@ -53,6 +54,7 @@ HEADERS  += bomdialog.h \
     hotkeysdialog.h \
     infodialog.h \
     mainwindow.h \
+    padoffsetdialog.h \
     pindialog.h \
     renderingdialog.h \
     templatesdialog.h \
@@ -109,6 +111,7 @@ FORMS    += bomdialog.ui \
     hotkeysdialog.ui \
     infodialog.ui \
     mainwindow.ui \
+    padoffsetdialog.ui \
     pindialog.ui \
     renderingdialog.ui \
     templatesdialog.ui \
