@@ -21,19 +21,23 @@
 #include "ui_pindialog.h"
 #include "mainwindow.h"
 
-PinDialog::PinDialog(MainWindow* parent)
-: QDialog(parent)
+PinDialog::PinDialog(QWidget* parent)
+: QWidget(parent)
 , ui(new Ui_PinDialog)
-, m_pMainWindow(parent)
+, m_pMainWindow(nullptr)
 {
-	ui->setupUi(this);
-	QObject::connect(ui->tableWidget,	SIGNAL(cellChanged(int,int)),	this,			SLOT(CellChanged(int,int)));
-	QObject::connect(this,				SIGNAL(rejected()),				m_pMainWindow,	SLOT(UpdateControls()));	// Close using X button
+	ui->setupUi( reinterpret_cast<QDialog*>(this) );
 }
 
 PinDialog::~PinDialog()
 {
 	delete ui;
+}
+
+void PinDialog::SetMainWindow(MainWindow* p)
+{
+	m_pMainWindow = p;
+	QObject::connect(ui->tableWidget,	SIGNAL(cellChanged(int,int)),	this,			SLOT(CellChanged(int,int)));
 }
 
 Component* PinDialog::GetUserComp() const
@@ -140,7 +144,7 @@ void PinDialog::keyPressEvent(QKeyEvent* event)
 #ifndef VEROROUTE_ANDROID
 	m_pMainWindow->specialKeyPressEvent(event);
 #endif
-	QDialog::keyPressEvent(event);
+	QWidget::keyPressEvent(event);
 }
 
 void PinDialog::keyReleaseEvent(QKeyEvent* event)
@@ -148,5 +152,5 @@ void PinDialog::keyReleaseEvent(QKeyEvent* event)
 #ifndef VEROROUTE_ANDROID
 	m_pMainWindow->commonKeyReleaseEvent(event);
 #endif
-	QDialog::keyReleaseEvent(event);
+	QWidget::keyReleaseEvent(event);
 }

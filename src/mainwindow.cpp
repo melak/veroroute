@@ -21,17 +21,17 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "controldialog.h"
-#include "renderingdialog.h"
-#include "wiredialog.h"
-#include "hotkeysdialog.h"
-#include "infodialog.h"
 #include "compdialog.h"
-#include "textdialog.h"
-#include "bomdialog.h"
+#include "renderingdialog.h"
 #include "templatesdialog.h"
+#include "infodialog.h"
 #include "pindialog.h"
-#include "padoffsetdialog.h"
+#include "wiredialog.h"
+#include "bomdialog.h"
+#include "textdialog.h"
 #include "finddialog.h"
+#include "hotkeysdialog.h"
+#include "padoffsetdialog.h"
 #include "PolygonHelper.h"
 
 MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorialsPathStr, QWidget* parent)
@@ -75,32 +75,70 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	m_scrollArea->setWidget(m_label);
 	setCentralWidget(m_scrollArea);
 
-	// Put control dialog in right dock area
-	m_dockControlDlg = new QDockWidget(tr("  Control"), this);
+	// Control dialog goes on right
+	m_dockControlDlg = new QDockWidget("",this);
 	m_dockControlDlg->setAllowedAreas(Qt::RightDockWidgetArea);
-	m_dockControlDlg->setStyleSheet("QDockWidget { font: bold }");
+	//m_dockControlDlg->setStyleSheet("QDockWidget { font: bold }");
 	m_controlDlg	= new ControlDialog(m_dockControlDlg);
 	m_dockControlDlg->setWidget(m_controlDlg);
+	m_dockControlDlg->setTitleBarWidget( new QWidget(this) );	// Hide the title bar
 	addDockWidget(Qt::RightDockWidgetArea, m_dockControlDlg);
 	m_controlDlg->SetMainWindow(this);
 
-	// Put component editor dialog in right dock area
-	m_dockCompDlg = new QDockWidget(tr("  Component Definition"), this);
+	// Component editor dialog goes on right
+	m_dockCompDlg = new QDockWidget("",this);
 	m_dockCompDlg->setAllowedAreas(Qt::RightDockWidgetArea);
-	m_dockCompDlg->setStyleSheet("QDockWidget { font: bold }");
+	//m_dockCompDlg->setStyleSheet("QDockWidget { font: bold }");
 	m_compDlg	= new CompDialog(m_dockCompDlg);
-	m_dockCompDlg->setWidget(m_compDlg);
-	addDockWidget(Qt::RightDockWidgetArea, m_dockCompDlg);
 	m_compDlg->SetMainWindow(this);
+	m_dockCompDlg->setWidget(m_compDlg);
+	m_dockCompDlg->setTitleBarWidget( new QWidget(this) );	// Hide the title bar
+	addDockWidget(Qt::RightDockWidgetArea, m_dockCompDlg);
 
-	m_renderingDlg	= new RenderingDialog(this);
+	// Templates dialog goes on right
+	m_dockTemplatesDlg = new QDockWidget("",this);
+	m_dockTemplatesDlg->setAllowedAreas(Qt::RightDockWidgetArea);
+	//m_dockTemplatesDlg->setStyleSheet("QDockWidget { font: bold }");
+	m_templatesDlg	= new TemplatesDialog(m_dockTemplatesDlg);
+	m_templatesDlg->SetMainWindow(this);
+	m_dockTemplatesDlg->setWidget(m_templatesDlg);
+	m_dockTemplatesDlg->setTitleBarWidget( new QWidget(this) );	// Hide the title bar
+	addDockWidget(Qt::RightDockWidgetArea, m_dockTemplatesDlg);
+
+	// Rendering dialog goes on right
+	m_dockRenderingDlg = new QDockWidget("",this);
+	m_dockRenderingDlg->setAllowedAreas(Qt::RightDockWidgetArea);
+	//m_dockRenderingDlg->setStyleSheet("QDockWidget { font: bold }");
+	m_renderingDlg	= new RenderingDialog(m_dockRenderingDlg);
+	m_renderingDlg->SetMainWindow(this);
+	m_dockRenderingDlg->setWidget(m_renderingDlg);
+	m_dockRenderingDlg->setTitleBarWidget( new QWidget(this) );	// Hide the title bar
+	addDockWidget(Qt::RightDockWidgetArea, m_dockRenderingDlg);
+
+	// Info dialog goes on left
+	m_dockInfoDlg = new QDockWidget("",this);
+	m_dockInfoDlg->setAllowedAreas(Qt::LeftDockWidgetArea);
+	//m_dockInfoDlg->setStyleSheet("QDockWidget { font: bold }");
+	m_infoDlg	= new InfoDialog(m_dockCompDlg);
+	m_infoDlg->SetMainWindow(this);
+	m_dockInfoDlg->setWidget(m_infoDlg);
+	m_dockInfoDlg->setTitleBarWidget( new QWidget(this) );	// Hide the title bar
+	addDockWidget(Qt::LeftDockWidgetArea, m_dockInfoDlg);
+
+	// Pin dialog goes on left
+	m_dockPinDlg = new QDockWidget("",this);
+	m_dockPinDlg->setAllowedAreas(Qt::LeftDockWidgetArea);
+	//m_dockPinDlg->setStyleSheet("QDockWidget { font: bold }");
+	m_pinDlg	= new PinDialog(m_dockCompDlg);
+	m_pinDlg->SetMainWindow(this);
+	m_dockPinDlg->setWidget(m_pinDlg);
+	m_dockPinDlg->setTitleBarWidget( new QWidget(this) );	// Hide the title bar
+	addDockWidget(Qt::LeftDockWidgetArea, m_dockPinDlg);
+
 	m_wireDlg		= new WireDialog(this);
 	m_hotkeysDlg	= new HotkeysDialog(this);
-	m_infoDlg		= new InfoDialog(this);
 	m_textDlg		= new TextDialog(this);
 	m_bomDlg		= new BomDialog(this);
-	m_templatesDlg	= new TemplatesDialog(this);
-	m_pinDlg		= new PinDialog(this);
 	m_padOffsetDlg	= new PadOffsetDialog(this);
 	m_findDlg		= new FindDialog(this);
 
@@ -266,14 +304,14 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	QObject::connect(ui->actionDiagsMax,				SIGNAL(triggered()), this, SLOT(ToggleDiagsMax()));
 	QObject::connect(ui->actionFill,					SIGNAL(triggered()), this, SLOT(ToggleFill()));
 	// Windows menu actions
-	QObject::connect(ui->actionControlDlg,				SIGNAL(triggered()), this, SLOT(ShowControlDialog()));
+	QObject::connect(ui->actionControlDlg,				SIGNAL(triggered()), this, SLOT(ToggleControlDialog()));
 	QObject::connect(ui->actionTemplatesDlg,			SIGNAL(triggered()), this, SLOT(ToggleTemplatesDialog()));
 	QObject::connect(ui->actionInfoDlg,					SIGNAL(triggered()), this, SLOT(ToggleInfoDialog()));
 	QObject::connect(ui->actionRenderingDlg,			SIGNAL(triggered()), this, SLOT(ToggleRenderingDialog()));
 	QObject::connect(ui->actionWireDlg,					SIGNAL(triggered()), this, SLOT(ToggleWireDialog()));
 	QObject::connect(ui->actionBomDlg,					SIGNAL(triggered()), this, SLOT(ToggleBomDialog()));
 	QObject::connect(ui->actionPinDlg,					SIGNAL(triggered()), this, SLOT(TogglePinDialog()));
-	QObject::connect(ui->actionCompDlg,					SIGNAL(triggered()), this, SLOT(ShowCompDialog()));
+	QObject::connect(ui->actionCompDlg,					SIGNAL(triggered()), this, SLOT(ToggleCompDialog()));
 	// Layers menu actions
 	QObject::connect(ui->actionAddLayer,				SIGNAL(triggered()), this, SLOT(AddLayer()));
 	QObject::connect(ui->actionRemoveLayer,				SIGNAL(triggered()), this, SLOT(RemoveLayer()));
@@ -308,22 +346,22 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 MainWindow::~MainWindow()
 {
 	DestroyPixmapCache();
-	delete m_compDlg;
 	delete m_dockCompDlg;
-	delete m_controlDlg;
 	delete m_dockControlDlg;
-	delete m_templatesDlg;
-	delete m_renderingDlg;
+	delete m_dockTemplatesDlg;
+	delete m_dockRenderingDlg;
+	delete m_dockInfoDlg;
+	delete m_dockPinDlg;
 	delete m_wireDlg;
-	delete m_infoDlg;
 	delete m_bomDlg;
-	delete m_pinDlg;
-	delete m_padOffsetDlg;
+	delete m_textDlg;
 	delete m_findDlg;
+	delete m_padOffsetDlg;
 	delete m_labelStatus;
 	delete m_labelInfo;
 	delete m_label;
 	delete m_scrollArea;
+	delete m_hotkeysDlg;
 	delete ui;
 }
 
@@ -429,7 +467,8 @@ void MainWindow::ResetView(bool bTutorial)
 	}
 
 	ClearFind();
-	HideDlg(m_findDlg);
+	HideAllDockedDlgs();
+	HideAllNonDockedDlgs();
 
 	m_infoDlg->Update();
 	m_infoDlg->SetReadOnly(bTutorial);
@@ -771,11 +810,7 @@ void MainWindow::WriteGerber(const bool& bTwoLayerGerber, const bool& bMetric)
 
 	if ( !m_gerberFileName.isEmpty() )
 	{
-#ifdef VEROROUTE_ANDROID
-		ui->statusBar->showMessage( tr("Exporting to Gerber.  This can be very SLOW.  Please wait..."), 500 );
-#else
 		ui->statusBar->showMessage( tr("Exporting to Gerber..."), 500 );
-#endif
 
 		const int oldGridPixels		= m_board.GetGRIDPIXELS();
 		const int gerberGridPixels	= 1000;	// Gerber file had 4 decimal places per inch
@@ -1034,85 +1069,150 @@ void MainWindow::Delete()
 // Windows menu items
 void MainWindow::ShowDlg(QWidget* p)	{ p->showNormal();	p->raise();	p->activateWindow(); UpdateControls(); }
 void MainWindow::HideDlg(QWidget* p)	{ p->hide(); UpdateControls(); }
-void MainWindow::ShowControlDialog()	{ m_dockCompDlg->hide();	ShowDlg(m_dockControlDlg); }
-void MainWindow::ShowCompDialog()		{ m_dockControlDlg->hide();	HideDlg(m_findDlg);	HideDlg(m_textDlg);	HidePadOffsetDialog();	ShowDlg(m_dockCompDlg); }
+void MainWindow::HideAllDockedDlgs()
+{
+	m_dockControlDlg->hide();
+	m_dockCompDlg->hide();
+	m_dockRenderingDlg->hide();
+	m_dockTemplatesDlg->hide();
+	m_dockPinDlg->hide();
+	m_dockInfoDlg->hide();
+}
+void MainWindow::HideAllNonDockedDlgs()
+{
+	m_bomDlg->hide();
+	m_wireDlg->hide();
+	m_findDlg->hide();
+	m_textDlg->hide();
+}
+void MainWindow::ShowControlDialog()
+{
+	HideAllNonDockedDlgs();	// (m_bomDlg, m_wireDlg, m_findDlg, m_textDlg)
+
+	// (m_dockCompDlg, m_dockControlDlg, m_dockRenderingDlg, m_dockTemplatesDlg) are mutually exclusive
+	m_dockCompDlg->hide();
+	m_dockTemplatesDlg->hide();
+	m_dockRenderingDlg->hide();
+	ShowDlg(m_dockControlDlg);
+}
+void MainWindow::ToggleControlDialog()
+{
+	return m_dockControlDlg->isVisible() ? HideDlg(m_dockControlDlg) : ShowControlDialog();
+}
+void MainWindow::ShowCompDialog()
+{
+	HideAllNonDockedDlgs();	// (m_bomDlg, m_wireDlg, m_findDlg, m_textDlg)
+
+	HidePadOffsetDialog();
+
+	// (m_dockCompDlg, m_dockControlDlg, m_dockRenderingDlg, m_dockTemplatesDlg) are mutually exclusive
+	m_dockControlDlg->hide();
+	m_dockTemplatesDlg->hide();
+	m_dockRenderingDlg->hide();
+	ShowDlg(m_dockCompDlg);
+}
+void MainWindow::ToggleCompDialog()
+{
+	return m_dockCompDlg->isVisible() ? HideDlg(m_dockCompDlg) : ShowCompDialog();
+}
 void MainWindow::ShowRenderingDialog()
 {
-	ShowDlg(m_renderingDlg);	// Show the dialog (so we can get position info) ...
-	// ... then try to place it below the top toolbar and left of the control/comp editor dialog
-	QRect R = geometry();
-	QRect t = ui->toolBar->geometry();
-	QRect s = m_dockCompDlg->geometry();
-	QRect d = m_renderingDlg->geometry();
-	m_renderingDlg->move(R.right() - s.width() - d.width(), R.top() + t.bottom() );
+	HideAllNonDockedDlgs();	// (m_bomDlg, m_wireDlg, m_findDlg, m_textDlg)
+
+	// (m_dockCompDlg, m_dockControlDlg, m_dockRenderingDlg, m_dockTemplatesDlg) are mutually exclusive
+	m_dockCompDlg->hide();
+	m_dockControlDlg->hide();
+	m_dockTemplatesDlg->hide();
+	ShowDlg(m_dockRenderingDlg);
 }
 void MainWindow::ToggleRenderingDialog()
 {
-	return m_renderingDlg->isVisible() ? HideDlg(m_renderingDlg) : ShowRenderingDialog();
-}
-void MainWindow::ToggleWireDialog()
-{
-	return m_wireDlg->isVisible() ? HideDlg(m_wireDlg) : ShowDlg(m_wireDlg);
+	return m_dockRenderingDlg->isVisible() ? HideDlg(m_dockRenderingDlg) : ShowRenderingDialog();
 }
 void MainWindow::ShowHotkeysDialog()
 {
+	HideAllNonDockedDlgs();	// (m_bomDlg, m_wireDlg, m_findDlg, m_textDlg)
 	ShowDlg(m_hotkeysDlg);
 }
 void MainWindow::ShowInfoDialog()
 {
-	ShowDlg(m_infoDlg);	// Show the dialog (so we can get position info) ...
-	// ... then try to place it below the top toolbar and left of the control/comp editor dialog
-	QRect R = geometry();
-	QRect t = ui->toolBar->geometry();
-	QRect s = m_dockCompDlg->geometry();
-	QRect d = m_infoDlg->geometry();
-	m_infoDlg->move(R.right() - s.width() - d.width(), R.top() + t.bottom() );
-	ShowDlg(m_infoDlg);
+	HideAllNonDockedDlgs();	// (m_bomDlg, m_wireDlg, m_findDlg, m_textDlg)
+
+	// m_dockPinDlg and m_dockInfoDlg are mutually exclusive
+	m_dockPinDlg->hide();
+	ShowDlg(m_dockInfoDlg);
 }
 void MainWindow::ToggleInfoDialog()
 {
-	return m_infoDlg->isVisible() ? HideDlg(m_infoDlg) : ShowInfoDialog();
-}
-void MainWindow::ShowTextDialog()
-{
-	HideDlg(m_findDlg);
-	ShowDlg(m_textDlg);
+	return m_dockInfoDlg->isVisible() ? HideDlg(m_dockInfoDlg) : ShowInfoDialog();
 }
 void MainWindow::ShowBomDialog()
 {
-	UpdateBOM();	ShowDlg(m_bomDlg);
+	// (m_bomDlg, m_wireDlg, m_findDlg, m_textDlg) are mutually exclusive
+	m_wireDlg->hide();
+	m_findDlg->hide();
+	m_textDlg->hide();
+	UpdateBOM();
+	ShowDlg(m_bomDlg);
 }
 void MainWindow::ToggleBomDialog()
 {
 	return m_bomDlg->isVisible() ? HideDlg(m_bomDlg) : ShowBomDialog();
 }
+void MainWindow::ShowWireDialog()
+{
+	// (m_bomDlg, m_wireDlg, m_findDlg, m_textDlg) are mutually exclusive
+	m_bomDlg->hide();
+	m_findDlg->hide();
+	m_textDlg->hide();
+	ShowDlg(m_wireDlg);
+}
+void MainWindow::ToggleWireDialog()
+{
+	return m_wireDlg->isVisible() ? HideDlg(m_wireDlg) : ShowWireDialog();
+}
+void MainWindow::ShowFindDialog()
+{
+	// (m_bomDlg, m_wireDlg, m_findDlg, m_textDlg) are mutually exclusive
+	m_bomDlg->hide();
+	m_wireDlg->hide();
+	m_textDlg->hide();
+	ClearFind();
+	ShowDlg(m_findDlg);
+}
+void MainWindow::ShowTextDialog()
+{
+	// (m_bomDlg, m_wireDlg, m_findDlg, m_textDlg) are mutually exclusive
+	m_bomDlg->hide();
+	m_wireDlg->hide();
+	m_findDlg->hide();
+	ShowDlg(m_textDlg);
+}
 void MainWindow::ShowTemplatesDialog()
 {
-	UpdateTemplatesDialog();
-	ShowDlg(m_templatesDlg);	// Show the dialog (so we can get position info) ...
-	// ... then try to place it below the top toolbar and at the far left
-	QRect R = geometry();
-	QRect t = ui->toolBar->geometry();
-	m_templatesDlg->move(R.left(), R.top() + t.bottom() );
+	HideAllNonDockedDlgs();	// (m_bomDlg, m_wireDlg, m_findDlg, m_textDlg)
+
+	// (m_dockCompDlg, m_dockControlDlg, m_dockRenderingDlg, m_dockTemplatesDlg) are mutually exclusive
+	m_dockCompDlg->hide();
+	m_dockControlDlg->hide();
+	m_dockRenderingDlg->hide();
+	UpdateTemplatesDialog();	ShowDlg(m_dockTemplatesDlg);
 }
 void MainWindow::ToggleTemplatesDialog()
 {
-	return m_templatesDlg->isVisible() ? HideDlg(m_templatesDlg) : ShowTemplatesDialog();
+	return m_dockTemplatesDlg->isVisible() ? HideDlg(m_dockTemplatesDlg) : ShowTemplatesDialog();
 }
 void MainWindow::ShowPinDialog()
 {
-	m_pinDlg->Update();
-	ShowDlg(m_pinDlg);	// Show the dialog (so we can get position info) ...
-	// ... then try to place it below the top toolbar and left of the control/comp editor dialog
-	QRect R = geometry();
-	QRect t = ui->toolBar->geometry();
-	QRect s = m_dockCompDlg->geometry();
-	QRect d = m_pinDlg->geometry();
-	m_pinDlg->move(R.right() - s.width() - d.width(), R.top() + t.bottom() );
+	HideAllNonDockedDlgs();	// (m_bomDlg, m_wireDlg, m_findDlg, m_textDlg)
+
+	// (m_dockPinDlg, m_dockInfoDlg) are mutually exclusive
+	m_dockInfoDlg->hide();
+	m_pinDlg->Update();	ShowDlg(m_dockPinDlg);
 }
 void MainWindow::TogglePinDialog()
 {
-	return m_pinDlg->isVisible() ? HideDlg(m_pinDlg) : ShowPinDialog();
+	return m_dockPinDlg->isVisible() ? HideDlg(m_dockPinDlg) : ShowPinDialog();
 }
 void MainWindow::ShowPadOffsetDialog()
 {
@@ -1129,15 +1229,9 @@ void MainWindow::ShowPadOffsetDialog()
 void MainWindow::HidePadOffsetDialog(bool bForce)
 {
 	if ( !bForce && !m_padOffsetDlg->isVisible() ) return;
+	ui->statusBar->showMessage(QString(""));
 	UpdateHistory("Apply pad offsets");
 	HideDlg(m_padOffsetDlg);
-	ui->statusBar->showMessage(QString(""));
-}
-void MainWindow::ShowFindDialog()
-{
-	ClearFind();
-	HideDlg(m_textDlg);
-	ShowDlg(m_findDlg);
 }
 
 // Layers menu items
@@ -1530,7 +1624,6 @@ void MainWindow::UpdatePadInfo()
 	sprintf(buffer,"(X, Y) pad offset = (%d, %d) mil,    (%.4f, %.4f) mm", X, Y, X * 0.0254, Y * 0.0254);
 	ui->statusBar->showMessage(QString(buffer));
 }
-
 
 // Bad Nodes lists
 void MainWindow::SetNodeId(QListWidgetItem* item)
@@ -2157,12 +2250,14 @@ void MainWindow::UpdateControls()
 	m_controlDlg->UpdateControls();
 	m_findDlg->UpdateControls();
 
-	ui->actionTemplatesDlg->setText(m_templatesDlg->isVisible() ? QString("Hide Parts / Templates") : QString("Show Parts / Templates"));
-	ui->actionInfoDlg->setText(		m_infoDlg->isVisible()		? QString("Hide Info Dialog")		: QString("Show Info Dialog"));
-	ui->actionRenderingDlg->setText(m_renderingDlg->isVisible() ? QString("Hide Rendering Options") : QString("Show Rendering Options"));
-	ui->actionWireDlg->setText(		m_wireDlg->isVisible()		? QString("Hide Wire Options")		: QString("Show Wire Options"));
-	ui->actionBomDlg->setText(		m_bomDlg->isVisible()		? QString("Hide B.O.M.")			: QString("Show B.O.M."));
-	ui->actionPinDlg->setText(		m_pinDlg->isVisible()		? QString("Hide Pin Labels Editor") : QString("Show Pin Labels Editor"));
+	ui->actionControlDlg->setText(	m_dockControlDlg->isVisible()	? QString("Hide Control Dialog")				: QString("Show Control Dialog"));
+	ui->actionCompDlg->setText(		m_dockCompDlg->isVisible()		? QString("Hide Component Definition Dialog")	: QString("Show Component Definition Dialog"));
+	ui->actionTemplatesDlg->setText(m_dockTemplatesDlg->isVisible() ? QString("Hide Parts / Templates")				: QString("Show Parts / Templates"));
+	ui->actionInfoDlg->setText(		m_dockInfoDlg->isVisible()		? QString("Hide Info Dialog")					: QString("Show Info Dialog"));
+	ui->actionRenderingDlg->setText(m_dockRenderingDlg->isVisible() ? QString("Hide Rendering Options")				: QString("Show Rendering Options"));
+	ui->actionWireDlg->setText(		m_wireDlg->isVisible()			? QString("Hide Wire Options")					: QString("Show Wire Options"));
+	ui->actionBomDlg->setText(		m_bomDlg->isVisible()			? QString("Hide B.O.M.")						: QString("Show B.O.M."));
+	ui->actionPinDlg->setText(		m_dockPinDlg->isVisible()		? QString("Hide Pin Labels Editor")				: QString("Show Pin Labels Editor"));
 
 	UpdateUndoRedoControls();
 }

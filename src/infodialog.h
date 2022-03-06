@@ -24,13 +24,15 @@
 class MainWindow;
 class Ui_InfoDialog;
 
-class InfoDialog : public QDialog
+class InfoDialog : public QWidget
 {
 	Q_OBJECT
 
 public:
-	explicit InfoDialog(MainWindow* parent = nullptr);
+	explicit InfoDialog(QWidget* parent = nullptr);
 	~InfoDialog();
+
+	void SetMainWindow(MainWindow* p);
 
 	void Update();
 	bool GetIsModified();

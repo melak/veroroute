@@ -21,24 +21,27 @@
 #include "ui_infodialog.h"
 #include "mainwindow.h"
 
-InfoDialog::InfoDialog(MainWindow* parent)
-: QDialog(parent)
-, ui(new Ui::InfoDialog)
-, m_pMainWindow(parent)
+InfoDialog::InfoDialog(QWidget* parent)
+: QWidget(parent)
+, ui(new Ui_InfoDialog)
+, m_pMainWindow(nullptr)
 {
-	ui->setupUi(this);
+	ui->setupUi( reinterpret_cast<QDialog*>(this) );
 	ShowButtons(false);
-
-	QObject::connect(ui->plainTextEdit,	SIGNAL(textChanged()),	this,			SLOT(TextChanged()));
-	QObject::connect(ui->prev,			SIGNAL(clicked()),		m_pMainWindow,	SLOT(LoadPrevTutorial()));
-	QObject::connect(ui->reload,		SIGNAL(clicked()),		m_pMainWindow,	SLOT(LoadTutorial()));
-	QObject::connect(ui->next,			SIGNAL(clicked()),		m_pMainWindow,	SLOT(LoadNextTutorial()));
-	QObject::connect(this,				SIGNAL(rejected()),		m_pMainWindow,	SLOT(UpdateControls()));	// Close using X button
 }
 
 InfoDialog::~InfoDialog()
 {
 	delete ui;
+}
+
+void InfoDialog::SetMainWindow(MainWindow* p)
+{
+	m_pMainWindow = p;
+	QObject::connect(ui->plainTextEdit,	SIGNAL(textChanged()),	this,			SLOT(TextChanged()));
+	QObject::connect(ui->prev,			SIGNAL(clicked()),		m_pMainWindow,	SLOT(LoadPrevTutorial()));
+	QObject::connect(ui->reload,		SIGNAL(clicked()),		m_pMainWindow,	SLOT(LoadTutorial()));
+	QObject::connect(ui->next,			SIGNAL(clicked()),		m_pMainWindow,	SLOT(LoadNextTutorial()));
 }
 
 void InfoDialog::SetReadOnly(bool b)
@@ -56,6 +59,10 @@ void InfoDialog::ShowButtons(bool b)
 	ui->prev->setVisible(b);
 	ui->reload->setVisible(b);
 	ui->next->setVisible(b);
+	// Set bigger text edit box if we hide the buttons
+	QRect rect = ui->plainTextEdit->geometry();
+	rect.setBottom(b ? 561 : 600);
+	ui->plainTextEdit->setGeometry(rect);
 }
 
 void InfoDialog::EnablePrev(bool b)
@@ -97,7 +104,7 @@ void InfoDialog::keyPressEvent(QKeyEvent* event)
 		return m_pMainWindow->keyPressEvent(event);
 	m_pMainWindow->specialKeyPressEvent(event);
 #endif
-	QDialog::keyPressEvent(event);
+	QWidget::keyPressEvent(event);
 }
 
 void InfoDialog::keyReleaseEvent(QKeyEvent* event)
@@ -108,5 +115,5 @@ void InfoDialog::keyReleaseEvent(QKeyEvent* event)
 		return m_pMainWindow->keyReleaseEvent(event);
 	m_pMainWindow->commonKeyReleaseEvent(event);
 #endif
-	QDialog::keyReleaseEvent(event);
+	QWidget::keyReleaseEvent(event);
 }

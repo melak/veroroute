@@ -350,8 +350,6 @@
    <addaction name="actionToggleGrid"/>
    <addaction name="actionToggleText"/>
    <addaction name="actionTogglePinLabels"/>
-   <addaction name="actionToggleFlipH"/>
-   <addaction name="actionToggleFlipV"/>
    <addaction name="separator"/>
    <addaction name="actionPaintGrid"/>
    <addaction name="actionEraseGrid"/>
@@ -872,7 +870,7 @@
   </action>
   <action name="actionControlDlg">
    <property name="text">
-    <string>Show Control Dialog</string>
+    <string>Control Dialog</string>
    </property>
    <property name="iconText">
     <string>Control Dialog</string>
@@ -1220,7 +1218,7 @@
   </action>
   <action name="actionCompDlg">
    <property name="text">
-    <string>Show Component Definition Dialog</string>
+    <string>Component Definition Dialog</string>
    </property>
    <property name="iconText">
     <string>Component Definition Dialog</string>

@@ -23,7 +23,7 @@
 
 TextDialog::TextDialog(MainWindow* parent)
 : QDialog(parent)
-, ui(new Ui::TextDialog)
+, ui(new Ui_TextDialog)
 , m_pMainWindow(parent)
 {
 	ui->setupUi(this);

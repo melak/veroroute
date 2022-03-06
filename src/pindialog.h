@@ -25,13 +25,15 @@ class MainWindow;
 class Ui_PinDialog;
 class Component;
 
-class PinDialog : public QDialog
+class PinDialog : public QWidget
 {
 	Q_OBJECT
 
 public:
-	explicit PinDialog(MainWindow* parent = nullptr);
+	explicit PinDialog(QWidget* parent = nullptr);
 	~PinDialog();
+
+	void SetMainWindow(MainWindow* p);
 
 	void Update();
 protected:

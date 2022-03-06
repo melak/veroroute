@@ -262,7 +262,9 @@ public slots:
 	}
 	// Windows menu items + Other dialogs
 	void ShowControlDialog();
+	void ToggleControlDialog();
 	void ShowCompDialog();
+	void ToggleCompDialog();
 	void ToggleTemplatesDialog();
 	void ToggleRenderingDialog();
 	void ToggleWireDialog();
@@ -271,6 +273,7 @@ public slots:
 	void TogglePinDialog();
 	void ShowTemplatesDialog();
 	void ShowRenderingDialog();
+	void ShowWireDialog();
 	void ShowInfoDialog();
 	void ShowBomDialog();
 	void ShowPinDialog();
@@ -297,6 +300,8 @@ public slots:
 	// Helpers for child dialogs
 	void ShowDlg(QWidget* p);
 	void HideDlg(QWidget* p);
+	void HideAllDockedDlgs();
+	void HideAllNonDockedDlgs();
 
 	// View controls
 	void TrackSliderChanged(int i);	// Actually a helper for the following 3 checkboxes
@@ -576,18 +581,17 @@ private:
 	QPixmap					m_mainPixmap;					// ... contains a pixmap image of the whole board
 	QLabel*					m_labelInfo			= nullptr;	// For permanent status bar text
 	QLabel*					m_labelStatus		= nullptr;	// For permanent status bar text
-	QDockWidget*			m_dockControlDlg	= nullptr;
-	QDockWidget*			m_dockCompDlg		= nullptr;
-	ControlDialog*			m_controlDlg		= nullptr;
-	RenderingDialog*		m_renderingDlg		= nullptr;
+
+	ControlDialog*			m_controlDlg		= nullptr;	QDockWidget* m_dockControlDlg	= nullptr;
+	CompDialog*				m_compDlg			= nullptr;	QDockWidget* m_dockCompDlg		= nullptr;
+	TemplatesDialog*		m_templatesDlg		= nullptr;	QDockWidget* m_dockTemplatesDlg	= nullptr;
+	RenderingDialog*		m_renderingDlg		= nullptr;	QDockWidget* m_dockRenderingDlg	= nullptr;
+	InfoDialog*				m_infoDlg			= nullptr;	QDockWidget* m_dockInfoDlg		= nullptr;
+	PinDialog*				m_pinDlg			= nullptr;	QDockWidget* m_dockPinDlg		= nullptr;
 	WireDialog*				m_wireDlg			= nullptr;
 	HotkeysDialog*			m_hotkeysDlg		= nullptr;
-	InfoDialog*				m_infoDlg			= nullptr;
-	CompDialog*				m_compDlg			= nullptr;
 	TextDialog*				m_textDlg			= nullptr;
 	BomDialog*				m_bomDlg			= nullptr;
-	TemplatesDialog*		m_templatesDlg		= nullptr;
-	PinDialog*				m_pinDlg			= nullptr;
 	PadOffsetDialog*		m_padOffsetDlg		= nullptr;
 	FindDialog*				m_findDlg			= nullptr;
 

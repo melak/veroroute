@@ -25,13 +25,15 @@ class MainWindow;
 class Ui_TemplatesDialog;
 class Board;
 
-class TemplatesDialog : public QDialog
+class TemplatesDialog : public QWidget
 {
 	Q_OBJECT
 
 public:
-	explicit TemplatesDialog(MainWindow* parent = nullptr);
+	explicit TemplatesDialog(QWidget* parent = nullptr);
 	~TemplatesDialog();
+
+	void SetMainWindow(MainWindow* p);
 
 	void Update();
 protected:

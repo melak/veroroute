@@ -24,13 +24,15 @@
 class MainWindow;
 class Ui_RenderingDialog;
 
-class RenderingDialog : public QDialog
+class RenderingDialog : public QWidget
 {
 	Q_OBJECT
 
 public:
-	explicit RenderingDialog(MainWindow* parent = nullptr);
+	explicit RenderingDialog(QWidget* parent = nullptr);
 	~RenderingDialog();
+
+	void SetMainWindow(MainWindow* p);
 
 	void UpdateControls();
 protected:

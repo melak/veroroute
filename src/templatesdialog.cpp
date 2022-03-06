@@ -22,14 +22,19 @@
 #include "mainwindow.h"
 #include "TemplateManager.h"
 
-TemplatesDialog::TemplatesDialog(MainWindow* parent)
-: QDialog(parent)
+TemplatesDialog::TemplatesDialog(QWidget* parent)
+: QWidget(parent)
 , ui(new Ui_TemplatesDialog)
-, m_pMainWindow(parent)
+, m_pMainWindow(nullptr)
 , m_iRowL(-1)
 , m_iRowR(-1)
 {
-	ui->setupUi(this);
+	ui->setupUi( reinterpret_cast<QDialog*>(this) );
+}
+
+void TemplatesDialog::SetMainWindow(MainWindow* p)
+{
+	m_pMainWindow = p;
 	QObject::connect(ui->tableWidget,	SIGNAL(cellClicked(int,int)),		this,			SLOT(GenericClicked(int,int)));
 	QObject::connect(ui->tableWidget,	SIGNAL(cellDoubleClicked(int,int)),	this,			SLOT(GenericDoubleClicked(int,int)));
 	QObject::connect(ui->tableWidget_2,	SIGNAL(cellClicked(int,int)),		this,			SLOT(UserClicked(int,int)));
@@ -38,7 +43,6 @@ TemplatesDialog::TemplatesDialog(MainWindow* parent)
 	QObject::connect(ui->pushButton_2,	SIGNAL(clicked()),					this,			SLOT(DeleteTemplate()));
 	QObject::connect(ui->pushButton_3,	SIGNAL(clicked()),					this,			SLOT(LoadFromVrt()));
 	QObject::connect(ui->pushButton_4,	SIGNAL(clicked()),					this,			SLOT(SaveToVrt()));
-	QObject::connect(this,				SIGNAL(rejected()),					m_pMainWindow,	SLOT(UpdateControls()));	// Close using X button
 	LoadFromUserVrt(false);	// false ==> no message box
 }
 
@@ -290,7 +294,7 @@ void TemplatesDialog::keyPressEvent(QKeyEvent* event)
 #ifndef VEROROUTE_ANDROID
 	m_pMainWindow->specialKeyPressEvent(event);
 #endif
-	QDialog::keyPressEvent(event);
+	QWidget::keyPressEvent(event);
 }
 
 void TemplatesDialog::keyReleaseEvent(QKeyEvent* event)
@@ -298,5 +302,5 @@ void TemplatesDialog::keyReleaseEvent(QKeyEvent* event)
 #ifndef VEROROUTE_ANDROID
 	m_pMainWindow->commonKeyReleaseEvent(event);
 #endif
-	QDialog::keyReleaseEvent(event);
+	QWidget::keyReleaseEvent(event);
 }

@@ -23,7 +23,7 @@
 
 CompDialog::CompDialog(QWidget* parent)
 : QWidget(parent)
-, ui(new Ui::CompDialog)
+, ui(new Ui_CompDialog)
 , m_pMainWindow(nullptr)
 {
 	ui->setupUi( reinterpret_cast<QDialog*>(this) );

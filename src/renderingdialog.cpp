@@ -21,13 +21,24 @@
 #include "ui_renderingdialog.h"
 #include "mainwindow.h"
 
-RenderingDialog::RenderingDialog(MainWindow* parent)
-: QDialog(parent)
+RenderingDialog::RenderingDialog(QWidget* parent)
+: QWidget(parent)
 , ui(new Ui_RenderingDialog)
-, m_pMainWindow(parent)
+, m_pMainWindow(nullptr)
 {
-	ui->setupUi(this);
+	ui->setupUi( reinterpret_cast<QDialog*>(this) );
 	ui->antiAliasOn->setChecked(true);
+
+}
+
+RenderingDialog::~RenderingDialog()
+{
+	delete ui;
+}
+
+void RenderingDialog::SetMainWindow(MainWindow* p)
+{
+	m_pMainWindow = p;
 	QObject::connect(ui->antiAliasOff,		SIGNAL(toggled(bool)),		m_pMainWindow,	SLOT(SetAntialiasOff(bool)));
 	QObject::connect(ui->antiAliasOn,		SIGNAL(toggled(bool)),		m_pMainWindow,	SLOT(SetAntialiasOn(bool)));
 	QObject::connect(ui->spinBox_bright,	SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SetBrightness(int)));
@@ -47,13 +58,8 @@ RenderingDialog::RenderingDialog(MainWindow* parent)
 	QObject::connect(ui->viapadWidth,		SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SetViaPadWidth(int)));
 	QObject::connect(ui->viaholeWidth,		SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SetViaHoleWidth(int)));
 	QObject::connect(ui->closeTracks,		SIGNAL(toggled(bool)),		m_pMainWindow,	SLOT(SetShowCloseTracks(bool)));
-	QObject::connect(this,					SIGNAL(rejected()),			m_pMainWindow,	SLOT(UpdateControls()));	// Close using X button
 }
 
-RenderingDialog::~RenderingDialog()
-{
-	delete ui;
-}
 
 void RenderingDialog::UpdateControls()
 {
@@ -147,7 +153,7 @@ void RenderingDialog::keyPressEvent(QKeyEvent* event)
 #ifndef VEROROUTE_ANDROID
 	m_pMainWindow->specialKeyPressEvent(event);
 #endif
-	QDialog::keyPressEvent(event);
+	QWidget::keyPressEvent(event);
 }
 
 void RenderingDialog::keyReleaseEvent(QKeyEvent* event)
@@ -155,5 +161,5 @@ void RenderingDialog::keyReleaseEvent(QKeyEvent* event)
 #ifndef VEROROUTE_ANDROID
 	m_pMainWindow->commonKeyReleaseEvent(event);
 #endif
-	QDialog::keyReleaseEvent(event);
+	QWidget::keyReleaseEvent(event);
 }

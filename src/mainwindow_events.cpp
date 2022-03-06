@@ -20,8 +20,9 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "PolygonHelper.h"
+#include "wiredialog.h"
+#include "bomdialog.h"
 #include "finddialog.h"
-#include "textdialog.h"
 #include <QtGlobal>
 
 static const bool ALLOW_DELAY_BASED_SMART_PAN = true;
@@ -41,8 +42,11 @@ static bool g_bPinClicked = false;									// For implementation of ALLOW_DELAY_
 
 void MainWindow::GetPixMapXY(const QPoint& currentPoint, int& pixmapX, int& pixmapY) const
 {
+	const int iLeftDlgWidth = m_dockInfoDlg->isVisible() ? m_dockInfoDlg->width() :
+							  m_dockPinDlg->isVisible()  ? m_dockPinDlg->width() : 0;
+
 	const int iToolbarHeight = ( ui->toolBar->isFloating() || ui->toolBar->isHidden() ) ? 0 : ui->toolBar->height();
-	pixmapX = currentPoint.x() + m_scrollArea->horizontalScrollBar()->value();
+	pixmapX = currentPoint.x() + m_scrollArea->horizontalScrollBar()->value() - iLeftDlgWidth;
 	pixmapY = currentPoint.y() + m_scrollArea->verticalScrollBar()->value() - ui->menuBar->height()- iToolbarHeight;
 
 	int gndL, gndR, gndT, gndB;
@@ -981,7 +985,7 @@ void MainWindow::dropEvent(QDropEvent *e)
 void MainWindow::SetPaintPins(bool b)
 {
 	if ( b == GetPaintPins() ) return;
-	if ( b ) { HideDlg(m_findDlg);	HideDlg(m_textDlg); }
+	if ( b ) HideAllNonDockedDlgs();
 	m_eMouseMode = ( b ) ? MOUSE_MODE::PAINT_PINS : MOUSE_MODE::SELECT;
 	centralWidget()->setCursor(b ? Qt::CrossCursor : Qt::OpenHandCursor);
 	UpdateControls();
@@ -989,7 +993,7 @@ void MainWindow::SetPaintPins(bool b)
 void MainWindow::SetErasePins(bool b)
 {
 	if ( b == GetErasePins() ) return;
-	if ( b ) { HideDlg(m_findDlg);	HideDlg(m_textDlg); }
+	if ( b ) HideAllNonDockedDlgs();
 	m_eMouseMode = ( b ) ? MOUSE_MODE::ERASE_PINS : MOUSE_MODE::SELECT;
 	centralWidget()->setCursor(b ? Qt::CrossCursor : Qt::OpenHandCursor);
 	UpdateControls();
@@ -997,7 +1001,7 @@ void MainWindow::SetErasePins(bool b)
 void MainWindow::SetPaintBoard(bool b)
 {
 	if ( b == GetPaintBoard() ) return;
-	if ( b ) { HideDlg(m_findDlg);	HideDlg(m_textDlg); }
+	if ( b ) HideAllNonDockedDlgs();
 	m_eMouseMode = ( b ) ? MOUSE_MODE::PAINT_GRID : MOUSE_MODE::SELECT;;
 	centralWidget()->setCursor(b ? Qt::CrossCursor : Qt::OpenHandCursor);
 	UpdateControls();
@@ -1005,7 +1009,7 @@ void MainWindow::SetPaintBoard(bool b)
 void MainWindow::SetEraseBoard(bool b)
 {
 	if ( b == GetEraseBoard() ) return;
-	if ( b ) { HideDlg(m_findDlg);	HideDlg(m_textDlg); }
+	if ( b ) HideAllNonDockedDlgs();
 	m_eMouseMode = ( b ) ? MOUSE_MODE::ERASE_GRID : MOUSE_MODE::SELECT;;
 	centralWidget()->setCursor(b ? Qt::CrossCursor : Qt::OpenHandCursor);
 	UpdateControls();
@@ -1013,7 +1017,7 @@ void MainWindow::SetEraseBoard(bool b)
 void MainWindow::SetPaintFlood(bool b)
 {
 	if ( b == GetPaintFlood() ) return;
-	if ( b ) { HideDlg(m_findDlg);	HideDlg(m_textDlg); }
+	if ( b ) HideAllNonDockedDlgs();
 	m_eMouseMode = ( b ) ? MOUSE_MODE::PAINT_FLOOD : MOUSE_MODE::SELECT;
 	centralWidget()->setCursor(b ? Qt::CrossCursor : Qt::OpenHandCursor);
 	UpdateControls();
@@ -1021,7 +1025,7 @@ void MainWindow::SetPaintFlood(bool b)
 void MainWindow::SetDefiningRect(bool b)
 {
 	if ( b == GetDefiningRect() ) return;
-	if ( b ) { HideDlg(m_findDlg);	HideDlg(m_textDlg); }
+	if ( b ) HideAllNonDockedDlgs();
 	m_eMouseMode = ( b ) ? MOUSE_MODE::DEFINE_RECT : MOUSE_MODE::SELECT;
 	centralWidget()->setCursor(b ? Qt::SizeFDiagCursor : Qt::OpenHandCursor);
 	UpdateControls();
@@ -1029,13 +1033,14 @@ void MainWindow::SetDefiningRect(bool b)
 void MainWindow::SetResizingText(bool b)
 {
 	if ( b == GetResizingText() ) return;
-	if ( b ) { HideDlg(m_findDlg); }
+	if ( b ) { m_wireDlg->hide();	m_bomDlg->hide();	m_findDlg->hide(); }	// Mutually exclusive with 	m_textDlg
 	m_eMouseMode = ( b ) ? MOUSE_MODE::RESIZE_TEXT : MOUSE_MODE::SELECT;
 	UpdateControls();
 }
 void MainWindow::SetSmartPan(bool b)
 {
 	if ( b == GetSmartPan() ) return;
+	if ( b ) HideAllNonDockedDlgs();
 	m_eMouseMode = ( b ) ? MOUSE_MODE::SMART_PAN : MOUSE_MODE::SELECT;
 	centralWidget()->setCursor(Qt::OpenHandCursor);
 	UpdateControls();
