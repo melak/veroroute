@@ -27,11 +27,6 @@ RenderingDialog::RenderingDialog(MainWindow* parent)
 , m_pMainWindow(parent)
 {
 	ui->setupUi(this);
-
-#ifndef VEROROUTE_ANDROID
-	ui->pushButtonOK->hide();
-#endif
-
 	ui->antiAliasOn->setChecked(true);
 	QObject::connect(ui->antiAliasOff,		SIGNAL(toggled(bool)),		m_pMainWindow,	SLOT(SetAntialiasOff(bool)));
 	QObject::connect(ui->antiAliasOn,		SIGNAL(toggled(bool)),		m_pMainWindow,	SLOT(SetAntialiasOn(bool)));
@@ -52,7 +47,7 @@ RenderingDialog::RenderingDialog(MainWindow* parent)
 	QObject::connect(ui->viapadWidth,		SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SetViaPadWidth(int)));
 	QObject::connect(ui->viaholeWidth,		SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SetViaHoleWidth(int)));
 	QObject::connect(ui->closeTracks,		SIGNAL(toggled(bool)),		m_pMainWindow,	SLOT(SetShowCloseTracks(bool)));
-	QObject::connect(ui->pushButtonOK,		SIGNAL(clicked()),			this,			SLOT(hide()));
+	QObject::connect(this,					SIGNAL(rejected()),			m_pMainWindow,	SLOT(UpdateControls()));	// Close using X button
 }
 
 RenderingDialog::~RenderingDialog()

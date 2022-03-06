@@ -203,6 +203,7 @@ public slots:
 	void SelectAll();
 	void SelectAllInRects();
 	void Delete();
+	void ShowFindDialog();
 	// Add menu items
 	void AddMarker()			{ AddPart(COMP::MARK); }
 	void AddPad()				{ AddPart(COMP::PAD); }
@@ -259,22 +260,26 @@ public slots:
 		RepaintSkipRouting();
 		ShowTextDialog();
 	}
-	// Windows menu items
+	// Windows menu items + Other dialogs
 	void ShowControlDialog();
+	void ShowCompDialog();
+	void ToggleTemplatesDialog();
+	void ToggleRenderingDialog();
+	void ToggleWireDialog();
+	void ToggleInfoDialog();
+	void ToggleBomDialog();
+	void TogglePinDialog();
 	void ShowTemplatesDialog();
 	void ShowRenderingDialog();
-	void ShowWireDialog();
-	void ShowHotkeysDialog();
 	void ShowInfoDialog();
-	void ShowCompDialog();
-	void ShowTextDialog();
 	void ShowBomDialog();
 	void ShowPinDialog();
-	void ShowPadOffsetDialog();
-	void HidePadOffsetDialog();
-	void ShowFindDialog();
+	void ShowTextDialog();
 	void ShowAbout();
 	void ShowSupport();
+	void ShowHotkeysDialog();
+	void ShowPadOffsetDialog();	// Triggered by clicking on a pin for 1000ms
+	void HidePadOffsetDialog(bool bForce = false);
 	// Layers menu items
 	void AddLayer();
 	void RemoveLayer();
@@ -291,6 +296,7 @@ public slots:
 
 	// Helpers for child dialogs
 	void ShowDlg(QWidget* p);
+	void HideDlg(QWidget* p);
 
 	// View controls
 	void TrackSliderChanged(int i);	// Actually a helper for the following 3 checkboxes
@@ -377,6 +383,7 @@ public slots:
 	void SetAntialiasOff(bool b);
 	void SetAntialiasOn(bool b);
 	// Find parts by name/value
+	void ClearFind();
 	void Find(bool bUseName, bool bExact, const QString& str);
 	// Wire options
 	void SetWireShare(bool b);
@@ -438,7 +445,20 @@ public slots:
 	void DefinerChooseColor();
 	void DefinerRaise();
 	void DefinerLower();
+
+	// GUI update
+	void UpdateControls();
 private:
+	// GUI update
+	void UpdateRecentFiles(const QString* pFileName, bool bAdd);
+	void UpdateWindowTitle();
+	void UpdateRulerInfo();
+	void UpdateCompDialog();
+	void EnableCompDialogControls();
+	void UpdateBOM();
+	void UpdateTemplatesDialog();
+	void UpdateTextDialog(bool bFull = false);
+
 	void DestroyPixmapCache();
 #ifdef USE_PIXMAP_CACHE
 	void CreatePixmapCache(const GuiControl& guiCtrl, ColorManager& colorManager);
@@ -511,18 +531,7 @@ private:
 	void CompStretchWidth(const bool& bGrow);
 	void CompTextMove(const int& deltaRow, const int& deltaCol);
 	void PadMove(const int& deltaRowMil, const int& deltaColMil);
-	void ShowPadInfo();
-
-	// GUI update
-	void UpdateRecentFiles(const QString* pFileName, bool bAdd);
-	void UpdateWindowTitle();
-	void UpdateRulerInfo();
-	void UpdateControls();
-	void UpdateCompDialog();
-	void EnableCompDialogControls();
-	void UpdateBOM();
-	void UpdateTemplatesDialog();
-	void UpdateTextDialog(bool bFull = false);
+	void UpdatePadInfo();
 
 	// Helpers
 	void SetQuality(QPainter& p);
@@ -549,6 +558,7 @@ private:
 	QPen	m_whitePen;
 	QPen	m_redPen;
 	QPen	m_orangePen;
+	QPen	m_yellowPen;
 	QPen	m_lightBluePen;
 	QPen	m_varPen;
 	QPen	m_dotPen;
@@ -556,7 +566,7 @@ private:
 	QBrush	m_backgroundBrush;
 	QBrush	m_darkBrush;
 	QBrush	m_varBrush;
-private:
+
 	QNetworkAccessManager	m_networkMgr;	// For checking version against Sourceforge
 	QAction*				m_recentFileAction[MAX_RECENT_FILES];
 	QAction*				m_separator			= nullptr;	// At the end of the recent files list

@@ -30,19 +30,15 @@ TemplatesDialog::TemplatesDialog(MainWindow* parent)
 , m_iRowR(-1)
 {
 	ui->setupUi(this);
-#ifndef VEROROUTE_ANDROID
-	ui->pushButtonOK->hide();
-	ui->pushButton_2->resize(ui->pushButton_2->width() + 40, ui->pushButton_2->height());
-#endif
-	QObject::connect(ui->tableWidget,	SIGNAL(cellClicked(int,int)),		this,	SLOT(GenericClicked(int,int)));
-	QObject::connect(ui->tableWidget,	SIGNAL(cellDoubleClicked(int,int)),	this,	SLOT(GenericDoubleClicked(int,int)));
-	QObject::connect(ui->tableWidget_2,	SIGNAL(cellClicked(int,int)),		this,	SLOT(UserClicked(int,int)));
-	QObject::connect(ui->tableWidget_2,	SIGNAL(cellDoubleClicked(int,int)),	this,	SLOT(UserDoubleClicked(int,int)));
-	QObject::connect(ui->pushButton,	SIGNAL(clicked()),					this,	SLOT(AddTemplates()));
-	QObject::connect(ui->pushButton_2,	SIGNAL(clicked()),					this,	SLOT(DeleteTemplate()));
-	QObject::connect(ui->pushButton_3,	SIGNAL(clicked()),					this,	SLOT(LoadFromVrt()));
-	QObject::connect(ui->pushButton_4,	SIGNAL(clicked()),					this,	SLOT(SaveToVrt()));
-	QObject::connect(ui->pushButtonOK,	SIGNAL(clicked()),					this,	SLOT(hide()));
+	QObject::connect(ui->tableWidget,	SIGNAL(cellClicked(int,int)),		this,			SLOT(GenericClicked(int,int)));
+	QObject::connect(ui->tableWidget,	SIGNAL(cellDoubleClicked(int,int)),	this,			SLOT(GenericDoubleClicked(int,int)));
+	QObject::connect(ui->tableWidget_2,	SIGNAL(cellClicked(int,int)),		this,			SLOT(UserClicked(int,int)));
+	QObject::connect(ui->tableWidget_2,	SIGNAL(cellDoubleClicked(int,int)),	this,			SLOT(UserDoubleClicked(int,int)));
+	QObject::connect(ui->pushButton,	SIGNAL(clicked()),					this,			SLOT(AddTemplates()));
+	QObject::connect(ui->pushButton_2,	SIGNAL(clicked()),					this,			SLOT(DeleteTemplate()));
+	QObject::connect(ui->pushButton_3,	SIGNAL(clicked()),					this,			SLOT(LoadFromVrt()));
+	QObject::connect(ui->pushButton_4,	SIGNAL(clicked()),					this,			SLOT(SaveToVrt()));
+	QObject::connect(this,				SIGNAL(rejected()),					m_pMainWindow,	SLOT(UpdateControls()));	// Close using X button
 	LoadFromUserVrt(false);	// false ==> no message box
 }
 

@@ -381,8 +381,8 @@ struct CompTypes
 		switch( eType )
 		{
 			case COMP::MARK:				return "Marker";
-			case COMP::PAD:					return "Pad";
-			case COMP::PAD_FLYINGWIRE:		return "Wire_Pad";
+			case COMP::PAD:
+			case COMP::PAD_FLYINGWIRE:		return "Pad";
 			case COMP::WIRE:				return "Wire";
 			case COMP::RESISTOR:			return "R";
 			case COMP::INDUCTOR:			return "L";

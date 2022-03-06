@@ -58,7 +58,7 @@ public:
 	{
 		m_mapIdToComp.clear();
 		m_mapWireToInfo.clear();
-		m_foundId.clear();
+		ClearFind();
 		ClearTrax();
 	}
 	CompManager& operator=(const CompManager& o)
@@ -320,10 +320,13 @@ public:
 			if ( CompTypes::AllowCustomPCBshapes(comp.GetType()) ) comp.SetDefaultShapes(bUsePCBshapes);
 		}
 	}
-	void Find(const bool bUseName, const bool bExact, const std::string& str)
+	void ClearFind()
 	{
 		m_foundId.clear();
-		if ( str.empty() ) return;
+	}
+	void Find(const bool bUseName, const bool bExact, const std::string& str)
+	{
+		if ( str.empty() ) return;	// Do nothing if passed an empty string
 		for (const auto& mapObj : m_mapIdToComp)
 		{
 			const Component&	comp	= mapObj.second;

@@ -28,11 +28,8 @@ BomDialog::BomDialog(MainWindow* parent)
 , m_pMainWindow(parent)
 {
 	ui->setupUi(this);
-#ifndef VEROROUTE_ANDROID
-	ui->pushButtonOK->hide();
-#endif
-	QObject::connect(ui->pushButton,	SIGNAL(clicked()),	this,	SLOT(WriteToFile()));
-	QObject::connect(ui->pushButtonOK,	SIGNAL(clicked()),	this,	SLOT(hide()));
+	QObject::connect(ui->pushButton,	SIGNAL(clicked()),	this,			SLOT(WriteToFile()));
+	QObject::connect(this,				SIGNAL(rejected()),	m_pMainWindow,	SLOT(UpdateControls()));	// Close using X button
 }
 
 BomDialog::~BomDialog()

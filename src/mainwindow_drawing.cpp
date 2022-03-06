@@ -19,6 +19,7 @@
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "padoffsetdialog.h"
 #include "GPainter.h"
 #include "SpanningTreeHelper.h"
 
@@ -705,8 +706,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					if ( !bVero )
 					{
 						comp.GetCompPinOffsets(pinIndex, padOffsetX, padOffsetY);	// Get offsets in mil
-						padOffsetX = (padOffsetX * W) / 100;	 // Convert from mil to pixels
-						padOffsetY = (padOffsetY * W) / 100;	 // Convert from mil to pixels
+						padOffsetX = (padOffsetX * W) / 100;	// Convert from mil to pixels
+						padOffsetY = (padOffsetY * W) / 100;	// Convert from mil to pixels
 					}
 
 					if ( board.GetLyrs() == 2 )
@@ -1367,8 +1368,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			{
 				const Component& comp = compMgr.GetComponentById( pC->GetCompId() );
 				comp.GetCompPinOffsets(pC->GetPinIndex(), padOffsetX, padOffsetY);	// Get offsets in mil
-				X += (padOffsetX * W) / 100;	 // Convert from mil to pixels
-				Y += (padOffsetY * W) / 100;	 // Convert from mil to pixels
+				X += (padOffsetX * W) / 100;	// Convert from mil to pixels
+				Y += (padOffsetY * W) / 100;	// Convert from mil to pixels
 			}
 
 			spanTreePoints.push_back( QPointF(X, Y) );
@@ -1385,8 +1386,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				{
 					const Component& comp = compMgr.GetComponentById( pD->GetCompId() );
 					comp.GetCompPinOffsets(pD->GetPinIndex(), padOffsetX, padOffsetY);	// Get offsets in mil
-					X += (padOffsetX * W) / 100;	 // Convert from mil to pixels
-					Y += (padOffsetY * W) / 100;	 // Convert from mil to pixels
+					X += (padOffsetX * W) / 100;	// Convert from mil to pixels
+					Y += (padOffsetY * W) / 100;	// Convert from mil to pixels
 				}
 
 				spanTreePoints.push_back( QPointF(X, Y) );
@@ -1420,9 +1421,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			const char&		 compDirection	= comp.GetDirection();
 			const bool		 bMark			= compType == COMP::MARK;
 			const bool		 bWire			= compType == COMP::WIRE;
-			const bool		 bPadFlyingWire	= compType == COMP::PAD_FLYINGWIRE;
 			const bool		 bVeroLabel		= compType == COMP::VERO_NUMBER || compType == COMP::VERO_LETTER;
-			if ( bMark || bWire || bPadFlyingWire || bVeroLabel ) continue;
+			if ( bMark || bWire || bVeroLabel ) continue;
 			const bool		 bPlaced		= comp.GetIsPlaced();
 			if ( m_bWriteGerber && !bPlaced ) continue;		// Don't write floating components to Gerber
 			const bool		 bFound			= compMgr.GetFound( comp.GetId() );
@@ -1594,6 +1594,31 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				painter.drawRect(L, T, R-L, B-T);
 				painter.drawRect(R-C, B-C, C, C);
 			}
+		}
+	}
+
+	// Draw a cross on the pad being used for pad offset =========================================
+	if ( !m_bWriteGerber && !bVero && m_padOffsetDlg->isVisible() )	//TODO See what cases support pad offset launch
+	{
+		const Element* pC = m_board.Get(layer, m_gridRow, m_gridCol);
+		if ( pC->GetHasPin() && !pC->GetHasWire() )
+		{
+			GetXY(board, m_gridRow, m_gridCol, X, Y);
+
+			int padOffsetX, padOffsetY;	// For handling offset pads
+			const Component& comp = compMgr.GetComponentById( pC->GetCompId() );
+			comp.GetCompPinOffsets(pC->GetPinIndex(), padOffsetX, padOffsetY);	// Get offsets in mil
+
+			X += (padOffsetX * W) / 100;	// Convert from mil to pixels
+			Y += (padOffsetY * W) / 100;	// Convert from mil to pixels
+
+			painter.save();
+			painter.setBrush(Qt::NoBrush);
+			m_yellowPen.setWidth(1);
+			painter.setPen(m_yellowPen);
+			painter.drawLine(X-C, Y, X+C, Y);
+			painter.drawLine(X, Y-C, X, Y+C);
+			painter.restore();
 		}
 	}
 

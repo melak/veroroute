@@ -27,9 +27,6 @@ PadOffsetDialog::PadOffsetDialog(MainWindow* parent)
 , m_pMainWindow(parent)
 {
 	ui->setupUi(this);
-#ifndef VEROROUTE_ANDROID
-	ui->pushButtonOK->hide();
-#endif
 
 	QFont font = ui->textL->font();
 	font.setFamily(QString("Arial Unicode MS"));
@@ -46,17 +43,22 @@ PadOffsetDialog::PadOffsetDialog(MainWindow* parent)
 	ui->textT->setText(QChar(0x25b2));
 	ui->textB->setText(QChar(0x25bc));
 
-	QObject::connect(ui->textC,			SIGNAL(clicked()),	m_pMainWindow,	SLOT(PadCentre()));
-	QObject::connect(ui->textL,			SIGNAL(clicked()),	m_pMainWindow,	SLOT(PadMoveL()));
-	QObject::connect(ui->textR,			SIGNAL(clicked()),	m_pMainWindow,	SLOT(PadMoveR()));
-	QObject::connect(ui->textT,			SIGNAL(clicked()),	m_pMainWindow,	SLOT(PadMoveT()));
-	QObject::connect(ui->textB,			SIGNAL(clicked()),	m_pMainWindow,	SLOT(PadMoveB()));
-	QObject::connect(ui->pushButtonOK,	SIGNAL(clicked()),	m_pMainWindow,	SLOT(HidePadOffsetDialog()));
+	QObject::connect(ui->textC,	SIGNAL(clicked()),	m_pMainWindow,	SLOT(PadCentre()));
+	QObject::connect(ui->textL,	SIGNAL(clicked()),	m_pMainWindow,	SLOT(PadMoveL()));
+	QObject::connect(ui->textR,	SIGNAL(clicked()),	m_pMainWindow,	SLOT(PadMoveR()));
+	QObject::connect(ui->textT,	SIGNAL(clicked()),	m_pMainWindow,	SLOT(PadMoveT()));
+	QObject::connect(ui->textB,	SIGNAL(clicked()),	m_pMainWindow,	SLOT(PadMoveB()));
+	QObject::connect(this,		SIGNAL(rejected()),	this,			SLOT(OnCloseX()));	// Close using X button
 }
 
 PadOffsetDialog::~PadOffsetDialog()
 {
 	delete ui;
+}
+
+void PadOffsetDialog::OnCloseX()
+{
+	m_pMainWindow->HidePadOffsetDialog(true);	// true ==> force
 }
 
 void PadOffsetDialog::keyPressEvent(QKeyEvent* event)

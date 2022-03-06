@@ -130,17 +130,11 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	ui->actionSelectAll->setShortcut(QKeySequence());
 	ui->actionDelete->setShortcut(QKeySequence());
 	ui->actionSwitchLayer->setShortcut(QKeySequence());
-#endif
 
-#ifdef VEROROUTE_ANDROID
-	m_infoDlg->move(595,65);
 	ui->toolBar->insertSeparator(ui->actionFat);
 #else
 	move(50,50);
-	m_templatesDlg->move(940,50);
-	m_infoDlg->move(940,50);
 	ui->menuPaint->menuAction()->setVisible(false);
-	ui->actionSmartPan->setVisible(false);
 	ui->actionPaintGrid->setVisible(false);
 	ui->actionEraseGrid->setVisible(false);
 	ui->actionPaintPins->setVisible(false);
@@ -164,6 +158,7 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	m_whitePen			= QPen(Qt::white, 0,				Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 	m_redPen			= QPen(Qt::red, 0,					Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 	m_orangePen			= QPen(QColor(255,128,0,255), 0,	Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+	m_yellowPen			= QPen(QColor(255,255,0,255), 0,	Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 	m_lightBluePen		= QPen(QColor(96, 96, 255, 255), 0,	Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 	m_varPen			= QPen(Qt::black, 0,				Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 	m_dotPen			= QPen(QColor(96,96,96,255), 0,		Qt::DotLine,   Qt::RoundCap, Qt::RoundJoin);
@@ -172,11 +167,12 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	m_darkBrush			= QBrush(QColor(0,0,0,150),			Qt::SolidPattern);	// using alpha
 	m_varBrush			= QBrush(QColor(255,255,255,0),		Qt::SolidPattern);
 
+	// File menu actions
 	QObject::connect(ui->actionNew,						SIGNAL(triggered()), this, SLOT(New()));
 	QObject::connect(ui->actionOpen,					SIGNAL(triggered()), this, SLOT(Open()));
+	QObject::connect(ui->actionMerge,					SIGNAL(triggered()), this, SLOT(Merge()));
 	QObject::connect(ui->actionSave,					SIGNAL(triggered()), this, SLOT(Save()));
 	QObject::connect(ui->actionSave_As,					SIGNAL(triggered()), this, SLOT(SaveAs()));
-	QObject::connect(ui->actionMerge,					SIGNAL(triggered()), this, SLOT(Merge()));
 	QObject::connect(ui->actionImportTango,				SIGNAL(triggered()), this, SLOT(ImportTango()));
 	QObject::connect(ui->actionImportOrcad,				SIGNAL(triggered()), this, SLOT(ImportOrcad()));
 	QObject::connect(ui->actionWrite_PDF,				SIGNAL(triggered()), this, SLOT(WritePDF()));
@@ -187,97 +183,109 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	QObject::connect(ui->actionWrite_Gerber2_mm,		SIGNAL(triggered()), this, SLOT(WriteGerber2mm()));
 	QObject::connect(ui->actionClearRecent,				SIGNAL(triggered()), this, SLOT(ClearRecentFiles()));
 	QObject::connect(ui->actionQuit,					SIGNAL(triggered()), this, SLOT(Quit()));
-	QObject::connect(ui->actionZoom_In,					SIGNAL(triggered()), this, SLOT(ZoomIn()));
-	QObject::connect(ui->actionZoom_Out,				SIGNAL(triggered()), this, SLOT(ZoomOut()));
-	QObject::connect(ui->actionCrop,					SIGNAL(triggered()), this, SLOT(Crop()));
-	QObject::connect(ui->actionToggleGrid,				SIGNAL(triggered()), this, SLOT(ToggleGrid()));
-	QObject::connect(ui->actionToggleText,				SIGNAL(triggered()), this, SLOT(ToggleText()));
-	QObject::connect(ui->actionToggleFlipH,				SIGNAL(triggered()), this, SLOT(ToggleFlipH()));
-	QObject::connect(ui->actionToggleFlipV,				SIGNAL(triggered()), this, SLOT(ToggleFlipV()));
-	QObject::connect(ui->actionTogglePinLabels,			SIGNAL(triggered()), this, SLOT(TogglePinLabels()));
-	QObject::connect(ui->actionToggleFlyWires,			SIGNAL(triggered()), this, SLOT(ToggleFlyWires()));
-	QObject::connect(ui->actionToggleRuler,				SIGNAL(triggered()), this, SLOT(ToggleRuler()));
-	QObject::connect(ui->actionVeroV,					SIGNAL(triggered()), this, SLOT(VeroV()));
-	QObject::connect(ui->actionVeroH,					SIGNAL(triggered()), this, SLOT(VeroH()));
-	QObject::connect(ui->actionFat,						SIGNAL(triggered()), this, SLOT(Fat()));
-	QObject::connect(ui->actionThin,					SIGNAL(triggered()), this, SLOT(Thin()));
-	QObject::connect(ui->actionCurved,					SIGNAL(triggered()), this, SLOT(Curved()));
-	QObject::connect(ui->actionDiagsMin,				SIGNAL(triggered()), this, SLOT(ToggleDiagsMin()));
-	QObject::connect(ui->actionDiagsMax,				SIGNAL(triggered()), this, SLOT(ToggleDiagsMax()));
-	QObject::connect(ui->actionFill,					SIGNAL(triggered()), this, SLOT(ToggleFill()));
-	QObject::connect(ui->actionSelectArea,				SIGNAL(triggered()), this, SLOT(ToggleSelectArea()));
+	// Edit menu actions
 	QObject::connect(ui->actionUndo,					SIGNAL(triggered()), this, SLOT(Undo()));
 	QObject::connect(ui->actionRedo,					SIGNAL(triggered()), this, SLOT(Redo()));
-	QObject::connect(ui->actionSmartPan,				SIGNAL(triggered()), this, SLOT(SmartPanOn()));
-	QObject::connect(ui->actionFind,					SIGNAL(triggered()), this, SLOT(ShowFindDialog()));
-	QObject::connect(ui->actionCopy,					SIGNAL(triggered()), this, SLOT(Copy()));
+	QObject::connect(ui->actionSelectArea,				SIGNAL(triggered()), this, SLOT(ToggleSelectArea()));
+	QObject::connect(ui->actionSelectAll,				SIGNAL(triggered()), this, SLOT(SelectAll()));
 	QObject::connect(ui->actionGroup,					SIGNAL(triggered()), this, SLOT(Group()));
 	QObject::connect(ui->actionUngroup,					SIGNAL(triggered()), this, SLOT(Ungroup()));
-	QObject::connect(ui->actionSelectAll,				SIGNAL(triggered()), this, SLOT(SelectAll()));
+	QObject::connect(ui->actionCopy,					SIGNAL(triggered()), this, SLOT(Copy()));
 	QObject::connect(ui->actionDelete,					SIGNAL(triggered()), this, SLOT(Delete()));
-	QObject::connect(ui->actionMarker,					SIGNAL(triggered()), this, SLOT(AddMarker()));
+	QObject::connect(ui->actionFind,					SIGNAL(triggered()), this, SLOT(ShowFindDialog()));
+	QObject::connect(ui->actionSmartPan,				SIGNAL(triggered()), this, SLOT(SmartPanOn()));
+	// Add menu actions
 	QObject::connect(ui->actionPad,						SIGNAL(triggered()), this, SLOT(AddPad()));
 	QObject::connect(ui->actionPad_FlyWire,				SIGNAL(triggered()), this, SLOT(AddPadFlyWire()));
-	QObject::connect(ui->actionStrip100,				SIGNAL(triggered()), this, SLOT(AddStrip100()));
-	QObject::connect(ui->actionBlock100,				SIGNAL(triggered()), this, SLOT(AddBlock100()));
-	QObject::connect(ui->actionBlock200,				SIGNAL(triggered()), this, SLOT(AddBlock200()));
 	QObject::connect(ui->actionWire,					SIGNAL(triggered()), this, SLOT(AddWire()));
 	QObject::connect(ui->actionResistor,				SIGNAL(triggered()), this, SLOT(AddResistor()));
 	QObject::connect(ui->actionInductor,				SIGNAL(triggered()), this, SLOT(AddInductor()));
-	QObject::connect(ui->actionCrystal,					SIGNAL(triggered()), this, SLOT(AddCrystal()));
-	QObject::connect(ui->actionDiode,					SIGNAL(triggered()), this, SLOT(AddDiode()));
-	QObject::connect(ui->actionLED,						SIGNAL(triggered()), this, SLOT(AddLED()));
 	QObject::connect(ui->actionCapCeramic,				SIGNAL(triggered()), this, SLOT(AddCapCeramic()));
 	QObject::connect(ui->actionCapFilm,					SIGNAL(triggered()), this, SLOT(AddCapFilm()));
 	QObject::connect(ui->actionCapFilmWide,				SIGNAL(triggered()), this, SLOT(AddCapFilmWide()));
-	QObject::connect(ui->actionCapElectro200NP,			SIGNAL(triggered()), this, SLOT(AddCapElectro200NP()));
-	QObject::connect(ui->actionCapElectro250NP,			SIGNAL(triggered()), this, SLOT(AddCapElectro250NP()));
-	QObject::connect(ui->actionCapElectro300NP,			SIGNAL(triggered()), this, SLOT(AddCapElectro300NP()));
-	QObject::connect(ui->actionCapElectro400NP,			SIGNAL(triggered()), this, SLOT(AddCapElectro400NP()));
-	QObject::connect(ui->actionCapElectro500NP,			SIGNAL(triggered()), this, SLOT(AddCapElectro500NP()));
-	QObject::connect(ui->actionCapElectro600NP,			SIGNAL(triggered()), this, SLOT(AddCapElectro600NP()));
 	QObject::connect(ui->actionCapElectro200,			SIGNAL(triggered()), this, SLOT(AddCapElectro200()));
 	QObject::connect(ui->actionCapElectro250,			SIGNAL(triggered()), this, SLOT(AddCapElectro250()));
 	QObject::connect(ui->actionCapElectro300,			SIGNAL(triggered()), this, SLOT(AddCapElectro300()));
 	QObject::connect(ui->actionCapElectro400,			SIGNAL(triggered()), this, SLOT(AddCapElectro400()));
 	QObject::connect(ui->actionCapElectro500,			SIGNAL(triggered()), this, SLOT(AddCapElectro500()));
 	QObject::connect(ui->actionCapElectro600,			SIGNAL(triggered()), this, SLOT(AddCapElectro600()));
+	QObject::connect(ui->actionCapElectro200NP,			SIGNAL(triggered()), this, SLOT(AddCapElectro200NP()));
+	QObject::connect(ui->actionCapElectro250NP,			SIGNAL(triggered()), this, SLOT(AddCapElectro250NP()));
+	QObject::connect(ui->actionCapElectro300NP,			SIGNAL(triggered()), this, SLOT(AddCapElectro300NP()));
+	QObject::connect(ui->actionCapElectro400NP,			SIGNAL(triggered()), this, SLOT(AddCapElectro400NP()));
+	QObject::connect(ui->actionCapElectro500NP,			SIGNAL(triggered()), this, SLOT(AddCapElectro500NP()));
+	QObject::connect(ui->actionCapElectro600NP,			SIGNAL(triggered()), this, SLOT(AddCapElectro600NP()));
+	QObject::connect(ui->actionTrimVertical,			SIGNAL(triggered()), this, SLOT(AddTrimVert()));
+	QObject::connect(ui->actionTrimVerticalOffset,		SIGNAL(triggered()), this, SLOT(AddTrimVertOffset()));
+	QObject::connect(ui->actionTrimVerticalOffsetWide,	SIGNAL(triggered()), this, SLOT(AddTrimVertOffsetWide()));
+	QObject::connect(ui->actionTrimFlat,				SIGNAL(triggered()), this, SLOT(AddTrimFlat()));
+	QObject::connect(ui->actionTrimFlatWide,			SIGNAL(triggered()), this, SLOT(AddTrimFlatWide()));
+	QObject::connect(ui->actionCrystal,					SIGNAL(triggered()), this, SLOT(AddCrystal()));
+	QObject::connect(ui->actionDiode,					SIGNAL(triggered()), this, SLOT(AddDiode()));
+	QObject::connect(ui->actionLED,						SIGNAL(triggered()), this, SLOT(AddLED()));
 	QObject::connect(ui->actionTO92,					SIGNAL(triggered()), this, SLOT(AddTO92()));
 	QObject::connect(ui->actionTO18,					SIGNAL(triggered()), this, SLOT(AddTO18()));
 	QObject::connect(ui->actionTO39,					SIGNAL(triggered()), this, SLOT(AddTO39()));
 	QObject::connect(ui->actionTO220,					SIGNAL(triggered()), this, SLOT(AddTO220()));
-	QObject::connect(ui->actionTrimVertical,			SIGNAL(triggered()), this, SLOT(AddTrimVert()));
-	QObject::connect(ui->actionTrimFlat,				SIGNAL(triggered()), this, SLOT(AddTrimFlat()));
-	QObject::connect(ui->actionTrimFlatWide,			SIGNAL(triggered()), this, SLOT(AddTrimFlatWide()));
-	QObject::connect(ui->actionTrimVerticalOffset,		SIGNAL(triggered()), this, SLOT(AddTrimVertOffset()));
-	QObject::connect(ui->actionTrimVerticalOffsetWide,	SIGNAL(triggered()), this, SLOT(AddTrimVertOffsetWide()));
-	QObject::connect(ui->actionSIP,						SIGNAL(triggered()), this, SLOT(AddSIP()));
 	QObject::connect(ui->actionDIP,						SIGNAL(triggered()), this, SLOT(AddDIP()));
+	QObject::connect(ui->actionSIP,						SIGNAL(triggered()), this, SLOT(AddSIP()));
+	QObject::connect(ui->actionStrip100,				SIGNAL(triggered()), this, SLOT(AddStrip100()));
+	QObject::connect(ui->actionBlock100,				SIGNAL(triggered()), this, SLOT(AddBlock100()));
+	QObject::connect(ui->actionBlock200,				SIGNAL(triggered()), this, SLOT(AddBlock200()));
 	QObject::connect(ui->actionSwitchST,				SIGNAL(triggered()), this, SLOT(AddSwitchST()));
 	QObject::connect(ui->actionSwitchDT,				SIGNAL(triggered()), this, SLOT(AddSwitchDT()));
 	QObject::connect(ui->actionSwitchST_DIP,			SIGNAL(triggered()), this, SLOT(AddSwitchST_DIP()));
+	QObject::connect(ui->actionMarker,					SIGNAL(triggered()), this, SLOT(AddMarker()));
 	QObject::connect(ui->actionTextBox,					SIGNAL(triggered()), this, SLOT(AddTextBox()));
 	QObject::connect(ui->actionVeroNumbers,				SIGNAL(triggered()), this, SLOT(AddVeroNumbers()));
 	QObject::connect(ui->actionVeroLetters,				SIGNAL(triggered()), this, SLOT(AddVeroLetters()));
-	QObject::connect(ui->actionRenderingDlg,			SIGNAL(triggered()), this, SLOT(ShowRenderingDialog()));
-	QObject::connect(ui->actionWireDlg,					SIGNAL(triggered()), this, SLOT(ShowWireDialog()));
+	// View menu actions
+	QObject::connect(ui->actionZoom_In,					SIGNAL(triggered()), this, SLOT(ZoomIn()));
+	QObject::connect(ui->actionZoom_Out,				SIGNAL(triggered()), this, SLOT(ZoomOut()));
+	QObject::connect(ui->actionCrop,					SIGNAL(triggered()), this, SLOT(Crop()));
+	QObject::connect(ui->actionToggleGrid,				SIGNAL(triggered()), this, SLOT(ToggleGrid()));
+	QObject::connect(ui->actionToggleText,				SIGNAL(triggered()), this, SLOT(ToggleText()));
+	QObject::connect(ui->actionTogglePinLabels,			SIGNAL(triggered()), this, SLOT(TogglePinLabels()));
+	QObject::connect(ui->actionToggleFlyWires,			SIGNAL(triggered()), this, SLOT(ToggleFlyWires()));
+	QObject::connect(ui->actionToggleRuler,				SIGNAL(triggered()), this, SLOT(ToggleRuler()));
+	QObject::connect(ui->actionToggleFlipH,				SIGNAL(triggered()), this, SLOT(ToggleFlipH()));
+	QObject::connect(ui->actionToggleFlipV,				SIGNAL(triggered()), this, SLOT(ToggleFlipV()));
+	// Paint menu actions
+	QObject::connect(ui->actionPaintGrid,				SIGNAL(triggered()), this, SLOT(TogglePaintGrid()));
+	QObject::connect(ui->actionEraseGrid,				SIGNAL(triggered()), this, SLOT(ToggleEraseGrid()));
+	QObject::connect(ui->actionPaintPins,				SIGNAL(triggered()), this, SLOT(TogglePaintPins()));
+	QObject::connect(ui->actionErasePins,				SIGNAL(triggered()), this, SLOT(ToggleErasePins()));
+	QObject::connect(ui->actionPaintFlood,				SIGNAL(triggered()), this, SLOT(TogglePaintFlood()));
+	// Track Style menu actions
+	QObject::connect(ui->actionFat,						SIGNAL(triggered()), this, SLOT(Fat()));
+	QObject::connect(ui->actionThin,					SIGNAL(triggered()), this, SLOT(Thin()));
+	QObject::connect(ui->actionCurved,					SIGNAL(triggered()), this, SLOT(Curved()));
+	QObject::connect(ui->actionVeroV,					SIGNAL(triggered()), this, SLOT(VeroV()));
+	QObject::connect(ui->actionVeroH,					SIGNAL(triggered()), this, SLOT(VeroH()));
+	QObject::connect(ui->actionDiagsMin,				SIGNAL(triggered()), this, SLOT(ToggleDiagsMin()));
+	QObject::connect(ui->actionDiagsMax,				SIGNAL(triggered()), this, SLOT(ToggleDiagsMax()));
+	QObject::connect(ui->actionFill,					SIGNAL(triggered()), this, SLOT(ToggleFill()));
+	// Windows menu actions
 	QObject::connect(ui->actionControlDlg,				SIGNAL(triggered()), this, SLOT(ShowControlDialog()));
-	QObject::connect(ui->actionTemplatesDlg,			SIGNAL(triggered()), this, SLOT(ShowTemplatesDialog()));
-	QObject::connect(ui->actionHotkeysDlg,				SIGNAL(triggered()), this, SLOT(ShowHotkeysDialog()));
-	QObject::connect(ui->actionInfoDlg,					SIGNAL(triggered()), this, SLOT(ShowInfoDialog()));
-	QObject::connect(ui->actionBomDlg,					SIGNAL(triggered()), this, SLOT(ShowBomDialog()));
-	QObject::connect(ui->actionTemplatesDlg,			SIGNAL(triggered()), this, SLOT(ShowTemplatesDialog()));
-	QObject::connect(ui->actionPinDlg,					SIGNAL(triggered()), this, SLOT(ShowPinDialog()));
+	QObject::connect(ui->actionTemplatesDlg,			SIGNAL(triggered()), this, SLOT(ToggleTemplatesDialog()));
+	QObject::connect(ui->actionInfoDlg,					SIGNAL(triggered()), this, SLOT(ToggleInfoDialog()));
+	QObject::connect(ui->actionRenderingDlg,			SIGNAL(triggered()), this, SLOT(ToggleRenderingDialog()));
+	QObject::connect(ui->actionWireDlg,					SIGNAL(triggered()), this, SLOT(ToggleWireDialog()));
+	QObject::connect(ui->actionBomDlg,					SIGNAL(triggered()), this, SLOT(ToggleBomDialog()));
+	QObject::connect(ui->actionPinDlg,					SIGNAL(triggered()), this, SLOT(TogglePinDialog()));
 	QObject::connect(ui->actionCompDlg,					SIGNAL(triggered()), this, SLOT(ShowCompDialog()));
+	// Layers menu actions
 	QObject::connect(ui->actionAddLayer,				SIGNAL(triggered()), this, SLOT(AddLayer()));
 	QObject::connect(ui->actionRemoveLayer,				SIGNAL(triggered()), this, SLOT(RemoveLayer()));
 	QObject::connect(ui->actionSwitchLayer,				SIGNAL(triggered()), this, SLOT(SwitchLayer()));
 	QObject::connect(ui->actionToggleVias,				SIGNAL(triggered()), this, SLOT(ToggleVias()));
+	// Help menu actions
 	QObject::connect(ui->actionAbout,					SIGNAL(triggered()), this, SLOT(ShowAbout()));
-	QObject::connect(ui->actionTutorial,				SIGNAL(triggered()), this, SLOT(LoadFirstTutorial()));
 	QObject::connect(ui->actionSupport,					SIGNAL(triggered()), this, SLOT(ShowSupport()));
+	QObject::connect(ui->actionHotkeysDlg,				SIGNAL(triggered()), this, SLOT(ShowHotkeysDialog()));
+	QObject::connect(ui->actionTutorial,				SIGNAL(triggered()), this, SLOT(LoadFirstTutorial()));
 	QObject::connect(ui->actionUpdateCheck,				SIGNAL(triggered()), this, SLOT(UpdateCheck()));
-	QObject::connect(&m_networkMgr,	SIGNAL(finished(QNetworkReply*)), this, SLOT(HandleNetworkReply(QNetworkReply*)));
+	// Component Editor Toolbar actions
 	QObject::connect(ui->actionEditor,					SIGNAL(triggered()), this, SLOT(DefinerToggleEditor()));
 	QObject::connect(ui->actionAddLine,					SIGNAL(triggered()), this, SLOT(DefinerAddLine()));
 	QObject::connect(ui->actionAddRect,					SIGNAL(triggered()), this, SLOT(DefinerAddRect()));
@@ -285,11 +293,9 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	QObject::connect(ui->actionAddEllipse,				SIGNAL(triggered()), this, SLOT(DefinerAddEllipse()));
 	QObject::connect(ui->actionAddArc,					SIGNAL(triggered()), this, SLOT(DefinerAddArc()));
 	QObject::connect(ui->actionAddChord,				SIGNAL(triggered()), this, SLOT(DefinerAddChord()));
-	QObject::connect(ui->actionPaintGrid,				SIGNAL(triggered()), this, SLOT(TogglePaintGrid()));
-	QObject::connect(ui->actionEraseGrid,				SIGNAL(triggered()), this, SLOT(ToggleEraseGrid()));
-	QObject::connect(ui->actionPaintPins,				SIGNAL(triggered()), this, SLOT(TogglePaintPins()));
-	QObject::connect(ui->actionErasePins,				SIGNAL(triggered()), this, SLOT(ToggleErasePins()));
-	QObject::connect(ui->actionPaintFlood,				SIGNAL(triggered()), this, SLOT(TogglePaintFlood()));
+
+	QObject::connect(&m_networkMgr,	SIGNAL(finished(QNetworkReply*)), this, SLOT(HandleNetworkReply(QNetworkReply*)));
+
 	m_fileName.clear();
 	CheckFolders();
 	ResetHistory("Empty");
@@ -422,7 +428,8 @@ void MainWindow::ResetView(bool bTutorial)
 		if ( bOK ) { m_gridRow = j;	m_gridCol = i; }
 	}
 
-	m_findDlg->hide();
+	ClearFind();
+	HideDlg(m_findDlg);
 
 	m_infoDlg->Update();
 	m_infoDlg->SetReadOnly(bTutorial);
@@ -489,6 +496,7 @@ void MainWindow::RepaintWithListNodes(bool bNow)
 	m_bRepaint = true;
 	if ( bNow ) repaint(); else update();
 	UpdateRulerInfo();
+	UpdatePadInfo();
 }
 
 void MainWindow::RepaintWithRouting(bool bNow)
@@ -498,6 +506,7 @@ void MainWindow::RepaintWithRouting(bool bNow)
 	m_bRepaint = true;
 	if ( bNow ) repaint(); else update();
 	UpdateRulerInfo();
+	UpdatePadInfo();
 }
 
 void MainWindow::RepaintSkipRouting(bool bNow)
@@ -506,6 +515,7 @@ void MainWindow::RepaintSkipRouting(bool bNow)
 	m_bRepaint = true;
 	if ( bNow ) repaint(); else update();
 	UpdateRulerInfo();
+	UpdatePadInfo();
 }
 
 void MainWindow::ShowCurrentRectSize()
@@ -793,6 +803,7 @@ void MainWindow::WriteGerber(const bool& bTwoLayerGerber, const bool& bMetric)
 
 		m_board.SetGRIDPIXELS(oldGridPixels);	// Restore number of pixels per grid square
 
+#ifndef VEROROUTE_ANDROID
 		// Ask the system to open the Gerber files
 		QDesktopServices::openUrl(m_gerberFileName + ".GKO");
 		QDesktopServices::openUrl(m_gerberFileName + ".GBL");
@@ -805,6 +816,7 @@ void MainWindow::WriteGerber(const bool& bTwoLayerGerber, const bool& bMetric)
 		}
 		QDesktopServices::openUrl(m_gerberFileName + ".GTO");
 		QDesktopServices::openUrl(m_gerberFileName + ".DRL");
+#endif
 	}
 }
 
@@ -1020,40 +1032,113 @@ void MainWindow::Delete()
 }
 
 // Windows menu items
-void MainWindow::ShowDlg(QWidget* p)	{ p->showNormal();	p->raise();	p->activateWindow(); }
+void MainWindow::ShowDlg(QWidget* p)	{ p->showNormal();	p->raise();	p->activateWindow(); UpdateControls(); }
+void MainWindow::HideDlg(QWidget* p)	{ p->hide(); UpdateControls(); }
 void MainWindow::ShowControlDialog()	{ m_dockCompDlg->hide();	ShowDlg(m_dockControlDlg); }
-void MainWindow::ShowRenderingDialog()	{ ShowDlg(m_renderingDlg); }
-void MainWindow::ShowWireDialog()		{ ShowDlg(m_wireDlg); }
-void MainWindow::ShowHotkeysDialog()	{ ShowDlg(m_hotkeysDlg); }
-void MainWindow::ShowInfoDialog()		{ ShowDlg(m_infoDlg); }
-void MainWindow::ShowCompDialog()		{ m_dockControlDlg->hide(); m_findDlg->hide(); ShowDlg(m_dockCompDlg); }
-void MainWindow::ShowTextDialog()		{ ShowDlg(m_textDlg); }
-void MainWindow::ShowBomDialog()		{ UpdateBOM();				ShowDlg(m_bomDlg); }
-void MainWindow::ShowTemplatesDialog()	{ UpdateTemplatesDialog();	ShowDlg(m_templatesDlg); }
-void MainWindow::ShowPinDialog()		{ m_pinDlg->Update();		ShowDlg(m_pinDlg); }
+void MainWindow::ShowCompDialog()		{ m_dockControlDlg->hide();	HideDlg(m_findDlg);	HideDlg(m_textDlg);	HidePadOffsetDialog();	ShowDlg(m_dockCompDlg); }
+void MainWindow::ShowRenderingDialog()
+{
+	ShowDlg(m_renderingDlg);	// Show the dialog (so we can get position info) ...
+	// ... then try to place it below the top toolbar and left of the control/comp editor dialog
+	QRect R = geometry();
+	QRect t = ui->toolBar->geometry();
+	QRect s = m_dockCompDlg->geometry();
+	QRect d = m_renderingDlg->geometry();
+	m_renderingDlg->move(R.right() - s.width() - d.width(), R.top() + t.bottom() );
+}
+void MainWindow::ToggleRenderingDialog()
+{
+	return m_renderingDlg->isVisible() ? HideDlg(m_renderingDlg) : ShowRenderingDialog();
+}
+void MainWindow::ToggleWireDialog()
+{
+	return m_wireDlg->isVisible() ? HideDlg(m_wireDlg) : ShowDlg(m_wireDlg);
+}
+void MainWindow::ShowHotkeysDialog()
+{
+	ShowDlg(m_hotkeysDlg);
+}
+void MainWindow::ShowInfoDialog()
+{
+	ShowDlg(m_infoDlg);	// Show the dialog (so we can get position info) ...
+	// ... then try to place it below the top toolbar and left of the control/comp editor dialog
+	QRect R = geometry();
+	QRect t = ui->toolBar->geometry();
+	QRect s = m_dockCompDlg->geometry();
+	QRect d = m_infoDlg->geometry();
+	m_infoDlg->move(R.right() - s.width() - d.width(), R.top() + t.bottom() );
+	ShowDlg(m_infoDlg);
+}
+void MainWindow::ToggleInfoDialog()
+{
+	return m_infoDlg->isVisible() ? HideDlg(m_infoDlg) : ShowInfoDialog();
+}
+void MainWindow::ShowTextDialog()
+{
+	HideDlg(m_findDlg);
+	ShowDlg(m_textDlg);
+}
+void MainWindow::ShowBomDialog()
+{
+	UpdateBOM();	ShowDlg(m_bomDlg);
+}
+void MainWindow::ToggleBomDialog()
+{
+	return m_bomDlg->isVisible() ? HideDlg(m_bomDlg) : ShowBomDialog();
+}
+void MainWindow::ShowTemplatesDialog()
+{
+	UpdateTemplatesDialog();
+	ShowDlg(m_templatesDlg);	// Show the dialog (so we can get position info) ...
+	// ... then try to place it below the top toolbar and at the far left
+	QRect R = geometry();
+	QRect t = ui->toolBar->geometry();
+	m_templatesDlg->move(R.left(), R.top() + t.bottom() );
+}
+void MainWindow::ToggleTemplatesDialog()
+{
+	return m_templatesDlg->isVisible() ? HideDlg(m_templatesDlg) : ShowTemplatesDialog();
+}
+void MainWindow::ShowPinDialog()
+{
+	m_pinDlg->Update();
+	ShowDlg(m_pinDlg);	// Show the dialog (so we can get position info) ...
+	// ... then try to place it below the top toolbar and left of the control/comp editor dialog
+	QRect R = geometry();
+	QRect t = ui->toolBar->geometry();
+	QRect s = m_dockCompDlg->geometry();
+	QRect d = m_pinDlg->geometry();
+	m_pinDlg->move(R.right() - s.width() - d.width(), R.top() + t.bottom() );
+}
+void MainWindow::TogglePinDialog()
+{
+	return m_pinDlg->isVisible() ? HideDlg(m_pinDlg) : ShowPinDialog();
+}
 void MainWindow::ShowPadOffsetDialog()
 {
-	ShowPadInfo();
-
-	ShowDlg(m_padOffsetDlg);	// Show it ...
-
+	ShowDlg(m_padOffsetDlg);	// Show the dialog (so we can get position info) ...
 	// ... then try to it centre on the lower toolbar
 	QRect R = geometry();
 	QRect r = ui->toolBar_2->geometry();
 	QRect d = m_padOffsetDlg->geometry();
-	const int titleBarHeight = d.y() - m_padOffsetDlg->pos().y();
+	const int titleBarHeight = d.top() - m_padOffsetDlg->pos().y();	// Can be 0 on Android
 	const int buttonHeight	 = 24;	// From ui file
-
-	m_padOffsetDlg->move(R.x() + r.x() + 400, R.y() + r.y() - titleBarHeight + ( r.height() - buttonHeight ) / 2);
+	m_padOffsetDlg->move(R.left() + r.left() + 300, R.top() + r.top() - titleBarHeight + ( r.height() - buttonHeight ) / 2);
+	UpdatePadInfo();
 }
-void MainWindow::HidePadOffsetDialog()
+void MainWindow::HidePadOffsetDialog(bool bForce)
 {
-	ui->statusBar->showMessage(QString(""));
+	if ( !bForce && !m_padOffsetDlg->isVisible() ) return;
 	UpdateHistory("Apply pad offsets");
-	m_padOffsetDlg->hide();
+	HideDlg(m_padOffsetDlg);
+	ui->statusBar->showMessage(QString(""));
 }
-
-void MainWindow::ShowFindDialog()		{ ShowDlg(m_findDlg); }
+void MainWindow::ShowFindDialog()
+{
+	ClearFind();
+	HideDlg(m_textDlg);
+	ShowDlg(m_findDlg);
+}
 
 // Layers menu items
 void MainWindow::AddLayer()
@@ -1236,6 +1321,7 @@ void MainWindow::ToggleFlipV()			{ SetFlipV( !m_board.GetFlipV() ); }
 void MainWindow::TogglePinLabels()		{ SetShowPinLabels( !m_board.GetShowPinLabels() ); }
 void MainWindow::ToggleFlyWires()		{ SetShowFlyWires( !m_board.GetShowFlyWires() ); }
 void MainWindow::ToggleRuler()			{ m_bRuler = !m_bRuler; if ( !m_bRuler ) ResetRuler();
+										  if ( m_bRuler ) HidePadOffsetDialog();
 										  UpdateControls(); RepaintSkipRouting();
 										}
 void MainWindow::ResetRuler()
@@ -1425,15 +1511,14 @@ void MainWindow::PadMove(const int& deltaRowMil, const int& deltaColMil)
 	const size_t	pinIndex	= pC->GetPinIndex();
 
 	comp.IncCompPinOffsets(pinIndex, deltaColMil, deltaRowMil);
-
-	ShowPadInfo();
 	return RepaintWithRouting();
 }
 
-void MainWindow::ShowPadInfo()
+void MainWindow::UpdatePadInfo()
 {
 	const Element* pC =  m_board.Get(0, m_gridRow, m_gridCol);
-	if ( !pC->GetHasPin() || pC->GetHasWire() )	return;	// Wires can share holes so cannot have offset pads
+	if ( !m_padOffsetDlg->isVisible() || !pC->GetHasPin() || pC->GetHasWire() )	// Wires can share holes so cannot have offset pads
+		return;
 
 	const Component&	comp		= m_board.GetCompMgr().GetComponentById( pC->GetCompId() );
 	const size_t		pinIndex	= pC->GetPinIndex();
@@ -1677,6 +1762,10 @@ void MainWindow::SetWireShare(bool b)		{ if ( m_board.SetWireShare(b) ) { Update
 void MainWindow::SetWireCross(bool b)		{ if ( m_board.SetWireCross(b) ) { UpdateHistory("Wire crossing on/off");		RepaintSkipRouting(); } }
 
 // Find dialog
+void MainWindow::ClearFind()
+{
+	m_board.GetCompMgr().ClearFind();
+}
 void MainWindow::Find(const bool bUseName, const bool bExact, const QString& str)
 {
 	m_board.GetCompMgr().Find(bUseName, bExact, str.toStdString());	RepaintSkipRouting();
@@ -1790,7 +1879,6 @@ void MainWindow::DefinerBuild()
 	if ( bOK )
 		UpdateHistory("Build shape");
 	EnableCompDialogControls();
-	ShowTemplatesDialog();
 }
 void MainWindow::DefinerToggleEditor()
 {
@@ -1928,11 +2016,12 @@ void MainWindow::UpdateControls()
 	const bool		bColor			= !bCompEdit && m_board.GetTrackMode() == TRACKMODE::COLOR;
 	const bool		bPCB			= !bCompEdit && m_board.GetTrackMode() == TRACKMODE::PCB;
 	const bool		bTracks			= bMono || bColor || bPCB;
-	const bool		bVeroV			=  m_board.GetVeroTracks() &&  m_board.GetVerticalStrips();
-	const bool		bVeroH			=  m_board.GetVeroTracks() && !m_board.GetVerticalStrips();
-	const bool		bFat			= !m_board.GetVeroTracks() && !m_board.GetCurvedTracks() &&  m_board.GetFatTracks();
-	const bool		bThin			= !m_board.GetVeroTracks() && !m_board.GetCurvedTracks() && !m_board.GetFatTracks();
-	const bool		bCurved			= !m_board.GetVeroTracks() &&  m_board.GetCurvedTracks();
+	const bool		bVero			= m_board.GetVeroTracks();
+	const bool		bVeroV			=  bVero &&  m_board.GetVerticalStrips();
+	const bool		bVeroH			=  bVero && !m_board.GetVerticalStrips();
+	const bool		bFat			= !bVero && !m_board.GetCurvedTracks() &&  m_board.GetFatTracks();
+	const bool		bThin			= !bVero && !m_board.GetCurvedTracks() && !m_board.GetFatTracks();
+	const bool		bCurved			= !bVero &&  m_board.GetCurvedTracks();
 
 	ui->menuExport_as_Gerber_1_Layer->setEnabled(bPCB && !bCompEdit && !m_board.GetMirrored() && !m_board.GetVeroTracks() && m_board.GetLyrs() == 1);
 	ui->menuExport_as_Gerber_2_Layer->setEnabled(bPCB && !bCompEdit && !m_board.GetMirrored() && !m_board.GetVeroTracks());
@@ -1966,21 +2055,21 @@ void MainWindow::UpdateControls()
 	}
 	ui->actionCopy->setEnabled( bTextOK || bCompOK );
 	if ( bTextOK )	// Text Box takes precedence over comps
-		ui->actionCopy->setText( QString("Copy+Paste selected Text Box") );
+		ui->actionCopy->setText( QString("Copy+Paste Selected Text Box") );
 	else if ( bCompOK )
-		ui->actionCopy->setText( QString("Copy+Paste selected Part(s)") );
+		ui->actionCopy->setText( QString("Copy+Paste Selected Part(s)") );
 	else
-		ui->actionCopy->setText( QString(" Copy+Paste selected Part(s) / Text Box") );
+		ui->actionCopy->setText( QString("Copy+Paste Selected Part(s) / Text Box") );
 	ui->actionGroup->setEnabled( bCompOK && groupMgr.CanGroup() );
 	ui->actionUngroup->setEnabled( bCompOK && groupMgr.CanUnGroup() );
 	ui->actionSelectAll->setEnabled( bCompActionsOK && !compMgr.GetMapIdToComp().empty() );
 	ui->actionDelete->setEnabled( bTextOK || bCompOK );
 	if ( bTextOK )	// Text Box takes precedence over comps
-		ui->actionDelete->setText( QString("Delete selected Text Box") );
+		ui->actionDelete->setText( QString("Delete Selected Text Box") );
 	else if ( bCompOK )
-		ui->actionDelete->setText( QString("Delete selected Part(s)") );
+		ui->actionDelete->setText( QString("Delete Selected Part(s)") );
 	else
-		ui->actionDelete->setText( QString("Delete selected Part(s) / Text Box") );
+		ui->actionDelete->setText( QString("Delete Selected Part(s) / Text Box") );
 
 	ui->actionCrop->setEnabled( !bCompEdit );
 	ui->actionTextBox->setEnabled( !bCompEdit && !bPCB && m_board.GetShowText() );
@@ -1990,11 +2079,12 @@ void MainWindow::UpdateControls()
 	ui->actionToggleText->setEnabled(  !bCompEdit && !bPCB );
 	ui->actionToggleFlipH->setEnabled( !bCompEdit );
 	ui->actionToggleFlipV->setEnabled( !bCompEdit );
-	const bool bPinLabels = m_board.GetCompMode() != COMPSMODE::OFF && ( bNoTracks || bColor );
+	const bool bPinLabels = m_board.GetCompMode() != COMPSMODE::OFF && ( bNoTracks || bColor );	// No pin labels in Mono/PCB mode
 	ui->actionTogglePinLabels->setEnabled( bPinLabels );
-	const bool bFlyWires  = m_board.GetCompMode() != COMPSMODE::OFF && ( bNoTracks || bColor );
+	const bool bFlyWires  = m_board.GetCompMode() != COMPSMODE::OFF && ( bNoTracks || bColor );	// No flying wires in Mono/PCB mode
 	ui->actionToggleFlyWires->setEnabled( bFlyWires );
-	ui->actionToggleRuler->setEnabled( true );
+	ui->actionToggleRuler->setEnabled( !bCompEdit );
+	ui->actionFind->setEnabled( !bCompEdit );
 
 	ui->actionToggleGrid->setChecked( m_board.GetShowGrid() && !bPCB );
 	ui->actionToggleText->setChecked( m_board.GetShowText() && !bCompEdit && !bPCB );
@@ -2006,16 +2096,20 @@ void MainWindow::UpdateControls()
 	ui->actionToggleRuler->setChecked( m_bRuler );
 	ui->actionToggleRuler->setText( m_bRuler ? QString("Hide Distance Tool") : QString("Show Distance Tool"));
 
-	ui->actionControlDlg->setEnabled( !bCompEdit );
 	ui->actionCompDlg->setEnabled( bCompEdit );
+	ui->actionControlDlg->setEnabled( !bCompEdit );
+	ui->actionRenderingDlg->setEnabled( !bCompEdit );
+	ui->actionWireDlg->setEnabled( !bCompEdit );
+	ui->actionBomDlg->setEnabled( !bCompEdit );
 
-	ui->actionVeroV->setEnabled(		bTracks );
-	ui->actionVeroH->setEnabled(		bTracks );
+	ui->menuTrack_Style->setEnabled(	bTracks );
+	ui->actionVeroV->setEnabled(		bTracks && (bNoTracks || bColor) );	// No Vero tracks in PCB or Mono mode
+	ui->actionVeroH->setEnabled(		bTracks && (bNoTracks || bColor) );	// No Vero tracks in PCB or Mono mode
 	ui->actionFat->setEnabled(			bTracks );
 	ui->actionThin->setEnabled(			bTracks );
 	ui->actionCurved->setEnabled(		bTracks );
-	ui->actionDiagsMin->setEnabled(		bTracks && !bVeroV && ! bVeroH );
-	ui->actionDiagsMax->setEnabled(		bTracks && !bVeroV && ! bVeroH );
+	ui->actionDiagsMin->setEnabled(		bTracks && !bVero );
+	ui->actionDiagsMax->setEnabled(		bTracks && !bVero );
 	ui->actionFill->setEnabled(			( bMono || bPCB ) && !m_board.GetVeroTracks() );
 	ui->actionSelectArea->setEnabled(	!bCompEdit );
 
@@ -2061,6 +2155,13 @@ void MainWindow::UpdateControls()
 	m_controlDlg->UpdateCompControls();
 	m_controlDlg->UpdateControls();
 	m_findDlg->UpdateControls();
+
+	ui->actionTemplatesDlg->setText(m_templatesDlg->isVisible() ? QString("Hide Parts / Templates") : QString("Show Parts / Templates"));
+	ui->actionInfoDlg->setText(		m_infoDlg->isVisible()		? QString("Hide Info Dialog")		: QString("Show Info Dialog"));
+	ui->actionRenderingDlg->setText(m_renderingDlg->isVisible() ? QString("Hide Rendering Options") : QString("Show Rendering Options"));
+	ui->actionWireDlg->setText(		m_wireDlg->isVisible()		? QString("Hide Wire Options")		: QString("Show Wire Options"));
+	ui->actionBomDlg->setText(		m_bomDlg->isVisible()		? QString("Hide B.O.M.")			: QString("Show B.O.M."));
+	ui->actionPinDlg->setText(		m_pinDlg->isVisible()		? QString("Hide Pin Labels Editor") : QString("Show Pin Labels Editor"));
 
 	UpdateUndoRedoControls();
 }

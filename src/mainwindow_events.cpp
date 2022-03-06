@@ -20,6 +20,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "PolygonHelper.h"
+#include "finddialog.h"
+#include "textdialog.h"
 #include <QtGlobal>
 
 static const bool ALLOW_DELAY_BASED_SMART_PAN = true;
@@ -28,6 +30,11 @@ static const bool ALLOW_DELAY_BASED_PAD_SHIFT = true;
 // Following 2 are to slow down the auto-panning while moving components with the mouse
 static std::chrono::steady_clock::time_point g_lastAutoPanTime;
 static bool g_bHaveAutoPanned = false;
+
+#ifdef VEROROUTE_ANDROID
+// Following is avoid too many redraws while defining rectangles
+static std::chrono::steady_clock::time_point g_lastDrawRect;
+#endif
 
 static std::chrono::steady_clock::time_point g_lastMouseClickTime;	// For implementation of ALLOW_DELAY_BASED_SMART_PAN / ALLOW_DELAY_BASED_PAD_SHIFT
 static bool g_bPinClicked = false;									// For implementation of ALLOW_DELAY_BASED_PAD_SHIFT
@@ -103,6 +110,13 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 {
 	g_bPinClicked = false;
 
+	g_bHaveAutoPanned = false;	// Reset flags for avoiding repeated re-draws
+
+	if ( m_findDlg->isVisible() )
+		HideDlg(m_findDlg);
+	else
+		ClearFind();	// Clear the set of found components
+
 	m_mousePos = event->pos();
 	if ( m_board.GetMirrored() ) return;
 
@@ -132,6 +146,7 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 
 	if ( m_board.GetCompEdit() )
 	{
+		HidePadOffsetDialog();
 		// Pin/Shape selection
 		const int pinId		= compDefiner.GetPinId(m_gridRow, m_gridCol);
 		const int shapeId	= compDefiner.GetShapeId(m_gridRow + dRow - 0.5, m_gridCol + dCol - 0.5);
@@ -165,6 +180,7 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 
 	if ( CanModifyRuler() )
 	{
+		HidePadOffsetDialog();
 		const QPoint current(m_gridCol, m_gridRow);
 		if      ( current == m_rulerA ) m_bModifyRulerA = false;	// Do nothing, but prefer end B next time
 		else if ( current == m_rulerB ) m_bModifyRulerA = true;		// Do nothing, but prefer end A next time
@@ -178,6 +194,7 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 
 	if ( GetDefiningRect() )
 	{
+		HidePadOffsetDialog();
 #ifdef VEROROUTE_ANDROID
 		if ( m_bMouseClick )
 #else
@@ -188,6 +205,9 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 			m_board.GetRectMgr().StartNewRect(m_gridRow, m_gridCol);
 			SelectAllInRects();
 			UpdateHistory("Select parts in area(s)");
+#ifdef VEROROUTE_ANDROID
+			g_lastDrawRect = std::chrono::steady_clock::now();
+#endif
 			ShowCurrentRectSize();
 		}
 #ifndef VEROROUTE_ANDROID
@@ -261,12 +281,16 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 	if ( GetSmartPan() || GetShiftKeyDown() || trackMode == TRACKMODE::OFF ) return;
 
 	if ( GetCurrentTextId() != BAD_TEXTID )
+	{
+		HidePadOffsetDialog();
 		return RepaintWithRouting();	// Don't modify nodeId or paint if editing text
+	}
 
 	const Element* pC = m_board.Get(layer, m_gridRow, m_gridCol);
 
 	if ( GetPaintFlood() )
 	{
+		HidePadOffsetDialog();
 #ifdef VEROROUTE_ANDROID
 		if ( m_bMouseClick )
 #else
@@ -292,6 +316,7 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 	}
 	else if ( GetPaintPins() || GetErasePins() || GetPaintBoard() || GetEraseBoard() )
 	{
+		HidePadOffsetDialog();
 #ifdef VEROROUTE_ANDROID
 		const bool bClickedValidNodeID = pC->GetNodeId() != BAD_NODEID;
 		if ( bClickedValidNodeID && GetPaintBoard() && pC->GetHasPin() )	// If we're painting board and clicked on a pin with a valid nodeID
@@ -360,6 +385,9 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 
 		if ( ALLOW_DELAY_BASED_PAD_SHIFT && pC->GetHasPin() && !pC->GetHasWire() )
 			g_bPinClicked = true;
+
+		if ( !pC->GetHasPin() || pC->GetHasWire() )	// Hide the pad offset dialog if we click on a place that cannot have a pad offset
+			HidePadOffsetDialog();
 	}
 
 	g_lastMouseClickTime = std::chrono::steady_clock::now();
@@ -523,8 +551,11 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 	}
 	else if ( !GetSmartPan() && GetDefiningRect() )
 	{
-		m_board.GetRectMgr().UpdateNewRect(m_gridRow, m_gridCol);
-		SelectAllInRects();
+		if ( deltaRow != 0 || deltaCol != 0 ) 	// No change of row or column ==> No change in current rect size
+		{
+			m_board.GetRectMgr().UpdateNewRect(m_gridRow, m_gridCol);
+			SelectAllInRects();
+		}
 	}
 	else if ( !GetSmartPan() && ( GetPaintBoard() || GetEraseBoard() ) && trackMode != TRACKMODE::OFF )	// (Un)Paint nodeId on board but NOT pins
 	{
@@ -641,18 +672,33 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 	if ( abs(deltaRow) <= 1 && abs(deltaCol) <= 1 )	// If not moved mouse too fast ...
 	{
 		if ( GetDefiningRect() )
-			ShowCurrentRectSize();
-		if ( GetResizingText() || GetDefiningRect() || m_board.GetCompEdit() )
-			RepaintSkipRouting();
+		{
+			if ( deltaRow != 0 || deltaCol != 0 )	// No change of row or column ==> No change in current rect size
+			{
+				ShowCurrentRectSize();
+#ifdef VEROROUTE_ANDROID
+				const auto elapsed		= std::chrono::steady_clock::now() - g_lastDrawRect;
+				const auto duration_ms	= std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
+				if ( duration_ms >= 0 && duration_ms < 200 ) return;	// ... do nothing if within 40 ms of the last draw
+				g_lastDrawRect = std::chrono::steady_clock::now();
+#endif
+				RepaintSkipRouting();
+			}
+		}
 		else
-			RepaintWithRouting();
+		{
+			if ( GetResizingText() || m_board.GetCompEdit() )
+				RepaintSkipRouting();
+			else
+				RepaintWithRouting();
+		}
 	}
 }
 
 void MainWindow::mouseReleaseEvent(QMouseEvent* event)
 {
 	bool bShowPadOffsetDialog(false);
-	if ( g_bPinClicked )
+	if ( g_bPinClicked && !m_board.GetVeroTracks() && !m_bRuler )
 	{
 		const auto elapsed		= std::chrono::steady_clock::now() - g_lastMouseClickTime;
 		const auto duration_ms	= std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
@@ -935,47 +981,62 @@ void MainWindow::dropEvent(QDropEvent *e)
 void MainWindow::SetPaintPins(bool b)
 {
 	if ( b == GetPaintPins() ) return;
+	if ( b ) { HideDlg(m_findDlg);	HideDlg(m_textDlg); }
 	m_eMouseMode = ( b ) ? MOUSE_MODE::PAINT_PINS : MOUSE_MODE::SELECT;
 	centralWidget()->setCursor(b ? Qt::CrossCursor : Qt::OpenHandCursor);
+	UpdateControls();
 }
 void MainWindow::SetErasePins(bool b)
 {
 	if ( b == GetErasePins() ) return;
+	if ( b ) { HideDlg(m_findDlg);	HideDlg(m_textDlg); }
 	m_eMouseMode = ( b ) ? MOUSE_MODE::ERASE_PINS : MOUSE_MODE::SELECT;
 	centralWidget()->setCursor(b ? Qt::CrossCursor : Qt::OpenHandCursor);
+	UpdateControls();
 }
 void MainWindow::SetPaintBoard(bool b)
 {
 	if ( b == GetPaintBoard() ) return;
+	if ( b ) { HideDlg(m_findDlg);	HideDlg(m_textDlg); }
 	m_eMouseMode = ( b ) ? MOUSE_MODE::PAINT_GRID : MOUSE_MODE::SELECT;;
 	centralWidget()->setCursor(b ? Qt::CrossCursor : Qt::OpenHandCursor);
+	UpdateControls();
 }
 void MainWindow::SetEraseBoard(bool b)
 {
 	if ( b == GetEraseBoard() ) return;
+	if ( b ) { HideDlg(m_findDlg);	HideDlg(m_textDlg); }
 	m_eMouseMode = ( b ) ? MOUSE_MODE::ERASE_GRID : MOUSE_MODE::SELECT;;
 	centralWidget()->setCursor(b ? Qt::CrossCursor : Qt::OpenHandCursor);
+	UpdateControls();
 }
 void MainWindow::SetPaintFlood(bool b)
 {
 	if ( b == GetPaintFlood() ) return;
+	if ( b ) { HideDlg(m_findDlg);	HideDlg(m_textDlg); }
 	m_eMouseMode = ( b ) ? MOUSE_MODE::PAINT_FLOOD : MOUSE_MODE::SELECT;
 	centralWidget()->setCursor(b ? Qt::CrossCursor : Qt::OpenHandCursor);
+	UpdateControls();
 }
 void MainWindow::SetDefiningRect(bool b)
 {
 	if ( b == GetDefiningRect() ) return;
+	if ( b ) { HideDlg(m_findDlg);	HideDlg(m_textDlg); }
 	m_eMouseMode = ( b ) ? MOUSE_MODE::DEFINE_RECT : MOUSE_MODE::SELECT;
 	centralWidget()->setCursor(b ? Qt::SizeFDiagCursor : Qt::OpenHandCursor);
+	UpdateControls();
 }
 void MainWindow::SetResizingText(bool b)
 {
 	if ( b == GetResizingText() ) return;
+	if ( b ) { HideDlg(m_findDlg); }
 	m_eMouseMode = ( b ) ? MOUSE_MODE::RESIZE_TEXT : MOUSE_MODE::SELECT;
+	UpdateControls();
 }
 void MainWindow::SetSmartPan(bool b)
 {
 	if ( b == GetSmartPan() ) return;
 	m_eMouseMode = ( b ) ? MOUSE_MODE::SMART_PAN : MOUSE_MODE::SELECT;
 	centralWidget()->setCursor(Qt::OpenHandCursor);
+	UpdateControls();
 }

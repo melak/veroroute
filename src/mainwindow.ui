@@ -57,7 +57,7 @@
     </property>
     <widget class="QMenu" name="menuImport">
      <property name="title">
-      <string>Import netlist</string>
+      <string>Import Netlist</string>
      </property>
      <addaction name="actionImportTango"/>
      <addaction name="actionImportOrcad"/>
@@ -103,16 +103,13 @@
     <addaction name="separator"/>
     <addaction name="actionSmartPan"/>
     <addaction name="separator"/>
-    <addaction name="actionFind"/>
-    <addaction name="separator"/>
-    <addaction name="actionCopy"/>
+    <addaction name="actionSelectArea"/>
+    <addaction name="actionSelectAll"/>
     <addaction name="separator"/>
     <addaction name="actionGroup"/>
     <addaction name="actionUngroup"/>
     <addaction name="separator"/>
-    <addaction name="actionSelectArea"/>
-    <addaction name="actionSelectAll"/>
-    <addaction name="separator"/>
+    <addaction name="actionCopy"/>
     <addaction name="actionDelete"/>
    </widget>
    <widget class="QMenu" name="menuAdd">
@@ -212,6 +209,7 @@
     <addaction name="actionToggleFlipH"/>
     <addaction name="actionToggleFlipV"/>
     <addaction name="separator"/>
+    <addaction name="actionFind"/>
    </widget>
    <widget class="QMenu" name="menuWindow">
     <property name="title">
@@ -648,7 +646,13 @@
   </action>
   <action name="actionCopy">
    <property name="text">
-    <string>Copy+Paste selected Part(s) / Text Box</string>
+    <string>Copy+Paste Selected Part(s) / Text Box</string>
+   </property>
+   <property name="iconText">
+    <string>Copy+Paste Selected Part(s) / Text Box</string>
+   </property>
+   <property name="toolTip">
+    <string>Copy+Paste Selected Part(s) / Text Box</string>
    </property>
    <property name="shortcut">
     <string>V</string>
@@ -659,7 +663,7 @@
   </action>
   <action name="actionGroup">
    <property name="text">
-    <string>Group selected Parts</string>
+    <string>Group Selected Parts</string>
    </property>
    <property name="shortcut">
     <string>G</string>
@@ -670,7 +674,7 @@
   </action>
   <action name="actionUngroup">
    <property name="text">
-    <string>Ungroup selected Parts</string>
+    <string>Ungroup Selected Parts</string>
    </property>
    <property name="shortcut">
     <string>U</string>
@@ -692,7 +696,7 @@
   </action>
   <action name="actionDelete">
    <property name="text">
-    <string>Delete selected Part(s) / Text Box</string>
+    <string>Delete Selected Part(s) / Text Box</string>
    </property>
    <property name="shortcut">
     <string>Backspace</string>
@@ -868,7 +872,13 @@
   </action>
   <action name="actionControlDlg">
    <property name="text">
-    <string>Control</string>
+    <string>Show Control Dialog</string>
+   </property>
+   <property name="iconText">
+    <string>Control Dialog</string>
+   </property>
+   <property name="toolTip">
+    <string>Control Dialog</string>
    </property>
   </action>
   <action name="actionTemplatesDlg">
@@ -899,7 +909,7 @@
   </action>
   <action name="actionPinDlg">
    <property name="text">
-    <string>Pin Labels</string>
+    <string>Pin Labels Editor</string>
    </property>
   </action>
   <action name="actionAbout">
@@ -1210,7 +1220,13 @@
   </action>
   <action name="actionCompDlg">
    <property name="text">
-    <string>Component Definition</string>
+    <string>Show Component Definition Dialog</string>
+   </property>
+   <property name="iconText">
+    <string>Component Definition Dialog</string>
+   </property>
+   <property name="toolTip">
+    <string>Component Definition Dialog</string>
    </property>
   </action>
   <action name="actionAddChord">
@@ -1237,7 +1253,7 @@
   </action>
   <action name="actionClearRecent">
    <property name="text">
-    <string>Clear recent files list</string>
+    <string>Clear Recent Files List</string>
    </property>
   </action>
   <action name="actionAddLayer">
@@ -1247,7 +1263,7 @@
   </action>
   <action name="actionRemoveLayer">
    <property name="text">
-    <string>Remove Top layer</string>
+    <string>Remove Top Layer</string>
    </property>
   </action>
   <action name="actionSwitchLayer">
@@ -1420,7 +1436,7 @@
   </action>
   <action name="actionSmartPan">
    <property name="text">
-    <string>Move whole Layout</string>
+    <string>Move Whole Layout / Resize Grid</string>
    </property>
   </action>
  </widget>

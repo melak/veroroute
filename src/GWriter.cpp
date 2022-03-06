@@ -46,7 +46,7 @@ void GStream::Clear()
 }
 void GStream::Close()
 {
-	if ( !m_file.exists() ) return;
+	if ( !m_file.isOpen() ) return;
 	switch( m_eType )
 	{
 		case GFILE::DRL:	m_os << "M30";	EndLine();	return m_file.close();	// End of program
@@ -109,7 +109,7 @@ bool GStream::Open(const QString& fileName, const GFILE& eType, const bool& bMet
 }
 void GStream::WriteHeader(const QString& UTC)	// Write header for current stream
 {
-	if ( !m_file.exists() ) return;
+	if ( !m_file.isOpen() ) return;
 	assert( m_pBoard->GetGRIDPIXELS() == 1000 );	// ==> 4 decimal places per inch
 	QString	strLayer	= "Layer: ";
 	QString	strProgram	= "VeroRoute V" + QString(szVEROROUTE_VERSION);
@@ -169,7 +169,7 @@ void GStream::WriteHeader(const QString& UTC)	// Write header for current stream
 }
 void GStream::MakeDrills()
 {
-	assert( m_file.exists() && m_eType == GFILE::DRL );
+	assert( m_file.isOpen() && m_eType == GFILE::DRL );
 
 	int				holeDefault;	// Default hole width
 	std::list<int>	holes;	  m_pBoard->GetHoleWidths_MIL(holes, holeDefault);
@@ -204,7 +204,7 @@ void GStream::MakeDrills()
 }
 void GStream::MakeApertures()	// Make "pens" for current stream
 {
-	assert( m_file.exists() && m_eType != GFILE::DRL);
+	assert( m_file.isOpen() && m_eType != GFILE::DRL);
 
 	int				padDefault;	// Default pad width
 	std::list<int>	pads;	  m_pBoard->GetPadWidths_MIL(pads, padDefault);
@@ -276,13 +276,13 @@ void GStream::MakeApertures()	// Make "pens" for current stream
 }
 void GStream::LinearInterpolation()
 {
-	if ( !m_file.exists() || m_eType == GFILE::DRL ) return;
+	if ( !m_file.isOpen() || m_eType == GFILE::DRL ) return;
 	m_os << "G01";
 	EndLine();
 }
 void GStream::Comment(const QString& str)
 {
-	if ( !m_file.exists() ) return;
+	if ( !m_file.isOpen() ) return;
 	if ( m_eType == GFILE::DRL )
 		m_os << ";" << str;
 	else
@@ -291,14 +291,14 @@ void GStream::Comment(const QString& str)
 }
 void GStream::EndLine()
 {
-	if ( !m_file.exists() ) return;
+	if ( !m_file.isOpen() ) return;
 	if ( m_eType != GFILE::DRL )
 		m_os << "*";
 	QtEndline();
 }
 void GStream::QtEndline()
 {
-	if ( !m_file.exists() ) return;
+	if ( !m_file.isOpen() ) return;
 #if QT_VERSION >= QT_VERSION_CHECK(5,14,0)
 	m_os << Qt::endl;
 #else
@@ -322,7 +322,7 @@ bool GStream::GetOK() const
 }
 void GStream::SetPolarity(const GPOLARITY& ePolarity, bool bCheckOK)
 {
-	if ( !m_file.exists() || m_ePolarity == ePolarity || m_eType == GFILE::DRL ) return;
+	if ( !m_file.isOpen() || m_ePolarity == ePolarity || m_eType == GFILE::DRL ) return;
 	if ( bCheckOK && !GetOK() ) return;
 	m_ePolarity = ePolarity;
 	switch( m_ePolarity )
@@ -334,7 +334,7 @@ void GStream::SetPolarity(const GPOLARITY& ePolarity, bool bCheckOK)
 }
 void GStream::Drill(const QPoint& p)
 {
-	if ( !GetOK() || !m_file.exists() || m_eType != GFILE::DRL ) return;
+	if ( !GetOK() || !m_file.isOpen() || m_eType != GFILE::DRL ) return;
 	m_os << "X";  WriteDrillOrdinate( p.x() );
 	m_os << "Y";  WriteDrillOrdinate( p.y() );
 	QtEndline();;
@@ -431,7 +431,7 @@ void GStream::DrawBuffers()
 }
 void GStream::Region(const Curve& curve)	// A filled closed curve (with zero width pen)
 {
-	if ( !m_file.exists() || m_eType == GFILE::DRL ) return;
+	if ( !m_file.isOpen() || m_eType == GFILE::DRL ) return;
 	assert( curve.m_ePen == GPEN::NONE );
 	if ( curve.size() < 3 ) return;	// Region must have >= 3 points
 	m_os << "G36";	EndLine();		// "Begin region"
@@ -454,7 +454,7 @@ void GStream::OutLine(const Curve& curve, bool bForceClose)	// Outline of a curv
 }
 void GStream::SetPen(const GPEN& ePen, const int& w)
 {
-	if ( !m_file.exists() ) return;
+	if ( !m_file.isOpen() ) return;
 	assert( m_pBoard );
 
 	int penWidth(w);
@@ -491,7 +491,7 @@ void GStream::SetPen(const GPEN& ePen, const int& w)
 }
 void GStream::Flash(const QPoint& p)
 {
-	if ( !m_file.exists() ) return;
+	if ( !m_file.isOpen() ) return;
 	if ( m_eType == GFILE::DRL ) return Drill(p);
 	WriteXY(p, FULL_LINE);
 	m_os << "D03";		// Always specify D03 code
@@ -499,7 +499,7 @@ void GStream::Flash(const QPoint& p)
 }
 void GStream::Move(const QPoint& p)
 {
-	if ( !m_file.exists() || m_eType == GFILE::DRL ) return;
+	if ( !m_file.isOpen() || m_eType == GFILE::DRL ) return;
 	if ( m_iLastX == p.x() && m_iLastY == p.y() ) return;
 	WriteXY(p, FULL_LINE);
 	m_os << "D02";		// Always specify D02 code
@@ -507,7 +507,7 @@ void GStream::Move(const QPoint& p)
 }
 void GStream::Draw(const QPoint& p)
 {
-	if ( !m_file.exists() || m_eType == GFILE::DRL ) return;
+	if ( !m_file.isOpen() || m_eType == GFILE::DRL ) return;
 	if ( m_iLastX == p.x() && m_iLastY == p.y() ) return;
 	WriteXY(p, FULL_LINE);
 	m_os << "D01";		// Always specify D01 code
@@ -521,7 +521,7 @@ void GStream::Line(const QPoint& pA, const QPoint& pB)
 void GStream::WriteXY(const QPoint& p,  const bool& bFullLine)
 {
 	// p has deciMil units (since GRIDPIXELS == 1000 for Gerber Export)
-	if ( !m_file.exists() ) return;
+	if ( !m_file.isOpen() ) return;
 	const int ix = ( m_bMetric ) ? ( 2540 * p.x() ) : p.x();	// metric ==> convert deciMil to nanometres
 	const int iy = ( m_bMetric ) ? ( 2540 * p.y() ) : p.y();	// metric ==> convert deciMil to nanometres
 	if ( bFullLine || m_iLastX != ix ) m_os << "X" << ix;
@@ -531,7 +531,7 @@ void GStream::WriteXY(const QPoint& p,  const bool& bFullLine)
 }
 void GStream::WriteDrillOrdinate(const int& iDeciMils)
 {
-	if ( !m_file.exists() || m_eType != GFILE::DRL ) return;
+	if ( !m_file.isOpen() || m_eType != GFILE::DRL ) return;
 	m_os << ( iDeciMils >= 0 ? "+" : "-" );	// Write sign
 	if ( m_bMetric )	// Writes mm in format AAAABBBBBB
 	{

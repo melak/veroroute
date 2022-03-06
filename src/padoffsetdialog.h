@@ -31,7 +31,8 @@ class PadOffsetDialog : public QDialog
 public:
 	explicit PadOffsetDialog(MainWindow* parent = nullptr);
 	~PadOffsetDialog();
-
+public slots:
+	void OnCloseX();
 protected:
 	void keyPressEvent(QKeyEvent* event);
 	void keyReleaseEvent(QKeyEvent* event);

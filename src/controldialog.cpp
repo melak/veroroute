@@ -256,6 +256,7 @@ void ControlDialog::UpdateControls()	// Non-component controls
 	const bool bNoTracks	= board.GetTrackMode() == TRACKMODE::OFF;
 	const bool bColor		= board.GetTrackMode() == TRACKMODE::COLOR;
 	const bool bComps		= board.GetCompMode()  != COMPSMODE::OFF;
+	const bool bVero		= board.GetVeroTracks();
 
 	ui->crop->setDisabled( bCompEdit );
 	ui->margin->setDisabled( bCompEdit );
@@ -271,9 +272,9 @@ void ControlDialog::UpdateControls()	// Non-component controls
 	ui->wipe->setDisabled( bCompEdit || board.GetDisableWipe() );
 
 	// Do track and component "sliders" last (they can trigger a redraw)
-	ui->checkBoxMono->setEnabled(  !bCompEdit );
+	ui->checkBoxMono->setEnabled(  !bCompEdit && !bVero );	// Mono mode not allowed with Vero tracks
 	ui->checkBoxColor->setEnabled( !bCompEdit );
-	ui->checkBoxPCB->setEnabled(   !bCompEdit );
+	ui->checkBoxPCB->setEnabled(   !bCompEdit && !bVero );	// PCB mode not allowed with Vero tracks
 	ui->checkBoxLine->setEnabled(  !bCompEdit );
 	ui->checkBoxName->setEnabled(  !bCompEdit );
 	ui->checkBoxValue->setEnabled( !bCompEdit );

@@ -27,10 +27,6 @@ TextDialog::TextDialog(MainWindow* parent)
 , m_pMainWindow(parent)
 {
 	ui->setupUi(this);
-#ifndef VEROROUTE_ANDROID
-	ui->pushButtonOK->hide();
-	ui->plainTextEdit->resize(ui->plainTextEdit->width() + 40, ui->plainTextEdit->height());
-#endif
 	QObject::connect(ui->spinBox,		SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SizeChanged(int)));
 	QObject::connect(ui->pushButtonB,	SIGNAL(clicked()),			m_pMainWindow,	SLOT(ToggleBold()));
 	QObject::connect(ui->pushButtonI,	SIGNAL(clicked()),			m_pMainWindow,	SLOT(ToggleItalic()));
@@ -44,7 +40,6 @@ TextDialog::TextDialog(MainWindow* parent)
 	QObject::connect(ui->pushButtonMid,	SIGNAL(clicked()),			m_pMainWindow,	SLOT(AlignMid()));
 	QObject::connect(ui->pushButtonBot,	SIGNAL(clicked()),			m_pMainWindow,	SLOT(AlignBot()));
 	QObject::connect(ui->plainTextEdit,	SIGNAL(textChanged()),		this,			SLOT(TextChanged()));
-	QObject::connect(ui->pushButtonOK,	SIGNAL(clicked()),			this,			SLOT(hide()));
 }
 
 TextDialog::~TextDialog()

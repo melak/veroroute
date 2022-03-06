@@ -6,19 +6,19 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>330</width>
+    <width>300</width>
     <height>110</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>330</width>
+    <width>300</width>
     <height>110</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>330</width>
+    <width>300</width>
     <height>110</height>
    </size>
   </property>
@@ -30,7 +30,7 @@
     <rect>
      <x>10</x>
      <y>10</y>
-     <width>311</width>
+     <width>281</width>
      <height>91</height>
     </rect>
    </property>
@@ -42,7 +42,7 @@
      <rect>
       <x>10</x>
       <y>30</y>
-      <width>291</width>
+      <width>261</width>
       <height>24</height>
      </rect>
     </property>
@@ -64,7 +64,7 @@
      <rect>
       <x>10</x>
       <y>60</y>
-      <width>291</width>
+      <width>261</width>
       <height>24</height>
      </rect>
     </property>
@@ -79,19 +79,6 @@
     </property>
     <property name="text">
      <string>Allow 2 wires to cross / overlay</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="pushButtonOK">
-    <property name="geometry">
-     <rect>
-      <x>270</x>
-      <y>60</y>
-      <width>31</width>
-      <height>24</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>OK</string>
     </property>
    </widget>
   </widget>
