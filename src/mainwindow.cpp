@@ -2010,13 +2010,14 @@ void MainWindow::UpdateControls()
 	const bool		bCompActionsOK	= !bCompEdit && !m_board.GetMirrored() && ( m_board.GetCompMode() != COMPSMODE::OFF );
 	const bool		bTextActionsOK	= !bCompEdit && !m_board.GetMirrored() && ( m_board.GetShowText() );
 	const bool		bTextOK			=  bTextActionsOK && GetCurrentTextId() != BAD_TEXTID;
-	const bool		bCompOK			=  bCompActionsOK && groupMgr.GetNumUserComps();
+	const int		numUserComps	=  groupMgr.GetNumUserComps();
+	const bool		bCompOK			=  bCompActionsOK && numUserComps;
 	const bool		bNoTracks		= !bCompEdit && m_board.GetTrackMode() == TRACKMODE::OFF;
 	const bool		bMono			= !bCompEdit && m_board.GetTrackMode() == TRACKMODE::MONO;
 	const bool		bColor			= !bCompEdit && m_board.GetTrackMode() == TRACKMODE::COLOR;
 	const bool		bPCB			= !bCompEdit && m_board.GetTrackMode() == TRACKMODE::PCB;
-	const bool		bTracks			= bMono || bColor || bPCB;
-	const bool		bVero			= m_board.GetVeroTracks();
+	const bool		bTracks			=  bMono || bColor || bPCB;
+	const bool		bVero			=  m_board.GetVeroTracks();
 	const bool		bVeroV			=  bVero &&  m_board.GetVerticalStrips();
 	const bool		bVeroH			=  bVero && !m_board.GetVerticalStrips();
 	const bool		bFat			= !bVero && !m_board.GetCurvedTracks() &&  m_board.GetFatTracks();
@@ -2057,7 +2058,7 @@ void MainWindow::UpdateControls()
 	if ( bTextOK )	// Text Box takes precedence over comps
 		ui->actionCopy->setText( QString("Copy+Paste Selected Text Box") );
 	else if ( bCompOK )
-		ui->actionCopy->setText( QString("Copy+Paste Selected Part(s)") );
+		ui->actionCopy->setText(numUserComps > 1 ? QString("Copy+Paste Selected Parts") : QString("Copy+Paste Selected Part"));
 	else
 		ui->actionCopy->setText( QString("Copy+Paste Selected Part(s) / Text Box") );
 	ui->actionGroup->setEnabled( bCompOK && groupMgr.CanGroup() );
@@ -2067,7 +2068,7 @@ void MainWindow::UpdateControls()
 	if ( bTextOK )	// Text Box takes precedence over comps
 		ui->actionDelete->setText( QString("Delete Selected Text Box") );
 	else if ( bCompOK )
-		ui->actionDelete->setText( QString("Delete Selected Part(s)") );
+		ui->actionDelete->setText(numUserComps > 1 ? QString("Delete Selected Parts") : QString("Delete Selected Part"));
 	else
 		ui->actionDelete->setText( QString("Delete Selected Part(s) / Text Box") );
 
