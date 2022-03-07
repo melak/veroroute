@@ -266,6 +266,7 @@ void CompDialog::keyPressEvent(QKeyEvent* event)
 	m_pMainWindow->specialKeyPressEvent(event);
 #endif
 	QWidget::keyPressEvent(event);
+	event->accept();
 }
 
 void CompDialog::keyReleaseEvent(QKeyEvent* event)
@@ -274,4 +275,5 @@ void CompDialog::keyReleaseEvent(QKeyEvent* event)
 	m_pMainWindow->commonKeyReleaseEvent(event);
 #endif
 	QWidget::keyReleaseEvent(event);
+	event->accept();
 }

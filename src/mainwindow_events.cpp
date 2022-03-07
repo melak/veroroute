@@ -116,6 +116,8 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 
 	g_bHaveAutoPanned = false;	// Reset flags for avoiding repeated re-draws
 
+	if ( m_wireDlg->isVisible() )	HideDlg(m_wireDlg);
+	if ( m_bomDlg->isVisible() )	HideDlg(m_bomDlg);
 	if ( m_findDlg->isVisible() )
 		HideDlg(m_findDlg);
 	else
@@ -145,7 +147,8 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 	else
 	{
 		const bool bInGrid = GetRowCol(event->pos(), m_gridRow, m_gridCol, dRow, dCol);
-		if ( !bInGrid) return;
+		if ( !bInGrid)
+			return HidePadOffsetDialog();
 	}
 
 	if ( m_board.GetCompEdit() )
@@ -753,9 +756,9 @@ void MainWindow::mouseReleaseEvent(QMouseEvent* event)
 		ShowPadOffsetDialog();
 }
 
-#ifndef VEROROUTE_ANDROID
 void MainWindow::keyPressEvent(QKeyEvent* event)
 {
+#ifndef VEROROUTE_ANDROID
 	g_bPinClicked = false;
 
 	commonKeyPressEvent(event);
@@ -882,12 +885,13 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
 
 	if ( bUpdateControls )
 		UpdateControls();
-
+#endif
 	event->accept();	// If we don't do this, we can get the same event passed multiple times if we're on MS Windows.
 }
 
 void MainWindow::keyReleaseEvent(QKeyEvent* event)
 {
+#ifndef VEROROUTE_ANDROID
 	g_bPinClicked = false;
 
 	commonKeyReleaseEvent(event);
@@ -919,13 +923,14 @@ void MainWindow::keyReleaseEvent(QKeyEvent* event)
 		UpdateControls();
 		RepaintWithListNodes();
 	}
+#endif
 	event->accept();	// If we don't do this, we can get the same event passed multiple times if we're on MS Windows.
 }
 
+#ifndef VEROROUTE_ANDROID
 void MainWindow::commonKeyPressEvent(QKeyEvent* event)		// So child dialogs can relay Ctrl and Shift to the main window
 {
 	g_bPinClicked = false;
-
 	switch( event->key() )
 	{
 		case Qt::Key_Shift:		return SetShiftKeyDown(true);
@@ -937,7 +942,6 @@ void MainWindow::commonKeyPressEvent(QKeyEvent* event)		// So child dialogs can 
 void MainWindow::commonKeyReleaseEvent(QKeyEvent* event)	// So child dialogs can relay Ctrl and Shift to the main window
 {
 	g_bPinClicked = false;
-
 	switch( event->key() )
 	{
 		case Qt::Key_Shift:		return SetShiftKeyDown(false);
@@ -980,6 +984,21 @@ void MainWindow::dropEvent(QDropEvent *e)
 											 QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::No ) return;
 		OpenVrt(fileName);
 	}
+}
+
+bool MainWindow::eventFilter(QObject* object, QEvent* event)
+{
+	// Intercept the Android "back" button event
+	if ( event->type() == QEvent::KeyRelease && qobject_cast<QMenu*>(object) )
+	{
+		QKeyEvent* ke = (QKeyEvent*)event;
+		if ( ke->key() == Qt::Key_Back )
+		{
+			ke->accept();
+			return true;
+		}
+	}
+	return QWidget::eventFilter(object, event);
 }
 
 void MainWindow::SetPaintPins(bool b)

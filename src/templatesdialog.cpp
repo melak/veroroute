@@ -30,19 +30,25 @@ TemplatesDialog::TemplatesDialog(QWidget* parent)
 , m_iRowR(-1)
 {
 	ui->setupUi( reinterpret_cast<QDialog*>(this) );
+#ifdef VEROROUTE_ANDROID
+	ui->tableWidget->verticalScrollBar()->setStyleSheet( ANDROID_VSCROLL_WIDTH );
+	ui->tableWidget->horizontalScrollBar()->setStyleSheet( ANDROID_HSCROLL_HEIGHT );
+	ui->tableWidget_2->verticalScrollBar()->setStyleSheet( ANDROID_VSCROLL_WIDTH );
+	ui->tableWidget_2->horizontalScrollBar()->setStyleSheet( ANDROID_HSCROLL_HEIGHT );
+#endif
 }
 
 void TemplatesDialog::SetMainWindow(MainWindow* p)
 {
 	m_pMainWindow = p;
-	QObject::connect(ui->tableWidget,	SIGNAL(cellClicked(int,int)),		this,			SLOT(GenericClicked(int,int)));
-	QObject::connect(ui->tableWidget,	SIGNAL(cellDoubleClicked(int,int)),	this,			SLOT(GenericDoubleClicked(int,int)));
-	QObject::connect(ui->tableWidget_2,	SIGNAL(cellClicked(int,int)),		this,			SLOT(UserClicked(int,int)));
-	QObject::connect(ui->tableWidget_2,	SIGNAL(cellDoubleClicked(int,int)),	this,			SLOT(UserDoubleClicked(int,int)));
-	QObject::connect(ui->pushButton,	SIGNAL(clicked()),					this,			SLOT(AddTemplates()));
-	QObject::connect(ui->pushButton_2,	SIGNAL(clicked()),					this,			SLOT(DeleteTemplate()));
-	QObject::connect(ui->pushButton_3,	SIGNAL(clicked()),					this,			SLOT(LoadFromVrt()));
-	QObject::connect(ui->pushButton_4,	SIGNAL(clicked()),					this,			SLOT(SaveToVrt()));
+	QObject::connect(ui->tableWidget,	SIGNAL(cellClicked(int,int)),		this,	SLOT(GenericClicked(int,int)));
+	QObject::connect(ui->tableWidget,	SIGNAL(cellDoubleClicked(int,int)),	this,	SLOT(GenericDoubleClicked(int,int)));
+	QObject::connect(ui->tableWidget_2,	SIGNAL(cellClicked(int,int)),		this,	SLOT(UserClicked(int,int)));
+	QObject::connect(ui->tableWidget_2,	SIGNAL(cellDoubleClicked(int,int)),	this,	SLOT(UserDoubleClicked(int,int)));
+	QObject::connect(ui->pushButton,	SIGNAL(clicked()),					this,	SLOT(AddTemplates()));
+	QObject::connect(ui->pushButton_2,	SIGNAL(clicked()),					this,	SLOT(DeleteTemplate()));
+	QObject::connect(ui->pushButton_3,	SIGNAL(clicked()),					this,	SLOT(LoadFromVrt()));
+	QObject::connect(ui->pushButton_4,	SIGNAL(clicked()),					this,	SLOT(SaveToVrt()));
 	LoadFromUserVrt(false);	// false ==> no message box
 }
 
@@ -295,6 +301,7 @@ void TemplatesDialog::keyPressEvent(QKeyEvent* event)
 	m_pMainWindow->specialKeyPressEvent(event);
 #endif
 	QWidget::keyPressEvent(event);
+	event->accept();
 }
 
 void TemplatesDialog::keyReleaseEvent(QKeyEvent* event)
@@ -303,4 +310,5 @@ void TemplatesDialog::keyReleaseEvent(QKeyEvent* event)
 	m_pMainWindow->commonKeyReleaseEvent(event);
 #endif
 	QWidget::keyReleaseEvent(event);
+	event->accept();
 }

@@ -96,6 +96,7 @@ void HotkeysDialog::keyPressEvent(QKeyEvent* event)
 	m_pMainWindow->specialKeyPressEvent(event);
 #endif
 	QDialog::keyPressEvent(event);
+	event->accept();
 }
 
 void HotkeysDialog::keyReleaseEvent(QKeyEvent* event)
@@ -104,4 +105,5 @@ void HotkeysDialog::keyReleaseEvent(QKeyEvent* event)
 	m_pMainWindow->commonKeyReleaseEvent(event);
 #endif
 	QDialog::keyReleaseEvent(event);
+	event->accept();
 }

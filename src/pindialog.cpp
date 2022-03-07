@@ -27,6 +27,10 @@ PinDialog::PinDialog(QWidget* parent)
 , m_pMainWindow(nullptr)
 {
 	ui->setupUi( reinterpret_cast<QDialog*>(this) );
+#ifdef VEROROUTE_ANDROID
+	ui->tableWidget->verticalScrollBar()->setStyleSheet( ANDROID_VSCROLL_WIDTH );
+	ui->tableWidget->horizontalScrollBar()->setStyleSheet( ANDROID_HSCROLL_HEIGHT );
+#endif
 }
 
 PinDialog::~PinDialog()
@@ -145,6 +149,7 @@ void PinDialog::keyPressEvent(QKeyEvent* event)
 	m_pMainWindow->specialKeyPressEvent(event);
 #endif
 	QWidget::keyPressEvent(event);
+	event->accept();
 }
 
 void PinDialog::keyReleaseEvent(QKeyEvent* event)
@@ -153,4 +158,5 @@ void PinDialog::keyReleaseEvent(QKeyEvent* event)
 	m_pMainWindow->commonKeyReleaseEvent(event);
 #endif
 	QWidget::keyReleaseEvent(event);
+	event->accept();
 }

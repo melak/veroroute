@@ -81,6 +81,7 @@ void TextDialog::keyPressEvent(QKeyEvent* event)
 	m_pMainWindow->specialKeyPressEvent(event);
 #endif
 	QDialog::keyPressEvent(event);
+	event->accept();
 }
 
 void TextDialog::keyReleaseEvent(QKeyEvent* event)
@@ -89,4 +90,5 @@ void TextDialog::keyReleaseEvent(QKeyEvent* event)
 	m_pMainWindow->commonKeyReleaseEvent(event);
 #endif
 	QDialog::keyReleaseEvent(event);
+	event->accept();
 }

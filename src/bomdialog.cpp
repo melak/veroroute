@@ -28,6 +28,10 @@ BomDialog::BomDialog(MainWindow* parent)
 , m_pMainWindow(parent)
 {
 	ui->setupUi(this);
+#ifdef VEROROUTE_ANDROID
+	ui->tableWidget->verticalScrollBar()->setStyleSheet( ANDROID_VSCROLL_WIDTH );
+	ui->tableWidget->horizontalScrollBar()->setStyleSheet( ANDROID_HSCROLL_HEIGHT );
+#endif
 	QObject::connect(ui->pushButton,	SIGNAL(clicked()),	this,			SLOT(WriteToFile()));
 	QObject::connect(this,				SIGNAL(rejected()),	m_pMainWindow,	SLOT(UpdateControls()));	// Close using X button
 }
@@ -202,6 +206,7 @@ void BomDialog::keyPressEvent(QKeyEvent* event)
 	m_pMainWindow->specialKeyPressEvent(event);
 #endif
 	QDialog::keyPressEvent(event);
+	event->accept();
 }
 
 void BomDialog::keyReleaseEvent(QKeyEvent* event)
@@ -210,4 +215,5 @@ void BomDialog::keyReleaseEvent(QKeyEvent* event)
 	m_pMainWindow->commonKeyReleaseEvent(event);
 #endif
 	QDialog::keyReleaseEvent(event);
+	event->accept();
 }

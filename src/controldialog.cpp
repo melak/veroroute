@@ -52,6 +52,7 @@ ControlDialog::ControlDialog(QWidget* parent)
 	QFont tmp = ui->typeComboBox->font();
 	tmp.setPointSize(12);
 	ui->typeComboBox->setFont(tmp);
+	ui->brokenList->setFont(tmp);
 #endif
 }
 
@@ -135,7 +136,10 @@ void ControlDialog::SetListItem(const int nodeId)
 void ControlDialog::AddListItem(const int nodeId, bool bFloating)
 {
 	const std::string str = std::to_string(nodeId) + ( bFloating ? " (Floating)" : "           " );
-	ui->brokenList->addItem( str.c_str() );
+	QListWidgetItem* p = new QListWidgetItem();
+	p->setText( QString(str.c_str()) );
+	p->setFont( ui->brokenList->font() );
+	ui->brokenList->addItem(p);
 }
 
 void ControlDialog::UpdateCompControls()	// Component controls

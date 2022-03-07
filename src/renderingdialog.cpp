@@ -154,6 +154,7 @@ void RenderingDialog::keyPressEvent(QKeyEvent* event)
 	m_pMainWindow->specialKeyPressEvent(event);
 #endif
 	QWidget::keyPressEvent(event);
+	event->accept();
 }
 
 void RenderingDialog::keyReleaseEvent(QKeyEvent* event)
@@ -162,4 +163,5 @@ void RenderingDialog::keyReleaseEvent(QKeyEvent* event)
 	m_pMainWindow->commonKeyReleaseEvent(event);
 #endif
 	QWidget::keyReleaseEvent(event);
+	event->accept();
 }

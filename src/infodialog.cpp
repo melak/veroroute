@@ -27,6 +27,10 @@ InfoDialog::InfoDialog(QWidget* parent)
 , m_pMainWindow(nullptr)
 {
 	ui->setupUi( reinterpret_cast<QDialog*>(this) );
+#ifdef VEROROUTE_ANDROID
+	ui->textEdit->verticalScrollBar()->setStyleSheet( ANDROID_VSCROLL_WIDTH );
+	ui->textEdit->horizontalScrollBar()->setStyleSheet( ANDROID_HSCROLL_HEIGHT );
+#endif
 	ShowButtons(false);
 }
 
@@ -38,20 +42,20 @@ InfoDialog::~InfoDialog()
 void InfoDialog::SetMainWindow(MainWindow* p)
 {
 	m_pMainWindow = p;
-	QObject::connect(ui->plainTextEdit,	SIGNAL(textChanged()),	this,			SLOT(TextChanged()));
-	QObject::connect(ui->prev,			SIGNAL(clicked()),		m_pMainWindow,	SLOT(LoadPrevTutorial()));
-	QObject::connect(ui->reload,		SIGNAL(clicked()),		m_pMainWindow,	SLOT(LoadTutorial()));
-	QObject::connect(ui->next,			SIGNAL(clicked()),		m_pMainWindow,	SLOT(LoadNextTutorial()));
+	QObject::connect(ui->textEdit,	SIGNAL(textChanged()),	this,			SLOT(TextChanged()));
+	QObject::connect(ui->prev,		SIGNAL(clicked()),		m_pMainWindow,	SLOT(LoadPrevTutorial()));
+	QObject::connect(ui->reload,	SIGNAL(clicked()),		m_pMainWindow,	SLOT(LoadTutorial()));
+	QObject::connect(ui->next,		SIGNAL(clicked()),		m_pMainWindow,	SLOT(LoadNextTutorial()));
 }
 
 void InfoDialog::SetReadOnly(bool b)
 {
-	ui->plainTextEdit->setReadOnly(b);
+	ui->textEdit->setReadOnly(b);
 }
 
 void InfoDialog::TextChanged()
 {
-	m_pMainWindow->SetInfoStr( ui->plainTextEdit->toPlainText() );
+	m_pMainWindow->SetInfoStr( ui->textEdit->toPlainText() );
 }
 
 void InfoDialog::ShowButtons(bool b)
@@ -60,9 +64,9 @@ void InfoDialog::ShowButtons(bool b)
 	ui->reload->setVisible(b);
 	ui->next->setVisible(b);
 	// Set bigger text edit box if we hide the buttons
-	QRect rect = ui->plainTextEdit->geometry();
+	QRect rect = ui->textEdit->geometry();
 	rect.setBottom(b ? 561 : 600);
-	ui->plainTextEdit->setGeometry(rect);
+	ui->textEdit->setGeometry(rect);
 }
 
 void InfoDialog::EnablePrev(bool b)
@@ -78,7 +82,14 @@ void InfoDialog::EnableNext(bool b)
 void InfoDialog::Update()
 {
 	m_initialStr = m_pMainWindow->m_board.GetInfoStr();
-	ui->plainTextEdit->setPlainText( QString::fromStdString(m_initialStr) );
+	ui->textEdit->clear();
+	QTextCursor			textCursor		= ui->textEdit->textCursor();
+	QTextBlockFormat	textBlockFormat	= textCursor.blockFormat();
+	//textBlockFormat.setAlignment(Qt::AlignJustify);	//TODO See if tutorials can be written so this is useable
+	textCursor.mergeBlockFormat(textBlockFormat);
+	ui->textEdit->setTextCursor(textCursor);
+	ui->textEdit->append( QString::fromStdString(m_initialStr) );
+	ui->textEdit->verticalScrollBar()->setSliderPosition(0);
 }
 
 bool InfoDialog::GetIsModified()
@@ -89,8 +100,7 @@ bool InfoDialog::GetIsModified()
 void InfoDialog::keyPressEvent(QKeyEvent* event)
 {
 	// In tutorial mode, forward event to main window (apart from special cases)
-#ifndef VEROROUTE_ANDROID
-	bool bForwardToMainWindow = ui->plainTextEdit->isReadOnly();
+	bool bForwardToMainWindow = ui->textEdit->isReadOnly();
 	switch( event->key() )
 	{
 		case Qt::Key_Tab:
@@ -102,18 +112,21 @@ void InfoDialog::keyPressEvent(QKeyEvent* event)
 	}
 	if ( bForwardToMainWindow )
 		return m_pMainWindow->keyPressEvent(event);
+#ifndef VEROROUTE_ANDROID
 	m_pMainWindow->specialKeyPressEvent(event);
 #endif
 	QWidget::keyPressEvent(event);
+	event->accept();
 }
 
 void InfoDialog::keyReleaseEvent(QKeyEvent* event)
 {
-#ifndef VEROROUTE_ANDROID
 	// In tutorial mode, forward event to main window
-	if ( ui->plainTextEdit->isReadOnly() )
+	if ( ui->textEdit->isReadOnly() )
 		return m_pMainWindow->keyReleaseEvent(event);
+#ifndef VEROROUTE_ANDROID
 	m_pMainWindow->commonKeyReleaseEvent(event);
 #endif
 	QWidget::keyReleaseEvent(event);
+	event->accept();
 }

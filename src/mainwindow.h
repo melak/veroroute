@@ -58,6 +58,11 @@ class FindDialog;
 
 const size_t MAX_RECENT_FILES = 10;
 
+#ifdef VEROROUTE_ANDROID
+#define ANDROID_VSCROLL_WIDTH  QString("QScrollBar:vertical { width: 15px; }")
+#define ANDROID_HSCROLL_HEIGHT QString("QScrollBar:horizontal { height: 15px; }")
+#endif
+
 class MainWindow : public QMainWindow
 {
 	friend class ControlDialog;
@@ -92,7 +97,7 @@ public:
 	explicit MainWindow(const QString& localDataPathStr, const QString& tutorialsPathStr, QWidget* parent = nullptr);
 	~MainWindow();
 
-	void ResetView(bool bTutorial = false);
+	void ResetView(MOUSE_MODE eMouseMode = MOUSE_MODE::SELECT, bool bTutorial = false);
 	void CheckFolders();
 	// Helper for mouse
 	void GetPixMapXY(const QPoint& currentPoint, int& pixmapX, int& pixmapY) const;
@@ -137,15 +142,16 @@ protected:
 	void mouseDoubleClickEvent(QMouseEvent* event);
 	void mouseMoveEvent(QMouseEvent* event);
 	void mouseReleaseEvent(QMouseEvent* event);
-#ifndef VEROROUTE_ANDROID
 	void keyPressEvent(QKeyEvent* event);
 	void keyReleaseEvent(QKeyEvent* event);
+#ifndef VEROROUTE_ANDROID
 	void commonKeyPressEvent(QKeyEvent* event);		// So child dialogs can relay Ctrl and Shift to the main window
 	void commonKeyReleaseEvent(QKeyEvent* event);	// So child dialogs can relay Ctrl and Shift to the main window
 	void specialKeyPressEvent(QKeyEvent* event);	// So child dialogs can do Ctrl+Q etc
 #endif
 	void dragEnterEvent(QDragEnterEvent *e);
 	void dropEvent(QDropEvent *e);
+	bool eventFilter(QObject* object, QEvent* event);	// Used with installEventFilter to intercept the Android "back" button
 public slots:
 	void Startup();
 	// File menu items
@@ -203,7 +209,6 @@ public slots:
 	void SelectAll();
 	void SelectAllInRects();
 	void Delete();
-	void ShowFindDialog();
 	// Add menu items
 	void AddMarker()			{ AddPart(COMP::MARK); }
 	void AddPad()				{ AddPart(COMP::PAD); }
@@ -261,22 +266,21 @@ public slots:
 		ShowTextDialog();
 	}
 	// Windows menu items + Other dialogs
-	void ShowControlDialog();
 	void ToggleControlDialog();
-	void ShowCompDialog();
 	void ToggleCompDialog();
 	void ToggleTemplatesDialog();
 	void ToggleRenderingDialog();
-	void ToggleWireDialog();
 	void ToggleInfoDialog();
-	void ToggleBomDialog();
 	void TogglePinDialog();
+	void ShowControlDialog();
+	void ShowCompDialog();
 	void ShowTemplatesDialog();
 	void ShowRenderingDialog();
-	void ShowWireDialog();
 	void ShowInfoDialog();
-	void ShowBomDialog();
 	void ShowPinDialog();
+	void ShowBomDialog();
+	void ShowWireDialog();
+	void ShowFindDialog();
 	void ShowTextDialog();
 	void ShowAbout();
 	void ShowSupport();
@@ -347,7 +351,7 @@ public slots:
 	void PadMoveT()			{ PadMove(-1, 0); }
 	void PadMoveB()			{ PadMove( 1, 0); }
 	// Bad Nodes lists
-	void SetNodeId(QListWidgetItem* item);
+	void SetNodeId(QListWidgetItem* p);
 	void ListNodes(bool bRebuild = true);
 	// Routing controls
 	void EnableRouting(bool b);
