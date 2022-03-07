@@ -326,7 +326,8 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 		HidePadOffsetDialog();
 #ifdef VEROROUTE_ANDROID
 		const bool bClickedValidNodeID = pC->GetNodeId() != BAD_NODEID;
-		if ( bClickedValidNodeID && GetPaintBoard() && pC->GetHasPin() )	// If we're painting board and clicked on a pin with a valid nodeID
+		const bool bTruePin = pC->GetHasPin() && !pC->GetHasWire();
+		if ( bClickedValidNodeID && GetPaintBoard() && bTruePin )	// If we're painting board and clicked on a true pin with a valid nodeID
 		{
 			SetCurrentNodeId( pC->GetNodeId() );	// ... then change current nodeID to that of the pin
 			m_mouseActionString = "Select Net";
@@ -338,13 +339,13 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 			m_mouseActionString = "Erase";
 		}
 		/* A bit too easy to mess up with this block
-		else if ( bClickedValidNodeID && GetPaintPins() && pC->GetHasPin() && pC->GetNodeId() == GetCurrentNodeId() )	// If we're painting pins and clicked on a pin with matching valid nodeID
+		else if ( bClickedValidNodeID && GetPaintPins() && bTruePin && pC->GetNodeId() == GetCurrentNodeId() )	// If we're painting pins and clicked on a true pin with matching valid nodeID
 		{
 			const bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, BAD_NODEID, true);	// .. then erase the pin instead of painting it
 			if ( !bChanged ) return;
 			m_mouseActionString = "Erase";
 		}*/
-		else if ( ( GetPaintPins() || GetErasePins() ) && !(pC->GetHasPin() && !pC->GetHasWire()) )	// Restrict painting/erasing pins to true pins (not wires)
+		else if ( ( GetPaintPins() || GetErasePins() ) && !bTruePin )	// Restrict painting/erasing pins to true pins (not wires)
 		{
 			return;
 		}
