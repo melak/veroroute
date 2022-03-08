@@ -454,10 +454,10 @@ public:
 		GlueWires();	// Set pointers between wired grid elements
 
 		// Move all user-defined rectangles
-		GetRectMgr().MoveAll(iDown, iRight);
+		m_rectMgr.MoveAll(iDown, iRight);
 
 		// Move all user-defined text
-		GetTextMgr().MoveAll(iDown, iRight);
+		m_textMgr.MoveAll(iDown, iRight);
 
 		if ( incLyrs > 0 )	// If we added a layer ...
 		{
@@ -515,7 +515,13 @@ public:
 		m_adjInfoMgr.DeAllocate();
 		for (int i = 0, iSize = GetSize(); i < iSize; i++) m_adjInfoMgr.InitCounts( GetAt(i) );
 	}
-
+	const Component& GetUserComponent() const
+	{
+		assert( m_groupMgr.GetNumUserComps() == 1 );	// Should only have one component selected
+		const Component& comp = m_compMgr.GetComponentById( m_groupMgr.GetUserCompId() );
+		assert( comp.GetType() != COMP::INVALID );
+		return comp;
+	}
 	Component& GetUserComponent()	// The currently selected component
 	{
 		assert( m_groupMgr.GetNumUserComps() == 1 );	// Should only have one component selected
@@ -593,17 +599,17 @@ public:
 	bool MoveTextBox(const int& deltaRow, const int& deltaCol);		// Move text box, and return true if the grid was panned
 	bool MoveComps(const std::list<int>& compIds, const int& deltaRow, const int& deltaCol);	// Move components and return true if the grid was panned
 	void RotateComps(const std::list<int>& compIds, const bool& bCW);	// Rotate components
-	Rect GetFootprintBounds(const std::list<int>& compIds);
+	Rect GetFootprintBounds(const std::list<int>& compIds) const;
 	void CustomPCBshapes();	// Allow some parts (e.g. DIPs) to be drawn differently in PCB mode
 
 	// Command enablers for GUI
-	bool GetDisableCompText();
-	bool GetDisableMove();
-	bool GetDisableRotate();
-	bool GetDisableStretch(bool bGrow);
-	bool GetDisableStretchWidth(bool bGrow);
-	bool GetDisableChangeType();
-	bool GetDisableChangeCustom();
+	bool GetDisableCompText() const;
+	bool GetDisableMove() const;
+	bool GetDisableRotate() const;
+	bool GetDisableStretch(bool bGrow) const;
+	bool GetDisableStretchWidth(bool bGrow) const;
+	bool GetDisableChangeType() const;
+	bool GetDisableChangeCustom() const;
 	bool GetDisableWipe() const;
 
 	void				SetInfoStr(const std::string& str)	{ m_infoStr = str; }
@@ -666,7 +672,7 @@ public:
 	}
 	void Merge(Board& src)
 	{
-		GetRectMgr().Clear();	// Wipe rect manager
+		m_rectMgr.Clear();	// Wipe rect manager
 
 		Crop(GetCropMargin(), 0);	// Crop this board (the destination board) with zero margin for cols
 		src.Crop(0, 0);				// Crop the source board (the one to merge in) with zero margins

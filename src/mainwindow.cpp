@@ -998,16 +998,19 @@ void MainWindow::Copy()
 		GetFirstRowCol(iRow, iCol);
 		m_board.AddTextBox(iRow, iCol);
 		UpdateHistory("Copy text box");
+		ShowTextDialog();
 		UpdateControls();
 		RepaintSkipRouting();
-		ShowTextDialog();
 	}
 	else
 	{
 		m_board.CopyUserComps();
-		UpdateHistory("Copy part(s)");
-		UpdateControls();
+		if ( m_board.GetGroupMgr().GetNumUserComps() > 1 )
+			UpdateHistory("Copy parts");
+		else
+			UpdateHistory("Copy part");
 		UpdateBOM();
+		UpdateControls();
 		RepaintSkipRouting();
 	}
 }
@@ -1072,14 +1075,16 @@ void MainWindow::Delete()
 	}
 	else
 	{
+		const bool bPlural = ( m_board.GetGroupMgr().GetNumUserComps() > 1 );
 		// Ask for confirmation unless deleting only wires and markers
 		if ( m_board.ConfirmDestroyUserComps() &&
-			 QMessageBox::question(this, tr("Confirm Delete"),
-										 tr("Are you sure you want to delete the selected part(s)?"),
-										 QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::No ) return;
+			QMessageBox::question(this, tr("Confirm Delete"),
+				 bPlural ? tr("Are you sure you want to delete the selected parts?") :
+						   tr("Are you sure you want to delete the selected part?")		   ,
+			 QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::No ) return;
 		m_board.DestroyUserComps();
 		SetCurrentCompId(BAD_COMPID);
-		UpdateHistory("Delete part(s)");
+		UpdateHistory(bPlural ? "Delete parts" : "Delete part");
 		UpdateControls();
 		UpdateBOM();
 		RepaintWithListNodes();
@@ -1119,6 +1124,7 @@ void MainWindow::ShowControlDialog()
 	m_dockCompDlg->hide();
 	m_dockTemplatesDlg->hide();
 	m_dockRenderingDlg->hide();
+	m_dockPinDlg->hide();	// Always hide the pin dialog when toggling to control dialog
 	ShowDlg(m_dockControlDlg);
 }
 void MainWindow::ShowCompDialog()
@@ -1132,6 +1138,7 @@ void MainWindow::ShowCompDialog()
 	m_dockTemplatesDlg->hide();
 	m_dockRenderingDlg->hide();
 	ShowDlg(m_dockCompDlg);
+	ShowPinDialog();			// Always show the pin dialog when toggling to component editor (if not in tutorial mode)
 }
 void MainWindow::ShowRenderingDialog()
 {
@@ -1143,7 +1150,6 @@ void MainWindow::ShowRenderingDialog()
 	m_dockTemplatesDlg->hide();
 	ShowDlg(m_dockRenderingDlg);
 }
-
 void MainWindow::ShowHotkeysDialog()
 {
 	HideAllNonDockedDlgs();	// (m_bomDlg, m_wireDlg, m_findDlg, m_textDlg)
@@ -1169,6 +1175,8 @@ void MainWindow::ShowTemplatesDialog()
 }
 void MainWindow::ShowPinDialog()
 {
+	if ( m_iTutorialNumber >= 0 ) return;	// Don't show pin labels dialog in tutorial mode
+
 	HideAllNonDockedDlgs();	// (m_bomDlg, m_wireDlg, m_findDlg, m_textDlg)
 
 	// (m_dockPinDlg, m_dockInfoDlg) are mutually exclusive
@@ -1200,6 +1208,7 @@ void MainWindow::ShowBomDialog()
 	m_wireDlg->hide();
 	m_findDlg->hide();
 	m_textDlg->hide();
+	ResetMouseMode();
 	UpdateBOM();
 	ShowDlg(m_bomDlg);
 }
@@ -1209,6 +1218,7 @@ void MainWindow::ShowWireDialog()
 	m_bomDlg->hide();
 	m_findDlg->hide();
 	m_textDlg->hide();
+	ResetMouseMode();
 	ShowDlg(m_wireDlg);
 }
 void MainWindow::ShowFindDialog()
@@ -1217,7 +1227,7 @@ void MainWindow::ShowFindDialog()
 	m_bomDlg->hide();
 	m_wireDlg->hide();
 	m_textDlg->hide();
-	ClearFind();
+	ResetMouseMode();
 	ShowDlg(m_findDlg);
 }
 void MainWindow::ShowTextDialog()
@@ -1226,6 +1236,7 @@ void MainWindow::ShowTextDialog()
 	m_bomDlg->hide();
 	m_wireDlg->hide();
 	m_findDlg->hide();
+	ResetMouseMode();
 	ShowDlg(m_textDlg);
 }
 // Layers menu items
@@ -1549,7 +1560,11 @@ void MainWindow::CompRotate(const bool& bCW)
 
 	m_board.RotateUserComps(bCW);
 
-	UpdateHistory(bCW ? "Rotate part(s) CW" : "Rotate part(s) CCW");
+	const bool bPlural = ( m_board.GetGroupMgr().GetNumUserComps() > 1 );
+	if ( bPlural )
+		UpdateHistory(bCW ? "Rotate parts CW" : "Rotate parts CCW");
+	else
+		UpdateHistory(bCW ? "Rotate part CW" : "Rotate part CCW");
 	UpdateControls();
 	RepaintWithListNodes();
 }
@@ -1688,8 +1703,8 @@ void MainWindow::Paste()		// On hitting the Paste button ...
 	if ( !m_board.GetRoutingEnabled() ) return;
 	m_board.PasteTracks(false);	// false ==> Don't wipe redundant track portions
 	if ( m_board.GetVeroTracks() )  m_board.AutoFillVero();
-	ResetMouseMode();
 	UpdateHistory("Paste Track");
+	ResetMouseMode();
 	UpdateControls();
 	RepaintWithListNodes();
 }
@@ -1698,8 +1713,8 @@ void MainWindow::Tidy()			// On hitting the Paste+Tidy button ...
 	if ( m_board.GetRoutingEnabled() ) return;
 	m_board.PasteTracks(true);	// true ==> Wipe redundant track portions
 	if ( m_board.GetVeroTracks() ) m_board.AutoFillVero();
-	ResetMouseMode();
 	UpdateHistory("Tidy Tracks");
+	ResetMouseMode();
 	UpdateControls();
 	RepaintWithListNodes();
 }
@@ -1707,8 +1722,8 @@ void MainWindow::WipeTracks()	// On hitting the Wipe All button ...
 {
 	if ( m_board.GetDisableWipe() ) return;
 	m_board.WipeTracks();
-	ResetMouseMode();
 	UpdateHistory("Wipe Tracks");
+	ResetMouseMode();
 	UpdateControls();
 	RepaintWithListNodes();
 }
@@ -1857,6 +1872,10 @@ void MainWindow::Find(const bool bUseName, const bool bExact, const QString& str
 {
 	m_board.GetCompMgr().Find(bUseName, bExact, str.toStdString());	RepaintSkipRouting();
 }
+size_t MainWindow::GetNumFound()
+{
+	return m_board.GetCompMgr().GetNumFound();
+}
 
 // Text box dialog
 void MainWindow::SizeChanged(int i)			{ if ( GetCurrentTextId() != BAD_TEXTID && GetCurrentTextRect().SetSize(i) )												{ UpdateTextDialog(); RepaintSkipRouting(); } }
@@ -1904,10 +1923,6 @@ void MainWindow::DefinerToggledPinLabels(bool b)
 	{
 		UpdateHistory("Toggle pin labels");
 		EnableCompDialogControls();
-
-		// If not in Tutorial Mode, then show/hide the pin labels dialog
-		if ( ( m_iTutorialNumber == -1 ) && ( b != m_dockPinDlg->isVisible() ) )
-			TogglePinDialog();
 	}
 }
 void MainWindow::DefinerToggledCustomFlag(bool b)
@@ -2057,10 +2072,18 @@ void MainWindow::UpdateRecentFiles(const QString* pFileName, bool bAdd)
 	const size_t numFiles = std::min(static_cast<size_t>(files.size()), MAX_RECENT_FILES);
 	for (size_t i = 0; i < numFiles; i++)
 	{
-		const QString&	fileName	= files[static_cast<int>(i)];
+		const QString&	str			= files[static_cast<int>(i)];	// Filename including the path
+#ifdef VEROROUTE_ANDROID
+		QFileInfo		info(str);
+		QString			messyName	= info.fileName();	// Try strip out as much of the Android path from str as we can.
+		// Name may be still be messy as Android sometimes puts ASCII codes like "%3A" before the filename.  So try remove that.
+		QString			fileName	= messyName.right(messyName.length() - messyName.lastIndexOf("%") - 3);
+#else
+		QString			fileName	= str;
+#endif
 		const QString	text		= tr("&%1 %2").arg( i + 1 ).arg( fileName );
 		m_recentFileAction[i]->setText(text);
-		m_recentFileAction[i]->setData(fileName);
+		m_recentFileAction[i]->setData(str);
 		m_recentFileAction[i]->setVisible(true);
 	}
 	for (size_t i = numFiles; i < MAX_RECENT_FILES; i++)
@@ -2147,11 +2170,11 @@ void MainWindow::UpdateControls()
 	}
 	ui->actionCopy->setEnabled( bTextOK || bCompOK );
 	if ( bTextOK )	// Text Box takes precedence over comps
-		ui->actionCopy->setText( QString("Copy+Paste Selected Text Box") );
+		ui->actionCopy->setText( QString("Copy + Paste Selected Text Box") );
 	else if ( bCompOK )
-		ui->actionCopy->setText(numUserComps > 1 ? QString("Copy+Paste Selected Parts") : QString("Copy+Paste Selected Part"));
+		ui->actionCopy->setText(numUserComps > 1 ? QString("Copy + Paste Selected Parts") : QString("Copy + Paste Selected Part"));
 	else
-		ui->actionCopy->setText( QString("Copy+Paste Selected Part(s) / Text Box") );
+		ui->actionCopy->setText( QString("Copy + Paste Selected Part(s) / Text Box") );
 	ui->actionGroup->setEnabled( bCompOK && groupMgr.CanGroup() );
 	ui->actionUngroup->setEnabled( bCompOK && groupMgr.CanUnGroup() );
 	ui->actionSelectAll->setEnabled( bCompActionsOK && !compMgr.GetMapIdToComp().empty() );
@@ -2246,17 +2269,17 @@ void MainWindow::UpdateControls()
 	m_wireDlg->UpdateControls();
 	m_controlDlg->UpdateCompControls();
 	m_controlDlg->UpdateControls();
-	m_findDlg->UpdateControls();
 
 	ui->actionControlDlg->setText(	m_dockControlDlg->isVisible()	? QString("(Hide) Control Dialog")				: QString("Control Dialog"));
 	ui->actionCompDlg->setText(		m_dockCompDlg->isVisible()		? QString("(Hide) Component Definition Dialog")	: QString("Component Definition Dialog"));
 	ui->actionTemplatesDlg->setText(m_dockTemplatesDlg->isVisible() ? QString("(Hide) Parts / Templates")			: QString("Parts / Templates"));
-	const bool bTutorial = ( m_iTutorialNumber != -1 );
+	const bool bTutorial = ( m_iTutorialNumber >= 0 );
 	if ( bTutorial )
 		ui->actionInfoDlg->setText(	m_dockInfoDlg->isVisible()		? QString("(Hide) Tutorial Dialog")				: QString("Tutorial Dialog"));
 	else
 		ui->actionInfoDlg->setText(	m_dockInfoDlg->isVisible()		? QString("(Hide) Info Dialog")					: QString("Info Dialog"));
 	ui->actionRenderingDlg->setText(m_dockRenderingDlg->isVisible() ? QString("(Hide) Rendering Options")			: QString("Rendering Options"));
+	ui->actionPinDlg->setEnabled( !bTutorial );	// Forbid pin dialog in tutorial mode as it will hide the info window
 	ui->actionPinDlg->setText(		m_dockPinDlg->isVisible()		? QString("(Hide) Pin Labels Editor")			: QString("Pin Labels Editor"));
 	UpdateUndoRedoControls();
 }

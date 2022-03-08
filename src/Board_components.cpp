@@ -735,13 +735,11 @@ void Board::PlaceFloaters()	// Try to place down all the floating components
 
 void Board::SelectAllComps(bool bRestrictToRects)
 {
-	const RectManager& rectMgr = GetRectMgr();
-
 	if ( bRestrictToRects )
 	{
 		// Build the trax object
-		Rect bounding = rectMgr.GetBounding() | rectMgr.GetCurrent();
-		m_compMgr.BuildTrax(rectMgr, *this, GetCurrentLayer(), bounding.m_rowMin, bounding.m_rowMax, bounding.m_colMin, bounding.m_colMax);
+		Rect bounding = m_rectMgr.GetBounding() | m_rectMgr.GetCurrent();
+		m_compMgr.BuildTrax(m_rectMgr, *this, GetCurrentLayer(), bounding.m_rowMin, bounding.m_rowMax, bounding.m_colMin, bounding.m_colMax);
 		assert( m_compMgr.GetTrax().GetIsPlaced() );
 	}
 	for (const auto& mapObj : m_compMgr.GetMapIdToComp())
@@ -755,8 +753,7 @@ void Board::SelectAllComps(bool bRestrictToRects)
 			const int	R = comp.GetLastCol();
 			const int	B = comp.GetLastRow();
 
-			const bool bOK = rectMgr.ContainsPoint(T, L) || rectMgr.ContainsPoint(T, R) ||
-							 rectMgr.ContainsPoint(B, L) || rectMgr.ContainsPoint(B, R);
+			const bool bOK = m_rectMgr.Overlaps( Rect(T, B, L, R) );
 			if ( !bOK ) continue;
 		}
 		SetCurrentCompId( mapObj.first );
@@ -799,7 +796,7 @@ void Board::DestroyUserComps()	// Destroy components in the user-group
 	assert( m_groupMgr.GetNumUserComps() == 0 );	// User group should be empty now
 	SetCurrentCompId(BAD_COMPID);
 	PlaceFloaters();		// See if we can now place floating components down
-	GetRectMgr().Clear();
+	m_rectMgr.Clear();
 	m_compMgr.ClearTrax();	// Clear the trax object
 }
 
@@ -958,9 +955,9 @@ bool Board::MoveTextBox(const int& deltaRow, const int& deltaCol)	// Move text b
 	if ( deltaRow == 0 && deltaCol == 0 ) return false;
 
 	// Move the rect and update the manager
-	GetTextMgr().MoveRect(GetCurrentTextId(), deltaRow, deltaCol);
+	m_textMgr.MoveRect(GetCurrentTextId(), deltaRow, deltaCol);
 
-	TextRect& rect = GetTextMgr().GetTextRectById( GetCurrentTextId() );
+	TextRect& rect = m_textMgr.GetTextRectById( GetCurrentTextId() );
 	if ( !rect.GetIsValid() ) return false;
 
 	// Pan the circuit as needed if the rect has gone out of bounds
@@ -1200,7 +1197,7 @@ void Board::FixCorruption()
 	PlaceFloaters();	// Unfloat components
 }
 
-Rect Board::GetFootprintBounds(const std::list<int>& compIds)
+Rect Board::GetFootprintBounds(const std::list<int>& compIds) const
 {
 	Rect bounding;
 	for (const auto& compId : compIds)

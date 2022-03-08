@@ -106,6 +106,8 @@
     <addaction name="actionSelectArea"/>
     <addaction name="actionSelectAll"/>
     <addaction name="separator"/>
+    <addaction name="actionFind"/>
+    <addaction name="separator"/>
     <addaction name="actionGroup"/>
     <addaction name="actionUngroup"/>
     <addaction name="separator"/>
@@ -208,8 +210,6 @@
     <addaction name="separator"/>
     <addaction name="actionToggleFlipH"/>
     <addaction name="actionToggleFlipV"/>
-    <addaction name="separator"/>
-    <addaction name="actionFind"/>
    </widget>
    <widget class="QMenu" name="menuWindow">
     <property name="title">
@@ -644,13 +644,13 @@
   </action>
   <action name="actionCopy">
    <property name="text">
-    <string>Copy+Paste Selected Part(s) / Text Box</string>
+    <string>Copy + Paste Selected Part(s) / Text Box</string>
    </property>
    <property name="iconText">
-    <string>Copy+Paste Selected Part(s) / Text Box</string>
+    <string>Copy + Paste Selected Part(s) / Text Box</string>
    </property>
    <property name="toolTip">
-    <string>Copy+Paste Selected Part(s) / Text Box</string>
+    <string>Copy + Paste Selected Part(s) / Text Box</string>
    </property>
    <property name="shortcut">
     <string>V</string>
@@ -1135,10 +1135,10 @@
      <normaloff>:/images/area.png</normaloff>:/images/area.png</iconset>
    </property>
    <property name="text">
-    <string>Select Parts/Tracks by Area</string>
+    <string>Select Parts / Tracks by Area</string>
    </property>
    <property name="toolTip">
-    <string>Select parts/tracks by area</string>
+    <string>Select parts / tracks by area</string>
    </property>
   </action>
   <action name="actionEditor">

@@ -32,12 +32,13 @@ public:
 	explicit FindDialog(MainWindow* parent = nullptr);
 	~FindDialog();
 
-	void UpdateControls();
 public slots:
 	void ToggleName(bool b);
 	void ToggleExact(bool b);
 	void TextChanged(const QString& str);
 protected:
+	void showEvent(QShowEvent* event);
+	void hideEvent(QHideEvent* event);
 	void closeEvent(QCloseEvent* event);
 	void keyPressEvent(QKeyEvent* event);
 	void keyReleaseEvent(QKeyEvent* event);
@@ -46,5 +47,6 @@ private:
 	MainWindow*		m_pMainWindow;
 	bool			m_bName = true;		// true/false ==> name/value
 	bool			m_bExact = false;	// true/false ==> exact match/substring match
+	bool			m_bCanFind = true;	// false ==> Don't find
 	QString			m_str;
 };

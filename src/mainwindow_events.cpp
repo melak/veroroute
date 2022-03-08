@@ -23,6 +23,7 @@
 #include "wiredialog.h"
 #include "bomdialog.h"
 #include "finddialog.h"
+#include "pindialog.h"
 #include <QtGlobal>
 
 static const bool ALLOW_DELAY_BASED_SMART_PAN = true;
@@ -131,6 +132,21 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 	CompDefiner&		compDefiner	= m_board.GetCompDefiner();
 	const int&			layer		= m_board.GetCurrentLayer();
 
+	// Get row col
+	double dRow(0), dCol(0);	// Fractional correction to row, col for SwapDiagLinks() call
+
+	bool bInGrid(false);
+	if ( m_board.GetCompEdit() )
+		bInGrid = GetRowCol(event->pos(), compDefiner.GetScreenRows(), compDefiner.GetScreenCols(), m_gridRow, m_gridCol, dRow, dCol);
+	else
+		bInGrid = GetRowCol(event->pos(), m_gridRow, m_gridCol, dRow, dCol);
+
+	if ( !bInGrid)
+	{
+		if ( m_dockPinDlg->isVisible() ) m_dockPinDlg->hide();
+		return HidePadOffsetDialog();
+	}
+
 	m_bMouseClick	= true;		// Set the flag meaning "click begin"
 #ifdef VEROROUTE_ANDROID
 	m_bLeftClick	= m_bRightClick = true;	// Making the point that there is no difference between left/right clicks in the Android version of the app
@@ -138,18 +154,6 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 	m_bLeftClick	= ( event->button() & Qt::LeftButton );
 	m_bRightClick	= ( event->button() & Qt::RightButton );
 #endif
-
-	// Get row col
-	double dRow(0), dCol(0);	// Fractional correction to row, col for SwapDiagLinks() call
-
-	if ( m_board.GetCompEdit() )
-		GetRowCol(event->pos(), compDefiner.GetScreenRows(), compDefiner.GetScreenCols(), m_gridRow, m_gridCol, dRow, dCol);
-	else
-	{
-		const bool bInGrid = GetRowCol(event->pos(), m_gridRow, m_gridCol, dRow, dCol);
-		if ( !bInGrid)
-			return HidePadOffsetDialog();
-	}
 
 	if ( m_board.GetCompEdit() )
 	{
@@ -201,6 +205,7 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 
 	if ( GetDefiningRect() )
 	{
+		if ( m_dockPinDlg->isVisible() ) m_dockPinDlg->hide();
 		HidePadOffsetDialog();
 #ifdef VEROROUTE_ANDROID
 		if ( m_bMouseClick )
@@ -289,6 +294,7 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 
 	if ( GetCurrentTextId() != BAD_TEXTID )
 	{
+		if ( m_dockPinDlg->isVisible() ) m_dockPinDlg->hide();
 		HidePadOffsetDialog();
 		return RepaintWithRouting();	// Don't modify nodeId or paint if editing text
 	}
@@ -297,6 +303,7 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 
 	if ( GetPaintFlood() )
 	{
+		if ( m_dockPinDlg->isVisible() ) m_dockPinDlg->hide();
 		HidePadOffsetDialog();
 #ifdef VEROROUTE_ANDROID
 		if ( m_bMouseClick )
@@ -323,6 +330,7 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 	}
 	else if ( GetPaintPins() || GetErasePins() || GetPaintBoard() || GetEraseBoard() )
 	{
+		if ( m_dockPinDlg->isVisible() ) m_dockPinDlg->hide();
 		HidePadOffsetDialog();
 #ifdef VEROROUTE_ANDROID
 		const bool bClickedValidNodeID = pC->GetNodeId() != BAD_NODEID;
@@ -394,6 +402,16 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 		if ( ALLOW_DELAY_BASED_PAD_SHIFT && pC->GetHasPin() && !pC->GetHasWire() )
 			g_bPinClicked = true;
 
+		// Pin labels editos is only useful if we have selected a single component with pin labels
+		bool bPinLabels(false);
+		if ( m_board.GetGroupMgr().GetNumUserComps() == 1 )
+		{
+			const Component& comp = m_board.GetCompMgr().GetComponentById( GetCurrentCompId() );
+			bPinLabels = ( comp.GetPinFlags() & PIN_LABELS );
+		}
+		if ( !bPinLabels && m_dockPinDlg->isVisible() )
+			HideDlg(m_dockPinDlg);
+
 		if ( !pC->GetHasPin() || pC->GetHasWire() )	// Hide the pad offset dialog if we click on a place that cannot have a pad offset
 			HidePadOffsetDialog();
 	}
@@ -416,6 +434,7 @@ void MainWindow::mouseDoubleClickEvent(QMouseEvent* event)
 	if ( GetSmartPan() || GetShiftKeyDown() ) return;
 
 #ifdef VEROROUTE_ANDROID
+	//TODO Could allow this in Desktop version too
 	if ( GetDefiningRect() )
 	{
 		SetDefiningRect(false);	// Quit define rectangles mode
@@ -527,10 +546,11 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 	// Get row col
 	int row(0), col(0);
 	double dRow(0), dCol(0);	// Fractional correction to row, col for SwapDiagLinks() call
+	bool bInGrid(false);
 	if ( m_board.GetCompEdit() )
-		GetRowCol(event->pos(), compDefiner.GetScreenRows(), compDefiner.GetScreenCols(), row, col, dRow, dCol);
+		bInGrid = GetRowCol(event->pos(), compDefiner.GetScreenRows(), compDefiner.GetScreenCols(), row, col, dRow, dCol);
 	else
-		GetRowCol(event->pos(), row, col, dRow, dCol);
+		bInGrid = GetRowCol(event->pos(), row, col, dRow, dCol);
 
 	int deltaRow = row - m_gridRow;
 	int deltaCol = col - m_gridCol;
@@ -567,6 +587,8 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 	}
 	else if ( !GetSmartPan() && ( GetPaintBoard() || GetEraseBoard() ) && trackMode != TRACKMODE::OFF )	// (Un)Paint nodeId on board but NOT pins
 	{
+		if ( !bInGrid ) return;
+
 		assert( !GetPaintPins() && !GetErasePins() && !GetPaintFlood() );	// Sanity check
 #ifdef VEROROUTE_ANDROID
 		if ( GetPaintBoard() )	// Paint
@@ -648,7 +670,8 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 			g_bHaveAutoPanned = true;
 			g_lastAutoPanTime = std::chrono::steady_clock::now();
 		}
-		m_mouseActionString = "Move part(s)";
+		const bool bPlural = ( m_board.GetGroupMgr().GetNumUserComps() > 1 );
+		m_mouseActionString = ( bPlural ? "Move parts" : "Move part" );
 	}
 	else if ( GetSmartPan() )	// If we're not moving anything else, we can smart pan
 	{
@@ -841,6 +864,7 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
 		}
 	}
 
+	const bool bPlural = ( m_board.GetGroupMgr().GetNumUserComps() > 1 );
 	// Component manipulation
 	switch( event->key() )
 	{
@@ -848,10 +872,10 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
 		case Qt::Key_Minus:		CompShrink();	break;
 		case Qt::Key_Plus:
 		case Qt::Key_Equal:		CompGrow();		break;
-		case Qt::Key_Left:		if ( !m_board.GetDisableMove() ) { m_board.MoveUserComps(0,-1);	UpdateHistory("Move part(s) left");  RepaintWithRouting(); } break;
-		case Qt::Key_Right:		if ( !m_board.GetDisableMove() ) { m_board.MoveUserComps(0, 1);	UpdateHistory("Move part(s) right"); RepaintWithRouting(); } break;
-		case Qt::Key_Up:		if ( !m_board.GetDisableMove() ) { m_board.MoveUserComps(-1,0);	UpdateHistory("Move part(s) up");    RepaintWithRouting(); } break;
-		case Qt::Key_Down:		if ( !m_board.GetDisableMove() ) { m_board.MoveUserComps( 1,0);	UpdateHistory("Move part(s) down");  RepaintWithRouting(); } break;
+		case Qt::Key_Left:		if ( !m_board.GetDisableMove() ) { m_board.MoveUserComps(0,-1);	UpdateHistory(bPlural ? "Move parts left"	: "Move part left");  RepaintWithRouting(); } break;
+		case Qt::Key_Right:		if ( !m_board.GetDisableMove() ) { m_board.MoveUserComps(0, 1);	UpdateHistory(bPlural ? "Move parts right"	: "Move part right"); RepaintWithRouting(); } break;
+		case Qt::Key_Up:		if ( !m_board.GetDisableMove() ) { m_board.MoveUserComps(-1,0);	UpdateHistory(bPlural ? "Move parts up"		: "Move part up");    RepaintWithRouting(); } break;
+		case Qt::Key_Down:		if ( !m_board.GetDisableMove() ) { m_board.MoveUserComps( 1,0);	UpdateHistory(bPlural ? "Move parts down"	: "Move part down");  RepaintWithRouting(); } break;
 	}
 	if ( !bIsAutoRepeat )
 	{

@@ -680,69 +680,69 @@ void Board::SetSolder(const int& nodeId, const int& col, const bool& bVertical)
 
 // Command enablers for GUI
 
-bool Board::GetDisableCompText()
+bool Board::GetDisableCompText() const
 {
 	if ( GetMirrored() ) return true;
-	if ( ( GetGroupMgr().GetNumUserComps() != 1 ) || ( GetCompMode() == COMPSMODE::OFF || GetCompMode() == COMPSMODE::OUTLINE ) ) return true;
+	if ( ( m_groupMgr.GetNumUserComps() != 1 ) || ( GetCompMode() == COMPSMODE::OFF || GetCompMode() == COMPSMODE::OUTLINE ) ) return true;
 	const Component& comp	= GetUserComponent();
 	const COMP&		 eType	= comp.GetType();
 	return ( eType == COMP::WIRE || eType == COMP::MARK || eType == COMP::VERO_NUMBER || eType == COMP::VERO_LETTER );	// No labels for wires/markers/vero-labels
 }
 
-bool Board::GetDisableMove()
+bool Board::GetDisableMove() const
 {
 	if ( GetMirrored() ) return true;
-	Component& trax			= m_compMgr.GetTrax();
-	const bool bHidingComps	= ( GetGroupMgr().GetNumUserComps() > 0 ) && ( GetCompMode()  == COMPSMODE::OFF );
+	const Component& trax	= m_compMgr.GetTrax();
+	const bool bHidingComps	= ( m_groupMgr.GetNumUserComps() > 0 ) && ( GetCompMode()  == COMPSMODE::OFF );
 	const bool bHidingTrax	= ( trax.GetSize() > 0 ) && ( GetTrackMode() == TRACKMODE::OFF );
 	if ( bHidingComps || bHidingTrax ) return true;
-	const bool bNoComps		= ( GetGroupMgr().GetNumUserComps() == 0 );
+	const bool bNoComps		= ( m_groupMgr.GetNumUserComps() == 0 );
 	const bool bNoTrax		= ( trax.GetSize() == 0 );
 	return bNoComps && bNoTrax;
 }
 
-bool Board::GetDisableRotate()
+bool Board::GetDisableRotate() const
 {
 	if ( GetMirrored() ) return true;
-	Component& trax			= m_compMgr.GetTrax();
-	const bool bHidingComps	= ( GetGroupMgr().GetNumUserComps() > 0 ) && ( GetCompMode()  == COMPSMODE::OFF );
+	const Component& trax	= m_compMgr.GetTrax();
+	const bool bHidingComps	= ( m_groupMgr.GetNumUserComps() > 0 ) && ( GetCompMode()  == COMPSMODE::OFF );
 	const bool bHidingTrax	= ( trax.GetSize() > 0 ) && ( GetTrackMode() == TRACKMODE::OFF );
 	if ( bHidingComps || bHidingTrax ) return true;
-	const bool bNoComps		= ( GetGroupMgr().GetNumUserComps() == 0 );
-	const bool bMark		= ( GetGroupMgr().GetNumUserComps() == 1 && GetUserComponent().GetType() == COMP::MARK );	// Can't rotate a marker
+	const bool bNoComps		= ( m_groupMgr.GetNumUserComps() == 0 );
+	const bool bMark		= ( m_groupMgr.GetNumUserComps() == 1 && GetUserComponent().GetType() == COMP::MARK );	// Can't rotate a marker
 	const bool bNoTrax		= ( trax.GetSize() == 0 );
 	return ( bNoComps || bMark ) && bNoTrax;
 }
 
-bool Board::GetDisableStretch(bool bGrow)
+bool Board::GetDisableStretch(bool bGrow) const
 {
 	if ( GetMirrored() ) return true;
-	if ( ( GetGroupMgr().GetNumUserComps() != 1 ) || ( GetCompMode() == COMPSMODE::OFF ) ) return true;
+	if ( ( m_groupMgr.GetNumUserComps() != 1 ) || ( GetCompMode() == COMPSMODE::OFF ) ) return true;
 	const Component& comp = GetUserComponent();
 	return !comp.CanStretch(bGrow);
 }
 
-bool Board::GetDisableStretchWidth(bool bGrow)
+bool Board::GetDisableStretchWidth(bool bGrow) const
 {
 	if ( GetMirrored() ) return true;
-	if ( ( GetGroupMgr().GetNumUserComps() != 1 ) || ( GetCompMode() == COMPSMODE::OFF ) ) return true;
+	if ( ( m_groupMgr.GetNumUserComps() != 1 ) || ( GetCompMode() == COMPSMODE::OFF ) ) return true;
 	const Component& comp = GetUserComponent();
 	return !comp.CanStretchWidth(bGrow);
 }
 
-bool Board::GetDisableChangeType()
+bool Board::GetDisableChangeType() const
 {
 	if ( GetMirrored() ) return true;
-	if ( ( GetGroupMgr().GetNumUserComps() != 1 ) || ( GetCompMode() == COMPSMODE::OFF ) ) return true;
+	if ( ( m_groupMgr.GetNumUserComps() != 1 ) || ( GetCompMode() == COMPSMODE::OFF ) ) return true;
 	const Component& comp	= GetUserComponent();
 	const COMP		 eType	= comp.GetType();
 	return !CompTypes::AllowTypeChange(eType, eType);
 }
 
-bool Board::GetDisableChangeCustom()
+bool Board::GetDisableChangeCustom() const
 {
 	if ( GetMirrored() ) return true;
-	if ( ( GetGroupMgr().GetNumUserComps() != 1 ) || ( GetCompMode() == COMPSMODE::OFF ) ) return true;
+	if ( ( m_groupMgr.GetNumUserComps() != 1 ) || ( GetCompMode() == COMPSMODE::OFF ) ) return true;
 	const Component& comp	= GetUserComponent();
 	return !comp.GetAllowCustomPads();
 }

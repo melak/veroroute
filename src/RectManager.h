@@ -82,6 +82,13 @@ public:
 		for (const auto& o : m_list) if ( o.ContainsPoint(row,col) ) return true;
 		return false;
 	}
+	bool Overlaps(const Rect& r) const
+	{
+		if ( m_current.Overlaps(r) ) return true;		// Check current before the list
+		if ( !m_bounding.Overlaps(r) ) return false;	// Check bounding rect of the list first
+		for (const auto& o : m_list) if ( o.Overlaps(r) ) return true;
+		return false;
+	}
 	void MoveAll(int iDown, int iRight)
 	{
 		m_startRow += iDown;

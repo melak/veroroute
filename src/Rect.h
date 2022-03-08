@@ -53,6 +53,14 @@ public:
 	int		GetCols() const							{ return GetIsValid() ? 1 + m_colMax - m_colMin : 0; }
 	int		GetArea() const							{ return GetRows() * GetCols(); }
 	bool	ContainsPoint(int row, int col) const	{ return GetIsValid() ? row >= m_rowMin && row <= m_rowMax && col >= m_colMin && col <= m_colMax : false; }
+	bool	Overlaps(const Rect& o) const
+	{
+		if ( m_rowMin > o.m_rowMax ) return false;
+		if ( m_rowMax < o.m_rowMin ) return false;
+		if ( m_colMin > o.m_colMax ) return false;
+		if ( m_colMax < o.m_colMin ) return false;
+		return true;
+	}
 	void	Move(int iDown, int iRight)				{ if ( !GetIsValid() ) return; m_rowMin += iDown; m_rowMax += iDown; m_colMin += iRight; m_colMax += iRight; }
 	// Merge interface functions
 	virtual void UpdateMergeOffsets(MergeOffsets& o) override

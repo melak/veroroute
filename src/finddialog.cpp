@@ -38,33 +38,42 @@ FindDialog::~FindDialog()
 	delete ui;
 }
 
-void FindDialog::UpdateControls()
-{
-	if ( isHidden() && !m_str.isEmpty() )
-		ui->nameEdit->setText(QString(""));
-}
-
 void FindDialog::ToggleName(bool b)
 {
 	m_bName = b;
-	m_pMainWindow->Find(m_bName, m_bExact, m_str);
+	if ( m_bCanFind ) m_pMainWindow->Find(m_bName, m_bExact, m_str);
 }
 
 void FindDialog::ToggleExact(bool b)
 {
 	m_bExact = b;
-	m_pMainWindow->Find(m_bName, m_bExact, m_str);
+	if ( m_bCanFind ) m_pMainWindow->Find(m_bName, m_bExact, m_str);
 }
 
 void FindDialog::TextChanged(const QString& str)
 {
 	m_str = str;
-	m_pMainWindow->Find(m_bName, m_bExact, m_str);
+	if ( m_bCanFind ) m_pMainWindow->Find(m_bName, m_bExact, m_str);
+}
+
+void FindDialog::showEvent(QShowEvent* event)
+{
+	m_bCanFind = true;
+	if ( m_pMainWindow->GetNumFound() == 0 )
+		ui->nameEdit->setText(QString(""));
+	TextChanged(m_str);
+	QDialog::showEvent(event);
+}
+
+void FindDialog::hideEvent(QHideEvent* event)
+{
+	m_bCanFind = false;
+	QDialog::hideEvent(event);
 }
 
 void FindDialog::closeEvent(QCloseEvent* event)
 {
-	ui->nameEdit->setText(QString(""));
+	m_bCanFind = false;
 	QDialog::closeEvent(event);
 }
 

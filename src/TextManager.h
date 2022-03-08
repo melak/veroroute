@@ -89,6 +89,12 @@ public:
 	{
 		for (auto& mapObj : m_mapIdtoText) mapObj.second.Move(iDown, iRight);
 	}
+	const TextRect& GetTextRectById(const int& textId) const
+	{
+		static TextRect dummy;
+		auto iter = m_mapIdtoText.find(textId);
+		return ( iter != m_mapIdtoText.end() ) ? iter->second : dummy;
+	}
 	TextRect& GetTextRectById(const int& textId)
 	{
 		return m_mapIdtoText[textId];

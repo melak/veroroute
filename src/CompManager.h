@@ -326,7 +326,8 @@ public:
 	}
 	void Find(const bool bUseName, const bool bExact, const std::string& str)
 	{
-		if ( str.empty() ) return;	// Do nothing if passed an empty string
+		ClearFind();
+		if ( str.empty() ) return;	// Don't search with an empty string
 		for (const auto& mapObj : m_mapIdToComp)
 		{
 			const Component&	comp	= mapObj.second;
@@ -341,6 +342,10 @@ public:
 	bool GetFound(const int& compId) const
 	{
 		return m_foundId.find(compId) != m_foundId.end();
+	}
+	size_t GetNumFound() const
+	{
+		return m_foundId.size();
 	}
 
 	// Merge interface functions
@@ -408,9 +413,10 @@ public:
 		for (auto& mapObj : m_mapIdToComp) mapObj.second.Save(outStream);
 		m_trax.Save(outStream);	// Added in VRT_VERSION_11
 	}
-	Component&	GetTrax()	{ return m_trax; }
-	void		ClearTrax()	{ m_trax.DeAllocate(); m_trax.SetType(COMP::TRACKS); m_trax.SetId(TRAX_COMPID); m_trax.SetIsPlaced(false); m_trax.SetRow(0); m_trax.SetCol(0); }
-	void		BuildTrax(const RectManager& rectMgr, const ElementGrid& grid, const int& nLyr, const int& nRowMin, const int& nRowMax, const int& nColMin, const int& nColMax)
+	const Component&	GetTrax() const	{ return m_trax; }
+	Component&			GetTrax()		{ return m_trax; }
+	void				ClearTrax()	{ m_trax.DeAllocate(); m_trax.SetType(COMP::TRACKS); m_trax.SetId(TRAX_COMPID); m_trax.SetIsPlaced(false); m_trax.SetRow(0); m_trax.SetCol(0); }
+	void				BuildTrax(const RectManager& rectMgr, const ElementGrid& grid, const int& nLyr, const int& nRowMin, const int& nRowMax, const int& nColMin, const int& nColMax)
 	{
 		m_trax = Component(this, rectMgr, grid, nLyr, nRowMin, nRowMax, nColMin, nColMax);
 		m_trax.SetId(TRAX_COMPID);

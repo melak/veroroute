@@ -255,15 +255,14 @@ public slots:
 	void AddVeroLetters()		{ AddPart(COMP::VERO_LETTER); }
 	void AddTextBox()
 	{
-		ResetMouseMode();
 		SetCurrentTextId(BAD_TEXTID);
 		int iRow, iCol;
 		GetFirstRowCol(iRow, iCol);
 		m_board.AddTextBox(iRow, iCol);
 		UpdateHistory("Add text");
+		ShowTextDialog();
 		UpdateControls();
 		RepaintSkipRouting();
-		ShowTextDialog();
 	}
 	// Windows menu items + Other dialogs
 	void ToggleControlDialog();
@@ -394,6 +393,7 @@ public slots:
 	// Find parts by name/value
 	void ClearFind();
 	void Find(bool bUseName, bool bExact, const QString& str);
+	size_t GetNumFound();
 	// Wire options
 	void SetWireShare(bool b);
 	void SetWireCross(bool b);
