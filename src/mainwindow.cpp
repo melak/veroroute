@@ -1904,10 +1904,11 @@ void MainWindow::DefinerToggledPinLabels(bool b)
 	{
 		UpdateHistory("Toggle pin labels");
 		EnableCompDialogControls();
+
+		// If not in Tutorial Mode, then show/hide the pin labels dialog
+		if ( ( m_iTutorialNumber == -1 ) && ( b != m_dockPinDlg->isVisible() ) )
+			TogglePinDialog();
 	}
-	// If not in Tutorial Mode, then show/hide the pin labels dialog
-	if ( ( m_iTutorialNumber == -1 ) && ( b != m_dockPinDlg->isVisible() ) )
-		TogglePinDialog();
 }
 void MainWindow::DefinerToggledCustomFlag(bool b)
 {
