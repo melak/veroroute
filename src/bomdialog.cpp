@@ -156,7 +156,16 @@ void BomDialog::Update()
 
 void BomDialog::WriteToFile()
 {
-	const QString fileName = m_pMainWindow->GetSaveFileName(tr("Choose a TXT file"), tr("Text (*.txt);;All Files (*)"), QString("txt"));
+#ifdef VEROROUTE_ANDROID
+	QMessageBox::information(this, tr("Information"), tr("You must now enter a filename ending in .txt"));
+	const QString 	name 		= m_pMainWindow->GetFileName().isEmpty() ? QString("Circuit") : m_pMainWindow->GetFileName();
+
+	const QFileInfo	info( StringHelper::GetTidyFileName( name ) );
+	const QString	defaultName	= info.completeBaseName() + QString(".txt");	// Remove any ".vrt" suffix and add ".txt" suffix
+	const QString	fileName	= m_pMainWindow->GetSaveFileName(defaultName, tr("Text (*.txt);;All Files (*)"), QString("txt"));
+#else
+	const QString	fileName	= m_pMainWindow->GetSaveFileName(tr("Choose a TXT file"), tr("Text (*.txt);;All Files (*)"), QString("txt"));
+#endif
 	if ( !fileName.isEmpty() )
 	{
 		QFile file;

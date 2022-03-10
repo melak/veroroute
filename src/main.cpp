@@ -113,12 +113,13 @@ int main(int argc, char *argv[])
 	// Spawn main window
 	MainWindow w( appDataPathStr, tutorialsPathStr );
 
+	const bool bMerge(false);
 	for (int i = 1; i < argc; i++)
 	{
 		if ( iArgP > 0 && ( i == iArgP || i == iArgP+1 ) ) continue;	// If "-p" was specified, ignore it and the subsequent argv
 
 		QString fileName( argv[i] );
-		w.OpenVrt(fileName);
+		w.OpenVrt(fileName, bMerge);
 		break;
 	}
 

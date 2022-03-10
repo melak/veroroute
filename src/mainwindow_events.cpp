@@ -1007,7 +1007,8 @@ void MainWindow::dropEvent(QDropEvent *e)
 			if ( QMessageBox::question(this, tr("Confirm Open"),
 											 tr("Your circuit is not saved. You will lose changes if you open a new one.  Continue?"),
 											 QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::No ) return;
-		OpenVrt(fileName);
+		const bool bMerge(false);
+		OpenVrt(fileName, bMerge);
 	}
 }
 

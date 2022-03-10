@@ -150,7 +150,7 @@
      <rect>
       <x>180</x>
       <y>30</y>
-      <width>71</width>
+      <width>81</width>
       <height>24</height>
      </rect>
     </property>
@@ -198,7 +198,7 @@
      <rect>
       <x>10</x>
       <y>30</y>
-      <width>91</width>
+      <width>61</width>
       <height>24</height>
      </rect>
     </property>
@@ -255,7 +255,7 @@
      <rect>
       <x>180</x>
       <y>30</y>
-      <width>91</width>
+      <width>81</width>
       <height>24</height>
      </rect>
     </property>
@@ -429,7 +429,7 @@
      <rect>
       <x>180</x>
       <y>90</y>
-      <width>71</width>
+      <width>81</width>
       <height>24</height>
      </rect>
     </property>
@@ -445,7 +445,7 @@
      <rect>
       <x>180</x>
       <y>30</y>
-      <width>71</width>
+      <width>81</width>
       <height>24</height>
      </rect>
     </property>
@@ -511,7 +511,7 @@
      <rect>
       <x>180</x>
       <y>60</y>
-      <width>71</width>
+      <width>81</width>
       <height>24</height>
      </rect>
     </property>
@@ -593,7 +593,7 @@
      <rect>
       <x>180</x>
       <y>120</y>
-      <width>61</width>
+      <width>81</width>
       <height>24</height>
      </rect>
     </property>
@@ -783,12 +783,12 @@
      <rect>
       <x>10</x>
       <y>30</y>
-      <width>91</width>
+      <width>111</width>
       <height>24</height>
      </rect>
     </property>
     <property name="text">
-     <string>Brightness</string>
+     <string>Brightness (%)</string>
     </property>
    </widget>
    <widget class="QSpinBox" name="spinBox_bright">
@@ -804,16 +804,16 @@
      <string>Height of target board</string>
     </property>
     <property name="minimum">
-     <number>200</number>
+     <number>0</number>
     </property>
     <property name="maximum">
-     <number>255</number>
+     <number>100</number>
     </property>
     <property name="singleStep">
      <number>5</number>
     </property>
     <property name="value">
-     <number>255</number>
+     <number>100</number>
     </property>
    </widget>
   </widget>

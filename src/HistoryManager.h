@@ -24,6 +24,8 @@
 // This is to prevent the files using too much disk space.
 
 #include "Board.h"
+#include "VeroRouteAndroid.h"
+#include <QFile>
 
 static const size_t MAX_HISTORY_FILES = 1000;
 
@@ -40,6 +42,43 @@ public:
 	bool GetCanRedo() const					{ return !m_list.empty() && GetNextIter() != m_list.end();   }
 	const std::string& GetUndoText() const	{ return std::get<2>(*m_currentIter); }
 	const std::string& GetRedoText() const	{ return std::get<2>(*GetNextIter()); }
+#ifdef VEROROUTE_ANDROID
+	QString GetLastHistoryFile()	// Called at program startup (for crash recovery)
+	{
+		// Android should not run two instances of VeroRoute (so m_ID should always be 1).
+		// So any files in the history folder at startup imply that an earlier run crashed.
+		// This method looks for the most recent file starting with "history_1_"
+		assert(m_ID == 0);
+		m_ID = 1;	// So files go "history_1_0.vrt", "history_1_1.vrt", ...
+		QString		strLastFile("");
+		QDateTime	dateTimeLast;
+		QFileInfo	fileInfo;
+		for (size_t n = 0; n < MAX_HISTORY_FILES; n++)
+		{
+			QFile file( GetFilename(n) );
+			if ( !file.exists() ) break;
+
+			fileInfo.setFile( file );
+			QDateTime dateTime = fileInfo.lastModified();
+
+			if ( strLastFile.isEmpty() || ( dateTime.msecsTo(dateTimeLast) < 0) )
+			{
+				strLastFile	= file.fileName();
+				dateTimeLast	= dateTime;
+			}
+		}
+		m_ID = 0;	// Restore to correct default value
+		return strLastFile;
+	}
+	void ClearAll()	// Called at program startup (for clean up after crash recovery)
+	{
+		if ( m_bLocked ) return;
+
+		const int numIDsToDestroy = 1;	// Could make this larger of course, but Android should only have m_ID == 1
+		for (m_ID = 1; m_ID < 1 + numIDsToDestroy; m_ID++) Clear();
+		m_ID = 0;	// Reset to invalid ID
+	}
+#endif
 	bool Reset(const std::string& str, Board& board)
 	{
 		if ( m_bLocked ) return false;
@@ -115,7 +154,7 @@ private:
 	}
 	void Clear()
 	{
-		for (size_t i = 0; i < MAX_HISTORY_FILES; i++) remove( GetFilename(i) );// Delete all possible history files
+		for (size_t i = 0; i < MAX_HISTORY_FILES; i++) remove( GetFilename(i) );// Delete all history files for the session
 		m_bLocked = false;
 		m_list.clear();
 	}

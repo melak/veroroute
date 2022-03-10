@@ -229,7 +229,13 @@ void TemplatesDialog::Load(const QString& fileName, bool bInfoMsg)
 
 void TemplatesDialog::SaveToVrt()
 {
-	const QString fileName = m_pMainWindow->GetSaveFileName(tr("Save templates as"), tr("VeroRoute (*.vrt);;All Files (*)"), QString("vrt"));
+#ifdef VEROROUTE_ANDROID
+	QMessageBox::information(this, tr("Information"), tr("You must now enter a filename ending in .vrt"));
+	const QString	defaultName	= QString("Templates.vrt");
+	const QString	fileName	= m_pMainWindow->GetSaveFileName(defaultName, tr("VeroRoute (*.vrt);;All Files (*)"), QString("vrt"));
+#else
+	const QString	fileName	= m_pMainWindow->GetSaveFileName(tr("Save templates as"), tr("VeroRoute (*.vrt);;All Files (*)"), QString("vrt"));
+#endif
 	if ( !fileName.isEmpty() )
 		Save(fileName);
 }

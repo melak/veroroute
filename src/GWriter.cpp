@@ -80,10 +80,7 @@ bool GStream::Open(const QString& fileName, const GFILE& eType, const bool& bMet
 #ifdef VEROROUTE_ANDROID
 	// Ask user to confirm each Gerber file to get write permission from Android
 
-	QFileInfo	info(str);
-	QString		messyName = info.fileName();	// Try strip out as much of the Android path from str as we can.
-	// Name may be still be messy as Android sometimes puts ASCII codes like "%3A" before the filename.  So try remove that.
-	str = messyName.right(messyName.length() - messyName.lastIndexOf("%") - 3);
+	str = StringHelper::GetTidyFileName(str);
 
 	QFileDialog fileDialog(nullptr, str);
 	fileDialog.setAcceptMode(QFileDialog::AcceptSave);

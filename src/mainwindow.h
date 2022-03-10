@@ -135,6 +135,9 @@ public:
 	void		SetDefiningRect(bool b);
 	void		SetResizingText(bool b);
 	void		SetSmartPan(bool b);
+
+	const QString&	GetFileName() const { return m_fileName; }
+
 protected:
 	void paintEvent(QPaintEvent* event);
 	void wheelEvent(QWheelEvent* event);
@@ -417,7 +420,7 @@ public slots:
 	TemplateManager& GetTemplateManager() { return m_templateMgr; }
 	// Info dialog
 	void SetInfoStr(const QString& str)	{ m_board.SetInfoStr(str.toStdString()); }
-	void OpenVrt(const QString& fileName, bool bMerge = false);	// Helper for opening a vrt using Open(), Merge(), dropEvent(), or the command line
+	void OpenVrt(const QString& fileName, bool bMerge, bool bAddToRecentFiles = true);	// Helper for opening a vrt using Open(), Merge(), dropEvent(), or the command line
 	// Component editor
 	void DefinerSetValueStr(const QString& str);
 	void DefinerSetPrefixStr(const QString& str);

@@ -20,6 +20,7 @@
 #pragma once
 
 #include "Common.h"
+#include <QFileInfo>
 
 struct StringHelper
 {
@@ -70,6 +71,15 @@ struct StringHelper
 		std::istringstream iss(in);
 		for (std::string s; iss >> s; )
 			strList.push_back(s);
+	}
+
+	static QString GetTidyFileName(const QString& fileName)
+	{
+		const QFileInfo	info(fileName);
+		const QString	tidyName	= info.fileName();	// Strip out as much of the path from fileName as we can.
+		// Name may be still be messy as Android sometimes puts ASCII codes like "%3A" before the filename.  So try remove those.
+		const int		jj			= tidyName.lastIndexOf("%");
+		return ( jj == -1 ) ? tidyName : tidyName.right(tidyName.length() - jj - 3);
 	}
 
 	StringHelper() { assert( true || PreventBuildWarnings() ); }

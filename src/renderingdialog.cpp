@@ -77,7 +77,10 @@ void RenderingDialog::UpdateControls()
 	const bool bVias			= board.GetViasEnabled();
 	const bool bCloseTrackInfo	= board.GetHaveWarnPoints();
 
-	ui->spinBox_bright->setValue( board.GetBackgroundColor().GetR() );
+	const int ii =  board.GetBackgroundColor().GetR();	// Before VeroRoute V2.20, "Brightness" was stored as a grey level in the range [200,255].
+	const int i  = 5 * ( ( ii - 155 ) / 5 );			// From   VeroRoute V2.20, "Brightness" is a percentage value [0,100] that is stored as a grey level in the range [155,255].
+
+	ui->spinBox_bright->setValue( i );
 	ui->comptext->setValue( board.GetTextSizeComp() );
 	ui->comppins->setValue( board.GetTextSizePins() );
 	ui->spinBox_height->setValue( board.GetTargetRows() );
