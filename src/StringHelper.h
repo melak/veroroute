@@ -21,6 +21,7 @@
 
 #include "Common.h"
 #include <QFileInfo>
+#include "VeroRouteAndroid.h"
 
 struct StringHelper
 {
@@ -63,8 +64,6 @@ struct StringHelper
 			}
 		}
 	}
-	std::vector<std::string> strList;
-
 	static void GetSubStrings(const std::string& in, std::vector<std::string>& strList)
 	{
 		strList.clear();
@@ -72,25 +71,43 @@ struct StringHelper
 		for (std::string s; iss >> s; )
 			strList.push_back(s);
 	}
-
 	static QString GetTidyFileName(const QString& fileName)
 	{
 		const QFileInfo	info(fileName);
 		const QString	tidyName	= info.fileName();	// Strip out as much of the path from fileName as we can.
+#ifdef VEROROUTE_ANDROID
 		// Name may be still be messy as Android sometimes puts ASCII codes like "%3A" before the filename.  So try remove those.
 		const int		jj			= tidyName.lastIndexOf("%");
 		return ( jj == -1 ) ? tidyName : tidyName.right(tidyName.length() - jj - 3);
+#else
+		return tidyName;
+#endif
+	}
+	static QString RemoveDotSuffix(const QString& fileName)
+	{
+		const QFileInfo	info(fileName);
+		return ( info.suffix().length() > 0 ) ? fileName.left( fileName.length() - info.suffix().length() - 1) : fileName;
+	}
+	static QString ReplaceSuffix(const QString& fileName, const QString& suffix)
+	{
+		const QFileInfo	info(fileName);
+		return fileName.left( fileName.length() - info.suffix().length() ) + suffix;
 	}
 
 	StringHelper() { assert( true || PreventBuildWarnings() ); }
 private:
 	bool PreventBuildWarnings() const
 	{
-		std::ifstream	inStream;
-		std::string		str;
+		std::ifstream				inStream;
+		std::string					str;
+		std::vector<std::string>	strList;
 		StringHelper::IsEmptyStr("");
 		StringHelper::HasSpaces("");
 		StringHelper::getline_safe(inStream, str);
+		StringHelper::GetSubStrings(str, strList);
+		StringHelper::GetTidyFileName(QString(""));
+		StringHelper::RemoveDotSuffix(QString(""));
+		StringHelper::ReplaceSuffix(QString(""),QString(""));
 		return true;
 	}
 };

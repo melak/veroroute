@@ -46,7 +46,7 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	m_historyMgr.SetPathStr(m_localDataPathStr);
 	m_templateMgr.SetPathStr(m_localDataPathStr);
 
-	CompTypes::InitMapsCompTypeToStr();	// Put all comp types into a list ...
+	CompTypes::InitMapsCompTypeToStr();			// Put all comp types into a list ...
 	GetTemplateManager().AddDefaults();			// .. and create default templates
 
 	ui->setupUi(this);
@@ -201,11 +201,11 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 #endif
 
 	// Do multipart status bar
-	m_labelInfo			= new QLabel("Board Size", this);
+	m_labelInfo			= new QLabel("Size", this);
 	m_labelInfo->setFrameStyle(QFrame::NoFrame);
 	ui->statusBar->insertPermanentWidget(0, m_labelInfo, 0);
 
-	m_labelStatus		= new QLabel("Board Layer", this);
+	m_labelStatus		= new QLabel("Layer", this);
 	m_labelStatus->setFrameStyle(QFrame::NoFrame);
 	ui->statusBar->insertPermanentWidget(1, m_labelStatus, 0);	//ui->statusBar->addPermanentWidget(m_labelStatus, 0);
 
@@ -385,32 +385,38 @@ MainWindow::~MainWindow()
 
 void MainWindow::Startup()
 {
-#ifdef VEROROUTE_ANDROID
-	QString	strLastHistoryFile = m_historyMgr.GetLastHistoryFile();
-	const bool bHadCrash = !strLastHistoryFile.isEmpty();
-	if ( bHadCrash )
-	{
-		ResetView();
-		if ( QMessageBox::question(this, tr("!!! VeroRoute closed unexpectedly !!!"),
-										 tr("Recover using Undo/Redo history ?"),
-										 QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes) == QMessageBox::Yes )
-		{
-			m_historyMgr.Lock();
-			const bool bMerge(false), bAddToRecentFiles(false);
-			OpenVrt(strLastHistoryFile, bMerge, bAddToRecentFiles);	// Load the last file written to history
-			m_historyMgr.UnLock();
-		}
-		m_historyMgr.ClearAll();	// Wipe all the previous history files
-	}
-#endif
-	m_fileName.clear();
-	ResetHistory("Empty");
 	ResetView();
+
 #ifdef VEROROUTE_ANDROID
-	if ( bHadCrash )
+	QString strLastFileName		= m_historyMgr.GetLastFileName();
+	QString	strLastHistoryFile	= m_historyMgr.GetLastHistoryFile();
+
+	bool bCrashRecovery = !strLastHistoryFile.isEmpty();
+	if ( bCrashRecovery )
 	{
-		SaveAs();
+		bCrashRecovery = QMessageBox::question(this, tr("!!! VeroRoute closed unexpectedly !!!"),
+													 tr("Recover using Undo/Redo history ?"),
+													 QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes) == QMessageBox::Yes;
+		if ( bCrashRecovery )
+			OpenVrt(strLastHistoryFile, false, bCrashRecovery);	// Load the last file written to history;
+
+		m_historyMgr.ClearAll();	// Wipe all the previous history files
+
+		if ( bCrashRecovery )
+			m_fileName = strLastFileName;
+		else
+			m_fileName.clear();
 	}
+	else
+		m_fileName.clear();
+#else
+	m_fileName.clear();
+#endif
+
+	ResetHistory("Empty");
+#ifdef VEROROUTE_ANDROID
+	if ( bCrashRecovery )
+		QMessageBox::information(this, tr("Information"), tr("You should now Save the recovered circuit"));
 #endif
 }
 
@@ -522,7 +528,10 @@ void MainWindow::ResetView(MOUSE_MODE eMouseMode, bool bTutorial)
 	if ( !bTutorial ) m_iTutorialNumber = -1;	// Cancel tutorial mode
 	UpdateControls();
 	UpdateBOM();
-	UpdateTemplatesDialog();
+
+	const bool bUndoRedo = m_historyMgr.GetIsLocked();	// The history manager is locked for Undo/Redo
+	if ( !bUndoRedo ) UpdateTemplatesDialog();			// For Undo/Redo, don't update the Templates dialog
+
 	UpdateCompDialog();
 	UpdateWindowTitle();
 
@@ -605,11 +614,11 @@ void MainWindow::ShowCurrentRectSize()
 {
 	const auto& rect = m_board.GetRectMgr().GetCurrent();
 	char buffer[256] = {'\0'};
-	sprintf(buffer,"Current rectangle = (%d mil x %d mil),    (%.2f mm x %.2f mm)", rect.GetCols()*100, rect.GetRows()*100, rect.GetCols()*2.54, rect.GetRows()*2.54);
+	sprintf(buffer,"Current rectangle = (%.1fin x %.1fin), (%.2fmm x %.2fmm)", rect.GetCols()*0.1, rect.GetRows()*0.1, rect.GetCols()*2.54, rect.GetRows()*2.54);
 	ui->statusBar->showMessage(QString(buffer), 1000);
 }
 
-void MainWindow::OpenVrt(const QString& fileName, bool bMerge, bool bAddToRecentFiles)	// Helper for opening a vrt using Open(), Merge(), dropEvent(), or the command line
+void MainWindow::OpenVrt(const QString& fileName, bool bMerge, bool bCrashRecovery)	// Helper for opening a vrt using Open(), Merge(), dropEvent(), or the command line
 {
 	bool bOK(false);
 
@@ -629,12 +638,19 @@ void MainWindow::OpenVrt(const QString& fileName, bool bMerge, bool bAddToRecent
 			else
 				m_board	= tmp;		// ... copy the temporary board
 			if ( !bMerge )
+			{
 				m_fileName = fileName;	// Only a regular open (not a merge) should update the filename
+				m_historyMgr.SaveLastFileName(m_fileName);
+			}
 			ResetView();
-			if ( bMerge )
-				UpdateHistory("File->Open (merge into current)");
-			else
-				ResetHistory("File->Open");
+
+			if ( !bCrashRecovery )
+			{
+				if ( bMerge )
+					UpdateHistory("File->Open (merge into current)");
+				else
+					ResetHistory("File->Open");
+			}
 
 			bOK = true;
 		}
@@ -644,8 +660,8 @@ void MainWindow::OpenVrt(const QString& fileName, bool bMerge, bool bAddToRecent
 	else
 		QMessageBox::information(this, tr("Unable to open file"), tr(fileNameStr.c_str()));
 
-	if ( bAddToRecentFiles && !(bMerge && bOK) )	// A successful merge should not add the merged-in file to the recent files list
-		UpdateRecentFiles(&fileName, bOK);			// Remove file from list if bOK == false
+	if ( !bCrashRecovery && !(bMerge && bOK) )	// A successful merge should not add the merged-in file to the recent files list
+		UpdateRecentFiles(&fileName, bOK);		// Remove file from list if bOK == false
 }
 
 // File menu items
@@ -675,10 +691,7 @@ void MainWindow::Open()
 	}
 	QString fileName = QFileDialog::getOpenFileName(this, tr("Open file"), ""/*directory*/,	tr("VeroRoute (*.vrt);;All Files (*)"));
 	if ( !fileName.isEmpty() )
-	{
-		const bool bMerge(false);
-		OpenVrt(fileName, bMerge);
-	}
+		OpenVrt(fileName, false);
 }
 
 void MainWindow::OpenRecent()
@@ -695,10 +708,7 @@ void MainWindow::OpenRecent()
 	{
 		QString fileName = pAction->data().toString();
 		if ( !fileName.isEmpty() )
-		{
-			const bool bMerge(false);
-			OpenVrt(fileName, bMerge);
-		}
+			OpenVrt(fileName, false);
 	}
 }
 
@@ -714,17 +724,13 @@ void MainWindow::Merge()
 	}
 	QString fileName = QFileDialog::getOpenFileName(this, tr("Merge file"), ""/*directory*/,	tr("VeroRoute (*.vrt);;All Files (*)"));
 	if ( !fileName.isEmpty() )
-	{
-		const bool bMerge(true);
-		OpenVrt(fileName, bMerge);
-	}
+		OpenVrt(fileName, true);
 }
 
 void MainWindow::Save()
 {
 	SetCtrlKeyDown(false);	// May have just done a Ctrl+S.  Clear flag since key release can get missed.
 
-	if ( !GetIsModified() ) return;	// Already up-to-date
 	if ( m_fileName.isEmpty() ) return SaveAs();
 
 	DataStream outStream(DataStream::WRITE);
@@ -754,10 +760,8 @@ void MainWindow::SaveAs()
 	SetCtrlKeyDown(false);	SetShiftKeyDown(false);	// May have just done a Ctrl+Shift+S.  Clear flags since key release can get missed.
 
 #ifdef VEROROUTE_ANDROID
-	QMessageBox::information(this, tr("Information"),
-								   tr("You must now enter a filename ending in .vrt"));
-	const QString	defaultName	= QString("Circuit.vrt");
-	const QString	fileName	= GetSaveFileName(defaultName, tr("VeroRoute (*.vrt);;All Files (*)"), QString("vrt"));
+	QMessageBox::information(this, tr("Information"), tr("You must now select or enter a filename ending in .vrt"));
+	const QString	fileName	= GetSaveFileName(tr(""), tr("VeroRoute (*.vrt);;All Files (*)"), QString("vrt"));
 #else
 	const QString	fileName	= GetSaveFileName(tr("Save file as"), tr("VeroRoute (*.vrt);;All Files (*)"), QString("vrt"));
 #endif
@@ -773,6 +777,7 @@ void MainWindow::SaveAs()
 			outStream.Close();
 			m_infoDlg->Update();	// Don't need a ResetView() but MUST update the initial string for the info dialog
 			m_fileName = fileName;
+			m_historyMgr.SaveLastFileName(m_fileName);
 
 			bOK = true;
 
@@ -840,10 +845,14 @@ void MainWindow::ImportOrcad()
 void MainWindow::WritePDF()
 {
 #ifdef VEROROUTE_ANDROID
-	QMessageBox::information(this, tr("Information"), tr("You must now enter a filename ending in .pdf"));
-	const QString	name		= m_fileName.isEmpty() ? QString("Circuit") : m_fileName;
-	const QFileInfo	info( StringHelper::GetTidyFileName(name) );
-	const QString	defaultName	= info.completeBaseName() + QString(".pdf");	// Remove any ".vrt" suffix and add ".pdf" suffix
+	const QString	name		= m_fileName.isEmpty() ? QString("Circuit.vrt") : m_fileName;
+	QString			defaultName	= StringHelper::ReplaceSuffix(name, QString("pdf"));	// Replace vrt with pdf
+	QFile			file(defaultName);
+	if ( file.exists() )
+		defaultName.clear();
+	else
+		defaultName = StringHelper::GetTidyFileName(defaultName);
+	QMessageBox::information(this, tr("Information"), tr("You must now select or enter a filename ending in .pdf"));
 	m_pdfFileName = GetSaveFileName(defaultName, tr("PDF (*.pdf);;All Files (*)"), QString("pdf"));
 #else
 	m_pdfFileName = GetSaveFileName(tr("Choose a PDF file"), tr("PDF (*.pdf);;All Files (*)"), QString("pdf"));
@@ -874,21 +883,32 @@ void MainWindow::WriteGerber(const bool& bTwoLayerGerber, const bool& bMetric)
 	m_bTwoLayerGerber = bTwoLayerGerber;
 	m_board.SetHoleType(m_bTwoLayerGerber ? HOLETYPE::PTH : HOLETYPE::NPTH);
 
-#ifdef VEROROUTE_ANDROID
 	if ( m_fileName.isEmpty() )
 	{
 		QMessageBox::information(this, tr("Information"), tr("You must first Save your circuit to a .vrt file"));
 		return;
 	}
-	const QFileInfo	info( StringHelper::GetTidyFileName(m_fileName) );
-	m_gerberFileName = info.completeBaseName();	// Remove any ".vrt"
+
+#ifdef VEROROUTE_ANDROID
+	const QString	name = StringHelper::ReplaceSuffix(m_fileName, QString("GKO"));	// Replace "vrt" with "GKO"
+	QFile			file(name);
+	const bool bNewGerbers = !file.exists();	// If the GKO file doesn't exist, assume we're doing a new export
+	m_gerberFileName = StringHelper::RemoveDotSuffix(name);	// Remove ".GKO"
 #else
+	const QString	name = StringHelper::RemoveDotSuffix(m_fileName);	// Remove the ".vrt"
+	const QFileInfo	info( name );
+	const QString	defaultName = info.fileName();
 	m_gerberFileName = GetSaveFileName(tr("Choose a Gerber file prefix"), tr("All Files (*)"), QString(""));
 #endif
 	if ( !m_gerberFileName.isEmpty() )
 	{
+		bool bConfirmEachFile(false);
 #ifdef VEROROUTE_ANDROID
-		QMessageBox::information(this, tr("Information"), tr("You must now confirm the Save for each Gerber file"));
+		if ( bNewGerbers )
+		{
+			bConfirmEachFile = true;
+			QMessageBox::information(this, tr("Information"), tr("You must now confirm the Save for each Gerber file"));
+		}
 #endif
 		ui->statusBar->showMessage( tr("Exporting to Gerber..."), 500 );
 
@@ -903,7 +923,7 @@ void MainWindow::WriteGerber(const bool& bTwoLayerGerber, const bool& bMetric)
 		const bool bWireVias	= m_bTwoLayerGerber && m_board.GetLyrs() == 1 && m_board.GetCompMgr().GetHavePlacedWires();
 		const bool bVias		= m_board.GetHasVias() || bWireVias;
 
-		if ( m_gWriter.Open(m_gerberFileName, m_board, bVias, m_bTwoLayerGerber, bMetric) )
+		if ( m_gWriter.Open(m_gerberFileName, m_board, bVias, m_bTwoLayerGerber, bMetric, bConfirmEachFile) )
 		{
 			const int origlayer = m_board.GetCurrentLayer();
 			for (int lyr = 0, lyrs = m_board.GetLyrs(); lyr < lyrs; lyr++)
@@ -948,23 +968,27 @@ void MainWindow::ClearRecentFiles()
 void MainWindow::WritePNG()
 {
 #ifdef VEROROUTE_ANDROID
-	QMessageBox::information(this, tr("Information"), tr("You must now enter a filename ending in .png"));
-	const QString	name		= m_fileName.isEmpty() ? QString("Circuit") : m_fileName;
-	const QFileInfo	info( StringHelper::GetTidyFileName(name) );
-	const QString	defaultName	= info.completeBaseName() + QString(".png");	// Remove any ".vrt" suffix and add ".png" suffix
-	const QString	fileName	= GetSaveFileName(defaultName, tr("PNG (*.png);;All Files (*)"), QString("png"));
+	const QString	name		= m_fileName.isEmpty() ? QString("Circuit.vrt") : m_fileName;
+	QString			defaultName	= StringHelper::ReplaceSuffix(name, QString("png"));	// Replace vrt with png
+	QFile			file(defaultName);
+	if ( file.exists() )
+		defaultName.clear();
+	else
+		defaultName = StringHelper::GetTidyFileName(defaultName);
+	QMessageBox::information(this, tr("Information"), tr("You must now select or enter a filename ending in .png"));
+	const QString	pngFileName	= GetSaveFileName(defaultName, tr("PNG (*.png);;All Files (*)"), QString("png"));
 #else
-	const QString	fileName	= GetSaveFileName(tr("Choose a PNG file"), tr("PNG (*.png);;All Files (*)"), QString("png"));
+	const QString	pngFileName	= GetSaveFileName(tr("Choose a PNG file"), tr("PNG (*.png);;All Files (*)"), QString("png"));
 #endif
-	if ( !fileName.isEmpty() )
+	if ( !pngFileName.isEmpty() )
 	{
 		ui->statusBar->showMessage( tr("Exporting to PNG..."), 500 );
 
-		QFile file(fileName);
+		QFile file(pngFileName);
 		file.open(QIODevice::WriteOnly);
 		m_mainPixmap.save(&file, "PNG");
 
-		QDesktopServices::openUrl(fileName);	// Ask the system to open the PNG file.
+		QDesktopServices::openUrl(pngFileName);	// Ask the system to open the PNG file.
 	}
 }
 
@@ -2230,7 +2254,7 @@ void MainWindow::UpdateControls()
 	{
 		QString title;
 		char buffer[256] = {'\0'};
-		sprintf(buffer, "Board Size = %gin x %gin  (%gmm x %gmm)", m_board.GetRows()*0.1, m_board.GetCols()*0.1, m_board.GetRows()*2.54, m_board.GetCols()*2.54);
+		sprintf(buffer, "Size = %.1fin x %.1fin (%.2fmm x %.2fmm)", m_board.GetCols()*0.1, m_board.GetRows()*0.1, m_board.GetCols()*2.54, m_board.GetRows()*2.54);
 		title += buffer;
 		m_labelInfo->setText( title );
 		m_labelInfo->show();
@@ -2400,12 +2424,13 @@ bool MainWindow::GetMatchesVrtFile(const std::string& fileName) const
 void MainWindow::ResetHistory(const std::string& str)
 {
 	m_historyMgr.Reset(str, m_board);
+	m_historyMgr.SaveLastFileName(m_fileName);
 	UpdateUndoRedoControls();
 }
 void MainWindow::UpdateHistory(const std::string& str, const int compId)
 {
 	if ( !m_bHistoryDir ) return;	// No History folder
-	if ( GetMatchesVrtFile( m_historyMgr.GetCurrentFilename() ) ) return;	// No change
+	if ( GetMatchesVrtFile( m_historyMgr.GetCurrentHistoryFilename() ) ) return;	// No change
 	m_historyMgr.Update(str, compId, m_board);
 	UpdateUndoRedoControls();
 }

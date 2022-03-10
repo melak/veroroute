@@ -79,7 +79,9 @@ public:
 	~GStream()	{ Close(); Clear(); }
 	void Clear();
 	void Close();
-	bool Open(const QString& fileName, const GFILE& eType, const bool& bMetric, const Board& board, const bool& bVias, const QString& UTC);
+	bool Open(const QString& fileName, const GFILE& eType, const bool& bMetric, const Board& board, const bool& bVias, const bool& bConfirmEachFile);
+	void WriteHeader(const QString& UTC);
+	void WriteFooter();
 	void Drill(const QPoint& pF);
 	void SetPolarity(const GPOLARITY& ePolarity, bool bCheckOK = true);
 	void AddPad(const QPointF& pF, const GPEN& ePen, const int& w = 0);				// Add to m_pads buffer
@@ -97,7 +99,6 @@ public:
 	void DrawLoop(const QPolygonF& pF, const GPEN& ePen)			{ ClearBuffers(); AddLoop(pF,ePen);		DrawBuffers(); }
 	void DrawRegion(const QPolygonF& pF)							{ ClearBuffers(); AddRegion(pF);		DrawBuffers(); }
 private:
-	void WriteHeader(const QString& UTC);
 	void MakeDrills();
 	void MakeApertures();
 	void LinearInterpolation();
@@ -148,7 +149,7 @@ class GWriter
 public:
 	GWriter()	{}
 	~GWriter()	{ Close(); }
-	bool		Open(const QString& fileName, const Board& board, const bool& bVias, const bool& bTwoLayerGerber, const bool& bMetric);
+	bool		Open(const QString& fileName, const Board& board, const bool& bVias, const bool& bTwoLayerGerber, const bool& bMetric, const bool& bConfirmEachFile);
 	void		Close();
 	GStream&	GetStream(const GFILE& eType);
 private:

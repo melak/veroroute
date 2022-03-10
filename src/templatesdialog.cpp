@@ -186,7 +186,7 @@ void TemplatesDialog::DeleteTemplate()
 	}
 }
 
-const QString TemplatesDialog::GetUserFilename() const
+QString TemplatesDialog::GetUserFilename() const
 {
 	TemplateManager& mgr = m_pMainWindow->GetTemplateManager();
 	char buffer[256] = {'\0'};
@@ -230,9 +230,8 @@ void TemplatesDialog::Load(const QString& fileName, bool bInfoMsg)
 void TemplatesDialog::SaveToVrt()
 {
 #ifdef VEROROUTE_ANDROID
-	QMessageBox::information(this, tr("Information"), tr("You must now enter a filename ending in .vrt"));
-	const QString	defaultName	= QString("Templates.vrt");
-	const QString	fileName	= m_pMainWindow->GetSaveFileName(defaultName, tr("VeroRoute (*.vrt);;All Files (*)"), QString("vrt"));
+	QMessageBox::information(this, tr("Information"), tr("You must now select or enter a filename ending in .vrt"));
+	const QString	fileName	= m_pMainWindow->GetSaveFileName(tr(""), tr("VeroRoute (*.vrt);;All Files (*)"), QString("vrt"));
 #else
 	const QString	fileName	= m_pMainWindow->GetSaveFileName(tr("Save templates as"), tr("VeroRoute (*.vrt);;All Files (*)"), QString("vrt"));
 #endif

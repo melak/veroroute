@@ -26,6 +26,7 @@
 #include "Board.h"
 #include "VeroRouteAndroid.h"
 #include <QFile>
+#include <QDateTime>
 
 static const size_t MAX_HISTORY_FILES = 1000;
 
@@ -38,6 +39,7 @@ public:
 	HistoryManager() : m_ID(0), m_bLocked(false) {}
 	~HistoryManager() { Clear(); }
 	void SetPathStr(const std::string& str)	{ m_pathStr = str; }
+	bool GetIsLocked() const				{ return m_bLocked; }
 	bool GetCanUndo() const					{ return !m_list.empty() && m_currentIter != m_list.begin(); }
 	bool GetCanRedo() const					{ return !m_list.empty() && GetNextIter() != m_list.end();   }
 	const std::string& GetUndoText() const	{ return std::get<2>(*m_currentIter); }
@@ -55,7 +57,7 @@ public:
 		QFileInfo	fileInfo;
 		for (size_t n = 0; n < MAX_HISTORY_FILES; n++)
 		{
-			QFile file( GetFilename(n) );
+			QFile file( GetHistoryFilename(n) );
 			if ( !file.exists() ) break;
 
 			fileInfo.setFile( file );
@@ -74,8 +76,8 @@ public:
 	{
 		if ( m_bLocked ) return;
 
-		const int numIDsToDestroy = 1;	// Could make this larger of course, but Android should only have m_ID == 1
-		for (m_ID = 1; m_ID < 1 + numIDsToDestroy; m_ID++) Clear();
+		const int numInstancesToDestroy(1);	// Could make this larger, but Android should only have one instance with m_ID == 1
+		for (m_ID = 1; m_ID < 1 + numInstancesToDestroy; m_ID++) Clear();
 		m_ID = 0;	// Reset to invalid ID
 	}
 #endif
@@ -83,17 +85,40 @@ public:
 	{
 		if ( m_bLocked ) return false;
 
-		if ( m_ID != 0 ) Clear();	// If m_ID is valid then wipe all files that used it
+		if ( m_ID != 0 ) Clear();	// If m_ID is valid then wipe all files that used it, including the log file
 
 		// Set a new (unique) m_ID
 		for (m_ID = 1; m_ID < INT_MAX; m_ID++ )	// Keep increasing this until we get a unique ID
 		{
-			std::ifstream fTest( GetFilename(0) );	// See if (zeroth) filename with this ID exists
-			if ( !fTest.good() ) break;				// ID is not already in use so break
+			std::ifstream fTest( GetHistoryFilename(0) );	// See if (zeroth) filename with this ID exists
+			if ( !fTest.good() ) break;						// ID is not already in use so break
 		}
 
 		AddEntry(0, BAD_COMPID, str);
 		return Save(board);
+	}
+	QString LoadLastFileName()
+	{
+		QString lastFileName;
+		m_ID = 1;	// Android should only have a single log file called "log_1.log" containing the filename
+		DataStream inStream(DataStream::READ);
+		if ( inStream.Open( GetLogFileName() ) )
+		{
+			inStream.Load(lastFileName);
+			inStream.Close();
+		}
+		m_ID = 0;	// Restore to correct default value
+		return lastFileName;
+	}
+	void SaveLastFileName(const QString& lastFileName)
+	{
+		// Save lastFileName to log file (Useful for crash recovery)
+		DataStream outStream(DataStream::WRITE);
+		if ( outStream.Open( GetLogFileName() ) )
+		{
+			outStream.Save( lastFileName );
+			outStream.Close();
+		}
 	}
 	bool Update(const std::string& str, const int compId, Board& board)
 	{
@@ -116,7 +141,7 @@ public:
 		if ( iterNext != m_list.end() )	// We're modifying within the list ...
 		{
 			// Delete later history files
-			for (auto iter = iterNext; iter != m_list.end(); ++iter) remove( GetFilename(std::get<0>(*iter)) );
+			for (auto iter = iterNext; iter != m_list.end(); ++iter) remove( GetHistoryFilename(std::get<0>(*iter)) );
 			m_list.erase(iterNext, m_list.end());	// Erase later history list items
 		}
 		else if ( m_list.size() == MAX_HISTORY_FILES )	// We're at the end of the list and the list is full ...
@@ -144,7 +169,7 @@ public:
 		++m_currentIter;
 		return Load(board);
 	}
-	const char* GetCurrentFilename() const { return ( m_list.empty() ) ? "\0" : GetFilename(std::get<0>(*m_currentIter)); }
+	const char* GetCurrentHistoryFilename() const { return ( m_list.empty() ) ? "\0" : GetHistoryFilename(std::get<0>(*m_currentIter)); }
 private:
 	void AddEntry(const size_t& index, const int compId, const std::string& str)
 	{
@@ -154,14 +179,15 @@ private:
 	}
 	void Clear()
 	{
-		for (size_t i = 0; i < MAX_HISTORY_FILES; i++) remove( GetFilename(i) );// Delete all history files for the session
+		for (size_t i = 0; i < MAX_HISTORY_FILES; i++) remove( GetHistoryFilename(i) );	// Delete all history files for the session
+		remove( GetLogFileName() );	// Delete the single log file for the session
 		m_bLocked = false;
 		m_list.clear();
 	}
 	bool Load(Board& board)
 	{
 		DataStream inStream(DataStream::READ);
-		if ( !inStream.Open( GetCurrentFilename() ) ) return false;
+		if ( !inStream.Open( GetCurrentHistoryFilename() ) ) return false;
 		board.Load(inStream);
 		inStream.Close();
 		return inStream.GetOK();
@@ -169,17 +195,23 @@ private:
 	bool Save(Board& board)
 	{
 		DataStream outStream(DataStream::WRITE);
-		if ( !outStream.Open( GetCurrentFilename() ) ) return false;
+		if ( !outStream.Open( GetCurrentHistoryFilename() ) ) return false;
 		board.Save(outStream);
 		outStream.Close();
 		return true;
 	}
 	HistoryItemIter GetNextIter() const { auto iter = m_currentIter; ++iter; return iter; }
-	const char* GetFilename(const size_t& index) const
+	const char* GetHistoryFilename(const size_t& index) const
 	{
 		assert( index < MAX_HISTORY_FILES );	// Sanity check
 		memset(m_buffer, 0, 256 * sizeof(char));
 		sprintf(m_buffer, "%s/history/history_%d_%d.vrt", m_pathStr.c_str(), m_ID, static_cast<int>(index));
+		return m_buffer;
+	}
+	const char* GetLogFileName() const	// A single log file per VeroRoute instance
+	{
+		memset(m_buffer, 0, 256 * sizeof(char));
+		sprintf(m_buffer, "%s/history/log_%d.log", m_pathStr.c_str(), m_ID);
 		return m_buffer;
 	}
 private:

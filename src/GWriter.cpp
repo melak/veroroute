@@ -46,15 +46,10 @@ void GStream::Clear()
 }
 void GStream::Close()
 {
-	if ( !m_file.isOpen() ) return;
-	switch( m_eType )
-	{
-		case GFILE::DRL:	m_os << "M30";	EndLine();	return m_file.close();	// End of program
-		default:			m_os << "M02";	EndLine();	return m_file.close();	// End of file
-	}
+	if ( m_file.isOpen() )
+		m_file.close();
 }
-
-bool GStream::Open(const QString& fileName, const GFILE& eType, const bool& bMetric, const Board& board, const bool& bVias, const QString& UTC)
+bool GStream::Open(const QString& fileName, const GFILE& eType, const bool& bMetric, const Board& board, const bool& bVias, const bool& bConfirmEachFile)
 {
 	Clear();
 	m_eType		= eType;
@@ -77,33 +72,28 @@ bool GStream::Open(const QString& fileName, const GFILE& eType, const bool& bMet
 	}
 	str += suffix;
 
-#ifdef VEROROUTE_ANDROID
-	// Ask user to confirm each Gerber file to get write permission from Android
-
-	str = StringHelper::GetTidyFileName(str);
-
-	QFileDialog fileDialog(nullptr, str);
-	fileDialog.setAcceptMode(QFileDialog::AcceptSave);
-	fileDialog.setNameFilter(suffix);
-	fileDialog.setDefaultSuffix(suffix);
-
-	if ( fileDialog.exec() )
+	if ( bConfirmEachFile )
 	{
-		QStringList fileNames = fileDialog.selectedFiles();
-		if ( !fileNames.isEmpty() ) str = fileNames.at(0);
+		// Ask user to confirm each Gerber file (to get write permission from Android)
+		str = StringHelper::GetTidyFileName(str);
+
+		QFileDialog fileDialog(nullptr, str);
+		fileDialog.setAcceptMode(QFileDialog::AcceptSave);
+		fileDialog.setNameFilter(suffix);
+		fileDialog.setDefaultSuffix(suffix);
+
+		if ( fileDialog.exec() )
+		{
+			QStringList fileNames = fileDialog.selectedFiles();
+			if ( !fileNames.isEmpty() ) str = fileNames.at(0);
+		}
 	}
-#endif
 
 	m_file.setFileName( str ) ;
 	const bool bOK = m_file.open(QIODevice::WriteOnly);
-	if ( bOK )
-	{
+	if ( m_file.isOpen() )
 		m_os.setDevice(&m_file);
 
-		WriteHeader(UTC);
-		LinearInterpolation();
-		SetPolarity(GPOLARITY::DARK, false);	// false ==> skip GetOK() checks
-	}
 	return bOK;
 }
 void GStream::WriteHeader(const QString& UTC)	// Write header for current stream
@@ -113,7 +103,7 @@ void GStream::WriteHeader(const QString& UTC)	// Write header for current stream
 	QString	strLayer	= "Layer: ";
 	QString	strProgram	= "VeroRoute V" + QString(szVEROROUTE_VERSION);
 	QString	strUTC		= QString::fromStdString( UTC.toStdString() );
-	QString	strGen		= QString("Gerber Generator version 0.8");
+	QString	strGen		= QString("Gerber Generator version 0.9");
 	switch(m_eType)
 	{
 		case GFILE::GKO: strLayer += "BoardOutline";			break;
@@ -164,6 +154,18 @@ void GStream::WriteHeader(const QString& UTC)	// Write header for current stream
 			m_os << "%FSLAX24Y24*%";	QtEndline();
 		}
 		MakeApertures();
+	}
+
+	LinearInterpolation();
+	SetPolarity(GPOLARITY::DARK, false);	// false ==> skip GetOK() checks
+}
+void GStream::WriteFooter()
+{
+	if ( !m_file.isOpen() ) return;
+	switch( m_eType )
+	{
+		case GFILE::DRL:	m_os << "M30";	EndLine();	return;	// End of program
+		default:			m_os << "M02";	EndLine();	return;	// End of file
 	}
 }
 void GStream::MakeDrills()
@@ -608,7 +610,7 @@ void GStream::GetQPolygon(const QPolygonF& in, QPolygon& out) const
 }
 
 // Wrapper for handling a set of Gerber files
-bool GWriter::Open(const QString& fileName, const Board& board, const bool& bVias, const bool& bTwoLayerGerber, const bool& bMetric)
+bool GWriter::Open(const QString& fileName, const Board& board, const bool& bVias, const bool& bTwoLayerGerber, const bool& bMetric, const bool& bConfirmEachFile)
 {
 	QDateTime	local(QDateTime::currentDateTime());
 	QString		UTC = local.toTimeSpec(Qt::UTC).toString(Qt::ISODate);
@@ -617,17 +619,35 @@ bool GWriter::Open(const QString& fileName, const Board& board, const bool& bVia
 	bool bOK(!fileName.isEmpty());
 	for (int i = 0; i < NUM_STREAMS && bOK; i++)
 	{
-		if ( GFILE(i) == GFILE::GTL && !bTwoLayerGerber ) continue;
-		if ( GFILE(i) == GFILE::GTS && !bTwoLayerGerber ) continue;
 		if ( GFILE(i) == GFILE::GBO ) continue;	// Don't write this layer yet
-		bOK = m_os[i].Open(fileName, GFILE(i), bMetric, board, bVias, UTC);
+
+		// Produce all files (even for single layer export).
+		// Files that are not needed will be empty. This is to avoid zombie files.
+		// e.g. User does 2 layer export, then later does single layer export with the same Gerber prefix.
+		// We want the second export to wipe the GTL and GTS data from the first export.
+
+		bool bDoFileClose(false);
+		// For single layer export, we'll open the GTL and GTS files, then immediately close them so nothing will be written to them.
+		if ( GFILE(i) == GFILE::GTL ) bDoFileClose = !bTwoLayerGerber;
+		if ( GFILE(i) == GFILE::GTS ) bDoFileClose = !bTwoLayerGerber;
+
+		bOK = m_os[i].Open(fileName, GFILE(i), bMetric, board, bVias, bConfirmEachFile);
+
+		if ( bDoFileClose )
+			m_os[i].Close();
+		else
+			m_os[i].WriteHeader(UTC);
 	}
 	if ( !bOK ) Close();
 	return bOK;
 }
-void GWriter::Close()	// Close all file streams
+void GWriter::Close()	// Write footers, and close all file streams
 {
-	for (int i = 0; i < NUM_STREAMS; i++) m_os[i].Close();
+	for (int i = 0; i < NUM_STREAMS; i++)
+	{
+		m_os[i].WriteFooter();
+		m_os[i].Close();
+	}
 }
 GStream& GWriter::GetStream(const GFILE& eType)
 {

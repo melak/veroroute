@@ -33,7 +33,11 @@ struct DataStream
 	~DataStream() {}
 	bool Open(const char* fileName)
 	{
-		m_file.setFileName( QString(fileName) );
+		return Open( QString(fileName) );
+	}
+	bool Open(const QString& fileName)
+	{
+		m_file.setFileName(fileName);
 		m_bOK = m_file.open(m_type == READ ? QIODevice::ReadOnly : QIODevice::WriteOnly);
 		if ( m_bOK )
 		{
@@ -54,6 +58,7 @@ struct DataStream
 	void Load(float& o)					{				m_ios >> o; }
 	void Load(double& o)				{				m_ios >> o; }
 	void Load(std::string& o)			{ QString	t;	m_ios >> t; o = t.toStdString();}
+	void Load(QString& o)				{				m_ios >> o; }
 
 	void Save(const bool& o)			{ m_ios << o; }
 	void Save(const char& o)			{ m_ios << static_cast<qint8>	(o); }
@@ -65,6 +70,7 @@ struct DataStream
 	void Save(const float& o)			{ m_ios << o; }
 	void Save(const double& o)			{ m_ios << o; }
 	void Save(const std::string& o)		{ m_ios << QString::fromStdString(o); }
+	void Save(const QString& o)			{ m_ios << o; }
 
 	const int&	GetVersion() const		{ return m_version; }
 	void		SetVersion(int i)		{ m_version = i; }

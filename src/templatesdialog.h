@@ -53,7 +53,7 @@ private:
 	void Save(const QString& fileName);
 	void LoadFromUserVrt(bool bInfoMsg);
 	void SaveToUserVrt();
-	const QString GetUserFilename() const;
+	QString GetUserFilename() const;
 	void AddTemplatesFromBoard(Board& board, bool bAllComps, bool bInfoMsg);
 private:
 	Ui_TemplatesDialog*	ui;
