@@ -388,7 +388,7 @@ void MainWindow::Startup()
 	ResetView();
 
 #ifdef VEROROUTE_ANDROID
-	QString strLastFileName		= m_historyMgr.GetLastFileName();
+	QString strLastFileName		= m_historyMgr.LoadLastFileName();
 	QString	strLastHistoryFile	= m_historyMgr.GetLastHistoryFile();
 
 	bool bCrashRecovery = !strLastHistoryFile.isEmpty();
@@ -2205,7 +2205,7 @@ void MainWindow::UpdateRulerInfo()
 		const qreal	d_mil	= PolygonHelper::Length(B-A) * 100;	// mil
 		const qreal	d_mm	= d_mil * 0.0254;
 		char buffer[256] = {'\0'};
-		sprintf(buffer,"Distance = %.2f mil,    %.4f mm", d_mil, d_mm);
+		sprintf(buffer,"Distance = %.2f mil   (%.4f mm)", d_mil, d_mm);
 		ui->statusBar->showMessage(QString(buffer), 1000);
 	}
 }

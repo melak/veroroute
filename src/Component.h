@@ -400,11 +400,7 @@ public:
 	{
 		std::string str = GetTypeStr();
 		if ( GetType() == COMP::DIP || GetType() == COMP::SIP )
-		{
-			char buffer[32] = {'\0'};
-			sprintf(buffer, "%d", static_cast<int>(GetNumPins()));
-			str += std::string(buffer);		// e.g. "DIP16"
-		}
+			str += std::to_string(GetNumPins());	// e.g. "DIP16"
 		return str;
 	}
 	std::string GetFullImportStr() const	// For SIP/DIP/SWITCH/STRIP/BLOCK types, append the number of pins
@@ -413,11 +409,7 @@ public:
 		if ( GetType() == COMP::DIP || GetType() == COMP::SIP ||
 			 GetType() == COMP::SWITCH_DT || GetType() == COMP::SWITCH_ST || GetType() == COMP::SWITCH_ST_DIP ||
 			 GetType() == COMP::STRIP_100 || GetType() == COMP::BLOCK_100 || GetType() == COMP::BLOCK_200 )
-		{
-			char buffer[32] = {'\0'};
-			sprintf(buffer, "%d", static_cast<int>(GetNumPins()));
-			str += std::string(buffer);		// e.g. "DIP16"
-		}
+			str += std::to_string(GetNumPins());	// e.g. "DIP16"
 		return str;
 	}
 	// Helpers (account for component direction)

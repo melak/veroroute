@@ -88,27 +88,32 @@ public:
 
 		auto& lst = bGeneric ? m_listGeneric : m_listUser;
 
-		// Custom components need unique strings
-		if ( comp.GetType() == COMP::CUSTOM )
+		if ( !bGeneric )	// A new entry in the "User-Defined" list need extra checks ...
 		{
-			assert( !bGeneric );
 			for (const auto& o : lst)
 			{
-				if ( comp.GetTypeStr() == o.GetTypeStr() && comp.GetValueStr() == o.GetValueStr() )
+				// ... it must have a unique (TypeStr,ValueStr) combination
+				if ( entry.GetTypeStr() == o.GetTypeStr() && entry.GetValueStr() == o.GetValueStr() )
 				{
 					if ( pErrorStr ) *pErrorStr = "The template (Type = " + o.GetTypeStr() + ") "
 												+ "(Value = " + o.GetValueStr() + ") already exists";
 					return false;
 				}
-				else if ( !comp.GetImportStr().empty() && comp.GetImportStr() == o.GetImportStr() )
+				// ... if its a COMP::CUSTOM part, then it must have a unique import string
+				if ( entry.GetType() == COMP::CUSTOM )
 				{
-					if ( pErrorStr ) *pErrorStr = "The template (Type = " + o.GetTypeStr() + ") "
-												+ "(Value = " + o.GetValueStr() + ") "
-												+ "already has the Import string " + o.GetImportStr();
-					return false;
+					if ( !entry.GetImportStr().empty() && entry.GetImportStr() == o.GetImportStr() )
+					{
+						if ( pErrorStr ) *pErrorStr = "The template (Type = " + o.GetTypeStr() + ") "
+													+ "(Value = " + o.GetValueStr() + ") "
+													+ "already has the Import string " + o.GetImportStr();
+						return false;
+					}
 				}
 			}
 		}
+
+		// We've got a valid entry, so insert it at the relevant place in the list
 
 		auto iter = lst.begin();
 		bool bOK = iter == lst.end() || entry.IsLessThan(*iter, bGeneric);

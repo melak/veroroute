@@ -597,9 +597,7 @@ struct CompTypes
 	}
 	static std::string GetDefaultPinLabel(size_t iPinIndex)
 	{
-		static char buffer[32];
-		sprintf(buffer, "%d", static_cast<int>(iPinIndex+1));	// Pin numbers on screen start at 1
-		return buffer;
+		return std::to_string(iPinIndex + 1);	// Pin numbers on screen start at 1
 	}
 	static int GetDefaultPinAlign(size_t iPinIndex, size_t iNumPins, const COMP& eType)
 	{

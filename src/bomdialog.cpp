@@ -76,19 +76,13 @@ void BomDialog::Update()
 	}
 	std::stable_sort(pComps.begin(), pComps.end(), IsEarlierInBOM());	// Sort the list appropriately
 
-	// Count the number of values in the list.  This determines the number of rows in the table
-	int numValues(0);
-	std::string currentValue("");
-	for (const auto& p : pComps) if ( p->GetValueStr() != currentValue ) { currentValue = p->GetValueStr(); numValues++; }
-
 	// Set up the table
 	ui->tableWidget->clear();
-	ui->tableWidget->setRowCount(numValues);
 	ui->tableWidget->setColumnCount(4);
 	ui->tableWidget->setColumnWidth(0,130);
 	ui->tableWidget->setColumnWidth(1,250);
 	ui->tableWidget->setColumnWidth(2,100);
-	ui->tableWidget->setColumnWidth(3, (numValues > 9) ? 80 :100); // Small reduction when have a vertical scroll bar
+	ui->tableWidget->setColumnWidth(3,100);
 	m_tableHeader << "Name" << "Type" << "Value" << "Quantity";
 	ui->tableWidget->setHorizontalHeaderLabels(m_tableHeader);
 	ui->tableWidget->verticalHeader()->setVisible(false);
@@ -98,42 +92,38 @@ void BomDialog::Update()
 	ui->tableWidget->setShowGrid(true);
 
 	// Populate the table with data
-	std::string rowNames(""), rowTypes(""), rowValue("");
+	std::string rowNames(""), rowType(""), rowValue("");
 	int row(-1), rowQuantity(0);
-	char buffer[256] = {'\0'};
 	for (const auto& p : pComps)
 	{
-		const bool bLast		= ( p == pComps.back() );
-		const bool bNewValue	= ( p->GetValueStr() != rowValue );
-		if ( bNewValue )
+		const bool	bLast		= ( p == pComps.back() );
+		auto&		strNewValue	= p->GetValueStr();
+
+		auto		strNewType	= CompTypes::GetFamilyStr( p->GetType() );
+		if ( !StringHelper::IsEmptyStr(strNewType) ) strNewType += ": ";
+		strNewType += p->GetTypeStr();
+		if ( p->GetType() == COMP::DIP || p->GetType() == COMP::SIP )
+			strNewType += std::to_string(p->GetNumPins());	// e.g. "DIP16"
+		if ( p->GetType() == COMP::STRIP_100 || p->GetType() == COMP::BLOCK_100 || p->GetType() == COMP::BLOCK_200 )
+			strNewType += std::string(" (") + std::to_string(p->GetNumPins()) + std::string(" pins)");
+
+		const bool bNewRow = ( row == -1) || ( strNewValue != rowValue ) || ( strNewType != rowType );
+		if ( bNewRow )
 		{
 			if ( row != -1 )	// If have a previous row ...
 			{
-				sprintf(buffer,"%d",rowQuantity);
 				// Write previous row to table.	Note: No memory leak since setItem() takes ownership.
 				ui->tableWidget->setItem(row, 0, new QTableWidgetItem(QString::fromStdString(rowNames)));
-				ui->tableWidget->setItem(row, 1, new QTableWidgetItem(QString::fromStdString(rowTypes)));
+				ui->tableWidget->setItem(row, 1, new QTableWidgetItem(QString::fromStdString(rowType)));
 				ui->tableWidget->setItem(row, 2, new QTableWidgetItem(QString::fromStdString(rowValue)));
-				ui->tableWidget->setItem(row, 3, new QTableWidgetItem(QString(buffer)));
+				ui->tableWidget->setItem(row, 3, new QTableWidgetItem(QString::number(rowQuantity)));
 			}
 			// Initialise data for new row
 			row++;
-			rowQuantity = 1;
-			rowNames = p->GetNameStr();
-			rowTypes = CompTypes::GetFamilyStr( p->GetType() );
-			if ( !StringHelper::IsEmptyStr(rowTypes) ) rowTypes += ": ";
-			rowTypes += p->GetTypeStr();
-			rowValue = p->GetValueStr();
-			if ( p->GetType() == COMP::DIP || p->GetType() == COMP::SIP )
-			{
-				sprintf(buffer, "%d", static_cast<int>(p->GetNumPins()));
-				rowTypes += std::string(buffer);	// e.g. "DIP16"
-			}
-			if ( p->GetType() == COMP::STRIP_100 || p->GetType() == COMP::BLOCK_100 || p->GetType() == COMP::BLOCK_200 )
-			{
-				sprintf(buffer, " (%d pins)", static_cast<int>(p->GetNumPins()));
-				rowTypes += std::string(buffer);
-			}
+			rowQuantity	= 1;
+			rowNames	= p->GetNameStr();
+			rowValue	= strNewValue;
+			rowType		= strNewType;
 		}
 		else
 		{
@@ -143,14 +133,17 @@ void BomDialog::Update()
 		}
 		if ( bLast )	// Very last component in the B.O.M.
 		{
-			sprintf(buffer,"%d",rowQuantity);
 			// Write current row to table.	Note: No memory leak since setItem() takes ownership.
 			ui->tableWidget->setItem(row, 0, new QTableWidgetItem(QString::fromStdString(rowNames)));
-			ui->tableWidget->setItem(row, 1, new QTableWidgetItem(QString::fromStdString(rowTypes)));
+			ui->tableWidget->setItem(row, 1, new QTableWidgetItem(QString::fromStdString(rowType)));
 			ui->tableWidget->setItem(row, 2, new QTableWidgetItem(QString::fromStdString(rowValue)));
-			ui->tableWidget->setItem(row, 3, new QTableWidgetItem(QString(buffer)));
+			ui->tableWidget->setItem(row, 3, new QTableWidgetItem(QString::number(rowQuantity)));
 		}
 	}
+	const int numRows(row + 1);
+	ui->tableWidget->setRowCount(numRows);
+	if ( numRows > 8 )
+		ui->tableWidget->setColumnWidth(3,80);	// Small reduction when have a vertical scroll bar
 	ui->pushButton->setDisabled( pComps.empty() );
 }
 

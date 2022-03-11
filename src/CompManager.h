@@ -373,13 +373,11 @@ public:
 			{
 				// Try and produce a simple unique Name for the part if possible
 				std::string nameStr;
-				char buffer[256] = {'\0'};
 				const std::string prefixStr = comp.GetPrefixStr();	// e.g. "C" for capacitors
 				for (int iSuffix = 1; iSuffix < INT_MAX && bNameExists; iSuffix++)
 				{
-					sprintf(buffer,"%s%d", prefixStr.c_str(), iSuffix);
-					nameStr = buffer;	// e.g. "C1"
-					bNameExists = GetComponentIdFromName(nameStr) != BAD_COMPID;
+					nameStr		= prefixStr + std::to_string(iSuffix);	// e.g. "C1"
+					bNameExists	= GetComponentIdFromName(nameStr) != BAD_COMPID;
 				}
 				comp.SetNameStr(nameStr);
 			}

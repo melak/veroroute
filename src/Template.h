@@ -65,19 +65,12 @@ public:
 	{
 		if ( bGeneric ) return *this < o;
 
-		char buffer[32] = {'\0'};
 		std::string a = GetTypeStr();
 		std::string b = o.GetTypeStr();
 		if ( GetType() == COMP::SIP || GetType() == COMP::DIP )
-		{
-			sprintf(buffer, "%d", static_cast<int>(GetNumPins()));
-			a += std::string(buffer);	// e.g. "DIP16"
-		}
+			a += std::to_string( GetNumPins() );	// e.g. "DIP16"
 		if ( o.GetType() == COMP::SIP || o.GetType() == COMP::DIP )
-		{
-			sprintf(buffer, "%d", static_cast<int>(o.GetNumPins()));
-			b += std::string(buffer);	// e.g. "DIP16"
-		}
+			b += std::to_string( o.GetNumPins() );	// e.g. "DIP16"
 		int i = a.compare( b );								// Compare Type strings
 		if ( i != 0 ) return i < 0;
 		return GetValueStr().compare( o.GetValueStr() );	// Compare Value strings

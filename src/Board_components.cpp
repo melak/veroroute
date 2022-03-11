@@ -35,7 +35,6 @@ int Board::CreateComponent(int iRow, int iCol, const COMP& eType, const Componen
 	assert( eType != COMP::INVALID );
 
 	// Try and produce a simple unique Name for the new part if possible
-	char buffer[256] = {'\0'};
 	std::string nameStr;	// We'll use this string for both Name and Value
 	const std::string prefixStr = ( pComp ) ? pComp->GetPrefixStr() : CompTypes::GetDefaultPrefixStr(eType);	// e.g. "C" for capacitors
 	if ( !prefixStr.empty() )
@@ -44,9 +43,8 @@ int Board::CreateComponent(int iRow, int iCol, const COMP& eType, const Componen
 		bool bNameExists(true);
 		for (int iSuffix = 1; iSuffix < INT_MAX && bNameExists; iSuffix++)
 		{
-			sprintf(buffer,"%s%d", prefixStr.c_str(), iSuffix);
-			nameStr = buffer;	// e.g. "C1"
-			bNameExists = ( m_compMgr.GetComponentIdFromName(nameStr) != BAD_COMPID );
+			nameStr		= prefixStr + std::to_string(iSuffix);	// e.g. "C1"
+			bNameExists	= ( m_compMgr.GetComponentIdFromName(nameStr) != BAD_COMPID );
 		}
 	}
 

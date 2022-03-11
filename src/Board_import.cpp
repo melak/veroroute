@@ -556,10 +556,8 @@ bool Board::BreakComponentIntoPads(Component& comp)
 	for (size_t iPinIndex = 0; iPinIndex < numPins; iPinIndex++)	// Loop component pins
 	{
 		// Create a new PAD component for the pin, with suitable name, value, nodeId
-		static char buffer[32];
-		sprintf(buffer, "_%d", static_cast<int>(iPinIndex+1));
 		nodeList[0] = comp.GetNodeId(iPinIndex);
-		Component tmp(comp.GetNameStr() + std::string(buffer), comp.GetValueStr(), COMP::PAD, nodeList);
+		Component tmp(comp.GetNameStr() + std::string("_") + std::to_string(iPinIndex+1), comp.GetValueStr(), COMP::PAD, nodeList);
 
 		// Find board location of existing pin, and put the new PAD there
 		int row, col;

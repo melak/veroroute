@@ -276,9 +276,7 @@ void TemplatesDialog::AddTemplatesFromBoard(Board& board, bool bAllComps, bool b
 
 	if ( !bAllComps && groupMgr.GetNumUserComps() == 0 && bInfoMsg )
 	{
-		char buffer[64] = {'\0'};
-		sprintf(buffer, "No parts are currently selected in the main view.");
-		QMessageBox::information(this, tr("Information"), tr(buffer));
+		QMessageBox::information(this, tr("Information"), tr("No parts are currently selected in the main view."));
 		return;
 	}
 	
@@ -293,11 +291,7 @@ void TemplatesDialog::AddTemplatesFromBoard(Board& board, bool bAllComps, bool b
 	if ( nCount > 0 ) Update();
 
 	if ( bInfoMsg )
-	{
-		char buffer[64] = {'\0'};
-		sprintf(buffer, "%d new templates added.", nCount);
-		QMessageBox::information(this, tr("Information"), tr(buffer));
-	}
+		QMessageBox::information(this, tr("Information"), QString::number(nCount) + QString(" new templates added."));
 }
 
 void TemplatesDialog::keyPressEvent(QKeyEvent* event)

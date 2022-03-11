@@ -28,7 +28,12 @@
 #include <QFile>
 #include <QDateTime>
 
+// An average vrt file could be around 75k, so limit the undo buffer on Android to 100 files.
+#ifdef VEROROUTE_ANDROID
+static const size_t MAX_HISTORY_FILES = 100;
+#else
 static const size_t MAX_HISTORY_FILES = 1000;
+#endif
 
 typedef std::tuple<size_t, int, std::string>	HistoryItem;	// <index, compId, description>
 typedef std::list<HistoryItem>::const_iterator	HistoryItemIter;
