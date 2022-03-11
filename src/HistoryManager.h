@@ -20,47 +20,61 @@
 #pragma once
 
 // Class to manage history files for undo/redo functionality
+// An average vrt file could be around 75k.
 // An upper limit of 1000 files has been set, so the max undo level is 999.
 // This is to prevent the files using too much disk space.
+// On Android, the upper limit has been reduced to 100 files.
+//
+// Each VeroRoute instance on a machine uses a different instance ID
+// when writing to the shared history folder.
+// The instance ID determines the filenames that the instance will use.
+// An instance with an ID of "N" (where N >= 1) will write the following binary files to the history folder:
+//
+//	"circuit_N.log"		This stores the path to the user's vrt file (the user's last save)
+//	"entries_N.log"		This stores a copy of the entries in the Undo/Redo list, and the current place within that list.
+//	"history_N_0.vrt"
+//	"history_N_1.vrt"
+//  etc
+//
+//  There is a history vrt file for each entry in the Undo/Redo list.
 
 #include "Board.h"
 #include "VeroRouteAndroid.h"
 #include <QFile>
 #include <QDateTime>
 
-// An average vrt file could be around 75k, so limit the undo buffer on Android to 100 files.
 #ifdef VEROROUTE_ANDROID
-static const size_t MAX_HISTORY_FILES = 100;
+static const unsigned int MAX_HISTORY_FILES = 100;
 #else
-static const size_t MAX_HISTORY_FILES = 1000;
+static const unsigned int MAX_HISTORY_FILES = 1000;
 #endif
 
-typedef std::tuple<size_t, int, std::string>	HistoryItem;	// <index, compId, description>
-typedef std::list<HistoryItem>::const_iterator	HistoryItemIter;
+typedef std::tuple<unsigned int, int, std::string>	HistoryItem;	// <index, compId, description>
+typedef std::list<HistoryItem>::const_iterator		HistoryItemIter;
 
 class HistoryManager
 {
 public:
-	HistoryManager() : m_ID(0), m_bLocked(false) {}
+	HistoryManager() {}
 	~HistoryManager() { Clear(); }
-	void SetPathStr(const std::string& str)	{ m_pathStr = str; }
-	bool GetIsLocked() const				{ return m_bLocked; }
-	bool GetCanUndo() const					{ return !m_list.empty() && m_currentIter != m_list.begin(); }
-	bool GetCanRedo() const					{ return !m_list.empty() && GetNextIter() != m_list.end();   }
-	const std::string& GetUndoText() const	{ return std::get<2>(*m_currentIter); }
-	const std::string& GetRedoText() const	{ return std::get<2>(*GetNextIter()); }
+	void SetPathStr(const std::string& str)		{ m_pathStr = str; }
+	void SetInstanceID(const unsigned int& ID)	{ m_ID = ID; }
+	bool GetIsLocked() const					{ return m_bLocked; }
+	bool GetCanUndo() const						{ return !m_list.empty() && m_currentIter != m_list.begin(); }
+	bool GetCanRedo() const						{ return !m_list.empty() && GetNextIter() != m_list.end();   }
+	const std::string& GetUndoText() const		{ return std::get<2>(*m_currentIter); }
+	const std::string& GetRedoText() const		{ return std::get<2>(*GetNextIter()); }
 #ifdef VEROROUTE_ANDROID
 	QString GetLastHistoryFile()	// Called at program startup (for crash recovery)
 	{
 		// Android should not run two instances of VeroRoute (so m_ID should always be 1).
-		// So any files in the history folder at startup imply that an earlier run crashed.
-		// This method looks for the most recent file starting with "history_1_"
-		assert(m_ID == 0);
-		m_ID = 1;	// So files go "history_1_0.vrt", "history_1_1.vrt", ...
-		QString		strLastFile("");
+		// The presence of files in the history folder at startup means VeroRoute did not shut down properly.
+
+		// The history files form a circular buffer, and we want to find the youngest.
+		QString		strLastHistoryFile;
 		QDateTime	dateTimeLast;
 		QFileInfo	fileInfo;
-		for (size_t n = 0; n < MAX_HISTORY_FILES; n++)
+		for (unsigned int n = 0; n < MAX_HISTORY_FILES; n++)
 		{
 			QFile file( GetHistoryFilename(n) );
 			if ( !file.exists() ) break;
@@ -68,29 +82,20 @@ public:
 			fileInfo.setFile( file );
 			QDateTime dateTime = fileInfo.lastModified();
 
-			if ( strLastFile.isEmpty() || ( dateTime.msecsTo(dateTimeLast) < 0) )
+			if ( strLastHistoryFile.isEmpty() || ( dateTime.msecsTo(dateTimeLast) < 0) )
 			{
-				strLastFile	= file.fileName();
-				dateTimeLast	= dateTime;
+				strLastHistoryFile	= file.fileName();
+				dateTimeLast		= dateTime;
 			}
 		}
-		m_ID = 0;	// Restore to correct default value
-		return strLastFile;
-	}
-	void ClearAll()	// Called at program startup (for clean up after crash recovery)
-	{
-		if ( m_bLocked ) return;
-
-		const int numInstancesToDestroy(1);	// Could make this larger, but Android should only have one instance with m_ID == 1
-		for (m_ID = 1; m_ID < 1 + numInstancesToDestroy; m_ID++) Clear();
-		m_ID = 0;	// Reset to invalid ID
+		return strLastHistoryFile;
 	}
 #endif
-	bool Reset(const std::string& str, Board& board)
+	bool Reset(const std::string& str, Board& board, const QString& lastFileName)
 	{
 		if ( m_bLocked ) return false;
 
-		if ( m_ID != 0 ) Clear();	// If m_ID is valid then wipe all files that used it, including the log file
+		if ( m_ID != 0 ) Clear();	// If m_ID is valid, clear m_list and all files for that ID (history, circuit, entries)
 
 		// Set a new (unique) m_ID
 		for (m_ID = 1; m_ID < INT_MAX; m_ID++ )	// Keep increasing this until we get a unique ID
@@ -99,35 +104,71 @@ public:
 			if ( !fTest.good() ) break;						// ID is not already in use so break
 		}
 
-		AddEntry(0, BAD_COMPID, str);
-		return Save(board);
+		AddEntry(0, BAD_COMPID, str);	// Updates the "entries.log" file for m_ID
+		SaveCircuitFile(lastFileName);	// Updates the "circuit.log" file for m_ID
+		return Save(board);				// Updates one "history.vrt" file for m_ID
 	}
-	QString LoadLastFileName()
+	void LoadEntriesFile()	// Import info from "entries.log" for m_ID
 	{
-		QString lastFileName;
-		m_ID = 1;	// Android should only have a single log file called "log_1.log" containing the filename
+		m_list.clear();
+		m_currentIter = m_list.begin();
+
 		DataStream inStream(DataStream::READ);
-		if ( inStream.Open( GetLogFileName() ) )
+		if ( inStream.Open( GetEntriesFileName() ) )
 		{
-			inStream.Load(lastFileName);
+			unsigned int listSize(0);
+			inStream.Load(listSize);
+
+			for (unsigned int index = 0; index < listSize; ++index)
+			{
+				unsigned int	tmp0;	inStream.Load(tmp0);
+				int				tmp1;	inStream.Load(tmp1);
+				std::string		tmp2;	inStream.Load(tmp2);
+				m_list.push_back( HistoryItem(tmp0, tmp1, tmp2) );
+			}
+
+			unsigned int currentIterIndex(0);
+			inStream.Load(currentIterIndex);
+
+			unsigned int iterIndex(0);
+			for (auto iter = m_list.begin(), iterEnd = m_list.end(); iter != iterEnd; ++iter, ++iterIndex)
+			{
+				if ( iterIndex == currentIterIndex )
+				{
+					m_currentIter = iter;
+					break;
+				}
+			}
 			inStream.Close();
 		}
-		m_ID = 0;	// Restore to correct default value
-		return lastFileName;
 	}
-	void SaveLastFileName(const QString& lastFileName)
+	void SaveEntriesFile()	// Export info to "entries.log" file for m_ID
 	{
-		// Save lastFileName to log file (Useful for crash recovery)
 		DataStream outStream(DataStream::WRITE);
-		if ( outStream.Open( GetLogFileName() ) )
+		if ( outStream.Open( GetEntriesFileName() ) )
 		{
-			outStream.Save( lastFileName );
+			const unsigned int listSize = (unsigned int) m_list.size();
+			outStream.Save(listSize);
+
+			unsigned int currentIterIndex(0), iterIndex(0);
+			for (auto iter = m_list.begin(), iterEnd = m_list.end(); iter != iterEnd; ++iter, ++iterIndex)
+			{
+				if ( iter == m_currentIter ) currentIterIndex = iterIndex;
+				outStream.Save(std::get<0>(*iter));	// unsigned int
+				outStream.Save(std::get<1>(*iter));	// int
+				outStream.Save(std::get<2>(*iter));	// std::string
+			}
+			outStream.Save(currentIterIndex);
 			outStream.Close();
 		}
 	}
 	bool Update(const std::string& str, const int compId, Board& board)
 	{
 		if ( m_bLocked ) return false;
+
+		// For the current m_ID, we only need to update a "history.vrt" file and the "entries.log" file.
+		// Calling 	Save()     will create/overwrite a "history.vrt" file.
+		// Calling  AddEntry() will create/overwrite the "entries.log" file.
 
 		if ( compId != BAD_COMPID )	// compId is only used when updating the Name and Value fields for a part
 		{							// or the 4 text fields in the component editor (which always uses compId == 0)
@@ -142,6 +183,7 @@ public:
 				return Save(board);								// ... then overwrite the current entry instead of adding a new one
 		}
 
+		// Update m_list
 		auto iterNext = GetNextIter();
 		if ( iterNext != m_list.end() )	// We're modifying within the list ...
 		{
@@ -149,7 +191,7 @@ public:
 			for (auto iter = iterNext; iter != m_list.end(); ++iter) remove( GetHistoryFilename(std::get<0>(*iter)) );
 			m_list.erase(iterNext, m_list.end());	// Erase later history list items
 		}
-		else if ( m_list.size() == MAX_HISTORY_FILES )	// We're at the end of the list and the list is full ...
+		else if ( (unsigned int)m_list.size() == MAX_HISTORY_FILES )	// We're at the end of the list and the list is full ...
 		{
 			// We'll overwrite the first history file, so no need to delete it
 			m_list.erase(m_list.begin());	// Erase first history list item
@@ -174,20 +216,45 @@ public:
 		++m_currentIter;
 		return Load(board);
 	}
-	const char* GetCurrentHistoryFilename() const { return ( m_list.empty() ) ? "\0" : GetHistoryFilename(std::get<0>(*m_currentIter)); }
+	void Clear()
+	{
+		assert( !m_bLocked );
+		for (unsigned int i = 0; i < MAX_HISTORY_FILES; i++) remove( GetHistoryFilename(i) );	// Delete all history files for the instance
+		remove( GetEntriesFileName() );	// Delete the entries file for the instance
+		remove( GetCircuitFileName() );	// Delete the circuit file for the instance
+		m_list.clear();					// Clear the list
+	}
+	const char* GetCurrentHistoryFilename() const
+	{
+		return ( m_list.empty() ) ? "\0" : GetHistoryFilename(std::get<0>(*m_currentIter));
+	}
+	QString LoadCircuitFile()
+	{
+		QString lastFileName;
+		DataStream inStream(DataStream::READ);
+		if ( inStream.Open( GetCircuitFileName() ) )
+		{
+			inStream.Load(lastFileName);
+			inStream.Close();
+		}
+		return lastFileName;
+	}
+	void SaveCircuitFile(const QString& lastFileName)
+	{
+		DataStream outStream(DataStream::WRITE);
+		if ( outStream.Open( GetCircuitFileName() ) )
+		{
+			outStream.Save( lastFileName );
+			outStream.Close();
+		}
+	}
 private:
-	void AddEntry(const size_t& index, const int compId, const std::string& str)
+	void AddEntry(const unsigned int& index, const int compId, const std::string& str)
 	{
 		m_list.push_back( HistoryItem(index % MAX_HISTORY_FILES, compId, str) );
 		m_currentIter = m_list.end();
 		m_currentIter--;
-	}
-	void Clear()
-	{
-		for (size_t i = 0; i < MAX_HISTORY_FILES; i++) remove( GetHistoryFilename(i) );	// Delete all history files for the session
-		remove( GetLogFileName() );	// Delete the single log file for the session
-		m_bLocked = false;
-		m_list.clear();
+		SaveEntriesFile();
 	}
 	bool Load(Board& board)
 	{
@@ -206,24 +273,30 @@ private:
 		return true;
 	}
 	HistoryItemIter GetNextIter() const { auto iter = m_currentIter; ++iter; return iter; }
-	const char* GetHistoryFilename(const size_t& index) const
+	const char* GetHistoryFilename(const unsigned int& index) const
 	{
 		assert( index < MAX_HISTORY_FILES );	// Sanity check
 		memset(m_buffer, 0, 256 * sizeof(char));
-		sprintf(m_buffer, "%s/history/history_%d_%d.vrt", m_pathStr.c_str(), m_ID, static_cast<int>(index));
+		sprintf(m_buffer, "%s/history/history_%u_%u.vrt", m_pathStr.c_str(), m_ID, index);
 		return m_buffer;
 	}
-	const char* GetLogFileName() const	// A single log file per VeroRoute instance
+	const char* GetCircuitFileName() const	// A single file containing the circuit name per VeroRoute instance
 	{
 		memset(m_buffer, 0, 256 * sizeof(char));
-		sprintf(m_buffer, "%s/history/log_%d.log", m_pathStr.c_str(), m_ID);
+		sprintf(m_buffer, "%s/history/circuit_%u.log", m_pathStr.c_str(), m_ID);
+		return m_buffer;
+	}
+	const char* GetEntriesFileName() const	// A single file containing the undo/redo entries per VeroRoute instance
+	{
+		memset(m_buffer, 0, 256 * sizeof(char));
+		sprintf(m_buffer, "%s/history/entries_%u.log", m_pathStr.c_str(), m_ID);
 		return m_buffer;
 	}
 private:
-	std::string				m_pathStr;		// Path to the "history" folder
-	int						m_ID;			// Allows multiple VeroRoute instances to share the same "history" folder.
-	bool					m_bLocked;		// Should lock the list while doing Undo() or Redo()
-	std::list<HistoryItem>	m_list;			// Each history item is an <Index, Description> pair
-	HistoryItemIter			m_currentIter;	// Points to the last written history item
-	mutable char			m_buffer[256];	// For constructing history filenames
+	std::string				m_pathStr;			// Path to the "history" folder
+	unsigned int			m_ID = 0;			// Each VeroRoute instance has a unique m_ID > 0
+	bool					m_bLocked = false;	// Should lock the list while doing Undo() or Redo()
+	std::list<HistoryItem>	m_list;				// Each history item is an <Index, Description> pair
+	HistoryItemIter			m_currentIter;		// Points to the last written history item
+	mutable char			m_buffer[256];		// For constructing history filenames
 };

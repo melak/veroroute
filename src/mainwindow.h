@@ -99,6 +99,7 @@ public:
 
 	void ResetView(MOUSE_MODE eMouseMode = MOUSE_MODE::SELECT, bool bTutorial = false);
 	void CheckFolders();
+	void CheckHistory();
 	// Helper for mouse
 	void GetPixMapXY(const QPoint& currentPoint, int& pixmapX, int& pixmapY) const;
 	bool GetRowCol(const QPoint& currentPoint, int& row, int& col, double& deltaRow, double& deltaCol) const;

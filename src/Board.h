@@ -726,7 +726,7 @@ public:
 		int iVrtVersion(0);
 		inStream.Load(iVrtVersion);
 		inStream.SetVersion(iVrtVersion);
-		inStream.SetOK(iVrtVersion <= VRT_VERSION_CURRENT);
+		inStream.SetOK(iVrtVersion >= VRT_VERSION_1 && iVrtVersion <= VRT_VERSION_CURRENT);
 		if ( !inStream.GetOK() ) return;	// Unsupported VRT version
 
 		inStream.Load(m_infoStr);

@@ -355,6 +355,7 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	QObject::connect(&m_networkMgr,	SIGNAL(finished(QNetworkReply*)), this, SLOT(HandleNetworkReply(QNetworkReply*)));
 
 	CheckFolders();
+	CheckHistory();
 
 	setAcceptDrops(true);
 
@@ -381,43 +382,6 @@ MainWindow::~MainWindow()
 	delete m_scrollArea;
 	delete m_hotkeysDlg;
 	delete ui;
-}
-
-void MainWindow::Startup()
-{
-	ResetView();
-
-#ifdef VEROROUTE_ANDROID
-	QString strLastFileName		= m_historyMgr.LoadLastFileName();
-	QString	strLastHistoryFile	= m_historyMgr.GetLastHistoryFile();
-
-	bool bCrashRecovery = !strLastHistoryFile.isEmpty();
-	if ( bCrashRecovery )
-	{
-		bCrashRecovery = QMessageBox::question(this, tr("!!! VeroRoute closed unexpectedly !!!"),
-													 tr("Recover using Undo/Redo history ?"),
-													 QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes) == QMessageBox::Yes;
-		if ( bCrashRecovery )
-			OpenVrt(strLastHistoryFile, false, bCrashRecovery);	// Load the last file written to history;
-
-		m_historyMgr.ClearAll();	// Wipe all the previous history files
-
-		if ( bCrashRecovery )
-			m_fileName = strLastFileName;
-		else
-			m_fileName.clear();
-	}
-	else
-		m_fileName.clear();
-#else
-	m_fileName.clear();
-#endif
-
-	ResetHistory("Empty");
-#ifdef VEROROUTE_ANDROID
-	if ( bCrashRecovery )
-		QMessageBox::information(this, tr("Information"), tr("You should now Save the recovered circuit"));
-#endif
 }
 
 void MainWindow::CheckFolders()
@@ -491,6 +455,43 @@ void MainWindow::CheckFolders()
 
 		QMessageBox::warning(this, tr("Templates folder is not available "), tr(messageStr.c_str()));
 	}
+}
+
+void MainWindow::CheckHistory()
+{
+#ifdef VEROROUTE_ANDROID
+	m_historyMgr.SetInstanceID(1);	// Android should only have a single VeroRoute instance (with ID == 1).
+
+	const QString strLastHistoryFile = m_historyMgr.GetLastHistoryFile();	// e.g. "history/history_1_78.vrt"
+	if ( !strLastHistoryFile.isEmpty() )	// If VeroRoute did not close properly ...
+	{
+		// If showing a message box then tidy the screen before showing it ...
+		/*
+		HideAllDockedDlgs();
+		HideAllNonDockedDlgs();
+		activateWindow();	// Select mainwindow rather than child dialogs
+		const bool bDoRecover = QMessageBox::question(this,	tr("!!! VeroRoute was closed unexpectedly !!!"),
+															tr("Recover using Undo/Redo history ?"),
+															QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes) == QMessageBox::Yes;	*/
+		const bool bDoRecover(true);
+		if ( bDoRecover )
+		{
+			OpenVrt(strLastHistoryFile, false, bDoRecover);	// Restore the last board state
+			m_historyMgr.LoadEntriesFile();					// Restore the old Undo/Redo log
+			m_fileName = m_historyMgr.LoadCircuitFile();	// Restore the old filename
+			return;											// Done
+		}
+		else
+			m_historyMgr.Clear();	// Tidy up. (Wipe all history/log files for the instance)
+	}
+#endif
+	m_historyMgr.SetInstanceID(0);	// Set an instance ID of 0 to stop ResetHistory() wiping other instance histories
+	ResetHistory("Empty");			// Begin a new history ...
+}
+
+void MainWindow::Startup()
+{
+	ResetView();
 }
 
 void MainWindow::ResetView(MOUSE_MODE eMouseMode, bool bTutorial)
@@ -620,7 +621,13 @@ void MainWindow::ShowCurrentRectSize()
 
 void MainWindow::OpenVrt(const QString& fileName, bool bMerge, bool bCrashRecovery)	// Helper for opening a vrt using Open(), Merge(), dropEvent(), or the command line
 {
-	bool bOK(false);
+	QFileInfo info(fileName);
+	bool bOK = ( info.suffix() == QString("vrt") );
+	if ( !bOK )
+	{
+		QMessageBox::information(this, tr("File does not have .vrt suffix"), fileName);
+		return;
+	}
 
 	DataStream inStream(DataStream::READ);
 	const std::string fileNameStr = fileName.toStdString();
@@ -631,34 +638,32 @@ void MainWindow::OpenVrt(const QString& fileName, bool bMerge, bool bCrashRecove
 		Board tmp;	// Load using a temporary board in case there is a problem with the file
 		tmp.Load(inStream);
 		inStream.Close();
-		if ( inStream.GetOK() ) // If it loaded OK ...
+
+		bOK = inStream.GetOK();
+		if ( bOK ) // If it loaded OK ...
 		{
 			if ( bMerge )
 				m_board.Merge(tmp);	// ... merge in the temporary board
 			else
 				m_board	= tmp;		// ... copy the temporary board
-			if ( !bMerge )
-			{
-				m_fileName = fileName;	// Only a regular open (not a merge) should update the filename
-				m_historyMgr.SaveLastFileName(m_fileName);
-			}
-			ResetView();
 
 			if ( !bCrashRecovery )
 			{
 				if ( bMerge )
 					UpdateHistory("File->Open (merge into current)");
 				else
+				{
+					m_fileName = fileName;	// Only a regular open (not a merge) should update the filename
 					ResetHistory("File->Open");
+				}
+				ResetView();
 			}
-
-			bOK = true;
 		}
 		else
-			QMessageBox::information(this, tr("Unsupported VRT version"), tr(fileNameStr.c_str()));
+			QMessageBox::information(this, tr("Unsupported VRT version"), fileName);
 	}
 	else
-		QMessageBox::information(this, tr("Unable to open file"), tr(fileNameStr.c_str()));
+		QMessageBox::information(this, tr("Unable to open file"), fileName);
 
 	if ( !bCrashRecovery && !(bMerge && bOK) )	// A successful merge should not add the merged-in file to the recent files list
 		UpdateRecentFiles(&fileName, bOK);		// Remove file from list if bOK == false
@@ -676,8 +681,8 @@ void MainWindow::New()
 	}
 	m_board.Clear();
 	m_fileName.clear();
-	ResetView();
 	ResetHistory("File->New");
+	ResetView();
 }
 
 void MainWindow::Open()
@@ -777,7 +782,7 @@ void MainWindow::SaveAs()
 			outStream.Close();
 			m_infoDlg->Update();	// Don't need a ResetView() but MUST update the initial string for the info dialog
 			m_fileName = fileName;
-			m_historyMgr.SaveLastFileName(m_fileName);
+			m_historyMgr.SaveCircuitFile(m_fileName);	// Must call this directly instead of calling ResetHistory()
 
 			bOK = true;
 
@@ -807,8 +812,8 @@ void MainWindow::ImportTango()
 		std::string			errorStr;
 		const bool bOK = m_board.ImportTango(GetTemplateManager(), fileNameStr, errorStr);
 		m_fileName.clear();
-		ResetView();
 		ResetHistory("File->Import Netlist");
+		ResetView();
 		if ( !bOK )
 		{
 			QMessageBox::information(this, tr("Error Importing Netlist"), tr(errorStr.c_str()));
@@ -833,8 +838,8 @@ void MainWindow::ImportOrcad()
 		std::string			errorStr;
 		const bool bOK = m_board.ImportOrcad(GetTemplateManager(), fileNameStr, errorStr);
 		m_fileName.clear();
-		ResetView();
 		ResetHistory("File->Import Netlist");
+		ResetView();
 		if ( !bOK )
 		{
 			QMessageBox::information(this, tr("Error Importing Netlist"), tr(errorStr.c_str()));
@@ -1414,8 +1419,8 @@ void MainWindow::LoadTutorial()
 		if ( inStream.GetOK() )
 		{
 			m_fileName = fileName;
-			ResetView(MOUSE_MODE::SELECT, true);	// true ==> tutorial mode
 			ResetHistory("File->Open");
+			ResetView(MOUSE_MODE::SELECT, true);	// true ==> tutorial mode
 		}
 		else
 			QMessageBox::information(this, tr("Unsupported VRT version"), tr(fileName));
@@ -2423,8 +2428,7 @@ bool MainWindow::GetMatchesVrtFile(const std::string& fileName) const
 }
 void MainWindow::ResetHistory(const std::string& str)
 {
-	m_historyMgr.Reset(str, m_board);
-	m_historyMgr.SaveLastFileName(m_fileName);
+	m_historyMgr.Reset(str, m_board, m_fileName);
 	UpdateUndoRedoControls();
 }
 void MainWindow::UpdateHistory(const std::string& str, const int compId)
