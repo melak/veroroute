@@ -91,7 +91,7 @@ void FindDialog::keyReleaseEvent(QKeyEvent* event)
 #ifdef VEROROUTE_ANDROID
 	if ( event->key() == Qt::Key_Back )
 	{
-		QTimer::singleShot(0, m_pMainWindow, SLOT(HideFindDialog()));//TODO Send close dialog signal to mainwindow
+		QTimer::singleShot(0, m_pMainWindow, SLOT(HideFindDialog()));
 		return event->accept();
 	}
 #else

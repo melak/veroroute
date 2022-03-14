@@ -65,12 +65,8 @@ public:
 	{
 		if ( bGeneric ) return *this < o;
 
-		std::string a = GetTypeStr();
-		std::string b = o.GetTypeStr();
-		if ( GetType() == COMP::SIP || GetType() == COMP::DIP )
-			a += std::to_string( GetNumPins() );	// e.g. "DIP16"
-		if ( o.GetType() == COMP::SIP || o.GetType() == COMP::DIP )
-			b += std::to_string( o.GetNumPins() );	// e.g. "DIP16"
+		std::string a = GetFullTypeStr();
+		std::string b = o.GetFullTypeStr();
 		int i = a.compare( b );								// Compare Type strings
 		if ( i != 0 ) return i < 0;
 		return GetValueStr().compare( o.GetValueStr() );	// Compare Value strings

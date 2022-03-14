@@ -84,7 +84,10 @@ public:
 	{
 		Template entry;
 		if ( !entry.MakeTemplate(comp) )
+		{
+			if ( pErrorStr ) *pErrorStr = "MakeTemplate() failed";
 			return false;
+		}
 
 		auto& lst = bGeneric ? m_listGeneric : m_listUser;
 
@@ -93,9 +96,9 @@ public:
 			for (const auto& o : lst)
 			{
 				// ... it must have a unique (TypeStr,ValueStr) combination
-				if ( entry.GetTypeStr() == o.GetTypeStr() && entry.GetValueStr() == o.GetValueStr() )
+				if ( entry.GetFullTypeStr() == o.GetFullTypeStr() && entry.GetValueStr() == o.GetValueStr() )
 				{
-					if ( pErrorStr ) *pErrorStr = "The template (Type = " + o.GetTypeStr() + ") "
+					if ( pErrorStr ) *pErrorStr = "The template (Type = " + o.GetFullTypeStr() + ") "
 												+ "(Value = " + o.GetValueStr() + ") already exists";
 					return false;
 				}
@@ -104,7 +107,7 @@ public:
 				{
 					if ( !entry.GetImportStr().empty() && entry.GetImportStr() == o.GetImportStr() )
 					{
-						if ( pErrorStr ) *pErrorStr = "The template (Type = " + o.GetTypeStr() + ") "
+						if ( pErrorStr ) *pErrorStr = "The template (Type = " + o.GetFullTypeStr() + ") "
 													+ "(Value = " + o.GetValueStr() + ") "
 													+ "already has the Import string " + o.GetImportStr();
 						return false;
@@ -126,6 +129,10 @@ public:
 			bOK = prev.IsLessThan(entry, bGeneric)
 			   && ( iter == lst.end() || entry.IsLessThan(*iter, bGeneric) );
 			if ( bOK ) lst.insert(iter, entry);
+		}
+		if ( !bOK )
+		{
+			if ( pErrorStr ) *pErrorStr = "Could not insert template in list";
 		}
 		return bOK;
 	}

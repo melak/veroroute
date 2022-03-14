@@ -75,7 +75,7 @@ void PadOffsetDialog::keyReleaseEvent(QKeyEvent* event)
 #ifdef VEROROUTE_ANDROID
 	if ( event->key() == Qt::Key_Back )
 	{
-		QTimer::singleShot(0, m_pMainWindow, SLOT(HidePadOffsetDialog()));//TODO Send close dialog signal to mainwindow
+		QTimer::singleShot(0, m_pMainWindow, SLOT(HidePadOffsetDialog()));
 		return event->accept();
 	}
 #else

@@ -290,6 +290,67 @@
     </sizepolicy>
    </property>
   </widget>
+  <widget class="QToolBar" name="toolBar_2">
+   <property name="minimumSize">
+    <size>
+     <width>0</width>
+     <height>40</height>
+    </size>
+   </property>
+   <property name="maximumSize">
+    <size>
+     <width>16777215</width>
+     <height>40</height>
+    </size>
+   </property>
+   <property name="windowTitle">
+    <string>toolBar_2</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>BottomToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionEditor"/>
+   <addaction name="separator"/>
+   <addaction name="actionUndo"/>
+   <addaction name="actionRedo"/>
+   <addaction name="separator"/>
+   <addaction name="actionZoom_In"/>
+   <addaction name="actionZoom_Out"/>
+   <addaction name="separator"/>
+   <addaction name="actionToggleGrid"/>
+  </widget>
+  <widget class="QToolBar" name="toolBar_3">
+   <property name="minimumSize">
+    <size>
+     <width>0</width>
+     <height>40</height>
+    </size>
+   </property>
+   <property name="maximumSize">
+    <size>
+     <width>16777215</width>
+     <height>40</height>
+    </size>
+   </property>
+   <property name="windowTitle">
+    <string>toolBar_3</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>BottomToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionAddLine"/>
+   <addaction name="actionAddRect"/>
+   <addaction name="actionAddRoundedRect"/>
+   <addaction name="actionAddEllipse"/>
+   <addaction name="actionAddArc"/>
+   <addaction name="actionAddChord"/>
+  </widget>
   <widget class="QToolBar" name="toolBar">
    <property name="enabled">
     <bool>true</bool>
@@ -303,7 +364,7 @@
    <property name="minimumSize">
     <size>
      <width>0</width>
-     <height>0</height>
+     <height>40</height>
     </size>
    </property>
    <property name="maximumSize">
@@ -312,26 +373,11 @@
      <height>40</height>
     </size>
    </property>
-   <property name="windowTitle">
-    <string>toolBar</string>
-   </property>
-   <property name="toolTip">
-    <string/>
-   </property>
-   <property name="movable">
-    <bool>true</bool>
-   </property>
-   <property name="allowedAreas">
-    <set>Qt::TopToolBarArea</set>
-   </property>
    <property name="iconSize">
     <size>
      <width>24</width>
      <height>24</height>
     </size>
-   </property>
-   <property name="floatable">
-    <bool>true</bool>
    </property>
    <attribute name="toolBarArea">
     <enum>BottomToolBarArea</enum>
@@ -339,15 +385,8 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="separator"/>
-   <addaction name="actionUndo"/>
-   <addaction name="actionRedo"/>
-   <addaction name="separator"/>
-   <addaction name="actionZoom_In"/>
-   <addaction name="actionZoom_Out"/>
-   <addaction name="separator"/>
-   <addaction name="actionToggleGrid"/>
    <addaction name="actionToggleText"/>
+   <addaction name="separator"/>
    <addaction name="actionTogglePinLabels"/>
    <addaction name="separator"/>
    <addaction name="actionPaintGrid"/>
@@ -367,40 +406,7 @@
    <addaction name="actionFill"/>
    <addaction name="separator"/>
    <addaction name="actionSelectArea"/>
-  </widget>
-  <widget class="QToolBar" name="toolBar_2">
-   <property name="minimumSize">
-    <size>
-     <width>200</width>
-     <height>40</height>
-    </size>
-   </property>
-   <property name="maximumSize">
-    <size>
-     <width>16777215</width>
-     <height>40</height>
-    </size>
-   </property>
-   <property name="windowTitle">
-    <string>toolBar_2</string>
-   </property>
-   <property name="allowedAreas">
-    <set>Qt::BottomToolBarArea</set>
-   </property>
-   <attribute name="toolBarArea">
-    <enum>BottomToolBarArea</enum>
-   </attribute>
-   <attribute name="toolBarBreak">
-    <bool>false</bool>
-   </attribute>
-   <addaction name="actionEditor"/>
    <addaction name="separator"/>
-   <addaction name="actionAddLine"/>
-   <addaction name="actionAddRect"/>
-   <addaction name="actionAddRoundedRect"/>
-   <addaction name="actionAddEllipse"/>
-   <addaction name="actionAddArc"/>
-   <addaction name="actionAddChord"/>
    <addaction name="actionSwitchLayer"/>
   </widget>
   <action name="actionNew">

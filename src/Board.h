@@ -141,6 +141,12 @@ public:
 		m_colorMgr.Clear();
 		GuiControl::Clear();	// Clear() base class
 	}
+	void Reset()	// For use with File->New()
+	{
+		Clear();
+		if ( GetLyrs() == 2 ) GrowThenPan(-1, 0, 0, 0, 0);	// Give new board a single layer
+		GuiControl::Reset();
+	}
 
 	void GlueNbrs()	// Set pointers between neighbouring grid elements
 	{

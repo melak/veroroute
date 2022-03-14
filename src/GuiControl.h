@@ -500,6 +500,34 @@ public:
 					 const int& iPadWidthMIL, const int& iPerimeterCode, const int& iTagCode,
 					 std::list<MyPolygonF>& out,
 					 const bool bHavePad, const bool bIsGnd, const bool bGap = false) const;
+	void Reset()	// For use with File->New()
+	{
+		m_currentLayer		= 0;
+		m_currentCompId		= BAD_COMPID;
+		m_currentNodeId		= BAD_NODEID;
+		m_groundNodeId0		= BAD_NODEID;
+		m_groundNodeId1		= BAD_NODEID;
+		m_currentTextId		= BAD_TEXTID;
+		m_diagsMode			= DIAGSMODE::MIN;
+		m_iTrackMode		= TRACKMODE::COLOR;
+		m_iCompMode			= COMPSMODE::NAME;
+		m_iFillSaturation	= 0;
+		m_bShowTarget		= false;
+		m_bShowCloseTracks	= false;
+		m_bVeroTracks		= false;
+		m_bCurvedTracks		= false;
+		m_bFatTracks		= true;
+		m_bRoutingEnabled	= false;
+		m_bViasEnabled		= true;
+		m_bShowGrid			= true;
+		m_bShowText			= true;
+		m_bFlipH			= false;
+		m_bFlipV			= false;
+		m_bPinLabels		= true;
+		m_bFlyWires			= true;
+		m_bGroundFill		= false;
+		m_bCompEdit			= false;
+	}
 private:
 	MyRGB		m_backgroundColor	= MyRGB(0xFFFFFF);
 	int			m_currentLayer		= 0;				// Currently selected layer for display

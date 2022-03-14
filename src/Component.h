@@ -401,6 +401,8 @@ public:
 		std::string str = GetTypeStr();
 		if ( GetType() == COMP::DIP || GetType() == COMP::SIP )
 			str += std::to_string(GetNumPins());	// e.g. "DIP16"
+		if ( GetType() == COMP::STRIP_100 || GetType() == COMP::BLOCK_100 || GetType() == COMP::BLOCK_200 )
+			str += std::string(" (") + std::to_string(GetNumPins()) + std::string(" pins)");
 		return str;
 	}
 	std::string GetFullImportStr() const	// For SIP/DIP/SWITCH/STRIP/BLOCK types, append the number of pins

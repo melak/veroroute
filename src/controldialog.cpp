@@ -155,7 +155,7 @@ void ControlDialog::UpdateCompControls()	// Component controls
 		const Component& comp = board.GetUserComponent();
 		nameStr			= comp.GetNameStr();
 		valueStr		= comp.GetValueStr();
-		typeStr			= comp.GetTypeStr();
+		typeStr			= comp.GetFullTypeStr();
 		bCustom			= comp.GetCustomPads();
 		iPadWidth		= comp.GetPadWidth();
 		iHoleWidth		= comp.GetHoleWidth();

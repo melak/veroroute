@@ -164,10 +164,12 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 
 #ifdef VEROROUTE_ANDROID
 	ui->menuBar->setNativeMenuBar(false);
-	ui->toolBar->setIconSize(QSize(30,30));		// 30x30 instead of 24x24
-	ui->toolBar->setMovable(false);				// Keep docked
 	ui->toolBar_2->setIconSize(QSize(30,30));	// 30x30 instead of 24x24
 	ui->toolBar_2->setMovable(false);			// Keep docked
+	ui->toolBar_3->setIconSize(QSize(30,30));	// 30x30 instead of 24x24
+	ui->toolBar_3->setMovable(false);			// Keep docked
+	ui->toolBar->setIconSize(QSize(30,30));		// 30x30 instead of 24x24
+	ui->toolBar->setMovable(false);				// Keep docked
 	ui->actionHotkeysDlg->setVisible(false);	// Hide dialog listing key/mouse actions
 	ui->actionUpdateCheck->setVisible(false);	// Hide update check (until SSL support added)
 	// Remove keyboard shortcuts for actions
@@ -679,7 +681,7 @@ void MainWindow::New()
 										 tr("Your circuit is not saved. You will lose changes if you make a new one.  Continue?"),
 										 QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::No ) return;
 	}
-	m_board.Clear();
+	m_board.Reset();
 	m_fileName.clear();
 	ResetHistory("File->New");
 	ResetView();
@@ -1106,8 +1108,8 @@ void MainWindow::Copy()
 			UpdateHistory("Copy parts");
 		else
 			UpdateHistory("Copy part");
-		UpdateBOM();
 		UpdateControls();
+		UpdateBOM();
 		RepaintSkipRouting();
 	}
 }
@@ -1288,7 +1290,7 @@ void MainWindow::ShowPadOffsetDialog()
 	QRect r = ui->statusBar->geometry();
 	QRect d = m_padOffsetDlg->geometry();
 	const int titleBarHeight = d.top() - m_padOffsetDlg->pos().y();	// Can be 0 on Android
-	m_padOffsetDlg->move(R.left() + r.left() + 450, R.top() + r.top() - titleBarHeight);
+	m_padOffsetDlg->move(R.left() + r.left() + 450, R.top() + r.top() - titleBarHeight - 2);
 	UpdatePadInfo();
 }
 void MainWindow::HidePadOffsetDialog(bool bForce)
@@ -2248,6 +2250,9 @@ void MainWindow::UpdateControls()
 	const bool		bThin			= !bVero && !m_board.GetCurvedTracks() && !m_board.GetFatTracks();
 	const bool		bCurved			= !bVero &&  m_board.GetCurvedTracks();
 
+	ui->toolBar->setVisible( !bCompEdit );
+	ui->toolBar_3->setVisible( bCompEdit );
+
 	ui->menuExport_as_Gerber_1_Layer->setEnabled(bPCB && !bCompEdit && !m_board.GetMirrored() && !m_board.GetVeroTracks() && m_board.GetLyrs() == 1);
 	ui->menuExport_as_Gerber_2_Layer->setEnabled(bPCB && !bCompEdit && !m_board.GetMirrored() && !m_board.GetVeroTracks());
 	ui->actionMerge->setEnabled(    !bPCB && !bCompEdit);
@@ -2395,7 +2400,7 @@ void MainWindow::UpdateControls()
 }
 void MainWindow::UpdateCompDialog()			{ m_compDlg->Update(); m_pinDlg->Update(); }
 void MainWindow::EnableCompDialogControls()	{ m_compDlg->EnableControls(); }
-void MainWindow::UpdateBOM()				{ m_bomDlg->Update(); }
+void MainWindow::UpdateBOM()				{ m_bomDlg->Update(); if ( m_bomDlg->isVisible() ) { HideBomDialog(); ShowBomDialog(); } }	// Hide/Show needed to make the list refresh
 void MainWindow::UpdateTemplatesDialog()	{ m_templatesDlg->Update(); }
 void MainWindow::UpdateTextDialog(bool bFull)
 {

@@ -101,11 +101,7 @@ void BomDialog::Update()
 
 		auto		strNewType	= CompTypes::GetFamilyStr( p->GetType() );
 		if ( !StringHelper::IsEmptyStr(strNewType) ) strNewType += ": ";
-		strNewType += p->GetTypeStr();
-		if ( p->GetType() == COMP::DIP || p->GetType() == COMP::SIP )
-			strNewType += std::to_string(p->GetNumPins());	// e.g. "DIP16"
-		if ( p->GetType() == COMP::STRIP_100 || p->GetType() == COMP::BLOCK_100 || p->GetType() == COMP::BLOCK_200 )
-			strNewType += std::string(" (") + std::to_string(p->GetNumPins()) + std::string(" pins)");
+		strNewType += p->GetFullTypeStr();
 
 		const bool bNewRow = ( row == -1) || ( strNewValue != rowValue ) || ( strNewType != rowType );
 		if ( bNewRow )
@@ -219,7 +215,7 @@ void BomDialog::keyReleaseEvent(QKeyEvent* event)
 #ifdef VEROROUTE_ANDROID
 	if ( event->key() == Qt::Key_Back )
 	{
-		QTimer::singleShot(0, m_pMainWindow, SLOT(HideBomDialog()));//TODO Send close dialog signal to mainwindow
+		QTimer::singleShot(0, m_pMainWindow, SLOT(HideBomDialog()));
 		return event->accept();
 	}
 #else
