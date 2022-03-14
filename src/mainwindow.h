@@ -117,6 +117,7 @@ public:
 	const bool&	GetCtrlKeyDown() const	{ return m_bCtrlKeyDown;	}
 	const bool&	GetShiftKeyDown() const	{ return m_bShiftKeyDown;	}
 
+	bool		GetPaintAction() const	{ return m_eMouseMode >= MOUSE_MODE::PAINT_PINS && m_eMouseMode <= MOUSE_MODE::PAINT_FLOOD; }
 	bool		GetPaintPins() const	{ return m_eMouseMode == MOUSE_MODE::PAINT_PINS; }
 	bool		GetErasePins() const	{ return m_eMouseMode == MOUSE_MODE::ERASE_PINS; }
 	bool		GetPaintBoard() const	{ return m_eMouseMode == MOUSE_MODE::PAINT_GRID; }
@@ -282,8 +283,11 @@ public slots:
 	void ShowInfoDialog();
 	void ShowPinDialog();
 	void ShowBomDialog();
+	void HideBomDialog();
 	void ShowWireDialog();
+	void HideWireDialog();
 	void ShowFindDialog();
+	void HideFindDialog();
 	void ShowTextDialog();
 	void ShowAbout();
 	void ShowSupport();
@@ -524,6 +528,8 @@ private:
 	}
 	void AddFromTemplate(const Component& compTemp)
 	{
+		if ( compTemp.GetType() != COMP::CUSTOM ) return AddPart( compTemp.GetType() );
+
 		if ( m_board.GetCompEdit() ) return;	// Do nothing in component editor mode
 
 		ResetMouseMode();

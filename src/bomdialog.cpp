@@ -216,7 +216,13 @@ void BomDialog::keyPressEvent(QKeyEvent* event)
 
 void BomDialog::keyReleaseEvent(QKeyEvent* event)
 {
-#ifndef VEROROUTE_ANDROID
+#ifdef VEROROUTE_ANDROID
+	if ( event->key() == Qt::Key_Back )
+	{
+		QTimer::singleShot(0, m_pMainWindow, SLOT(HideBomDialog()));//TODO Send close dialog signal to mainwindow
+		return event->accept();
+	}
+#else
 	m_pMainWindow->commonKeyReleaseEvent(event);
 #endif
 	QDialog::keyReleaseEvent(event);

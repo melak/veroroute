@@ -86,12 +86,13 @@ void TemplatesDialog::Update()
 			int iWidth(0);
 			switch( i )
 			{
-				case 0: iWidth = bGeneric ? 220 : 160; break;
-				case 1: iWidth = (numRows > 20) ? 160 : 180; // Small reduction when have a vertical scroll bar
+				case 0: iWidth = bGeneric ? 360 : 180; break;
+				case 1: iWidth = (numRows > 6) ? 160 : 180; // Small reduction when have a vertical scroll bar
 			}
 			pTableWidget->setColumnWidth(i,iWidth);
 		}
 		pTableWidget->setHorizontalHeaderLabels(tableHeader);
+		pTableWidget->horizontalHeader()->setVisible(!bGeneric);
 		pTableWidget->verticalHeader()->setVisible(false);
 		pTableWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
 		pTableWidget->setSelectionBehavior(QAbstractItemView::SelectRows);

@@ -46,9 +46,8 @@ void MainWindow::GetPixMapXY(const QPoint& currentPoint, int& pixmapX, int& pixm
 	const int iLeftDlgWidth = m_dockInfoDlg->isVisible() ? m_dockInfoDlg->width() :
 							  m_dockPinDlg->isVisible()  ? m_dockPinDlg->width() : 0;
 
-	const int iToolbarHeight = ( ui->toolBar->isFloating() || ui->toolBar->isHidden() ) ? 0 : ui->toolBar->height();
 	pixmapX = currentPoint.x() + m_scrollArea->horizontalScrollBar()->value() - iLeftDlgWidth;
-	pixmapY = currentPoint.y() + m_scrollArea->verticalScrollBar()->value() - ui->menuBar->height()- iToolbarHeight;
+	pixmapY = currentPoint.y() + m_scrollArea->verticalScrollBar()->value() - ui->menuBar->height();
 
 	int gndL, gndR, gndT, gndB;
 	m_board.GetGroundFillBounds(gndL, gndR, gndT, gndB);
@@ -117,10 +116,10 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 
 	g_bHaveAutoPanned = false;	// Reset flags for avoiding repeated re-draws
 
-	if ( m_wireDlg->isVisible() )	HideDlg(m_wireDlg);
-	if ( m_bomDlg->isVisible() )	HideDlg(m_bomDlg);
+	if ( m_wireDlg->isVisible() )	HideWireDialog();
+	if ( m_bomDlg->isVisible() )	HideBomDialog();
 	if ( m_findDlg->isVisible() )
-		HideDlg(m_findDlg);
+		HideFindDialog();
 	else
 		ClearFind();	// Clear the set of found components
 
@@ -443,10 +442,10 @@ void MainWindow::mouseDoubleClickEvent(QMouseEvent* event)
 	}
 #endif
 
-	if ( m_board.GetTrackMode() == TRACKMODE::OFF ) return;
-
 	if ( GetCurrentTextId() != BAD_TEXTID )
 		return ShowTextDialog();
+
+	if ( m_board.GetTrackMode() == TRACKMODE::OFF ) return;
 
 	// Get row col
 	double dRow(0), dCol(0);	// Fractional correction to row, col for SwapDiagLinks() call
@@ -457,7 +456,7 @@ void MainWindow::mouseDoubleClickEvent(QMouseEvent* event)
 	centralWidget()->setCursor(Qt::CrossCursor);
 
 	// Handle changing layer preference for PCBs via double-clicking on a component pin
-	if ( m_board.GetTrackMode() == TRACKMODE::PCB && m_board.GetLyrs() == 2 )
+	if ( m_board.GetTrackMode() == TRACKMODE::PCB && m_board.GetLyrs() == 2 && !GetPaintBoard() )
 	{
 		if ( hypot(dRow - 0.5, dCol - 0.5) < 0.25 )	// Only consider clicks that are close to the grid point
 		{
@@ -469,8 +468,33 @@ void MainWindow::mouseDoubleClickEvent(QMouseEvent* event)
 		}
 	}
 
+	// Handle competing diagonals
+	if ( !GetPaintAction() && m_board.GetTrackMode() != TRACKMODE::OFF )	//TODO Making !GetPaintAction() explicit
+	{
+		const int	dR = ( dRow > 0.5 ) ? 1 : 0;	// Correct row, col to account for crossing ...
+		const int	dC = ( dCol > 0.5 ) ? 1 : 0;	// ... point being near corner of element
+		const int&	layer	 = m_board.GetCurrentLayer();
+
+		const bool	bSwapped = m_board.Get(layer, m_gridRow + dR, m_gridCol + dC)->SwapDiagLinks();
+		if ( bSwapped )
+		{
+			m_board.WipeAutoSetPoints();
+			m_board.PlaceFloaters();	// See if we can now place floating components down
+			UpdateHistory("Toggle competing diagonals");
+
+			// mouseReleaseEvent() will do RepaintWithRouting() and ListNodes().  No need to do it here.
+			return;
+		}
+	}
+
 #ifdef VEROROUTE_ANDROID
+	// Component rotation
+	//TODO Could allow this in Desktop version too if we change how toggle diagonals works (e.g. require space bar to be pressed ?)
+	if ( !GetPaintAction() && m_board.GetCompMode() != COMPSMODE::OFF && m_eMouseMode == MOUSE_MODE::SELECT && GetCurrentCompId() != BAD_COMPID )
+		return CompRotateCW();
+
 	// Handle leaving PaintBoard mode via double-clicking on a component pin
+	//TODO See is this get confused with swapping diagonals
 	if ( GetPaintBoard() && GetCurrentNodeId() != BAD_NODEID )
 	{
 		if ( hypot(dRow - 0.5, dCol - 0.5) < 0.25 )	// Only consider clicks that are close to the grid point
@@ -485,21 +509,6 @@ void MainWindow::mouseDoubleClickEvent(QMouseEvent* event)
 		}
 	}
 #endif
-
-	// Handle competing diagonals ...
-	const int	dR = ( dRow > 0.5 ) ? 1 : 0;	// Correct row, col to account for crossing ...
-	const int	dC = ( dCol > 0.5 ) ? 1 : 0;	// ... point being near corner of element
-	const int&	layer	 = m_board.GetCurrentLayer();
-
-	const bool	bSwapped = m_board.Get(layer, m_gridRow + dR, m_gridCol + dC)->SwapDiagLinks();
-	if ( bSwapped )
-	{
-		m_board.WipeAutoSetPoints();
-		m_board.PlaceFloaters();	// See if we can now place floating components down
-		UpdateHistory("Toggle competing diagonals");
-
-		// mouseReleaseEvent() will do RepaintWithRouting() and ListNodes().  No need to do it here.
-	}
 }
 
 void MainWindow::mouseMoveEvent(QMouseEvent* event)

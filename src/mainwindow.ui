@@ -9,14 +9,14 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1024</width>
-    <height>760</height>
+    <width>1350</width>
+    <height>720</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>200</width>
-    <height>200</height>
+    <width>800</width>
+    <height>690</height>
    </size>
   </property>
   <property name="mouseTracking">
@@ -44,7 +44,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1024</width>
+     <width>1350</width>
      <height>26</height>
     </rect>
    </property>
@@ -334,12 +334,11 @@
     <bool>true</bool>
    </property>
    <attribute name="toolBarArea">
-    <enum>TopToolBarArea</enum>
+    <enum>BottomToolBarArea</enum>
    </attribute>
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="actionSwitchLayer"/>
    <addaction name="separator"/>
    <addaction name="actionUndo"/>
    <addaction name="actionRedo"/>
@@ -402,6 +401,7 @@
    <addaction name="actionAddEllipse"/>
    <addaction name="actionAddArc"/>
    <addaction name="actionAddChord"/>
+   <addaction name="actionSwitchLayer"/>
   </widget>
   <action name="actionNew">
    <property name="text">

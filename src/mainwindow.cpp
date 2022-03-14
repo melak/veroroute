@@ -1283,13 +1283,12 @@ void MainWindow::ShowPinDialog()
 void MainWindow::ShowPadOffsetDialog()
 {
 	ShowDlg(m_padOffsetDlg);	// Show the dialog (so we can get position info) ...
-	// ... then try to it centre on the lower toolbar
+	// ... then try to it centre it in the status bar !!!
 	QRect R = geometry();
-	QRect r = ui->toolBar_2->geometry();
+	QRect r = ui->statusBar->geometry();
 	QRect d = m_padOffsetDlg->geometry();
 	const int titleBarHeight = d.top() - m_padOffsetDlg->pos().y();	// Can be 0 on Android
-	const int buttonHeight	 = 24;	// From ui file
-	m_padOffsetDlg->move(R.left() + r.left() + 300, R.top() + r.top() - titleBarHeight + ( r.height() - buttonHeight ) / 2);
+	m_padOffsetDlg->move(R.left() + r.left() + 450, R.top() + r.top() - titleBarHeight);
 	UpdatePadInfo();
 }
 void MainWindow::HidePadOffsetDialog(bool bForce)
@@ -1309,6 +1308,10 @@ void MainWindow::ShowBomDialog()
 	UpdateBOM();
 	ShowDlg(m_bomDlg);
 }
+void MainWindow::HideBomDialog()
+{
+	HideDlg(m_bomDlg);
+}
 void MainWindow::ShowWireDialog()
 {
 	// (m_bomDlg, m_wireDlg, m_findDlg, m_textDlg) are mutually exclusive
@@ -1318,6 +1321,10 @@ void MainWindow::ShowWireDialog()
 	ResetMouseMode();
 	ShowDlg(m_wireDlg);
 }
+void MainWindow::HideWireDialog()
+{
+	HideDlg(m_wireDlg);
+}
 void MainWindow::ShowFindDialog()
 {
 	// (m_bomDlg, m_wireDlg, m_findDlg, m_textDlg) are mutually exclusive
@@ -1326,6 +1333,10 @@ void MainWindow::ShowFindDialog()
 	m_textDlg->hide();
 	ResetMouseMode();
 	ShowDlg(m_findDlg);
+}
+void MainWindow::HideFindDialog()
+{
+	HideDlg(m_findDlg);
 }
 void MainWindow::ShowTextDialog()
 {

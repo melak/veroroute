@@ -65,7 +65,7 @@ void InfoDialog::ShowButtons(bool b)
 	ui->next->setVisible(b);
 	// Set bigger text edit box if we hide the buttons
 	QRect rect = ui->textEdit->geometry();
-	rect.setBottom(b ? 561 : 600);
+	rect.setHeight(b ? 591 : 630);
 	ui->textEdit->setGeometry(rect);
 }
 

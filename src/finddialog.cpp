@@ -88,7 +88,13 @@ void FindDialog::keyPressEvent(QKeyEvent* event)
 
 void FindDialog::keyReleaseEvent(QKeyEvent* event)
 {
-#ifndef VEROROUTE_ANDROID
+#ifdef VEROROUTE_ANDROID
+	if ( event->key() == Qt::Key_Back )
+	{
+		QTimer::singleShot(0, m_pMainWindow, SLOT(HideFindDialog()));//TODO Send close dialog signal to mainwindow
+		return event->accept();
+	}
+#else
 	m_pMainWindow->commonKeyReleaseEvent(event);
 #endif
 	QDialog::keyReleaseEvent(event);

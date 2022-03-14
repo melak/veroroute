@@ -6,20 +6,20 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>350</width>
-    <height>600</height>
+    <width>330</width>
+    <height>630</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>350</width>
-    <height>600</height>
+    <width>330</width>
+    <height>630</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>350</width>
-    <height>600</height>
+    <width>330</width>
+    <height>630</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -28,8 +28,8 @@
   <widget class="QGroupBox" name="groupBox">
    <property name="geometry">
     <rect>
-     <x>10</x>
-     <y>10</y>
+     <x>0</x>
+     <y>0</y>
      <width>131</width>
      <height>61</height>
     </rect>
@@ -43,7 +43,7 @@
       <x>10</x>
       <y>30</y>
       <width>61</width>
-      <height>24</height>
+      <height>27</height>
      </rect>
     </property>
     <property name="mouseTracking">
@@ -62,7 +62,7 @@
       <x>70</x>
       <y>30</y>
       <width>51</width>
-      <height>24</height>
+      <height>27</height>
      </rect>
     </property>
     <property name="mouseTracking">
@@ -79,9 +79,9 @@
   <widget class="QGroupBox" name="groupBox_2">
    <property name="geometry">
     <rect>
-     <x>10</x>
-     <y>180</y>
-     <width>311</width>
+     <x>0</x>
+     <y>190</y>
+     <width>331</width>
      <height>61</height>
     </rect>
    </property>
@@ -94,7 +94,7 @@
       <x>70</x>
       <y>30</y>
       <width>61</width>
-      <height>24</height>
+      <height>27</height>
      </rect>
     </property>
     <property name="toolTip">
@@ -116,7 +116,7 @@
       <x>10</x>
       <y>30</y>
       <width>61</width>
-      <height>24</height>
+      <height>27</height>
      </rect>
     </property>
     <property name="text">
@@ -129,7 +129,7 @@
       <x>260</x>
       <y>30</y>
       <width>61</width>
-      <height>24</height>
+      <height>27</height>
      </rect>
     </property>
     <property name="toolTip">
@@ -151,7 +151,7 @@
       <x>180</x>
       <y>30</y>
       <width>81</width>
-      <height>24</height>
+      <height>27</height>
      </rect>
     </property>
     <property name="text">
@@ -162,7 +162,7 @@
   <widget class="QGroupBox" name="groupBox_target">
    <property name="geometry">
     <rect>
-     <x>10</x>
+     <x>0</x>
      <y>80</y>
      <width>331</width>
      <height>91</height>
@@ -177,7 +177,7 @@
       <x>10</x>
       <y>60</y>
       <width>311</width>
-      <height>24</height>
+      <height>27</height>
      </rect>
     </property>
     <property name="mouseTracking">
@@ -199,7 +199,7 @@
       <x>10</x>
       <y>30</y>
       <width>61</width>
-      <height>24</height>
+      <height>27</height>
      </rect>
     </property>
     <property name="text">
@@ -212,7 +212,7 @@
       <x>260</x>
       <y>30</y>
       <width>61</width>
-      <height>24</height>
+      <height>27</height>
      </rect>
     </property>
     <property name="toolTip">
@@ -234,7 +234,7 @@
       <x>70</x>
       <y>30</y>
       <width>61</width>
-      <height>24</height>
+      <height>27</height>
      </rect>
     </property>
     <property name="toolTip">
@@ -256,7 +256,7 @@
       <x>180</x>
       <y>30</y>
       <width>81</width>
-      <height>24</height>
+      <height>27</height>
      </rect>
     </property>
     <property name="text">
@@ -267,10 +267,10 @@
   <widget class="QGroupBox" name="groupBox_widths">
    <property name="geometry">
     <rect>
-     <x>10</x>
-     <y>250</y>
+     <x>0</x>
+     <y>270</y>
      <width>331</width>
-     <height>211</height>
+     <height>221</height>
     </rect>
    </property>
    <property name="title">
@@ -282,7 +282,7 @@
       <x>70</x>
       <y>60</y>
       <width>61</width>
-      <height>24</height>
+      <height>27</height>
      </rect>
     </property>
     <property name="toolTip">
@@ -307,7 +307,7 @@
       <x>70</x>
       <y>30</y>
       <width>61</width>
-      <height>24</height>
+      <height>27</height>
      </rect>
     </property>
     <property name="toolTip">
@@ -332,7 +332,7 @@
       <x>10</x>
       <y>30</y>
       <width>61</width>
-      <height>24</height>
+      <height>27</height>
      </rect>
     </property>
     <property name="text">
@@ -348,7 +348,7 @@
       <x>10</x>
       <y>90</y>
       <width>61</width>
-      <height>24</height>
+      <height>27</height>
      </rect>
     </property>
     <property name="text">
@@ -364,7 +364,7 @@
       <x>10</x>
       <y>60</y>
       <width>61</width>
-      <height>24</height>
+      <height>27</height>
      </rect>
     </property>
     <property name="text">
@@ -380,7 +380,7 @@
       <x>70</x>
       <y>90</y>
       <width>61</width>
-      <height>24</height>
+      <height>27</height>
      </rect>
     </property>
     <property name="toolTip">
@@ -405,7 +405,7 @@
       <x>260</x>
       <y>90</y>
       <width>61</width>
-      <height>24</height>
+      <height>27</height>
      </rect>
     </property>
     <property name="toolTip">
@@ -430,7 +430,7 @@
       <x>180</x>
       <y>90</y>
       <width>81</width>
-      <height>24</height>
+      <height>27</height>
      </rect>
     </property>
     <property name="text">
@@ -446,7 +446,7 @@
       <x>180</x>
       <y>30</y>
       <width>81</width>
-      <height>24</height>
+      <height>27</height>
      </rect>
     </property>
     <property name="text">
@@ -462,7 +462,7 @@
       <x>260</x>
       <y>30</y>
       <width>61</width>
-      <height>24</height>
+      <height>27</height>
      </rect>
     </property>
     <property name="toolTip">
@@ -487,7 +487,7 @@
       <x>260</x>
       <y>60</y>
       <width>61</width>
-      <height>24</height>
+      <height>27</height>
      </rect>
     </property>
     <property name="toolTip">
@@ -512,7 +512,7 @@
       <x>180</x>
       <y>60</y>
       <width>81</width>
-      <height>24</height>
+      <height>27</height>
      </rect>
     </property>
     <property name="text">
@@ -526,13 +526,14 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>150</y>
+      <y>160</y>
       <width>311</width>
-      <height>24</height>
+      <height>27</height>
      </rect>
     </property>
     <property name="font">
      <font>
+      <weight>50</weight>
       <italic>true</italic>
       <bold>false</bold>
      </font>
@@ -548,13 +549,14 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>180</y>
+      <y>190</y>
       <width>311</width>
-      <height>24</height>
+      <height>27</height>
      </rect>
     </property>
     <property name="font">
      <font>
+      <weight>50</weight>
       <italic>true</italic>
       <bold>false</bold>
      </font>
@@ -572,7 +574,7 @@
       <x>10</x>
       <y>120</y>
       <width>311</width>
-      <height>24</height>
+      <height>27</height>
      </rect>
     </property>
     <property name="mouseTracking">
@@ -594,7 +596,7 @@
       <x>180</x>
       <y>120</y>
       <width>81</width>
-      <height>24</height>
+      <height>27</height>
      </rect>
     </property>
     <property name="text">
@@ -610,7 +612,7 @@
       <x>260</x>
       <y>120</y>
       <width>61</width>
-      <height>24</height>
+      <height>27</height>
      </rect>
     </property>
     <property name="toolTip">
@@ -633,8 +635,8 @@
   <widget class="QGroupBox" name="groupBox_pcb">
    <property name="geometry">
     <rect>
-     <x>10</x>
-     <y>470</y>
+     <x>0</x>
+     <y>510</y>
      <width>331</width>
      <height>121</height>
     </rect>
@@ -646,9 +648,9 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>30</y>
+      <y>28</y>
       <width>161</width>
-      <height>24</height>
+      <height>27</height>
      </rect>
     </property>
     <property name="text">
@@ -662,9 +664,9 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>60</y>
+      <y>58</y>
       <width>161</width>
-      <height>24</height>
+      <height>27</height>
      </rect>
     </property>
     <property name="text">
@@ -678,9 +680,9 @@
     <property name="geometry">
      <rect>
       <x>180</x>
-      <y>30</y>
+      <y>28</y>
       <width>61</width>
-      <height>24</height>
+      <height>27</height>
      </rect>
     </property>
     <property name="toolTip">
@@ -703,9 +705,9 @@
     <property name="geometry">
      <rect>
       <x>180</x>
-      <y>60</y>
+      <y>58</y>
       <width>61</width>
-      <height>24</height>
+      <height>27</height>
      </rect>
     </property>
     <property name="toolTip">
@@ -728,9 +730,9 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>90</y>
+      <y>88</y>
       <width>161</width>
-      <height>24</height>
+      <height>27</height>
      </rect>
     </property>
     <property name="text">
@@ -744,9 +746,9 @@
     <property name="geometry">
      <rect>
       <x>180</x>
-      <y>90</y>
+      <y>88</y>
       <width>61</width>
-      <height>24</height>
+      <height>27</height>
      </rect>
     </property>
     <property name="toolTip">
@@ -769,9 +771,9 @@
   <widget class="QGroupBox" name="groupBox_bright">
    <property name="geometry">
     <rect>
-     <x>150</x>
-     <y>10</y>
-     <width>191</width>
+     <x>140</x>
+     <y>0</y>
+     <width>181</width>
      <height>61</height>
     </rect>
    </property>
@@ -784,7 +786,7 @@
       <x>10</x>
       <y>30</y>
       <width>111</width>
-      <height>24</height>
+      <height>27</height>
      </rect>
     </property>
     <property name="text">
@@ -797,7 +799,7 @@
       <x>120</x>
       <y>30</y>
       <width>61</width>
-      <height>24</height>
+      <height>27</height>
      </rect>
     </property>
     <property name="toolTip">
