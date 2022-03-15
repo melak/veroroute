@@ -279,7 +279,9 @@ public slots:
 	void ShowControlDialog();
 	void ShowCompDialog();
 	void ShowTemplatesDialog();
+	void HideTemplatesDialog();
 	void ShowRenderingDialog();
+	void HideRenderingDialog();
 	void ShowInfoDialog();
 	void ShowPinDialog();
 	void ShowBomDialog();

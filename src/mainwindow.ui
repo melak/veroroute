@@ -216,13 +216,13 @@
      <string>Windows</string>
     </property>
     <addaction name="actionControlDlg"/>
+    <addaction name="actionCompDlg"/>
+    <addaction name="actionPinDlg"/>
     <addaction name="actionTemplatesDlg"/>
-    <addaction name="actionInfoDlg"/>
     <addaction name="actionRenderingDlg"/>
     <addaction name="actionWireDlg"/>
     <addaction name="actionBomDlg"/>
-    <addaction name="actionPinDlg"/>
-    <addaction name="actionCompDlg"/>
+    <addaction name="actionInfoDlg"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -321,6 +321,12 @@
    <addaction name="actionZoom_Out"/>
    <addaction name="separator"/>
    <addaction name="actionToggleGrid"/>
+   <addaction name="separator"/>
+   <addaction name="actionPinDlg"/>
+   <addaction name="separator"/>
+   <addaction name="actionTemplatesDlg"/>
+   <addaction name="separator"/>
+   <addaction name="actionRenderingDlg"/>
   </widget>
   <widget class="QToolBar" name="toolBar_3">
    <property name="minimumSize">
@@ -385,6 +391,7 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
+   <addaction name="separator"/>
    <addaction name="actionToggleText"/>
    <addaction name="separator"/>
    <addaction name="actionTogglePinLabels"/>
@@ -886,6 +893,13 @@
    </property>
   </action>
   <action name="actionTemplatesDlg">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="veroroute.qrc">
+     <normaloff>:/images/templates.png</normaloff>:/images/templates.png</iconset>
+   </property>
    <property name="text">
     <string>Parts / Templates</string>
    </property>
@@ -902,6 +916,13 @@
    </property>
   </action>
   <action name="actionRenderingDlg">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="veroroute.qrc">
+     <normaloff>:/images/render.png</normaloff>:/images/render.png</iconset>
+   </property>
    <property name="text">
     <string>Rendering Options</string>
    </property>
@@ -912,6 +933,13 @@
    </property>
   </action>
   <action name="actionPinDlg">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="veroroute.qrc">
+     <normaloff>:/images/pineditor.png</normaloff>:/images/pineditor.png</iconset>
+   </property>
    <property name="text">
     <string>Pin Labels Editor</string>
    </property>

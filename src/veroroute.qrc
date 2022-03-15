@@ -42,5 +42,8 @@
         <file>images/paintflood.png</file>
         <file>images/paintgrid.png</file>
         <file>images/paintpins.png</file>
+        <file>images/pineditor.png</file>
+        <file>images/templates.png</file>
+        <file>images/render.png</file>
     </qresource>
 </RCC>

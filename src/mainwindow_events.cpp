@@ -142,7 +142,10 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 
 	if ( !bInGrid)
 	{
+		// Disabled code for auto-hiding the pin labels editor
+		/*
 		if ( m_dockPinDlg->isVisible() ) m_dockPinDlg->hide();
+		*/
 		return HidePadOffsetDialog();
 	}
 
@@ -401,7 +404,9 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 		if ( ALLOW_DELAY_BASED_PAD_SHIFT && pC->GetHasPin() && !pC->GetHasWire() )
 			g_bPinClicked = true;
 
-		// Pin labels editos is only useful if we have selected a single component with pin labels
+		// Disabled code for auto-hiding the pin labels editor
+		// Pin labels editor is only useful if we have selected a single component with pin labels
+		/*
 		bool bPinLabels(false);
 		if ( m_board.GetGroupMgr().GetNumUserComps() == 1 )
 		{
@@ -410,6 +415,7 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 		}
 		if ( !bPinLabels && m_dockPinDlg->isVisible() )
 			HideDlg(m_dockPinDlg);
+		*/
 
 		if ( !pC->GetHasPin() || pC->GetHasWire() )	// Hide the pad offset dialog if we click on a place that cannot have a pad offset
 			HidePadOffsetDialog();

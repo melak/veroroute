@@ -162,11 +162,11 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	m_padOffsetDlg	= new PadOffsetDialog(this);
 	m_findDlg		= new FindDialog(this);
 
-	ui->toolBar_2->setIconSize(QSize(30,30));	// 30x30 instead of 24x24
+	ui->toolBar_2->setIconSize(QSize(32,32));	// 32x32 instead of 24x24
 	ui->toolBar_2->setMovable(false);			// Keep docked
-	ui->toolBar_3->setIconSize(QSize(30,30));	// 30x30 instead of 24x24
+	ui->toolBar_3->setIconSize(QSize(32,32));	// 32x32 instead of 24x24
 	ui->toolBar_3->setMovable(false);			// Keep docked
-	ui->toolBar->setIconSize(QSize(30,30));		// 30x30 instead of 24x24
+	ui->toolBar->setIconSize(QSize(32,32));		// 32x32 instead of 24x24
 	ui->toolBar->setMovable(false);				// Keep docked
 
 #ifdef VEROROUTE_ANDROID
@@ -1196,9 +1196,9 @@ void MainWindow::ShowDlg(QWidget* p)		{ p->showNormal();	p->raise();	p->activate
 void MainWindow::HideDlg(QWidget* p)		{ p->hide(); UpdateControls(); }
 void MainWindow::ToggleControlDialog()		{ return m_dockControlDlg->isVisible()		? HideDlg(m_dockControlDlg)		: ShowControlDialog(); }
 void MainWindow::ToggleCompDialog()			{ return m_dockCompDlg->isVisible()			? HideDlg(m_dockCompDlg)		: ShowCompDialog(); }
-void MainWindow::ToggleRenderingDialog()	{ return m_dockRenderingDlg->isVisible()	? HideDlg(m_dockRenderingDlg)	: ShowRenderingDialog(); }
+void MainWindow::ToggleRenderingDialog()	{ return m_dockRenderingDlg->isVisible()	? HideRenderingDialog()			: ShowRenderingDialog(); }
 void MainWindow::ToggleInfoDialog()			{ return m_dockInfoDlg->isVisible()			? HideDlg(m_dockInfoDlg)		: ShowInfoDialog(); }
-void MainWindow::ToggleTemplatesDialog()	{ return m_dockTemplatesDlg->isVisible()	? HideDlg(m_dockTemplatesDlg)	: ShowTemplatesDialog(); }
+void MainWindow::ToggleTemplatesDialog()	{ return m_dockTemplatesDlg->isVisible()	? HideTemplatesDialog()			: ShowTemplatesDialog(); }
 void MainWindow::TogglePinDialog()			{ return m_dockPinDlg->isVisible()			? HideDlg(m_dockPinDlg)			: ShowPinDialog(); }
 void MainWindow::HideAllDockedDlgs()
 {
@@ -1250,6 +1250,11 @@ void MainWindow::ShowRenderingDialog()
 	m_dockTemplatesDlg->hide();
 	ShowDlg(m_dockRenderingDlg);
 }
+void MainWindow::HideRenderingDialog()
+{
+	HideDlg(m_dockRenderingDlg);
+	if ( !m_board.GetCompEdit() ) ShowDlg(m_dockControlDlg);
+}
 void MainWindow::ShowHotkeysDialog()
 {
 	HideAllNonDockedDlgs();	// (m_bomDlg, m_wireDlg, m_findDlg, m_textDlg)
@@ -1272,6 +1277,11 @@ void MainWindow::ShowTemplatesDialog()
 	m_dockControlDlg->hide();
 	m_dockRenderingDlg->hide();
 	UpdateTemplatesDialog();	ShowDlg(m_dockTemplatesDlg);
+}
+void MainWindow::HideTemplatesDialog()
+{
+	HideDlg(m_dockTemplatesDlg);
+	return m_board.GetCompEdit() ? ShowDlg(m_dockCompDlg) : ShowDlg(m_dockControlDlg);
 }
 void MainWindow::ShowPinDialog()
 {
@@ -2327,11 +2337,11 @@ void MainWindow::UpdateControls()
 	ui->actionToggleRuler->setChecked( m_bRuler );
 	ui->actionToggleRuler->setText( m_bRuler ? QString("Hide Distance Tool") : QString("Show Distance Tool"));
 
-	ui->actionCompDlg->setEnabled( bCompEdit );
-	ui->actionControlDlg->setEnabled( !bCompEdit );
-	ui->actionRenderingDlg->setEnabled( !bCompEdit );
-	ui->actionWireDlg->setEnabled( !bCompEdit );
-	ui->actionBomDlg->setEnabled( !bCompEdit );
+	ui->actionCompDlg->setEnabled( bCompEdit );			ui->actionCompDlg->setVisible( bCompEdit );
+	ui->actionControlDlg->setEnabled( !bCompEdit );		ui->actionControlDlg->setVisible( !bCompEdit );
+	ui->actionRenderingDlg->setEnabled( !bCompEdit );	ui->actionRenderingDlg->setVisible( !bCompEdit );
+	ui->actionWireDlg->setEnabled( !bCompEdit );		ui->actionWireDlg->setVisible( !bCompEdit );
+	ui->actionBomDlg->setEnabled( !bCompEdit );			ui->actionBomDlg->setVisible( !bCompEdit );
 
 	ui->menuTrack_Style->setEnabled(	bTracks );
 	ui->actionVeroV->setEnabled(		bTracks && (bNoTracks || bColor) );	// No Vero tracks in PCB or Mono mode
@@ -2389,14 +2399,17 @@ void MainWindow::UpdateControls()
 	ui->actionControlDlg->setText(	m_dockControlDlg->isVisible()	? QString("(Hide) Control Dialog")				: QString("Control Dialog"));
 	ui->actionCompDlg->setText(		m_dockCompDlg->isVisible()		? QString("(Hide) Component Definition Dialog")	: QString("Component Definition Dialog"));
 	ui->actionTemplatesDlg->setText(m_dockTemplatesDlg->isVisible() ? QString("(Hide) Parts / Templates")			: QString("Parts / Templates"));
+	ui->actionTemplatesDlg->setChecked( m_dockTemplatesDlg->isVisible() );
 	const bool bTutorial = ( m_iTutorialNumber >= 0 );
 	if ( bTutorial )
 		ui->actionInfoDlg->setText(	m_dockInfoDlg->isVisible()		? QString("(Hide) Tutorial Dialog")				: QString("Tutorial Dialog"));
 	else
 		ui->actionInfoDlg->setText(	m_dockInfoDlg->isVisible()		? QString("(Hide) Info Dialog")					: QString("Info Dialog"));
 	ui->actionRenderingDlg->setText(m_dockRenderingDlg->isVisible() ? QString("(Hide) Rendering Options")			: QString("Rendering Options"));
+	ui->actionRenderingDlg->setChecked( m_dockRenderingDlg->isVisible() );
 	ui->actionPinDlg->setEnabled( !bTutorial );	// Forbid pin dialog in tutorial mode as it will hide the info window
 	ui->actionPinDlg->setText(		m_dockPinDlg->isVisible()		? QString("(Hide) Pin Labels Editor")			: QString("Pin Labels Editor"));
+	ui->actionPinDlg->setChecked(	m_dockPinDlg->isVisible() );
 	UpdateUndoRedoControls();
 }
 void MainWindow::UpdateCompDialog()			{ m_compDlg->Update(); m_pinDlg->Update(); }
