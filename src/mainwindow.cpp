@@ -162,14 +162,15 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	m_padOffsetDlg	= new PadOffsetDialog(this);
 	m_findDlg		= new FindDialog(this);
 
-#ifdef VEROROUTE_ANDROID
-	ui->menuBar->setNativeMenuBar(false);
 	ui->toolBar_2->setIconSize(QSize(30,30));	// 30x30 instead of 24x24
 	ui->toolBar_2->setMovable(false);			// Keep docked
 	ui->toolBar_3->setIconSize(QSize(30,30));	// 30x30 instead of 24x24
 	ui->toolBar_3->setMovable(false);			// Keep docked
 	ui->toolBar->setIconSize(QSize(30,30));		// 30x30 instead of 24x24
 	ui->toolBar->setMovable(false);				// Keep docked
+
+#ifdef VEROROUTE_ANDROID
+	ui->menuBar->setNativeMenuBar(false);
 	ui->actionHotkeysDlg->setVisible(false);	// Hide dialog listing key/mouse actions
 	ui->actionUpdateCheck->setVisible(false);	// Hide update check (until SSL support added)
 	// Remove keyboard shortcuts for actions

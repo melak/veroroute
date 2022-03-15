@@ -48,7 +48,7 @@ ControlDialog::ControlDialog(QWidget* parent)
 	ui->textT->setText(QChar(0x25b2));
 	ui->textB->setText(QChar(0x25bc));
 
-#ifdef VEROROUTE_ANDROID
+#ifdef Q_OS_ANDROID
 	QFont tmp = ui->typeComboBox->font();
 	tmp.setPointSize(12);
 	ui->typeComboBox->setFont(tmp);

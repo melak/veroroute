@@ -58,7 +58,7 @@ CompDialog::CompDialog(QWidget* parent)
 	ui->comboBox_PinShape->addItem(QString("Rectangle"));
 	ui->comboBox_PinShape->blockSignals(false);	// We're done populating, so unblock signals
 
-#ifdef VEROROUTE_ANDROID
+#ifdef Q_OS_ANDROID
 	QFont tmp = ui->comboBox_PinShape->font();
 	tmp.setPointSize(12);
 	ui->comboBox_PinShape->setFont(tmp);

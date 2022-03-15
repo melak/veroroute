@@ -487,12 +487,11 @@ void MainWindow::mouseDoubleClickEvent(QMouseEvent* event)
 		}
 	}
 
-#ifdef VEROROUTE_ANDROID
-	// Component rotation
-	//TODO Could allow this in Desktop version too
+	// Handle component rotation
 	if ( !GetPaintAction() && m_board.GetCompMode() != COMPSMODE::OFF && m_eMouseMode == MOUSE_MODE::SELECT && GetCurrentCompId() != BAD_COMPID )
 		return CompRotateCW();
 
+#ifdef VEROROUTE_ANDROID
 	// Handle leaving PaintBoard mode via double-clicking on a component pin
 	//TODO See if this gets confused with swapping diagonals.  May not be a good idea anyway
 	if ( GetPaintBoard() && GetCurrentNodeId() != BAD_NODEID )
