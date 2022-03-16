@@ -45,5 +45,6 @@
         <file>images/pineditor.png</file>
         <file>images/templates.png</file>
         <file>images/render.png</file>
+        <file>images/delete.png</file>
     </qresource>
 </RCC>

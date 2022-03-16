@@ -33,7 +33,28 @@ public:
 	MyScrollArea(QWidget* parent = nullptr) : QScrollArea(parent), m_parent(parent) {}
 	~MyScrollArea() {}
 
+	bool m_bDoCentreView = false;
+	void CentreView()
+	{
+		if ( !m_bDoCentreView ) return;
+		auto* pH = horizontalScrollBar();
+		auto* pV = verticalScrollBar();
+		const int iHcentre	= ( pH->minimum() + pH->maximum() ) / 2;
+		const int iVcentre	= ( pV->minimum() + pV->maximum() ) / 2;
+		const bool bChanged	= ( pH->value() != iHcentre ) || ( pV->value() != iVcentre );
+		if ( bChanged )
+		{
+			pH->setValue(iHcentre);
+			pV->setValue(iVcentre);
+			m_bDoCentreView = false;
+		}
+	}
 protected:
+	void resizeEvent(QResizeEvent* event)
+	{
+		QScrollArea::resizeEvent(event);
+		CentreView();
+	}
 	void wheelEvent(QWheelEvent* event)
 	{
 		if ( m_parent ) QCoreApplication::sendEvent(m_parent, event);

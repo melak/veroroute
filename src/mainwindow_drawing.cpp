@@ -310,6 +310,8 @@ void MainWindow::paintEvent(QPaintEvent*)
 	m_scrollArea->setWidgetResizable(false);
 	m_label->adjustSize();
 
+	m_scrollArea->CentreView();	// Centre the scrollbars (if needed) for component editor mode
+
 	m_bRepaint = false;
 }
 

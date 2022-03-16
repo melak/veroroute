@@ -283,7 +283,9 @@ public slots:
 	void ShowRenderingDialog();
 	void HideRenderingDialog();
 	void ShowInfoDialog();
+	void HideInfoDialog();
 	void ShowPinDialog();
+	void HidePinDialog();
 	void ShowBomDialog();
 	void HideBomDialog();
 	void ShowWireDialog();
@@ -507,7 +509,7 @@ private:
 	void SetCurrentCompId(const int& i)		{ m_board.SetCurrentCompId(i);	UpdateControls(); }
 	void SetCurrentTextId(const int& i)		{ m_board.SetCurrentTextId(i);	UpdateControls(); }
 	void SetCurrentPinId(const int& i)		{ m_board.SetCurrentPinId(i);	UpdateCompDialog(); }
-	void SetCurrentShapeId(const int& i)	{ m_board.SetCurrentShapeId(i);	UpdateCompDialog(); }
+	void SetCurrentShapeId(const int& i)	{ m_board.SetCurrentShapeId(i);	UpdateCompDialog(); UpdateControls(); }
 	TextRect& GetCurrentTextRect()			{ return m_board.GetTextMgr().GetTextRectById( GetCurrentTextId() ); }
 	// Helpers for slots
 	void ZoomHelper(int delta);

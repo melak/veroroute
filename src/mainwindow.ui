@@ -317,6 +317,8 @@
    <addaction name="actionUndo"/>
    <addaction name="actionRedo"/>
    <addaction name="separator"/>
+   <addaction name="actionDelete"/>
+   <addaction name="separator"/>
    <addaction name="actionZoom_In"/>
    <addaction name="actionZoom_Out"/>
    <addaction name="separator"/>
@@ -706,6 +708,10 @@
    </property>
   </action>
   <action name="actionDelete">
+   <property name="icon">
+    <iconset resource="veroroute.qrc">
+     <normaloff>:/images/delete.png</normaloff>:/images/delete.png</iconset>
+   </property>
    <property name="text">
     <string>Delete Selected Part(s) / Text Box</string>
    </property>

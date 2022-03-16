@@ -500,7 +500,7 @@ void MainWindow::Startup()
 void MainWindow::ResetView(MOUSE_MODE eMouseMode, bool bTutorial)
 {
 	m_mousePos = QPoint(0,0);
-	m_bMouseClick	= m_bLeftClick	= m_bRightClick = m_bCtrlKeyDown  = m_bShiftKeyDown	= false;
+	m_bMouseClick = m_bLeftClick = m_bRightClick = m_bCtrlKeyDown = m_bShiftKeyDown = false;
 	m_eMouseMode = eMouseMode;
 	m_bWritePDF = m_bWriteGerber = m_bTwoLayerGerber = false;
 	m_XGRIDOFFSET	= m_YGRIDOFFSET	= m_XCORRECTION = m_YCORRECTION = 0;
@@ -1197,9 +1197,9 @@ void MainWindow::HideDlg(QWidget* p)		{ p->hide(); UpdateControls(); }
 void MainWindow::ToggleControlDialog()		{ return m_dockControlDlg->isVisible()		? HideDlg(m_dockControlDlg)		: ShowControlDialog(); }
 void MainWindow::ToggleCompDialog()			{ return m_dockCompDlg->isVisible()			? HideDlg(m_dockCompDlg)		: ShowCompDialog(); }
 void MainWindow::ToggleRenderingDialog()	{ return m_dockRenderingDlg->isVisible()	? HideRenderingDialog()			: ShowRenderingDialog(); }
-void MainWindow::ToggleInfoDialog()			{ return m_dockInfoDlg->isVisible()			? HideDlg(m_dockInfoDlg)		: ShowInfoDialog(); }
+void MainWindow::ToggleInfoDialog()			{ return m_dockInfoDlg->isVisible()			? HideInfoDialog()				: ShowInfoDialog(); }
 void MainWindow::ToggleTemplatesDialog()	{ return m_dockTemplatesDlg->isVisible()	? HideTemplatesDialog()			: ShowTemplatesDialog(); }
-void MainWindow::TogglePinDialog()			{ return m_dockPinDlg->isVisible()			? HideDlg(m_dockPinDlg)			: ShowPinDialog(); }
+void MainWindow::TogglePinDialog()			{ return m_dockPinDlg->isVisible()			? HidePinDialog()				: ShowPinDialog(); }
 void MainWindow::HideAllDockedDlgs()
 {
 	m_dockControlDlg->hide();
@@ -1238,7 +1238,9 @@ void MainWindow::ShowCompDialog()
 	m_dockTemplatesDlg->hide();
 	m_dockRenderingDlg->hide();
 	ShowDlg(m_dockCompDlg);
-	ShowPinDialog();			// Always show the pin dialog when toggling to component editor (if not in tutorial mode)
+	ShowPinDialog();		// Always show the pin dialog when toggling to component editor (if not in tutorial mode)
+
+	m_scrollArea->m_bDoCentreView = true;	// Need to set this flag so it's picked up by next RepaintSkipRouting()
 }
 void MainWindow::ShowRenderingDialog()
 {
@@ -1262,11 +1264,19 @@ void MainWindow::ShowHotkeysDialog()
 }
 void MainWindow::ShowInfoDialog()
 {
+	m_scrollArea->m_bDoCentreView = m_board.GetCompEdit();	// Set flag BEFORE hide/show dialogs
+
 	HideAllNonDockedDlgs();	// (m_bomDlg, m_wireDlg, m_findDlg, m_textDlg)
 
 	// m_dockPinDlg and m_dockInfoDlg are mutually exclusive
 	m_dockPinDlg->hide();
 	ShowDlg(m_dockInfoDlg);
+}
+void MainWindow::HideInfoDialog()
+{
+	m_scrollArea->m_bDoCentreView = m_board.GetCompEdit();	// Set flag BEFORE hide/show dialogs
+
+	HideDlg(m_dockInfoDlg);
 }
 void MainWindow::ShowTemplatesDialog()
 {
@@ -1285,13 +1295,22 @@ void MainWindow::HideTemplatesDialog()
 }
 void MainWindow::ShowPinDialog()
 {
-	if ( m_iTutorialNumber >= 0 ) return;	// Don't show pin labels dialog in tutorial mode
+	m_scrollArea->m_bDoCentreView = m_board.GetCompEdit();	// Set flag BEFORE hide/show dialogs
 
-	HideAllNonDockedDlgs();	// (m_bomDlg, m_wireDlg, m_findDlg, m_textDlg)
+	if ( m_iTutorialNumber < 0 )	// Don't show pin labels dialog in tutorial mode
+	{
+		HideAllNonDockedDlgs();	// (m_bomDlg, m_wireDlg, m_findDlg, m_textDlg)
 
-	// (m_dockPinDlg, m_dockInfoDlg) are mutually exclusive
-	m_dockInfoDlg->hide();
-	m_pinDlg->Update();	ShowDlg(m_dockPinDlg);
+		// (m_dockPinDlg, m_dockInfoDlg) are mutually exclusive
+		m_dockInfoDlg->hide();
+		m_pinDlg->Update();	ShowDlg(m_dockPinDlg);
+	}
+}
+void MainWindow::HidePinDialog()
+{
+	m_scrollArea->m_bDoCentreView = m_board.GetCompEdit();	// Set flag BEFORE hide/show dialogs
+
+	HideDlg( m_dockPinDlg );
 }
 void MainWindow::ShowPadOffsetDialog()
 {
@@ -2260,6 +2279,7 @@ void MainWindow::UpdateControls()
 	const bool		bFat			= !bVero && !m_board.GetCurvedTracks() &&  m_board.GetFatTracks();
 	const bool		bThin			= !bVero && !m_board.GetCurvedTracks() && !m_board.GetFatTracks();
 	const bool		bCurved			= !bVero &&  m_board.GetCurvedTracks();
+	const bool		bShapeOK		=  bCompEdit && ( GetCurrentShapeId() != BAD_ID );
 
 	ui->toolBar->setVisible( !bCompEdit );
 	ui->toolBar_3->setVisible( bCompEdit );
@@ -2268,7 +2288,9 @@ void MainWindow::UpdateControls()
 	ui->menuExport_as_Gerber_2_Layer->setEnabled(bPCB && !bCompEdit && !m_board.GetMirrored() && !m_board.GetVeroTracks());
 	ui->actionMerge->setEnabled(    !bPCB && !bCompEdit);
 	ui->actionWrite_PDF->setEnabled(!bPCB && !bCompEdit);
+	ui->actionWrite_PNG->setEnabled( !bCompEdit );
 	ui->menuAdd->setEnabled( !bCompEdit && m_board.GetCompMode() != COMPSMODE::OFF && !m_board.GetMirrored() );
+	ui->menuPaint->setEnabled( !bCompEdit );
 	ui->menuLayers->setEnabled( !bCompEdit );
 	ui->actionAddLayer->setEnabled(		m_board.GetLyrs() == 1 );
 	ui->actionRemoveLayer->setEnabled(	m_board.GetLyrs() != 1 );
@@ -2304,11 +2326,13 @@ void MainWindow::UpdateControls()
 	ui->actionGroup->setEnabled( bCompOK && groupMgr.CanGroup() );
 	ui->actionUngroup->setEnabled( bCompOK && groupMgr.CanUnGroup() );
 	ui->actionSelectAll->setEnabled( bCompActionsOK && !compMgr.GetMapIdToComp().empty() );
-	ui->actionDelete->setEnabled( bTextOK || bCompOK );
+	ui->actionDelete->setEnabled( bTextOK || bCompOK || bShapeOK );
 	if ( bTextOK )	// Text Box takes precedence over comps
 		ui->actionDelete->setText( QString("Delete Selected Text Box") );
 	else if ( bCompOK )
 		ui->actionDelete->setText(numUserComps > 1 ? QString("Delete Selected Parts") : QString("Delete Selected Part"));
+	else if ( bCompEdit )
+		ui->actionDelete->setText(QString("Delete Selected Shape"));
 	else
 		ui->actionDelete->setText( QString("Delete Selected Part(s) / Text Box") );
 
