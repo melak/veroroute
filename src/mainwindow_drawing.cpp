@@ -438,45 +438,53 @@ void MainWindow::PaintCompDefiner()	// The paint method in "component editor mod
 
 	m_varBrush.setColor(QColor(192,192,255,128));	// Light blue
 
-	int iPinId(0);
-	for (int j = 0, jMax = grid.GetRows(); j < jMax; j++)
-	for (int i = 0, iMax = grid.GetCols(); i < iMax; i++, iPinId++)
+	for (int iLoop = 0; iLoop < 2; iLoop++)
 	{
-		auto p = grid.Get(0,j,i);	// Always layer 0 for component editor
-		GetXY(board, def.GetGridRowMin() + j, def.GetGridColMin() + i, X, Y );
-
-		// Write pin labels
-		painter.save();
-		painter.translate(X, Y);
-
-		painter.setPen(Qt::NoPen);
-		painter.setBrush(p->GetSurface() == SURFACE_FREE ? Qt::NoBrush :
-						 p->GetSurface() == SURFACE_HOLE ? m_darkBrush : m_varBrush);	//TODO Handle SURFACE_GAP, SURFACE PLUG in future
-		painter.drawRect(-C,-C,W,W);
-		if ( iPinId == def.GetCurrentPinId() )
+		int iPinId(0);
+		for (int j = 0, jMax = grid.GetRows(); j < jMax; j++)
+		for (int i = 0, iMax = grid.GetCols(); i < iMax; i++, iPinId++)
 		{
-			painter.setPen(m_redPen);
-			painter.drawEllipse(-C,-C,W,W);
-		}
-		if ( p->GetIsPin() )
-		{
-			painter.setPen(m_blackPen);
-			painter.rotate(270);
+			auto p = grid.Get(0,j,i);	// Always layer 0 for component editor
+			GetXY(board, def.GetGridRowMin() + j, def.GetGridColMin() + i, X, Y );
 
-			const size_t pinIndex = p->GetPinIndex();
-			std::string strPinLabel = ( pinIndex < def.GetNumPins() ) ? def.GetPinLabel(pinIndex) : CompTypes::GetDefaultPinLabel(pinIndex);
-			int iFlag = ( pinIndex < def.GetNumPins() ) ? def.GetPinAlign(pinIndex) : Qt::AlignCenter;
-			if ( iFlag == Qt::AlignLeft || iFlag == Qt::AlignRight )
+			painter.save();
+			painter.translate(X, Y);
+
+			if ( iLoop == 0 )	// Shade according to GetSurface()
 			{
-				const bool bLeft = ( iFlag == Qt::AlignLeft );
-				painter.translate(bLeft ? -C/2 : C/2, 0);
+				painter.setPen(Qt::NoPen);
+				painter.setBrush(p->GetSurface() == SURFACE_FREE ? Qt::NoBrush :
+								 p->GetSurface() == SURFACE_HOLE ? m_darkBrush : m_varBrush);	//TODO Handle SURFACE_GAP, SURFACE PLUG in future
+				painter.drawRect(-C,-C,W,W);
 			}
-			iFlag |= ( Qt::TextDontClip | Qt::AlignVCenter );
+			if ( iLoop == 1 )	// Draw pins/labels
+			{
+				if ( iPinId == def.GetCurrentPinId() )
+				{
+					painter.setPen(m_redPen);
+					painter.drawEllipse(-C,-C,W,W);
+				}
+				if ( p->GetIsPin() )
+				{
+					painter.setPen(m_blackPen);
+					painter.rotate(270);
 
-			painter.scale(dTextScale, dTextScale);
-			painter.drawText(0,0,0,0, iFlag, strPinLabel.c_str());
+					const size_t pinIndex = p->GetPinIndex();
+					std::string strPinLabel = ( pinIndex < def.GetNumPins() ) ? def.GetPinLabel(pinIndex) : CompTypes::GetDefaultPinLabel(pinIndex);
+					int iFlag = ( pinIndex < def.GetNumPins() ) ? def.GetPinAlign(pinIndex) : Qt::AlignCenter;
+					if ( iFlag == Qt::AlignLeft || iFlag == Qt::AlignRight )
+					{
+						const bool bLeft = ( iFlag == Qt::AlignLeft );
+						painter.translate(bLeft ? -C/2 : C/2, 0);
+					}
+					iFlag |= ( Qt::TextDontClip | Qt::AlignVCenter );
+
+					painter.scale(dTextScale, dTextScale);
+					painter.drawText(0,0,0,0, iFlag, strPinLabel.c_str());
+				}
+			}
+			painter.restore();
 		}
-		painter.restore();
 	}
 	painter.end();
 }
