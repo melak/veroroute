@@ -320,10 +320,9 @@ void MainWindow::PaintCompDefiner()	// The paint method in "component editor mod
 	Board&			board		= m_board;
 	CompDefiner&	def			= board.GetCompDefiner();
 	const PinGrid&	grid		= def.GetGrid();
-
-	const int&		 W			= board.GetGRIDPIXELS();	// Square width in pixels
-	const int		 C			= W >> 1;					// Half square width in pixels
-	const double	 dTextScale	= W / 24.0;					// For scaling text when zooming
+	const int&		W			= board.GetGRIDPIXELS();	// Square width in pixels
+	const int		C			= W >> 1;					// Half square width in pixels
+	const double	dTextScale	= W / 24.0;					// For scaling text when zooming
 
 	// Shift comp to near grid centre
 	const int ROWS(def.GetScreenRows()), COLS(def.GetScreenCols());
@@ -463,7 +462,7 @@ void MainWindow::PaintCompDefiner()	// The paint method in "component editor mod
 		{
 			painter.setPen(m_blackPen);
 			painter.rotate(270);
-			painter.scale(dTextScale, dTextScale);
+
 			const size_t pinIndex = p->GetPinIndex();
 			std::string strPinLabel = ( pinIndex < def.GetNumPins() ) ? def.GetPinLabel(pinIndex) : CompTypes::GetDefaultPinLabel(pinIndex);
 			int iFlag = ( pinIndex < def.GetNumPins() ) ? def.GetPinAlign(pinIndex) : Qt::AlignCenter;
@@ -474,6 +473,7 @@ void MainWindow::PaintCompDefiner()	// The paint method in "component editor mod
 			}
 			iFlag |= ( Qt::TextDontClip | Qt::AlignVCenter );
 
+			painter.scale(dTextScale, dTextScale);
 			painter.drawText(0,0,0,0, iFlag, strPinLabel.c_str());
 		}
 		painter.restore();
