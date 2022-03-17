@@ -130,7 +130,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>User-Defined Parts</string>
+    <string>User-Defined Templates</string>
    </property>
    <property name="alignment">
     <set>Qt::AlignCenter</set>

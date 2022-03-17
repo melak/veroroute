@@ -176,12 +176,17 @@ void TemplatesDialog::DeleteTemplate()
 
 	const bool bGeneric = false;
 
+	UserClicked(ui->tableWidget_2->currentRow(), 0);	// Make sure selection is up to date (user may have scrolled since click)
+
 	if ( m_iRowR >= 0 && m_iRowR < static_cast<int>(mgr.GetSize(bGeneric)) )
 	{
-		if ( QMessageBox::question(this, tr("Confirm Delete Template"),
-										 tr("There is no undo for this operation.  Continue?"),
-										 QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::No ) return;
 		const Component comp = mgr.GetNth(bGeneric, static_cast<size_t>(m_iRowR));
+
+		const std::string messageStr = "The template (Type = " + comp.GetFullTypeStr() + ") "
+									 + "(Value = " + comp.GetValueStr() + ") is about to be deleted.  There is no undo for this operation.  Continue?";
+		if ( QMessageBox::question(this, tr("Confirm Delete Template"),
+										 tr(messageStr.c_str()),
+										 QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::No ) return;	
 		if ( mgr.Remove(comp) )
 			Update();
 	}
