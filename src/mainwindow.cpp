@@ -1195,7 +1195,7 @@ void MainWindow::Delete()
 void MainWindow::ShowDlg(QWidget* p)		{ p->showNormal();	p->raise();	p->activateWindow(); UpdateControls(); }
 void MainWindow::HideDlg(QWidget* p)		{ p->hide(); UpdateControls(); }
 void MainWindow::ToggleControlDialog()		{ return m_dockControlDlg->isVisible()		? HideDlg(m_dockControlDlg)		: ShowControlDialog(); }
-void MainWindow::ToggleCompDialog()			{ return m_dockCompDlg->isVisible()			? HideDlg(m_dockCompDlg)		: ShowCompDialog(); }
+void MainWindow::ToggleCompDialog()			{ return m_dockCompDlg->isVisible()			? HideCompDialog()				: ShowCompDialog(); }
 void MainWindow::ToggleRenderingDialog()	{ return m_dockRenderingDlg->isVisible()	? HideRenderingDialog()			: ShowRenderingDialog(); }
 void MainWindow::ToggleInfoDialog()			{ return m_dockInfoDlg->isVisible()			? HideInfoDialog()				: ShowInfoDialog(); }
 void MainWindow::ToggleTemplatesDialog()	{ return m_dockTemplatesDlg->isVisible()	? HideTemplatesDialog()			: ShowTemplatesDialog(); }
@@ -1240,7 +1240,14 @@ void MainWindow::ShowCompDialog()
 	ShowDlg(m_dockCompDlg);
 	ShowPinDialog();		// Always show the pin dialog when toggling to component editor (if not in tutorial mode)
 
-	m_scrollArea->m_bDoCentreView = true;	// Need to set this flag so it's picked up by next RepaintSkipRouting()
+	m_scrollArea->m_bDoCentreView = true;
+	RepaintSkipRouting();
+}
+void MainWindow::HideCompDialog()
+{
+	m_scrollArea->m_bDoCentreView = m_board.GetCompEdit();	// Set flag BEFORE hide/show dialogs
+
+	HideDlg(m_dockCompDlg);
 }
 void MainWindow::ShowRenderingDialog()
 {
@@ -1280,6 +1287,8 @@ void MainWindow::HideInfoDialog()
 }
 void MainWindow::ShowTemplatesDialog()
 {
+	m_scrollArea->m_bDoCentreView = m_board.GetCompEdit();	// Set flag BEFORE hide/show dialogs
+
 	HideAllNonDockedDlgs();	// (m_bomDlg, m_wireDlg, m_findDlg, m_textDlg)
 
 	// (m_dockCompDlg, m_dockControlDlg, m_dockRenderingDlg, m_dockTemplatesDlg) are mutually exclusive
@@ -1290,6 +1299,8 @@ void MainWindow::ShowTemplatesDialog()
 }
 void MainWindow::HideTemplatesDialog()
 {
+	m_scrollArea->m_bDoCentreView = m_board.GetCompEdit();	// Set flag BEFORE hide/show dialogs
+
 	HideDlg(m_dockTemplatesDlg);
 	return m_board.GetCompEdit() ? ShowDlg(m_dockCompDlg) : ShowDlg(m_dockControlDlg);
 }
