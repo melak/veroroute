@@ -1738,7 +1738,7 @@ void MainWindow::CompStretch(const bool& bGrow)
 
 	m_board.StretchUserComp(bGrow);
 
-	UpdateHistory(bGrow ? "Increase part length" : "Decrease part length", m_board.GetUserComponent().GetId());
+	UpdateHistory("Change part length", m_board.GetUserComponent().GetId());
 	UpdateControls();
 	RepaintWithListNodes();
 }
@@ -1748,7 +1748,7 @@ void MainWindow::CompStretchWidth(const bool& bGrow)
 
 	m_board.StretchWidthUserComp(bGrow);
 
-	UpdateHistory(bGrow ? "Increase part width" : "Decrease part width", m_board.GetUserComponent().GetId());
+	UpdateHistory("Change part width", m_board.GetUserComponent().GetId());
 	UpdateControls();
 	RepaintWithListNodes();
 }
@@ -1758,13 +1758,7 @@ void MainWindow::CompTextMove(const int& deltaRow, const int& deltaCol)
 
 	m_board.MoveUserCompText(deltaRow, deltaCol);
 
-	const int objId = m_board.GetUserComponent().GetId();
-	if		( deltaRow < 0 ) UpdateHistory("Move label up",		objId);
-	else if ( deltaRow > 0 ) UpdateHistory("Move label down",	objId);
-	else if ( deltaCol < 0 ) UpdateHistory("Move label left",	objId);
-	else if ( deltaCol > 0 ) UpdateHistory("Move label right",	objId);
-	else					 UpdateHistory("Move label centre",	objId);
-
+	UpdateHistory("Move label", m_board.GetUserComponent().GetId());
 	RepaintSkipRouting();
 }
 
