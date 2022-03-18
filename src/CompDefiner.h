@@ -402,7 +402,8 @@ public:
 			return AddShape( Shape(eType, true, false, -dX, dX, -dY, dY) );
 	}
 	// Helpers
-	void DestroyShape();
+	int  CopyShape();
+	int  DestroyShape();
 	int  GetNewShapeId() const;
 	bool SetWidth(const int& i);
 	bool SetHeight(const int& i);

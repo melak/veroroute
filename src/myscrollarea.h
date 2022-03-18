@@ -22,6 +22,7 @@
 #include <QtGui>
 #include <QScrollArea>
 #include <QScrollBar>
+#include <chrono>
 
 // Wrapper to send mouse wheel and key press events to the mainwindow instead of the scroll bars
 
@@ -33,10 +34,10 @@ public:
 	MyScrollArea(QWidget* parent = nullptr) : QScrollArea(parent), m_parent(parent) {}
 	~MyScrollArea() {}
 
-	bool m_bDoCentreView = false;
+	void SetRequestCentreView(bool b) { m_bRequestCentreView = b; }
 	void CentreView()
 	{
-		if ( !m_bDoCentreView ) return;
+		if ( !m_bRequestCentreView ) return;
 		auto* pH = horizontalScrollBar();
 		auto* pV = verticalScrollBar();
 		const int iHcentre	= ( pH->minimum() + pH->maximum() ) / 2;
@@ -46,7 +47,7 @@ public:
 		{
 			pH->setValue(iHcentre);
 			pV->setValue(iVcentre);
-			m_bDoCentreView = false;
+			m_bRequestCentreView = false;
 		}
 	}
 protected:
@@ -67,6 +68,10 @@ protected:
 	{
 		if ( m_parent ) QCoreApplication::sendEvent(m_parent, event);
 	}
+	bool viewportEvent(QEvent* event);
 private:
 	QWidget* m_parent;
+	std::chrono::steady_clock::time_point m_lastTouchEnd;
+	bool m_bRequestCentreView	= false;
+	bool m_bTouchCancelled		= false;
 };

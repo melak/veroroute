@@ -34,7 +34,11 @@ static std::chrono::steady_clock::time_point g_lastAutoPanTime;
 static bool g_bHaveAutoPanned = false;
 
 #ifdef VEROROUTE_ANDROID
-// Following is avoid too many redraws while defining rectangles
+#define AVOID_RECT_REDRAWS
+#endif
+
+#ifdef AVOID_RECT_REDRAWS
+// Following is to avoid too many redraws while defining rectangles
 static std::chrono::steady_clock::time_point g_lastDrawRect;
 #endif
 
@@ -43,11 +47,8 @@ static bool g_bPinClicked = false;									// For implementation of ALLOW_DELAY_
 
 void MainWindow::GetPixMapXY(const QPoint& currentPoint, int& pixmapX, int& pixmapY) const
 {
-	const int iLeftDlgWidth = m_dockInfoDlg->isVisible() ? m_dockInfoDlg->width() :
-							  m_dockPinDlg->isVisible()  ? m_dockPinDlg->width() : 0;
-
-	pixmapX = currentPoint.x() + m_scrollArea->horizontalScrollBar()->value() - iLeftDlgWidth;
-	pixmapY = currentPoint.y() + m_scrollArea->verticalScrollBar()->value() - ui->menuBar->height();
+	pixmapX = currentPoint.x() + m_scrollArea->horizontalScrollBar()->value();
+	pixmapY = currentPoint.y() + m_scrollArea->verticalScrollBar()->value();
 
 	int gndL, gndR, gndT, gndB;
 	m_board.GetGroundFillBounds(gndL, gndR, gndT, gndB);
@@ -83,9 +84,9 @@ bool MainWindow::GetRowCol(const QPoint& currentPoint, const int rows, const int
 void MainWindow::wheelEvent(QWheelEvent* event)
 {
 #if QT_VERSION >= QT_VERSION_CHECK(5,14,0)
-	m_mousePos = QPoint(static_cast<int>(event->position().x()), static_cast<int>(event->position().y()));
+	m_mousePos = event->position().toPoint();
 #else
-	m_mousePos = QPoint(static_cast<int>(event->posF().x()), static_cast<int>(event->posF().y()));
+	m_mousePos = event->posF().toPoint();
 #endif
 
 	if ( GetShiftKeyDown() ) return;	// Ignore wheel events while trying to group components
@@ -110,20 +111,15 @@ bool MainWindow::CanModifyRuler() const
 						  GetDefiningRect() || GetPaintPins() || GetErasePins() || GetPaintBoard() || GetEraseBoard() || GetPaintFlood() );
 }
 
-void MainWindow::mousePressEvent(QMouseEvent* event)
+void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, const bool& bRightClick)
 {
 	g_bPinClicked = false;
 
 	g_bHaveAutoPanned = false;	// Reset flags for avoiding repeated re-draws
 
-	if ( m_wireDlg->isVisible() )	HideWireDialog();
-	if ( m_bomDlg->isVisible() )	HideBomDialog();
-	if ( m_findDlg->isVisible() )
-		HideFindDialog();
-	else
-		ClearFind();	// Clear the set of found components
+	if ( !m_findDlg->isVisible() ) ClearFind();	// Clear the set of found components
 
-	m_mousePos = event->pos();
+	m_mousePos = pos;
 	if ( m_board.GetMirrored() ) return;
 
 	const TRACKMODE&	trackMode	= m_board.GetTrackMode();
@@ -136,9 +132,9 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 
 	bool bInGrid(false);
 	if ( m_board.GetCompEdit() )
-		bInGrid = GetRowCol(event->pos(), compDefiner.GetScreenRows(), compDefiner.GetScreenCols(), m_gridRow, m_gridCol, dRow, dCol);
+		bInGrid = GetRowCol(m_mousePos, compDefiner.GetScreenRows(), compDefiner.GetScreenCols(), m_gridRow, m_gridCol, dRow, dCol);
 	else
-		bInGrid = GetRowCol(event->pos(), m_gridRow, m_gridCol, dRow, dCol);
+		bInGrid = GetRowCol(m_mousePos, m_gridRow, m_gridCol, dRow, dCol);
 
 	if ( !bInGrid)
 	{
@@ -150,11 +146,10 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 	}
 
 	m_bMouseClick	= true;		// Set the flag meaning "click begin"
+	m_bLeftClick	= bLeftClick;
+	m_bRightClick	= bRightClick;
 #ifdef VEROROUTE_ANDROID
 	m_bLeftClick	= m_bRightClick = true;	// Making the point that there is no difference between left/right clicks in the Android version of the app
-#else
-	m_bLeftClick	= ( event->button() & Qt::LeftButton );
-	m_bRightClick	= ( event->button() & Qt::RightButton );
 #endif
 
 	if ( m_board.GetCompEdit() )
@@ -219,7 +214,7 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 			m_board.GetRectMgr().StartNewRect(m_gridRow, m_gridCol);
 			SelectAllInRects();
 			UpdateHistory("Select parts in area(s)");
-#ifdef VEROROUTE_ANDROID
+#ifdef AVOID_RECT_REDRAWS
 			g_lastDrawRect = std::chrono::steady_clock::now();
 #endif
 			ShowCurrentRectSize();
@@ -335,6 +330,7 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 		if ( m_dockPinDlg->isVisible() ) m_dockPinDlg->hide();
 		HidePadOffsetDialog();
 #ifdef VEROROUTE_ANDROID
+		//TODO Could allow this in Desktop version too
 		const bool bClickedValidNodeID = pC->GetNodeId() != BAD_NODEID;
 		const bool bTruePin = pC->GetHasPin() && !pC->GetHasWire();
 		if ( bClickedValidNodeID && GetPaintBoard() && bTruePin )	// If we're painting board and clicked on a true pin with a valid nodeID
@@ -348,13 +344,6 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 			if ( !bChanged ) return;
 			m_mouseActionString = "Erase";
 		}
-		/* A bit too easy to mess up with this block
-		else if ( bClickedValidNodeID && GetPaintPins() && bTruePin && pC->GetNodeId() == GetCurrentNodeId() )	// If we're painting pins and clicked on a true pin with matching valid nodeID
-		{
-			const bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, BAD_NODEID, true);	// .. then erase the pin instead of painting it
-			if ( !bChanged ) return;
-			m_mouseActionString = "Erase";
-		}*/
 		else if ( ( GetPaintPins() || GetErasePins() ) && !bTruePin )	// Restrict painting/erasing pins to true pins (not wires)
 		{
 			return;
@@ -428,11 +417,11 @@ void MainWindow::mousePressEvent(QMouseEvent* event)
 	RepaintWithRouting();
 }
 
-void MainWindow::mouseDoubleClickEvent(QMouseEvent* event)
+void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 {
 	g_bPinClicked = false;
 
-	m_mousePos = event->pos();
+	m_mousePos = pos;
 	if ( m_board.GetMirrored() ) return;
 	if ( m_board.GetCompEdit() ) return;
 
@@ -455,16 +444,16 @@ void MainWindow::mouseDoubleClickEvent(QMouseEvent* event)
 
 	// Get row col
 	double dRow(0), dCol(0);	// Fractional correction to row, col for SwapDiagLinks() call
-	const bool bInGrid = GetRowCol(event->pos(), m_gridRow, m_gridCol, dRow, dCol);
+	const bool bInGrid = GetRowCol(m_mousePos, m_gridRow, m_gridCol, dRow, dCol);
 	if ( !bInGrid ) return;
 
 	// Cursor modification
 	centralWidget()->setCursor(Qt::CrossCursor);
 
 	// Handle changing layer preference for PCBs via double-clicking on a component pin
-	if ( m_board.GetTrackMode() == TRACKMODE::PCB && m_board.GetLyrs() == 2 && !GetPaintBoard() )
+	if ( !GetPaintAction() && m_board.GetTrackMode() == TRACKMODE::PCB && m_board.GetLyrs() == 2 )
 	{
-		if ( hypot(dRow - 0.5, dCol - 0.5) < 0.25 )	// Only consider clicks that are close to the grid point
+		if ( hypot(dRow - 0.5, dCol - 0.5) <= 0.5 )	// Only consider clicks that are close to the grid point
 		{
 			if ( m_board.ToggleLyrPref(m_board.GetCurrentLayer(), m_gridRow, m_gridCol) )
 			{
@@ -475,7 +464,7 @@ void MainWindow::mouseDoubleClickEvent(QMouseEvent* event)
 	}
 
 	// Handle competing diagonals
-	if ( !GetPaintAction() && m_board.GetTrackMode() != TRACKMODE::OFF )	//TODO Making !GetPaintAction() explicit
+	if ( !GetPaintAction() && m_board.GetTrackMode() != TRACKMODE::OFF )
 	{
 		const int	dR = ( dRow > 0.5 ) ? 1 : 0;	// Correct row, col to account for crossing ...
 		const int	dC = ( dCol > 0.5 ) ? 1 : 0;	// ... point being near corner of element
@@ -499,10 +488,9 @@ void MainWindow::mouseDoubleClickEvent(QMouseEvent* event)
 
 #ifdef VEROROUTE_ANDROID
 	// Handle leaving PaintBoard mode via double-clicking on a component pin
-	//TODO See if this gets confused with swapping diagonals.  May not be a good idea anyway
 	if ( GetPaintBoard() && GetCurrentNodeId() != BAD_NODEID )
 	{
-		if ( hypot(dRow - 0.5, dCol - 0.5) < 0.25 )	// Only consider clicks that are close to the grid point
+		if ( hypot(dRow - 0.5, dCol - 0.5) <= 0.5 )	// Only consider clicks that are close to the grid point
 		{
 			const Element* pC = m_board.Get(m_board.GetCurrentLayer(), m_gridRow, m_gridCol);
 			if ( pC->GetHasPin() && !pC->GetHasWire() && pC->GetNodeId() == GetCurrentNodeId() )
@@ -516,11 +504,11 @@ void MainWindow::mouseDoubleClickEvent(QMouseEvent* event)
 #endif
 }
 
-void MainWindow::mouseMoveEvent(QMouseEvent* event)
+void MainWindow::MouseMoveEvent(const QPoint& pos)
 {
 	g_bPinClicked = false;
 
-	m_mousePos = event->pos();
+	m_mousePos = pos;
 	if ( m_board.GetMirrored() ) return;
 	if ( !m_bMouseClick ) return;
 	const TRACKMODE&	trackMode	= m_board.GetTrackMode();
@@ -562,9 +550,9 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 	double dRow(0), dCol(0);	// Fractional correction to row, col for SwapDiagLinks() call
 	bool bInGrid(false);
 	if ( m_board.GetCompEdit() )
-		bInGrid = GetRowCol(event->pos(), compDefiner.GetScreenRows(), compDefiner.GetScreenCols(), row, col, dRow, dCol);
+		bInGrid = GetRowCol(m_mousePos, compDefiner.GetScreenRows(), compDefiner.GetScreenCols(), row, col, dRow, dCol);
 	else
-		bInGrid = GetRowCol(event->pos(), row, col, dRow, dCol);
+		bInGrid = GetRowCol(m_mousePos, row, col, dRow, dCol);
 
 	int deltaRow = row - m_gridRow;
 	int deltaCol = col - m_gridCol;
@@ -578,7 +566,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 		if ( GetCurrentShapeId() != BAD_ID )
 		{
 			int pixmapX(0), pixmapY(0);
-			GetPixMapXY(event->pos(), pixmapX, pixmapY);
+			GetPixMapXY(m_mousePos, pixmapX, pixmapY);
 
 			if ( deltaRow == 0 ) { if ( pixmapY > W * compDefiner.GetScreenRows() ) deltaRow++; }
 			if ( deltaCol == 0 ) { if ( pixmapX > W * compDefiner.GetScreenCols() ) deltaCol++; }
@@ -631,7 +619,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 	else if ( !GetSmartPan() && GetCurrentTextId() != BAD_TEXTID )
 	{
 		int pixmapX(0), pixmapY(0);
-		GetPixMapXY(event->pos(), pixmapX, pixmapY);
+		GetPixMapXY(m_mousePos, pixmapX, pixmapY);
 
 		if ( deltaRow == 0 ) { if ( pixmapY > W * m_board.GetRows() ) deltaRow++; }
 		if ( deltaCol == 0 ) { if ( pixmapX > W * m_board.GetCols() ) deltaCol++; }
@@ -664,7 +652,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 	else if ( !GetSmartPan() && GetCurrentCompId() != BAD_COMPID && compMode != COMPSMODE::OFF )	// Move user-group components
 	{
 		int pixmapX(0), pixmapY(0);
-		GetPixMapXY(event->pos(), pixmapX, pixmapY);
+		GetPixMapXY(m_mousePos, pixmapX, pixmapY);
 
 		if ( deltaRow == 0 ) { if ( pixmapY > W * m_board.GetRows() ) deltaRow++; }
 		if ( deltaCol == 0 ) { if ( pixmapX > W * m_board.GetCols() ) deltaCol++; }
@@ -690,7 +678,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 	else if ( GetSmartPan() )	// If we're not moving anything else, we can smart pan
 	{
 		int pixmapX(0), pixmapY(0);
-		GetPixMapXY(event->pos(), pixmapX, pixmapY);
+		GetPixMapXY(m_mousePos, pixmapX, pixmapY);
 
 		if ( deltaRow == 0 ) { if ( pixmapY > W * m_board.GetRows() ) deltaRow = 1; }
 		if ( deltaCol == 0 ) { if ( pixmapX > W * m_board.GetCols() ) deltaCol = 1; }
@@ -721,7 +709,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 			if ( deltaRow != 0 || deltaCol != 0 )	// No change of row or column ==> No change in current rect size
 			{
 				ShowCurrentRectSize();
-#ifdef VEROROUTE_ANDROID
+#ifdef AVOID_RECT_REDRAWS
 				const auto elapsed		= std::chrono::steady_clock::now() - g_lastDrawRect;
 				const auto duration_ms	= std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
 				if ( duration_ms >= 0 && duration_ms < 200 ) return;	// ... do nothing if within 40 ms of the last draw
@@ -740,7 +728,7 @@ void MainWindow::mouseMoveEvent(QMouseEvent* event)
 	}
 }
 
-void MainWindow::mouseReleaseEvent(QMouseEvent* event)
+void MainWindow::MouseReleaseEvent(const QPoint& pos)
 {
 	bool bShowPadOffsetDialog(false);
 	if ( g_bPinClicked && !m_board.GetVeroTracks() && !m_bRuler )
@@ -751,7 +739,7 @@ void MainWindow::mouseReleaseEvent(QMouseEvent* event)
 	}
 	g_bPinClicked = false;
 
-	m_mousePos = event->pos();
+	m_mousePos = pos;
 	releaseMouse();
 
 	if ( GetSmartPan() )
@@ -797,40 +785,8 @@ void MainWindow::mouseReleaseEvent(QMouseEvent* event)
 void MainWindow::keyPressEvent(QKeyEvent* event)
 {
 #ifndef VEROROUTE_ANDROID
-	g_bPinClicked = false;
-
 	commonKeyPressEvent(event);
 
-	// Pad offsets (Ctrl + Cursor keys)	// Deprecated this as it does not write to history, and we really only want to do that at the end when Ctrl key is released
-	/*
-	if ( GetCtrlKeyDown() && !m_board.GetVeroTracks() && !m_board.GetCompEdit() )
-	{
-		const Element* pC =  m_board.Get(0, m_gridRow, m_gridCol);
-		if ( pC->GetHasPin() && !pC->GetHasWire() )	// Wires can share holes so cannot have offset pads
-		{
-			Component&		comp		= m_board.GetCompMgr().GetComponentById( pC->GetCompId() );
-			const size_t	pinIndex	= pC->GetPinIndex();
-			int dx(0), dy(0);
-			switch( event->key() )
-			{
-				case Qt::Key_Left:	 dx--; break;
-				case Qt::Key_Right:	 dx++; break;
-				case Qt::Key_Up:	 dy--; break;
-				case Qt::Key_Down:	 dy++; break;
-			}
-			comp.IncCompPinOffsets(pinIndex, dx, dy);
-
-			int X,Y;
-			comp.GetCompPinOffsets(pinIndex, X, Y);	// Get offsets in mil
-
-			char buffer[256] = {'\0'};
-			sprintf(buffer,"(X, Y) pad offset = (%d, %d) mil,    (%.4f, %.4f) mm", X, Y, X * 0.0254, Y * 0.0254);
-			ui->statusBar->showMessage(QString(buffer), 1000);
-
-			return RepaintSkipRouting();
-		}
-	}
-	*/
 	if ( GetCtrlKeyDown() ) return;		// Try to keep Ctrl key input handled by menu items
 	if ( GetShiftKeyDown() ) return;	// Ignore other key presses while trying to group components
 
@@ -878,7 +834,8 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
 		}
 	}
 
-	const bool bPlural = ( m_board.GetGroupMgr().GetNumUserComps() > 1 );
+	const bool	bPlural	= ( m_board.GetGroupMgr().GetNumUserComps() > 1 );
+	const int	objID	= ( bPlural ) ? -1 : m_board.GetUserComponent().GetId();
 	// Component manipulation
 	switch( event->key() )
 	{
@@ -886,10 +843,10 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
 		case Qt::Key_Minus:		CompShrink();	break;
 		case Qt::Key_Plus:
 		case Qt::Key_Equal:		CompGrow();		break;
-		case Qt::Key_Left:		if ( !m_board.GetDisableMove() ) { m_board.MoveUserComps(0,-1);	UpdateHistory(bPlural ? "Move parts left"	: "Move part left");  RepaintWithRouting(); } break;
-		case Qt::Key_Right:		if ( !m_board.GetDisableMove() ) { m_board.MoveUserComps(0, 1);	UpdateHistory(bPlural ? "Move parts right"	: "Move part right"); RepaintWithRouting(); } break;
-		case Qt::Key_Up:		if ( !m_board.GetDisableMove() ) { m_board.MoveUserComps(-1,0);	UpdateHistory(bPlural ? "Move parts up"		: "Move part up");    RepaintWithRouting(); } break;
-		case Qt::Key_Down:		if ( !m_board.GetDisableMove() ) { m_board.MoveUserComps( 1,0);	UpdateHistory(bPlural ? "Move parts down"	: "Move part down");  RepaintWithRouting(); } break;
+		case Qt::Key_Left:		if ( !m_board.GetDisableMove() ) { m_board.MoveUserComps(0,-1);	UpdateHistory(bPlural ? "Move parts left"	: "Move part left",	 objID); RepaintWithRouting(); } break;
+		case Qt::Key_Right:		if ( !m_board.GetDisableMove() ) { m_board.MoveUserComps(0, 1);	UpdateHistory(bPlural ? "Move parts right"	: "Move part right", objID); RepaintWithRouting(); } break;
+		case Qt::Key_Up:		if ( !m_board.GetDisableMove() ) { m_board.MoveUserComps(-1,0);	UpdateHistory(bPlural ? "Move parts up"		: "Move part up",	 objID); RepaintWithRouting(); } break;
+		case Qt::Key_Down:		if ( !m_board.GetDisableMove() ) { m_board.MoveUserComps( 1,0);	UpdateHistory(bPlural ? "Move parts down"	: "Move part down",	 objID); RepaintWithRouting(); } break;
 	}
 	if ( !bIsAutoRepeat )
 	{
@@ -930,9 +887,14 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
 
 void MainWindow::keyReleaseEvent(QKeyEvent* event)
 {
-#ifndef VEROROUTE_ANDROID
-	g_bPinClicked = false;
-
+#ifdef VEROROUTE_ANDROID
+	if ( event->key() == Qt::Key_Back )
+	{
+		if ( m_bHistoryDir && m_historyMgr.GetCanUndo() )
+			QTimer::singleShot(0, this, SLOT(Undo()));
+		return event->accept();
+	}
+#else
 	commonKeyReleaseEvent(event);
 
 	if ( GetSmartPan() )
@@ -962,8 +924,8 @@ void MainWindow::keyReleaseEvent(QKeyEvent* event)
 		UpdateControls();
 		RepaintWithListNodes();
 	}
-#endif
 	event->accept();	// If we don't do this, we can get the same event passed multiple times if we're on MS Windows.
+#endif
 }
 
 #ifndef VEROROUTE_ANDROID

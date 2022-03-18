@@ -162,7 +162,10 @@ void RenderingDialog::keyPressEvent(QKeyEvent* event)
 
 void RenderingDialog::keyReleaseEvent(QKeyEvent* event)
 {
-#ifndef VEROROUTE_ANDROID
+#ifdef VEROROUTE_ANDROID
+	if ( event->key() == Qt::Key_Back )
+		return m_pMainWindow->keyReleaseEvent(event);	// Try Undo operation
+#else
 	m_pMainWindow->commonKeyReleaseEvent(event);
 #endif
 	QWidget::keyReleaseEvent(event);

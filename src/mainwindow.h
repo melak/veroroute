@@ -140,13 +140,13 @@ public:
 
 	const QString&	GetFileName() const { return m_fileName; }
 
+	void MousePressEvent(const QPoint& pos, const bool& bLeftClick = true, const bool& bRightClick = true);
+	void MouseDoubleClickEvent(const QPoint& pos);
+	void MouseMoveEvent(const QPoint& pos);
+	void MouseReleaseEvent(const QPoint& pos);
 protected:
 	void paintEvent(QPaintEvent* event);
 	void wheelEvent(QWheelEvent* event);
-	void mousePressEvent(QMouseEvent* event);
-	void mouseDoubleClickEvent(QMouseEvent* event);
-	void mouseMoveEvent(QMouseEvent* event);
-	void mouseReleaseEvent(QMouseEvent* event);
 	void keyPressEvent(QKeyEvent* event);
 	void keyReleaseEvent(QKeyEvent* event);
 #ifndef VEROROUTE_ANDROID
@@ -566,7 +566,7 @@ private:
 	bool GetIsModified() const;
 	bool GetMatchesVrtFile(const std::string& fileName) const;
 	void ResetHistory(const std::string& str);
-	void UpdateHistory(const std::string& str, const int compId = BAD_COMPID);
+	void UpdateHistory(const std::string& str, const int objId = -1);
 	void UpdateUndoRedoControls();
 
 	// Helper to auto-append suffix when writing a file

@@ -46,5 +46,6 @@
         <file>images/templates.png</file>
         <file>images/render.png</file>
         <file>images/delete.png</file>
+        <file>images/copy.png</file>
     </qresource>
 </RCC>

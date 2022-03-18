@@ -49,7 +49,7 @@ static const unsigned int MAX_HISTORY_FILES = 100;
 static const unsigned int MAX_HISTORY_FILES = 1000;
 #endif
 
-typedef std::tuple<unsigned int, int, std::string>	HistoryItem;	// <index, compId, description>
+typedef std::tuple<unsigned int, int, std::string>	HistoryItem;	// <index, object id, description>
 typedef std::list<HistoryItem>::const_iterator		HistoryItemIter;
 
 class HistoryManager
@@ -162,7 +162,7 @@ public:
 			outStream.Close();
 		}
 	}
-	bool Update(const std::string& str, const int compId, Board& board)
+	bool Update(const std::string& str, const int objId, Board& board)
 	{
 		if ( m_bLocked ) return false;
 
@@ -170,17 +170,12 @@ public:
 		// Calling 	Save()     will create/overwrite a "history.vrt" file.
 		// Calling  AddEntry() will create/overwrite the "entries.log" file.
 
-		if ( compId != BAD_COMPID )	// compId is only used when updating the Name and Value fields for a part
-		{							// or the 4 text fields in the component editor (which always uses compId == 0)
-			assert(	str ==	"Part name change"	||
-					str ==	"Part value change"	||
-					str ==	"Edit Value string"	||
-					str ==	"Edit Prefix string"||
-					str ==	"Edit Type string"	||
-					str ==	"Edit Import string" );
-			if ( (std::get<1>(*m_currentIter) == compId ) &&	// If we're working on the same part ...
-				 (std::get<2>(*m_currentIter) == str ) )		// ... and the same text field ...
-				return Save(board);								// ... then overwrite the current entry instead of adding a new one
+		assert(BAD_COMPID == -1 && BAD_ID == -1);
+		if ( objId != -1 )	// objId is typically a "component ID" in layout mode, or a "shape ID" or "pin ID" in component editor mode.
+		{					// Lots of other things force an objId == 0 (think of that as "dialog ID").
+			if ( (std::get<1>(*m_currentIter) == objId ) &&	// If we're working on the same object as the current entry ...
+				 (std::get<2>(*m_currentIter) == str ) )	// ... and have the same text field as the current entry ...
+				return Save(board);							// ... then overwrite the current entry instead of adding a new one
 		}
 
 		// Update m_list
@@ -196,7 +191,7 @@ public:
 			// We'll overwrite the first history file, so no need to delete it
 			m_list.erase(m_list.begin());	// Erase first history list item
 		}
-		AddEntry(std::get<0>(*m_currentIter) + 1, compId, str);
+		AddEntry(std::get<0>(*m_currentIter) + 1, objId, str);
 
 		return Save(board);
 	}
@@ -249,9 +244,9 @@ public:
 		}
 	}
 private:
-	void AddEntry(const unsigned int& index, const int compId, const std::string& str)
+	void AddEntry(const unsigned int& index, const int objId, const std::string& str)
 	{
-		m_list.push_back( HistoryItem(index % MAX_HISTORY_FILES, compId, str) );
+		m_list.push_back( HistoryItem(index % MAX_HISTORY_FILES, objId, str) );
 		m_currentIter = m_list.end();
 		m_currentIter--;
 		SaveEntriesFile();

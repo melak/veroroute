@@ -521,8 +521,11 @@ void MainWindow::ResetView(MOUSE_MODE eMouseMode, bool bTutorial)
 	}
 
 	ClearFind();
-	HideAllDockedDlgs();
-	HideAllNonDockedDlgs();
+
+	const bool bUndoRedo = m_historyMgr.GetIsLocked();	// The history manager is locked for Undo/Redo
+
+	if ( !bUndoRedo ) HideAllDockedDlgs();
+	if ( !bUndoRedo ) HideAllNonDockedDlgs();
 
 	m_infoDlg->Update();
 	m_infoDlg->SetReadOnly(bTutorial);
@@ -533,18 +536,21 @@ void MainWindow::ResetView(MOUSE_MODE eMouseMode, bool bTutorial)
 	UpdateControls();
 	UpdateBOM();
 
-	const bool bUndoRedo = m_historyMgr.GetIsLocked();	// The history manager is locked for Undo/Redo
-	if ( !bUndoRedo ) UpdateTemplatesDialog();			// For Undo/Redo, don't update the Templates dialog
+	if ( !bUndoRedo ) UpdateTemplatesDialog();	// For Undo/Redo, don't update the Templates dialog
 
 	UpdateCompDialog();
 	UpdateWindowTitle();
 
-	if ( m_board.GetCompEdit() )
-		ShowCompDialog();
-	else
-		ShowControlDialog();
+	if ( !bUndoRedo )
+	{
+		if ( m_board.GetCompEdit() )
+			ShowCompDialog();
+		else
+			ShowControlDialog();
 
-	if ( bTutorial ) ShowInfoDialog();			// Always show Info dialog in Tutorial Mode
+		if ( bTutorial ) ShowInfoDialog();		// Always show Info dialog in Tutorial Mode
+	}
+
 	ui->actionSave->setEnabled(!bTutorial);		// Disable "Save" in Tutorial Mode
 	ui->actionSave_As->setEnabled(!bTutorial);	// Disable "Save As" in Tutorial Mode
 	UpdateUndoRedoControls();
@@ -1091,7 +1097,13 @@ void MainWindow::SmartPanOn()
 
 void MainWindow::Copy()
 {
-	if ( GetCurrentTextId() != BAD_TEXTID )
+	if ( m_board.GetCompEdit() && GetCurrentShapeId() != BAD_ID )
+	{
+		SetCurrentShapeId( GetCompDefiner().CopyShape() );
+		UpdateHistory("Copy shape");
+		RepaintSkipRouting();
+	}
+	else if ( GetCurrentTextId() != BAD_TEXTID )
 	{
 		if ( StringHelper::IsEmptyStr( GetCurrentTextRect().GetStr() ) ) return;	// Don't copy empty text boxes
 		int iRow, iCol;
@@ -1160,8 +1172,7 @@ void MainWindow::Delete()
 {
 	if ( m_board.GetCompEdit() && GetCurrentShapeId() != BAD_ID )
 	{
-		GetCompDefiner().DestroyShape();
-		SetCurrentShapeId(BAD_ID);
+		SetCurrentShapeId( GetCompDefiner().DestroyShape() );
 		UpdateHistory("Delete shape");
 		RepaintSkipRouting();
 	}
@@ -1240,12 +1251,12 @@ void MainWindow::ShowCompDialog()
 	ShowDlg(m_dockCompDlg);
 	ShowPinDialog();		// Always show the pin dialog when toggling to component editor (if not in tutorial mode)
 
-	m_scrollArea->m_bDoCentreView = true;
+	m_scrollArea->SetRequestCentreView(true);
 	RepaintSkipRouting();
 }
 void MainWindow::HideCompDialog()
 {
-	m_scrollArea->m_bDoCentreView = m_board.GetCompEdit();	// Set flag BEFORE hide/show dialogs
+	m_scrollArea->SetRequestCentreView( m_board.GetCompEdit() );	// Set BEFORE hide/show dialogs
 
 	HideDlg(m_dockCompDlg);
 }
@@ -1271,7 +1282,7 @@ void MainWindow::ShowHotkeysDialog()
 }
 void MainWindow::ShowInfoDialog()
 {
-	m_scrollArea->m_bDoCentreView = m_board.GetCompEdit();	// Set flag BEFORE hide/show dialogs
+	m_scrollArea->SetRequestCentreView( m_board.GetCompEdit() );	// Set BEFORE hide/show dialogs
 
 	HideAllNonDockedDlgs();	// (m_bomDlg, m_wireDlg, m_findDlg, m_textDlg)
 
@@ -1281,13 +1292,13 @@ void MainWindow::ShowInfoDialog()
 }
 void MainWindow::HideInfoDialog()
 {
-	m_scrollArea->m_bDoCentreView = m_board.GetCompEdit();	// Set flag BEFORE hide/show dialogs
+	m_scrollArea->SetRequestCentreView( m_board.GetCompEdit() );	// Set BEFORE hide/show dialogs
 
 	HideDlg(m_dockInfoDlg);
 }
 void MainWindow::ShowTemplatesDialog()
 {
-	m_scrollArea->m_bDoCentreView = m_board.GetCompEdit();	// Set flag BEFORE hide/show dialogs
+	m_scrollArea->SetRequestCentreView( m_board.GetCompEdit() );	// Set BEFORE hide/show dialogs
 
 	HideAllNonDockedDlgs();	// (m_bomDlg, m_wireDlg, m_findDlg, m_textDlg)
 
@@ -1299,14 +1310,14 @@ void MainWindow::ShowTemplatesDialog()
 }
 void MainWindow::HideTemplatesDialog()
 {
-	m_scrollArea->m_bDoCentreView = m_board.GetCompEdit();	// Set flag BEFORE hide/show dialogs
+	m_scrollArea->SetRequestCentreView( m_board.GetCompEdit() );	// Set BEFORE hide/show dialogs
 
 	HideDlg(m_dockTemplatesDlg);
 	return m_board.GetCompEdit() ? ShowDlg(m_dockCompDlg) : ShowDlg(m_dockControlDlg);
 }
 void MainWindow::ShowPinDialog()
 {
-	m_scrollArea->m_bDoCentreView = m_board.GetCompEdit();	// Set flag BEFORE hide/show dialogs
+	m_scrollArea->SetRequestCentreView( m_board.GetCompEdit() );	// Set BEFORE hide/show dialogs
 
 	if ( m_iTutorialNumber < 0 )	// Don't show pin labels dialog in tutorial mode
 	{
@@ -1319,7 +1330,7 @@ void MainWindow::ShowPinDialog()
 }
 void MainWindow::HidePinDialog()
 {
-	m_scrollArea->m_bDoCentreView = m_board.GetCompEdit();	// Set flag BEFORE hide/show dialogs
+	m_scrollArea->SetRequestCentreView( m_board.GetCompEdit() );	// Set BEFORE hide/show dialogs
 
 	HideDlg( m_dockPinDlg );
 }
@@ -1340,6 +1351,8 @@ void MainWindow::HidePadOffsetDialog(bool bForce)
 	ui->statusBar->showMessage(QString(""));
 	UpdateHistory("Apply pad offsets");
 	HideDlg(m_padOffsetDlg);
+	if ( bForce )
+		RepaintSkipRouting(true);
 }
 void MainWindow::ShowBomDialog()
 {
@@ -1414,7 +1427,7 @@ void MainWindow::SwitchLayer()
 {
 	assert( m_board.GetLyrs() == 2 );
 	m_board.SetCurrentLayer( ( m_board.GetCurrentLayer() + 1 ) % 2 );
-	UpdateHistory("Toggle layer");
+	UpdateHistory("Toggle layer", 0);
 	UpdateControls();
 	RepaintWithRouting();
 }
@@ -1422,7 +1435,7 @@ void MainWindow::ToggleVias()
 {
 	assert( m_board.GetLyrs() == 2 );
 	m_board.SetViasEnabled( !m_board.GetViasEnabled() );
-	UpdateHistory("Toggle vias");
+	UpdateHistory("Toggle vias", 0);
 	UpdateControls();
 	RepaintWithListNodes();
 }
@@ -1536,22 +1549,22 @@ void MainWindow::HandleNetworkReply(QNetworkReply* pReply)
 }
 
 // View controls (Update history BEFORE calling UpdateControls() since that triggers more history writes)
-void MainWindow::TrackSliderChanged(int i)		{ if ( m_board.SetTrackSliderValue(i) )	{ UpdateHistory("Track slider change");		UpdateControls(); DestroyPixmapCache(); RepaintSkipRouting(); m_board.CustomPCBshapes(); } }
+void MainWindow::TrackSliderChanged(int i)		{ if ( m_board.SetTrackSliderValue(i) )	{ UpdateHistory("Toggle Mono/Color/PCB");		UpdateControls(); DestroyPixmapCache(); RepaintSkipRouting(); m_board.CustomPCBshapes(); } }
 void MainWindow::CheckBoxMonoChanged(bool b)	{ if ( b != (m_board.GetTrackSliderValue() == 1) ) TrackSliderChanged(b ? 1 : 0); }
 void MainWindow::CheckBoxColorChanged(bool b)	{ if ( b != (m_board.GetTrackSliderValue() == 2) ) TrackSliderChanged(b ? 2 : 0); }
 void MainWindow::CheckBoxPcbChanged(bool b)		{ if ( b != (m_board.GetTrackSliderValue() == 3) ) TrackSliderChanged(b ? 3 : 0); }
-void MainWindow::SaturationSliderChanged(int i) { if ( m_board.SetSaturation(i) )		{ UpdateHistory("Saturation change");		UpdateControls(); DestroyPixmapCache(); RepaintSkipRouting(); } }
-void MainWindow::CompSliderChanged(int i)		{ if ( m_board.SetCompSliderValue(i) )	{ UpdateHistory("Part slider change");		UpdateControls(); RepaintSkipRouting(); } }
+void MainWindow::SaturationSliderChanged(int i) { if ( m_board.SetSaturation(i) )		{ UpdateHistory("Saturation change", 0);		UpdateControls(); DestroyPixmapCache(); RepaintSkipRouting(); } }
+void MainWindow::CompSliderChanged(int i)		{ if ( m_board.SetCompSliderValue(i) )	{ UpdateHistory("Toggle Line/Name/Value");		UpdateControls(); RepaintSkipRouting(); } }
 void MainWindow::CheckBoxLineChanged(bool b)	{ if ( b != (m_board.GetCompSliderValue() == 1) ) CompSliderChanged(b ? 1 : 0); }
 void MainWindow::CheckBoxNameChanged(bool b)	{ if ( b != (m_board.GetCompSliderValue() == 2) ) CompSliderChanged(b ? 2 : 0); }
 void MainWindow::CheckBoxValueChanged(bool b)	{ if ( b != (m_board.GetCompSliderValue() == 3) ) CompSliderChanged(b ? 3 : 0); }
-void MainWindow::FillSliderChanged(int i)		{ if ( m_board.SetFillSaturation(i) )	{ UpdateHistory("Fill opacity change");		UpdateControls(); DestroyPixmapCache();	RepaintSkipRouting(); } }
-void MainWindow::SetShowGrid(bool b)			{ if ( m_board.SetShowGrid(b) )			{ UpdateHistory("Toggle grid");				UpdateControls(); RepaintSkipRouting(); } }
-void MainWindow::SetShowText(bool b)			{ if ( m_board.SetShowText(b) )			{ UpdateHistory("Toggle text");				UpdateControls(); RepaintSkipRouting(); } }
-void MainWindow::SetFlipH(bool b)				{ if ( m_board.SetFlipH(b) )			{ UpdateHistory("Toggle flip horizontal");	UpdateControls(); RepaintSkipRouting(); } }
-void MainWindow::SetFlipV(bool b)				{ if ( m_board.SetFlipV(b) )			{ UpdateHistory("Toggle flip vertical");	UpdateControls(); RepaintSkipRouting(); } }
-void MainWindow::SetShowPinLabels(bool b)		{ if ( m_board.SetShowPinLabels(b) )	{ UpdateHistory("Toggle pin labels");		UpdateControls(); RepaintSkipRouting(); } }
-void MainWindow::SetShowFlyWires(bool b)		{ if ( m_board.SetShowFlyWires(b) )		{ UpdateHistory("Toggle flying wires");		UpdateControls(); RepaintSkipRouting(); } }
+void MainWindow::FillSliderChanged(int i)		{ if ( m_board.SetFillSaturation(i) )	{ UpdateHistory("Fill opacity change", 0);		UpdateControls(); DestroyPixmapCache();	RepaintSkipRouting(); } }
+void MainWindow::SetShowGrid(bool b)			{ if ( m_board.SetShowGrid(b) )			{ UpdateHistory("Toggle grid", 0);				UpdateControls(); RepaintSkipRouting(); } }
+void MainWindow::SetShowText(bool b)			{ if ( m_board.SetShowText(b) )			{ UpdateHistory("Toggle text", 0);				UpdateControls(); RepaintSkipRouting(); } }
+void MainWindow::SetFlipH(bool b)				{ if ( m_board.SetFlipH(b) )			{ UpdateHistory("Flip horizontal", 0);			UpdateControls(); RepaintSkipRouting(); } }
+void MainWindow::SetFlipV(bool b)				{ if ( m_board.SetFlipV(b) )			{ UpdateHistory("Flip vertical", 0);			UpdateControls(); RepaintSkipRouting(); } }
+void MainWindow::SetShowPinLabels(bool b)		{ if ( m_board.SetShowPinLabels(b) )	{ UpdateHistory("Toggle pin labels", 0);		UpdateControls(); RepaintSkipRouting(); } }
+void MainWindow::SetShowFlyWires(bool b)		{ if ( m_board.SetShowFlyWires(b) )		{ UpdateHistory("Toggle flying wires", 0);		UpdateControls(); RepaintSkipRouting(); } }
 void MainWindow::SetFill(bool b)
 {
 	if ( m_board.SetGroundFill(b) )
@@ -1562,8 +1575,8 @@ void MainWindow::SetFill(bool b)
 		RepaintSkipRouting();
 	}
 }
-void MainWindow::Crop()					{ if ( m_board.Crop() ) { UpdateHistory("Crop");	RepaintSkipRouting(); } }
-void MainWindow::MarginChanged(int i)	{ if ( m_board.SetCropMargin(i) && m_board.Crop() ) { UpdateHistory("Margin change");	RepaintSkipRouting(); } }
+void MainWindow::Crop()					{ if ( m_board.Crop() ) { UpdateHistory("Crop", 0);	RepaintSkipRouting(); } }
+void MainWindow::MarginChanged(int i)	{ if ( m_board.SetCropMargin(i) && m_board.Crop() ) { UpdateHistory("Margin change", 0);	RepaintSkipRouting(); } }
 void MainWindow::ToggleGrid()			{ SetShowGrid( !m_board.GetShowGrid() ); }
 void MainWindow::ToggleText()			{ SetShowText( !m_board.GetShowText() ); if ( !m_board.GetShowText() ) SetCurrentTextId(BAD_TEXTID); }
 void MainWindow::ToggleFlipH()			{ SetFlipH( !m_board.GetFlipH() ); }
@@ -1666,7 +1679,7 @@ void MainWindow::SetCompType(const QString& str)
 	const COMP	eType	= CompTypes::GetTypeFromTypeStr( str.toStdString() );
 	if ( eType == comp.GetType() ) return;	// No change
 	m_board.ChangeTypeUserComp(eType);
-	UpdateHistory("Change part type");
+	UpdateHistory("Change part type", comp.GetId());
 	UpdateControls();
 	RepaintWithListNodes();
 }
@@ -1677,7 +1690,7 @@ void MainWindow::SetCompCustomFlag(const bool& b)
 	Component& comp = m_board.GetUserComponent();
 	if ( b == comp.GetCustomPads() ) return;	// No change
 	comp.SetCustomPads(b);
-	UpdateHistory("Change custom pad/hole flag");
+	UpdateHistory("Change custom flag", comp.GetId());
 	UpdateControls();
 	RepaintWithListNodes();
 }
@@ -1689,7 +1702,7 @@ void MainWindow::SetCompPadWidth(const int& i)
 	if ( i == comp.GetPadWidth() ) return;	// No change
 	comp.SetPadWidth(i);
 	if ( comp.GetHoleWidth() > i-8 ) comp.SetHoleWidth( i-8 );	// 8 ==> minimum annular ring = 4 mil
-	UpdateHistory("Change custom pad size");
+	UpdateHistory("Change custom pad size", comp.GetId());
 	UpdateControls();
 	RepaintWithListNodes();
 }
@@ -1701,7 +1714,7 @@ void MainWindow::SetCompHoleWidth(const int& i)
 	if ( i == comp.GetHoleWidth() ) return;	// No change
 	comp.SetHoleWidth(i);
 	if ( comp.GetPadWidth() < i+8 ) comp.SetPadWidth( i+8 );	// 8 ==> minimum annular ring = 4 mil
-	UpdateHistory("Change i hole size");
+	UpdateHistory("Change custom  hole size", comp.GetId());
 	UpdateControls();
 	RepaintWithListNodes();
 }
@@ -1713,9 +1726,9 @@ void MainWindow::CompRotate(const bool& bCW)
 
 	const bool bPlural = ( m_board.GetGroupMgr().GetNumUserComps() > 1 );
 	if ( bPlural )
-		UpdateHistory(bCW ? "Rotate parts CW" : "Rotate parts CCW");
+		UpdateHistory("Rotate parts", 0);
 	else
-		UpdateHistory(bCW ? "Rotate part CW" : "Rotate part CCW");
+		UpdateHistory("Rotate part", m_board.GetUserComponent().GetId());
 	UpdateControls();
 	RepaintWithListNodes();
 }
@@ -1725,7 +1738,7 @@ void MainWindow::CompStretch(const bool& bGrow)
 
 	m_board.StretchUserComp(bGrow);
 
-	UpdateHistory(bGrow ? "Increase part length" : "Decrease part length");
+	UpdateHistory(bGrow ? "Increase part length" : "Decrease part length", m_board.GetUserComponent().GetId());
 	UpdateControls();
 	RepaintWithListNodes();
 }
@@ -1735,7 +1748,7 @@ void MainWindow::CompStretchWidth(const bool& bGrow)
 
 	m_board.StretchWidthUserComp(bGrow);
 
-	UpdateHistory(bGrow ? "Increase part width" : "Decrease part width");
+	UpdateHistory(bGrow ? "Increase part width" : "Decrease part width", m_board.GetUserComponent().GetId());
 	UpdateControls();
 	RepaintWithListNodes();
 }
@@ -1744,11 +1757,13 @@ void MainWindow::CompTextMove(const int& deltaRow, const int& deltaCol)
 	if ( m_board.GetDisableCompText() ) return;
 
 	m_board.MoveUserCompText(deltaRow, deltaCol);
-	if		( deltaRow < 0 ) UpdateHistory("Move label up");
-	else if ( deltaRow > 0 ) UpdateHistory("Move label down");
-	else if ( deltaCol < 0 ) UpdateHistory("Move label left");
-	else if ( deltaCol > 0 ) UpdateHistory("Move label right");
-	else					 UpdateHistory("Move label centre");
+
+	const int objId = m_board.GetUserComponent().GetId();
+	if		( deltaRow < 0 ) UpdateHistory("Move label up",		objId);
+	else if ( deltaRow > 0 ) UpdateHistory("Move label down",	objId);
+	else if ( deltaCol < 0 ) UpdateHistory("Move label left",	objId);
+	else if ( deltaCol > 0 ) UpdateHistory("Move label right",	objId);
+	else					 UpdateHistory("Move label centre",	objId);
 
 	RepaintSkipRouting();
 }
@@ -1886,7 +1901,7 @@ void MainWindow::AutoColor(bool b)
 		m_board.GetColorMgr().Unfix( GetCurrentNodeId() );
 	else
 		m_board.GetColorMgr().Fix( GetCurrentNodeId() );
-	UpdateHistory(b ? "Enable Auto-Color" : "Disable Auto-Color");
+	UpdateHistory("Toggle Auto-Color", GetCurrentNodeId());
 	UpdateControls();
 	RepaintSkipRouting();
 }
@@ -1898,8 +1913,9 @@ void MainWindow::SelectNodeColor()
 	if ( newColor.isValid() && oldColor != newColor )
 	{
 		mgr.SetNodeColor(GetCurrentNodeId(), newColor);
+		const int objId = GetCurrentNodeId();
 		SetCurrentNodeId(BAD_NODEID);	// Unselect nodeId so we can see the color in the view
-		UpdateHistory("Set Node Color");
+		UpdateHistory("Set Node Color", objId);
 		UpdateControls();
 		RepaintSkipRouting();
 	}
@@ -1993,31 +2009,30 @@ void MainWindow::SetBrightness(int i)
 {
 	const bool bNewFormat = ( i >= 0 && i <= 100 );		// Before VeroRoute V2.20, "Brightness" was stored as a grey level in the range [200,255].
 	const int  ii = ( bNewFormat ) ? ( 155 + i ) : i;	// From   VeroRoute V2.20, "Brightness" is a percentage value [0,100] that is stored as a grey level in the range [155,255].
-	if ( m_board.SetBackgroundColor(MyRGB(ii,ii,ii)) )	{ UpdateHistory("Background brightness change");	DestroyPixmapCache();	RepaintSkipRouting(); }
+	if ( m_board.SetBackgroundColor(MyRGB(ii,ii,ii)) )	{ UpdateHistory("Background brightness change", 0);	DestroyPixmapCache();	RepaintSkipRouting(); }
 }
-void MainWindow::SetPadWidth(int i)			{ if ( m_board.SetPAD_MIL(i)   ) { UpdateHistory("Pad width change");				UpdateControls();	DestroyPixmapCache();	RepaintSkipRouting(); } }
-void MainWindow::SetTrackWidth(int i)		{ if ( m_board.SetTRACK_MIL(i) ) { UpdateHistory("Track width change");				UpdateControls();	DestroyPixmapCache();	RepaintSkipRouting(); } }
-void MainWindow::SetTagWidth(int i)			{ if ( m_board.SetTAG_MIL(i) )   { UpdateHistory("Thermal width change");			UpdateControls();	DestroyPixmapCache();	RepaintSkipRouting(); } }
-void MainWindow::SetHoleWidth(int i)		{ if ( m_board.SetHOLE_MIL(i)  ) { UpdateHistory("Hole width change");				UpdateControls();	RepaintSkipRouting(); } }
-void MainWindow::SetGapWidth(int i)			{ if ( m_board.SetGAP_MIL(i)   ) { UpdateHistory("Gap width change");				UpdateControls();	RepaintSkipRouting(); } }
-void MainWindow::SetMaskWidth(int i)		{ if ( m_board.SetMASK_MIL(i)  ) { UpdateHistory("Solder mask margin change");		UpdateControls();	RepaintSkipRouting(); } }
-void MainWindow::SetSilkWidth(int i)		{ if ( m_board.SetSILK_MIL(i)  ) { UpdateHistory("Silkscreen line width change");	UpdateControls();	RepaintSkipRouting(); } }
-void MainWindow::SetEdgeWidth(int i)		{ if ( m_board.SetEDGE_MIL(i)  ) { UpdateHistory("Board edge margin change");		UpdateControls();	RepaintSkipRouting(); } }
-void MainWindow::SetViaPadWidth(int i)		{ if ( m_board.SetVIAPAD_MIL(i)) { UpdateHistory("Via pad width change");			UpdateControls();	DestroyPixmapCache();	RepaintSkipRouting(); } }
-void MainWindow::SetViaHoleWidth(int i)		{ if ( m_board.SetVIAHOLE_MIL(i)){ UpdateHistory("Via hole width change");			UpdateControls();	DestroyPixmapCache();	RepaintSkipRouting(); } }
-void MainWindow::SetTextSizeComp(int i)		{ if ( m_board.SetTextSizeComp(i) )		  { UpdateHistory("Text size change (component)");	RepaintSkipRouting(); } }
-void MainWindow::SetTextSizePins(int i)		{ if ( m_board.SetTextSizePins(i) )		  { UpdateHistory("Text size change (pins)");		RepaintSkipRouting(); } }
-
-void MainWindow::SetTargetRows(int i)		{ if ( m_board.SetTargetRows(i) )		  { UpdateHistory("Target board height change");	RepaintSkipRouting(); } }
-void MainWindow::SetTargetCols(int i)		{ if ( m_board.SetTargetCols(i) )		  { UpdateHistory("Target board width change");		RepaintSkipRouting(); } }
-void MainWindow::SetShowTarget(bool b)		{ if ( m_board.SetShowTarget(b) )		  { UpdateHistory("Target board on/off");			RepaintSkipRouting(); } }
-void MainWindow::SetShowCloseTracks(bool b)	{ if ( m_board.SetShowCloseTracks(b) )	  { UpdateHistory("Show closest tracks on/off");	UpdateControls();	RepaintSkipRouting(); } }
-void MainWindow::SetAntialiasOff(bool b)	{ if ( b && m_board.SetRenderQuality(0) ) { UpdateHistory("Anti-alias off");  DestroyPixmapCache(); RepaintSkipRouting(); } }
-void MainWindow::SetAntialiasOn(bool b)		{ if ( b && m_board.SetRenderQuality(1) ) { UpdateHistory("Anti-alias on");   DestroyPixmapCache(); RepaintSkipRouting(); } }
+void MainWindow::SetPadWidth(int i)			{ if ( m_board.SetPAD_MIL(i)   ) { UpdateHistory("Pad width change", 0);				UpdateControls();	DestroyPixmapCache();	RepaintSkipRouting(); } }
+void MainWindow::SetTrackWidth(int i)		{ if ( m_board.SetTRACK_MIL(i) ) { UpdateHistory("Track width change", 0);				UpdateControls();	DestroyPixmapCache();	RepaintSkipRouting(); } }
+void MainWindow::SetTagWidth(int i)			{ if ( m_board.SetTAG_MIL(i) )   { UpdateHistory("Thermal width change", 0);			UpdateControls();	DestroyPixmapCache();	RepaintSkipRouting(); } }
+void MainWindow::SetHoleWidth(int i)		{ if ( m_board.SetHOLE_MIL(i)  ) { UpdateHistory("Hole width change", 0);				UpdateControls();	RepaintSkipRouting(); } }
+void MainWindow::SetGapWidth(int i)			{ if ( m_board.SetGAP_MIL(i)   ) { UpdateHistory("Gap width change", 0);				UpdateControls();	RepaintSkipRouting(); } }
+void MainWindow::SetMaskWidth(int i)		{ if ( m_board.SetMASK_MIL(i)  ) { UpdateHistory("Solder mask margin change", 0);		UpdateControls();	RepaintSkipRouting(); } }
+void MainWindow::SetSilkWidth(int i)		{ if ( m_board.SetSILK_MIL(i)  ) { UpdateHistory("Silkscreen line width change", 0);	UpdateControls();	RepaintSkipRouting(); } }
+void MainWindow::SetEdgeWidth(int i)		{ if ( m_board.SetEDGE_MIL(i)  ) { UpdateHistory("Board edge margin change", 0);		UpdateControls();	RepaintSkipRouting(); } }
+void MainWindow::SetViaPadWidth(int i)		{ if ( m_board.SetVIAPAD_MIL(i)) { UpdateHistory("Via pad width change", 0);			UpdateControls();	DestroyPixmapCache();	RepaintSkipRouting(); } }
+void MainWindow::SetViaHoleWidth(int i)		{ if ( m_board.SetVIAHOLE_MIL(i)){ UpdateHistory("Via hole width change", 0);			UpdateControls();	DestroyPixmapCache();	RepaintSkipRouting(); } }
+void MainWindow::SetTextSizeComp(int i)		{ if ( m_board.SetTextSizeComp(i) )		  { UpdateHistory("Text size change (component)", 0);	RepaintSkipRouting(); } }
+void MainWindow::SetTextSizePins(int i)		{ if ( m_board.SetTextSizePins(i) )		  { UpdateHistory("Text size change (pins)", 0);		RepaintSkipRouting(); } }
+void MainWindow::SetTargetRows(int i)		{ if ( m_board.SetTargetRows(i) )		  { UpdateHistory("Target board height change", 0);		RepaintSkipRouting(); } }
+void MainWindow::SetTargetCols(int i)		{ if ( m_board.SetTargetCols(i) )		  { UpdateHistory("Target board width change", 0);		RepaintSkipRouting(); } }
+void MainWindow::SetShowTarget(bool b)		{ if ( m_board.SetShowTarget(b) )		  { UpdateHistory("Toggle show target board area", 0);	RepaintSkipRouting(); } }
+void MainWindow::SetShowCloseTracks(bool b)	{ if ( m_board.SetShowCloseTracks(b) )	  { UpdateHistory("Toggle show closest tracks", 0);		UpdateControls();	RepaintSkipRouting(); } }
+void MainWindow::SetAntialiasOff(bool b)	{ if ( b && m_board.SetRenderQuality(0) ) { UpdateHistory("Anti-alias off");	DestroyPixmapCache(); RepaintSkipRouting(); } }
+void MainWindow::SetAntialiasOn(bool b)		{ if ( b && m_board.SetRenderQuality(1) ) { UpdateHistory("Anti-alias on");		DestroyPixmapCache(); RepaintSkipRouting(); } }
 
 // Wire dialog
-void MainWindow::SetWireShare(bool b)		{ if ( m_board.SetWireShare(b) ) { UpdateHistory("Wire hole-sharing on/off");	RepaintSkipRouting(); } }
-void MainWindow::SetWireCross(bool b)		{ if ( m_board.SetWireCross(b) ) { UpdateHistory("Wire crossing on/off");		RepaintSkipRouting(); } }
+void MainWindow::SetWireShare(bool b)		{ if ( m_board.SetWireShare(b) ) { UpdateHistory("Toggle allow wires to share a hole");	RepaintSkipRouting(); } }
+void MainWindow::SetWireCross(bool b)		{ if ( m_board.SetWireCross(b) ) { UpdateHistory("Toggle allow wires to cross");		RepaintSkipRouting(); } }
 
 // Find dialog
 void MainWindow::ClearFind()
@@ -2065,8 +2080,8 @@ void MainWindow::DefinerSetValueStr(const QString& str)		{ if ( GetCompDefiner()
 void MainWindow::DefinerSetPrefixStr(const QString& str)	{ if ( GetCompDefiner().SetPrefixStr(str.toStdString())	) { UpdateHistory("Edit Prefix string",0); EnableCompDialogControls(); } }
 void MainWindow::DefinerSetTypeStr(const QString& str)		{ if ( GetCompDefiner().SetTypeStr(str.toStdString())	) { UpdateHistory("Edit Type string",  0); EnableCompDialogControls(); } }
 void MainWindow::DefinerSetImportStr(const QString& str)	{ if ( GetCompDefiner().SetImportStr(str.toStdString())	) { UpdateHistory("Edit Import string",0); EnableCompDialogControls(); } }
-void MainWindow::DefinerSetPinShapeType(const QString& str)	{ if ( GetCompDefiner().SetPinType(str.toStdString())	) { UpdateHistory("Action"); EnableCompDialogControls(); } }
-void MainWindow::DefinerSetShapeType(const QString& str)	{ if ( GetCompDefiner().SetType(str.toStdString())		) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
+void MainWindow::DefinerSetPinShapeType(const QString& str)	{ if ( GetCompDefiner().SetPinType(str.toStdString())	) { UpdateHistory("Set pin shape",     0); EnableCompDialogControls(); } }
+void MainWindow::DefinerSetShapeType(const QString& str)	{ if ( GetCompDefiner().SetType(str.toStdString())		) { UpdateHistory("Set shape type", GetCompDefiner().GetCurrentShapeId());	EnableCompDialogControls(); RepaintSkipRouting(); } }
 void MainWindow::DefinerToggledPinLabels(bool b)
 {
 	CompDefiner& compDefiner = GetCompDefiner();
@@ -2077,7 +2092,7 @@ void MainWindow::DefinerToggledPinLabels(bool b)
 		bChanged = compDefiner.SetPinFlags( compDefiner.GetPinFlags() & ~PIN_LABELS );
 	if ( bChanged )
 	{
-		UpdateHistory("Toggle pin labels");
+		UpdateHistory("Toggle pin labels", 0);
 		EnableCompDialogControls();
 	}
 }
@@ -2091,7 +2106,7 @@ void MainWindow::DefinerToggledCustomFlag(bool b)
 		bChanged = compDefiner.SetPinFlags( compDefiner.GetPinFlags() & ~PIN_CUSTOM );
 	if ( bChanged )
 	{
-		UpdateHistory("Toggle custom pad/hole size");
+		UpdateHistory("Toggle custom pad/hole size", 0);
 		EnableCompDialogControls();
 	}
 }
@@ -2100,7 +2115,7 @@ void MainWindow::DefinerToggleShapeLine(bool b)
 	const bool bChanged = GetCompDefiner().SetLine(b);
 	if ( bChanged )
 	{
-		UpdateHistory("Toggle shape line");
+		UpdateHistory("Toggle shape has line", 0);
 		EnableCompDialogControls();
 		RepaintSkipRouting();
 	}
@@ -2110,25 +2125,25 @@ void MainWindow::DefinerToggleShapeFill(bool b)
 	const bool bChanged = GetCompDefiner().SetFill(b);
 	if ( bChanged )
 	{
-		UpdateHistory("Toggle shape fill");
+		UpdateHistory("Toggle shape has fill", 0);
 		EnableCompDialogControls();
 		RepaintSkipRouting();
 	}
 }
-void MainWindow::DefinerWidthChanged(int i)				{ if ( GetCompDefiner().SetWidth(i)		) { UpdateHistory("Action"); EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
-void MainWindow::DefinerHeightChanged(int i)			{ if ( GetCompDefiner().SetHeight(i)	) { UpdateHistory("Action"); EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
-void MainWindow::DefinerPadWidthChanged(int i)			{ if ( GetCompDefiner().SetPadWidth(i)	) { UpdateHistory("Action"); EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
-void MainWindow::DefinerHoleWidthChanged(int i)			{ if ( GetCompDefiner().SetHoleWidth(i)	) { UpdateHistory("Action"); EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
-void MainWindow::DefinerSetPinNumber(int i)				{ if ( GetCompDefiner().SetPinNumber(i)	) { UpdateHistory("Action"); EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
-void MainWindow::DefinerIncPinNumber(bool b)			{ if ( GetCompDefiner().IncPinNumber(b)	) { UpdateHistory("Action"); EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }	// Called using mouse wheel in view
-void MainWindow::DefinerSetSurface(const QString& str)	{ if ( GetCompDefiner().SetSurface(str.toStdString()) ) { UpdateHistory("Action"); EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
-void MainWindow::DefinerSetCX(double d)	{ if ( GetCompDefiner().SetCX(d)	) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
-void MainWindow::DefinerSetCY(double d)	{ if ( GetCompDefiner().SetCY(-d)	) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }	// Control assumes CY goes up
-void MainWindow::DefinerSetDX(double d)	{ if ( GetCompDefiner().SetDX(d)	) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
-void MainWindow::DefinerSetDY(double d)	{ if ( GetCompDefiner().SetDY(d)	) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
-void MainWindow::DefinerSetA1(double d)	{ if ( GetCompDefiner().SetA1(d)	) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
-void MainWindow::DefinerSetA2(double d)	{ if ( GetCompDefiner().SetA2(d)	) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
-void MainWindow::DefinerSetA3(double d)	{ if ( GetCompDefiner().SetA3(d)	) { UpdateHistory("Action"); EnableCompDialogControls(); RepaintSkipRouting(); } }
+void MainWindow::DefinerWidthChanged(int i)				{ if ( GetCompDefiner().SetWidth(i)		) { UpdateHistory("Footprint width changed", 0);	EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
+void MainWindow::DefinerHeightChanged(int i)			{ if ( GetCompDefiner().SetHeight(i)	) { UpdateHistory("Footprint height changed", 0);	EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
+void MainWindow::DefinerPadWidthChanged(int i)			{ if ( GetCompDefiner().SetPadWidth(i)	) { UpdateHistory("Pad width changed", 0);			EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
+void MainWindow::DefinerHoleWidthChanged(int i)			{ if ( GetCompDefiner().SetHoleWidth(i)	) { UpdateHistory("Hole width changed", 0);			EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
+void MainWindow::DefinerSetPinNumber(int i)				{ if ( GetCompDefiner().SetPinNumber(i)	) { UpdateHistory("Change pin number", GetCompDefiner().GetCurrentPinId());			EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
+void MainWindow::DefinerIncPinNumber(bool b)			{ if ( GetCompDefiner().IncPinNumber(b)	) { UpdateHistory("Change pin number", GetCompDefiner().GetCurrentPinId());			EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }	// Called using mouse wheel in view
+void MainWindow::DefinerSetSurface(const QString& str)	{ if ( GetCompDefiner().SetSurface(str.toStdString()) ) { UpdateHistory("Change surface type", GetCompDefiner().GetCurrentPinId());	EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
+void MainWindow::DefinerSetCX(double d)					{ if ( GetCompDefiner().SetCX(d)	) { UpdateHistory("Set shape centre",	GetCurrentShapeId()); EnableCompDialogControls(); RepaintSkipRouting(); } }
+void MainWindow::DefinerSetCY(double d)					{ if ( GetCompDefiner().SetCY(-d)	) { UpdateHistory("Set shape centre",	GetCurrentShapeId()); EnableCompDialogControls(); RepaintSkipRouting(); } }	// Control assumes CY goes up
+void MainWindow::DefinerSetDX(double d)					{ if ( GetCompDefiner().SetDX(d)	) { UpdateHistory("Set shape width",	GetCurrentShapeId()); EnableCompDialogControls(); RepaintSkipRouting(); } }
+void MainWindow::DefinerSetDY(double d)					{ if ( GetCompDefiner().SetDY(d)	) { UpdateHistory("Set shape height",	GetCurrentShapeId()); EnableCompDialogControls(); RepaintSkipRouting(); } }
+void MainWindow::DefinerSetA1(double d)					{ if ( GetCompDefiner().SetA1(d)	) { UpdateHistory("Set shape angle A",	GetCurrentShapeId()); EnableCompDialogControls(); RepaintSkipRouting(); } }
+void MainWindow::DefinerSetA2(double d)					{ if ( GetCompDefiner().SetA2(d)	) { UpdateHistory("Set shape angle B",	GetCurrentShapeId()); EnableCompDialogControls(); RepaintSkipRouting(); } }
+void MainWindow::DefinerSetA3(double d)					{ if ( GetCompDefiner().SetA3(d)	) { UpdateHistory("Set shape rotate",	GetCurrentShapeId()); EnableCompDialogControls(); RepaintSkipRouting(); } }
 void MainWindow::DefinerBuild()
 {
 	assert( GetCompDefiner().GetIsValid() );
@@ -2138,8 +2153,6 @@ void MainWindow::DefinerBuild()
 	const bool bOK = GetTemplateManager().Add(false, comp, &errorStr);
 	if ( !bOK )
 		QMessageBox::warning(this, tr("Failed to add part to templates"), tr(errorStr.c_str()));
-	if ( bOK )
-		UpdateHistory("Build shape");
 	EnableCompDialogControls();
 }
 void MainWindow::DefinerToggleEditor()
@@ -2155,12 +2168,12 @@ void MainWindow::DefinerToggleEditor()
 		}
 		UpdateCompDialog();
 		ShowCompDialog();		// Show component definition dialog
-		UpdateHistory("Open component editor");
+		UpdateHistory("Open component editor", 0);
 	}
 	else
 	{
 		ShowControlDialog();	// Show control dialog
-		UpdateHistory("Close component editor");
+		UpdateHistory("Close component editor", 0);
 	}
 	UpdateControls();
 	if ( m_board.GetCompEdit() )
@@ -2177,8 +2190,9 @@ void MainWindow::DefinerAddArc()		{ const int id = GetCompDefiner().AddArc();			
 void MainWindow::DefinerAddChord()		{ const int id = GetCompDefiner().AddChord();		if ( id != BAD_ID ) { SetCurrentShapeId(id); UpdateCompDialog(); UpdateHistory("Add shape"); RepaintSkipRouting(); } }
 void MainWindow::DefinerChooseColor()
 {
-	auto& def = GetCompDefiner();	assert( def.GetCurrentShapeId() != BAD_ID );
-	if ( def.GetCurrentShapeId() == BAD_ID ) return;
+	auto& def = GetCompDefiner();
+	const int id = def.GetCurrentShapeId();	assert( id != BAD_ID );
+	if ( id == BAD_ID ) return;
 	const QColor oldColor = def.GetCurrentShape().GetFillColor().GetQColor();
 	QColor		 newColor = QColorDialog::getColor(oldColor, this);
 	if ( newColor.isValid() && oldColor != newColor )
@@ -2187,24 +2201,26 @@ void MainWindow::DefinerChooseColor()
 		newColor.getRgb(&r,&g,&b);
 		if ( def.SetFillColor( MyRGB((r<<16) + (g<<8) + b) ) )
 		{
-			UpdateCompDialog(); UpdateHistory("Set fill color"); RepaintSkipRouting();
+			UpdateCompDialog(); UpdateHistory("Set fill color", id); RepaintSkipRouting();
 		}
 	}
 }
 void MainWindow::DefinerRaise()
 {
-	auto& def = GetCompDefiner();	assert( def.GetCurrentShapeId() != BAD_ID );
+	auto& def = GetCompDefiner();
+	const int id = def.GetCurrentShapeId();	assert( id != BAD_ID );
 	if ( def.Raise() )
 	{
-		UpdateCompDialog(); UpdateHistory("Raise"); RepaintSkipRouting();
+		UpdateCompDialog(); UpdateHistory("Raise", id); RepaintSkipRouting();
 	}
 }
 void MainWindow::DefinerLower()
 {
-	auto& def = GetCompDefiner();	assert( def.GetCurrentShapeId() != BAD_ID );
+	auto& def = GetCompDefiner();
+	const int id = def.GetCurrentShapeId();	assert( id != BAD_ID );
 	if ( def.Lower() )
 	{
-		UpdateCompDialog(); UpdateHistory("Lower"); RepaintSkipRouting();
+		UpdateCompDialog(); UpdateHistory("Lower", id); RepaintSkipRouting();
 	}
 }
 
@@ -2327,11 +2343,13 @@ void MainWindow::UpdateControls()
 		m_labelStatus->setText(m_board.GetCurrentLayer() == 0 ? QString("   Layer = Bottom   ") : QString("   Layer = Top   "));
 		m_labelStatus->show();
 	}
-	ui->actionCopy->setEnabled( bTextOK || bCompOK );
+	ui->actionCopy->setEnabled( bTextOK || bCompOK || bShapeOK );
 	if ( bTextOK )	// Text Box takes precedence over comps
 		ui->actionCopy->setText( QString("Copy + Paste Selected Text Box") );
 	else if ( bCompOK )
 		ui->actionCopy->setText(numUserComps > 1 ? QString("Copy + Paste Selected Parts") : QString("Copy + Paste Selected Part"));
+	else if ( bCompEdit )
+		ui->actionCopy->setText( QString("Copy + Paste Selected Shape") );
 	else
 		ui->actionCopy->setText( QString("Copy + Paste Selected Part(s) / Text Box") );
 	ui->actionGroup->setEnabled( bCompOK && groupMgr.CanGroup() );
@@ -2496,11 +2514,11 @@ void MainWindow::ResetHistory(const std::string& str)
 	m_historyMgr.Reset(str, m_board, m_fileName);
 	UpdateUndoRedoControls();
 }
-void MainWindow::UpdateHistory(const std::string& str, const int compId)
+void MainWindow::UpdateHistory(const std::string& str, const int objId)
 {
 	if ( !m_bHistoryDir ) return;	// No History folder
 	if ( GetMatchesVrtFile( m_historyMgr.GetCurrentHistoryFilename() ) ) return;	// No change
-	m_historyMgr.Update(str, compId, m_board);
+	m_historyMgr.Update(str, objId, m_board);
 	UpdateUndoRedoControls();
 }
 void MainWindow::UpdateUndoRedoControls()

@@ -26,6 +26,7 @@ SOURCES += bomdialog.cpp \
     mainwindow.cpp \
     mainwindow_drawing.cpp \
     mainwindow_events.cpp \
+    myscrollarea.cpp \
     padoffsetdialog.cpp \
     pindialog.cpp \
     renderingdialog.cpp \

@@ -123,13 +123,22 @@ void CompDefiner::MoveCurrentShape(const double& dDown, const double& dRight)
 }
 
 // Helpers
-
-void CompDefiner::DestroyShape()
+int CompDefiner::CopyShape()
+{
+	assert( GetCurrentShapeId() != BAD_ID );
+	const Shape& s = GetCurrentShape();
+	const int iNewShapeId = AddShape( s );	assert( iNewShapeId != BAD_ID );
+	SetCurrentShapeId( iNewShapeId );
+	MoveCurrentShape(1.0, 1.0);	// Apply offset so not overlaying old shape
+	return GetCurrentShapeId();
+}
+int CompDefiner::DestroyShape()
 {
 	assert( GetCurrentShapeId() != BAD_ID );
 	for (auto iter = m_mapShapes.begin(); iter != m_mapShapes.end(); ++iter)
 		if ( iter->first == GetCurrentShapeId() ) { m_mapShapes.erase(iter); break; }
 	SetCurrentShapeId( BAD_ID );
+	return GetCurrentShapeId();
 }
 int CompDefiner::GetNewShapeId() const
 {

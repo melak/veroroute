@@ -124,7 +124,10 @@ void InfoDialog::keyReleaseEvent(QKeyEvent* event)
 	// In tutorial mode, forward event to main window
 	if ( ui->textEdit->isReadOnly() )
 		return m_pMainWindow->keyReleaseEvent(event);
-#ifndef VEROROUTE_ANDROID
+#ifdef VEROROUTE_ANDROID
+	if ( event->key() == Qt::Key_Back )
+		return m_pMainWindow->keyReleaseEvent(event);	// Try Undo operation
+#else
 	m_pMainWindow->commonKeyReleaseEvent(event);
 #endif
 	QWidget::keyReleaseEvent(event);

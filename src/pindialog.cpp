@@ -41,7 +41,7 @@ PinDialog::~PinDialog()
 void PinDialog::SetMainWindow(MainWindow* p)
 {
 	m_pMainWindow = p;
-	QObject::connect(ui->tableWidget,	SIGNAL(cellChanged(int,int)),	this,			SLOT(CellChanged(int,int)));
+	QObject::connect(ui->tableWidget,	SIGNAL(cellChanged(int,int)),	this,	SLOT(CellChanged(int,int)));
 }
 
 Component* PinDialog::GetUserComp() const
@@ -64,6 +64,7 @@ void PinDialog::CellChanged(int row, int col)
 	QTableWidgetItem*	pItemLabel	= ui->tableWidget->item(row, col);
 	const size_t		iPinIndex	= static_cast<size_t>(row);
 	const std::string	strLabel	= pItemLabel->text().toStdString();
+	const int			objId		= static_cast<int>(iPinIndex) + ( pComp ? ( pComp->GetId() * 1000000 ) : 0);
 
 	if ( col == 1 )
 	{
@@ -72,6 +73,7 @@ void PinDialog::CellChanged(int row, int col)
 		{
 			if ( pDef  ) pDef->SetPinLabel(iPinIndex, strLabel);
 			if ( pComp ) pComp->SetPinLabel(iPinIndex, strLabel);
+			m_pMainWindow->UpdateHistory("Changed pin label", objId);
 			m_pMainWindow->RepaintSkipRouting();
 		}
 	}
@@ -84,6 +86,7 @@ void PinDialog::CellChanged(int row, int col)
 		{
 			if ( pDef )  pDef->SetPinAlign(iPinIndex, iAlign);
 			if ( pComp ) pComp->SetPinAlign(iPinIndex, iAlign);
+			m_pMainWindow->UpdateHistory("Changed pin label alignment", objId);
 			m_pMainWindow->RepaintSkipRouting();
 		}
 		if ( strLabel != "L" && strLabel != "R" && strLabel != "C" )
@@ -154,7 +157,10 @@ void PinDialog::keyPressEvent(QKeyEvent* event)
 
 void PinDialog::keyReleaseEvent(QKeyEvent* event)
 {
-#ifndef VEROROUTE_ANDROID
+#ifdef VEROROUTE_ANDROID
+	if ( event->key() == Qt::Key_Back )
+		return m_pMainWindow->keyReleaseEvent(event);	// Try Undo operation
+#else
 	m_pMainWindow->commonKeyReleaseEvent(event);
 #endif
 	QWidget::keyReleaseEvent(event);

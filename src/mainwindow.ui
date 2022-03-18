@@ -16,7 +16,7 @@
   <property name="minimumSize">
    <size>
     <width>800</width>
-    <height>690</height>
+    <height>720</height>
    </size>
   </property>
   <property name="mouseTracking">
@@ -317,6 +317,7 @@
    <addaction name="actionUndo"/>
    <addaction name="actionRedo"/>
    <addaction name="separator"/>
+   <addaction name="actionCopy"/>
    <addaction name="actionDelete"/>
    <addaction name="separator"/>
    <addaction name="actionZoom_In"/>
@@ -658,6 +659,10 @@
    </property>
   </action>
   <action name="actionCopy">
+   <property name="icon">
+    <iconset resource="veroroute.qrc">
+     <normaloff>:/images/copy.png</normaloff>:/images/copy.png</iconset>
+   </property>
    <property name="text">
     <string>Copy + Paste Selected Part(s) / Text Box</string>
    </property>
