@@ -31,7 +31,7 @@ class MyScrollArea : public QScrollArea
 	Q_OBJECT
 
 public:
-	MyScrollArea(QWidget* parent = nullptr) : QScrollArea(parent), m_parent(parent) {}
+	MyScrollArea(QWidget* parent = nullptr);
 	~MyScrollArea() {}
 
 	void SetRequestCentreView(bool b) { m_bRequestCentreView = b; }
@@ -73,7 +73,7 @@ private:
 	qreal GetSpread(const QList<QTouchEvent::TouchPoint>& points) const;
 private:
 	QWidget* m_parent;
-	std::chrono::steady_clock::time_point m_lastTouchEnd;
+	std::chrono::steady_clock::time_point m_lastTouchBegin;
 	bool	m_bRequestCentreView	= false;
 	bool	m_bTouchCancelled		= false;
 	qreal	m_dSpread				= 0;

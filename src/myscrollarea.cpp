@@ -20,6 +20,11 @@
 #include "mainwindow.h"
 #include "PolygonHelper.h"
 
+MyScrollArea::MyScrollArea(QWidget* parent) : QScrollArea(parent), m_parent(parent)
+{
+	m_lastTouchBegin = std::chrono::steady_clock::now();
+}
+
 bool MyScrollArea::viewportEvent(QEvent* event)
 {
 	MainWindow* pMainWindow = (MainWindow*)m_parent;
@@ -66,12 +71,14 @@ bool MyScrollArea::viewportEvent(QEvent* event)
 			m_dSpread = 0;
 			m_maxPoints = 0;
 
+			const auto	now				= std::chrono::steady_clock::now();
+			const auto	elapsed			= now - m_lastTouchBegin;
+			const auto	duration_ms		= std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
+			const bool	bDoubleClicked	= ( duration_ms >= 0 && duration_ms <= 300 );
+			m_lastTouchBegin = now;
+
 			if ( pMainWindow )
 			{
-				const auto	elapsed			= std::chrono::steady_clock::now() - m_lastTouchEnd;
-				const auto	duration_ms		= std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
-				const bool	bDoubleClicked	= ( duration_ms >= 0 && duration_ms <= 200 );	//TODO
-
 				QTouchEvent*	ev		= (QTouchEvent*)event;
 				const auto&		points	= ev->touchPoints();
 
@@ -136,8 +143,6 @@ bool MyScrollArea::viewportEvent(QEvent* event)
 		}
 		case QEvent::TouchEnd:
 		{
-			m_lastTouchEnd = std::chrono::steady_clock::now();
-
 			if ( m_bTouchCancelled ) return QScrollArea::viewportEvent(event);
 			if ( m_maxPoints > 1 ) return QScrollArea::viewportEvent(event);
 
