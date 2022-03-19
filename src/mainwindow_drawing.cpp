@@ -1624,7 +1624,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 			painter.save();
 			painter.setBrush(Qt::NoBrush);
-			m_yellowPen.setWidth(1);
+			m_yellowPen.setWidth(2);
 			painter.setPen(m_yellowPen);
 			painter.drawLine(X-C, Y, X+C, Y);
 			painter.drawLine(X, Y-C, X, Y+C);

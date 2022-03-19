@@ -104,6 +104,7 @@ public:
 	void GetPixMapXY(const QPoint& currentPoint, int& pixmapX, int& pixmapY) const;
 	bool GetRowCol(const QPoint& currentPoint, int& row, int& col, double& deltaRow, double& deltaCol) const;
 	bool GetRowCol(const QPoint& currentPoint, const int rows, const int cols, int& row, int& col, double& deltaRow, double& deltaCol) const;
+	bool HaveZeroDeltaRowCol(int& deltaRow, int& deltaCol);
 
 	// Helpers for rendering
 	void GetFirstRowCol(int& iRow, int& iCol) const;

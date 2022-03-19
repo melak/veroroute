@@ -81,6 +81,23 @@ bool MainWindow::GetRowCol(const QPoint& currentPoint, const int rows, const int
 	return bInGrid;
 }
 
+bool MainWindow::HaveZeroDeltaRowCol(int& deltaRow, int& deltaCol)
+{
+	// Modify deltaRow/deltaCol to account for out-of-grid locations
+	int pixmapX(0), pixmapY(0);
+	GetPixMapXY(m_mousePos, pixmapX, pixmapY);
+
+	const int&	W	 = m_board.GetGRIDPIXELS();
+	const int	rows = ( m_board.GetCompEdit() ) ? m_board.GetCompDefiner().GetScreenRows() : m_board.GetRows();
+	const int	cols = ( m_board.GetCompEdit() ) ? m_board.GetCompDefiner().GetScreenCols() : m_board.GetCols();
+
+	if ( deltaRow == 0 ) { if ( pixmapY > W * rows ) deltaRow++; }
+	if ( deltaCol == 0 ) { if ( pixmapX > W * cols ) deltaCol++; }
+	if ( deltaRow == 0 ) { if ( pixmapY < 0 ) deltaRow--; }
+	if ( deltaCol == 0 ) { if ( pixmapX < 0 ) deltaCol--; }
+	return deltaRow == 0 && deltaCol == 0;
+}
+
 void MainWindow::wheelEvent(QWheelEvent* event)
 {
 #if QT_VERSION >= QT_VERSION_CHECK(5,14,0)
@@ -506,15 +523,12 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 
 void MainWindow::MouseMoveEvent(const QPoint& pos)
 {
-	g_bPinClicked = false;
-
 	m_mousePos = pos;
 	if ( m_board.GetMirrored() ) return;
 	if ( !m_bMouseClick ) return;
 	const TRACKMODE&	trackMode	= m_board.GetTrackMode();
 	const COMPSMODE&	compMode	= m_board.GetCompMode();
 	CompDefiner&		compDefiner	= m_board.GetCompDefiner();
-	const int&			W			= m_board.GetGRIDPIXELS();
 	const int&			layer		= m_board.GetCurrentLayer();
 
 	if ( GetPaintPins() || GetErasePins() || GetPaintFlood() ) return;	// Ignore mouse move while painting pins or flooding
@@ -561,18 +575,16 @@ void MainWindow::MouseMoveEvent(const QPoint& pos)
 	m_gridRow = row;
 	m_gridCol = col;
 
+	//TODO See when its sensible to set g_bPinClicked to false
+	// If we don't do anything, then its not really a move, and we can preserve g_bPinClicked
+	if ( m_board.GetCompEdit() || GetPaintAction() || GetDefiningRect() || GetResizingText() || CanModifyRuler() )
+		g_bPinClicked = false;
+
 	if ( m_board.GetCompEdit() )
 	{
 		if ( GetCurrentShapeId() != BAD_ID )
 		{
-			int pixmapX(0), pixmapY(0);
-			GetPixMapXY(m_mousePos, pixmapX, pixmapY);
-
-			if ( deltaRow == 0 ) { if ( pixmapY > W * compDefiner.GetScreenRows() ) deltaRow++; }
-			if ( deltaCol == 0 ) { if ( pixmapX > W * compDefiner.GetScreenCols() ) deltaCol++; }
-			if ( deltaRow == 0 ) { if ( pixmapY < 0 ) deltaRow--; }
-			if ( deltaCol == 0 ) { if ( pixmapX < 0 ) deltaCol--; }
-			if ( deltaRow == 0 && deltaCol == 0 ) return;	// No change
+			if ( HaveZeroDeltaRowCol(deltaRow, deltaCol) ) return;	// No change
 
 			compDefiner.SetCurrentPinId(BAD_ID);				// Clear pin selection
 			compDefiner.MoveCurrentShape(deltaRow, deltaCol);	// Move the shape
@@ -618,14 +630,7 @@ void MainWindow::MouseMoveEvent(const QPoint& pos)
 	}
 	else if ( !GetSmartPan() && GetCurrentTextId() != BAD_TEXTID )
 	{
-		int pixmapX(0), pixmapY(0);
-		GetPixMapXY(m_mousePos, pixmapX, pixmapY);
-
-		if ( deltaRow == 0 ) { if ( pixmapY > W * m_board.GetRows() ) deltaRow++; }
-		if ( deltaCol == 0 ) { if ( pixmapX > W * m_board.GetCols() ) deltaCol++; }
-		if ( deltaRow == 0 ) { if ( pixmapY < 0 ) deltaRow--; }
-		if ( deltaCol == 0 ) { if ( pixmapX < 0 ) deltaCol--; }
-		if ( deltaRow == 0 && deltaCol == 0 ) return;	// No change
+		if ( HaveZeroDeltaRowCol(deltaRow, deltaCol) ) return;	// No change
 
 		if ( g_bHaveAutoPanned )	// If we've auto-panned the grid before ...
 		{
@@ -651,14 +656,7 @@ void MainWindow::MouseMoveEvent(const QPoint& pos)
 	}
 	else if ( !GetSmartPan() && GetCurrentCompId() != BAD_COMPID && compMode != COMPSMODE::OFF )	// Move user-group components
 	{
-		int pixmapX(0), pixmapY(0);
-		GetPixMapXY(m_mousePos, pixmapX, pixmapY);
-
-		if ( deltaRow == 0 ) { if ( pixmapY > W * m_board.GetRows() ) deltaRow++; }
-		if ( deltaCol == 0 ) { if ( pixmapX > W * m_board.GetCols() ) deltaCol++; }
-		if ( deltaRow == 0 ) { if ( pixmapY < 0 ) deltaRow--; }
-		if ( deltaCol == 0 ) { if ( pixmapX < 0 ) deltaCol--; }
-		if ( deltaRow == 0 && deltaCol == 0 ) return;	// No change
+		if ( HaveZeroDeltaRowCol(deltaRow, deltaCol) ) return;	// No change
 
 		if ( g_bHaveAutoPanned )	// If we've auto-panned the grid before ...
 		{
@@ -666,6 +664,7 @@ void MainWindow::MouseMoveEvent(const QPoint& pos)
 			const auto duration_ms	= std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
 			if ( duration_ms >= 0 && duration_ms < 40 ) return;	// ... do nothing if within 40 ms of the last auto-pan
 		}
+
 		const bool bAutoPanned = m_board.MoveUserComps(deltaRow, deltaCol);	// Move the components and note if the grid was auto-panned
 		if ( bAutoPanned )
 		{
@@ -677,14 +676,8 @@ void MainWindow::MouseMoveEvent(const QPoint& pos)
 	}
 	else if ( GetSmartPan() )	// If we're not moving anything else, we can smart pan
 	{
-		int pixmapX(0), pixmapY(0);
-		GetPixMapXY(m_mousePos, pixmapX, pixmapY);
+		if ( HaveZeroDeltaRowCol(deltaRow, deltaCol) ) return;	// No change
 
-		if ( deltaRow == 0 ) { if ( pixmapY > W * m_board.GetRows() ) deltaRow = 1; }
-		if ( deltaCol == 0 ) { if ( pixmapX > W * m_board.GetCols() ) deltaCol = 1; }
-		if ( deltaRow == 0 ) { if ( pixmapY < W ) deltaRow = -1; }
-		if ( deltaCol == 0 ) { if ( pixmapX < W ) deltaCol = -1; }
-		if ( deltaRow == 0 && deltaCol == 0 ) return;	// No change
 		m_board.SmartPan(deltaRow, deltaCol);	// Pan whole circuit w.r.t. grid area, growing/shrinking as needed
 		m_mouseActionString = "Move whole layout";
 	}
@@ -726,6 +719,9 @@ void MainWindow::MouseMoveEvent(const QPoint& pos)
 				RepaintWithRouting();
 		}
 	}
+
+	if ( abs(deltaRow) > 0 || abs(deltaCol) > 0 )
+		g_bPinClicked = false;
 }
 
 void MainWindow::MouseReleaseEvent(const QPoint& pos)
