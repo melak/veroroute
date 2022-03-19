@@ -346,22 +346,48 @@ void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, cons
 	{
 		if ( m_dockPinDlg->isVisible() ) m_dockPinDlg->hide();
 		HidePadOffsetDialog();
+
+		// Handle competing diagonals first
+		bool bDoSwap(false);
+		if ( GetPaintBoard() && m_board.GetTrackMode() != TRACKMODE::OFF )	//TODO Maybe could do ( GetPaintBoard() || GetPaintPins() )
+		{
+			if ( hypot(dRow - 0.5, dCol - 0.5) > 0.5 )	// Only consider clicks that are between grid points
+			{
+				const int	dR = ( dRow > 0.5 ) ? 1 : 0;	// Correct row, col to account for crossing ...
+				const int	dC = ( dCol > 0.5 ) ? 1 : 0;	// ... point being near corner of element
+				const int&	layer	 = m_board.GetCurrentLayer();
+
+				Element* pRB = m_board.Get(layer, m_gridRow + dR, m_gridCol + dC);
+				if ( pRB->CanSwapDiagLinks() )
+				{
+					Element* pLB = pRB->GetNbr(NBR_L);
+					bDoSwap	= ( pRB->GetNodeId() == GetCurrentNodeId() && !ReadCodeBit(NBR_LT, pRB->GetCode()) )	// pRB has correct nodeID but no diagonal to LT
+						   || ( pLB->GetNodeId() == GetCurrentNodeId() && !ReadCodeBit(NBR_RT, pLB->GetCode()) );	// pLB has correct nodeID but no diagonal to RT
+					if ( bDoSwap )
+					{
+						pRB->SwapDiagLinks();
+						m_mouseActionString = "Paint";
+					}
+				}
+			}
+		}
+
 #ifdef VEROROUTE_ANDROID
 		//TODO Could allow this in Desktop version too
 		const bool bClickedValidNodeID = pC->GetNodeId() != BAD_NODEID;
 		const bool bTruePin = pC->GetHasPin() && !pC->GetHasWire();
-		if ( bClickedValidNodeID && GetPaintBoard() && bTruePin )	// If we're painting board and clicked on a true pin with a valid nodeID
+		if ( bClickedValidNodeID && GetPaintBoard() && bTruePin && !bDoSwap )	// If we're painting board and clicked on a true pin with a valid nodeID
 		{
 			SetCurrentNodeId( pC->GetNodeId() );	// ... then change current nodeID to that of the pin
 			m_mouseActionString = "Select Net";
 		}
-		else if ( bClickedValidNodeID && GetPaintBoard() && pC->GetNodeId() == GetCurrentNodeId() )	// If we're painting board and clicked on a point with matching valid nodeID
+		else if ( bClickedValidNodeID && GetPaintBoard() && pC->GetNodeId() == GetCurrentNodeId() && !bDoSwap )	// If we're painting board and clicked on a point with matching valid nodeID
 		{
 			const bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, BAD_NODEID, false);	// ... then erase the point instead of painting it
 			if ( !bChanged ) return;
 			m_mouseActionString = "Erase";
 		}
-		else if ( ( GetPaintPins() || GetErasePins() ) && !bTruePin )	// Restrict painting/erasing pins to true pins (not wires)
+		else if ( ( GetPaintPins() || GetErasePins() ) && !bTruePin && !bDoSwap )	// Restrict painting/erasing pins to true pins (not wires)
 		{
 			return;
 		}
@@ -369,9 +395,9 @@ void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, cons
 #endif
 
 #ifdef VEROROUTE_ANDROID
-		if ( GetPaintPins() || GetPaintBoard() )	// Paint
+		if ( ( GetPaintPins() || GetPaintBoard() ) && !bDoSwap )	// Paint
 #else
-		if ( m_bLeftClick )	// Paint
+		if ( m_bLeftClick && !bDoSwap )	// Paint
 #endif
 		{
 			if ( GetCurrentNodeId() == BAD_NODEID )			// If trying to left-click paint a BAD_NODEID ...
@@ -385,9 +411,9 @@ void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, cons
 		}
 
 #ifdef VEROROUTE_ANDROID
-		else if ( GetErasePins() || GetEraseBoard() )	// Erase
+		else if ( ( GetErasePins() || GetEraseBoard() ) && !bDoSwap )	// Erase
 #else
-		else if ( m_bRightClick )	// Erase
+		else if ( m_bRightClick && !bDoSwap )	// Erase
 #endif
 		{
 			const bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, BAD_NODEID, GetPaintPins() || GetErasePins());
@@ -483,19 +509,22 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 	// Handle competing diagonals
 	if ( !GetPaintAction() && m_board.GetTrackMode() != TRACKMODE::OFF )
 	{
-		const int	dR = ( dRow > 0.5 ) ? 1 : 0;	// Correct row, col to account for crossing ...
-		const int	dC = ( dCol > 0.5 ) ? 1 : 0;	// ... point being near corner of element
-		const int&	layer	 = m_board.GetCurrentLayer();
-
-		const bool	bSwapped = m_board.Get(layer, m_gridRow + dR, m_gridCol + dC)->SwapDiagLinks();
-		if ( bSwapped )
+		if ( hypot(dRow - 0.5, dCol - 0.5) > 0.5 )	// Only consider clicks that are between grid points
 		{
-			m_board.WipeAutoSetPoints();
-			m_board.PlaceFloaters();	// See if we can now place floating components down
-			UpdateHistory("Toggle competing diagonals");
+			const int	dR = ( dRow > 0.5 ) ? 1 : 0;	// Correct row, col to account for crossing ...
+			const int	dC = ( dCol > 0.5 ) ? 1 : 0;	// ... point being near corner of element
+			const int&	layer	 = m_board.GetCurrentLayer();
 
-			// mouseReleaseEvent() will do RepaintWithRouting() and ListNodes().  No need to do it here.
-			return;
+			const bool	bSwapped = m_board.Get(layer, m_gridRow + dR, m_gridCol + dC)->SwapDiagLinks();
+			if ( bSwapped )
+			{
+				m_board.WipeAutoSetPoints();
+				m_board.PlaceFloaters();	// See if we can now place floating components down
+				UpdateHistory("Toggle competing diagonals");
+
+				// mouseReleaseEvent() will do RepaintWithRouting() and ListNodes().  No need to do it here.
+				return;
+			}
 		}
 	}
 
@@ -603,11 +632,33 @@ void MainWindow::MouseMoveEvent(const QPoint& pos)
 	{
 		if ( !bInGrid ) return;
 
+		// Handle competing diagonals first
+		bool bDoSwap(false);
+		if ( hypot(dRow - 0.5, dCol - 0.5) > 0.5 )	// Only consider clicks that are between grid points
+		{
+			const int	dR = ( dRow > 0.5 ) ? 1 : 0;	// Correct row, col to account for crossing ...
+			const int	dC = ( dCol > 0.5 ) ? 1 : 0;	// ... point being near corner of element
+			const int&	layer	 = m_board.GetCurrentLayer();
+
+			Element* pRB = m_board.Get(layer, m_gridRow + dR, m_gridCol + dC);
+			if ( pRB->CanSwapDiagLinks() )
+			{
+				Element* pLB = pRB->GetNbr(NBR_L);
+				bDoSwap	= ( pRB->GetNodeId() == GetCurrentNodeId() && !ReadCodeBit(NBR_LT, pRB->GetCode()) )	// pRB has correct nodeID but no diagonal to LT
+					   || ( pLB->GetNodeId() == GetCurrentNodeId() && !ReadCodeBit(NBR_RT, pLB->GetCode()) );	// pLB has correct nodeID but no diagonal to RT
+				if ( bDoSwap )
+				{
+					pRB->SwapDiagLinks();
+					m_mouseActionString = "Paint";
+				}
+			}
+		}
+
 		assert( !GetPaintPins() && !GetErasePins() && !GetPaintFlood() );	// Sanity check
 #ifdef VEROROUTE_ANDROID
-		if ( GetPaintBoard() )	// Paint
+		if ( GetPaintBoard() && !bDoSwap )	// Paint
 #else
-		if ( m_bLeftClick )		// Paint
+		if ( m_bLeftClick && !bDoSwap )		// Paint
 #endif
 		{
 			const bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, GetCurrentNodeId(), false);	// false ==> Only allow paint board (not pins)
@@ -616,9 +667,9 @@ void MainWindow::MouseMoveEvent(const QPoint& pos)
 		}
 
 #ifdef VEROROUTE_ANDROID
-		if ( GetEraseBoard() )	// Erase
+		if ( GetEraseBoard() && !bDoSwap )	// Erase
 #else
-		if ( m_bRightClick )	// Erase
+		if ( m_bRightClick && !bDoSwap )	// Erase
 #endif
 		{
 			const bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, BAD_NODEID, false);	// false ==> Only allow erase board (not pins)

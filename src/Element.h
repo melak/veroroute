@@ -270,17 +270,21 @@ public:
 		pW = pNbr->GetW(0);		if ( pW ) { pW->WipeFlagBits(AUTOSET|VEROSET);	pW->MarkFlagBits(USERSET); }
 		pW = pNbr->GetW(1);		if ( pW ) { pW->WipeFlagBits(AUTOSET|VEROSET);	pW->MarkFlagBits(USERSET); }
 	}
-	bool SwapDiagLinks()
+	bool CanSwapDiagLinks()
 	{
 		// Take "this" to be the bottom right element in group of 4 squares
 		// "LT"  is the diagonal from "this" to m_pLT
 		// "LTX" is the diagonal that cuts across it (from m_pL to m_pT)
-
-		// Swap (by inverting flags) if we have competing diagonals
 		const bool bCanSwap = GetNodeId() == GetNbr(NBR_LT)->GetNodeId()				&&	// LT:  "this" and LT must have same nodeId
 							  GetNbr(NBR_L)->GetNodeId() == GetNbr(NBR_T)->GetNodeId()	&&	// LTX: L and T must have same nodeId
 							  GetNbr(NBR_L)->IsClash( GetNodeId() );						// L and "this" must have clashing nodeIds
-		if ( !bCanSwap ) return false;
+		return bCanSwap;
+	}
+	bool SwapDiagLinks()
+	{
+		if ( !CanSwapDiagLinks() ) return false;
+
+		// Swap (by inverting flags) if we have competing diagonals
 		ToggleUsed(NBR_LT);
 		GetNbr(NBR_L)->ToggleUsed(NBR_RT);
 		return true;
