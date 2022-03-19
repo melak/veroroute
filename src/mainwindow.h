@@ -560,9 +560,11 @@ private:
 	// Helpers
 	void SetQuality(QPainter& p);
 	void ResetRuler();
-	bool CanModifyRuler() const;
+	bool CanModifyRuler() const;	
+public:
 	bool CanZoomIn() const;
 	bool CanZoomOut() const;
+private:
 	bool GetIsModified() const;
 	bool GetMatchesVrtFile(const std::string& fileName) const;
 	void ResetHistory(const std::string& str);
@@ -655,6 +657,7 @@ private:
 	bool		m_bTemplatesDir		= false;	// true ==> have "templates" folder
 	bool		m_bRuler			= false;
 	bool		m_bModifyRulerA		= false;
+	bool		m_bUpdatingControls	= false;
 	int			m_XGRIDOFFSET		= 0;		// So we can centre when writing to PDF
 	int			m_YGRIDOFFSET		= 0;		// So we can centre when writing to PDF
 	int			m_XCORRECTION		= 0;		// So we can fully render pads larger than 100 mil diameter

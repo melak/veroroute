@@ -70,8 +70,12 @@ protected:
 	}
 	bool viewportEvent(QEvent* event);
 private:
+	qreal GetSpread(const QList<QTouchEvent::TouchPoint>& points) const;
+private:
 	QWidget* m_parent;
 	std::chrono::steady_clock::time_point m_lastTouchEnd;
-	bool m_bRequestCentreView	= false;
-	bool m_bTouchCancelled		= false;
+	bool	m_bRequestCentreView	= false;
+	bool	m_bTouchCancelled		= false;
+	qreal	m_dSpread				= 0;
+	int		m_maxPoints				= 0;
 };

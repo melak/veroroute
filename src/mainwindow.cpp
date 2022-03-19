@@ -635,7 +635,7 @@ void MainWindow::OpenVrt(const QString& fileName, bool bMerge, bool bCrashRecove
 	if ( !bOK )
 	{
 		QMessageBox::information(this, tr("File does not have .vrt suffix"), fileName);
-		return;
+		return UpdateRecentFiles(&fileName, false);		// Remove file from list
 	}
 
 	DataStream inStream(DataStream::READ);
@@ -1029,7 +1029,6 @@ void MainWindow::ZoomIn()
 	if ( W >= 96  ) delta *= 2;
 	if ( W >= 128 ) delta *= 2;
 	ZoomHelper(delta);
-	UpdateHistory("Zoom in");
 }
 void MainWindow::ZoomOut()
 {
@@ -1040,7 +1039,6 @@ void MainWindow::ZoomOut()
 	if ( W > 96  ) delta *= 2;
 	if ( W > 128 ) delta *= 2;
 	ZoomHelper(delta);
-	UpdateHistory("Zoom out");
 }
 void MainWindow::ZoomHelper(int delta)	// delta == change in GRIDPIXELS
 {
@@ -1060,6 +1058,8 @@ void MainWindow::ZoomHelper(int delta)	// delta == change in GRIDPIXELS
 	// Try to have same grid position under mouse after zoom
 	pH->setValue(static_cast<int>(L + X * delta * 1.0 / W));
 	pV->setValue(static_cast<int>(T + Y * delta * 1.0 / W));
+
+	UpdateHistory("Zoom", 0);
 }
 
 // Edit menu items
@@ -2281,6 +2281,8 @@ void MainWindow::UpdateRulerInfo()
 
 void MainWindow::UpdateControls()
 {
+	m_bUpdatingControls = true;
+
 	GroupManager&	groupMgr		=  m_board.GetGroupMgr();
 	CompManager&	compMgr			=  m_board.GetCompMgr();
 	const bool		bCompEdit		=  m_board.GetCompEdit();
@@ -2458,6 +2460,8 @@ void MainWindow::UpdateControls()
 	ui->actionPinDlg->setText(		m_dockPinDlg->isVisible()		? QString("(Hide) Pin Labels Editor")			: QString("Pin Labels Editor"));
 	ui->actionPinDlg->setChecked(	m_dockPinDlg->isVisible() );
 	UpdateUndoRedoControls();
+
+	m_bUpdatingControls = false;
 }
 void MainWindow::UpdateCompDialog()			{ m_compDlg->Update(); m_pinDlg->Update(); }
 void MainWindow::EnableCompDialogControls()	{ m_compDlg->EnableControls(); }
@@ -2510,6 +2514,7 @@ void MainWindow::ResetHistory(const std::string& str)
 }
 void MainWindow::UpdateHistory(const std::string& str, const int objId)
 {
+	if ( m_bUpdatingControls ) return;
 	if ( !m_bHistoryDir ) return;	// No History folder
 	if ( GetMatchesVrtFile( m_historyMgr.GetCurrentHistoryFilename() ) ) return;	// No change
 	m_historyMgr.Update(str, objId, m_board);

@@ -18,6 +18,7 @@
 */
 
 #include "mainwindow.h"
+#include "PolygonHelper.h"
 
 bool MyScrollArea::viewportEvent(QEvent* event)
 {
@@ -62,14 +63,19 @@ bool MyScrollArea::viewportEvent(QEvent* event)
 		case QEvent::TouchBegin:
 		{
 			m_bTouchCancelled = false;
+			m_dSpread = 0;
+			m_maxPoints = 0;
 
-			QTouchEvent* ev = (QTouchEvent*)event;
-			auto& points = ev->touchPoints();
 			if ( pMainWindow )
 			{
-				const auto elapsed			= std::chrono::steady_clock::now() - m_lastTouchEnd;
-				const auto duration_ms		= std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
-				const bool bDoubleClicked	= ( duration_ms >= 0 && duration_ms <= 200 );	//TODO
+				const auto	elapsed			= std::chrono::steady_clock::now() - m_lastTouchEnd;
+				const auto	duration_ms		= std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
+				const bool	bDoubleClicked	= ( duration_ms >= 0 && duration_ms <= 200 );	//TODO
+
+				QTouchEvent*	ev		= (QTouchEvent*)event;
+				const auto&		points	= ev->touchPoints();
+
+				m_maxPoints = points.size();
 
 				if ( bDoubleClicked )
 					pMainWindow->MouseDoubleClickEvent(points.begin()->pos().toPoint());
@@ -81,37 +87,78 @@ bool MyScrollArea::viewportEvent(QEvent* event)
 		}
 		case QEvent::TouchUpdate:
 		{
-			if ( m_bTouchCancelled ) break;
+			if ( m_bTouchCancelled ) return QScrollArea::viewportEvent(event);
 
-			QTouchEvent* ev = (QTouchEvent*)event;
-			auto& points = ev->touchPoints();
-			if ( points.size() == 1 )	// Single point ==> mouse move
+			if ( pMainWindow )
 			{
-				if ( pMainWindow )
-					pMainWindow->MouseMoveEvent(points.begin()->pos().toPoint());
-			}
-			else
-			{
-				m_bTouchCancelled = true;//TODO Temporary hack
-				//TODO Process points to handle zoom / scroll etc
+				QTouchEvent*	ev			= (QTouchEvent*)event;
+				const auto&		points		= ev->touchPoints();
+
+				const int		numPoints	= points.size();
+				m_maxPoints = std::max(m_maxPoints, numPoints);
+
+				switch( numPoints )
+				{
+					case 1:
+					{
+						if ( m_maxPoints > 1 ) return QScrollArea::viewportEvent(event);
+
+						pMainWindow->MouseMoveEvent(points.begin()->pos().toPoint());	break;	// Only ever had one point ==> mouse move
+					}
+					case 2:	// 2 points ==> try handle zoom
+					{
+						if ( m_maxPoints > 2 ) return QScrollArea::viewportEvent(event);
+
+						const qreal dNewSpread = GetSpread(points);	assert(dNewSpread > 0);
+						if ( m_dSpread == 0 )
+						{
+							m_dSpread = dNewSpread;	// Initial spread measure
+						}
+						else if ( m_dSpread > 0 && dNewSpread > (m_dSpread * 1.20) && pMainWindow->CanZoomIn() )	// If we've increased the spread by 20%
+						{
+							m_dSpread = dNewSpread;	// Update the spread measure ...
+							pMainWindow->ZoomIn();	// ... and zoom in
+						}
+						else if ( m_dSpread > 0 && dNewSpread < (m_dSpread * 0.833) && pMainWindow->CanZoomOut() )	// If we've decreased the spread by 20%
+						{
+							m_dSpread = dNewSpread;	// Update the spread measure ...
+							pMainWindow->ZoomOut();	// ... and zoom out
+						}
+						else
+							return QScrollArea::viewportEvent(event);
+						break;
+					}
+					default:	return QScrollArea::viewportEvent(event);
+				}
 			}
 			event->accept();
 			return true;
 		}
 		case QEvent::TouchEnd:
 		{
-			if ( m_bTouchCancelled ) break;
-
 			m_lastTouchEnd = std::chrono::steady_clock::now();
-			QTouchEvent* ev = (QTouchEvent*)event;
-			auto& points = ev->touchPoints();
+
+			if ( m_bTouchCancelled ) return QScrollArea::viewportEvent(event);
+			if ( m_maxPoints > 1 ) return QScrollArea::viewportEvent(event);
+
 			if ( pMainWindow )
+			{
+				QTouchEvent*	ev		= (QTouchEvent*)event;
+				const auto&		points	= ev->touchPoints();
 				pMainWindow->MouseReleaseEvent(points.begin()->pos().toPoint());
+			}
 			event->accept();
 			return true;
 		}
 		default:
-			break;
+			return QScrollArea::viewportEvent(event);
 	}
-	return QScrollArea::viewportEvent(event);
 }
+
+qreal MyScrollArea::GetSpread(const QList<QTouchEvent::TouchPoint>& points) const
+{
+	// Just use first 2 points
+	return ( points.size() > 1 ) ? PolygonHelper::Length( points[0].pos() - points[1].pos() ) : 0;
+}
+
+
