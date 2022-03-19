@@ -457,7 +457,7 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 	if ( GetCurrentTextId() != BAD_TEXTID )
 		return ShowTextDialog();
 
-	if ( m_board.GetTrackMode() == TRACKMODE::OFF ) return;
+	if ( m_board.GetTrackMode() == TRACKMODE::OFF && m_board.GetCompMode() == COMPSMODE::OFF ) return;
 
 	// Get row col
 	double dRow(0), dCol(0);	// Fractional correction to row, col for SwapDiagLinks() call
@@ -500,7 +500,7 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 	}
 
 	// Handle component rotation
-	if ( !GetPaintAction() && m_board.GetCompMode() != COMPSMODE::OFF && m_eMouseMode == MOUSE_MODE::SELECT && GetCurrentCompId() != BAD_COMPID )
+	if ( m_board.GetCompMode() != COMPSMODE::OFF && ( m_eMouseMode == MOUSE_MODE::SELECT || GetPaintPins() || GetErasePins() ) && GetCurrentCompId() != BAD_COMPID )
 		return CompRotateCW();
 
 #ifdef VEROROUTE_ANDROID
@@ -531,8 +531,8 @@ void MainWindow::MouseMoveEvent(const QPoint& pos)
 	CompDefiner&		compDefiner	= m_board.GetCompDefiner();
 	const int&			layer		= m_board.GetCurrentLayer();
 
-	if ( GetPaintPins() || GetErasePins() || GetPaintFlood() ) return;	// Ignore mouse move while painting pins or flooding
-	if ( GetShiftKeyDown() ) return;									// Ignore mouse move while trying to group components
+	if ( GetPaintFlood() ) return;		// Ignore mouse move while flooding
+	if ( GetShiftKeyDown() ) return;	// Ignore mouse move while trying to group components
 
 	if ( ALLOW_DELAY_BASED_SMART_PAN
 		 && !m_board.GetCompEdit() && !GetDefiningRect() && !GetPaintBoard() && !GetEraseBoard() && !CanModifyRuler()
