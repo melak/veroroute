@@ -571,8 +571,8 @@ public:
 	void Backtrace(Element* pEnd, const int& nodeId);
 	bool BacktraceHelper(Element*& p, unsigned int& MH, const int& nodeId, const unsigned int& iDeltaMH, const int& iNbr, const int& iLoop);
 	void Manhatten(Element* p);
-	void ManhattenHelper(const Element* p, const int& iNbr, unsigned int& iMH, unsigned int& iMaxMH);
 	Element* GetConnPin();
+	unsigned int GetConnRID() const;
 	void CheckAllComplete();
 	void PasteTracks(bool bTidy);
 	void WipeTracks();
@@ -847,12 +847,13 @@ private:
 	double					m_dMinSeparation = DBL_MAX;	// Units of grid squares
 
 	// Routing algorithm	// Don't persist or copy
-	ConnectionMatrix		m_connectionMatrix;	// Tracks connectivity between target pins
-	std::vector<Element*>	m_targetPins;		// Set of pins to route.
-	std::vector<bool>		m_growingRoutes;	// Flags to indicate if routes to target pins are still growing
-	std::vector<Element*>	m_tmpVec;			// The set of visited points.
-	size_t					m_tmpVecSize;		// The number of visited points.
-	int						m_iConnPin = -1;	// The element index of a connected pin ( set by Manhatten() )
-	bool					m_bRouteMinimal;	// true ==> don't build tracks between pins that are already connected
-	bool					m_bHasVias;			// true ==> there are routed vias in the design (as opposed to "wires-as-tracks" vias)
+	ConnectionMatrix		m_connectionMatrix;			// Tracks connectivity between target pins
+	std::vector<Element*>	m_targetPins;				// Set of pins to route.
+	std::vector<bool>		m_growingRoutes;			// Flags to indicate if routes to target pins are still growing
+	std::vector<Element*>	m_tmpVec;					// The set of visited points.
+	size_t					m_tmpVecSize;				// The number of visited points.
+	int						m_iConnPin = -1;			// The element index of a connected pin ( set by Manhatten() )
+	unsigned int			m_iConnRID = BAD_ROUTEID;	// ... and its route ID
+	bool					m_bRouteMinimal;			// true ==> don't build tracks between pins that are already connected
+	bool					m_bHasVias;					// true ==> there are routed vias in the design (as opposed to "wires-as-tracks" vias)
 };

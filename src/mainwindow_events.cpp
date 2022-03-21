@@ -492,9 +492,16 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 		}
 	}
 
-	// Handle selection of nodeId when double-clicking on a component pin (but not painting pins of flooding)
+	// Handle selection of nodeId when double-clicking on a pin
+	const bool bWire = pC->GetHasWire();
+	if ( bWire && !GetPaintBoard() && !GetEraseBoard() && !GetPaintFlood() && bCloseToGridPoint )	// Only consider clicks that are close to the grid point
+	{
+		SetCurrentNodeId( pC->GetNodeId() );
+		UpdateHistory( ( GetCurrentNodeId() == BAD_NODEID ) ? "Unselect Net" : "Select Net", 0);
+		return;
+	}
 	const bool bPin = pC->GetHasPin() && !pC->GetHasWire();
-	if ( bPin && !GetPaintPins() && !GetErasePins() && !GetPaintFlood()	&& bCloseToGridPoint )	//TODO Was bPin && !GetPaintPins() && !GetPaintFlood()
+	if ( bPin && !GetPaintPins() && !GetErasePins() && !GetPaintFlood()	&& bCloseToGridPoint )	// Only consider clicks that are close to the grid point
 	{
 		SetCurrentNodeId( pC->GetNodeId() );
 		UpdateHistory( ( GetCurrentNodeId() == BAD_NODEID ) ? "Unselect Net" : "Select Net", 0);

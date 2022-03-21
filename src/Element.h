@@ -141,6 +141,7 @@ public:
 	void SetSolderR(const bool& b)		{ auto pBase = GetBase(); if ( pBase == this ) m_bSolderR = b; else pBase->SetSolderR(b); }
 	void SetIsVia(const bool& b)		{ auto pBase = GetBase(); if ( pBase == this ) m_bIsVia	  = b; else pBase->SetIsVia(b); }
 	void SetRoutable(const int& i)		{ m_iRoutable	= i; }
+	void SetRouteId(const unsigned int& i)	{ m_routeId = i; }
 	void ResetMH()
 	{
 		m_routeId	= BAD_ROUTEID;	// Wipe RouteId

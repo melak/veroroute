@@ -38,6 +38,9 @@
 //
 //  There is a history vrt file for each entry in the Undo/Redo list.
 
+static const int HISTORY_VERSION_1  =  1;
+static const int HISTORY_VERSION_CURRENT = HISTORY_VERSION_1;
+
 #include "Board.h"
 #include "VeroRouteAndroid.h"
 #include <QFile>
@@ -116,6 +119,9 @@ public:
 		DataStream inStream(DataStream::READ);
 		if ( inStream.Open( GetEntriesFileName() ) )
 		{
+			int iHistoryVersion(0);
+			inStream.Load(iHistoryVersion);
+
 			unsigned int listSize(0);
 			inStream.Load(listSize);
 
@@ -147,6 +153,8 @@ public:
 		DataStream outStream(DataStream::WRITE);
 		if ( outStream.Open( GetEntriesFileName() ) )
 		{
+			outStream.Save(HISTORY_VERSION_CURRENT);
+
 			const unsigned int listSize = (unsigned int) m_list.size();
 			outStream.Save(listSize);
 
@@ -229,6 +237,8 @@ public:
 		DataStream inStream(DataStream::READ);
 		if ( inStream.Open( GetCircuitFileName() ) )
 		{
+			int iHistoryVersion(0);
+			inStream.Load(iHistoryVersion);
 			inStream.Load(lastFileName);
 			inStream.Close();
 		}
@@ -239,6 +249,7 @@ public:
 		DataStream outStream(DataStream::WRITE);
 		if ( outStream.Open( GetCircuitFileName() ) )
 		{
+			outStream.Save(HISTORY_VERSION_CURRENT);
 			outStream.Save( lastFileName );
 			outStream.Close();
 		}

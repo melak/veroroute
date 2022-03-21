@@ -199,12 +199,17 @@ void Board::UpdateVias()	// Sets the via flag to true on all candidate vias
 	SetViasEnabled(false);		// Disable routing through vias to perform test
 
 	std::vector<unsigned int> iMH;
+	std::vector<unsigned int> iRID;
 	if ( bViasEnabled )
 	{
-		// Store existing MH values (used for showing connected areas) because Flood() will wipe them
+		// Store existing MH values and route IDs (used for showing connected areas) because Flood() will wipe them
 		iMH.resize( GetSize() );
+		iRID.resize( GetSize() );
 		for (int i = 0, iSize = GetSize(); i < iSize; i++)
-			iMH[i] = GetAt(i)->GetMH();
+		{
+			iMH[i]	= GetAt(i)->GetMH();
+			iRID[i]	= GetAt(i)->GetRouteId();
+		}
 	}
 
 	for (int i = 0, iSize = ( GetLyrs() == 1 ) ? GetSize() : ( GetSize() / 2 ); i < iSize; i++)	// Loop layer 0 only
@@ -225,9 +230,12 @@ void Board::UpdateVias()	// Sets the via flag to true on all candidate vias
 
 	if ( bViasEnabled )
 	{
-		// Restore MH values
+		// Restore MH values and route IDs
 		for (int i = 0, iSize = GetSize(); i < iSize; i++)
+		{
 			GetAt(i)->SetMH( iMH[i] );
+			GetAt(i)->SetRouteId( iRID[i] );
+		}
 	}
 
 	SetViasEnabled(bViasEnabled);		// Restore vias state
@@ -268,12 +276,21 @@ unsigned int Board::Flood()
 	if ( GetRoutingEnabled() )
 		Flood_Helper(true);	// true ==> build new tracks
 
+	// Give connected target pins the same route ID (so we can draw a limited set of air-wires).
+	// We don't care about route IDs at other elements, so leave them as they are.
+	for (size_t j = 0; j < N; j++)
+	for (size_t k = j+1; k < N; k++)
+		if ( m_connectionMatrix.GetAreConnected(j, k) )
+			m_targetPins[k]->SetRouteId( m_targetPins[j]->GetRouteId() );
+
 	m_connectionMatrix.DeAllocate();
 	return m_connectionMatrix.GetCost();
 }
 
 void Board::Flood_Helper(const bool bBuildTracks)
 {
+	WIRELIST wireList;	// Helper for chains of wires
+
 	for (int i = 0, iSize = GetSize(); i < iSize; i++)	// Loop all grid points
 		GetAt(i)->ResetMH();	// Wipe RouteId. Set "infinite" MH distance.  Zero max MH parameter.
 
@@ -293,14 +310,32 @@ void Board::Flood_Helper(const bool bBuildTracks)
 		UpdateMH(p, iRouteID, iMH, iMaxMH);				// Add p to set of visited points
 	}
 
-	std::fill(m_growingRoutes.begin(), m_growingRoutes.end(), false);	// Clear flags tracking route growth from pins
-
 	const bool			bHaveWires	 = m_compMgr.GetHavePlacedWires();
 	const bool			bMultiLayer	 = GetLyrs() > 1;
 	const bool			bViasEnabled = bMultiLayer && GetViasEnabled();
 	const int&			iFloodNodeId = m_targetPins[0]->GetNodeId();
 	const bool			bDiagsOK	 = ( GetDiagsMode() != DIAGSMODE::OFF );
 	const unsigned int	iMaxDeltaMH	 = ( bViasEnabled ) ? MH_LVIA : bDiagsOK ? MH_DIAG : MH_LRTB;	// The max MH increment in single-layer mode depends on if diagonals are allowed
+
+	// If any of the target pins are wires, we have to handle those first
+	for (size_t n = 0; n < N && bHaveWires; n++)
+	{
+		Element* p = m_targetPins[n];
+		if ( !p->GetHasWire() ) continue;
+		const int iRID = p->GetRouteId();
+		p->GetWireList(wireList);	// Get list of p and its wired points
+		for (const auto& o : wireList)
+		{
+			Element* pW = const_cast<Element*> (o.first);
+			if ( pW == p ) continue;	// Skip p
+			assert( p->GetNodeId() == pW->GetNodeId() );			// Sanity check
+			if ( pW->GetMH() != BAD_MH ) continue;					// Don't overwrite visited points (even if MH is improved)
+			const unsigned int iOtherMH = iMH + MH_WIRE * o.second;	// Each wire increases MH by MH_WIRE
+			UpdateMH(pW, iRID, iOtherMH, iMaxMH);					// Add pW to set of visited points
+		}
+	}
+
+	std::fill(m_growingRoutes.begin(), m_growingRoutes.end(), false);	// Clear flags tracking route growth from pins
 
 	size_t jjStart(0);
 
@@ -546,153 +581,43 @@ bool Board::BacktraceHelper(Element*& p, unsigned int& MH, const int& nodeId, co
 
 void Board::Manhatten(Element* p)
 {
-	// Populate the grid with connected Manhatten-style "distances" to p.
-
-	m_iConnPin = -1;
-
 	const int iTraceNodeId = p->GetNodeId();	// The NodeID to trace
 	if ( iTraceNodeId == BAD_NODEID ) return;	// Don't trace invalid NodeID
 
-	WIRELIST wireList;	// Helper for chains of wires
+	const bool bRouteMinimal	= m_bRouteMinimal;		// Log m_bRouteMinimal state
+	const bool bRoutingEnabled	= GetRoutingEnabled();	// Log routing state
 
-	m_targetPins.clear();	// Reusing this to hold only flying wire pads for the nodeId being traced
+	m_bRouteMinimal	= true;
+	SetRoutingEnabled(false);	// Don't build tracks
 
-	for (int i = 0, iSize = GetSize(); i < iSize; i++)	// Loop all grid points
-	{
-		Element* pL = GetAt(i);
-		if ( GetAllowFlyWire(pL) && pL->GetNodeId() == iTraceNodeId )
-			m_targetPins.push_back(pL);
+	m_targetPins.clear();
 
-		pL->ResetMH();	// Wipe RouteId. Set "infinite" MH distance.  Zero max MH parameter.
-	}
-
-	m_tmpVec.resize(static_cast<size_t>(GetSize()), nullptr);
-	m_tmpVecSize = 0;	// Clear the set of visited points
-
-	const bool			bMultiLayer	 = GetLyrs() > 1;
-	const bool			bViasEnabled = bMultiLayer && GetViasEnabled();
-	const bool			bDiagsOK	 = ( GetDiagsMode() != DIAGSMODE::OFF );
-	const unsigned int	iMaxDeltaMH	 = ( bViasEnabled ) ? MH_LVIA : bDiagsOK ? MH_DIAG : MH_LRTB;	// The max MH increment in single-layer mode depends on if diagonals are allowed
-
-	size_t jjStart(0);
-	const unsigned int iRouteID(0);
-	unsigned int iMH(0), iMaxMH(0);
-
-	if ( m_growingRoutes.empty() ) m_growingRoutes.resize(1, 0);	// Only ever use iRouteID == 0 in Manhatten()
-
-	// All pins that support "flying wires" and have the same nodeID are connected to each other
-	if ( GetAllowFlyWire(p) )
-		for (const auto& pL : m_targetPins)
-			UpdateMH(pL, iRouteID, iMH, iMaxMH);	// Add pL to set of visited points (with MH value of zero)
+	if ( p->GetHasPin() )	// p could be a wire end
+		m_targetPins.push_back( p->IsLayer0() ? p : p->GetNbr(NBR_X) );	// Always want target pins on layer 0
 	else
-		UpdateMH(p, iRouteID, iMH, iMaxMH);	// Add p to set of visited points (with MH value of zero)
+		m_targetPins.push_back(p);
 
-	const bool bWire = p->IsLayer0() && p->GetHasWire();	// Constrain wire-routing to layer 0
-	if ( bWire )
+	for (int i = 0, iSize = ( GetLyrs() == 1 ) ? GetSize() : ( GetSize() / 2 ); i < iSize; i++)	// Use layer 0 only for pins
 	{
-		p->GetWireList(wireList);	// Get list of p and its wired points
-		for (const auto& o : wireList)	// Ideally want these in order of increasing MH
-		{
-			Element* pW = const_cast<Element*> (o.first);
-			if ( pW == p ) continue;	// Skip p
-			assert( p->GetNodeId() == pW->GetNodeId() );			// Sanity check
-			if ( pW->GetMH() != BAD_MH ) continue;					// Don't overwrite visited points (even if MH is improved)
-			const unsigned int iOtherMH = iMH + MH_WIRE * o.second;	// Each wire increases MH by MH_WIRE
-			UpdateMH(pW, iRouteID, iOtherMH, iMaxMH);				// Add pW to set of visited points
-		}
-	}
-	while ( true )
-	{
-		iMH++;	// Increase MH (think of this as distance from start point).
-
-		// Now see what visited points have an MH value that is "one step away" from this target value.
-		// For visited wires, both wires-ends are in the set of visited points.
-		// Therefore we only need to consider the 8 neighbours for each visited point.
-
-		if ( iMH == BAD_MH ) break;					// Quit if iMH reaches "infinity"
-		if ( iMH > iMaxMH + iMaxDeltaMH ) break;	// Can't reach out further from the set of visited points
-
-		const size_t jjSize = m_tmpVecSize;	// m_tmpVecSize gets modified in loop so take a copy
-		for (size_t jj = jjStart; jj < jjSize; jj++)	// Loop through visited points
-		{
-			const Element* pJ = m_tmpVec[jj];
-			if ( pJ->GetNodeId() != iTraceNodeId ) continue;	// Wrong nodeId
-
-			if ( pJ->GetMaxMH() + iMaxDeltaMH < iMH )	// If pJ (and all previous points) are too far from the flood boundary
-			{
-				jjStart = jj + 1;						// ... then skip them from now on (since iMH only ever increases)
-				continue;
-			}
-
-			const int iTypeMin(bMultiLayer ? 0 : 1), iTypeMax(bViasEnabled ? 2 : 1);
-			for (int iType = iTypeMin; iType <= iTypeMax; iType++)
-			{
-				switch( iType )
-				{
-					case 0:	// Type 0 ==> Change layer at a pin
-						if ( pJ->GetMH() + MH_LPIN == iMH && pJ->GetHasPin() )
-							ManhattenHelper(pJ, NBR_X, iMH, iMaxMH);
-						break;
-					case 1:	// Type 1 ==> Move within layer
-						for (int iDiag = 0, iDiagMax = ( bDiagsOK ) ? 2 : 1; iDiag < iDiagMax; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
-						{
-							const unsigned int iDeltaMH = ( iDiag ) ? MH_DIAG : MH_LRTB;
-							if ( pJ->GetMH() + iDeltaMH != iMH ) continue;	// pJ has wrong MH for connection
-
-							for (int iNbr = iDiag; iNbr < 8; iNbr += 2)	// Even/Odd iNbr ==> Non-diagonal/Diagonal
-								ManhattenHelper(pJ, iNbr, iMH, iMaxMH);
-						}
-						break;
-					case 2:	// Type 2 ==> Change layer at a via
-						if ( pJ->GetMH() + MH_LVIA == iMH && !pJ->GetHasPin() )
-							ManhattenHelper(pJ, NBR_X, iMH, iMaxMH);
-						break;
-				}
-			}
-		}
+		Element* q = GetAt(i);
+		if ( q == p ) continue;	// Skip self
+		if ( q && q->GetHasPin() && !q->GetHasWire() && q->GetNodeId() == iTraceNodeId )	// Skip wires
+			m_targetPins.push_back(q);
 	}
 
-	// Update m_iConnPin
+	Flood();
+
+	SetRoutingEnabled(bRoutingEnabled);	// Restore routing state
+	m_bRouteMinimal	= bRouteMinimal;	// Restore m_bRouteMinimal state
+
+	// Update m_iConnPin and m_iConnRID.
 	for (int i = 0, iSize = GetSize(); i < iSize && m_iConnPin == -1; i++)
 	{
-		const Element* p = GetAt(i);
-		if ( p->GetMH() != BAD_MH && p->GetHasPin() && !p->GetHasWire() )
-			m_iConnPin = i;
-	}
-}
-
-void Board::ManhattenHelper(const Element* p, const int& iNbr, unsigned int& iMH, unsigned int& iMaxMH)
-{
-	if ( !ReadCodeBit(iNbr, p->GetRoutable()) ) return;	// Skip non-routable nbrs
-
-	Element* pK	 = p->GetNbr(iNbr);	assert( pK );
-	if ( pK == nullptr ) return;
-
-	WIRELIST wireList;	// Helper for chains of wires
-
-	const unsigned iRouteID(0);
-	if ( p->GetUsed(iNbr) && pK->GetMH() == BAD_MH )
-	{
-		// All pins that support "flying wires" and have the same nodeID are connected to each other
-		if ( GetAllowFlyWire(pK) )
-			for (const auto& pL : m_targetPins)
-				UpdateMH(pL, iRouteID, iMH, iMaxMH);	// Add pL to set of visited points
-		else
-			UpdateMH(pK, iRouteID, iMH, iMaxMH);	// Add pK to set of visited points
-
-		const bool bWire = pK->IsLayer0() && pK->GetHasWire();	// Constrain wire-routing to layer 0
-		if ( bWire )
+		Element* q = GetAt(i);
+		if ( q->GetMH() != BAD_MH && q->GetHasPin() && !q->GetHasWire() )
 		{
-			pK->GetWireList(wireList);	// Get list of pK and its wired points
-			for (const auto& o : wireList)	// Ideally want these in order of increasing MH
-			{
-				Element* pW = const_cast<Element*> (o.first);
-				if ( pW == pK ) continue;	// Skip pK
-				assert( pK->GetNodeId() == pW->GetNodeId() );			// Sanity check
-				if ( pW->GetMH() != BAD_MH ) continue;					// Don't overwrite visited points (even if MH is improved)
-				const unsigned int iOtherMH = iMH + MH_WIRE * o.second;	// Each wire increases MH by MH_WIRE
-				UpdateMH(pW, iRouteID, iOtherMH, iMaxMH);				// Add pW to set of visited points
-			}
+			m_iConnPin = i;
+			m_iConnRID = q->GetRouteId();
 		}
 	}
 }
@@ -700,6 +625,11 @@ void Board::ManhattenHelper(const Element* p, const int& iNbr, unsigned int& iMH
 Element* Board::GetConnPin()
 {
 	return ( m_iConnPin >= 0 && m_iConnPin < GetSize() ) ? GetAt(m_iConnPin) : nullptr;
+}
+
+unsigned int Board::GetConnRID() const
+{
+	return ( m_iConnPin >= 0 && m_iConnPin < GetSize() ) ? m_iConnRID : BAD_ROUTEID;
 }
 
 void Board::CheckAllComplete()

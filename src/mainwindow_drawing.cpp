@@ -1363,14 +1363,14 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				Y += (padOffsetY * W) / 100;	// Convert from mil to pixels
 			}
 
-			spanTreePoints.push_back( SpanningTreeHelper::POINT(QPointF(X, Y), pD->GetMH()) );
+			spanTreePoints.push_back( SpanningTreeHelper::POINT(QPointF(X, Y), pD->GetRouteId()) );
 		}
 
 		std::list< SpanningTreeHelper::LINE > spanTreeLines;
 		SpanningTreeHelper::Build(spanTreePoints, spanTreeLines);
 		for (const auto& o : spanTreeLines)
 		{
-			if ( o.first.second != BAD_MH && o.second.second != BAD_MH ) continue;	// Don't draw air-wire if both points have good MH
+			if ( o.first.second == o.second.second ) continue;	// Don't draw air-wires between points with same route ID
 			painter.setPen(m_redPen);
 			painter.drawLine(o.first.first, o.second.first);
 		}
