@@ -154,13 +154,7 @@ void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, cons
 		bInGrid = GetRowCol(m_mousePos, m_gridRow, m_gridCol, dRow, dCol);
 
 	if ( !bInGrid)
-	{
-		// Disabled code for auto-hiding the pin labels editor
-		/*
-		if ( m_dockPinDlg->isVisible() ) m_dockPinDlg->hide();
-		*/
 		return HidePadOffsetDialog();
-	}
 
 	m_bMouseClick	= true;		// Set the flag meaning "click begin"
 	m_bLeftClick	= bLeftClick;
@@ -322,7 +316,7 @@ void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, cons
 #ifdef VEROROUTE_ANDROID
 		if ( m_bMouseClick )
 #else
-		if ( m_bLeftClick )	// Only define rectangles using left-click
+		if ( m_bLeftClick )
 #endif
 		{
 			if ( GetCurrentNodeId() == BAD_NODEID )			// If trying to left-click paint a BAD_NODEID ...
@@ -351,7 +345,8 @@ void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, cons
 		bool bDoSwap(false);
 		if ( GetPaintBoard() && m_board.GetTrackMode() != TRACKMODE::OFF )	//TODO Maybe could do ( GetPaintBoard() || GetPaintPins() )
 		{
-			if ( hypot(dRow - 0.5, dCol - 0.5) > 0.5 )	// Only consider clicks that are between grid points
+			const bool bCloseToGridPoint = ( hypot(dRow - 0.5, dCol - 0.5) <= 0.3333 );	// true ==> clicked close to grid point
+			if ( !bCloseToGridPoint )	// Only consider clicks that are between grid points
 			{
 				const int	dR = ( dRow > 0.5 ) ? 1 : 0;	// Correct row, col to account for crossing ...
 				const int	dC = ( dCol > 0.5 ) ? 1 : 0;	// ... point being near corner of element
@@ -376,12 +371,7 @@ void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, cons
 		//TODO Could allow this in Desktop version too
 		const bool bClickedValidNodeID = pC->GetNodeId() != BAD_NODEID;
 		const bool bTruePin = pC->GetHasPin() && !pC->GetHasWire();
-		if ( bClickedValidNodeID && GetPaintBoard() && bTruePin && !bDoSwap )	// If we're painting board and clicked on a true pin with a valid nodeID
-		{
-			SetCurrentNodeId( pC->GetNodeId() );	// ... then change current nodeID to that of the pin
-			m_mouseActionString = "Select Net";
-		}
-		else if ( bClickedValidNodeID && GetPaintBoard() && pC->GetNodeId() == GetCurrentNodeId() && !bDoSwap )	// If we're painting board and clicked on a point with matching valid nodeID
+		if ( GetPaintBoard() && bClickedValidNodeID && pC->GetNodeId() == GetCurrentNodeId() && !bDoSwap )	// If we're painting board and clicked on a point with matching valid nodeID
 		{
 			const bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, BAD_NODEID, false);	// ... then erase the point instead of painting it
 			if ( !bChanged ) return;
@@ -421,33 +411,10 @@ void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, cons
 			m_mouseActionString = "Erase";
 		}
 	}
-	else	// Set/Unset current nodeId from board
+	else
 	{
-#ifdef VEROROUTE_ANDROID
-		SetCurrentNodeId( pC->GetNodeId() );
-#else
-		if ( m_bLeftClick )
-			SetCurrentNodeId( pC->GetNodeId() );
-		if ( m_bRightClick )
-			SetCurrentNodeId( BAD_NODEID );
-#endif
-		m_mouseActionString = ( GetCurrentNodeId() == BAD_NODEID) ? "Unselect Net" : "Select Net";
-
 		if ( ALLOW_DELAY_BASED_PAD_SHIFT && pC->GetHasPin() && !pC->GetHasWire() )
 			g_bPinClicked = true;
-
-		// Disabled code for auto-hiding the pin labels editor
-		// Pin labels editor is only useful if we have selected a single component with pin labels
-		/*
-		bool bPinLabels(false);
-		if ( m_board.GetGroupMgr().GetNumUserComps() == 1 )
-		{
-			const Component& comp = m_board.GetCompMgr().GetComponentById( GetCurrentCompId() );
-			bPinLabels = ( comp.GetPinFlags() & PIN_LABELS );
-		}
-		if ( !bPinLabels && m_dockPinDlg->isVisible() )
-			HideDlg(m_dockPinDlg);
-		*/
 
 		if ( !pC->GetHasPin() || pC->GetHasWire() )	// Hide the pad offset dialog if we click on a place that cannot have a pad offset
 			HidePadOffsetDialog();
@@ -490,64 +457,69 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 	const bool bInGrid = GetRowCol(m_mousePos, m_gridRow, m_gridCol, dRow, dCol);
 	if ( !bInGrid ) return;
 
+	const bool bCloseToGridPoint = ( hypot(dRow - 0.5, dCol - 0.5) <= 0.3333 );	// true ==> clicked close to grid point
+
+	const int&	layer	= m_board.GetCurrentLayer();
+	Element*	pC		= m_board.Get(layer, m_gridRow, m_gridCol);
+
 	// Cursor modification
 	centralWidget()->setCursor(Qt::CrossCursor);
 
 	// Handle changing layer preference for PCBs via double-clicking on a component pin
-	if ( !GetPaintAction() && m_board.GetTrackMode() == TRACKMODE::PCB && m_board.GetLyrs() == 2 )
+	if ( !GetPaintAction() && m_board.GetTrackMode() == TRACKMODE::PCB && m_board.GetLyrs() == 2 && bCloseToGridPoint )	// Only consider clicks that are close to the grid point
 	{
-		if ( hypot(dRow - 0.5, dCol - 0.5) <= 0.5 )	// Only consider clicks that are close to the grid point
+		if ( m_board.ToggleLyrPref(layer, m_gridRow, m_gridCol) )
 		{
-			if ( m_board.ToggleLyrPref(m_board.GetCurrentLayer(), m_gridRow, m_gridCol) )
-			{
-				UpdateHistory("Change pin layer preference");
-				return;
-			}
+			UpdateHistory("Change pin layer preference", pC->GetCompId());
+			return;
 		}
 	}
 
 	// Handle competing diagonals
-	if ( !GetPaintAction() && m_board.GetTrackMode() != TRACKMODE::OFF )
+	if ( !GetPaintAction() && m_board.GetTrackMode() != TRACKMODE::OFF && !bCloseToGridPoint )	// Only consider clicks between grid points
 	{
-		if ( hypot(dRow - 0.5, dCol - 0.5) > 0.5 )	// Only consider clicks that are between grid points
+		const int	dR	= ( dRow > 0.5 ) ? 1 : 0;	// Correct row, col to account for crossing ...
+		const int	dC	= ( dCol > 0.5 ) ? 1 : 0;	// ... point being near corner of element
+		Element*	pRB	= m_board.Get(layer, m_gridRow + dR, m_gridCol + dC);
+		if ( pRB->SwapDiagLinks() )
 		{
-			const int	dR = ( dRow > 0.5 ) ? 1 : 0;	// Correct row, col to account for crossing ...
-			const int	dC = ( dCol > 0.5 ) ? 1 : 0;	// ... point being near corner of element
-			const int&	layer	 = m_board.GetCurrentLayer();
+			m_board.WipeAutoSetPoints();
+			m_board.PlaceFloaters();	// See if we can now place floating components down
+			UpdateHistory("Toggle competing diagonals", 0);
 
-			const bool	bSwapped = m_board.Get(layer, m_gridRow + dR, m_gridCol + dC)->SwapDiagLinks();
-			if ( bSwapped )
-			{
-				m_board.WipeAutoSetPoints();
-				m_board.PlaceFloaters();	// See if we can now place floating components down
-				UpdateHistory("Toggle competing diagonals");
-
-				// mouseReleaseEvent() will do RepaintWithRouting() and ListNodes().  No need to do it here.
-				return;
-			}
+			// mouseReleaseEvent() will do RepaintWithRouting() and ListNodes().  No need to do it here.
+			return;
 		}
+	}
+
+	// Handle selection of nodeId when double-clicking on a component pin (but not painting pins of flooding)
+	const bool bPin = pC->GetHasPin() && !pC->GetHasWire();
+	if ( bPin && !GetPaintPins() && !GetErasePins() && !GetPaintFlood()	&& bCloseToGridPoint )	//TODO Was bPin && !GetPaintPins() && !GetPaintFlood()
+	{
+		SetCurrentNodeId( pC->GetNodeId() );
+		UpdateHistory( ( GetCurrentNodeId() == BAD_NODEID ) ? "Unselect Net" : "Select Net", 0);
+		return;
 	}
 
 	// Handle component rotation
 	if ( m_board.GetCompMode() != COMPSMODE::OFF && ( m_eMouseMode == MOUSE_MODE::SELECT || GetPaintPins() || GetErasePins() ) && GetCurrentCompId() != BAD_COMPID )
-		return CompRotateCW();
-
-#ifdef VEROROUTE_ANDROID
-	// Handle leaving PaintBoard mode via double-clicking on a component pin
-	if ( GetPaintBoard() && GetCurrentNodeId() != BAD_NODEID )
 	{
-		if ( hypot(dRow - 0.5, dCol - 0.5) <= 0.5 )	// Only consider clicks that are close to the grid point
+		if ( GetPaintPins() || GetErasePins() )	// If we're in paint/erase pins mode ...
 		{
-			const Element* pC = m_board.Get(m_board.GetCurrentLayer(), m_gridRow, m_gridCol);
-			if ( pC->GetHasPin() && !pC->GetHasWire() && pC->GetNodeId() == GetCurrentNodeId() )
-			{
-				SetCurrentNodeId(BAD_NODEID);
-				SetPaintBoard(false);
-				return;
-			}
+			if ( !bPin || !bCloseToGridPoint )	//	... then only allow rotate if we clicked far enough away from a pin
+				return CompRotateCW();
 		}
+		else
+			return CompRotateCW();
 	}
-#endif
+
+	// Handle selection of nodeId (fallback case)
+	if ( !GetPaintAction() )
+	{
+		SetCurrentNodeId( pC->GetNodeId() );
+		UpdateHistory( ( GetCurrentNodeId() == BAD_NODEID ) ? "Unselect Net" : "Select Net", 0);
+		return;
+	}
 }
 
 void MainWindow::MouseMoveEvent(const QPoint& pos)

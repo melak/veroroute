@@ -579,7 +579,14 @@ void MainWindow::HandleRouting()
 		const int k = m_board.GetCurrentLayer();
 		Element* pC = m_board.Get(k, m_gridRow, m_gridCol);
 		bool bOK = ( pC->GetNodeId() == GetCurrentNodeId() );
-		// If current element has wrong NodeID, search the grid for the first element with the correct NodeID
+
+		if ( !bOK )		// If current element has wrong NodeID ...
+		{
+			pC = m_board.GetConnPin();// ... try to use a connected pin from the last call of Manhatten()
+			bOK = ( pC && pC->GetNodeId() == GetCurrentNodeId() );
+		}
+
+		// ... and if still not OK, then search the grid for the first element with the correct NodeID
 		for (int i = 0, iSize = m_board.GetSize(); i < iSize && !bOK; i++)
 		{
 			pC = m_board.GetAt(i);

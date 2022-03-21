@@ -27,9 +27,10 @@
 
 struct SpanningTreeHelper
 {
-	typedef std::pair<QPointF, QPointF>	LINE;
+	typedef std::pair<QPointF, unsigned int>	POINT;	// unsigned int is an optional attribute for the point
+	typedef std::pair<POINT, POINT>				LINE;
 
-	static inline void Build(const std::list<QPointF>& pointsIn, std::list<LINE>& linesOut, const bool& bDaisyChain = false)
+	static inline void Build(const std::list<POINT>& pointsIn, std::list<LINE>& linesOut, const bool& bDaisyChain = false)
 	{
 		typedef std::pair<size_t, size_t>	INDICES;
 		typedef std::pair<INDICES, qreal>	EDGE;
@@ -40,14 +41,14 @@ struct SpanningTreeHelper
 		if ( N < 2 ) return;
 
 		std::vector<size_t>		nConn;	nConn.resize(N,0);	// Number of direct connections to each point
-		std::vector<QPointF>	v;		v.resize(N);		// Points stored as a vector (for access via index)
+		std::vector<POINT>		v;		v.resize(N);		// Points stored as a vector (for access via index)
 		size_t i(0);
 		for (const auto& o: pointsIn) v[i++] = o;
 
 		std::list<EDGE> edges;	// Working list of edges
 		for (size_t i = 0; i < N; i++)
 			for (size_t j = i + 1; j < N; j++)
-				edges.push_back( EDGE(INDICES(i,j), PolygonHelper::Length(v[i]-v[j])) );
+				edges.push_back( EDGE(INDICES(i,j), PolygonHelper::Length(v[i].first - v[j].first)) );
 
 		ConnectionMatrix matrix;	// Helper for tracking connectivity between points
 		matrix.Allocate(N);
@@ -77,7 +78,7 @@ struct SpanningTreeHelper
 private:
 	bool PreventBuildWarnings() const
 	{
-		std::list<QPointF>	in;
+		std::list<POINT>	in;
 		std::list<LINE>		out;
 		Build(in, out);
 		return true;

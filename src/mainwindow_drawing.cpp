@@ -968,39 +968,31 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	}
 
 	// Draw hatched lines ========================================================================
-	if ( !m_bWriteGerber && trackMode != TRACKMODE::OFF )
+	if ( !m_bWriteGerber && trackMode != TRACKMODE::OFF && board.GetRoutingEnabled() )
 	{
-		if ( board.GetRoutingEnabled() || GetCurrentNodeId() != BAD_NODEID )
+		painter.save();
+		m_redPen.setWidth(W / 8);
+		m_backgroundPen.setWidth(0);
+		painter.setBrush(Qt::NoBrush);
+		for (int j = minRow; j <= maxRow; j++)
+		for (int i = minCol; i <= maxCol; i++)
 		{
-			painter.save();
-			m_redPen.setWidth(W / 8);
-			m_backgroundPen.setWidth(0);
-			painter.setBrush(Qt::NoBrush);
-			for (int j = minRow; j <= maxRow; j++)
-			for (int i = minCol; i <= maxCol; i++)
-			{
-				const Element* pC = board.Get(layer, j, i);
-				if ( pC->GetNodeId() == BAD_NODEID ) continue;
-				GetLRTB(board, 100, j, i, L, R, T, B);	// 100% size square
+			const Element* pC = board.Get(layer, j, i);
+			if ( pC->GetNodeId() == BAD_NODEID ) continue;
+			GetLRTB(board, 100, j, i, L, R, T, B);	// 100% size square
 
-				if ( pC->ReadFlagBits(AUTOSET) && !pC->ReadFlagBits(USERSET) )
-				{
-					painter.setPen(m_backgroundPen);
-					painter.drawLine(L, T, R, B);		// Draw "\" (hatched) line
-					painter.drawLine(L+C, T, R, B-C);	// Draw "\" (hatched) line
-					painter.drawLine(L, T+C, R-C, B);	// Draw "\" (hatched) line
-					painter.drawLine(L, B, R, T);		// Draw "/" (hatched) line
-					painter.drawLine(L+C, B, R, T+C);	// Draw "/" (hatched) line
-					painter.drawLine(L, B-C, R-C, T);	// Draw "/" (hatched) line
-				}
-				if ( pC->GetNodeId() == GetCurrentNodeId() && pC->GetMH() == BAD_MH )
-				{
-					painter.setPen(m_redPen);
-					painter.drawLine(L, B, R, T);		// Draw "/" (hatched) line
-				}
+			if ( pC->ReadFlagBits(AUTOSET) && !pC->ReadFlagBits(USERSET) )
+			{
+				painter.setPen(m_backgroundPen);
+				painter.drawLine(L, T, R, B);		// Draw "\" (hatched) line
+				painter.drawLine(L+C, T, R, B-C);	// Draw "\" (hatched) line
+				painter.drawLine(L, T+C, R-C, B);	// Draw "\" (hatched) line
+				painter.drawLine(L, B, R, T);		// Draw "/" (hatched) line
+				painter.drawLine(L+C, B, R, T+C);	// Draw "/" (hatched) line
+				painter.drawLine(L, B-C, R-C, T);	// Draw "/" (hatched) line
 			}
-			painter.restore();
 		}
+		painter.restore();
 	}
 
 	// Draw solder ===============================================================================
@@ -1339,6 +1331,54 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		}
 	}
 
+	// Draw air wires ============================================================================
+	if ( !m_bWriteGerber && trackMode != TRACKMODE::OFF && GetCurrentNodeId() != BAD_NODEID )
+	{
+		painter.save();
+		m_redPen.setWidth( static_cast<int>(0.175 * W) );
+		m_redPen.setCapStyle(Qt::SquareCap);
+		m_redPen.setStyle(Qt::DotLine);
+		painter.setPen(m_redPen);
+		painter.setBrush(Qt::NoBrush);
+
+		int padOffsetX, padOffsetY;	// For handling offset pads
+
+		std::list<SpanningTreeHelper::POINT> spanTreePoints;
+
+		for (int jj = minRow; jj <= maxRow; jj++)
+		for (int ii = minCol; ii <= maxCol; ii++)
+		{
+			Element*	pD		= board.Get(0, jj, ii);	// Layer 0 only
+			const bool	bPin	= pD->GetHasPin() && !pD->GetHasWire();
+			if ( !bPin ) continue;
+			if ( pD->GetNodeId() != GetCurrentNodeId() ) continue;
+
+			GetXY(board, jj, ii, X, Y);
+
+			if ( !bVero )
+			{
+				const Component& comp = compMgr.GetComponentById( pD->GetCompId() );
+				comp.GetCompPinOffsets(pD->GetPinIndex(), padOffsetX, padOffsetY);	// Get offsets in mil
+				X += (padOffsetX * W) / 100;	// Convert from mil to pixels
+				Y += (padOffsetY * W) / 100;	// Convert from mil to pixels
+			}
+
+			spanTreePoints.push_back( SpanningTreeHelper::POINT(QPointF(X, Y), pD->GetMH()) );
+		}
+
+		std::list< SpanningTreeHelper::LINE > spanTreeLines;
+		SpanningTreeHelper::Build(spanTreePoints, spanTreeLines);
+		for (const auto& o : spanTreeLines)
+		{
+			if ( o.first.second != BAD_MH && o.second.second != BAD_MH ) continue;	// Don't draw air-wire if both points have good MH
+			painter.setPen(m_redPen);
+			painter.drawLine(o.first.first, o.second.first);
+		}
+		m_redPen.setCapStyle(Qt::RoundCap);
+		m_redPen.setStyle(Qt::SolidLine);
+		painter.restore();
+	}
+
 	// Draw flying wires =========================================================================
 	if ( !m_bWriteGerber && !bMonoPCB && compMode != COMPSMODE::OFF && board.GetShowFlyWires() )
 	{
@@ -1347,6 +1387,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		QPen  blackPen = m_blackPen;	// Used for lines in the component pixmap
 		blackPen.setWidth(2);
 		m_varPen.setWidth(static_cast<int>(0.175 * W));
+		m_varPen.setCapStyle(Qt::SquareCap);
 		m_varPen.setStyle(Qt::DotLine);
 		painter.setBrush(Qt::NoBrush);
 		const int		dH = static_cast<int>(0.1*W);	// Param for wire rounded rect
@@ -1370,7 +1411,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 												 : colorMgr.GetColorFromNodeId(nodeId);
 			m_varPen.setColor(color);
 
-			std::list<QPointF> spanTreePoints;
+			std::list<SpanningTreeHelper::POINT> spanTreePoints;
 
 			GetXY(board, j, i, X, Y);
 
@@ -1382,7 +1423,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				Y += (padOffsetY * W) / 100;	// Convert from mil to pixels
 			}
 
-			spanTreePoints.push_back( QPointF(X, Y) );
+			spanTreePoints.push_back( SpanningTreeHelper::POINT(QPointF(X, Y), 0) );	// 0 ==> dummy point attribute
 
 			for (int jj = j; jj <= maxRow; jj++)
 			for (int ii = (jj == j) ? (i+1) : minCol; ii <= maxCol; ii++)
@@ -1400,15 +1441,15 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					Y += (padOffsetY * W) / 100;	// Convert from mil to pixels
 				}
 
-				spanTreePoints.push_back( QPointF(X, Y) );
+				spanTreePoints.push_back( SpanningTreeHelper::POINT(QPointF(X, Y), 0) );	// 0 ==> dummy point attribute
 			}
 
 			std::list< SpanningTreeHelper::LINE > spanTreeLines;
 			SpanningTreeHelper::Build(spanTreePoints, spanTreeLines, true);	// true ==> daisy chain
 			for (const auto& o : spanTreeLines)
 			{
-				const QPointF	vec	= ( o.second - o.first );
-				const QPointF	mid	= ( o.second + o.first ) * 0.5;
+				const QPointF	vec	= ( o.second.first - o.first.first );
+				const QPointF	mid	= ( o.second.first + o.first.first ) * 0.5;
 				const int		dL	= static_cast<int>(PolygonHelper::Length(vec) * 0.5);
 				painter.save();
 				painter.translate(mid.x(), mid.y());
@@ -1418,6 +1459,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				painter.restore();
 			}
 		}
+		m_varPen.setCapStyle(Qt::RoundCap);
 		painter.restore();
 	}
 

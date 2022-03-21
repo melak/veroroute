@@ -548,6 +548,8 @@ void Board::Manhatten(Element* p)
 {
 	// Populate the grid with connected Manhatten-style "distances" to p.
 
+	m_iConnPin = -1;
+
 	const int iTraceNodeId = p->GetNodeId();	// The NodeID to trace
 	if ( iTraceNodeId == BAD_NODEID ) return;	// Don't trace invalid NodeID
 
@@ -649,6 +651,14 @@ void Board::Manhatten(Element* p)
 			}
 		}
 	}
+
+	// Update m_iConnPin
+	for (int i = 0, iSize = GetSize(); i < iSize && m_iConnPin == -1; i++)
+	{
+		const Element* p = GetAt(i);
+		if ( p->GetMH() != BAD_MH && p->GetHasPin() && !p->GetHasWire() )
+			m_iConnPin = i;
+	}
 }
 
 void Board::ManhattenHelper(const Element* p, const int& iNbr, unsigned int& iMH, unsigned int& iMaxMH)
@@ -685,6 +695,11 @@ void Board::ManhattenHelper(const Element* p, const int& iNbr, unsigned int& iMH
 			}
 		}
 	}
+}
+
+Element* Board::GetConnPin()
+{
+	return ( m_iConnPin >= 0 && m_iConnPin < GetSize() ) ? GetAt(m_iConnPin) : nullptr;
 }
 
 void Board::CheckAllComplete()
