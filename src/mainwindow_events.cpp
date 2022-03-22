@@ -348,8 +348,8 @@ void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, cons
 		bool bDoSwap(false);
 		if ( GetPaintBoard() && m_board.GetTrackMode() != TRACKMODE::OFF )	//TODO Maybe could do ( GetPaintBoard() || GetPaintPins() )
 		{
-			const bool bCloseToGridPoint = ( hypot(dRow - 0.5, dCol - 0.5) <= 0.5 );	// true ==> clicked close to grid point
-			if ( !bCloseToGridPoint )	// Only consider clicks that are between grid points
+			const bool bCloseToCrossPoint = ( hypot(std::min(dRow, 1.0 - dRow), std::min(dCol, 1.0 - dCol)) <= 0.5 );	// true ==> clicked close to crossing diagonals point
+			if ( bCloseToCrossPoint )	// Only consider clicks close to crossing diagonals point
 			{
 				const int	dR = ( dRow > 0.5 ) ? 1 : 0;	// Correct row, col to account for crossing ...
 				const int	dC = ( dCol > 0.5 ) ? 1 : 0;	// ... point being near corner of element
@@ -473,13 +473,13 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 	const bool bInGrid = GetRowCol(m_mousePos, m_gridRow, m_gridCol, dRow, dCol);
 	if ( !bInGrid ) return;
 
-	const bool bCloseToGridPoint = ( hypot(dRow - 0.5, dCol - 0.5) <= 0.5 );	// true ==> clicked close to grid point
-
 	const int&	layer	= m_board.GetCurrentLayer();
 	Element*	pC		= m_board.Get(layer, m_gridRow, m_gridCol);
 
 	// Cursor modification
 	centralWidget()->setCursor(Qt::CrossCursor);
+
+	const bool bCloseToGridPoint = ( hypot(dRow - 0.5, dCol - 0.5) <= 0.5 );	// true ==> clicked close to grid point
 
 	// Handle changing layer preference for PCBs via double-clicking on a component pin
 	if ( bPCB && !GetPaintAction() && m_board.GetLyrs() == 2 && bCloseToGridPoint )	// Only consider clicks that are close to the grid point
@@ -492,18 +492,22 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 	}
 
 	// Handle competing diagonals
-	if ( bTrackOn && !GetPaintAction() && !bCloseToGridPoint )	// Only consider clicks between grid points
+	if ( bTrackOn && !GetPaintAction() )
 	{
-		const int	dR	= ( dRow > 0.5 ) ? 1 : 0;	// Correct row, col to account for crossing ...
-		const int	dC	= ( dCol > 0.5 ) ? 1 : 0;	// ... point being near corner of element
-		Element*	pRB	= m_board.Get(layer, m_gridRow + dR, m_gridCol + dC);
-		if ( pRB->SwapDiagLinks() )
+		const bool bCloseToCrossPoint = ( hypot(std::min(dRow, 1.0 - dRow), std::min(dCol, 1.0 - dCol)) <= 0.5 );	// true ==> clicked close to crossing diagonals point
+		if ( bCloseToCrossPoint )	// Only consider clicks close to crossing diagonals point
 		{
-			m_board.WipeAutoSetPoints();
-			m_board.PlaceFloaters();	// See if we can now place floating components down
-			UpdateHistory("Toggle competing diagonals", 0);
-			m_bReRoute = m_bReListNodes = true;
-			return;
+			const int	dR	= ( dRow > 0.5 ) ? 1 : 0;	// Correct row, col to account for crossing ...
+			const int	dC	= ( dCol > 0.5 ) ? 1 : 0;	// ... point being near corner of element
+			Element*	pRB	= m_board.Get(layer, m_gridRow + dR, m_gridCol + dC);
+			if ( pRB->SwapDiagLinks() )
+			{
+				m_board.WipeAutoSetPoints();
+				m_board.PlaceFloaters();	// See if we can now place floating components down
+				UpdateHistory("Toggle competing diagonals", 0);
+				m_bReRoute = m_bReListNodes = true;
+				return;
+			}
 		}
 	}
 
@@ -639,7 +643,8 @@ void MainWindow::MouseMoveEvent(const QPoint& pos)
 
 		// Handle competing diagonals first
 		bool bDoSwap(false);
-		if ( hypot(dRow - 0.5, dCol - 0.5) > 0.5 )	// Only consider clicks that are between grid points
+		const bool bCloseToCrossPoint = ( hypot(std::min(dRow, 1.0 - dRow), std::min(dCol, 1.0 - dCol)) <= 0.5 );	// true ==> clicked close to crossing diagonals point
+		if ( bCloseToCrossPoint )	// Only consider clicks close to crossing diagonals point
 		{
 			const int	dR = ( dRow > 0.5 ) ? 1 : 0;	// Correct row, col to account for crossing ...
 			const int	dC = ( dCol > 0.5 ) ? 1 : 0;	// ... point being near corner of element
