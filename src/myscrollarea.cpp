@@ -71,11 +71,10 @@ bool MyScrollArea::viewportEvent(QEvent* event)
 			m_dSpread = 0;
 			m_maxPoints = 0;
 
-			const auto	now				= std::chrono::steady_clock::now();
-			const auto	elapsed			= now - m_lastTouchBegin;
+			const auto	elapsed			= std::chrono::steady_clock::now() - m_lastTouchBegin;
 			const auto	duration_ms		= std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
-			const bool	bDoubleClicked	= ( duration_ms >= 0 && duration_ms <= 300 );
-			m_lastTouchBegin = now;
+			const auto	effective_ms	= ( duration_ms > m_releaseDuration_ms ) ? ( duration_ms - m_releaseDuration_ms ) : 0;
+			const bool	bDoubleClicked	= ( effective_ms > 0 && effective_ms <= 300 );
 
 			if ( pMainWindow )
 			{
@@ -89,6 +88,7 @@ bool MyScrollArea::viewportEvent(QEvent* event)
 				else
 					pMainWindow->MousePressEvent(points.begin()->pos().toPoint());
 			}
+			m_lastTouchBegin = std::chrono::steady_clock::now();	// Processing the events could have taken some time, so measure from here
 			event->accept();
 			return true;
 		}
@@ -150,7 +150,12 @@ bool MyScrollArea::viewportEvent(QEvent* event)
 			{
 				QTouchEvent*	ev		= (QTouchEvent*)event;
 				const auto&		points	= ev->touchPoints();
+
+				// The MouseReleaseEvent() can take some time due to updating the broken nets list.  Measure how long it takes.
+				const auto	begin		= std::chrono::steady_clock::now();
 				pMainWindow->MouseReleaseEvent(points.begin()->pos().toPoint());
+				const auto	elapsed		= std::chrono::steady_clock::now() - begin;
+				m_releaseDuration_ms	= std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
 			}
 			event->accept();
 			return true;
@@ -165,5 +170,3 @@ qreal MyScrollArea::GetSpread(const QList<QTouchEvent::TouchPoint>& points) cons
 	// Just use first 2 points
 	return ( points.size() > 1 ) ? PolygonHelper::Length( points[0].pos() - points[1].pos() ) : 0;
 }
-
-

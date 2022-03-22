@@ -2487,8 +2487,22 @@ void MainWindow::UpdateTextDialog(bool bFull)
 
 // Helpers
 void MainWindow::SetQuality(QPainter& painter) { painter.setRenderHint(QPainter::Antialiasing, m_board.GetRenderQuality() != 0); }
-bool MainWindow::CanZoomIn() const	{ return m_board.GetGRIDPIXELS() < 256; }	// 256 == MAX_GRIDPIXELS
-bool MainWindow::CanZoomOut() const	{ return m_board.GetGRIDPIXELS() > 6;   }	//   6 == MIN_GRIDPIXELS
+bool MainWindow::CanZoomIn() const
+{
+#ifdef VEROROUTE_ANDROID
+	return m_board.GetGRIDPIXELS() < 50;	// Large zoom will make the pixmap cache consume too much memory
+#else
+	return m_board.GetGRIDPIXELS() < 256;	// 256 == MAX_GRIDPIXELS
+#endif
+}
+bool MainWindow::CanZoomOut() const
+{
+#ifdef VEROROUTE_ANDROID
+	return m_board.GetGRIDPIXELS() > 10;	// Even this is too small to control on a touch interface
+#else
+	return m_board.GetGRIDPIXELS() > 6;		//   6 == MIN_GRIDPIXELS
+#endif
+}
 bool MainWindow::GetIsModified() const
 {
 	if ( m_iTutorialNumber >= 0 ) return false;	// Skip check if in tutorial mode

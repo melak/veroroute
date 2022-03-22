@@ -130,6 +130,8 @@ bool MainWindow::CanModifyRuler() const
 
 void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, const bool& bRightClick)
 {
+	m_bReRoute = m_bReListNodes = false;	// Reset both flags
+
 	g_bPinClicked = false;
 
 	g_bHaveAutoPanned = false;	// Reset flags for avoiding repeated re-draws
@@ -304,7 +306,7 @@ void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, cons
 	{
 		if ( m_dockPinDlg->isVisible() ) m_dockPinDlg->hide();
 		HidePadOffsetDialog();
-		return RepaintWithRouting();	// Don't modify nodeId or paint if editing text
+		return RepaintSkipRouting();	// Don't modify nodeId or paint if editing text
 	}
 
 	const Element* pC = m_board.Get(layer, m_gridRow, m_gridCol);
@@ -334,6 +336,7 @@ void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, cons
 
 			m_board.FloodNodeId( GetCurrentNodeId() );
 			m_mouseActionString = "Paint (flood)";
+			m_bReRoute = m_bReListNodes = true;
 		}
 	}
 	else if ( GetPaintPins() || GetErasePins() || GetPaintBoard() || GetEraseBoard() )
@@ -345,7 +348,7 @@ void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, cons
 		bool bDoSwap(false);
 		if ( GetPaintBoard() && m_board.GetTrackMode() != TRACKMODE::OFF )	//TODO Maybe could do ( GetPaintBoard() || GetPaintPins() )
 		{
-			const bool bCloseToGridPoint = ( hypot(dRow - 0.5, dCol - 0.5) <= 0.3333 );	// true ==> clicked close to grid point
+			const bool bCloseToGridPoint = ( hypot(dRow - 0.5, dCol - 0.5) <= 0.5 );	// true ==> clicked close to grid point
 			if ( !bCloseToGridPoint )	// Only consider clicks that are between grid points
 			{
 				const int	dR = ( dRow > 0.5 ) ? 1 : 0;	// Correct row, col to account for crossing ...
@@ -362,6 +365,7 @@ void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, cons
 					{
 						pRB->SwapDiagLinks();
 						m_mouseActionString = "Paint";
+						m_bReRoute = m_bReListNodes = true;
 					}
 				}
 			}
@@ -376,6 +380,7 @@ void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, cons
 			const bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, BAD_NODEID, false);	// ... then erase the point instead of painting it
 			if ( !bChanged ) return;
 			m_mouseActionString = "Erase";
+			m_bReRoute = m_bReListNodes = true;
 		}
 		else if ( ( GetPaintPins() || GetErasePins() ) && !bTruePin && !bDoSwap )	// Restrict painting/erasing pins to true pins (not wires)
 		{
@@ -398,6 +403,7 @@ void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, cons
 			const bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, GetCurrentNodeId(), GetPaintPins() || GetErasePins());
 			if ( !bChanged ) return;
 			m_mouseActionString = "Paint";
+			m_bReRoute = m_bReListNodes = true;
 		}
 
 #ifdef VEROROUTE_ANDROID
@@ -409,6 +415,7 @@ void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, cons
 			const bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, BAD_NODEID, GetPaintPins() || GetErasePins());
 			if ( !bChanged ) return;
 			m_mouseActionString = "Erase";
+			m_bReRoute = m_bReListNodes = true;
 		}
 	}
 	else
@@ -422,13 +429,20 @@ void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, cons
 
 	g_lastMouseClickTime = std::chrono::steady_clock::now();
 
-	m_board.WipeAutoSetPoints();
-	m_board.PlaceFloaters();	// See if we can now place floating components down
-	RepaintWithRouting();
+	if ( m_bReRoute )
+	{
+		m_board.WipeAutoSetPoints();
+		m_board.PlaceFloaters();	// See if we can now place floating components down
+		RepaintWithRouting();
+	}
+	else
+		RepaintSkipRouting();
 }
 
 void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 {
+	m_bReRoute = false;	// Reset m_bReRoute only.  Leave m_bReListNodes alone
+
 	g_bPinClicked = false;
 
 	m_mousePos = pos;
@@ -457,7 +471,7 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 	const bool bInGrid = GetRowCol(m_mousePos, m_gridRow, m_gridCol, dRow, dCol);
 	if ( !bInGrid ) return;
 
-	const bool bCloseToGridPoint = ( hypot(dRow - 0.5, dCol - 0.5) <= 0.3333 );	// true ==> clicked close to grid point
+	const bool bCloseToGridPoint = ( hypot(dRow - 0.5, dCol - 0.5) <= 0.5 );	// true ==> clicked close to grid point
 
 	const int&	layer	= m_board.GetCurrentLayer();
 	Element*	pC		= m_board.Get(layer, m_gridRow, m_gridCol);
@@ -486,8 +500,7 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 			m_board.WipeAutoSetPoints();
 			m_board.PlaceFloaters();	// See if we can now place floating components down
 			UpdateHistory("Toggle competing diagonals", 0);
-
-			// mouseReleaseEvent() will do RepaintWithRouting() and ListNodes().  No need to do it here.
+			m_bReRoute = m_bReListNodes = true;
 			return;
 		}
 	}
@@ -496,41 +509,53 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 	const bool bWire = pC->GetHasWire();
 	if ( bWire && !GetPaintBoard() && !GetEraseBoard() && !GetPaintFlood() && bCloseToGridPoint )	// Only consider clicks that are close to the grid point
 	{
-		SetCurrentNodeId( pC->GetNodeId() );
-		UpdateHistory( ( GetCurrentNodeId() == BAD_NODEID ) ? "Unselect Net" : "Select Net", 0);
+		if ( GetCurrentNodeId() != pC->GetNodeId() )
+		{
+			SetCurrentNodeId( pC->GetNodeId() );
+			UpdateHistory( ( GetCurrentNodeId() == BAD_NODEID ) ? "Unselect Net" : "Select Net", 0);
+			m_bReRoute = true;	// Dont' need to set m_bReListNodes when choosing different nodeID
+		}
 		return;
 	}
 	const bool bPin = pC->GetHasPin() && !pC->GetHasWire();
 	if ( bPin && !GetPaintPins() && !GetErasePins() && !GetPaintFlood()	&& bCloseToGridPoint )	// Only consider clicks that are close to the grid point
 	{
-		SetCurrentNodeId( pC->GetNodeId() );
-		UpdateHistory( ( GetCurrentNodeId() == BAD_NODEID ) ? "Unselect Net" : "Select Net", 0);
+		if ( GetCurrentNodeId() != pC->GetNodeId() )
+		{
+			SetCurrentNodeId( pC->GetNodeId() );
+			UpdateHistory( ( GetCurrentNodeId() == BAD_NODEID ) ? "Unselect Net" : "Select Net", 0);
+			m_bReRoute = true;	// Dont' need to set m_bReListNodes when choosing different nodeID
+		}
 		return;
 	}
 
 	// Handle component rotation
 	if ( m_board.GetCompMode() != COMPSMODE::OFF && ( m_eMouseMode == MOUSE_MODE::SELECT || GetPaintPins() || GetErasePins() ) && GetCurrentCompId() != BAD_COMPID )
 	{
-		if ( GetPaintPins() || GetErasePins() )	// If we're in paint/erase pins mode ...
+		if ( !bPin )	//	... Only allow rotate if we did not click on a pin
 		{
-			if ( !bPin || !bCloseToGridPoint )	//	... then only allow rotate if we clicked far enough away from a pin
-				return CompRotateCW();
-		}
-		else
+			m_bReRoute = m_bReListNodes = true;
 			return CompRotateCW();
+		}
 	}
 
 	// Handle selection of nodeId (fallback case)
 	if ( !GetPaintAction() )
 	{
-		SetCurrentNodeId( pC->GetNodeId() );
-		UpdateHistory( ( GetCurrentNodeId() == BAD_NODEID ) ? "Unselect Net" : "Select Net", 0);
+		if ( GetCurrentNodeId() != pC->GetNodeId() )
+		{
+			SetCurrentNodeId( pC->GetNodeId() );
+			UpdateHistory( ( GetCurrentNodeId() == BAD_NODEID ) ? "Unselect Net" : "Select Net", 0);
+			m_bReRoute = true;	// Dont' need to set m_bReListNodes when choosing different nodeID
+		}
 		return;
 	}
 }
 
 void MainWindow::MouseMoveEvent(const QPoint& pos)
 {
+	m_bReRoute = false;	// Reset m_bReRoute only.  Leave m_bReListNodes alone
+
 	m_mousePos = pos;
 	if ( m_board.GetMirrored() ) return;
 	if ( !m_bMouseClick ) return;
@@ -583,8 +608,8 @@ void MainWindow::MouseMoveEvent(const QPoint& pos)
 	m_gridRow = row;
 	m_gridCol = col;
 
-	//TODO See when its sensible to set g_bPinClicked to false
-	// If we don't do anything, then its not really a move, and we can preserve g_bPinClicked
+	// g_bPinClicked needs to be set false in a limited set of cases.
+	// If we don't do anything with the move operation, then we can preserve g_bPinClicked
 	if ( m_board.GetCompEdit() || GetPaintAction() || GetDefiningRect() || GetResizingText() || CanModifyRuler() )
 		g_bPinClicked = false;
 
@@ -629,6 +654,7 @@ void MainWindow::MouseMoveEvent(const QPoint& pos)
 				{
 					pRB->SwapDiagLinks();
 					m_mouseActionString = "Paint";
+					m_bReRoute = m_bReListNodes = true;
 				}
 			}
 		}
@@ -643,6 +669,7 @@ void MainWindow::MouseMoveEvent(const QPoint& pos)
 			const bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, GetCurrentNodeId(), false);	// false ==> Only allow paint board (not pins)
 			if ( !bChanged ) return;	// No change
 			m_mouseActionString = "Paint";
+			m_bReRoute = m_bReListNodes = true;
 		}
 
 #ifdef VEROROUTE_ANDROID
@@ -654,6 +681,7 @@ void MainWindow::MouseMoveEvent(const QPoint& pos)
 			const bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, BAD_NODEID, false);	// false ==> Only allow erase board (not pins)
 			if ( !bChanged ) return;	// No change
 			m_mouseActionString = "Erase";
+			m_bReRoute = m_bReListNodes = true;
 		}
 		m_board.WipeAutoSetPoints();
 		m_board.PlaceFloaters();	// See if we can now place floating components down
@@ -680,6 +708,7 @@ void MainWindow::MouseMoveEvent(const QPoint& pos)
 			{
 				g_bHaveAutoPanned = true;
 				g_lastAutoPanTime = std::chrono::steady_clock::now();
+				m_bReRoute = m_bReListNodes = true;
 			}
 		}
 		m_mouseActionString = ( GetResizingText() ) ? "Resize text box" : "Move text box";
@@ -703,6 +732,7 @@ void MainWindow::MouseMoveEvent(const QPoint& pos)
 		}
 		const bool bPlural = ( m_board.GetGroupMgr().GetNumUserComps() > 1 );
 		m_mouseActionString = ( bPlural ? "Move parts" : "Move part" );
+		m_bReRoute = m_bReListNodes = true;
 	}
 	else if ( GetSmartPan() )	// If we're not moving anything else, we can smart pan
 	{
@@ -710,6 +740,7 @@ void MainWindow::MouseMoveEvent(const QPoint& pos)
 
 		m_board.SmartPan(deltaRow, deltaCol);	// Pan whole circuit w.r.t. grid area, growing/shrinking as needed
 		m_mouseActionString = "Move whole layout";
+		m_bReRoute = m_bReListNodes = true;
 	}
 
 	if ( CanModifyRuler() )
@@ -743,10 +774,10 @@ void MainWindow::MouseMoveEvent(const QPoint& pos)
 		}
 		else
 		{
-			if ( GetResizingText() || m_board.GetCompEdit() )
-				RepaintSkipRouting();
-			else
+			if ( m_bReRoute )
 				RepaintWithRouting();
+			else
+				RepaintSkipRouting();
 		}
 	}
 
@@ -802,10 +833,16 @@ void MainWindow::MouseReleaseEvent(const QPoint& pos)
 
 	UpdateHistory(m_mouseActionString);
 	UpdateControls();
-	RepaintWithListNodes();
+
+	if ( m_bReListNodes )
+		RepaintWithListNodes();
+	else
+		RepaintSkipRouting();
 
 	if ( bShowPadOffsetDialog )
 		ShowPadOffsetDialog();
+
+	m_bReRoute = m_bReListNodes = false;	// Clear both flags
 }
 
 void MainWindow::keyPressEvent(QKeyEvent* event)

@@ -74,8 +74,9 @@ private:
 private:
 	QWidget* m_parent;
 	std::chrono::steady_clock::time_point m_lastTouchBegin;
-	bool	m_bRequestCentreView	= false;
-	bool	m_bTouchCancelled		= false;
-	qreal	m_dSpread				= 0;
-	int		m_maxPoints				= 0;
+	bool		m_bRequestCentreView	= false;
+	bool		m_bTouchCancelled		= false;
+	long long	m_releaseDuration_ms	= 0;
+	qreal		m_dSpread				= 0;
+	int			m_maxPoints				= 0;
 };

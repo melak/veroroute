@@ -1368,9 +1368,20 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 		std::list< SpanningTreeHelper::LINE > spanTreeLines;
 		SpanningTreeHelper::Build(spanTreePoints, spanTreeLines);
+		std::list< std::pair<unsigned int, unsigned int> > wiresDrawn;
 		for (const auto& o : spanTreeLines)
 		{
-			if ( o.first.second == o.second.second ) continue;	// Don't draw air-wires between points with same route ID
+			const auto ridL = std::min(o.first.second, o.second.second);	// The lower  route ID
+			const auto ridH = std::max(o.first.second, o.second.second);	// The higher route ID
+			if ( ridL == ridH ) continue;	// Don't draw air-wires between points with same route ID
+
+			// Draw at most one air-wire per pair of route IDs
+			bool bSkip(false);
+			for (auto iter = wiresDrawn.begin(), iterEnd = wiresDrawn.end(); iter != iterEnd && !bSkip; ++iter)
+				bSkip = ( iter->first == ridL && iter->second == ridH );	// Skip if we had the pair (L,H) before
+			if ( bSkip ) continue;
+
+			wiresDrawn.push_back( std::pair<int,int>(ridL, ridH) );
 			painter.setPen(m_redPen);
 			painter.drawLine(o.first.first, o.second.first);
 		}

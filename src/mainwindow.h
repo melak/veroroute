@@ -561,7 +561,7 @@ private:
 	// Helpers
 	void SetQuality(QPainter& p);
 	void ResetRuler();
-	bool CanModifyRuler() const;	
+	bool CanModifyRuler() const;
 public:
 	bool CanZoomIn() const;
 	bool CanZoomOut() const;
@@ -659,6 +659,8 @@ private:
 	bool		m_bRuler			= false;
 	bool		m_bModifyRulerA		= false;
 	bool		m_bUpdatingControls	= false;
+	bool		m_bReRoute			= false;
+	bool		m_bReListNodes		= false;
 	int			m_XGRIDOFFSET		= 0;		// So we can centre when writing to PDF
 	int			m_YGRIDOFFSET		= 0;		// So we can centre when writing to PDF
 	int			m_XCORRECTION		= 0;		// So we can fully render pads larger than 100 mil diameter
