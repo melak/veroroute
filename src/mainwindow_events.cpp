@@ -441,8 +441,6 @@ void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, cons
 
 void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 {
-	m_bReRoute = false;	// Reset m_bReRoute only.  Leave m_bReListNodes alone
-
 	g_bPinClicked = false;
 
 	m_mousePos = pos;
@@ -464,7 +462,11 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 	if ( GetCurrentTextId() != BAD_TEXTID )
 		return ShowTextDialog();
 
-	if ( m_board.GetTrackMode() == TRACKMODE::OFF && m_board.GetCompMode() == COMPSMODE::OFF ) return;
+	const bool bCompsOn	= m_board.GetCompMode()  != COMPSMODE::OFF;
+	const bool bTrackOn	= m_board.GetTrackMode() != TRACKMODE::OFF;
+	const bool bPCB		= m_board.GetTrackMode() == TRACKMODE::PCB;
+
+	if ( !bTrackOn && !bCompsOn ) return;
 
 	// Get row col
 	double dRow(0), dCol(0);	// Fractional correction to row, col for SwapDiagLinks() call
@@ -480,7 +482,7 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 	centralWidget()->setCursor(Qt::CrossCursor);
 
 	// Handle changing layer preference for PCBs via double-clicking on a component pin
-	if ( !GetPaintAction() && m_board.GetTrackMode() == TRACKMODE::PCB && m_board.GetLyrs() == 2 && bCloseToGridPoint )	// Only consider clicks that are close to the grid point
+	if ( bPCB && !GetPaintAction() && m_board.GetLyrs() == 2 && bCloseToGridPoint )	// Only consider clicks that are close to the grid point
 	{
 		if ( m_board.ToggleLyrPref(layer, m_gridRow, m_gridCol) )
 		{
@@ -490,7 +492,7 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 	}
 
 	// Handle competing diagonals
-	if ( !GetPaintAction() && m_board.GetTrackMode() != TRACKMODE::OFF && !bCloseToGridPoint )	// Only consider clicks between grid points
+	if ( bTrackOn && !GetPaintAction() && !bCloseToGridPoint )	// Only consider clicks between grid points
 	{
 		const int	dR	= ( dRow > 0.5 ) ? 1 : 0;	// Correct row, col to account for crossing ...
 		const int	dC	= ( dCol > 0.5 ) ? 1 : 0;	// ... point being near corner of element
@@ -505,9 +507,9 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 		}
 	}
 
-	// Handle selection of nodeId when double-clicking on a pin
+	// Handle selection of nodeId when double-clicking on a pin (when tracks are displayed)
 	const bool bWire = pC->GetHasWire();
-	if ( bWire && !GetPaintBoard() && !GetEraseBoard() && !GetPaintFlood() && bCloseToGridPoint )	// Only consider clicks that are close to the grid point
+	if ( bTrackOn && bWire && !GetPaintBoard() && !GetEraseBoard() && !GetPaintFlood() && bCloseToGridPoint )	// Only consider clicks that are close to the grid point
 	{
 		if ( GetCurrentNodeId() != pC->GetNodeId() )
 		{
@@ -518,7 +520,7 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 		return;
 	}
 	const bool bPin = pC->GetHasPin() && !pC->GetHasWire();
-	if ( bPin && !GetPaintPins() && !GetErasePins() && !GetPaintFlood()	&& bCloseToGridPoint )	// Only consider clicks that are close to the grid point
+	if ( bTrackOn && bPin && !GetPaintPins() && !GetErasePins() && !GetPaintFlood()	&& bCloseToGridPoint )	// Only consider clicks that are close to the grid point
 	{
 		if ( GetCurrentNodeId() != pC->GetNodeId() )
 		{
@@ -530,7 +532,7 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 	}
 
 	// Handle component rotation
-	if ( m_board.GetCompMode() != COMPSMODE::OFF && ( m_eMouseMode == MOUSE_MODE::SELECT || GetPaintPins() || GetErasePins() ) && GetCurrentCompId() != BAD_COMPID )
+	if ( bCompsOn && ( m_eMouseMode == MOUSE_MODE::SELECT || GetPaintPins() || GetErasePins() ) && GetCurrentCompId() != BAD_COMPID )
 	{
 		if ( !bPin )	//	... Only allow rotate if we did not click on a pin
 		{
@@ -540,7 +542,7 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 	}
 
 	// Handle selection of nodeId (fallback case)
-	if ( !GetPaintAction() )
+	if ( bTrackOn && !GetPaintAction() )
 	{
 		if ( GetCurrentNodeId() != pC->GetNodeId() )
 		{
@@ -548,7 +550,6 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 			UpdateHistory( ( GetCurrentNodeId() == BAD_NODEID ) ? "Unselect Net" : "Select Net", 0);
 			m_bReRoute = true;	// Dont' need to set m_bReListNodes when choosing different nodeID
 		}
-		return;
 	}
 }
 
@@ -836,6 +837,8 @@ void MainWindow::MouseReleaseEvent(const QPoint& pos)
 
 	if ( m_bReListNodes )
 		RepaintWithListNodes();
+	else if ( m_bReRoute )
+		RepaintWithRouting();
 	else
 		RepaintSkipRouting();
 
