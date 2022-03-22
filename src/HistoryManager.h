@@ -94,7 +94,7 @@ public:
 		return strLastHistoryFile;
 	}
 #endif
-	bool Reset(const std::string& str, Board& board, const QString& lastFileName)
+	bool Reset(const std::string& str, Board& board, const QString& lastFileName, const int& iTutorialNumber)
 	{
 		if ( m_bLocked ) return false;
 
@@ -107,9 +107,9 @@ public:
 			if ( !fTest.good() ) break;						// ID is not already in use so break
 		}
 
-		AddEntry(0, BAD_COMPID, str);	// Updates the "entries.log" file for m_ID
-		SaveCircuitFile(lastFileName);	// Updates the "circuit.log" file for m_ID
-		return Save(board);				// Updates one "history.vrt" file for m_ID
+		AddEntry(0, BAD_COMPID, str);					// Updates the "entries.log" file for m_ID
+		SaveCircuitFile(lastFileName, iTutorialNumber);	// Updates the "circuit.log" file for m_ID
+		return Save(board);								// Updates one "history.vrt" file for m_ID
 	}
 	void LoadEntriesFile()	// Import info from "entries.log" for m_ID
 	{
@@ -231,26 +231,28 @@ public:
 	{
 		return ( m_list.empty() ) ? "\0" : GetHistoryFilename(std::get<0>(*m_currentIter));
 	}
-	QString LoadCircuitFile()
+	void LoadCircuitFile(QString& lastFileName, int& iTutorialNumber)
 	{
-		QString lastFileName;
+		lastFileName.clear();
+		iTutorialNumber = -1;
 		DataStream inStream(DataStream::READ);
 		if ( inStream.Open( GetCircuitFileName() ) )
 		{
 			int iHistoryVersion(0);
 			inStream.Load(iHistoryVersion);
 			inStream.Load(lastFileName);
+			inStream.Load(iTutorialNumber);
 			inStream.Close();
 		}
-		return lastFileName;
 	}
-	void SaveCircuitFile(const QString& lastFileName)
+	void SaveCircuitFile(const QString& lastFileName, const int& iTutorialNumber)
 	{
 		DataStream outStream(DataStream::WRITE);
 		if ( outStream.Open( GetCircuitFileName() ) )
 		{
 			outStream.Save(HISTORY_VERSION_CURRENT);
-			outStream.Save( lastFileName );
+			outStream.Save(lastFileName);
+			outStream.Save(iTutorialNumber);
 			outStream.Close();
 		}
 	}

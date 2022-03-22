@@ -479,10 +479,10 @@ void MainWindow::CheckHistory()
 		const bool bDoRecover(true);
 		if ( bDoRecover )
 		{
-			OpenVrt(strLastHistoryFile, false, bDoRecover);	// Restore the last board state
-			m_historyMgr.LoadEntriesFile();					// Restore the old Undo/Redo log
-			m_fileName = m_historyMgr.LoadCircuitFile();	// Restore the old filename
-			return;											// Done
+			OpenVrt(strLastHistoryFile, false, bDoRecover);					// Restore the last board state
+			m_historyMgr.LoadEntriesFile();									// Restore the old Undo/Redo log
+			m_historyMgr.LoadCircuitFile(m_fileName, m_iTutorialNumber);	// Restore the old filename and tutorial number
+			return;															// Done
 		}
 		else
 			m_historyMgr.Clear();	// Tidy up. (Wipe all history/log files for the instance)
@@ -494,7 +494,7 @@ void MainWindow::CheckHistory()
 
 void MainWindow::Startup()
 {
-	ResetView();
+	ResetView(MOUSE_MODE::SELECT, m_iTutorialNumber >= 0);
 }
 
 void MainWindow::ResetView(MOUSE_MODE eMouseMode, bool bTutorial)
@@ -551,8 +551,6 @@ void MainWindow::ResetView(MOUSE_MODE eMouseMode, bool bTutorial)
 		if ( bTutorial ) ShowInfoDialog();		// Always show Info dialog in Tutorial Mode
 	}
 
-	ui->actionSave->setEnabled(!bTutorial);		// Disable "Save" in Tutorial Mode
-	ui->actionSave_As->setEnabled(!bTutorial);	// Disable "Save As" in Tutorial Mode
 	UpdateUndoRedoControls();
 	activateWindow();	// Select mainwindow rather than child dialogs
 	DestroyPixmapCache();
@@ -670,6 +668,7 @@ void MainWindow::OpenVrt(const QString& fileName, bool bMerge, bool bCrashRecove
 				else
 				{
 					m_fileName = fileName;	// Only a regular open (not a merge) should update the filename
+					m_iTutorialNumber = -1;
 					ResetHistory("File->Open");
 				}
 				ResetView();
@@ -697,6 +696,7 @@ void MainWindow::New()
 	}
 	m_board.Reset();
 	m_fileName.clear();
+	m_iTutorialNumber = -1;
 	ResetHistory("File->New");
 	ResetView();
 }
@@ -798,7 +798,7 @@ void MainWindow::SaveAs()
 			outStream.Close();
 			m_infoDlg->Update();	// Don't need a ResetView() but MUST update the initial string for the info dialog
 			m_fileName = fileName;
-			m_historyMgr.SaveCircuitFile(m_fileName);	// Must call this directly instead of calling ResetHistory()
+			m_historyMgr.SaveCircuitFile(m_fileName, m_iTutorialNumber);	// Must call this directly instead of calling ResetHistory()
 
 			bOK = true;
 
@@ -828,6 +828,7 @@ void MainWindow::ImportTango()
 		std::string			errorStr;
 		const bool bOK = m_board.ImportTango(GetTemplateManager(), fileNameStr, errorStr);
 		m_fileName.clear();
+		m_iTutorialNumber = -1;
 		ResetHistory("File->Import Netlist");
 		ResetView();
 		if ( !bOK )
@@ -854,6 +855,7 @@ void MainWindow::ImportOrcad()
 		std::string			errorStr;
 		const bool bOK = m_board.ImportOrcad(GetTemplateManager(), fileNameStr, errorStr);
 		m_fileName.clear();
+		m_iTutorialNumber = -1;
 		ResetHistory("File->Import Netlist");
 		ResetView();
 		if ( !bOK )
@@ -2310,13 +2312,16 @@ void MainWindow::UpdateControls()
 	const bool		bThin			= !bVero && !m_board.GetCurvedTracks() && !m_board.GetFatTracks();
 	const bool		bCurved			= !bVero &&  m_board.GetCurvedTracks();
 	const bool		bShapeOK		=  bCompEdit && ( GetCurrentShapeId() != BAD_ID );
+	const bool		bTutorial		= ( m_iTutorialNumber >= 0 );
 
 	ui->toolBar->setVisible( !bCompEdit );
 	ui->toolBar_3->setVisible( bCompEdit );
 
 	ui->menuExport_as_Gerber_1_Layer->setEnabled(bPCB && !bCompEdit && !m_board.GetMirrored() && !m_board.GetVeroTracks() && m_board.GetLyrs() == 1);
 	ui->menuExport_as_Gerber_2_Layer->setEnabled(bPCB && !bCompEdit && !m_board.GetMirrored() && !m_board.GetVeroTracks());
-	ui->actionMerge->setEnabled(    !bPCB && !bCompEdit);
+	ui->actionSave->setEnabled( !bTutorial);
+	ui->actionSave_As->setEnabled( !bTutorial );
+	ui->actionMerge->setEnabled(    !bPCB && !bCompEdit && !bTutorial );
 	ui->actionWrite_PDF->setEnabled(!bPCB && !bCompEdit);
 	ui->actionWrite_PNG->setEnabled( !bCompEdit );
 	ui->menuAdd->setEnabled( !bCompEdit && m_board.GetCompMode() != COMPSMODE::OFF && !m_board.GetMirrored() );
@@ -2456,7 +2461,6 @@ void MainWindow::UpdateControls()
 	ui->actionCompDlg->setText(		m_dockCompDlg->isVisible()		? QString("(Hide) Component Definition Dialog")	: QString("Component Definition Dialog"));
 	ui->actionTemplatesDlg->setText(m_dockTemplatesDlg->isVisible() ? QString("(Hide) Parts / Templates")			: QString("Parts / Templates"));
 	ui->actionTemplatesDlg->setChecked( m_dockTemplatesDlg->isVisible() );
-	const bool bTutorial = ( m_iTutorialNumber >= 0 );
 	if ( bTutorial )
 		ui->actionInfoDlg->setText(	m_dockInfoDlg->isVisible()		? QString("(Hide) Tutorial Dialog")				: QString("Tutorial Dialog"));
 	else
@@ -2530,7 +2534,7 @@ bool MainWindow::GetMatchesVrtFile(const std::string& fileName) const
 }
 void MainWindow::ResetHistory(const std::string& str)
 {
-	m_historyMgr.Reset(str, m_board, m_fileName);
+	m_historyMgr.Reset(str, m_board, m_fileName, m_iTutorialNumber);
 	UpdateUndoRedoControls();
 }
 void MainWindow::UpdateHistory(const std::string& str, const int objId)
