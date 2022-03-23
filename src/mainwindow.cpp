@@ -568,7 +568,7 @@ void MainWindow::ResetView(MOUSE_MODE eMouseMode, bool bTutorial)
 	RepaintWithListNodes();
 }
 
-void MainWindow::HandleRouting()
+void MainWindow::HandleRouting(const bool bSingleRoute)
 {
 	if ( m_board.GetTrackMode() == TRACKMODE::OFF ) return;
 
@@ -600,7 +600,7 @@ void MainWindow::HandleRouting()
 			pC = m_board.GetAt(i);
 			bOK = ( pC->GetNodeId() == GetCurrentNodeId() );
 		}
-		if ( bOK ) m_board.Manhatten(pC);	// Only calc MH over relevant elements
+		if ( bOK ) m_board.Manhatten(pC, bSingleRoute);	// Only calc MH over relevant elements
 		releaseMouse();
 	}
 }
@@ -2462,7 +2462,7 @@ void MainWindow::UpdateControls()
 	ui->actionEraseGrid->setEnabled(	bPaintGridOK );
 	ui->actionPaintPins->setEnabled(	bPaintPinsOK);
 	ui->actionErasePins->setEnabled(	bPaintPinsOK);
-	ui->actionPaintFlood->setEnabled(	bPaintPinsOK);
+	ui->actionPaintFlood->setEnabled(	bPaintPinsOK && !m_board.GetRoutingEnabled() );
 
 	ui->actionPaintPins->setChecked(	m_eMouseMode == MOUSE_MODE::PAINT_PINS );
 	ui->actionErasePins->setChecked(	m_eMouseMode == MOUSE_MODE::ERASE_PINS);

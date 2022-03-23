@@ -250,15 +250,15 @@ unsigned int Board::Flood(const int& iFloodNodeId)
 	return Flood();
 }
 
-unsigned int Board::Flood()
+unsigned int Board::Flood(const bool bSingleRoute)
 {
 	// Flood the board with MH values, starting from the m_targetPins.
 	// The return value is a cost that shows how unconnected the pins are.
 	// Zero cost means the pins are all inter-connected.
 
-	const size_t N = m_targetPins.size();
+	const size_t N = m_targetPins.size();	assert( bSingleRoute == ( N == 1) );
 
-	if ( N < 2 ) return 0;	// Return cost of zero
+	if ( !bSingleRoute && N < 2 ) return 0;	// Return cost of zero
 
 	// Allocate the connection matrix to indicate which pairs of targetPins are connected
 	m_connectionMatrix.Allocate( N );
@@ -393,7 +393,7 @@ void Board::Flood_Helper(const bool bBuildTracks)
 
 		// Periodically (every sufficiently large MH increase) examine which routes have grown.
 		// If all growing routes are connected to each other then we're done.
-		if ( !bDone && iMH >= iMHlastGrowthCheck + iMaxDeltaMH + (bHaveWires ? MH_WIRE : 0) )
+		if ( N > 1 && !bDone && iMH >= iMHlastGrowthCheck + iMaxDeltaMH + (bHaveWires ? MH_WIRE : 0) )
 		{
 			bDone = true;
 			for (size_t i = 0; i < N && bDone; i++)
@@ -460,7 +460,8 @@ void Board::Flood_Grow(const int& iFloodNodeId, Element* pJ, const int& iNbr, co
 
 	m_connectionMatrix.Connect(j, k);	// Make j-k connection and enforce transitivity
 
-	bDone = ( m_connectionMatrix.GetCost() == 0 );	// Zero cost ==> done
+	if ( m_targetPins.size() > 1 )
+		bDone = m_connectionMatrix.GetCost() == 0;	// Zero cost ==> done
 }
 
 void Board::Backtrace(Element* pEnd, const int& nodeId)
@@ -579,7 +580,7 @@ bool Board::BacktraceHelper(Element*& p, unsigned int& MH, const int& nodeId, co
 	return true;	// We backtraced OK, and have modified p and MH
 }
 
-void Board::Manhatten(Element* p)
+void Board::Manhatten(Element* p, const bool bSingleRoute)
 {
 	const int iTraceNodeId = p->GetNodeId();	// The NodeID to trace
 	if ( iTraceNodeId == BAD_NODEID ) return;	// Don't trace invalid NodeID
@@ -597,7 +598,8 @@ void Board::Manhatten(Element* p)
 	else
 		m_targetPins.push_back(p);
 
-	for (int i = 0, iSize = ( GetLyrs() == 1 ) ? GetSize() : ( GetSize() / 2 ); i < iSize; i++)	// Use layer 0 only for pins
+	// If we haven't specified bSingleRoute, then build additional routes from all true component pins
+	for (int i = 0, iSize = ( GetLyrs() == 1 ) ? GetSize() : ( GetSize() / 2 ); i < iSize && !bSingleRoute; i++)	// Use layer 0 only for pins
 	{
 		Element* q = GetAt(i);
 		if ( q == p ) continue;	// Skip self
@@ -605,7 +607,7 @@ void Board::Manhatten(Element* p)
 			m_targetPins.push_back(q);
 	}
 
-	Flood();
+	Flood(bSingleRoute);
 
 	SetRoutingEnabled(bRoutingEnabled);	// Restore routing state
 	m_bRouteMinimal	= bRouteMinimal;	// Restore m_bRouteMinimal state

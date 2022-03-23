@@ -498,7 +498,7 @@ private:
 				   const bool bHavePad, const bool bIsGnd, const bool bGap = false);	// Helper
 	void PaintBoard();
 	void PaintCompDefiner();
-	void HandleRouting();
+	void HandleRouting(const bool bSingleRoute = false);
 	void RepaintWithListNodes(bool bNow = false);
 	void RepaintWithRouting(bool bNow = false);
 	void RepaintSkipRouting(bool bNow = false);

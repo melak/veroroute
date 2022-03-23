@@ -334,7 +334,7 @@ void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, cons
 
 			const int tmp = GetCurrentNodeId();	// Need to temporarily change current nodeId for HandleRouting()
 			SetCurrentNodeId( pC->GetNodeId() );
-			HandleRouting();		// Work out MH distances for the flood
+			HandleRouting(true);	// Work out all MH distances for the flood
 			SetCurrentNodeId(tmp);	// Restore current nodeId
 
 			m_board.FloodNodeId( GetCurrentNodeId() );
@@ -943,8 +943,7 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
 								SetPaintPins(true);		break;
 			case Qt::Key_Space:	if ( trackMode == TRACKMODE::OFF || GetPaintPins() || GetErasePins() || GetPaintFlood() ) return;
 								SetPaintBoard(true);	break;
-			case Qt::Key_F:		if ( trackMode != TRACKMODE::COLOR || compMode == COMPSMODE::OFF || GetPaintBoard() || GetEraseBoard() || GetPaintPins() || GetErasePins() ) return;
-								if ( m_board.GetRoutingEnabled() ) return;
+			case Qt::Key_F:		if ( trackMode != TRACKMODE::COLOR || compMode == COMPSMODE::OFF || GetPaintBoard() || GetEraseBoard() || GetPaintPins() || GetErasePins() || m_board.GetRoutingEnabled() ) return;
 								SetPaintFlood(true);	break;
 			case Qt::Key_W:		WipeTracks();	break;
 		}

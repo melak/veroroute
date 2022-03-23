@@ -580,12 +580,12 @@ public:
 	void UpdateVias();
 	const bool& GetHasVias() const { return m_bHasVias; }
 	unsigned int Flood(const int& nodeId);
-	unsigned int Flood();
+	unsigned int Flood(const bool bSingleRoute = false);
 	void Flood_Helper(const bool bBuildTracks);
 	void Flood_Grow(const int& iFloodNodeId, Element* pJ, const int& iNbr, const bool& bBuildTracks, unsigned int& iMH, unsigned int& iMaxMH, bool& bDone);
 	void Backtrace(Element* pEnd, const int& nodeId);
 	bool BacktraceHelper(Element*& p, unsigned int& MH, const int& nodeId, const unsigned int& iDeltaMH, const int& iNbr, const int& iLoop);
-	void Manhatten(Element* p);
+	void Manhatten(Element* p, const bool bSingleRoute);
 	Element* GetConnPin();
 	unsigned int GetConnRID() const;
 	void CheckAllComplete();
