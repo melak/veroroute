@@ -210,7 +210,13 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 
 	m_labelStatus		= new QLabel("Layer", this);
 	m_labelStatus->setFrameStyle(QFrame::NoFrame);
-	ui->statusBar->insertPermanentWidget(1, m_labelStatus, 0);	//ui->statusBar->addPermanentWidget(m_labelStatus, 0);
+	ui->statusBar->insertPermanentWidget(1, m_labelStatus, 0);
+
+#ifdef VEROROUTE_DEBUG
+	m_labelDebug		= new QLabel("Debug", this);
+	m_labelDebug->setFrameStyle(QFrame::NoFrame);
+	ui->statusBar->insertPermanentWidget(2, m_labelDebug, 0);
+#endif
 
 	m_rulerPen			= QPen(QColor(255,255,0,192), 0,	Qt::SolidLine, Qt::FlatCap);	// using alpha
 	m_backgroundPen		= QPen(Qt::white, 0,				Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
@@ -340,6 +346,7 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	QObject::connect(ui->actionRemoveLayer,				SIGNAL(triggered()), this, SLOT(RemoveLayer()));
 	QObject::connect(ui->actionSwitchLayer,				SIGNAL(triggered()), this, SLOT(SwitchLayer()));
 	QObject::connect(ui->actionToggleVias,				SIGNAL(triggered()), this, SLOT(ToggleVias()));
+	QObject::connect(ui->actionResetLayerPrefs,			SIGNAL(triggered()), this, SLOT(ResetLayerPrefs()));
 	// Help menu actions
 	QObject::connect(ui->actionAbout,					SIGNAL(triggered()), this, SLOT(ShowAbout()));
 	QObject::connect(ui->actionSupport,					SIGNAL(triggered()), this, SLOT(ShowSupport()));
@@ -379,6 +386,9 @@ MainWindow::~MainWindow()
 	delete m_textDlg;
 	delete m_findDlg;
 	delete m_padOffsetDlg;
+#ifdef VEROROUTE_DEBUG
+	delete m_labelDebug;
+#endif
 	delete m_labelStatus;
 	delete m_labelInfo;
 	delete m_label;
@@ -506,7 +516,7 @@ void MainWindow::ResetView(MOUSE_MODE eMouseMode, bool bTutorial)
 	m_XGRIDOFFSET	= m_YGRIDOFFSET	= m_XCORRECTION = m_YCORRECTION = 0;
 
 	// Try to set m_gridRow, m_gridCol to match the current NodeId in the board
-	m_gridRow = m_gridCol = 0;
+	m_gridRow = m_gridCol = m_gridRowClicked = m_gridColClicked = 0;
 
 	ResetRuler();	// Reset the ruler
 
@@ -1448,6 +1458,14 @@ void MainWindow::ToggleVias()
 	UpdateControls();
 	RepaintWithListNodes();
 }
+void MainWindow::ResetLayerPrefs()
+{
+	assert( m_board.GetLyrs() == 2 );
+	m_board.ResetPinLayerPrefs();
+	UpdateHistory("Reset Pin Layer Preferences", 0);
+//	UpdateControls();	// Not needed
+	RepaintSkipRouting();
+}
 
 // Help menu items
 void MainWindow::ShowAbout()
@@ -2305,6 +2323,8 @@ void MainWindow::UpdateControls()
 	const bool		bColor			= !bCompEdit && m_board.GetTrackMode() == TRACKMODE::COLOR;
 	const bool		bPCB			= !bCompEdit && m_board.GetTrackMode() == TRACKMODE::PCB;
 	const bool		bTracks			=  bMono || bColor || bPCB;
+	const bool		bPaintGridOK	=  bTracks && !m_board.GetMirrored();
+	const bool		bPaintPinsOK	=  bColor && bCompActionsOK;
 	const bool		bVero			=  m_board.GetVeroTracks();
 	const bool		bVeroV			=  bVero &&  m_board.GetVerticalStrips();
 	const bool		bVeroH			=  bVero && !m_board.GetVerticalStrips();
@@ -2313,11 +2333,12 @@ void MainWindow::UpdateControls()
 	const bool		bCurved			= !bVero &&  m_board.GetCurvedTracks();
 	const bool		bShapeOK		=  bCompEdit && ( GetCurrentShapeId() != BAD_ID );
 	const bool		bTutorial		= ( m_iTutorialNumber >= 0 );
+	const bool		bSingleLayer	= ( m_board.GetLyrs() == 1 );
 
 	ui->toolBar->setVisible( !bCompEdit );
 	ui->toolBar_3->setVisible( bCompEdit );
 
-	ui->menuExport_as_Gerber_1_Layer->setEnabled(bPCB && !bCompEdit && !m_board.GetMirrored() && !m_board.GetVeroTracks() && m_board.GetLyrs() == 1);
+	ui->menuExport_as_Gerber_1_Layer->setEnabled(bPCB && !bCompEdit && !m_board.GetMirrored() && !m_board.GetVeroTracks() && bSingleLayer);
 	ui->menuExport_as_Gerber_2_Layer->setEnabled(bPCB && !bCompEdit && !m_board.GetMirrored() && !m_board.GetVeroTracks());
 	ui->actionSave->setEnabled( !bTutorial);
 	ui->actionSave_As->setEnabled( !bTutorial );
@@ -2327,13 +2348,14 @@ void MainWindow::UpdateControls()
 	ui->menuAdd->setEnabled( !bCompEdit && m_board.GetCompMode() != COMPSMODE::OFF && !m_board.GetMirrored() );
 	ui->menuPaint->setEnabled( !bCompEdit );
 	ui->menuLayers->setEnabled( !bCompEdit );
-	ui->actionAddLayer->setEnabled(		m_board.GetLyrs() == 1 );
-	ui->actionRemoveLayer->setEnabled(	m_board.GetLyrs() != 1 );
-	ui->actionToggleVias->setEnabled(	m_board.GetLyrs() != 1 );
-	ui->actionSwitchLayer->setEnabled(	m_board.GetLyrs() != 1 );
-	ui->actionToggleVias->setText(		m_board.GetLyrs() != 1 && m_board.GetViasEnabled() ? QString("Disable Vias") : QString("Enable Vias") );
-	ui->actionSwitchLayer->setText(		m_board.GetCurrentLayer() == 0 ? QString("Switch to Top Layer") : QString("Switch to Bottom Layer") );
-	ui->actionSwitchLayer->setIcon(		m_board.GetCurrentLayer() == 0 ? QIcon(":/images/layertop.png") : QIcon(":/images/layerbot.png"));
+	ui->actionAddLayer->setEnabled(			 bSingleLayer );
+	ui->actionRemoveLayer->setEnabled(		!bSingleLayer );
+	ui->actionToggleVias->setEnabled(		!bSingleLayer );
+	ui->actionResetLayerPrefs->setEnabled(	!bSingleLayer );
+	ui->actionSwitchLayer->setEnabled(		!bSingleLayer );
+	ui->actionToggleVias->setText(			!bSingleLayer && m_board.GetViasEnabled() ? QString("Disable Vias") : QString("Enable Vias") );
+	ui->actionSwitchLayer->setText(			m_board.GetCurrentLayer() == 0 ? QString("Switch to Top Layer") : QString("Switch to Bottom Layer") );
+	ui->actionSwitchLayer->setIcon(			m_board.GetCurrentLayer() == 0 ? QIcon(":/images/layertop.png") : QIcon(":/images/layerbot.png"));
 	if ( bCompEdit )
 	{
 		m_labelInfo->hide();
@@ -2436,11 +2458,11 @@ void MainWindow::UpdateControls()
 	ui->actionAddArc->setEnabled(			bCompEdit );
 	ui->actionAddChord->setEnabled(			bCompEdit );
 
-	ui->actionPaintGrid->setEnabled(	!bCompEdit && !bNoTracks );
-	ui->actionEraseGrid->setEnabled(	!bCompEdit && !bNoTracks );
-	ui->actionPaintPins->setEnabled(	!bCompEdit && !bNoTracks && m_board.GetCompMode() != COMPSMODE::OFF);
-	ui->actionErasePins->setEnabled(	!bCompEdit && !bNoTracks && m_board.GetCompMode() != COMPSMODE::OFF);
-	ui->actionPaintFlood->setEnabled(	!bCompEdit && !bNoTracks && m_board.GetCompMode() != COMPSMODE::OFF);
+	ui->actionPaintGrid->setEnabled(	bPaintGridOK );
+	ui->actionEraseGrid->setEnabled(	bPaintGridOK );
+	ui->actionPaintPins->setEnabled(	bPaintPinsOK);
+	ui->actionErasePins->setEnabled(	bPaintPinsOK);
+	ui->actionPaintFlood->setEnabled(	bPaintPinsOK);
 
 	ui->actionPaintPins->setChecked(	m_eMouseMode == MOUSE_MODE::PAINT_PINS );
 	ui->actionErasePins->setChecked(	m_eMouseMode == MOUSE_MODE::ERASE_PINS);

@@ -246,6 +246,7 @@
     <addaction name="separator"/>
     <addaction name="actionSwitchLayer"/>
     <addaction name="actionToggleVias"/>
+    <addaction name="actionResetLayerPrefs"/>
    </widget>
    <widget class="QMenu" name="menuTrack_Style">
     <property name="title">
@@ -317,6 +318,7 @@
    <addaction name="actionUndo"/>
    <addaction name="actionRedo"/>
    <addaction name="separator"/>
+   <addaction name="actionSelectArea"/>
    <addaction name="actionCopy"/>
    <addaction name="actionDelete"/>
    <addaction name="separator"/>
@@ -414,8 +416,6 @@
    <addaction name="actionDiagsMax"/>
    <addaction name="separator"/>
    <addaction name="actionFill"/>
-   <addaction name="separator"/>
-   <addaction name="actionSelectArea"/>
    <addaction name="separator"/>
    <addaction name="actionSwitchLayer"/>
   </widget>
@@ -1480,6 +1480,11 @@
   <action name="actionSmartPan">
    <property name="text">
     <string>Move Whole Layout / Resize Grid</string>
+   </property>
+  </action>
+  <action name="actionResetLayerPrefs">
+   <property name="text">
+    <string>Reset Pin Layer Preferences</string>
    </property>
   </action>
  </widget>

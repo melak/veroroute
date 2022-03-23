@@ -27,3 +27,6 @@
 
 // Remove comment from next line to test Android UI on a Desktop build
 //#define VEROROUTE_ANDROID
+
+// Remove the following comment so we can dump some debug info into the status bar
+//#define VEROROUTE_DEBUG

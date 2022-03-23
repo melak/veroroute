@@ -155,6 +155,9 @@ void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, cons
 	else
 		bInGrid = GetRowCol(m_mousePos, m_gridRow, m_gridCol, dRow, dCol);
 
+	m_gridRowClicked = m_gridRow;
+	m_gridColClicked = m_gridCol;
+
 	if ( !bInGrid)
 		return HidePadOffsetDialog();
 
@@ -346,7 +349,7 @@ void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, cons
 
 		// Handle competing diagonals first
 		bool bDoSwap(false);
-		if ( GetPaintBoard() && m_board.GetTrackMode() != TRACKMODE::OFF )	//TODO Maybe could do ( GetPaintBoard() || GetPaintPins() )
+		if ( GetPaintBoard() && m_board.GetTrackMode() != TRACKMODE::OFF )
 		{
 			const bool bCloseToCrossPoint = ( hypot(std::min(dRow, 1.0 - dRow), std::min(dCol, 1.0 - dCol)) <= 0.5 );	// true ==> clicked close to crossing diagonals point
 			if ( bCloseToCrossPoint )	// Only consider clicks close to crossing diagonals point
@@ -449,15 +452,12 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 
 	if ( GetSmartPan() || GetShiftKeyDown() ) return;
 
-#ifdef VEROROUTE_ANDROID
-	//TODO Could allow this in Desktop version too
 	if ( GetDefiningRect() )
 	{
 		SetDefiningRect(false);	// Quit define rectangles mode
 		UpdateControls();
 		return;
 	}
-#endif
 
 	if ( GetCurrentTextId() != BAD_TEXTID )
 		return ShowTextDialog();
@@ -470,8 +470,11 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 
 	// Get row col
 	double dRow(0), dCol(0);	// Fractional correction to row, col for SwapDiagLinks() call
-	const bool bInGrid = GetRowCol(m_mousePos, m_gridRow, m_gridCol, dRow, dCol);
-	if ( !bInGrid ) return;
+	const bool bInGrid			= GetRowCol(m_mousePos, m_gridRow, m_gridCol, dRow, dCol);
+	const bool bSameLocation	= ( m_gridRow == m_gridRowClicked && m_gridCol == m_gridColClicked );
+	m_gridRowClicked = m_gridRow;
+	m_gridColClicked = m_gridCol;
+	if ( !bInGrid || !bSameLocation ) return;
 
 	const int&	layer	= m_board.GetCurrentLayer();
 	Element*	pC		= m_board.Get(layer, m_gridRow, m_gridCol);
@@ -540,7 +543,7 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 	{
 		if ( !bPin )	//	... Only allow rotate if we did not click on a pin
 		{
-			m_bReRoute = m_bReListNodes = true;
+			m_bReRoute = m_bReListNodes = false;	// Set these false since CompRotateCW() calls RepaintWithListNodes() directly
 			return CompRotateCW();
 		}
 	}
@@ -936,11 +939,11 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
 		// Only one flag for paint-board/paint-pins/paint-flood must be true
 		switch( event->key() )
 		{
-			case Qt::Key_P:		if ( trackMode == TRACKMODE::OFF || compMode == COMPSMODE::OFF || GetPaintBoard() || GetEraseBoard() || GetPaintFlood() ) return;
+			case Qt::Key_P:		if ( trackMode != TRACKMODE::COLOR || compMode == COMPSMODE::OFF || GetPaintBoard() || GetEraseBoard() || GetPaintFlood() ) return;
 								SetPaintPins(true);		break;
 			case Qt::Key_Space:	if ( trackMode == TRACKMODE::OFF || GetPaintPins() || GetErasePins() || GetPaintFlood() ) return;
 								SetPaintBoard(true);	break;
-			case Qt::Key_F:		if ( trackMode == TRACKMODE::OFF || compMode == COMPSMODE::OFF || GetPaintBoard() || GetEraseBoard() || GetPaintPins() || GetErasePins() ) return;
+			case Qt::Key_F:		if ( trackMode != TRACKMODE::COLOR || compMode == COMPSMODE::OFF || GetPaintBoard() || GetEraseBoard() || GetPaintPins() || GetErasePins() ) return;
 								if ( m_board.GetRoutingEnabled() ) return;
 								SetPaintFlood(true);	break;
 			case Qt::Key_W:		WipeTracks();	break;

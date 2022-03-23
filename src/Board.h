@@ -182,6 +182,21 @@ public:
 		}
 	}
 
+	void ResetPinLayerPrefs()
+	{
+		assert( GetLyrs() == 2 );
+		for (int i = 0, iSize = ( GetLyrs() == 1 ) ? GetSize() : ( GetSize() / 2 ); i < iSize; i++)	// Use layer 0 only for pins
+		{
+			Element* p = GetAt(i);
+			if ( !p->GetHasPin() || p->GetHasWire() ) continue;	// Want pins only, not wires.
+
+			const int&		compId		= p->GetCompId();	assert(compId != BAD_COMPID);
+			const size_t	pinIndex	= p->GetPinIndex();	assert(pinIndex != BAD_PININDEX);
+			Component&		comp		= m_compMgr.GetComponentById(compId);
+			comp.SetLayerPref(pinIndex, LAYER_X);
+		}
+	}
+
 	bool ToggleLyrPref(int iLyr, int iRow, int iCol)
 	{
 		Element* p = Get(iLyr, iRow, iCol);

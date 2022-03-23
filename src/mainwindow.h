@@ -77,6 +77,7 @@ class MainWindow : public QMainWindow
 	friend class PinDialog;
 	friend class PadOffsetDialog;
 	friend class FindDialog;
+	friend class MyScrollArea;
 
 	Q_OBJECT
 
@@ -305,6 +306,7 @@ public slots:
 	void RemoveLayer();
 	void SwitchLayer();
 	void ToggleVias();
+	void ResetLayerPrefs();
 	// Help menu items
 	void LoadFirstTutorial();
 	void LoadPrevTutorial();
@@ -603,6 +605,9 @@ private:
 	QPixmap					m_mainPixmap;					// ... contains a pixmap image of the whole board
 	QLabel*					m_labelInfo			= nullptr;	// For permanent status bar text
 	QLabel*					m_labelStatus		= nullptr;	// For permanent status bar text
+#ifdef VEROROUTE_DEBUG
+	QLabel*					m_labelDebug		= nullptr;	// For permanent status bar text
+#endif
 
 	ControlDialog*			m_controlDlg		= nullptr;	QDockWidget* m_dockControlDlg	= nullptr;
 	CompDialog*				m_compDlg			= nullptr;	QDockWidget* m_dockCompDlg		= nullptr;
@@ -667,6 +672,8 @@ private:
 	int			m_YCORRECTION		= 0;		// So we can fully render pads larger than 100 mil diameter
 	int			m_gridRow			= 0;		// Board row corresponding to mouse position
 	int			m_gridCol			= 0;		// Board col correspondong to mouse position
+	int			m_gridRowClicked	= 0;		// Board row corresponding to mouse position when clicked. Set by MousePressEvent()/MouseDoubleClickEvent()
+	int			m_gridColClicked	= 0;		// Board col correspondong to mouse position when clicked. Set by MousePressEvent()/MouseDoubleClickEvent()
 	QPoint		m_rulerA;
 	QPoint		m_rulerB;
 	int			m_iTutorialNumber	= -1;		// Tutorial file number 0,1,2,... (or -1 if not in tutorial mode)

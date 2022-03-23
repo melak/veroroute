@@ -67,21 +67,26 @@ bool MyScrollArea::viewportEvent(QEvent* event)
 		}
 		case QEvent::TouchBegin:
 		{
-			m_bTouchCancelled = false;
-			m_dSpread = 0;
-			m_maxPoints = 0;
-
-			const auto	elapsed			= std::chrono::steady_clock::now() - m_lastTouchBegin;
-			const auto	duration_ms		= std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
-			const auto	effective_ms	= ( duration_ms > m_releaseDuration_ms ) ? ( duration_ms - m_releaseDuration_ms ) : 0;
-			const bool	bDoubleClicked	= ( effective_ms > 0 && effective_ms <= 300 );
+			bool bDoubleClicked(false);
+			if ( !m_bTouchCancelled && m_maxPoints == 1 )
+			{
+				const auto	elapsed			= std::chrono::steady_clock::now() - m_lastTouchBegin;
+				const auto	duration_ms		= std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
+				const auto	effective_ms	= ( duration_ms > m_releaseDuration_ms ) ? ( duration_ms - m_releaseDuration_ms ) : 0;
+#ifdef VEROROUTE_DEBUG
+				if ( pMainWindow ) pMainWindow->m_labelDebug->setText(QString::number(effective_ms));
+				if ( pMainWindow ) pMainWindow->m_labelDebug->show();
+#endif
+				bDoubleClicked = ( effective_ms >= 0 && effective_ms <= 500 );
+			}
 
 			if ( pMainWindow )
 			{
 				QTouchEvent*	ev		= (QTouchEvent*)event;
 				const auto&		points	= ev->touchPoints();
-
-				m_maxPoints = points.size();
+				m_maxPoints = points.size();	// Reset m_maxPoints
+				m_bTouchCancelled = false;	// Reset m_bTouchCancelled
+				m_dSpread = 0;			// Reset m_dSpread
 
 				if ( bDoubleClicked )
 					pMainWindow->MouseDoubleClickEvent(points.begin()->pos().toPoint());
@@ -143,8 +148,7 @@ bool MyScrollArea::viewportEvent(QEvent* event)
 		}
 		case QEvent::TouchEnd:
 		{
-			if ( m_bTouchCancelled ) return QScrollArea::viewportEvent(event);
-			if ( m_maxPoints > 1 ) return QScrollArea::viewportEvent(event);
+			if ( m_bTouchCancelled || ( m_maxPoints > 1 ) ) return QScrollArea::viewportEvent(event);
 
 			if ( pMainWindow )
 			{
