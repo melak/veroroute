@@ -59,8 +59,8 @@ class FindDialog;
 const size_t MAX_RECENT_FILES = 10;
 
 #ifdef VEROROUTE_ANDROID
-#define ANDROID_VSCROLL_WIDTH  QString("QScrollBar:vertical { width: 15px; }")
-#define ANDROID_HSCROLL_HEIGHT QString("QScrollBar:horizontal { height: 15px; }")
+#define ANDROID_VSCROLL_WIDTH  QString("QScrollBar:vertical { width: 20px; }")
+#define ANDROID_HSCROLL_HEIGHT QString("QScrollBar:horizontal { height: 20px; }")
 #endif
 
 class MainWindow : public QMainWindow

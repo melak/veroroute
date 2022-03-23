@@ -87,7 +87,7 @@ void TemplatesDialog::Update()
 			switch( i )
 			{
 				case 0: iWidth = bGeneric ? 360 : 180; break;
-				case 1: iWidth = (numRows > 6) ? 160 : 180; // Small reduction when have a vertical scroll bar
+				case 1: iWidth = 160; break;	// Allow for vertical scroll bar
 			}
 			pTableWidget->setColumnWidth(i,iWidth);
 		}

@@ -82,7 +82,7 @@ void BomDialog::Update()
 	ui->tableWidget->setColumnWidth(0,130);
 	ui->tableWidget->setColumnWidth(1,250);
 	ui->tableWidget->setColumnWidth(2,100);
-	ui->tableWidget->setColumnWidth(3,100);
+	ui->tableWidget->setColumnWidth(3,80);	// Allow for vertical scroll bar
 	m_tableHeader << "Name" << "Type" << "Value" << "Quantity";
 	ui->tableWidget->setHorizontalHeaderLabels(m_tableHeader);
 	ui->tableWidget->verticalHeader()->setVisible(false);
@@ -138,8 +138,6 @@ void BomDialog::Update()
 	}
 	const int numRows(row + 1);
 	ui->tableWidget->setRowCount(numRows);
-	if ( numRows > 8 )
-		ui->tableWidget->setColumnWidth(3,80);	// Small reduction when have a vertical scroll bar
 	ui->pushButton->setDisabled( pComps.empty() );
 }
 

@@ -109,7 +109,7 @@ void PinDialog::Update()
 	ui->tableWidget->setColumnCount(3);
 	ui->tableWidget->setColumnWidth(0,40);
 	ui->tableWidget->setColumnWidth(1,105);
-	ui->tableWidget->setColumnWidth(2,(numPins > 18) ? 65 : 85);	// Allow for scroll bar
+	ui->tableWidget->setColumnWidth(2,65);	// Allow for vertical scroll bar
 	m_tableHeader << "Pin" << "Label" << "Align";
 	ui->tableWidget->setHorizontalHeaderLabels(m_tableHeader);
 	ui->tableWidget->verticalHeader()->setVisible(false);
