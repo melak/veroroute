@@ -374,20 +374,19 @@ void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, cons
 			}
 		}
 
+		const bool bTruePin = pC->GetHasPin() && !pC->GetHasWire();
+		if ( ( GetPaintPins() || GetErasePins() ) && !bTruePin && !bDoSwap )	// Restrict painting/erasing pins to true pins (not wires)
+			return;
+
 #ifdef VEROROUTE_ANDROID
 		//TODO Could allow this in Desktop version too
 		const bool bClickedValidNodeID = pC->GetNodeId() != BAD_NODEID;
-		const bool bTruePin = pC->GetHasPin() && !pC->GetHasWire();
 		if ( GetPaintBoard() && bClickedValidNodeID && pC->GetNodeId() == GetCurrentNodeId() && !bDoSwap )	// If we're painting board and clicked on a point with matching valid nodeID
 		{
 			const bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, BAD_NODEID, false);	// ... then erase the point instead of painting it
 			if ( !bChanged ) return;
 			m_mouseActionString = "Erase";
 			m_bReRoute = m_bReListNodes = true;
-		}
-		else if ( ( GetPaintPins() || GetErasePins() ) && !bTruePin && !bDoSwap )	// Restrict painting/erasing pins to true pins (not wires)
-		{
-			return;
 		}
 		else
 #endif
