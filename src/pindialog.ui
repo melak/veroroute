@@ -35,7 +35,7 @@
     </rect>
    </property>
    <property name="focusPolicy">
-    <enum>Qt::StrongFocus</enum>
+    <enum>Qt::NoFocus</enum>
    </property>
    <property name="tabKeyNavigation">
     <bool>true</bool>

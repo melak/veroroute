@@ -263,7 +263,7 @@ public:
 			if ( ReadCodeBit(iNbr , iPerimeterCode) ) continue;			// Skip if direction already has connection
 			if ( ReadCodeBit((iNbr+1)%8 , iPerimeterCode) ) continue;	// Skip if adjacent CW  direction already has connection
 			if ( ReadCodeBit((iNbr+7)%8, iPerimeterCode) ) continue;	// Skip if adjacent CCW direction already has connection
-			if ( iNbrNodeId != BAD_NODEID && iNbrNodeId != iGndNodeId ) continue;	// Skip if direction is not empty, or has non-ground NodeID
+			if ( ( q->GetHasPin() || iNbrNodeId != BAD_NODEID ) && iNbrNodeId != iGndNodeId ) continue;	// Skip if direction is not empty, or has non-ground NodeID
 			if ( p->IsBlocked(iNbr, iGndNodeId) ) continue;							// Skip is direction is blocked
 
 			const int	iLayerPrefQ	= ( GetLyrs() == 1 || !q->GetHasPin() || q->GetHasWire() ) ? LAYER_X : GetLayerPref(q);
