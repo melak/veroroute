@@ -266,7 +266,7 @@ public slots:
 		int iRow, iCol;
 		GetFirstRowCol(iRow, iCol);
 		m_board.AddTextBox(iRow, iCol);
-		UpdateHistory("Add text");
+		UpdateHistory("add text");
 		ShowTextDialog();
 		UpdateControls();
 		RepaintSkipRouting();
@@ -532,7 +532,7 @@ private:
 		groupMgr.ResetUserGroup( compId );	// Reset the user group with the current comp (and its siblings)
 		SetCurrentCompId(compId);
 
-		UpdateHistory("Add part"); UpdateControls(); UpdateBOM(); RepaintSkipRouting();
+		UpdateHistory("add part"); UpdateControls(); UpdateBOM(); RepaintSkipRouting();
 	}
 	void AddFromTemplate(const Component& compTemp)
 	{
@@ -551,7 +551,7 @@ private:
 		groupMgr.ResetUserGroup( compId );	// Reset the user group with the current comp (and its siblings)
 		SetCurrentCompId(compId);
 
-		UpdateHistory("Add part"); UpdateControls(); UpdateBOM(); RepaintSkipRouting();
+		UpdateHistory("add part"); UpdateControls(); UpdateBOM(); RepaintSkipRouting();
 	}
 	void CompRotate(const bool& bCW);
 	void CompStretch(const bool& bGrow);

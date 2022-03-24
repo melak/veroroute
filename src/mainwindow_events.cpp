@@ -130,6 +130,8 @@ bool MainWindow::CanModifyRuler() const
 
 void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, const bool& bRightClick)
 {
+	m_mouseActionString.clear();
+
 	m_bReRoute = m_bReListNodes = false;	// Reset both flags
 
 	g_bPinClicked = false;
@@ -173,14 +175,12 @@ void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, cons
 		if ( GetCurrentPinId() != pinId )
 		{
 			SetCurrentPinId(pinId);
-			//if ( pinId == BAD_ID )
-			//	mouseActionString = ( pinId == BAD_ID ) ? "Unselect footprint grid point" : "Select footprint grid point";
+			m_mouseActionString = ( pinId == BAD_ID ) ? "unselect point in footprint" : "select point in footprint";
 		}
 		if ( GetCurrentShapeId() != shapeId )
 		{
 			SetCurrentShapeId(shapeId);
-			//if ( shapeId == BAD_ID )
-			//	mouseActionString = ( shapeId == BAD_ID ) ? "Unselect shape" : "Select shape";
+			m_mouseActionString = ( shapeId == BAD_ID ) ? "unselect shape" : "select shape";
 		}
 		UpdateCompDialog();
 		return RepaintSkipRouting();
@@ -225,7 +225,7 @@ void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, cons
 			centralWidget()->setCursor(Qt::SizeFDiagCursor);
 			m_board.GetRectMgr().StartNewRect(m_gridRow, m_gridCol);
 			SelectAllInRects();
-			UpdateHistory("Select parts in area(s)");
+			UpdateHistory("select parts / tracks by area");
 #ifdef AVOID_RECT_REDRAWS
 			g_lastDrawRect = std::chrono::steady_clock::now();
 #endif
@@ -259,7 +259,7 @@ void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, cons
 					m_board.GetTextMgr().DestroyRect( GetCurrentTextId() );
 
 				if ( textId != BAD_TEXTID )
-					m_mouseActionString = "Select text box";
+					m_mouseActionString = "select text box";
 
 				SetCurrentTextId(textId);
 			}
@@ -284,7 +284,7 @@ void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, cons
 				groupMgr.UpdateUserGroup( GetCurrentCompId() );	// Add/remove current comp (and its siblings) to user group
 				UpdateControls();
 				if ( GetCurrentTextId() == BAD_TEXTID )
-					m_mouseActionString = "(Un)select part(s)";
+					m_mouseActionString = "(un)select part(s)";
 			}
 			else if ( !groupMgr.GetIsUserComp( GetCurrentCompId() ) )
 			{
@@ -293,7 +293,7 @@ void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, cons
 				compMgr.ClearTrax();
 				UpdateControls();
 				if ( GetCurrentTextId() == BAD_TEXTID )
-					m_mouseActionString = "(Un)select part(s)";
+					m_mouseActionString = "(un)select part(s)";
 			}
 		}
 	}
@@ -334,7 +334,7 @@ void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, cons
 			SetCurrentNodeId(tmp);	// Restore current nodeId
 
 			m_board.FloodNodeId( GetCurrentNodeId() );
-			m_mouseActionString = "Paint (flood)";
+			m_mouseActionString = "paint (flood)";
 			m_bReRoute = m_bReListNodes = true;
 		}
 	}
@@ -363,7 +363,7 @@ void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, cons
 					if ( bDoSwap )
 					{
 						pRB->SwapDiagLinks();
-						m_mouseActionString = "Paint";
+						m_mouseActionString = "swap competing diagonals";
 						m_bReRoute = m_bReListNodes = true;
 					}
 				}
@@ -381,7 +381,7 @@ void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, cons
 		{
 			const bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, BAD_NODEID, false);	// ... then erase the point instead of painting it
 			if ( !bChanged ) return;
-			m_mouseActionString = "Erase";
+			m_mouseActionString = "erase";
 			m_bReRoute = m_bReListNodes = true;
 		}
 		else
@@ -400,7 +400,7 @@ void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, cons
 
 			const bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, GetCurrentNodeId(), GetPaintPins() || GetErasePins());
 			if ( !bChanged ) return;
-			m_mouseActionString = "Paint";
+			m_mouseActionString = "paint";
 			m_bReRoute = m_bReListNodes = true;
 		}
 
@@ -412,7 +412,7 @@ void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, cons
 		{
 			const bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, BAD_NODEID, GetPaintPins() || GetErasePins());
 			if ( !bChanged ) return;
-			m_mouseActionString = "Erase";
+			m_mouseActionString = "erase";
 			m_bReRoute = m_bReListNodes = true;
 		}
 	}
@@ -439,6 +439,8 @@ void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, cons
 
 void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 {
+	m_mouseActionString.clear();
+
 	g_bPinClicked = false;
 
 	m_mousePos = pos;
@@ -484,7 +486,7 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 	{
 		if ( m_board.ToggleLyrPref(layer, m_gridRow, m_gridCol) )
 		{
-			UpdateHistory("Change pin layer preference", pC->GetCompId());
+			UpdateHistory("change pin layer preference", pC->GetCompId());
 			return;
 		}
 	}
@@ -500,10 +502,10 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 			Element*	pRB	= m_board.Get(layer, m_gridRow + dR, m_gridCol + dC);
 			if ( pRB->SwapDiagLinks() )
 			{
+				m_mouseActionString = "swap competing diagonals";
+				m_bReRoute = m_bReListNodes = true;
 				m_board.WipeAutoSetPoints();
 				m_board.PlaceFloaters();	// See if we can now place floating components down
-				UpdateHistory("Toggle competing diagonals", 0);
-				m_bReRoute = m_bReListNodes = true;
 				return;
 			}
 		}
@@ -516,7 +518,7 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 		if ( GetCurrentNodeId() != pC->GetNodeId() )
 		{
 			SetCurrentNodeId( pC->GetNodeId() );
-			UpdateHistory( ( GetCurrentNodeId() == BAD_NODEID ) ? "Unselect Net" : "Select Net", 0);
+			UpdateHistory( ( GetCurrentNodeId() == BAD_NODEID ) ? "unselect net" : "select net", 0);
 			m_bReRoute = true;	// Dont' need to set m_bReListNodes when choosing different nodeID
 		}
 		return;
@@ -527,7 +529,7 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 		if ( GetCurrentNodeId() != pC->GetNodeId() )
 		{
 			SetCurrentNodeId( pC->GetNodeId() );
-			UpdateHistory( ( GetCurrentNodeId() == BAD_NODEID ) ? "Unselect Net" : "Select Net", 0);
+			UpdateHistory( ( GetCurrentNodeId() == BAD_NODEID ) ? "unselect net" : "select net", 0);
 			m_bReRoute = true;	// Dont' need to set m_bReListNodes when choosing different nodeID
 		}
 		return;
@@ -549,7 +551,7 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 		if ( GetCurrentNodeId() != pC->GetNodeId() )
 		{
 			SetCurrentNodeId( pC->GetNodeId() );
-			UpdateHistory( ( GetCurrentNodeId() == BAD_NODEID ) ? "Unselect Net" : "Select Net", 0);
+			UpdateHistory( ( GetCurrentNodeId() == BAD_NODEID ) ? "unselect net" : "select net", 0);
 			m_bReRoute = true;	// Dont' need to set m_bReListNodes when choosing different nodeID
 		}
 	}
@@ -624,6 +626,7 @@ void MainWindow::MouseMoveEvent(const QPoint& pos)
 
 			compDefiner.SetCurrentPinId(BAD_ID);				// Clear pin selection
 			compDefiner.MoveCurrentShape(deltaRow, deltaCol);	// Move the shape
+			m_mouseActionString = "move shape";
 			UpdateCompDialog();
 		}
 	}
@@ -657,7 +660,7 @@ void MainWindow::MouseMoveEvent(const QPoint& pos)
 				if ( bDoSwap )
 				{
 					pRB->SwapDiagLinks();
-					m_mouseActionString = "Paint";
+					m_mouseActionString = "swap competing diagonals";
 					m_bReRoute = m_bReListNodes = true;
 				}
 			}
@@ -672,7 +675,7 @@ void MainWindow::MouseMoveEvent(const QPoint& pos)
 		{
 			const bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, GetCurrentNodeId(), false);	// false ==> Only allow paint board (not pins)
 			if ( !bChanged ) return;	// No change
-			m_mouseActionString = "Paint";
+			m_mouseActionString = "paint";
 			m_bReRoute = m_bReListNodes = true;
 		}
 
@@ -684,7 +687,7 @@ void MainWindow::MouseMoveEvent(const QPoint& pos)
 		{
 			const bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, BAD_NODEID, false);	// false ==> Only allow erase board (not pins)
 			if ( !bChanged ) return;	// No change
-			m_mouseActionString = "Erase";
+			m_mouseActionString = "erase";
 			m_bReRoute = m_bReListNodes = true;
 		}
 		m_board.WipeAutoSetPoints();
@@ -715,7 +718,7 @@ void MainWindow::MouseMoveEvent(const QPoint& pos)
 				m_bReRoute = m_bReListNodes = true;
 			}
 		}
-		m_mouseActionString = ( GetResizingText() ) ? "Resize text box" : "Move text box";
+		m_mouseActionString = ( GetResizingText() ) ? "resize text box" : "move text box";
 	}
 	else if ( !GetSmartPan() && GetCurrentCompId() != BAD_COMPID && compMode != COMPSMODE::OFF )	// Move user-group components
 	{
@@ -735,7 +738,7 @@ void MainWindow::MouseMoveEvent(const QPoint& pos)
 			g_lastAutoPanTime = std::chrono::steady_clock::now();
 		}
 		const bool bPlural = ( m_board.GetGroupMgr().GetNumUserComps() > 1 );
-		m_mouseActionString = ( bPlural ? "Move parts" : "Move part" );
+		m_mouseActionString = ( bPlural ? "move parts" : "move part" );
 		m_bReRoute = m_bReListNodes = true;
 	}
 	else if ( GetSmartPan() )	// If we're not moving anything else, we can smart pan
@@ -743,7 +746,7 @@ void MainWindow::MouseMoveEvent(const QPoint& pos)
 		if ( HaveZeroDeltaRowCol(deltaRow, deltaCol) ) return;	// No change
 
 		m_board.SmartPan(deltaRow, deltaCol);	// Pan whole circuit w.r.t. grid area, growing/shrinking as needed
-		m_mouseActionString = "Move whole layout";
+		m_mouseActionString = "move whole layout";
 		m_bReRoute = m_bReListNodes = true;
 	}
 
@@ -812,14 +815,14 @@ void MainWindow::MouseReleaseEvent(const QPoint& pos)
 
 	if ( m_board.GetCompEdit() )
 	{
-		UpdateHistory(m_mouseActionString);
+		UpdateHistory(m_mouseActionString, 0);
 		return RepaintSkipRouting();
 	}
 	if ( GetResizingText() )
 	{
 		centralWidget()->setCursor(Qt::OpenHandCursor);
 		SetResizingText(false);
-		UpdateHistory("Resize text box");
+		UpdateHistory("resize text box", GetCurrentTextId());
 		return RepaintSkipRouting();
 	}
 	if ( GetDefiningRect() )
@@ -835,7 +838,7 @@ void MainWindow::MouseReleaseEvent(const QPoint& pos)
 	else
 		centralWidget()->setCursor(Qt::OpenHandCursor);
 
-	UpdateHistory(m_mouseActionString);
+	UpdateHistory(m_mouseActionString, 0);
 	UpdateControls();
 
 	if ( m_bReListNodes )
@@ -912,10 +915,10 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
 		case Qt::Key_Minus:		CompShrink();	break;
 		case Qt::Key_Plus:
 		case Qt::Key_Equal:		CompGrow();		break;
-		case Qt::Key_Left:		if ( !m_board.GetDisableMove() ) { m_board.MoveUserComps(0,-1);	UpdateHistory(bPlural ? "Move parts left"	: "Move part left",	 objID); RepaintWithRouting(); } break;
-		case Qt::Key_Right:		if ( !m_board.GetDisableMove() ) { m_board.MoveUserComps(0, 1);	UpdateHistory(bPlural ? "Move parts right"	: "Move part right", objID); RepaintWithRouting(); } break;
-		case Qt::Key_Up:		if ( !m_board.GetDisableMove() ) { m_board.MoveUserComps(-1,0);	UpdateHistory(bPlural ? "Move parts up"		: "Move part up",	 objID); RepaintWithRouting(); } break;
-		case Qt::Key_Down:		if ( !m_board.GetDisableMove() ) { m_board.MoveUserComps( 1,0);	UpdateHistory(bPlural ? "Move parts down"	: "Move part down",	 objID); RepaintWithRouting(); } break;
+		case Qt::Key_Left:		if ( !m_board.GetDisableMove() ) { m_board.MoveUserComps(0,-1);	UpdateHistory(bPlural ? "move parts" : "move part", objID); RepaintWithRouting(); } break;
+		case Qt::Key_Right:		if ( !m_board.GetDisableMove() ) { m_board.MoveUserComps(0, 1);	UpdateHistory(bPlural ? "move parts" : "move part", objID); RepaintWithRouting(); } break;
+		case Qt::Key_Up:		if ( !m_board.GetDisableMove() ) { m_board.MoveUserComps(-1,0);	UpdateHistory(bPlural ? "move parts" : "move part", objID); RepaintWithRouting(); } break;
+		case Qt::Key_Down:		if ( !m_board.GetDisableMove() ) { m_board.MoveUserComps( 1,0);	UpdateHistory(bPlural ? "move parts" : "move part", objID); RepaintWithRouting(); } break;
 	}
 	if ( !bIsAutoRepeat )
 	{

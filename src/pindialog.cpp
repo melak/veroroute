@@ -73,7 +73,7 @@ void PinDialog::CellChanged(int row, int col)
 		{
 			if ( pDef  ) pDef->SetPinLabel(iPinIndex, strLabel);
 			if ( pComp ) pComp->SetPinLabel(iPinIndex, strLabel);
-			m_pMainWindow->UpdateHistory("Changed pin label", objId);
+			m_pMainWindow->UpdateHistory("change pin label", objId);
 			m_pMainWindow->RepaintSkipRouting();
 		}
 	}
@@ -86,7 +86,7 @@ void PinDialog::CellChanged(int row, int col)
 		{
 			if ( pDef )  pDef->SetPinAlign(iPinIndex, iAlign);
 			if ( pComp ) pComp->SetPinAlign(iPinIndex, iAlign);
-			m_pMainWindow->UpdateHistory("Changed pin label alignment", objId);
+			m_pMainWindow->UpdateHistory("change pin label alignment", objId);
 			m_pMainWindow->RepaintSkipRouting();
 		}
 		if ( strLabel != "L" && strLabel != "R" && strLabel != "C" )

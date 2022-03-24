@@ -87,20 +87,28 @@ void RenderingDialog::UpdateControls()
 	ui->spinBox_width->setValue( board.GetTargetCols() );
 	ui->shade->setChecked( board.GetShowTarget() );
 	if ( board.GetRenderQuality() == 0 ) ui->antiAliasOff->setChecked(true); else ui->antiAliasOn->setChecked(true);
-	ui->groupBox_bright->setDisabled(bCompEdit || bPCB );
-	ui->groupBox_target->setDisabled(	bCompEdit );
-	ui->comptext->setDisabled(			bCompEdit );
-	ui->comppins->setDisabled(			!bCompEdit && bMonoPCB );
-	ui->padWidth->setDisabled(			bCompEdit || bNoTrackOptions || bVero );
-	ui->trackWidth->setDisabled(		bCompEdit || bNoTrackOptions || bVero );
-	ui->tagWidth->setDisabled(			bCompEdit || bNoTrackOptions || bVero || !bMonoPCB || !bGndFill );
-	ui->holeWidth->setDisabled(			bCompEdit || bNoTrackOptions || bVero );
-	ui->viapadWidth->setDisabled(		bCompEdit || bNoTrackOptions || bVero || !bVias );
-	ui->viaholeWidth->setDisabled(		bCompEdit || bNoTrackOptions || bVero || !bVias );
-	ui->gapWidth->setDisabled(			bCompEdit || bVero || !bMonoPCB || !bGndFill );
-	ui->groupBox_pcb->setDisabled(		bCompEdit || bVero || !bPCB );
+
+	ui->spinBox_bright->setDisabled(bCompEdit || bPCB );
+	ui->shade->setDisabled(	bCompEdit );
+	ui->spinBox_height->setDisabled(bCompEdit );
+	ui->spinBox_width->setDisabled(	bCompEdit );
+	ui->comptext->setDisabled(		bCompEdit );
+	ui->comppins->setDisabled(		!bCompEdit && bMonoPCB );
+	ui->padWidth->setDisabled(		bCompEdit || bNoTrackOptions || bVero );
+	ui->trackWidth->setDisabled(	bCompEdit || bNoTrackOptions || bVero );
+	ui->tagWidth->setDisabled(		bCompEdit || bNoTrackOptions || bVero || !bMonoPCB || !bGndFill );
+	ui->holeWidth->setDisabled(		bCompEdit || bNoTrackOptions || bVero );
+	ui->viapadWidth->setDisabled(	bCompEdit || bNoTrackOptions || bVero || !bVias );
+	ui->viaholeWidth->setDisabled(	bCompEdit || bNoTrackOptions || bVero || !bVias );
+	ui->gapWidth->setDisabled(		bCompEdit || bVero || !bMonoPCB || !bGndFill );
+	ui->maskWidth->setDisabled(		bCompEdit || bVero || !bPCB );
+	ui->silkWidth->setDisabled(		bCompEdit || bVero || !bPCB );
+	ui->edgeWidth->setDisabled(		bCompEdit || bVero || !bPCB );
 
 	// ... and corresponding labels
+	ui->label_brightness->setDisabled(	bCompEdit || bPCB );
+	ui->label_height->setDisabled(		bCompEdit );
+	ui->label_width->setDisabled(		bCompEdit );
 	ui->label_comptext->setDisabled(	bCompEdit );
 	ui->label_comppins->setDisabled(	!bCompEdit && bMonoPCB );
 	ui->label_pad->setDisabled(			bCompEdit || bNoTrackOptions || bVero );
@@ -110,6 +118,9 @@ void RenderingDialog::UpdateControls()
 	ui->label_viapad->setDisabled(		bCompEdit || bNoTrackOptions || bVero || !bVias );
 	ui->label_viahole->setDisabled(		bCompEdit || bNoTrackOptions || bVero || !bVias );
 	ui->label_gap->setDisabled(			bCompEdit || bVero || !bMonoPCB || !bGndFill );
+	ui->label_mask->setDisabled(		bCompEdit || bVero || !bPCB );
+	ui->label_silk->setDisabled(		bCompEdit || bVero || !bPCB );
+	ui->label_edge->setDisabled(		bCompEdit || bVero || !bPCB );
 	ui->label_info->setDisabled(		bCompEdit || bVero );
 	ui->label_info_2->setDisabled(		bCompEdit || bVero || !bMonoPCB || !bGndFill );
 	ui->closeTracks->setDisabled(		bCompEdit || bVero || !bCloseTrackInfo );

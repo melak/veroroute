@@ -18,7 +18,7 @@
   </property>
   <property name="maximumSize">
    <size>
-    <width>330</width>
+    <width>830</width>
     <height>630</height>
    </size>
   </property>
@@ -28,7 +28,7 @@
   <widget class="QGroupBox" name="groupBox">
    <property name="geometry">
     <rect>
-     <x>0</x>
+     <x>350</x>
      <y>0</y>
      <width>131</width>
      <height>71</height>
@@ -37,741 +37,11 @@
    <property name="title">
     <string>AntiAlias</string>
    </property>
-   <widget class="QRadioButton" name="antiAliasOff">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>25</y>
-      <width>61</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="mouseTracking">
-     <bool>false</bool>
-    </property>
-    <property name="focusPolicy">
-     <enum>Qt::TabFocus</enum>
-    </property>
-    <property name="text">
-     <string>Off</string>
-    </property>
-   </widget>
-   <widget class="QRadioButton" name="antiAliasOn">
-    <property name="geometry">
-     <rect>
-      <x>70</x>
-      <y>25</y>
-      <width>51</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="mouseTracking">
-     <bool>false</bool>
-    </property>
-    <property name="focusPolicy">
-     <enum>Qt::TabFocus</enum>
-    </property>
-    <property name="text">
-     <string>On</string>
-    </property>
-   </widget>
-  </widget>
-  <widget class="QGroupBox" name="groupBox_2">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>180</y>
-     <width>330</width>
-     <height>71</height>
-    </rect>
-   </property>
-   <property name="title">
-    <string>Component Text Size</string>
-   </property>
-   <widget class="QSpinBox" name="comptext">
-    <property name="geometry">
-     <rect>
-      <x>70</x>
-      <y>25</y>
-      <width>61</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>Text size for part Name/Value labels</string>
-    </property>
-    <property name="minimum">
-     <number>5</number>
-    </property>
-    <property name="maximum">
-     <number>11</number>
-    </property>
-    <property name="value">
-     <number>9</number>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_comptext">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>25</y>
-      <width>61</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Label</string>
-    </property>
-   </widget>
-   <widget class="QSpinBox" name="comppins">
-    <property name="geometry">
-     <rect>
-      <x>260</x>
-      <y>25</y>
-      <width>61</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>Text size for pin labels</string>
-    </property>
-    <property name="minimum">
-     <number>5</number>
-    </property>
-    <property name="maximum">
-     <number>11</number>
-    </property>
-    <property name="value">
-     <number>9</number>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_comppins">
-    <property name="geometry">
-     <rect>
-      <x>180</x>
-      <y>25</y>
-      <width>81</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Pin labels</string>
-    </property>
-   </widget>
-  </widget>
-  <widget class="QGroupBox" name="groupBox_target">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>80</y>
-     <width>330</width>
-     <height>91</height>
-    </rect>
-   </property>
-   <property name="title">
-    <string>Target Board Dimensions (x100 mil)</string>
-   </property>
-   <widget class="QCheckBox" name="shade">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>60</y>
-      <width>311</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="mouseTracking">
-     <bool>false</bool>
-    </property>
-    <property name="focusPolicy">
-     <enum>Qt::TabFocus</enum>
-    </property>
-    <property name="toolTip">
-     <string>Draw area outside the target board in a darker shade</string>
-    </property>
-    <property name="text">
-     <string>Shade off-board area</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_width">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>25</y>
-      <width>61</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Width</string>
-    </property>
-   </widget>
-   <widget class="QSpinBox" name="spinBox_height">
-    <property name="geometry">
-     <rect>
-      <x>260</x>
-      <y>25</y>
-      <width>61</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>Height of target board</string>
-    </property>
-    <property name="minimum">
-     <number>1</number>
-    </property>
-    <property name="maximum">
-     <number>999</number>
-    </property>
-    <property name="value">
-     <number>10</number>
-    </property>
-   </widget>
-   <widget class="QSpinBox" name="spinBox_width">
-    <property name="geometry">
-     <rect>
-      <x>70</x>
-      <y>25</y>
-      <width>61</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>Width of target board</string>
-    </property>
-    <property name="minimum">
-     <number>1</number>
-    </property>
-    <property name="maximum">
-     <number>999</number>
-    </property>
-    <property name="value">
-     <number>9</number>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_height">
-    <property name="geometry">
-     <rect>
-      <x>180</x>
-      <y>25</y>
-      <width>81</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Height</string>
-    </property>
-   </widget>
-  </widget>
-  <widget class="QGroupBox" name="groupBox_widths">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>260</y>
-     <width>330</width>
-     <height>221</height>
-    </rect>
-   </property>
-   <property name="title">
-    <string>Track Widths (mil)</string>
-   </property>
-   <widget class="QSpinBox" name="holeWidth">
-    <property name="geometry">
-     <rect>
-      <x>70</x>
-      <y>55</y>
-      <width>61</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>Hole width (1 mil = 0.001 inches)</string>
-    </property>
-    <property name="minimum">
-     <number>20</number>
-    </property>
-    <property name="maximum">
-     <number>50</number>
-    </property>
-    <property name="singleStep">
-     <number>1</number>
-    </property>
-    <property name="value">
-     <number>26</number>
-    </property>
-   </widget>
-   <widget class="QSpinBox" name="padWidth">
-    <property name="geometry">
-     <rect>
-      <x>70</x>
-      <y>25</y>
-      <width>61</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>Pad width (1 mil = 0.001 inches)</string>
-    </property>
-    <property name="minimum">
-     <number>50</number>
-    </property>
-    <property name="maximum">
-     <number>98</number>
-    </property>
-    <property name="singleStep">
-     <number>1</number>
-    </property>
-    <property name="value">
-     <number>90</number>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_pad">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>25</y>
-      <width>61</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Pad</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_track">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>85</y>
-      <width>61</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Track</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_hole">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>55</y>
-      <width>61</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Hole</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-    </property>
-   </widget>
-   <widget class="QSpinBox" name="trackWidth">
-    <property name="geometry">
-     <rect>
-      <x>70</x>
-      <y>85</y>
-      <width>61</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>Track width (1 mil = 0.001 inches)</string>
-    </property>
-    <property name="minimum">
-     <number>4</number>
-    </property>
-    <property name="maximum">
-     <number>50</number>
-    </property>
-    <property name="singleStep">
-     <number>1</number>
-    </property>
-    <property name="value">
-     <number>46</number>
-    </property>
-   </widget>
-   <widget class="QSpinBox" name="gapWidth">
-    <property name="geometry">
-     <rect>
-      <x>260</x>
-      <y>85</y>
-      <width>61</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>Gap width for ground-fills  (1 mil = 0.001 inches)</string>
-    </property>
-    <property name="minimum">
-     <number>5</number>
-    </property>
-    <property name="maximum">
-     <number>30</number>
-    </property>
-    <property name="singleStep">
-     <number>1</number>
-    </property>
-    <property name="value">
-     <number>10</number>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_gap">
-    <property name="geometry">
-     <rect>
-      <x>180</x>
-      <y>85</y>
-      <width>81</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Gap</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_viapad">
-    <property name="geometry">
-     <rect>
-      <x>180</x>
-      <y>25</y>
-      <width>81</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Via Pad</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-    </property>
-   </widget>
-   <widget class="QSpinBox" name="viapadWidth">
-    <property name="geometry">
-     <rect>
-      <x>260</x>
-      <y>25</y>
-      <width>61</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>Via pad width (1 mil = 0.001 inches)</string>
-    </property>
-    <property name="minimum">
-     <number>16</number>
-    </property>
-    <property name="maximum">
-     <number>80</number>
-    </property>
-    <property name="singleStep">
-     <number>1</number>
-    </property>
-    <property name="value">
-     <number>50</number>
-    </property>
-   </widget>
-   <widget class="QSpinBox" name="viaholeWidth">
-    <property name="geometry">
-     <rect>
-      <x>260</x>
-      <y>55</y>
-      <width>61</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>Via hole width (1 mil = 0.001 inches)</string>
-    </property>
-    <property name="minimum">
-     <number>8</number>
-    </property>
-    <property name="maximum">
-     <number>40</number>
-    </property>
-    <property name="singleStep">
-     <number>1</number>
-    </property>
-    <property name="value">
-     <number>25</number>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_viahole">
-    <property name="geometry">
-     <rect>
-      <x>180</x>
-      <y>55</y>
-      <width>81</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Via Hole</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_info">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>150</y>
-      <width>311</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <weight>50</weight>
-      <italic>true</italic>
-      <bold>false</bold>
-     </font>
-    </property>
-    <property name="text">
-     <string>Info:</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_info_2">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>185</y>
-      <width>311</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <weight>50</weight>
-      <italic>true</italic>
-      <bold>false</bold>
-     </font>
-    </property>
-    <property name="text">
-     <string>Info:</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-    </property>
-   </widget>
-   <widget class="QCheckBox" name="closeTracks">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>115</y>
-      <width>171</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="mouseTracking">
-     <bool>false</bool>
-    </property>
-    <property name="focusPolicy">
-     <enum>Qt::TabFocus</enum>
-    </property>
-    <property name="toolTip">
-     <string>Show closest tracks in view</string>
-    </property>
-    <property name="text">
-     <string>Show closest tracks </string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_tag">
-    <property name="geometry">
-     <rect>
-      <x>180</x>
-      <y>115</y>
-      <width>81</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Thermal</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-    </property>
-   </widget>
-   <widget class="QSpinBox" name="tagWidth">
-    <property name="geometry">
-     <rect>
-      <x>260</x>
-      <y>115</y>
-      <width>61</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>Thermal relief tag width (1 mil = 0.001 inches)</string>
-    </property>
-    <property name="minimum">
-     <number>4</number>
-    </property>
-    <property name="maximum">
-     <number>50</number>
-    </property>
-    <property name="singleStep">
-     <number>1</number>
-    </property>
-    <property name="value">
-     <number>46</number>
-    </property>
-   </widget>
-  </widget>
-  <widget class="QGroupBox" name="groupBox_pcb">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>490</y>
-     <width>330</width>
-     <height>131</height>
-    </rect>
-   </property>
-   <property name="title">
-    <string>PCB Parameters (mil)</string>
-   </property>
-   <widget class="QLabel" name="label_mask">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>25</y>
-      <width>161</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Solder Mask Margin</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_silk">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>55</y>
-      <width>161</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Silkscreen Line Width</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-    </property>
-   </widget>
-   <widget class="QSpinBox" name="maskWidth">
-    <property name="geometry">
-     <rect>
-      <x>180</x>
-      <y>25</y>
-      <width>61</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>Solder mask margin (1 mil = 0.001 inches)</string>
-    </property>
-    <property name="minimum">
-     <number>0</number>
-    </property>
-    <property name="maximum">
-     <number>10</number>
-    </property>
-    <property name="singleStep">
-     <number>1</number>
-    </property>
-    <property name="value">
-     <number>4</number>
-    </property>
-   </widget>
-   <widget class="QSpinBox" name="silkWidth">
-    <property name="geometry">
-     <rect>
-      <x>180</x>
-      <y>55</y>
-      <width>61</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>Silkscreen line width (1 mil = 0.001 inches)</string>
-    </property>
-    <property name="minimum">
-     <number>1</number>
-    </property>
-    <property name="maximum">
-     <number>10</number>
-    </property>
-    <property name="singleStep">
-     <number>1</number>
-    </property>
-    <property name="value">
-     <number>7</number>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_edge">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>85</y>
-      <width>161</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Board Edge Margin</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-    </property>
-   </widget>
-   <widget class="QSpinBox" name="edgeWidth">
-    <property name="geometry">
-     <rect>
-      <x>180</x>
-      <y>85</y>
-      <width>61</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>Board edge margin (1 mil = 0.001 inches)</string>
-    </property>
-    <property name="minimum">
-     <number>0</number>
-    </property>
-    <property name="maximum">
-     <number>50</number>
-    </property>
-    <property name="singleStep">
-     <number>1</number>
-    </property>
-    <property name="value">
-     <number>20</number>
-    </property>
-   </widget>
   </widget>
   <widget class="QGroupBox" name="groupBox_bright">
    <property name="geometry">
     <rect>
-     <x>140</x>
+     <x>490</x>
      <y>0</y>
      <width>190</width>
      <height>71</height>
@@ -780,65 +50,859 @@
    <property name="title">
     <string>Background</string>
    </property>
-   <widget class="QLabel" name="label_brightness">
-    <property name="geometry">
-     <rect>
-      <x>10</x>
-      <y>25</y>
-      <width>111</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Brightness (%)</string>
-    </property>
-   </widget>
-   <widget class="QSpinBox" name="spinBox_bright">
-    <property name="geometry">
-     <rect>
-      <x>120</x>
-      <y>25</y>
-      <width>61</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="toolTip">
-     <string>Height of target board</string>
-    </property>
-    <property name="minimum">
-     <number>0</number>
-    </property>
-    <property name="maximum">
-     <number>100</number>
-    </property>
-    <property name="singleStep">
-     <number>5</number>
-    </property>
-    <property name="value">
-     <number>100</number>
-    </property>
-   </widget>
+  </widget>
+  <widget class="QLabel" name="label_14">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>180</y>
+     <width>330</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <weight>75</weight>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>Component Text Size</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+   </property>
+  </widget>
+  <widget class="QSpinBox" name="comppins">
+   <property name="geometry">
+    <rect>
+     <x>260</x>
+     <y>205</y>
+     <width>61</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>Text size for pin labels</string>
+   </property>
+   <property name="minimum">
+    <number>5</number>
+   </property>
+   <property name="maximum">
+    <number>11</number>
+   </property>
+   <property name="value">
+    <number>9</number>
+   </property>
+  </widget>
+  <widget class="QSpinBox" name="comptext">
+   <property name="geometry">
+    <rect>
+     <x>70</x>
+     <y>205</y>
+     <width>61</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>Text size for part Name/Value labels</string>
+   </property>
+   <property name="minimum">
+    <number>5</number>
+   </property>
+   <property name="maximum">
+    <number>11</number>
+   </property>
+   <property name="value">
+    <number>9</number>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_comppins">
+   <property name="geometry">
+    <rect>
+     <x>180</x>
+     <y>205</y>
+     <width>81</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Pin labels</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_comptext">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>205</y>
+     <width>61</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Label</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_15">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>260</y>
+     <width>330</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <weight>75</weight>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>Track Widths (mil)</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_pad">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>285</y>
+     <width>61</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Pad</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+   </property>
+  </widget>
+  <widget class="QSpinBox" name="padWidth">
+   <property name="geometry">
+    <rect>
+     <x>70</x>
+     <y>285</y>
+     <width>61</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>Pad width (1 mil = 0.001 inches)</string>
+   </property>
+   <property name="minimum">
+    <number>50</number>
+   </property>
+   <property name="maximum">
+    <number>98</number>
+   </property>
+   <property name="singleStep">
+    <number>1</number>
+   </property>
+   <property name="value">
+    <number>90</number>
+   </property>
+  </widget>
+  <widget class="QSpinBox" name="viapadWidth">
+   <property name="geometry">
+    <rect>
+     <x>260</x>
+     <y>285</y>
+     <width>61</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>Via pad width (1 mil = 0.001 inches)</string>
+   </property>
+   <property name="minimum">
+    <number>16</number>
+   </property>
+   <property name="maximum">
+    <number>80</number>
+   </property>
+   <property name="singleStep">
+    <number>1</number>
+   </property>
+   <property name="value">
+    <number>50</number>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_viapad">
+   <property name="geometry">
+    <rect>
+     <x>180</x>
+     <y>285</y>
+     <width>81</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Via Pad</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_hole">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>315</y>
+     <width>61</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Hole</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+   </property>
+  </widget>
+  <widget class="QSpinBox" name="holeWidth">
+   <property name="geometry">
+    <rect>
+     <x>70</x>
+     <y>315</y>
+     <width>61</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>Hole width (1 mil = 0.001 inches)</string>
+   </property>
+   <property name="minimum">
+    <number>20</number>
+   </property>
+   <property name="maximum">
+    <number>50</number>
+   </property>
+   <property name="singleStep">
+    <number>1</number>
+   </property>
+   <property name="value">
+    <number>26</number>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_viahole">
+   <property name="geometry">
+    <rect>
+     <x>180</x>
+     <y>315</y>
+     <width>81</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Via Hole</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+   </property>
+  </widget>
+  <widget class="QSpinBox" name="viaholeWidth">
+   <property name="geometry">
+    <rect>
+     <x>260</x>
+     <y>315</y>
+     <width>61</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>Via hole width (1 mil = 0.001 inches)</string>
+   </property>
+   <property name="minimum">
+    <number>8</number>
+   </property>
+   <property name="maximum">
+    <number>40</number>
+   </property>
+   <property name="singleStep">
+    <number>1</number>
+   </property>
+   <property name="value">
+    <number>25</number>
+   </property>
+  </widget>
+  <widget class="QSpinBox" name="trackWidth">
+   <property name="geometry">
+    <rect>
+     <x>70</x>
+     <y>345</y>
+     <width>61</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>Track width (1 mil = 0.001 inches)</string>
+   </property>
+   <property name="minimum">
+    <number>4</number>
+   </property>
+   <property name="maximum">
+    <number>50</number>
+   </property>
+   <property name="singleStep">
+    <number>1</number>
+   </property>
+   <property name="value">
+    <number>46</number>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_track">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>345</y>
+     <width>61</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Track</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+   </property>
+  </widget>
+  <widget class="QSpinBox" name="gapWidth">
+   <property name="geometry">
+    <rect>
+     <x>260</x>
+     <y>345</y>
+     <width>61</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>Gap width for ground-fills  (1 mil = 0.001 inches)</string>
+   </property>
+   <property name="minimum">
+    <number>5</number>
+   </property>
+   <property name="maximum">
+    <number>30</number>
+   </property>
+   <property name="singleStep">
+    <number>1</number>
+   </property>
+   <property name="value">
+    <number>10</number>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_gap">
+   <property name="geometry">
+    <rect>
+     <x>180</x>
+     <y>345</y>
+     <width>81</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Gap</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="closeTracks">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>375</y>
+     <width>171</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="mouseTracking">
+    <bool>false</bool>
+   </property>
+   <property name="focusPolicy">
+    <enum>Qt::TabFocus</enum>
+   </property>
+   <property name="toolTip">
+    <string>Show closest tracks in view</string>
+   </property>
+   <property name="text">
+    <string>Show closest tracks </string>
+   </property>
+  </widget>
+  <widget class="QSpinBox" name="tagWidth">
+   <property name="geometry">
+    <rect>
+     <x>260</x>
+     <y>375</y>
+     <width>61</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>Thermal relief tag width (1 mil = 0.001 inches)</string>
+   </property>
+   <property name="minimum">
+    <number>4</number>
+   </property>
+   <property name="maximum">
+    <number>50</number>
+   </property>
+   <property name="singleStep">
+    <number>1</number>
+   </property>
+   <property name="value">
+    <number>46</number>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_tag">
+   <property name="geometry">
+    <rect>
+     <x>180</x>
+     <y>375</y>
+     <width>81</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Thermal</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_info">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>410</y>
+     <width>311</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <weight>50</weight>
+     <italic>true</italic>
+     <bold>false</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>Info:</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_info_2">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>445</y>
+     <width>311</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <weight>50</weight>
+     <italic>true</italic>
+     <bold>false</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>Info:</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+   </property>
+  </widget>
+  <widget class="QSpinBox" name="maskWidth">
+   <property name="geometry">
+    <rect>
+     <x>180</x>
+     <y>515</y>
+     <width>61</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>Solder mask margin (1 mil = 0.001 inches)</string>
+   </property>
+   <property name="minimum">
+    <number>0</number>
+   </property>
+   <property name="maximum">
+    <number>10</number>
+   </property>
+   <property name="singleStep">
+    <number>1</number>
+   </property>
+   <property name="value">
+    <number>4</number>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_mask">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>515</y>
+     <width>161</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Solder Mask Margin</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+   </property>
+  </widget>
+  <widget class="QSpinBox" name="silkWidth">
+   <property name="geometry">
+    <rect>
+     <x>180</x>
+     <y>545</y>
+     <width>61</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>Silkscreen line width (1 mil = 0.001 inches)</string>
+   </property>
+   <property name="minimum">
+    <number>1</number>
+   </property>
+   <property name="maximum">
+    <number>10</number>
+   </property>
+   <property name="singleStep">
+    <number>1</number>
+   </property>
+   <property name="value">
+    <number>7</number>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_silk">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>545</y>
+     <width>161</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Silkscreen Line Width</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+   </property>
+  </widget>
+  <widget class="QSpinBox" name="edgeWidth">
+   <property name="geometry">
+    <rect>
+     <x>180</x>
+     <y>575</y>
+     <width>61</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>Board edge margin (1 mil = 0.001 inches)</string>
+   </property>
+   <property name="minimum">
+    <number>0</number>
+   </property>
+   <property name="maximum">
+    <number>50</number>
+   </property>
+   <property name="singleStep">
+    <number>1</number>
+   </property>
+   <property name="value">
+    <number>20</number>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_edge">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>575</y>
+     <width>161</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Board Edge Margin</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_16">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>490</y>
+     <width>330</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <weight>75</weight>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>PCB Parameters (mil)</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_height">
+   <property name="geometry">
+    <rect>
+     <x>180</x>
+     <y>105</y>
+     <width>81</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Height</string>
+   </property>
+  </widget>
+  <widget class="QSpinBox" name="spinBox_height">
+   <property name="geometry">
+    <rect>
+     <x>260</x>
+     <y>105</y>
+     <width>61</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>Height of target board</string>
+   </property>
+   <property name="minimum">
+    <number>1</number>
+   </property>
+   <property name="maximum">
+    <number>999</number>
+   </property>
+   <property name="value">
+    <number>10</number>
+   </property>
+  </widget>
+  <widget class="QSpinBox" name="spinBox_width">
+   <property name="geometry">
+    <rect>
+     <x>70</x>
+     <y>105</y>
+     <width>61</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>Width of target board</string>
+   </property>
+   <property name="minimum">
+    <number>1</number>
+   </property>
+   <property name="maximum">
+    <number>999</number>
+   </property>
+   <property name="value">
+    <number>9</number>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_width">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>105</y>
+     <width>61</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Width</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="shade">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>140</y>
+     <width>311</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="mouseTracking">
+    <bool>false</bool>
+   </property>
+   <property name="focusPolicy">
+    <enum>Qt::TabFocus</enum>
+   </property>
+   <property name="toolTip">
+    <string>Draw area outside the target board in a darker shade</string>
+   </property>
+   <property name="text">
+    <string>Shade off-board area</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_17">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>80</y>
+     <width>330</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <weight>75</weight>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>Target Board Size (x100 mil)</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+   </property>
+  </widget>
+  <widget class="QRadioButton" name="antiAliasOn">
+   <property name="geometry">
+    <rect>
+     <x>70</x>
+     <y>25</y>
+     <width>51</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="mouseTracking">
+    <bool>false</bool>
+   </property>
+   <property name="focusPolicy">
+    <enum>Qt::TabFocus</enum>
+   </property>
+   <property name="text">
+    <string>On</string>
+   </property>
+  </widget>
+  <widget class="QRadioButton" name="antiAliasOff">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>25</y>
+     <width>61</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="mouseTracking">
+    <bool>false</bool>
+   </property>
+   <property name="focusPolicy">
+    <enum>Qt::TabFocus</enum>
+   </property>
+   <property name="text">
+    <string>Off</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_brightness">
+   <property name="geometry">
+    <rect>
+     <x>150</x>
+     <y>25</y>
+     <width>111</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Brightness (%)</string>
+   </property>
+  </widget>
+  <widget class="QSpinBox" name="spinBox_bright">
+   <property name="geometry">
+    <rect>
+     <x>260</x>
+     <y>25</y>
+     <width>61</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>Height of target board</string>
+   </property>
+   <property name="minimum">
+    <number>0</number>
+   </property>
+   <property name="maximum">
+    <number>100</number>
+   </property>
+   <property name="singleStep">
+    <number>5</number>
+   </property>
+   <property name="value">
+    <number>100</number>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_18">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>150</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <weight>75</weight>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>Anti-alias</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_19">
+   <property name="geometry">
+    <rect>
+     <x>150</x>
+     <y>0</y>
+     <width>180</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <weight>75</weight>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>Background</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+   </property>
   </widget>
  </widget>
  <tabstops>
-  <tabstop>antiAliasOff</tabstop>
-  <tabstop>antiAliasOn</tabstop>
-  <tabstop>spinBox_width</tabstop>
-  <tabstop>spinBox_height</tabstop>
-  <tabstop>shade</tabstop>
   <tabstop>comptext</tabstop>
   <tabstop>comppins</tabstop>
-  <tabstop>padWidth</tabstop>
-  <tabstop>viapadWidth</tabstop>
-  <tabstop>holeWidth</tabstop>
-  <tabstop>viaholeWidth</tabstop>
-  <tabstop>trackWidth</tabstop>
-  <tabstop>gapWidth</tabstop>
-  <tabstop>tagWidth</tabstop>
-  <tabstop>closeTracks</tabstop>
-  <tabstop>maskWidth</tabstop>
-  <tabstop>silkWidth</tabstop>
-  <tabstop>edgeWidth</tabstop>
  </tabstops>
  <resources/>
  <connections/>

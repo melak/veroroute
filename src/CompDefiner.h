@@ -341,7 +341,6 @@ public:
 	}
 	bool SetPinType(const std::string& str)
 	{
-		if ( GetCurrentShapeId() == BAD_ID ) return false;
 		const bool bRect = ( str == "Rectangle" );
 		if ( bRect )
 			return SetPinFlags( GetPinFlags() | PIN_RECT );		// Set bit
