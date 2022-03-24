@@ -138,7 +138,7 @@ void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, cons
 
 	if ( !m_findDlg->isVisible() ) ClearFind();	// Clear the set of found components
 
-	m_mousePos = pos;
+	m_mousePos = m_clickedPos = pos;
 	if ( m_board.GetMirrored() ) return;
 
 	const TRACKMODE&	trackMode	= m_board.GetTrackMode();
@@ -154,10 +154,6 @@ void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, cons
 		bInGrid = GetRowCol(m_mousePos, compDefiner.GetScreenRows(), compDefiner.GetScreenCols(), m_gridRow, m_gridCol, dRow, dCol);
 	else
 		bInGrid = GetRowCol(m_mousePos, m_gridRow, m_gridCol, dRow, dCol);
-
-	m_gridRowClicked = m_gridRow;
-	m_gridColClicked = m_gridCol;
-
 	if ( !bInGrid)
 		return HidePadOffsetDialog();
 
@@ -467,13 +463,13 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 
 	if ( !bTrackOn && !bCompsOn ) return;
 
+	const bool bSameLocation = ( PolygonHelper::Length(m_mousePos - m_clickedPos) ) < m_board.GetGRIDPIXELS();	// Tolerance of one grid square
+	if ( !bSameLocation ) return;
+
 	// Get row col
 	double dRow(0), dCol(0);	// Fractional correction to row, col for SwapDiagLinks() call
 	const bool bInGrid			= GetRowCol(m_mousePos, m_gridRow, m_gridCol, dRow, dCol);
-	const bool bSameLocation	= ( m_gridRow == m_gridRowClicked && m_gridCol == m_gridColClicked );
-	m_gridRowClicked = m_gridRow;
-	m_gridColClicked = m_gridCol;
-	if ( !bInGrid || !bSameLocation ) return;
+	if ( !bInGrid ) return;
 
 	const int&	layer	= m_board.GetCurrentLayer();
 	Element*	pC		= m_board.Get(layer, m_gridRow, m_gridCol);

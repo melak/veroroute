@@ -647,6 +647,7 @@ private:
 	int			m_radPixmapBlob		= 0;		// ...
 #endif
 	QPoint		m_mousePos;
+	QPoint		m_clickedPos;
 	bool		m_bRepaint			= false;	// Flag to make paintEvent() do something useful
 	bool		m_bMouseClick		= false;	// Flag of click beginning
 	bool		m_bLeftClick		= false;
@@ -672,8 +673,6 @@ private:
 	int			m_YCORRECTION		= 0;		// So we can fully render pads larger than 100 mil diameter
 	int			m_gridRow			= 0;		// Board row corresponding to mouse position
 	int			m_gridCol			= 0;		// Board col correspondong to mouse position
-	int			m_gridRowClicked	= 0;		// Board row corresponding to mouse position when clicked. Set by MousePressEvent()/MouseDoubleClickEvent()
-	int			m_gridColClicked	= 0;		// Board col correspondong to mouse position when clicked. Set by MousePressEvent()/MouseDoubleClickEvent()
 	QPoint		m_rulerA;
 	QPoint		m_rulerB;
 	int			m_iTutorialNumber	= -1;		// Tutorial file number 0,1,2,... (or -1 if not in tutorial mode)

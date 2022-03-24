@@ -509,14 +509,14 @@ void MainWindow::Startup()
 
 void MainWindow::ResetView(MOUSE_MODE eMouseMode, bool bTutorial)
 {
-	m_mousePos = QPoint(0,0);
+	m_mousePos = m_clickedPos = QPoint(0,0);
 	m_bMouseClick = m_bLeftClick = m_bRightClick = m_bCtrlKeyDown = m_bShiftKeyDown = false;
 	m_eMouseMode = eMouseMode;
 	m_bWritePDF = m_bWriteGerber = m_bTwoLayerGerber = false;
 	m_XGRIDOFFSET	= m_YGRIDOFFSET	= m_XCORRECTION = m_YCORRECTION = 0;
 
 	// Try to set m_gridRow, m_gridCol to match the current NodeId in the board
-	m_gridRow = m_gridCol = m_gridRowClicked = m_gridColClicked = 0;
+	m_gridRow = m_gridCol = 0;
 
 	ResetRuler();	// Reset the ruler
 
@@ -2151,8 +2151,8 @@ void MainWindow::DefinerToggleShapeFill(bool b)
 		RepaintSkipRouting();
 	}
 }
-void MainWindow::DefinerWidthChanged(int i)				{ if ( GetCompDefiner().SetWidth(i)		) { UpdateHistory("Footprint width changed", 0);	EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
-void MainWindow::DefinerHeightChanged(int i)			{ if ( GetCompDefiner().SetHeight(i)	) { UpdateHistory("Footprint height changed", 0);	EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
+void MainWindow::DefinerWidthChanged(int i)				{ if ( GetCompDefiner().SetWidth(i)		) { UpdateHistory("Change footprint size", 0);	EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
+void MainWindow::DefinerHeightChanged(int i)			{ if ( GetCompDefiner().SetHeight(i)	) { UpdateHistory("Change footprint size", 0);	EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
 void MainWindow::DefinerPadWidthChanged(int i)			{ if ( GetCompDefiner().SetPadWidth(i)	) { UpdateHistory("Pad width changed", 0);			EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
 void MainWindow::DefinerHoleWidthChanged(int i)			{ if ( GetCompDefiner().SetHoleWidth(i)	) { UpdateHistory("Hole width changed", 0);			EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
 void MainWindow::DefinerSetPinNumber(int i)				{ if ( GetCompDefiner().SetPinNumber(i)	) { UpdateHistory("Change pin number", GetCompDefiner().GetCurrentPinId());			EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }

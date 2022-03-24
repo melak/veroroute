@@ -236,7 +236,7 @@
     </rect>
    </property>
    <property name="focusPolicy">
-    <enum>Qt::WheelFocus</enum>
+    <enum>Qt::StrongFocus</enum>
    </property>
    <property name="minimum">
     <number>1</number>
@@ -290,7 +290,7 @@
     </rect>
    </property>
    <property name="focusPolicy">
-    <enum>Qt::WheelFocus</enum>
+    <enum>Qt::StrongFocus</enum>
    </property>
    <property name="minimum">
     <number>1</number>
