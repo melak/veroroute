@@ -218,7 +218,6 @@
    </property>
    <property name="font">
     <font>
-     <weight>75</weight>
      <bold>true</bold>
     </font>
    </property>
@@ -308,12 +307,11 @@
      <x>5</x>
      <y>210</y>
      <width>255</width>
-     <height>20</height>
+     <height>25</height>
     </rect>
    </property>
    <property name="font">
     <font>
-     <weight>75</weight>
      <bold>true</bold>
     </font>
    </property>
@@ -327,12 +325,11 @@
      <x>5</x>
      <y>268</y>
      <width>251</width>
-     <height>20</height>
+     <height>25</height>
     </rect>
    </property>
    <property name="font">
     <font>
-     <weight>75</weight>
      <bold>true</bold>
     </font>
    </property>
@@ -408,7 +405,6 @@
    </property>
    <property name="font">
     <font>
-     <weight>75</weight>
      <bold>true</bold>
     </font>
    </property>
@@ -1058,7 +1054,6 @@
    </property>
    <property name="font">
     <font>
-     <weight>75</weight>
      <bold>true</bold>
     </font>
    </property>
@@ -1070,13 +1065,13 @@
    <property name="geometry">
     <rect>
      <x>0</x>
-     <y>143</y>
+     <y>142</y>
      <width>271</width>
      <height>2</height>
     </rect>
    </property>
    <property name="frameShadow">
-    <enum>QFrame::Plain</enum>
+    <enum>QFrame::Sunken</enum>
    </property>
    <property name="lineWidth">
     <number>2</number>
@@ -1095,7 +1090,7 @@
     </rect>
    </property>
    <property name="frameShadow">
-    <enum>QFrame::Plain</enum>
+    <enum>QFrame::Sunken</enum>
    </property>
    <property name="lineWidth">
     <number>2</number>
@@ -1114,7 +1109,7 @@
     </rect>
    </property>
    <property name="frameShadow">
-    <enum>QFrame::Plain</enum>
+    <enum>QFrame::Sunken</enum>
    </property>
    <property name="lineWidth">
     <number>2</number>
@@ -1127,13 +1122,13 @@
    <property name="geometry">
     <rect>
      <x>0</x>
-     <y>325</y>
+     <y>326</y>
      <width>271</width>
      <height>2</height>
     </rect>
    </property>
    <property name="frameShadow">
-    <enum>QFrame::Plain</enum>
+    <enum>QFrame::Sunken</enum>
    </property>
    <property name="lineWidth">
     <number>2</number>
