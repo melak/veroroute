@@ -37,7 +37,6 @@
 MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorialsPathStr, QWidget* parent)
 : QMainWindow(parent)
 , ui(new Ui::MainWindow)
-, m_mouseActionString("action")
 , m_localDataPathStr(localDataPathStr.toStdString())
 , m_tutorialsPathStr(tutorialsPathStr.toStdString())
 {

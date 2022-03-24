@@ -573,6 +573,7 @@ private:
 	void ResetHistory(const std::string& str);
 	void UpdateHistory(const std::string& str, const int objId = -1);
 	void UpdateUndoRedoControls();
+	void SetMouseActionString(const std::string& str, const int objId = -1);
 
 	// Helper to auto-append suffix when writing a file
 	QString GetSaveFileName(const QString& caption, const QString& nameFilter, const QString& defaultSuffix);
@@ -629,6 +630,7 @@ private:
 	QString					m_fileName;			// The loaded/saved .vrt file
 	QString					m_pdfFileName;		// The saved PDF file
 	QString					m_gerberFileName;	// The saved Gerber file
+	int						m_mouseObjId = -1;	// For the undo/redo history
 	std::string				m_mouseActionString;// For the undo/redo history
 	std::string				m_localDataPathStr;	// The path to the "history" and "templates" folders
 	std::string				m_tutorialsPathStr;	// The path to the "tutorials" folder and "veroroute.png"
