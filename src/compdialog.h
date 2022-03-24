@@ -35,6 +35,7 @@ public:
 	void SetMainWindow(MainWindow* p);
 	void Update();
 	void EnableControls();
+	bool GetUpdatingControls() const { return m_bUpdatingControls; }
 protected:
 	bool eventFilter(QObject* object, QEvent* event);
 	void wheelEvent(QWheelEvent* event);
@@ -47,4 +48,5 @@ protected:
 private:
 	Ui_CompDialog*	ui;
 	MainWindow*		m_pMainWindow;
+	bool			m_bUpdatingControls = false;
 };

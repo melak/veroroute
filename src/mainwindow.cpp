@@ -2151,12 +2151,13 @@ void MainWindow::DefinerToggleShapeFill(bool b)
 		RepaintSkipRouting();
 	}
 }
-void MainWindow::DefinerWidthChanged(int i)				{ if ( GetCompDefiner().SetWidth(i)		) { UpdateHistory("change footprint size", 0);	EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
-void MainWindow::DefinerHeightChanged(int i)			{ if ( GetCompDefiner().SetHeight(i)	) { UpdateHistory("change footprint size", 0);	EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
-void MainWindow::DefinerPadWidthChanged(int i)			{ if ( GetCompDefiner().SetPadWidth(i)	) { UpdateHistory("change custom pad width", 0);			EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
-void MainWindow::DefinerHoleWidthChanged(int i)			{ if ( GetCompDefiner().SetHoleWidth(i)	) { UpdateHistory("change custom hole width", 0);			EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
-void MainWindow::DefinerSetPinNumber(int i)				{ if ( GetCompDefiner().SetPinNumber(i)	) { UpdateHistory("change pin number", GetCompDefiner().GetCurrentPinId());			EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
-void MainWindow::DefinerIncPinNumber(bool b)			{ if ( GetCompDefiner().IncPinNumber(b)	) { UpdateHistory("change pin number", GetCompDefiner().GetCurrentPinId());			EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }	// Called using mouse wheel in view
+
+void MainWindow::DefinerWidthChanged(int i)				{ if ( GetCompDefiner().SetWidth(i)		) { UpdateHistory("change footprint size", 0);		EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
+void MainWindow::DefinerHeightChanged(int i)			{ if ( GetCompDefiner().SetHeight(i)	) { UpdateHistory("change footprint size", 0);		EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
+void MainWindow::DefinerPadWidthChanged(int i)			{ if ( GetCompDefiner().SetPadWidth(i)	) { UpdateHistory("change custom pad width", 0);	EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
+void MainWindow::DefinerHoleWidthChanged(int i)			{ if ( GetCompDefiner().SetHoleWidth(i)	) { UpdateHistory("change custom hole width", 0);	EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
+void MainWindow::DefinerSetPinNumber(int i)				{ if ( GetCompDefiner().SetPinNumber(i)	) { UpdateHistory("change pin number", GetCompDefiner().GetCurrentPinId());	EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
+void MainWindow::DefinerIncPinNumber(bool b)			{ if ( GetCompDefiner().IncPinNumber(b)	) { UpdateHistory("change pin number", GetCompDefiner().GetCurrentPinId());	EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }	// Called using mouse wheel in view
 void MainWindow::DefinerSetSurface(const QString& str)	{ if ( GetCompDefiner().SetSurface(str.toStdString()) ) { UpdateHistory("change surface type", GetCompDefiner().GetCurrentPinId());	EnableCompDialogControls(); UpdateCompDialog(); RepaintSkipRouting(); } }
 void MainWindow::DefinerSetCX(double d)					{ if ( GetCompDefiner().SetCX(d)	) { UpdateHistory("change shape centre",		GetCurrentShapeId()); EnableCompDialogControls(); RepaintSkipRouting(); } }
 void MainWindow::DefinerSetCY(double d)					{ if ( GetCompDefiner().SetCY(-d)	) { UpdateHistory("change shape centre",		GetCurrentShapeId()); EnableCompDialogControls(); RepaintSkipRouting(); } }	// Control assumes CY goes up
@@ -2187,14 +2188,14 @@ void MainWindow::DefinerToggleEditor()
 			if ( !comp.GetShapes().empty() )
 				GetCompDefiner().Populate( comp );
 		}
+		UpdateHistory("enter component editor mode", 0);
 		UpdateCompDialog();
 		ShowCompDialog();		// Show component definition dialog
-		UpdateHistory("enter component editor mode", 0);
 	}
 	else
 	{
-		ShowControlDialog();	// Show control dialog
 		UpdateHistory("leave component editor mode", 0);
+		ShowControlDialog();	// Show control dialog
 	}
 	UpdateControls();
 	if ( m_board.GetCompEdit() )
@@ -2203,12 +2204,12 @@ void MainWindow::DefinerToggleEditor()
 		RepaintWithRouting();
 	activateWindow();			// Stop MS Windows showing the Menu greyed out
 }
-void MainWindow::DefinerAddLine()		{ const int id = GetCompDefiner().AddLine();		if ( id != BAD_ID ) { SetCurrentShapeId(id); UpdateCompDialog(); UpdateHistory("add shape"); RepaintSkipRouting(); } }
-void MainWindow::DefinerAddRect()		{ const int id = GetCompDefiner().AddRect();		if ( id != BAD_ID ) { SetCurrentShapeId(id); UpdateCompDialog(); UpdateHistory("add shape"); RepaintSkipRouting(); } }
-void MainWindow::DefinerAddRoundedRect(){ const int id = GetCompDefiner().AddRoundedRect();	if ( id != BAD_ID ) { SetCurrentShapeId(id); UpdateCompDialog(); UpdateHistory("add shape"); RepaintSkipRouting(); } }
-void MainWindow::DefinerAddEllipse()	{ const int id = GetCompDefiner().AddEllipse();		if ( id != BAD_ID ) { SetCurrentShapeId(id); UpdateCompDialog(); UpdateHistory("add shape"); RepaintSkipRouting(); } }
-void MainWindow::DefinerAddArc()		{ const int id = GetCompDefiner().AddArc();			if ( id != BAD_ID ) { SetCurrentShapeId(id); UpdateCompDialog(); UpdateHistory("add shape"); RepaintSkipRouting(); } }
-void MainWindow::DefinerAddChord()		{ const int id = GetCompDefiner().AddChord();		if ( id != BAD_ID ) { SetCurrentShapeId(id); UpdateCompDialog(); UpdateHistory("add shape"); RepaintSkipRouting(); } }
+void MainWindow::DefinerAddLine()		{ const int id = GetCompDefiner().AddLine();		if ( id != BAD_ID ) { SetCurrentShapeId(id); UpdateHistory("add shape"); UpdateCompDialog(); RepaintSkipRouting(); } }
+void MainWindow::DefinerAddRect()		{ const int id = GetCompDefiner().AddRect();		if ( id != BAD_ID ) { SetCurrentShapeId(id); UpdateHistory("add shape"); UpdateCompDialog(); RepaintSkipRouting(); } }
+void MainWindow::DefinerAddRoundedRect(){ const int id = GetCompDefiner().AddRoundedRect();	if ( id != BAD_ID ) { SetCurrentShapeId(id); UpdateHistory("add shape"); UpdateCompDialog(); RepaintSkipRouting(); } }
+void MainWindow::DefinerAddEllipse()	{ const int id = GetCompDefiner().AddEllipse();		if ( id != BAD_ID ) { SetCurrentShapeId(id); UpdateHistory("add shape"); UpdateCompDialog(); RepaintSkipRouting(); } }
+void MainWindow::DefinerAddArc()		{ const int id = GetCompDefiner().AddArc();			if ( id != BAD_ID ) { SetCurrentShapeId(id); UpdateHistory("add shape"); UpdateCompDialog(); RepaintSkipRouting(); } }
+void MainWindow::DefinerAddChord()		{ const int id = GetCompDefiner().AddChord();		if ( id != BAD_ID ) { SetCurrentShapeId(id); UpdateHistory("add shape"); UpdateCompDialog(); RepaintSkipRouting(); } }
 void MainWindow::DefinerChooseColor()
 {
 	auto& def = GetCompDefiner();
@@ -2220,29 +2221,20 @@ void MainWindow::DefinerChooseColor()
 	{
 		int r(0), g(0), b(0);
 		newColor.getRgb(&r,&g,&b);
-		if ( def.SetFillColor( MyRGB((r<<16) + (g<<8) + b) ) )
-		{
-			UpdateCompDialog(); UpdateHistory("change shape color", id); RepaintSkipRouting();
-		}
+		if ( def.SetFillColor( MyRGB((r<<16) + (g<<8) + b) ) ) { UpdateHistory("change shape color", id); UpdateCompDialog(); RepaintSkipRouting(); }
 	}
 }
 void MainWindow::DefinerRaise()
 {
 	auto& def = GetCompDefiner();
 	const int id = def.GetCurrentShapeId();	assert( id != BAD_ID );
-	if ( def.Raise() )
-	{
-		UpdateCompDialog(); UpdateHistory("raise/lower shape", id); RepaintSkipRouting();
-	}
+	if ( def.Raise() ) { UpdateHistory("raise/lower shape", id); UpdateCompDialog(); RepaintSkipRouting(); }
 }
 void MainWindow::DefinerLower()
 {
 	auto& def = GetCompDefiner();
 	const int id = def.GetCurrentShapeId();	assert( id != BAD_ID );
-	if ( def.Lower() )
-	{
-		UpdateCompDialog(); UpdateHistory("raise/lower shape", id); RepaintSkipRouting();
-	}
+	if ( def.Lower() ) { UpdateHistory("raise/lower shape", id); UpdateCompDialog(); RepaintSkipRouting(); }
 }
 
 // GUI update
@@ -2345,7 +2337,9 @@ void MainWindow::UpdateControls()
 	ui->actionMerge->setEnabled(    !bPCB && !bCompEdit && !bTutorial );
 	ui->actionWrite_PDF->setEnabled(!bPCB && !bCompEdit);
 	ui->actionWrite_PNG->setEnabled( !bCompEdit );
-	ui->menuAdd->setEnabled( !bCompEdit && m_board.GetCompMode() != COMPSMODE::OFF && !m_board.GetMirrored() );
+	ui->menuAdd->menuAction()->setVisible( !bCompEdit );
+	ui->menuAdd->setEnabled( bCompEdit || ( m_board.GetCompMode() != COMPSMODE::OFF && !m_board.GetMirrored() ) );
+	ui->menuAddShape->menuAction()->setVisible( bCompEdit );
 	ui->menuPaint->setEnabled( !bCompEdit );
 	ui->menuLayers->setEnabled( !bCompEdit );
 	ui->actionAddLayer->setEnabled(			 bSingleLayer );
@@ -2559,7 +2553,7 @@ void MainWindow::ResetHistory(const std::string& str)
 void MainWindow::UpdateHistory(const std::string& str, const int objId)
 {
 	if ( str.empty() ) return;	// Must have a string
-	if ( m_bUpdatingControls ) return;
+	if ( m_bUpdatingControls || m_compDlg->GetUpdatingControls() ) return;
 	if ( !m_bHistoryDir ) return;	// No History folder
 	if ( GetMatchesVrtFile( m_historyMgr.GetCurrentHistoryFilename() ) ) return;	// No change
 	m_historyMgr.Update(str, objId, m_board);

@@ -117,6 +117,8 @@ CompDialog::~CompDialog()
 
 void CompDialog::Update()
 {
+	m_bUpdatingControls = true;
+
 	CompDefiner&	def				= m_pMainWindow->GetCompDefiner();
 	const bool		bValidPinId		= BAD_ID != def.GetCurrentPinId();
 	const bool		bValidShapeId	= BAD_ID != def.GetCurrentShapeId();
@@ -167,6 +169,8 @@ void CompDialog::Update()
 	}
 	ui->pushButtonRGB->setStyleSheet("border:2px solid " + rgb.GetQColor().name());
 	EnableControls();
+
+	m_bUpdatingControls = false;
 }
 
 void CompDialog::EnableControls()	// Enable/disable controls

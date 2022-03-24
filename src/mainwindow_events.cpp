@@ -112,13 +112,10 @@ void MainWindow::wheelEvent(QWheelEvent* event)
 	{
 		if ( bBack ) ZoomOut(); else ZoomIn();
 	}
+	else if ( m_board.GetCompEdit() )
+		DefinerIncPinNumber(!bBack);
 	else if ( !m_board.GetMirrored() )
-	{
-		if ( m_board.GetCompEdit() )
-			DefinerIncPinNumber(!bBack);
-		else
-			CompStretch(!bBack);
-	}
+		CompStretch(!bBack);
 	event->accept();	// If we don't do this, we can get the same event passed multiple times if we're on MS Windows.
 }
 
@@ -141,7 +138,7 @@ void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, cons
 	if ( !m_findDlg->isVisible() ) ClearFind();	// Clear the set of found components
 
 	m_mousePos = m_clickedPos = pos;
-	if ( m_board.GetMirrored() ) return;
+	if ( !m_board.GetCompEdit() && m_board.GetMirrored() ) return;
 
 	const TRACKMODE&	trackMode	= m_board.GetTrackMode();
 	const COMPSMODE&	compMode	= m_board.GetCompMode();
@@ -444,7 +441,7 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 	g_bPinClicked = false;
 
 	m_mousePos = pos;
-	if ( m_board.GetMirrored() ) return;
+	if ( !m_board.GetCompEdit() && m_board.GetMirrored() ) return;
 	if ( m_board.GetCompEdit() ) return;
 
 	if ( GetSmartPan() || GetShiftKeyDown() ) return;
@@ -562,7 +559,7 @@ void MainWindow::MouseMoveEvent(const QPoint& pos)
 	m_bReRoute = false;	// Reset m_bReRoute only.  Leave m_bReListNodes alone
 
 	m_mousePos = pos;
-	if ( m_board.GetMirrored() ) return;
+	if ( !m_board.GetCompEdit() && m_board.GetMirrored() ) return;
 	if ( !m_bMouseClick ) return;
 	const TRACKMODE&	trackMode	= m_board.GetTrackMode();
 	const COMPSMODE&	compMode	= m_board.GetCompMode();
@@ -809,7 +806,7 @@ void MainWindow::MouseReleaseEvent(const QPoint& pos)
 	if ( GetSmartPan() )
 		SetSmartPan(false);
 
-	if ( m_board.GetMirrored() ) return;
+	if ( !m_board.GetCompEdit() && m_board.GetMirrored() ) return;
 
 	m_bMouseClick = false;
 
@@ -862,7 +859,7 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
 	if ( GetCtrlKeyDown() ) return;		// Try to keep Ctrl key input handled by menu items
 	if ( GetShiftKeyDown() ) return;	// Ignore other key presses while trying to group components
 
-	if ( m_board.GetMirrored() ) return;
+	if ( !m_board.GetCompEdit() && m_board.GetMirrored() ) return;
 
 	const TRACKMODE&	trackMode		= m_board.GetTrackMode();
 	const COMPSMODE&	compMode		= m_board.GetCompMode();
@@ -971,7 +968,7 @@ void MainWindow::keyReleaseEvent(QKeyEvent* event)
 	if ( GetSmartPan() )
 		SetSmartPan(false);
 
-	if ( m_board.GetMirrored() ) return;
+	if ( !m_board.GetCompEdit() && m_board.GetMirrored() ) return;
 	if ( event->isAutoRepeat() ) return;
 
 	if ( m_board.GetCompEdit() )

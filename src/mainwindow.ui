@@ -273,9 +273,21 @@
     <addaction name="actionErasePins"/>
     <addaction name="actionPaintFlood"/>
    </widget>
+   <widget class="QMenu" name="menuAddShape">
+    <property name="title">
+     <string>Add</string>
+    </property>
+    <addaction name="actionAddLine"/>
+    <addaction name="actionAddRect"/>
+    <addaction name="actionAddRoundedRect"/>
+    <addaction name="actionAddEllipse"/>
+    <addaction name="actionAddArc"/>
+    <addaction name="actionAddChord"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
    <addaction name="menuAdd"/>
+   <addaction name="menuAddShape"/>
    <addaction name="menuView"/>
    <addaction name="menuPaint"/>
    <addaction name="menuTrack_Style"/>
@@ -1207,7 +1219,7 @@
      <normaloff>:/images/addline.png</normaloff>:/images/addline.png</iconset>
    </property>
    <property name="text">
-    <string>AddLine</string>
+    <string>Line</string>
    </property>
    <property name="toolTip">
     <string>Add line</string>
@@ -1219,7 +1231,7 @@
      <normaloff>:/images/addrect.png</normaloff>:/images/addrect.png</iconset>
    </property>
    <property name="text">
-    <string>AddRect</string>
+    <string>Rectangle</string>
    </property>
    <property name="toolTip">
     <string>Add rectangle</string>
@@ -1231,7 +1243,7 @@
      <normaloff>:/images/addroundedrect.png</normaloff>:/images/addroundedrect.png</iconset>
    </property>
    <property name="text">
-    <string>AddRoundedRect</string>
+    <string>Rounded rectangle</string>
    </property>
    <property name="toolTip">
     <string>Add rounded rectangle</string>
@@ -1243,7 +1255,7 @@
      <normaloff>:/images/addellipse.png</normaloff>:/images/addellipse.png</iconset>
    </property>
    <property name="text">
-    <string>AddEllipse</string>
+    <string>Ellipse</string>
    </property>
    <property name="toolTip">
     <string>Add ellipse</string>
@@ -1255,7 +1267,7 @@
      <normaloff>:/images/addarc.png</normaloff>:/images/addarc.png</iconset>
    </property>
    <property name="text">
-    <string>AddArc</string>
+    <string>Arc</string>
    </property>
    <property name="toolTip">
     <string>Add arc</string>
@@ -1278,7 +1290,7 @@
      <normaloff>:/images/addchord.png</normaloff>:/images/addchord.png</iconset>
    </property>
    <property name="text">
-    <string>AddChord</string>
+    <string>Chord</string>
    </property>
    <property name="toolTip">
     <string>Add chord</string>
