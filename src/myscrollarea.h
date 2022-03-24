@@ -34,20 +34,34 @@ public:
 	MyScrollArea(QWidget* parent = nullptr);
 	~MyScrollArea() {}
 
-	void SetRequestCentreView(bool b) { m_bRequestCentreView = b; }
+	void SetRequestTopLeftView(bool b)	{ m_bRequestTopLeftView	= b; }
+	void SetRequestCentreView(bool b)	{ m_bRequestCentreView	= b; }
 	void CentreView()
 	{
-		if ( !m_bRequestCentreView ) return;
+		if ( !m_bRequestTopLeftView && !m_bRequestCentreView ) return;
 		auto* pH = horizontalScrollBar();
 		auto* pV = verticalScrollBar();
-		const int iHcentre	= ( pH->minimum() + pH->maximum() ) / 2;
-		const int iVcentre	= ( pV->minimum() + pV->maximum() ) / 2;
-		const bool bChanged	= ( pH->value() != iHcentre ) || ( pV->value() != iVcentre );
-		if ( bChanged )
+		if ( m_bRequestTopLeftView )
 		{
-			pH->setValue(iHcentre);
-			pV->setValue(iVcentre);
-			m_bRequestCentreView = false;
+			const bool bChanged	= ( pH->value() != pH->minimum() ) || ( pV->value() != pV->minimum() );
+			if ( bChanged )
+			{
+				pH->setValue( pH->minimum() );
+				pV->setValue( pV->minimum() );
+				m_bRequestTopLeftView = false;
+			}
+		}
+		if ( m_bRequestCentreView )
+		{
+			const int iHcentre	= ( pH->minimum() + pH->maximum() ) / 2;
+			const int iVcentre	= ( pV->minimum() + pV->maximum() ) / 2;
+			const bool bChanged	= ( pH->value() != iHcentre ) || ( pV->value() != iVcentre );
+			if ( bChanged )
+			{
+				pH->setValue(iHcentre);
+				pV->setValue(iVcentre);
+				m_bRequestCentreView = false;
+			}
 		}
 	}
 protected:
@@ -75,6 +89,7 @@ private:
 	QWidget* m_parent;
 	std::chrono::steady_clock::time_point m_lastTouchBegin;
 	bool		m_bRequestCentreView	= false;
+	bool		m_bRequestTopLeftView	= false;
 	bool		m_bTouchCancelled		= false;
 	bool		m_bDoubleClickCancelled	= false;
 	long long	m_releaseDuration_ms	= 0;

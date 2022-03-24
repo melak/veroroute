@@ -564,6 +564,9 @@ void MainWindow::ResetView(MOUSE_MODE eMouseMode, bool bTutorial)
 	activateWindow();	// Select mainwindow rather than child dialogs
 	DestroyPixmapCache();
 
+	if ( !bUndoRedo && !m_board.GetCompEdit() )
+		m_scrollArea->SetRequestTopLeftView(true);
+
 	RepaintWithListNodes();
 }
 
