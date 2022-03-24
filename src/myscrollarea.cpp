@@ -68,7 +68,7 @@ bool MyScrollArea::viewportEvent(QEvent* event)
 		case QEvent::TouchBegin:
 		{
 			bool bDoubleClicked(false);
-			if ( !m_bTouchCancelled && m_maxPoints == 1 )
+			if ( !m_bTouchCancelled && !m_bDoubleClickCancelled )
 			{
 				const auto	elapsed			= std::chrono::steady_clock::now() - m_lastTouchBegin;
 				const auto	duration_ms		= std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
@@ -79,14 +79,16 @@ bool MyScrollArea::viewportEvent(QEvent* event)
 #endif
 				bDoubleClicked = ( effective_ms >= 0 && effective_ms <= 500 );
 			}
+			m_bDoubleClickCancelled = bDoubleClicked;	// Prevent daisy chaining of double-clicks
 
 			if ( pMainWindow )
 			{
 				QTouchEvent*	ev		= (QTouchEvent*)event;
 				const auto&		points	= ev->touchPoints();
-				m_maxPoints = points.size();	// Reset m_maxPoints
-				m_bTouchCancelled = false;	// Reset m_bTouchCancelled
-				m_dSpread = 0;			// Reset m_dSpread
+
+				m_maxPoints			= points.size();	// Reset m_maxPoints
+				m_bTouchCancelled	= false;			// Reset m_bTouchCancelled
+				m_dSpread			= 0;				// Reset m_dSpread
 
 				if ( bDoubleClicked )
 					pMainWindow->MouseDoubleClickEvent(points.begin()->pos().toPoint());
@@ -105,9 +107,11 @@ bool MyScrollArea::viewportEvent(QEvent* event)
 			{
 				QTouchEvent*	ev			= (QTouchEvent*)event;
 				const auto&		points		= ev->touchPoints();
-
 				const int		numPoints	= points.size();
+
 				m_maxPoints = std::max(m_maxPoints, numPoints);
+
+				if ( m_maxPoints > 1 ) m_bDoubleClickCancelled = true;
 
 				switch( numPoints )
 				{
