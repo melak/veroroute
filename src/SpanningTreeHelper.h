@@ -40,7 +40,7 @@ struct SpanningTreeHelper
 		const size_t N = pointsIn.size();
 		if ( N < 2 ) return;
 
-		std::vector<size_t>		nConn;	nConn.resize(N,0);	// Number of direct connections to each point
+		std::vector<size_t>		nConn;	nConn.resize(N,0);	// Number of direct connections to each point (for daisy chain algorithm)
 		std::vector<POINT>		v;		v.resize(N);		// Points stored as a vector (for access via index)
 		size_t i(0);
 		for (const auto& o: pointsIn) v[i++] = o;
@@ -71,6 +71,60 @@ struct SpanningTreeHelper
 			matrix.Connect(ij.first, ij.second);					// Update connection matrix
 			nConn[ij.first]++;	nConn[ij.second]++;					// Update number of direct connections
 			edges.erase(iterBest);									// Remove best from the working list
+		}
+	}
+
+	static inline void BuildAirWires(const std::list<POINT>& pointsIn, std::list<LINE>& linesOut)
+	{
+		std::list<LINE> lines;	// Working list of lines
+
+		Build(pointsIn, lines);	// Build minimal spanning tree
+
+		// Erase all LINEs that are between points with the same route ID
+		for (auto iter = lines.begin(); iter != lines.end();)
+			if ( iter->first.second == iter->second.second ) iter = lines.erase(iter); else ++iter;
+
+		// Then map the Route IDs to consecutive indexes 0,1,2,... so we can use a ConnectionMatrix
+		std::unordered_map<size_t, size_t> mapRIDtoIndex;
+		size_t index(0);
+		for (const auto& o : lines)
+		{
+			if ( mapRIDtoIndex.find(o.first.second)  == mapRIDtoIndex.end() ) mapRIDtoIndex[o.first.second]  = index++;
+			if ( mapRIDtoIndex.find(o.second.second) == mapRIDtoIndex.end() ) mapRIDtoIndex[o.second.second] = index++;
+		}
+
+		const size_t N = mapRIDtoIndex.size();
+		if ( N < 2 ) return;
+
+		std::list<qreal> lengths;	// Working list of lengths
+		for (const auto& o : lines)
+			lengths.push_back( PolygonHelper::Length(o.first.first - o.second.first) );
+
+		ConnectionMatrix matrix;	// Helper for tracking connectivity between indices
+		matrix.Allocate(N);
+
+		while ( linesOut.size() < N-1 )
+		{
+			qreal Dmin(DBL_MAX);
+			// Now have 2 iterators that go in step through the lists of lines and lengths
+			auto iterLineBest	= lines.begin();	// The shortest edge that does not make an unnecessary connection
+			auto iterLine		= iterLineBest;
+			auto iterLineEnd	= lines.end();
+			auto iterLengthBest	= lengths.begin();
+			auto iterLength		= iterLengthBest;
+			auto iterLengthEnd	= lengths.end();
+			for (; iterLine != iterLineEnd && iterLength != iterLengthEnd; ++iterLine, ++iterLength )
+			{
+				const qreal& D	= *iterLength;
+				if ( D > Dmin || matrix.GetAreConnected(mapRIDtoIndex[iterLine->first.second], mapRIDtoIndex[iterLine->second.second]) ) continue;
+				iterLineBest	= iterLine;
+				iterLengthBest	= iterLength;
+				Dmin			= D;
+			}
+			linesOut.push_back( *iterLineBest );	// Add best to output list
+			matrix.Connect(mapRIDtoIndex[iterLineBest->first.second], mapRIDtoIndex[iterLineBest->second.second]);	// Update connection matrix
+			lines.erase(iterLineBest);				// Remove best from the working list of lines
+			lengths.erase(iterLengthBest);			// ... and from the working list of lengths
 		}
 	}
 
