@@ -1343,7 +1343,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 		int padOffsetX, padOffsetY;	// For handling offset pads
 
-		std::list<SpanningTreeHelper::POINT> spanTreePoints;
+		std::list<SpanningTreeHelper::AIRWIRE_POINT> spanTreePoints;
 
 		for (int jj = minRow; jj <= maxRow; jj++)
 		for (int ii = minCol; ii <= maxCol; ii++)
@@ -1363,10 +1363,10 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				Y += (padOffsetY * W) / 100;	// Convert from mil to pixels
 			}
 
-			spanTreePoints.push_back( SpanningTreeHelper::POINT(QPointF(X, Y), pD->GetRouteId()) );
+			spanTreePoints.push_back( SpanningTreeHelper::AIRWIRE_POINT(QPointF(X, Y), pD->GetRouteId()) );
 		}
 
-		std::list< SpanningTreeHelper::LINE > spanTreeLines;
+		std::list< SpanningTreeHelper::AIRWIRE_LINE > spanTreeLines;
 		SpanningTreeHelper::BuildAirWires(spanTreePoints, spanTreeLines);	// Build air-wires
 
 		for (const auto& o : spanTreeLines)
@@ -1409,7 +1409,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 												 : colorMgr.GetColorFromNodeId(nodeId);
 			m_varPen.setColor(color);
 
-			std::list<SpanningTreeHelper::POINT> spanTreePoints;
+			std::list<QPointF> spanTreePoints;
 
 			GetXY(board, j, i, X, Y);
 
@@ -1421,7 +1421,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				Y += (padOffsetY * W) / 100;	// Convert from mil to pixels
 			}
 
-			spanTreePoints.push_back( SpanningTreeHelper::POINT(QPointF(X, Y), 0) );	// 0 ==> dummy point attribute
+			spanTreePoints.push_back( QPointF(X, Y) );
 
 			for (int jj = j; jj <= maxRow; jj++)
 			for (int ii = (jj == j) ? (i+1) : minCol; ii <= maxCol; ii++)
@@ -1439,15 +1439,15 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					Y += (padOffsetY * W) / 100;	// Convert from mil to pixels
 				}
 
-				spanTreePoints.push_back( SpanningTreeHelper::POINT(QPointF(X, Y), 0) );	// 0 ==> dummy point attribute
+				spanTreePoints.push_back( QPointF(X, Y) );
 			}
 
 			std::list< SpanningTreeHelper::LINE > spanTreeLines;
 			SpanningTreeHelper::Build(spanTreePoints, spanTreeLines, true);	// true ==> daisy chain
 			for (const auto& o : spanTreeLines)
 			{
-				const QPointF	vec	= ( o.second.first - o.first.first );
-				const QPointF	mid	= ( o.second.first + o.first.first ) * 0.5;
+				const QPointF	vec	= ( o.second - o.first );
+				const QPointF	mid	= ( o.second + o.first ) * 0.5;
 				const int		dL	= static_cast<int>(PolygonHelper::Length(vec) * 0.5);
 				painter.save();
 				painter.translate(mid.x(), mid.y());

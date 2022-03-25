@@ -27,10 +27,9 @@
 
 struct SpanningTreeHelper
 {
-	typedef std::pair<QPointF, unsigned int>	POINT;	// unsigned int is an optional attribute for the point
-	typedef std::pair<POINT, POINT>				LINE;
+	typedef std::pair<QPointF, QPointF>	LINE;
 
-	static inline void Build(const std::list<POINT>& pointsIn, std::list<LINE>& linesOut, const bool& bDaisyChain = false)
+	static inline void Build(const std::list<QPointF>& pointsIn, std::list<LINE>& linesOut, const bool& bDaisyChain = false)
 	{
 		typedef std::pair<size_t, size_t>	INDICES;
 		typedef std::pair<INDICES, qreal>	EDGE;
@@ -41,14 +40,14 @@ struct SpanningTreeHelper
 		if ( N < 2 ) return;
 
 		std::vector<size_t>		nConn;	nConn.resize(N,0);	// Number of direct connections to each point (for daisy chain algorithm)
-		std::vector<POINT>		v;		v.resize(N);		// Points stored as a vector (for access via index)
+		std::vector<QPointF>	v;		v.resize(N);		// Points stored as a vector (for access via index)
 		size_t i(0);
 		for (const auto& o: pointsIn) v[i++] = o;
 
 		std::list<EDGE> edges;	// Working list of edges
 		for (size_t i = 0; i < N; i++)
 			for (size_t j = i + 1; j < N; j++)
-				edges.push_back( EDGE(INDICES(i,j), PolygonHelper::Length(v[i].first - v[j].first)) );
+				edges.push_back( EDGE(INDICES(i,j), PolygonHelper::Length(v[i] - v[j])) );
 
 		ConnectionMatrix matrix;	// Helper for tracking connectivity between points
 		matrix.Allocate(N);
@@ -74,57 +73,67 @@ struct SpanningTreeHelper
 		}
 	}
 
-	static inline void BuildAirWires(const std::list<POINT>& pointsIn, std::list<LINE>& linesOut)
+	typedef std::pair<QPointF, unsigned int>		AIRWIRE_POINT;	// unsigned int holds the Route ID for the point
+	typedef std::pair<AIRWIRE_POINT, AIRWIRE_POINT>	AIRWIRE_LINE;
+
+	static inline void BuildAirWires(const std::list<AIRWIRE_POINT>& pointsIn, std::list<AIRWIRE_LINE>& linesOut)
 	{
-		std::list<LINE> lines;	// Working list of lines
+		typedef std::pair<AIRWIRE_LINE, qreal>	AIRWIRE_EDGE;	// qreal holds the length of the AIRWIRE_LINE
 
-		Build(pointsIn, lines);	// Build minimal spanning tree
+		linesOut.clear();
 
-		// Erase all LINEs that are between points with the same route ID
-		for (auto iter = lines.begin(); iter != lines.end();)
-			if ( iter->first.second == iter->second.second ) iter = lines.erase(iter); else ++iter;
-
-		// Then map the Route IDs to consecutive indexes 0,1,2,... so we can use a ConnectionMatrix
-		std::unordered_map<size_t, size_t> mapRIDtoIndex;
-		size_t index(0);
-		for (const auto& o : lines)
-		{
-			if ( mapRIDtoIndex.find(o.first.second)  == mapRIDtoIndex.end() ) mapRIDtoIndex[o.first.second]  = index++;
-			if ( mapRIDtoIndex.find(o.second.second) == mapRIDtoIndex.end() ) mapRIDtoIndex[o.second.second] = index++;
-		}
-
-		const size_t N = mapRIDtoIndex.size();
+		const size_t N = pointsIn.size();
 		if ( N < 2 ) return;
 
-		std::list<qreal> lengths;	// Working list of lengths
-		for (const auto& o : lines)
-			lengths.push_back( PolygonHelper::Length(o.first.first - o.second.first) );
+		std::vector<AIRWIRE_POINT>	v;	v.resize(N);	// Points stored as a vector (for access via index)
+		size_t i(0);
+		for (const auto& o: pointsIn) v[i++] = o;
 
-		ConnectionMatrix matrix;	// Helper for tracking connectivity between indices
-		matrix.Allocate(N);
+		std::unordered_map<size_t, size_t> mapRIDtoIndex;	// Map Route IDs to consecutive indexes 0,1,2,... so we can use a ConnectionMatrix
+		size_t index(0);	// For populating mapRIDtoIndex
 
-		while ( linesOut.size() < N-1 )
+		std::list<AIRWIRE_EDGE> edges;	// Working list of edges.  An edge is an AIRWIRE_LINE plus its calculated length.
+		for (size_t i = 0; i < N; i++)
+			for (size_t j = i + 1; j < N; j++)
+			{
+				const unsigned int& RID_i = v[i].second;
+				const unsigned int& RID_j = v[j].second;
+				if ( RID_i != RID_j ) // Endpoints of edge must have different route IDs
+				{
+					edges.push_back( AIRWIRE_EDGE( AIRWIRE_LINE(v[i], v[j]), PolygonHelper::Length(v[i].first - v[j].first) ) );
+
+					// Update map of RID to indexes 0,1,2, ...
+					if ( mapRIDtoIndex.find(RID_i) == mapRIDtoIndex.end() ) mapRIDtoIndex[RID_i] = index++;
+					if ( mapRIDtoIndex.find(RID_j) == mapRIDtoIndex.end() ) mapRIDtoIndex[RID_j] = index++;
+				}
+			}
+
+		const size_t numRIDs = mapRIDtoIndex.size();	// Number of unique route IDs
+		if ( numRIDs < 2 ) return;
+
+		ConnectionMatrix matrix;	// Helper for tracking connectivity between points
+		matrix.Allocate(numRIDs);
+
+		while ( linesOut.size() < numRIDs-1 )
 		{
 			qreal Dmin(DBL_MAX);
-			// Now have 2 iterators that go in step through the lists of lines and lengths
-			auto iterLineBest	= lines.begin();	// The shortest edge that does not make an unnecessary connection
-			auto iterLine		= iterLineBest;
-			auto iterLineEnd	= lines.end();
-			auto iterLengthBest	= lengths.begin();
-			auto iterLength		= iterLengthBest;
-			auto iterLengthEnd	= lengths.end();
-			for (; iterLine != iterLineEnd && iterLength != iterLengthEnd; ++iterLine, ++iterLength )
+			auto iterBest = edges.begin();	// The shortest edge that does not make an unnecessary connection
+			for (auto iter = iterBest, iterEnd = edges.end(); iter != iterEnd; ++iter)
 			{
-				const qreal& D	= *iterLength;
-				if ( D > Dmin || matrix.GetAreConnected(mapRIDtoIndex[iterLine->first.second], mapRIDtoIndex[iterLine->second.second]) ) continue;
-				iterLineBest	= iterLine;
-				iterLengthBest	= iterLength;
-				Dmin			= D;
+				const AIRWIRE_LINE&	line_ij	= iter->first;
+				const unsigned int&	RID_i	= line_ij.first.second;
+				const unsigned int&	RID_j	= line_ij.second.second;
+				const qreal&		D		= iter->second;
+				if ( D > Dmin || matrix.GetAreConnected(mapRIDtoIndex[RID_i], mapRIDtoIndex[RID_j]) ) continue;
+				iterBest	= iter;
+				Dmin		= D;
 			}
-			linesOut.push_back( *iterLineBest );	// Add best to output list
-			matrix.Connect(mapRIDtoIndex[iterLineBest->first.second], mapRIDtoIndex[iterLineBest->second.second]);	// Update connection matrix
-			lines.erase(iterLineBest);				// Remove best from the working list of lines
-			lengths.erase(iterLengthBest);			// ... and from the working list of lengths
+			const AIRWIRE_LINE&	line_ij	= iterBest->first;
+			const unsigned int&	RID_i	= line_ij.first.second;
+			const unsigned int&	RID_j	= line_ij.second.second;
+			linesOut.push_back( line_ij );	// Add best line to linesOut
+			matrix.Connect(mapRIDtoIndex[RID_i], mapRIDtoIndex[RID_j]);	// Update connection matrix
+			edges.erase(iterBest);			// Remove best from the working list
 		}
 	}
 
@@ -132,9 +141,12 @@ struct SpanningTreeHelper
 private:
 	bool PreventBuildWarnings() const
 	{
-		std::list<POINT>	in;
-		std::list<LINE>		out;
-		Build(in, out);
+		std::list<QPointF>			inA;
+		std::list<LINE>				outA;
+		std::list<AIRWIRE_POINT>	inB;
+		std::list<AIRWIRE_LINE>		outB;
+		Build(inA, outA);
+		BuildAirWires(inB, outB);
 		return true;
 	}
 };
