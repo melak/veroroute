@@ -676,13 +676,13 @@
      <normaloff>:/images/copy.png</normaloff>:/images/copy.png</iconset>
    </property>
    <property name="text">
-    <string>Copy + Paste Selected Part(s) / Text Box</string>
+    <string>Copy Selected Part(s) / Text Box</string>
    </property>
    <property name="iconText">
-    <string>Copy + Paste Selected Part(s) / Text Box</string>
+    <string>Copy Selected Part(s) / Text Box</string>
    </property>
    <property name="toolTip">
-    <string>Copy + Paste Selected Part(s) / Text Box</string>
+    <string>Copy Selected Part(s) / Text Box</string>
    </property>
    <property name="shortcut">
     <string>V</string>

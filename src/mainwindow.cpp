@@ -2372,13 +2372,13 @@ void MainWindow::UpdateControls()
 	}
 	ui->actionCopy->setEnabled( bTextOK || bCompOK || bShapeOK );
 	if ( bTextOK )	// Text Box takes precedence over comps
-		ui->actionCopy->setText( QString("Copy + Paste Selected Text Box") );
+		ui->actionCopy->setText( QString("Copy Selected Text Box") );
 	else if ( bCompOK )
-		ui->actionCopy->setText(numUserComps > 1 ? QString("Copy + Paste Selected Parts") : QString("Copy + Paste Selected Part"));
+		ui->actionCopy->setText(numUserComps > 1 ? QString("Copy Selected Parts") : QString("Copy Selected Part"));
 	else if ( bCompEdit )
-		ui->actionCopy->setText( QString("Copy + Paste Selected Shape") );
+		ui->actionCopy->setText( QString("Copy Selected Shape") );
 	else
-		ui->actionCopy->setText( QString("Copy + Paste Selected Part(s) / Text Box") );
+		ui->actionCopy->setText( QString("Copy Selected Part(s) / Text Box") );
 	ui->actionGroup->setEnabled( bCompOK && groupMgr.CanGroup() );
 	ui->actionUngroup->setEnabled( bCompOK && groupMgr.CanUnGroup() );
 	ui->actionSelectAll->setEnabled( bCompActionsOK && !compMgr.GetMapIdToComp().empty() );
