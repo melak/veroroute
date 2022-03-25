@@ -125,6 +125,32 @@ bool MainWindow::CanModifyRuler() const
 						  GetDefiningRect() || GetPaintPins() || GetErasePins() || GetPaintBoard() || GetEraseBoard() || GetPaintFlood() );
 }
 
+bool MainWindow::GetHaveFloatingPin(int& iFloatingNodeId)
+{
+	iFloatingNodeId = BAD_NODEID;
+
+	const Element* pC = m_board.Get(m_board.GetCurrentLayer(), m_gridRow, m_gridCol);
+	if ( pC->GetHasPin() ) return false;	// Skip if we already have a placed pin
+
+	for (auto& mapObj : m_board.GetCompMgr().GetMapIdToComp())
+	{
+		const Component& comp = mapObj.second;
+		if ( comp.GetIsPlaced() ) continue;	// Only want floating components
+		const auto& eType = comp.GetType();
+		if ( eType == COMP::WIRE || eType == COMP::MARK || eType == COMP::VERO_NUMBER || eType == COMP::VERO_LETTER ) continue;
+
+		const int j(m_gridRow - comp.GetRow());		if ( j < 0 || j >= comp.GetCompRows() ) continue;
+		const int i(m_gridCol - comp.GetCol());		if ( i < 0 || i >= comp.GetCompCols() ) continue;
+
+		const CompElement* p = comp.GetCompElement(j, i);
+		if ( !p->GetIsPin() ) continue;
+
+		iFloatingNodeId = comp.GetNodeId( p->GetPinIndex() );
+		return true;
+	}
+	return false;
+}
+
 void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, const bool& bRightClick)
 {
 	SetMouseActionString("");
@@ -374,7 +400,7 @@ void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, cons
 #ifdef VEROROUTE_ANDROID
 		//TODO Could allow this in Desktop version too
 		const bool bClickedValidNodeID = pC->GetNodeId() != BAD_NODEID;
-		if ( GetPaintBoard() && bClickedValidNodeID && pC->GetNodeId() == GetCurrentNodeId() && !bDoSwap )	// If we're painting board and clicked on a point with matching valid nodeID
+		if ( GetPaintBoard() && bClickedValidNodeID && pC->GetNodeId() == GetCurrentNodeId() && pC->ReadFlagBits(USERSET) && !bDoSwap )	// If we're painting board and clicked on a point with matching valid nodeID
 		{
 			const bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, BAD_NODEID, false);	// ... then erase the point instead of painting it
 			if ( !bChanged ) return;
@@ -407,7 +433,21 @@ void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, cons
 		else if ( m_bRightClick && !bDoSwap )	// Erase
 #endif
 		{
-			const bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, BAD_NODEID, GetPaintPins() || GetErasePins());
+			// Erase both layers if it makes it easier to let a floating part fall into place.
+			int iFloatingNodeId(BAD_NODEID);
+			const bool bEraseBothLayers = m_board.GetLyrs() > 1 &&				// If 2-layer board ...
+										  !GetPaintPins() && !GetErasePins() &&	// ... and not erasing a pin
+										  GetHaveFloatingPin(iFloatingNodeId);	// ... then see if we have a floating pin and gets its nodeId
+
+			bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, BAD_NODEID, GetPaintPins() || GetErasePins());
+			if ( bEraseBothLayers )
+			{
+				const int	layerOther	= ( layer == 0 ) ? 1 : 0;
+				const int&	otherNodeId	= m_board.Get(layerOther, m_gridRow, m_gridCol)->GetNodeId();
+				// Only erase if the other layer has a valid nodeId that does not match the floating nodeId
+				if ( otherNodeId != BAD_NODEID && otherNodeId != iFloatingNodeId )
+					bChanged = m_board.SetNodeIdByUser(layerOther, m_gridRow, m_gridCol, BAD_NODEID, GetPaintPins() || GetErasePins()) || bChanged;
+			}
 			if ( !bChanged ) return;
 			SetMouseActionString("erase", GetCurrentNodeId());
 			m_bReRoute = m_bReListNodes = true;
@@ -682,7 +722,21 @@ void MainWindow::MouseMoveEvent(const QPoint& pos)
 		if ( m_bRightClick && !bDoSwap )	// Erase
 #endif
 		{
-			const bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, BAD_NODEID, false);	// false ==> Only allow erase board (not pins)
+			// Erase both layers if it makes it easier to let a floating part fall into place.
+			int iFloatingNodeId(BAD_NODEID);
+			const bool bEraseBothLayers = m_board.GetLyrs() > 1 && 				// If 2-layer board, and not erasing a pin ...
+										  !GetPaintPins() && !GetErasePins() &&	// ... and not erasing a pin
+										  GetHaveFloatingPin(iFloatingNodeId);	// ... then see if we have a floating pin and gets its nodeId
+
+			bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, BAD_NODEID, false);	// false ==> Only allow erase board (not pins)
+			if ( bEraseBothLayers )
+			{
+				const int	layerOther	= ( layer == 0 ) ? 1 : 0;
+				const int&	otherNodeId	= m_board.Get(layerOther, m_gridRow, m_gridCol)->GetNodeId();
+				// Only erase if the other layer has a valid nodeId that does not match the floating nodeId
+				if ( otherNodeId != BAD_NODEID && otherNodeId != iFloatingNodeId )
+					bChanged = m_board.SetNodeIdByUser(layerOther, m_gridRow, m_gridCol, BAD_NODEID, false) || bChanged;	// false ==> Only allow erase board (not pins)
+			}
 			if ( !bChanged ) return;	// No change
 			SetMouseActionString("erase", GetCurrentNodeId());
 			m_bReRoute = m_bReListNodes = true;
