@@ -158,7 +158,10 @@ QMAKE_INSTALL_PROGRAM = install -m 755
 #                   ../tutorials/tutorial_19.vrt \
 #                   ../tutorials/tutorial_20.vrt \
 #                   ../tutorials/tutorial_21.vrt \
-#                   ../tutorials/tutorial_22.vrt
+#                   ../tutorials/tutorial_22.vrt \
+#                   ../tutorials/tutorial_23.vrt \
+#                   ../tutorials/tutorial_24.vrt \
+#                   ../tutorials/tutorial_25.vrt
 #    assets.path = /assets/tutorials/
 #INSTALLS += target assets
 #}
