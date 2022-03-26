@@ -539,8 +539,8 @@ void MainWindow::ResetView(MOUSE_MODE eMouseMode, bool bTutorial)
 	m_infoDlg->Update();
 	m_infoDlg->SetReadOnly(bTutorial);
 	m_infoDlg->ShowButtons(bTutorial);
-	m_infoDlg->EnablePrev(bTutorial && m_iTutorialNumber > 0);	// Tutorials go to 0 to 22
-	m_infoDlg->EnableNext(bTutorial && m_iTutorialNumber < 22);	// Tutorials go to 0 to 22
+	m_infoDlg->EnablePrev(bTutorial && m_iTutorialNumber > 0);	// Tutorials go to 0 to 25
+	m_infoDlg->EnableNext(bTutorial && m_iTutorialNumber < 25);	// Tutorials go to 0 to 25
 	if ( !bTutorial ) m_iTutorialNumber = -1;	// Cancel tutorial mode
 	UpdateControls();
 	UpdateBOM();

@@ -1,3 +1,44 @@
+V2.20  Bug fix: Don't allow Vero tracks with Mono/PCB mode.  They should be mutually exclusive.
+       Bug fix: Disable distance tool in Component Editor Mode.
+       Bug fix: Pin Labels editor was not writing changes to Undo/Redo history.
+       Bug fix: "Select Parts by Area" was not correctly accounting for footprint overlap with the highlighted area.
+       Bug fix: Component Editor was not drawing L/R aligned pin labels in the correct place.
+       Bug fix: Templates dialog was not correctly checking for duplicate entries.
+       Bug fix: Templates dialog could delete the wrong template without warning if the user scrolls to select the template instead of clicking on it.
+       Bug fix: B.O.M. could put parts with the same Value but different Type onto the same row.
+       Bug fix: B.O.M. not immediately updating on component add.
+       Bug fix: Load of VRT files was not checking for zero version number.
+       Bug fix: Double clicking on a generic part in the Templates dialog (to add it to the layout) was not setting the default name/value.
+       Bug fix: File->New was not forcing a single-layer board to be created.
+       Bug fix: Stripes on flying wires were not always rendered properly on unix builds.
+       Bug fix: Component Editor Mode was not working if "flip view" options were enabled in Circuit Layout Mode.
+       New feature: Complete reworking of how connectivity info is displayed (no more red lines all over the tracks).
+                    Instead show missing connections with a minimal set of air-wires.
+       Improvement: Removed the "flip view" options from the toolbar (they were too easy to hit by mistake on a tablet screen).  They are only in the View menu now.
+       Improvement: No longer use "T" key to change pin layer preference for 2-layer PCBs.  Instead double-click on a pin when in PCB mode.
+       Improvement: Show board dimensions in status bar instead of title bar.
+       Improvement: Added "Surface" combo box to component editor so it can be set without relying on use of mouse wheel in the view.
+       Improvement: No longer set PCB pad offsets with cursor keys.  Instead click on a pin for 1 second, then release to launch Pad Offset Dialog.
+       Improvement: Single toolbar with bigger icons and buttons that change according to mode (Circuit Layout/Component Editor).
+       Improvement: Added toolbar icons for "Delete" and "Copy".
+       Improvement: Allow "Copy" operation to work on shapes in Component Editor Mode.
+       Improvement: Auto-centre the view when switching to Component Editor Mode.
+       Improvement: Double-click on selected components rotates them (if you dont click on a pin).
+       Improvement: More efficent undo/redo history logging.
+       Improvement: Allow competing diagonals to be resolved by regular paint procedure (i.e. paint on the crossing after painting the ends of the diagonal).
+       Improvement: No more selection/desection of netlist ID by single clicks.
+                    You must now double-click on a track/pin to select, and double click on a blank area to deselect.
+                    Stops confusing behaviour such as a netlist of interest becoming deselected when you try to move some other part.
+       Improvement: Only allow painting/unpainting of pins (and paint by flood fill) when in Color mode.
+       Improvement: Added Layers menu item for resetting all pin layer preferences.
+       Improvement: On a 2-layer board, if you have a floating component (because the tracks on the layers do not match the floating pins)
+                    and you go to erase the tracks under those floating pins so that the component can drop into place, then
+                    auto-erase the tracks on the other board layer also if necessary.  This saves the user having to switch layers
+                    to erasing the tracks manually.
+       Improvement: Force docking of major dialogs (necessary for Android usability).
+       Replaced all sliders in the GUI with check boxes or spin controls.
+       Use of the "P" key is now strictly for painting/erasing component pins.  Not regular grid points or wires.
+       Updated the tutorials.
 V2.19  Bug fix: The grid did not properly resize itself when the user tried to add a component or text box that
                 was wider/taller than the current grid size, leading to a corrupted layout.
 V2.18  Bug fix: Pin layer preference logic for PCBs was not properly handling diagonal connections, so
