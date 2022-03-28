@@ -1648,7 +1648,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	}
 
 	// Draw a cross on the pad being used for pad offset =========================================
-	if ( !m_bWriteGerber && !bVero && m_padOffsetDlg->isVisible() )	//TODO See what cases support pad offset launch
+	if ( !m_bWriteGerber && !bVero && m_padOffsetDlg->isVisible() )
 	{
 		const Element* pC = m_board.Get(layer, m_gridRow, m_gridCol);
 		if ( pC->GetHasPin() && !pC->GetHasWire() )

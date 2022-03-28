@@ -767,6 +767,15 @@ void MainWindow::Save()
 
 	if ( m_fileName.isEmpty() ) return SaveAs();
 
+#ifdef VEROROUTE_ANDROID
+	QFileInfo info(m_fileName);
+	if ( info.suffix() != QString("vrt") )
+	{
+		QMessageBox::information(this, tr("FAILED: File has suffix") + QString(" \".") + info.suffix() + QString("\" ") + tr("instead of") + QString(" \".vrt\""), m_fileName);
+		return;
+	}
+#endif
+
 	DataStream outStream(DataStream::WRITE);
 	const std::string fileNameStr = m_fileName.toStdString();
 	if ( outStream.Open( fileNameStr.c_str() ) )
@@ -799,27 +808,36 @@ void MainWindow::SaveAs()
 #else
 	const QString	fileName	= GetSaveFileName(tr("Save file as"), tr("VeroRoute (*.vrt);;All Files (*)"), QString("vrt"));
 #endif
-	if ( !fileName.isEmpty() )
+
+	if ( fileName.isEmpty() ) return;
+
+#ifdef VEROROUTE_ANDROID
+	QFileInfo info(fileName);
+	if ( info.suffix() != QString("vrt") )
 	{
-		DataStream outStream(DataStream::WRITE);
-		const std::string fileNameStr = fileName.toStdString();
-		if ( outStream.Open( fileNameStr.c_str() ) )
-		{
-			ui->statusBar->showMessage( tr("Saving..."), 500 );
-
-			m_board.Save(outStream);
-			outStream.Close();
-			m_infoDlg->Update();	// Don't need a ResetView() but MUST update the initial string for the info dialog
-			m_fileName = fileName;
-			m_historyMgr.SaveCircuitFile(m_fileName, m_iTutorialNumber);	// Must call this directly instead of calling ResetHistory()
-
-			bOK = true;
-
-			UpdateWindowTitle();
-		}
-		else
-			QMessageBox::information(this, tr("Unable to save file"), tr(fileNameStr.c_str()));
+		QMessageBox::information(this, tr("FAILED: File has suffix") + QString(" \".") + info.suffix() + QString("\" ") + tr("instead of") + QString(" \".vrt\""), fileName);
+		return;
 	}
+#endif
+
+	DataStream outStream(DataStream::WRITE);
+	const std::string fileNameStr = fileName.toStdString();
+	if ( outStream.Open( fileNameStr.c_str() ) )
+	{
+		ui->statusBar->showMessage( tr("Saving..."), 500 );
+
+		m_board.Save(outStream);
+		outStream.Close();
+		m_infoDlg->Update();	// Don't need a ResetView() but MUST update the initial string for the info dialog
+		m_fileName = fileName;
+		m_historyMgr.SaveCircuitFile(m_fileName, m_iTutorialNumber);	// Must call this directly instead of calling ResetHistory()
+
+		bOK = true;
+
+		UpdateWindowTitle();
+	}
+	else
+		QMessageBox::information(this, tr("Unable to save file"), tr(fileNameStr.c_str()));
 
 	UpdateRecentFiles(&fileName, bOK);	// Remove file from list if bOK == false
 }
@@ -883,8 +901,8 @@ void MainWindow::WritePDF()
 #ifdef VEROROUTE_ANDROID
 	const QString	name		= m_fileName.isEmpty() ? QString("Circuit.vrt") : m_fileName;
 	QString			defaultName	= StringHelper::ReplaceSuffix(name, QString("pdf"));	// Replace vrt with pdf
-	QFile			file(defaultName);
-	if ( file.exists() )
+	QFile			fileTest(defaultName);
+	if ( fileTest.exists() )
 		defaultName.clear();
 	else
 		defaultName = StringHelper::GetTidyFileName(defaultName);
@@ -893,25 +911,33 @@ void MainWindow::WritePDF()
 #else
 	m_pdfFileName = GetSaveFileName(tr("Choose a PDF file"), tr("PDF (*.pdf);;All Files (*)"), QString("pdf"));
 #endif
-	if ( !m_pdfFileName.isEmpty() )
+	if ( m_pdfFileName.isEmpty() ) return;
+
+#ifdef VEROROUTE_ANDROID
+	QFileInfo info(m_pdfFileName);
+	if ( info.suffix() != QString("pdf") )
 	{
-		ui->statusBar->showMessage( tr("Exporting to PDF..."), 500 );
-
-		const int oldGridPixels	= m_board.GetGRIDPIXELS();
-		const int pdfGridPixels = 120;	// 1200 dpi
-		m_board.SetGRIDPIXELS(pdfGridPixels);
-		m_XGRIDOFFSET = pdfGridPixels * ( 58 - m_board.GetCols() / 2 );	// A4 landscape is about 116 * 0.1 inches wide
-		m_YGRIDOFFSET = pdfGridPixels * ( 41 - m_board.GetRows() / 2 );	// A4 landscape is about  82 * 0.1 inches tall
-
-		m_bWritePDF = true;			// Makes paintEvent() write to PDF instead of pixmap
-		RepaintSkipRouting(true);	// true  ==> force use of repaint() rather than update()
-		m_bWritePDF = false;		// Makes paintEvent() go back to writing to pixmap
-
-		m_XGRIDOFFSET = m_YGRIDOFFSET = 0;		// Restore zero offsets
-		m_board.SetGRIDPIXELS(oldGridPixels);	// Restore number of pixels per grid square
-
-		QDesktopServices::openUrl(m_pdfFileName);	// Ask the system to open the PDF file.
+		QMessageBox::information(this, tr("FAILED: File has suffix") + QString(" \".") + info.suffix() + QString("\" ") + tr("instead of") + QString(" \".pdf\""), m_pdfFileName);
+		return;
 	}
+#endif
+
+	ui->statusBar->showMessage( tr("Exporting to PDF..."), 500 );
+
+	const int oldGridPixels	= m_board.GetGRIDPIXELS();
+	const int pdfGridPixels = 120;	// 1200 dpi
+	m_board.SetGRIDPIXELS(pdfGridPixels);
+	m_XGRIDOFFSET = pdfGridPixels * ( 58 - m_board.GetCols() / 2 );	// A4 landscape is about 116 * 0.1 inches wide
+	m_YGRIDOFFSET = pdfGridPixels * ( 41 - m_board.GetRows() / 2 );	// A4 landscape is about  82 * 0.1 inches tall
+
+	m_bWritePDF = true;			// Makes paintEvent() write to PDF instead of pixmap
+	RepaintSkipRouting(true);	// true  ==> force use of repaint() rather than update()
+	m_bWritePDF = false;		// Makes paintEvent() go back to writing to pixmap
+
+	m_XGRIDOFFSET = m_YGRIDOFFSET = 0;		// Restore zero offsets
+	m_board.SetGRIDPIXELS(oldGridPixels);	// Restore number of pixels per grid square
+
+	QDesktopServices::openUrl(m_pdfFileName);	// Ask the system to open the PDF file.
 }
 
 void MainWindow::WriteGerber(const bool& bTwoLayerGerber, const bool& bMetric)
@@ -1006,8 +1032,8 @@ void MainWindow::WritePNG()
 #ifdef VEROROUTE_ANDROID
 	const QString	name		= m_fileName.isEmpty() ? QString("Circuit.vrt") : m_fileName;
 	QString			defaultName	= StringHelper::ReplaceSuffix(name, QString("png"));	// Replace vrt with png
-	QFile			file(defaultName);
-	if ( file.exists() )
+	QFile			fileTest(defaultName);
+	if ( fileTest.exists() )
 		defaultName.clear();
 	else
 		defaultName = StringHelper::GetTidyFileName(defaultName);
@@ -1016,16 +1042,24 @@ void MainWindow::WritePNG()
 #else
 	const QString	pngFileName	= GetSaveFileName(tr("Choose a PNG file"), tr("PNG (*.png);;All Files (*)"), QString("png"));
 #endif
-	if ( !pngFileName.isEmpty() )
+	if ( pngFileName.isEmpty() ) return;
+
+#ifdef VEROROUTE_ANDROID
+	QFileInfo info(pngFileName);
+	if ( info.suffix() != QString("png") )
 	{
-		ui->statusBar->showMessage( tr("Exporting to PNG..."), 500 );
-
-		QFile file(pngFileName);
-		file.open(QIODevice::WriteOnly);
-		m_mainPixmap.save(&file, "PNG");
-
-		QDesktopServices::openUrl(pngFileName);	// Ask the system to open the PNG file.
+		QMessageBox::information(this, tr("FAILED: File has suffix") + QString(" \".") + info.suffix() + QString("\" ") + tr("instead of") + QString(" \".png\""), pngFileName);
+		return;
 	}
+#endif
+
+	ui->statusBar->showMessage( tr("Exporting to PNG..."), 500 );
+
+	QFile file(pngFileName);
+	file.open(QIODevice::WriteOnly);
+	m_mainPixmap.save(&file, "PNG");
+
+	QDesktopServices::openUrl(pngFileName);	// Ask the system to open the PNG file.
 }
 
 void MainWindow::Quit()
