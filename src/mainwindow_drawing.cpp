@@ -721,10 +721,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					}
 
 					if ( board.GetLyrs() == 2 )
-					{
-						if ( nodeId != BAD_NODEID )
-							layerPref	= comp.GetLayerPref(pinIndex);
-					}
+						layerPref = comp.GetLayerPref(pinIndex);
 
 					bCustomSize = comp.GetCustomPads();
 					if ( bCustomSize )
