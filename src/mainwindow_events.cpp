@@ -511,8 +511,10 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 	const bool bInGrid			= GetRowCol(m_mousePos, m_gridRow, m_gridCol, dRow, dCol);
 	if ( !bInGrid ) return;
 
-	const int&	layer	= m_board.GetCurrentLayer();
-	Element*	pC		= m_board.Get(layer, m_gridRow, m_gridCol);
+	const int&	layer		= m_board.GetCurrentLayer();
+	Element*	pC			= m_board.Get(layer, m_gridRow, m_gridCol);
+	const bool	bWire		= pC->GetHasWire();
+	const bool	bTruePin	= pC->GetHasPin() && !bWire;
 
 	// Cursor modification
 	centralWidget()->setCursor(Qt::CrossCursor);
@@ -520,11 +522,19 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 	const bool bCloseToGridPoint = ( hypot(dRow - 0.5, dCol - 0.5) <= 0.5 );	// true ==> clicked close to grid point
 
 	// Handle changing layer preference for PCBs via double-clicking on a component pin
-	if ( bPCB && !GetPaintAction() && m_board.GetLyrs() == 2 && bCloseToGridPoint )	// Only consider clicks that are close to the grid point
+	if ( bPCB && bTruePin && !GetPaintAction() && m_board.GetLyrs() == 2 && bCloseToGridPoint )	// Only consider clicks that are close to the grid point
 	{
-		if ( m_board.ToggleLyrPref(layer, m_gridRow, m_gridCol) )
+		const bool bToggled = m_board.ToggleLyrPref(layer, m_gridRow, m_gridCol);	assert(bToggled);
+		if ( bToggled )
 		{
 			SetMouseActionString("change pin layer preference", pC->GetCompId());
+
+			// Also handle change of nodeID ...
+			if ( GetCurrentNodeId() != pC->GetNodeId() )
+			{
+				SetCurrentNodeId( pC->GetNodeId() );
+				m_bReRoute = true;	// Dont' need to set m_bReListNodes when choosing different nodeID
+			}
 			return;
 		}
 	}
@@ -550,7 +560,6 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 	}
 
 	// Handle selection of nodeId when double-clicking on a pin (when tracks are displayed)
-	const bool bWire = pC->GetHasWire();
 	if ( bTrackOn && bWire && !GetPaintBoard() && !GetEraseBoard() && !GetPaintFlood() && bCloseToGridPoint )	// Only consider clicks that are close to the grid point
 	{
 		if ( GetCurrentNodeId() != pC->GetNodeId() )
@@ -561,8 +570,7 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 		}
 		return;
 	}
-	const bool bPin = pC->GetHasPin() && !bWire;
-	if ( bTrackOn && bPin && !GetPaintPins() && !GetErasePins() && !GetPaintFlood()	&& bCloseToGridPoint )	// Only consider clicks that are close to the grid point
+	if ( bTrackOn && bTruePin && !GetPaintPins() && !GetErasePins() && !GetPaintFlood()	&& bCloseToGridPoint )	// Only consider clicks that are close to the grid point
 	{
 		if ( GetCurrentNodeId() != pC->GetNodeId() )
 		{
@@ -576,7 +584,7 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 	// Handle component rotation
 	if ( bCompsOn && ( m_eMouseMode == MOUSE_MODE::SELECT || GetPaintPins() || GetErasePins() ) && GetCurrentCompId() != BAD_COMPID )
 	{
-		if ( !bPin )	//	... Only allow rotate if we did not click on a pin
+		if ( !bTruePin )	//	... Only allow rotate if we did not click on a pin
 		{
 			m_bReRoute = m_bReListNodes = false;	// Set these false since CompRotateCW() calls RepaintWithListNodes() directly
 			SetMouseActionString("");	// CompRotateCW() will write history
