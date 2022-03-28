@@ -248,7 +248,7 @@ void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, cons
 			centralWidget()->setCursor(Qt::SizeFDiagCursor);
 			m_board.GetRectMgr().StartNewRect(m_gridRow, m_gridCol);
 			SelectAllInRects();
-			UpdateHistory("select parts / tracks by area");
+			SetMouseActionString("select parts / tracks by area");
 #ifdef AVOID_RECT_REDRAWS
 			g_lastDrawRect = std::chrono::steady_clock::now();
 #endif
@@ -523,7 +523,7 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 	{
 		if ( m_board.ToggleLyrPref(layer, m_gridRow, m_gridCol) )
 		{
-			UpdateHistory("change pin layer preference", pC->GetCompId());
+			SetMouseActionString("change pin layer preference", pC->GetCompId());
 			return;
 		}
 	}
@@ -555,18 +555,18 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 		if ( GetCurrentNodeId() != pC->GetNodeId() )
 		{
 			SetCurrentNodeId( pC->GetNodeId() );
-			UpdateHistory( ( GetCurrentNodeId() == BAD_NODEID ) ? "unselect net" : "select net", 0);
+			SetMouseActionString( ( GetCurrentNodeId() == BAD_NODEID ) ? "unselect net" : "select net", 0);
 			m_bReRoute = true;	// Dont' need to set m_bReListNodes when choosing different nodeID
 		}
 		return;
 	}
-	const bool bPin = pC->GetHasPin() && !pC->GetHasWire();
+	const bool bPin = pC->GetHasPin() && !bWire;
 	if ( bTrackOn && bPin && !GetPaintPins() && !GetErasePins() && !GetPaintFlood()	&& bCloseToGridPoint )	// Only consider clicks that are close to the grid point
 	{
 		if ( GetCurrentNodeId() != pC->GetNodeId() )
 		{
 			SetCurrentNodeId( pC->GetNodeId() );
-			UpdateHistory( ( GetCurrentNodeId() == BAD_NODEID ) ? "unselect net" : "select net", 0);
+			SetMouseActionString( ( GetCurrentNodeId() == BAD_NODEID ) ? "unselect net" : "select net", 0);
 			m_bReRoute = true;	// Dont' need to set m_bReListNodes when choosing different nodeID
 		}
 		return;
@@ -578,6 +578,7 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 		if ( !bPin )	//	... Only allow rotate if we did not click on a pin
 		{
 			m_bReRoute = m_bReListNodes = false;	// Set these false since CompRotateCW() calls RepaintWithListNodes() directly
+			SetMouseActionString("");	// CompRotateCW() will write history
 			return CompRotateCW();
 		}
 	}
@@ -588,7 +589,7 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 		if ( GetCurrentNodeId() != pC->GetNodeId() )
 		{
 			SetCurrentNodeId( pC->GetNodeId() );
-			UpdateHistory( ( GetCurrentNodeId() == BAD_NODEID ) ? "unselect net" : "select net", 0);
+			SetMouseActionString( ( GetCurrentNodeId() == BAD_NODEID ) ? "unselect net" : "select net", 0);
 			m_bReRoute = true;	// Dont' need to set m_bReListNodes when choosing different nodeID
 		}
 	}
@@ -866,25 +867,20 @@ void MainWindow::MouseReleaseEvent(const QPoint& pos)
 
 	if ( m_board.GetCompEdit() )
 	{
-		UpdateHistory(m_mouseActionString, m_mouseObjId);
-		return RepaintSkipRouting();
 	}
-	if ( GetResizingText() )
+	else if ( GetResizingText() )
 	{
 		centralWidget()->setCursor(Qt::OpenHandCursor);
 		SetResizingText(false);
-		UpdateHistory("resize text box", GetCurrentTextId());
-		return RepaintSkipRouting();
 	}
-	if ( GetDefiningRect() )
+	else if ( GetDefiningRect() )
 	{
 		centralWidget()->setCursor(Qt::SizeFDiagCursor);
 		m_board.GetRectMgr().EndNewRect();
 		SelectAllInRects();
 		ShowCurrentRectSize();
-		return RepaintSkipRouting();
 	}
-	if ( GetPaintPins() || GetErasePins() || GetPaintBoard() || GetEraseBoard() || GetPaintFlood() )
+	else if ( GetPaintPins() || GetErasePins() || GetPaintBoard() || GetEraseBoard() || GetPaintFlood() )
 		centralWidget()->setCursor(Qt::CrossCursor);
 	else
 		centralWidget()->setCursor(Qt::OpenHandCursor);
