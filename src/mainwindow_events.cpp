@@ -333,7 +333,8 @@ void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, cons
 
 	const Element* pC = m_board.Get(layer, m_gridRow, m_gridCol);
 
-	if ( GetPaintFlood() )
+	const bool bColor = ( trackMode == TRACKMODE::COLOR );
+	if ( GetPaintFlood() && bColor )
 	{
 		if ( m_dockPinDlg->isVisible() ) m_dockPinDlg->hide();
 		HidePadOffsetDialog();
@@ -361,7 +362,7 @@ void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, cons
 			m_bReRoute = m_bReListNodes = true;
 		}
 	}
-	else if ( GetPaintPins() || GetErasePins() || GetPaintBoard() || GetEraseBoard() )
+	else if ( ( (GetPaintPins() || GetErasePins()) && bColor ) || GetPaintBoard() || GetEraseBoard() )
 	{
 		if ( m_dockPinDlg->isVisible() ) m_dockPinDlg->hide();
 		HidePadOffsetDialog();
