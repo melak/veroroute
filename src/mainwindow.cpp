@@ -957,9 +957,6 @@ void MainWindow::WriteGerber(const bool& bTwoLayerGerber, const bool& bMetric)
 	const bool bNewGerbers = !file.exists();	// If the GKO file doesn't exist, assume we're doing a new export
 	m_gerberFileName = StringHelper::RemoveDotSuffix(name);	// Remove ".GKO"
 #else
-	const QString	name = StringHelper::RemoveDotSuffix(m_fileName);	// Remove the ".vrt"
-	const QFileInfo	info( name );
-	const QString	defaultName = info.fileName();
 	m_gerberFileName = GetSaveFileName(tr("Choose a Gerber file prefix"), tr("All Files (*)"), QString(""));
 #endif
 	if ( !m_gerberFileName.isEmpty() )
