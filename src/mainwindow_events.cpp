@@ -606,8 +606,6 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 
 void MainWindow::MouseMoveEvent(const QPoint& pos)
 {
-	m_bReRoute = false;	// Reset m_bReRoute only.  Leave m_bReListNodes alone
-
 	m_mousePos = pos;
 	if ( !m_board.GetCompEdit() && m_board.GetMirrored() ) return;
 	if ( !m_bMouseClick ) return;
@@ -846,6 +844,8 @@ void MainWindow::MouseMoveEvent(const QPoint& pos)
 				RepaintWithRouting();
 			else
 				RepaintSkipRouting();
+
+			m_bReRoute = false;
 		}
 	}
 
