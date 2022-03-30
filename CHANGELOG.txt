@@ -1,3 +1,8 @@
+V2.21  Bug fix: Unreliable redraw when double-click, especially on Android tablet interface.
+       Bug fix: Was possible to paint/erase pins and paint flood in non-Color mode.
+       Bug fix: Should allow pin layer preference to be set, even if pin has no netlist ID assigned.
+       Bug fix: Extra checks needed when saving files on Android, as the system might add extra characters after the filename suffix.
+       Improvement: Double-click to change pin layer preference should also select netlist ID of the pin.
 V2.20  Bug fix: Don't allow Vero tracks with Mono/PCB mode.  They should be mutually exclusive.
        Bug fix: Disable distance tool in Component Editor Mode.
        Bug fix: Pin Labels editor was not writing changes to Undo/Redo history.
@@ -27,14 +32,14 @@ V2.20  Bug fix: Don't allow Vero tracks with Mono/PCB mode.  They should be mutu
        Improvement: More efficent undo/redo history logging.
        Improvement: Allow competing diagonals to be resolved by regular paint procedure (i.e. paint on the crossing after painting the ends of the diagonal).
        Improvement: No more selection/desection of netlist ID by single clicks.
-                    You must now double-click on a track/pin to select, and double click on a blank area to deselect.
+                    You must now double-click on a track/pin to select, and double-click on a blank area to deselect.
                     Stops confusing behaviour such as a netlist of interest becoming deselected when you try to move some other part.
        Improvement: Only allow painting/unpainting of pins (and paint by flood fill) when in Color mode.
        Improvement: Added Layers menu item for resetting all pin layer preferences.
        Improvement: On a 2-layer board, if you have a floating component (because the tracks on the layers do not match the floating pins)
                     and you go to erase the tracks under those floating pins so that the component can drop into place, then
                     auto-erase the tracks on the other board layer also if necessary.  This saves the user having to switch layers
-                    to erasing the tracks manually.
+                    to erase the tracks manually.
        Improvement: Force docking of major dialogs (necessary for Android usability).
        Replaced all sliders in the GUI with check boxes or spin controls.
        Use of the "P" key is now strictly for painting/erasing component pins.  Not regular grid points or wires.
