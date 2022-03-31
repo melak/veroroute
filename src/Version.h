@@ -2,7 +2,7 @@
 
 static const char* szVEROROUTE_VERSION =
 
-"2.21"		// Bug fix: Unreliable redraw when double-click, especially on Android tablet interface.
+"2.21";		// Bug fix: Unreliable redraw when double-click, especially on Android tablet interface.
 			// Bug fix: Was possible to paint/erase pins and paint flood in non-Color mode.
 			// Bug fix: Should allow pin layer preference to be set, even if pin has no netlist ID assigned.
 			// Bug fix: Extra checks needed when saving files on Android, as the system might add extra characters after the filename suffix.
