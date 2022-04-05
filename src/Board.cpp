@@ -20,6 +20,11 @@
 #include "Board.h"
 #include "PolygonHelper.h"
 
+bool Board::GetForce_X_Thermals() const
+{
+	return false;	// true ==> hide all ground tracks when doing a ground-fill, and force X-shaped thermal reliefs
+}
+
 // Methods to get objects at a grid location
 
 int Board::GetComponentId(int row, int col)	// Pick the most relevant component at the location
@@ -136,6 +141,10 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 	int minRow, minCol, maxRow, maxCol;
 	GetBounds(minRow, minCol, maxRow, maxCol);
 
+	const bool&	bVero		= GetVeroTracks();
+	const bool	bMonoPCB	= GetTrackMode() == TRACKMODE::MONO || GetTrackMode() == TRACKMODE::PCB;
+	const bool	bGroundFill	= !bVero && bMonoPCB && GetGroundFill();
+
 	for (int k = 0, kMax = GetLyrs(); k < kMax; k++)	// Check all layers
 	{
 		PolygonHelper polygonHelper;
@@ -147,7 +156,7 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 			const int&		nodeIdA		= pA->GetNodeId();
 			const bool		bHasPinA	= pA->GetHasPin();
 			if ( nodeIdA == BAD_NODEID && !bHasPinA ) continue;	// Skip if no track and no pin
-			const bool		bIsGndA		= GetGroundFill() && nodeIdA == GetGroundNodeId(k) && nodeIdA != BAD_NODEID;
+			const bool		bIsGndA		= bGroundFill && nodeIdA == GetGroundNodeId(k) && nodeIdA != BAD_NODEID;
 
 			MyPointF pointA(i, j, 0.005 * GetTRACK_MIL());	// The blob centre for pA (note: track radius !!!)
 			MyPointF padA(pointA);							// The pad centre for pA (pad radius will be set below)
@@ -184,7 +193,7 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 				const bool		bHasPinB	= pB->GetHasPin();
 				if ( nodeIdB == BAD_NODEID && !bHasPinB ) continue;	// Skip if no track and no pin
 				if ( nodeIdB == nodeIdA ) continue;
-				const bool		bIsGndB		= GetGroundFill() && nodeIdB == GetGroundNodeId(k) && nodeIdB != BAD_NODEID;
+				const bool		bIsGndB		= bGroundFill && nodeIdB == GetGroundNodeId(k) && nodeIdB != BAD_NODEID;
 
 				MyPointF pointB(ii, jj, 0.005 * GetTRACK_MIL());	// The blob centre for pB (note: track radius !!!)
 				MyPointF padB(pointB);								// The pad centre for pB (pad radius will be set below)

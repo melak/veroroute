@@ -504,6 +504,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	const bool		 bPCB			= trackMode == TRACKMODE::PCB;
 	const bool		 bMonoPCB		= bMono || bPCB;
 	const bool		 bGroundFill	= !bVero && bMonoPCB && board.GetGroundFill();
+	const bool		 bForceXthermal	= board.GetForce_X_Thermals();
 #ifdef USE_PIXMAP_CACHE
 	const bool		 bPixmapCache	= !bVero && ( bMono || bColor ) && !bGroundFill && !m_bWritePDF;	// true ==> Faster rendering (Mono/Color modes)
 #else
@@ -700,6 +701,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				assert( !(bVia && bPad) );	// Can't be both a via and a regular pad
 				const bool		bIsGnd			= bGroundFill && nodeId == groundNodeId;
 				const int		iTagCode		= ( bPad && bIsGnd && nodeId != BAD_NODEID ) ? board.GetTagCode(pC, iPerimeterCode) : 0;
+
+				if ( bForceXthermal && !bPad && bIsGnd ) continue;	// Don't render ground tracks if forcing X shaped thermal reliefs
 
 				bool	bCustomSize(false);
 				int		iPadWidthMIL(0), iHoleWidthMIL(0);	// 0 ==> Not a custom size value

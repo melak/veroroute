@@ -224,42 +224,43 @@ public:
 
 	int GetPerimeterCode(const Element* p) const	// Helper for the GUI "blobs"
 	{
-		const bool	bDiagsOK	= GetDiagsMode() != DIAGSMODE::OFF;
-		const bool	bMinDiags	= GetDiagsMode() == DIAGSMODE::MIN;
+		const bool bDiagsOK		= GetDiagsMode() != DIAGSMODE::OFF;
+		const bool bMinDiags	= GetDiagsMode() == DIAGSMODE::MIN;
+		const bool bBottomLayer	= p->IsLayer0();	// true ==> p is on bottom layer
 
 		// Get track perimeter code on this layer (without any layer preferences)
 		int iCode = p->GetPerimeterCode(bDiagsOK, bMinDiags);	// 0 to 255
-
-		// For a 2-layer board, modify the track perimeter code on this layer to account for pin layer preferences
-		// Only true components (not wires) can have a pin layer preference.
-		if ( GetLyrs() == 1 || !p->GetHasPin() || p->GetHasWire() ) return iCode;
-
-		// Get track perimeter code on other layer (without any layer preferences)
-		// Use "false" instead of "bMinDiags" because we are interested in the local
-		// connectivity in the other layer rather than its displayed track pattern.
-		const int	iCodeOther = p->GetNbr(NBR_X)->GetPerimeterCode(bDiagsOK, false);	// 0 to 255
-
-		const bool	bBottomLayer	= p->IsLayer0();	// true ==> p is on bottom layer
-		const int	iLayerPrefP		= GetLayerPref(p);
-
-		for (int iNbr = 0; iNbr < 8; iNbr ++)	// Loop nbrs in layer
+		if ( GetLyrs() == 2 && p->GetHasPin() && !p->GetHasWire() )
 		{
-			// Only directions that are used in BOTH layers can be affected by layer preference
-			if ( !ReadCodeBit(iNbr, iCode) || !ReadCodeBit(iNbr, iCodeOther) ) continue;
+			// For a 2-layer board, modify the track perimeter code on this layer to account for pin layer preferences
+			// Only true components (not wires) can have a pin layer preference.
 
-			const Element* q = p->GetNbr(iNbr);
-			if ( !q->GetHasPin() || q->GetHasWire() ) continue;
+			// Get track perimeter code on other layer (without any layer preferences)
+			// Use "false" instead of "bMinDiags" because we are interested in the local
+			// connectivity in the other layer rather than its displayed track pattern.
+			const int	iCodeOther		= p->GetNbr(NBR_X)->GetPerimeterCode(bDiagsOK, false);	// 0 to 255
+			const int	iLayerPrefP		= GetLayerPref(p);
 
-			const int iLayerPrefQ = GetLayerPref(q);
+			for (int iNbr = 0; iNbr < 8; iNbr ++)	// Loop nbrs in layer
+			{
+				// Only directions that are used in BOTH layers can be affected by layer preference
+				if ( !ReadCodeBit(iNbr, iCode) || !ReadCodeBit(iNbr, iCodeOther) ) continue;
 
-			const bool bOK = ( iLayerPrefP == LAYER_X && iLayerPrefQ == LAYER_X ) ||
-							 ( bBottomLayer ? ( iLayerPrefP == LAYER_B || iLayerPrefQ == LAYER_B )
-											: ( iLayerPrefP == LAYER_T || iLayerPrefQ == LAYER_T ) );
-			if ( !bOK ) ClearCodeBit(iNbr, iCode);
+				const Element* q = p->GetNbr(iNbr);
+				if ( !q->GetHasPin() || q->GetHasWire() ) continue;
+
+				const int iLayerPrefQ = GetLayerPref(q);
+
+				const bool bOK = ( iLayerPrefP == LAYER_X && iLayerPrefQ == LAYER_X ) ||
+								 ( bBottomLayer ? ( iLayerPrefP == LAYER_B || iLayerPrefQ == LAYER_B )
+												: ( iLayerPrefP == LAYER_T || iLayerPrefQ == LAYER_T ) );
+				if ( !bOK ) ClearCodeBit(iNbr, iCode);
+			}
 		}
-#ifdef FORCE_X_THERMALS
-		if ( GetTrackMode() == TRACKMODE::PCB && GetGroundFill() && GetGroundNodeId( bBottomLayer ? 0 : 1 ) == p->GetNodeId() ) return 0;	// Hack to force "X" shaped thermal reliefs
-#endif
+
+		if ( GetForce_X_Thermals() && p->GetHasPin() && (GetTrackMode() == TRACKMODE::PCB || GetTrackMode() == TRACKMODE::MONO ) && GetGroundFill() && GetGroundNodeId(bBottomLayer ? 0 : 1) == p->GetNodeId() )
+			return 0;
+
 		return iCode;
 	}
 
@@ -268,6 +269,15 @@ public:
 		const int	iGndNodeId		= p->GetNodeId();
 		const bool	bBottomLayer	= p->IsLayer0();	// true ==> p is on bottom layer			
 		const int	iLayerPrefP		= ( GetLyrs() == 1 || !p->GetHasPin() || p->GetHasWire() ) ? LAYER_X : GetLayerPref(p);
+
+#ifdef _DEBUG
+		const bool&	bVero			= GetVeroTracks();
+		const bool	bMonoPCB		= GetTrackMode() == TRACKMODE::MONO || GetTrackMode() == TRACKMODE::PCB;
+		const bool	bGroundFill		= !bVero && bMonoPCB && GetGroundFill();
+		assert(bGroundFill && p->GetHasPin() && iGndNodeId == GetGroundNodeId(k) && iGndNodeId != BAD_NODEID);
+#endif
+
+		if ( GetForce_X_Thermals() && GetLyrs() == 1 && GetGroundNodeId(bBottomLayer ? 0 : 1) == iGndNodeId ) return CODEBITS_DIAGS;
 
 		int iCandidateTagBits(0);
 		for (int iNbr = 0; iNbr < 8; iNbr ++)	// Loop nbrs in layer
@@ -288,11 +298,10 @@ public:
 											: ( iLayerPrefP == LAYER_T || iLayerPrefQ == LAYER_T ) );
 			if ( bOK ) SetCodeBit(iNbr, iCandidateTagBits);	// Update iCandidateTagBits
 		}
-
 		if ( iCandidateTagBits == 0 ) return 0;							// No candidate tags, so we're done
-#ifdef FORCE_X_THERMALS
-		return CODEBITS_DIAGS;	// Hack to force "X" shaped thermal reliefs
-#endif
+
+		if ( GetForce_X_Thermals() ) return CODEBITS_DIAGS;
+
 		if ( iCandidateTagBits == CODEBITS_LYR ) return CODEBITS_DIAGS;	// All tags are allowed, so just use the 4 diagonals
 
 		// Select a subset of the iCandidateTagBits
@@ -665,6 +674,8 @@ public:
 	std::list<QPointF>& GetWarnPoints(int iLayer)	{ return m_warnPoints[iLayer]; }
 	void ClearWarnPoints()							{ m_warnPoints[0].clear(); m_warnPoints[1].clear(); }
 	bool GetHaveWarnPoints() const					{ return !m_warnPoints[0].empty() || !m_warnPoints[1].empty(); }
+
+	bool GetForce_X_Thermals() const;
 
 	// Import Protel V1 / Tango netlist (exported from TinyCAD / gEDA)
 	bool ImportTango(const TemplateManager& templateMgr, const std::string& filename, std::string& errorStr);

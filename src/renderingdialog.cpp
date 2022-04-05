@@ -72,10 +72,10 @@ void RenderingDialog::UpdateControls()
 	const bool bPCB				= board.GetTrackMode() == TRACKMODE::PCB;
 	const bool bMonoPCB			= board.GetTrackMode() == TRACKMODE::MONO || bPCB;
 	const bool bNoTrackOptions	= board.GetTrackMode() == TRACKMODE::OFF;
-	const bool bGndFill			= board.GetGroundFill();
 	const bool bVero			= board.GetVeroTracks();
 	const bool bVias			= board.GetViasEnabled();
 	const bool bCloseTrackInfo	= board.GetHaveWarnPoints();
+	const bool bGroundFill		= !bVero && bMonoPCB && board.GetGroundFill();
 
 	const int ii =  board.GetBackgroundColor().GetR();	// Before VeroRoute V2.20, "Brightness" was stored as a grey level in the range [200,255].
 	const int i  = 5 * ( ( ii - 155 ) / 5 );			// From   VeroRoute V2.20, "Brightness" is a percentage value [0,100] that is stored as a grey level in the range [155,255].
@@ -96,11 +96,11 @@ void RenderingDialog::UpdateControls()
 	ui->comppins->setDisabled(		!bCompEdit && bMonoPCB );
 	ui->padWidth->setDisabled(		bCompEdit || bNoTrackOptions || bVero );
 	ui->trackWidth->setDisabled(	bCompEdit || bNoTrackOptions || bVero );
-	ui->tagWidth->setDisabled(		bCompEdit || bNoTrackOptions || bVero || !bMonoPCB || !bGndFill );
+	ui->tagWidth->setDisabled(		bCompEdit || bNoTrackOptions || !bGroundFill );
 	ui->holeWidth->setDisabled(		bCompEdit || bNoTrackOptions || bVero );
 	ui->viapadWidth->setDisabled(	bCompEdit || bNoTrackOptions || bVero || !bVias );
 	ui->viaholeWidth->setDisabled(	bCompEdit || bNoTrackOptions || bVero || !bVias );
-	ui->gapWidth->setDisabled(		bCompEdit || bVero || !bMonoPCB || !bGndFill );
+	ui->gapWidth->setDisabled(		bCompEdit || !bGroundFill );
 	ui->maskWidth->setDisabled(		bCompEdit || bVero || !bPCB );
 	ui->silkWidth->setDisabled(		bCompEdit || bVero || !bPCB );
 	ui->edgeWidth->setDisabled(		bCompEdit || bVero || !bPCB );
@@ -113,16 +113,16 @@ void RenderingDialog::UpdateControls()
 	ui->label_comppins->setDisabled(	!bCompEdit && bMonoPCB );
 	ui->label_pad->setDisabled(			bCompEdit || bNoTrackOptions || bVero );
 	ui->label_track->setDisabled(		bCompEdit || bNoTrackOptions || bVero );
-	ui->label_tag->setDisabled(			bCompEdit || bNoTrackOptions || bVero || !bMonoPCB || !bGndFill );
+	ui->label_tag->setDisabled(			bCompEdit || bNoTrackOptions || !bGroundFill );
 	ui->label_hole->setDisabled(		bCompEdit || bNoTrackOptions || bVero );
 	ui->label_viapad->setDisabled(		bCompEdit || bNoTrackOptions || bVero || !bVias );
 	ui->label_viahole->setDisabled(		bCompEdit || bNoTrackOptions || bVero || !bVias );
-	ui->label_gap->setDisabled(			bCompEdit || bVero || !bMonoPCB || !bGndFill );
+	ui->label_gap->setDisabled(			bCompEdit || !bGroundFill );
 	ui->label_mask->setDisabled(		bCompEdit || bVero || !bPCB );
 	ui->label_silk->setDisabled(		bCompEdit || bVero || !bPCB );
 	ui->label_edge->setDisabled(		bCompEdit || bVero || !bPCB );
 	ui->label_info->setDisabled(		bCompEdit || bVero );
-	ui->label_info_2->setDisabled(		bCompEdit || bVero || !bMonoPCB || !bGndFill );
+	ui->label_info_2->setDisabled(		bCompEdit || !bGroundFill );
 	ui->closeTracks->setDisabled(		bCompEdit || bVero || !bCloseTrackInfo );
 	if ( bCompEdit || bVero || !bCloseTrackInfo )
 		ui->closeTracks->hide();
@@ -153,7 +153,7 @@ void RenderingDialog::UpdateControls()
 	ui->label_info->setText( QString::fromStdString(str) );
 
 	std::string str2 = "Current min ground-fill width = ";
-	if ( bCompEdit || bVero || !bMonoPCB || !bGndFill )
+	if ( bCompEdit || !bGroundFill )
 		str2 += "n/a";
 	else
 		str2 += std::to_string(minGndMil) + "." + std::to_string(minGndRem) + " mil";

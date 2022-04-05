@@ -1,3 +1,5 @@
+V2.22  Bug fix: Fix extent of protrusion into ground-fill by extra thermal reliefs.
+       Bug fix: Error in how extra thermal reliefs considered in minimum track separation.
 V2.21  Bug fix: Unreliable redraw when double-click, especially on Android tablet interface.
        Bug fix: Was possible to paint/erase pins and paint flood in non-Color mode.
        Bug fix: Should allow pin layer preference to be set, even if pin has no netlist ID assigned.

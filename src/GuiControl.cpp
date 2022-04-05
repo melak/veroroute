@@ -181,8 +181,11 @@ void GuiControl::CalcBlob(const qreal& W, const QPointF& pC, const QPointF& pCof
 		polygon.m_bClosed	= false;
 
 		const int	i = ( iPadWidthMIL == 0 ) ? GetPAD_MIL() : iPadWidthMIL;
-		const qreal	X = W * 0.01 * ( i * 0.5 + GetGAP_MIL() );
-		const qreal	D = static_cast<int>( X * sqrt(0.5) );
+		const qreal P = i * 0.5 + GetGAP_MIL();
+		const qreal T = GetTAG_MIL() * 0.5;
+		const qreal	X = W * 0.01 * sqrt( std::max(P*P - T*T, 0.0) );
+		const qreal	D = X * sqrt(0.5);
+
 		for (int iNbr = 0; iNbr < 8; iNbr++)
 		{
 			if ( !ReadCodeBit(iNbr, iTagCode) ) continue;
