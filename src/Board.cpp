@@ -136,9 +136,10 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 	int minRow, minCol, maxRow, maxCol;
 	GetBounds(minRow, minCol, maxRow, maxCol);
 
-	const bool&	bVero		= GetVeroTracks();
-	const bool	bMonoPCB	= GetTrackMode() == TRACKMODE::MONO || GetTrackMode() == TRACKMODE::PCB;
-	const bool	bGroundFill	= !bVero && bMonoPCB && GetGroundFill();
+	const bool&	bVero			= GetVeroTracks();
+	const bool	bMonoPCB		= GetTrackMode() == TRACKMODE::MONO || GetTrackMode() == TRACKMODE::PCB;
+	const bool	bGroundFill		= !bVero && bMonoPCB && GetGroundFill();
+	const bool	bForceXthermals	= GetForce_X_Thermals();
 
 	for (int k = 0, kMax = GetLyrs(); k < kMax; k++)	// Check all layers
 	{
@@ -156,6 +157,7 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 			MyPointF pointA(i, j, 0.005 * GetTRACK_MIL());	// The blob centre for pA (note: track radius !!!)
 			MyPointF padA(pointA);							// The pad centre for pA (pad radius will be set below)
 			bool	 bPadA(true);							// Set false if there is no pad at pA
+			bool	 bPadOffsetA(false);					// Set true if we have an offset pad at pA
 			int		 iPadWidthMIL_A(0);						// Needed for tag length
 			if ( pA->GetHasWire() )
 				padA.m_radius = 0.005 * GetPAD_MIL();	// No custom pad size for wires
@@ -167,6 +169,7 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 				// Handle pad offsets
 				comp.GetCompPinOffsets(pA->GetPinIndex(), Xmil, Ymil);
 				padA += QPointF(0.01 * Xmil, 0.01 * Ymil);
+				bPadOffsetA	= ( Xmil != 0 || Ymil != 0 );
 			}
 			else if ( pA->GetIsVia() )
 				padA.m_radius = 0.005 * GetVIAPAD_MIL();
@@ -174,9 +177,11 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 				bPadA = false;
 
 			std::list<MyPolygonF> blobA;	// Blob A points (in units of grid squares)
-			const int iPerimeterCodeA	= GetPerimeterCode(pA);
-			const int iTagCodeA			= ( bPadA && bIsGndA ) ? GetTagCode(pA, iPerimeterCodeA) : 0;
-			CalcBlob(1, pointA, padA, iPadWidthMIL_A, iPerimeterCodeA, iTagCodeA, blobA, bHasPinA, bIsGndA);	// 1 ==> scale of 1 grid square
+			const int	iPerimeterCodeA	= GetPerimeterCode(pA);
+			const int	iTagCodeA		= ( bPadA && bIsGndA ) ? GetTagCode(pA, iPerimeterCodeA) : 0;
+			const bool	bBlobA			= !bPadOffsetA || iPerimeterCodeA != 0 || ( bForceXthermals && bIsGndA );
+			if ( bBlobA )
+				CalcBlob(1, pointA, padA, iPadWidthMIL_A, iPerimeterCodeA, iTagCodeA, blobA, bHasPinA, bIsGndA);	// 1 ==> scale of 1 grid square
 
 			// Only need to loop half the directions in the following loop (the i,j scan takes care of the other half)
 			for (int jj = std::max(minRow,j-nRings); jj <= j; jj++)
@@ -193,6 +198,7 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 				MyPointF pointB(ii, jj, 0.005 * GetTRACK_MIL());	// The blob centre for pB (note: track radius !!!)
 				MyPointF padB(pointB);								// The pad centre for pB (pad radius will be set below)
 				bool	 bPadB(true);								// Set false if there is no pad at pB
+				bool	 bPadOffsetB(false);						// Set true if we have an offset pad at pB
 				int		 iPadWidthMIL_B(0);
 
 				if ( pB->GetHasWire() )
@@ -205,6 +211,7 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 					// Handle pad offsets
 					comp.GetCompPinOffsets(pB->GetPinIndex(), Xmil, Ymil);
 					padB += QPointF(0.01 * Xmil, 0.01 * Ymil);
+					bPadOffsetB	= ( Xmil != 0 || Ymil != 0 );
 				}
 				else if ( pB->GetIsVia() )
 					padB.m_radius = 0.005 * GetVIAPAD_MIL();
@@ -212,9 +219,11 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 					bPadB = false;
 
 				std::list<MyPolygonF> blobB;	// Blob B points (in units of grid squares)
-				const int iPerimeterCodeB	= GetPerimeterCode(pB);
-				const int iTagCodeB			= ( bPadB && bIsGndB ) ? GetTagCode(pB, iPerimeterCodeB) : 0;
-				CalcBlob(1, pointB, padB, iPadWidthMIL_B, iPerimeterCodeB, iTagCodeB, blobB, bHasPinB, bIsGndB);	// 1 ==> scale of 1 grid square
+				const int	iPerimeterCodeB	= GetPerimeterCode(pB);
+				const int	iTagCodeB		= ( bPadB && bIsGndB ) ? GetTagCode(pB, iPerimeterCodeB) : 0;
+				const bool	bBlobB			= !bPadOffsetB || iPerimeterCodeB != 0 || ( bForceXthermals && bIsGndB );
+				if ( bBlobB )
+					CalcBlob(1, pointB, padB, iPadWidthMIL_B, iPerimeterCodeB, iTagCodeB, blobB, bHasPinB, bIsGndB);	// 1 ==> scale of 1 grid square
 
 				const bool bCompareBlobs = !bStandardBlobs || ( abs(jj - j) < 2 && abs(ii - i) < 2 );	// Standard blobs ==> just consider neighbouring grid points
 
@@ -222,13 +231,13 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 				if ( bPadA && bPadB ) polygonHelper.CalcSeparation(padA, padB);
 
 				// Pad A to Blob B
-				if ( bPadA ) for(const auto& b : blobB) polygonHelper.CalcSeparation(padA, b);
+				if ( bPadA && bBlobB ) for(const auto& b : blobB) polygonHelper.CalcSeparation(padA, b);
 
 				// Pad B to Blob A
-				if ( bPadB ) for(const auto& a : blobA) polygonHelper.CalcSeparation(padB, a);
+				if ( bPadB && bBlobA ) for(const auto& a : blobA) polygonHelper.CalcSeparation(padB, a);
 
 				// Blob A to Blob B
-				if ( bCompareBlobs ) for(const auto& a : blobA) for(const auto& b : blobB) polygonHelper.CalcSeparation(a, b);
+				if ( bCompareBlobs && bBlobA && bBlobB ) for(const auto& a : blobA) for(const auto& b : blobB) polygonHelper.CalcSeparation(a, b);
 			}
 		}
 		if ( polygonHelper.m_Dmin > m_dMinSeparation ) continue;
