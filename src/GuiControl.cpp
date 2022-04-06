@@ -20,6 +20,11 @@
 #include "GuiControl.h"
 #include "PolygonHelper.h"
 
+bool GuiControl::GetForce_X_Thermals() const
+{
+	return false;	// true ==> hide all ground tracks when doing a ground-fill, and force X-shaped thermal reliefs
+}
+
 void GuiControl::CalcBlob(const qreal& W, const QPointF& pC, const QPointF& pCoffset,
 						  const int& iPadWidthMIL, const int& iPerimeterCode, const int& iTagCode,
 						  std::list<MyPolygonF>& out,
@@ -121,14 +126,18 @@ void GuiControl::CalcBlob(const qreal& W, const QPointF& pC, const QPointF& pCof
 		}
 	}
 
-	// Set other polygon attributes, then copy the polygon to the output polygon list
-	const bool bVariTracks = N > 0 && !bClosed && bFatTracks && padWidth > trkWidth;
-	polygon.m_eTrkPen	= trkPen;
-	polygon.m_ePadPen	= bVariTracks ? padPen : GPEN::NONE;
-	polygon.m_radiusTrk	= ( bIsGnd ? tagWidth : trkWidth ) * 0.5;
-	polygon.m_radiusPad	= bVariTracks ? ( padWidth * 0.5 ) : 0;
-	polygon.m_bClosed	= bClosed;
-	out.push_back(polygon);
+	const bool bGndPad = ( N == 0 && bHavePad && bIsGnd );
+	if ( !bGndPad )	// Don't draw the blob for an isolated pad in the ground-fill
+	{
+		// Set other polygon attributes, then copy the polygon to the output polygon list
+		const bool bVariTracks = N > 0 && !bClosed && bFatTracks && padWidth > trkWidth;
+		polygon.m_eTrkPen	= trkPen;
+		polygon.m_ePadPen	= bVariTracks ? padPen : GPEN::NONE;
+		polygon.m_radiusTrk	= ( bIsGnd ? tagWidth : trkWidth ) * 0.5;
+		polygon.m_radiusPad	= bVariTracks ? ( padWidth * 0.5 ) : 0;
+		polygon.m_bClosed	= bClosed;
+		out.push_back(polygon);
+	}
 
 	if ( bLeg )	// Track leg from offset pad to its grid origin
 	{
@@ -171,7 +180,7 @@ void GuiControl::CalcBlob(const qreal& W, const QPointF& pC, const QPointF& pCof
 			}
 		}
 	}
-	if ( iTagCode > 0 )	// Draw extra thermal relief tags
+	if ( iTagCode > 0 && ( !bLeg || GetForce_X_Thermals() ) )	// Only draw extra thermal relief tags if we don't have an offset pad, or are forcing X-shaped tags
 	{
 		assert( bIsGnd );
 		polygon.m_eTrkPen	= trkPen;
@@ -190,7 +199,7 @@ void GuiControl::CalcBlob(const qreal& W, const QPointF& pC, const QPointF& pCof
 		{
 			if ( !ReadCodeBit(iNbr, iTagCode) ) continue;
 
-			QPointF pD(pC);	// The other end of the tag
+			QPointF pD(pCoffset);	// The other end of the tag
 			switch( iNbr)
 			{
 				case NBR_L:		pD += QPointF(-X,  0);	break;
@@ -203,7 +212,7 @@ void GuiControl::CalcBlob(const qreal& W, const QPointF& pC, const QPointF& pCof
 				case NBR_LB:	pD += QPointF(-D,  D);	break;
 			}
 			polygon.clear();
-			polygon << pC << pD;
+			polygon << pCoffset << pD;
 			out.push_back(polygon);
 		}
 	}

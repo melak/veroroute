@@ -675,8 +675,6 @@ public:
 	void ClearWarnPoints()							{ m_warnPoints[0].clear(); m_warnPoints[1].clear(); }
 	bool GetHaveWarnPoints() const					{ return !m_warnPoints[0].empty() || !m_warnPoints[1].empty(); }
 
-	bool GetForce_X_Thermals() const;
-
 	// Import Protel V1 / Tango netlist (exported from TinyCAD / gEDA)
 	bool ImportTango(const TemplateManager& templateMgr, const std::string& filename, std::string& errorStr);
 	// Import OrcadPCB2 netlist (exported from KiCAD)

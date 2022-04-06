@@ -734,7 +734,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					}
 				}
 				const bool bPadOffset	= ( padOffsetX != 0 || padOffsetY != 0 );
-				const bool bBlob		= !bPadOffset || iPerimeterCode != 0;
+				const bool bBlob		= !bPadOffset || iPerimeterCode != 0 || ( bForceXthermal && bIsGnd );
 
 				QPen& greyPen = ( layerPref == LAYER_X ) ? penGry :
 								( layerPref == LAYER_T ) ? penTop : penBot;

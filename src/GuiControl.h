@@ -500,6 +500,7 @@ public:
 					 const int& iPadWidthMIL, const int& iPerimeterCode, const int& iTagCode,
 					 std::list<MyPolygonF>& out,
 					 const bool bHavePad, const bool bIsGnd, const bool bGap = false) const;
+	bool GetForce_X_Thermals() const;
 	void Reset()	// For use with File->New()
 	{
 		m_currentLayer		= 0;

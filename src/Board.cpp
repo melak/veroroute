@@ -20,11 +20,6 @@
 #include "Board.h"
 #include "PolygonHelper.h"
 
-bool Board::GetForce_X_Thermals() const
-{
-	return false;	// true ==> hide all ground tracks when doing a ground-fill, and force X-shaped thermal reliefs
-}
-
 // Methods to get objects at a grid location
 
 int Board::GetComponentId(int row, int col)	// Pick the most relevant component at the location
