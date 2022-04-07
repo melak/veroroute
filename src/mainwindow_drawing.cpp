@@ -229,18 +229,20 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 			{
 				const bool bPad	= polygon.m_ePadPen != GPEN::NONE;
 				const bool bTrk	= polygon.m_eTrkPen != GPEN::NONE;
-				if ( !bTrk && !bPad ) continue;
+				if ( !bTrk && !bPad && !polygon.m_bClosed ) continue;
 
 				const GPEN& ePen = bTrk ? polygon.m_eTrkPen : polygon.m_ePadPen;
 
 				if ( polygon.m_bClosed )
 				{
-					os.AddLoop(polygon, ePen);			// Closed polygon outline
-					if ( !bGap ) os.AddRegion(polygon);	// Only non-Gap polygon needs filling
+					if ( bPad || bTrk )
+						os.AddLoop(polygon, ePen);	// Closed polygon outline
+					if ( !bGap )
+						os.AddRegion(polygon);		// Only non-Gap polygon needs filling
 				}
 				else if ( bPad && bTrk )	// Fat tracks with diagonals
 					os.AddVariTrack(polygon, polygon.m_ePadPen, polygon.m_eTrkPen);
-				else
+				else if ( bPad || bTrk )
 					os.AddTrack(polygon, ePen);
 			}
 		}
@@ -261,9 +263,9 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 		{
 			const bool bTrk	= polygon.m_eTrkPen != GPEN::NONE;
 			const bool bPad	= polygon.m_ePadPen != GPEN::NONE;
-			if ( !bTrk && !bPad ) continue;
+			if ( !bTrk && !bPad && !polygon.m_bClosed ) continue;
 
-			pen.setWidth(bTrk ? trackWidth : padWidth);
+			pen.setWidth(bTrk ? trackWidth : bPad ? padWidth : 0);
 			painter.setPen(pen);
 
 			if ( polygon.m_bClosed )
@@ -280,15 +282,18 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 					painter.drawLine(*iterA, *iterB); ++iterA; ++iterB;
 				}
 			}
-			else if ( polygon.size() == 1 )
-				painter.drawPoint( polygon.first() );
-			else
+			else if ( bPad || bTrk )
 			{
-				auto iterA = polygon.begin();
-				auto iterB = iterA; iterB++;
-				while( iterB != polygon.end() )
+				if ( polygon.size() == 1 )
+					painter.drawPoint( polygon.first() );
+				else
 				{
-					painter.drawLine(*iterA, *iterB); ++iterA; ++iterB;
+					auto iterA = polygon.begin();
+					auto iterB = iterA; iterB++;
+					while( iterB != polygon.end() )
+					{
+						painter.drawLine(*iterA, *iterB); ++iterA; ++iterB;
+					}
 				}
 			}
 		}

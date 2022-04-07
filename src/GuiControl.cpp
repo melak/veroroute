@@ -183,37 +183,38 @@ void GuiControl::CalcBlob(const qreal& W, const QPointF& pC, const QPointF& pCof
 	if ( iTagCode > 0 && ( !bLeg || GetForce_X_Thermals() ) )	// Only draw extra thermal relief tags if we don't have an offset pad, or are forcing X-shaped tags
 	{
 		assert( bIsGnd );
-		polygon.m_eTrkPen	= trkPen;
-		polygon.m_ePadPen	= GPEN::NONE;
-		polygon.m_radiusTrk	= tagWidth * 0.5;
-		polygon.m_radiusPad	= 0;
-		polygon.m_bClosed	= false;
 
-		const int	i = ( iPadWidthMIL == 0 ) ? GetPAD_MIL() : iPadWidthMIL;
-		const qreal P = i * 0.5 + GetGAP_MIL();
-		const qreal T = GetTAG_MIL() * 0.5;
-		const qreal	X = W * 0.01 * sqrt( std::max(P*P - T*T, 0.0) );
-		const qreal	D = X * sqrt(0.5);
+		polygon.m_eTrkPen	= GPEN::NONE;
+		polygon.m_ePadPen	= GPEN::NONE;
+		polygon.m_radiusTrk	= 0;
+		polygon.m_radiusPad	= 0;
+		polygon.m_bClosed	= true;
+
+		const int	i = ( ( iPadWidthMIL == 0 ) ? GetPAD_MIL() : iPadWidthMIL ) + ( GetGAP_MIL() << 1 );
+		const qreal X(W * 0.005 * (i + 1));	// Using (i+1) instead of (i) increases tag length by 0.5 mil.  Avoids short tags from rounding errors.
+		const qreal T(W * 0.005 * GetTAG_MIL());
+		const qreal f(sqrt(0.5));
+		const qreal x(f * X), t(f * T);	// Scale for diagonal diretions
+		const qreal p(x + t), q(x - t); // Transform for diagonal connections
 
 		for (int iNbr = 0; iNbr < 8; iNbr++)
 		{
 			if ( !ReadCodeBit(iNbr, iTagCode) ) continue;
 
-			QPointF pD(pCoffset);	// The other end of the tag
+			polygon.clear();
 			switch( iNbr)
 			{
-				case NBR_L:		pD += QPointF(-X,  0);	break;
-				case NBR_LT:	pD += QPointF(-D, -D);	break;
-				case NBR_T:		pD += QPointF( 0, -X);	break;
-				case NBR_RT:	pD += QPointF( D, -D);	break;
-				case NBR_R:		pD += QPointF( X,  0);	break;
-				case NBR_RB:	pD += QPointF( D,  D);	break;
-				case NBR_B:		pD += QPointF( 0,  X);	break;
-				case NBR_LB:	pD += QPointF(-D,  D);	break;
+				case NBR_L: 	polygon	<< pCoffset + QPointF(-X,  T) << pCoffset + QPointF(-X, -T) << pCoffset + QPointF( 0, -T) << pCoffset + QPointF( 0,  T);	break;
+				case NBR_LT:	polygon	<< pCoffset + QPointF(-p, -q) << pCoffset + QPointF(-q, -p) << pCoffset + QPointF( t, -t) << pCoffset + QPointF(-t,  t);	break;
+				case NBR_T:		polygon	<< pCoffset + QPointF(-T,  0) << pCoffset + QPointF(-T, -X) << pCoffset + QPointF( T, -X) << pCoffset + QPointF( T,  0);	break;
+				case NBR_RT:	polygon	<< pCoffset + QPointF( q, -p) << pCoffset + QPointF( p, -q) << pCoffset + QPointF( t,  t) << pCoffset + QPointF(-t, -t);	break;
+				case NBR_R:		polygon	<< pCoffset + QPointF( X, -T) << pCoffset + QPointF( X,  T) << pCoffset + QPointF( 0,  T) << pCoffset + QPointF( 0, -T);	break;
+				case NBR_RB:	polygon	<< pCoffset + QPointF( p,  q) << pCoffset + QPointF( q,  p) << pCoffset + QPointF(-t,  t) << pCoffset + QPointF( t, -t);	break;
+				case NBR_B:		polygon	<< pCoffset + QPointF( T,  0) << pCoffset + QPointF( T,  X) << pCoffset + QPointF(-T,  X) << pCoffset + QPointF(-T,  0);	break;
+				case NBR_LB:	polygon	<< pCoffset + QPointF(-q,  p) << pCoffset + QPointF(-p,  q) << pCoffset + QPointF(-t, -t) << pCoffset + QPointF( t,  t);	break;
 			}
-			polygon.clear();
-			polygon << pCoffset << pD;
-			out.push_back(polygon);
+			if ( !polygon.empty() )
+				out.push_back(polygon);
 		}
 	}
 }
