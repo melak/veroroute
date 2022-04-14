@@ -92,6 +92,7 @@ public:
 		m_bGroundFill		= o.m_bGroundFill;
 		m_bVerticalStrips	= o.m_bVerticalStrips;
 		m_bCompEdit			= o.m_bCompEdit;
+		m_bXthermals		= o.m_bXthermals;
 		return *this;
 	}
 	bool operator==(const GuiControl& o) const	// Compare persisted info
@@ -144,7 +145,8 @@ public:
 			&&	m_bFlyWires			== o.m_bFlyWires
 			&&	m_bGroundFill		== o.m_bGroundFill
 			&&	m_bVerticalStrips	== o.m_bVerticalStrips
-			&&	m_bCompEdit			== o.m_bCompEdit;
+			&&	m_bCompEdit			== o.m_bCompEdit
+			&&	m_bXthermals		== o.m_bXthermals;
 	}
 	bool operator!=(const GuiControl& o) const
 	{
@@ -317,6 +319,9 @@ public:
 		m_bCompEdit = false;
 		if ( inStream.GetVersion() >= VRT_VERSION_19 )
 			inStream.Load(m_bCompEdit);			// Added in VRT_VERSION_19
+		m_bXthermals = false;
+		if ( inStream.GetVersion() >= VRT_VERSION_53 )
+			inStream.Load(m_bXthermals);		// Added in VRT_VERSION_53
 	}
 	virtual void Save(DataStream& outStream) override
 	{
@@ -369,6 +374,7 @@ public:
 		outStream.Save(m_bGroundFill);		// Added in VRT_VERSION_3
 		outStream.Save(m_bVerticalStrips);	// Added in VRT_VERSION_12
 		outStream.Save(m_bCompEdit);		// Added in VRT_VERSION_19
+		outStream.Save(m_bXthermals);		// Added in VRT_VERSION_53
 	}
 	bool SetBackgroundColor(const MyRGB& o)	{ const bool bChanged = m_backgroundColor	!= o; m_backgroundColor	= o; return bChanged;}
 	bool SetCurrentLayer(const int& i)		{ const bool bChanged = m_currentLayer		!= i; m_currentLayer	= i; return bChanged; }
@@ -428,6 +434,7 @@ public:
 	bool SetGroundFill(const bool& b)		{ const bool bChanged = m_bGroundFill		!= b; m_bGroundFill		= b; return bChanged; }
 	bool SetVerticalStrips(const bool& b)	{ const bool bChanged = m_bVerticalStrips	!= b; m_bVerticalStrips	= b; return bChanged; }
 	bool SetCompEdit(const bool& b)			{ const bool bChanged = m_bCompEdit			!= b; m_bCompEdit		= b; return bChanged; }
+	bool SetXthermals(const bool& b)		{ const bool bChanged = m_bXthermals		!= b; m_bXthermals		= b; return bChanged; }
 	const MyRGB&		GetBackgroundColor() const	{ return m_backgroundColor; }
 	const int&			GetCurrentLayer() const		{ return m_currentLayer; }
 	const int&			GetCurrentNodeId() const	{ return m_currentNodeId; }
@@ -477,6 +484,7 @@ public:
 	const bool&			GetGroundFill() const		{ return m_bGroundFill; }
 	const bool&			GetVerticalStrips() const	{ return m_bVerticalStrips; }
 	const bool&			GetCompEdit() const			{ return m_bCompEdit; }
+	const bool&			GetXthermals() const		{ return m_bXthermals; }
 	// Helpers
 	bool		SetGroundNodeId()				{ return ( GetCurrentLayer() == 0 ) ? SetGroundNodeId0( GetCurrentNodeId() ) : SetGroundNodeId1( GetCurrentNodeId() ); }
 	const int&	GetGroundNodeId(int lyr) const	{ return ( lyr == 0 ) ? GetGroundNodeId0() : GetGroundNodeId1(); }
@@ -500,7 +508,6 @@ public:
 					 const int& iPadWidthMIL, const int& iPerimeterCode, const int& iTagCode,
 					 std::list<MyPolygonF>& out,
 					 const bool bHavePad, const bool bIsGnd, const bool bGap = false) const;
-	bool GetForce_X_Thermals() const;
 	void Reset()	// For use with File->New()
 	{
 		m_currentLayer		= 0;
@@ -528,6 +535,7 @@ public:
 		m_bFlyWires			= true;
 		m_bGroundFill		= false;
 		m_bCompEdit			= false;
+		m_bXthermals		= false;
 	}
 private:
 	MyRGB		m_backgroundColor	= MyRGB(0xFFFFFF);
@@ -579,4 +587,5 @@ private:
 	bool		m_bGroundFill		= false;
 	bool		m_bVerticalStrips	= true;
 	bool		m_bCompEdit			= false;			// true ==> component editor mode
+	bool		m_bXthermals		= false;			// true ==> force X thermal reliefs and hide tracks in ground-fill
 };

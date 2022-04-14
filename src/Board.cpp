@@ -139,7 +139,7 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 	const bool&	bVero			= GetVeroTracks();
 	const bool	bMonoPCB		= GetTrackMode() == TRACKMODE::MONO || GetTrackMode() == TRACKMODE::PCB;
 	const bool	bGroundFill		= !bVero && bMonoPCB && GetGroundFill();
-	const bool	bForceXthermals	= GetForce_X_Thermals();
+	const bool	bForceXthermals	= GetXthermals();
 
 	for (int k = 0, kMax = GetLyrs(); k < kMax; k++)	// Check all layers
 	{

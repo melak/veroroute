@@ -258,7 +258,7 @@ public:
 			}
 		}
 
-		if ( GetForce_X_Thermals() && p->GetHasPin() && (GetTrackMode() == TRACKMODE::PCB || GetTrackMode() == TRACKMODE::MONO ) && GetGroundFill() && GetGroundNodeId(bBottomLayer ? 0 : 1) == p->GetNodeId() )
+		if ( GetXthermals() && p->GetHasPin() && (GetTrackMode() == TRACKMODE::PCB || GetTrackMode() == TRACKMODE::MONO ) && GetGroundFill() && GetGroundNodeId(bBottomLayer ? 0 : 1) == p->GetNodeId() )
 			return 0;
 
 		return iCode;
@@ -277,7 +277,7 @@ public:
 		assert(bGroundFill && p->GetHasPin() && iGndNodeId == GetGroundNodeId(k) && iGndNodeId != BAD_NODEID);
 #endif
 
-		if ( GetForce_X_Thermals() && GetLyrs() == 1 && GetGroundNodeId(bBottomLayer ? 0 : 1) == iGndNodeId ) return CODEBITS_DIAGS;
+		if ( GetXthermals() && GetLyrs() == 1 && GetGroundNodeId(bBottomLayer ? 0 : 1) == iGndNodeId ) return CODEBITS_DIAGS;
 
 		int iCandidateTagBits(0);
 		for (int iNbr = 0; iNbr < 8; iNbr ++)	// Loop nbrs in layer
@@ -300,7 +300,7 @@ public:
 		}
 		if ( iCandidateTagBits == 0 ) return 0;							// No candidate tags, so we're done
 
-		if ( GetForce_X_Thermals() ) return CODEBITS_DIAGS;
+		if ( GetXthermals() ) return CODEBITS_DIAGS;
 
 		if ( iCandidateTagBits == CODEBITS_LYR ) return CODEBITS_DIAGS;	// All tags are allowed, so just use the 4 diagonals
 

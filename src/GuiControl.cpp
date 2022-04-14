@@ -20,11 +20,6 @@
 #include "GuiControl.h"
 #include "PolygonHelper.h"
 
-bool GuiControl::GetForce_X_Thermals() const
-{
-	return false;	// true ==> hide all ground tracks when doing a ground-fill, and force X-shaped thermal reliefs
-}
-
 void GuiControl::CalcBlob(const qreal& W, const QPointF& pC, const QPointF& pCoffset,
 						  const int& iPadWidthMIL, const int& iPerimeterCode, const int& iTagCode,
 						  std::list<MyPolygonF>& out,
@@ -180,7 +175,7 @@ void GuiControl::CalcBlob(const qreal& W, const QPointF& pC, const QPointF& pCof
 			}
 		}
 	}
-	if ( iTagCode > 0 && ( !bLeg || GetForce_X_Thermals() ) )	// Only draw extra thermal relief tags if we don't have an offset pad, or are forcing X-shaped tags
+	if ( iTagCode > 0 && ( !bLeg || GetXthermals() ) )	// Only draw extra thermal relief tags if we don't have an offset pad, or are forcing X-shaped tags
 	{
 		assert( bIsGnd );
 

@@ -1000,6 +1000,7 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
 			case Qt::Key_F:		if ( trackMode != TRACKMODE::COLOR || compMode == COMPSMODE::OFF || GetPaintBoard() || GetEraseBoard() || GetPaintPins() || GetErasePins() || m_board.GetRoutingEnabled() ) return;
 								SetPaintFlood(true);	break;
 			case Qt::Key_W:		WipeTracks();	break;
+			case Qt::Key_T:		m_board.SetXthermals(!m_board.GetXthermals());	break;
 		}
 	}
 

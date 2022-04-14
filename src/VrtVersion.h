@@ -52,4 +52,5 @@ static const int VRT_VERSION_49 = 49;	// Added vertical alignment flag to text b
 static const int VRT_VERSION_50 = 50;	// Added background color property
 static const int VRT_VERSION_51 = 51;	// Added pinlabels to component editor
 static const int VRT_VERSION_52 = 52;	// Added thermal relief tag size
-static const int VRT_VERSION_CURRENT = VRT_VERSION_52;
+static const int VRT_VERSION_53 = 53;	// Added X-thermals flag
+static const int VRT_VERSION_CURRENT = VRT_VERSION_53;

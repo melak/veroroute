@@ -509,7 +509,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	const bool		 bPCB			= trackMode == TRACKMODE::PCB;
 	const bool		 bMonoPCB		= bMono || bPCB;
 	const bool		 bGroundFill	= !bVero && bMonoPCB && board.GetGroundFill();
-	const bool		 bForceXthermal	= board.GetForce_X_Thermals();
+	const bool		 bForceXthermal	= board.GetXthermals();
 #ifdef USE_PIXMAP_CACHE
 	const bool		 bPixmapCache	= !bVero && ( bMono || bColor ) && !bGroundFill && !m_bWritePDF;	// true ==> Faster rendering (Mono/Color modes)
 #else
