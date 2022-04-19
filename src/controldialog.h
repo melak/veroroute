@@ -39,6 +39,8 @@ public:
 
 	void UpdateCompControls();	// Component controls
 	void UpdateControls();		// Non-component controls
+public slots:
+	void BrokenListItemChanged();
 protected:
 	void wheelEvent(QWheelEvent* event);
 	void mousePressEvent(QMouseEvent* event);

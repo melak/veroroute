@@ -41,9 +41,9 @@ TemplatesDialog::TemplatesDialog(QWidget* parent)
 void TemplatesDialog::SetMainWindow(MainWindow* p)
 {
 	m_pMainWindow = p;
-	QObject::connect(ui->tableWidget,	SIGNAL(cellClicked(int,int)),		this,	SLOT(GenericClicked(int,int)));
+	QObject::connect(ui->tableWidget,	SIGNAL(itemSelectionChanged()),		this,	SLOT(GenericChanged()));
 	QObject::connect(ui->tableWidget,	SIGNAL(cellDoubleClicked(int,int)),	this,	SLOT(GenericDoubleClicked(int,int)));
-	QObject::connect(ui->tableWidget_2,	SIGNAL(cellClicked(int,int)),		this,	SLOT(UserClicked(int,int)));
+	QObject::connect(ui->tableWidget_2,	SIGNAL(itemSelectionChanged()),		this,	SLOT(UserChanged()));
 	QObject::connect(ui->tableWidget_2,	SIGNAL(cellDoubleClicked(int,int)),	this,	SLOT(UserDoubleClicked(int,int)));
 	QObject::connect(ui->pushButton,	SIGNAL(clicked()),					this,	SLOT(AddTemplates()));
 	QObject::connect(ui->pushButton_2,	SIGNAL(clicked()),					this,	SLOT(DeleteTemplate()));
@@ -131,15 +131,20 @@ void TemplatesDialog::Update()
 	SaveToUserVrt();
 }
 
-void TemplatesDialog::GenericClicked(int row, int)
+void TemplatesDialog::GenericClicked(int row)
 {
 	m_iRowL = row;
 	ui->tableWidget->selectRow(m_iRowL);
 }
 
-void TemplatesDialog::GenericDoubleClicked(int row, int col)
+void TemplatesDialog::GenericChanged()
 {
-	GenericClicked(row, col);
+	GenericClicked( ui->tableWidget->currentRow() );
+}
+
+void TemplatesDialog::GenericDoubleClicked(int row, int)
+{
+	GenericClicked(row);
 
 	TemplateManager& mgr = m_pMainWindow->GetTemplateManager();
 
@@ -148,15 +153,20 @@ void TemplatesDialog::GenericDoubleClicked(int row, int col)
 		m_pMainWindow->AddFromTemplate(mgr.GetNth(bGeneric, static_cast<size_t>(m_iRowL)));
 }
 
-void TemplatesDialog::UserClicked(int row, int)
+void TemplatesDialog::UserClicked(int row)
 {
 	m_iRowR = row;
 	ui->tableWidget_2->selectRow(m_iRowR);
 }
 
-void TemplatesDialog::UserDoubleClicked(int row, int col)
+void TemplatesDialog::UserChanged()
 {
-	UserClicked(row, col);
+	UserClicked( ui->tableWidget_2->currentRow() );
+}
+
+void TemplatesDialog::UserDoubleClicked(int row, int)
+{
+	UserClicked(row);
 
 	TemplateManager& mgr = m_pMainWindow->GetTemplateManager();
 
@@ -175,8 +185,6 @@ void TemplatesDialog::DeleteTemplate()
 	TemplateManager& mgr = m_pMainWindow->GetTemplateManager();
 
 	const bool bGeneric = false;
-
-	UserClicked(ui->tableWidget_2->currentRow(), 0);	// Make sure selection is up to date (user may have scrolled since click)
 
 	if ( m_iRowR >= 0 && m_iRowR < static_cast<int>(mgr.GetSize(bGeneric)) )
 	{

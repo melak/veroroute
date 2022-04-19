@@ -404,6 +404,7 @@ public slots:
 	void SetTargetRows(int i);
 	void SetTargetCols(int i);
 	void SetShowTarget(bool b);
+	void SetXthermals(bool b);
 	void SetShowCloseTracks(bool b);
 	void SetAntialiasOff(bool b);
 	void SetAntialiasOn(bool b);

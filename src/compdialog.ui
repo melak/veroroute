@@ -1074,7 +1074,7 @@
     <enum>QFrame::Sunken</enum>
    </property>
    <property name="lineWidth">
-    <number>2</number>
+    <number>1</number>
    </property>
    <property name="orientation">
     <enum>Qt::Horizontal</enum>
@@ -1093,7 +1093,7 @@
     <enum>QFrame::Sunken</enum>
    </property>
    <property name="lineWidth">
-    <number>2</number>
+    <number>1</number>
    </property>
    <property name="orientation">
     <enum>Qt::Horizontal</enum>
@@ -1112,7 +1112,7 @@
     <enum>QFrame::Sunken</enum>
    </property>
    <property name="lineWidth">
-    <number>2</number>
+    <number>1</number>
    </property>
    <property name="orientation">
     <enum>Qt::Horizontal</enum>
@@ -1131,7 +1131,7 @@
     <enum>QFrame::Sunken</enum>
    </property>
    <property name="lineWidth">
-    <number>2</number>
+    <number>1</number>
    </property>
    <property name="orientation">
     <enum>Qt::Horizontal</enum>

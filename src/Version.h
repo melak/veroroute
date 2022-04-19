@@ -2,7 +2,10 @@
 
 static const char* szVEROROUTE_VERSION =
 
-"2.22";		// Bug fix: Fix extent of protrusion into ground-fill by extra thermal reliefs.
+"2.23";		// Bug fix: Broken Nets list was not updating the main view if user scrolled to a list item instead of clicking on it.
+			// New feature: Option to force thermal reliefs to use an X-shaped pattern of tags.
+			// Speeded-up code for spanning-trees and connection matrices.
+//"2.22";	// Bug fix: Fix extent of protrusion into ground-fill by extra thermal reliefs.
 			// Bug fix: Error in how extra thermal reliefs considered in minimum track separation.
 //"2.21";	// Bug fix: Unreliable redraw when double-click, especially on Android tablet interface.
 			// Bug fix: Was possible to paint/erase pins and paint flood in non-Color mode.

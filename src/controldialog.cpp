@@ -54,6 +54,10 @@ ControlDialog::ControlDialog(QWidget* parent)
 	ui->typeComboBox->setFont(tmp);
 	ui->brokenList->setFont(tmp);
 #endif
+
+#ifdef VEROROUTE_ANDROID
+	ui->brokenList->verticalScrollBar()->setStyleSheet( ANDROID_VSCROLL_WIDTH );
+#endif
 }
 
 void ControlDialog::SetMainWindow(MainWindow* p)
@@ -89,7 +93,7 @@ void ControlDialog::SetMainWindow(MainWindow* p)
 	QObject::connect(ui->custom,			SIGNAL(toggled(bool)),		m_pMainWindow,	SLOT(SetCompCustomFlag(bool)));
 	QObject::connect(ui->padWidth,			SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SetCompPadWidth(int)));
 	QObject::connect(ui->holeWidth,			SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SetCompHoleWidth(int)));
-	QObject::connect(ui->brokenList,		SIGNAL(itemClicked(QListWidgetItem*)),	m_pMainWindow, SLOT(SetNodeId(QListWidgetItem*)));
+	QObject::connect(ui->brokenList,		SIGNAL(itemSelectionChanged()), this,		SLOT(BrokenListItemChanged()));
 
 	QObject::connect(ui->autoRoute,			SIGNAL(toggled(bool)),		m_pMainWindow,	SLOT(EnableRouting(bool)));
 	QObject::connect(ui->autoRoute,			SIGNAL(toggled(bool)),		ui->paste,		SLOT(setEnabled(bool)));
@@ -301,6 +305,11 @@ void ControlDialog::UpdateControls()	// Non-component controls
 
 	QColor color = bColor ? board.GetColorMgr().GetColorFromNodeId( board.GetCurrentNodeId(), false ) : Qt::black;
 	ui->setColor->setStyleSheet("border:2px solid " + color.name());
+}
+
+void ControlDialog::BrokenListItemChanged()
+{
+	m_pMainWindow->SetNodeId( ui->brokenList->currentItem() );
 }
 
 void ControlDialog::wheelEvent(QWheelEvent* event)

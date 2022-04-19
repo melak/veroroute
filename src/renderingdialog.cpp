@@ -57,6 +57,7 @@ void RenderingDialog::SetMainWindow(MainWindow* p)
 	QObject::connect(ui->edgeWidth,			SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SetEdgeWidth(int)));
 	QObject::connect(ui->viapadWidth,		SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SetViaPadWidth(int)));
 	QObject::connect(ui->viaholeWidth,		SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SetViaHoleWidth(int)));
+	QObject::connect(ui->Xthermals,			SIGNAL(toggled(bool)),		m_pMainWindow,	SLOT(SetXthermals(bool)));
 	QObject::connect(ui->closeTracks,		SIGNAL(toggled(bool)),		m_pMainWindow,	SLOT(SetShowCloseTracks(bool)));
 }
 
@@ -76,6 +77,7 @@ void RenderingDialog::UpdateControls()
 	const bool bVias			= board.GetViasEnabled();
 	const bool bCloseTrackInfo	= board.GetHaveWarnPoints();
 	const bool bGroundFill		= !bVero && bMonoPCB && board.GetGroundFill();
+	const bool bTags			= !bCompEdit && !bNoTrackOptions && bGroundFill;
 
 	const int ii =  board.GetBackgroundColor().GetR();	// Before VeroRoute V2.20, "Brightness" was stored as a grey level in the range [200,255].
 	const int i  = 5 * ( ( ii - 155 ) / 5 );			// From   VeroRoute V2.20, "Brightness" is a percentage value [0,100] that is stored as a grey level in the range [155,255].
@@ -96,7 +98,7 @@ void RenderingDialog::UpdateControls()
 	ui->comppins->setDisabled(		!bCompEdit && bMonoPCB );
 	ui->padWidth->setDisabled(		bCompEdit || bNoTrackOptions || bVero );
 	ui->trackWidth->setDisabled(	bCompEdit || bNoTrackOptions || bVero );
-	ui->tagWidth->setDisabled(		bCompEdit || bNoTrackOptions || !bGroundFill );
+	ui->tagWidth->setDisabled(		!bTags );
 	ui->holeWidth->setDisabled(		bCompEdit || bNoTrackOptions || bVero );
 	ui->viapadWidth->setDisabled(	bCompEdit || bNoTrackOptions || bVero || !bVias );
 	ui->viaholeWidth->setDisabled(	bCompEdit || bNoTrackOptions || bVero || !bVias );
@@ -113,7 +115,7 @@ void RenderingDialog::UpdateControls()
 	ui->label_comppins->setDisabled(	!bCompEdit && bMonoPCB );
 	ui->label_pad->setDisabled(			bCompEdit || bNoTrackOptions || bVero );
 	ui->label_track->setDisabled(		bCompEdit || bNoTrackOptions || bVero );
-	ui->label_tag->setDisabled(			bCompEdit || bNoTrackOptions || !bGroundFill );
+	ui->label_tag->setDisabled(			!bTags );
 	ui->label_hole->setDisabled(		bCompEdit || bNoTrackOptions || bVero );
 	ui->label_viapad->setDisabled(		bCompEdit || bNoTrackOptions || bVero || !bVias );
 	ui->label_viahole->setDisabled(		bCompEdit || bNoTrackOptions || bVero || !bVias );
@@ -123,6 +125,11 @@ void RenderingDialog::UpdateControls()
 	ui->label_edge->setDisabled(		bCompEdit || bVero || !bPCB );
 	ui->label_info->setDisabled(		bCompEdit || bVero );
 	ui->label_info_2->setDisabled(		bCompEdit || !bGroundFill );
+	ui->Xthermals->setDisabled(			!bTags );
+	if ( !bTags )
+		ui->Xthermals->hide();
+	else
+		ui->Xthermals->show();
 	ui->closeTracks->setDisabled(		bCompEdit || bVero || !bCloseTrackInfo );
 	if ( bCompEdit || bVero || !bCloseTrackInfo )
 		ui->closeTracks->hide();
@@ -139,6 +146,7 @@ void RenderingDialog::UpdateControls()
 	ui->edgeWidth->setValue(	board.GetEDGE_MIL()		);
 	ui->viapadWidth->setValue(	board.GetVIAPAD_MIL()	);
 	ui->viaholeWidth->setValue(	board.GetVIAHOLE_MIL()	);
+	ui->Xthermals->setChecked(	board.GetXthermals()	);
 
 	const int minTrkMil = static_cast<int>(minTrk);
 	const int minTrkRem = static_cast<int>(10.0 * (minTrk - minTrkMil));	// 0.1 mil resolution

@@ -40,15 +40,17 @@ protected:
 	void keyPressEvent(QKeyEvent* event);
 	void keyReleaseEvent(QKeyEvent* event);
 public slots:
-	void GenericClicked(int row, int col);
-	void GenericDoubleClicked(int row, int col);
-	void UserClicked(int row, int col);
-	void UserDoubleClicked(int row, int col);
+	void GenericChanged();
+	void GenericDoubleClicked(int row, int);
+	void UserChanged();
+	void UserDoubleClicked(int row, int);
 	void AddTemplates();
 	void DeleteTemplate();
 	void LoadFromVrt();
 	void SaveToVrt();
 private:
+	void GenericClicked(int row);
+	void UserClicked(int row);
 	void Load(const QString& fileName, bool bInfoMsg);
 	void Save(const QString& fileName);
 	void LoadFromUserVrt(bool bInfoMsg);
