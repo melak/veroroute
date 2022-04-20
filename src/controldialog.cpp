@@ -93,7 +93,7 @@ void ControlDialog::SetMainWindow(MainWindow* p)
 	QObject::connect(ui->custom,			SIGNAL(toggled(bool)),		m_pMainWindow,	SLOT(SetCompCustomFlag(bool)));
 	QObject::connect(ui->padWidth,			SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SetCompPadWidth(int)));
 	QObject::connect(ui->holeWidth,			SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SetCompHoleWidth(int)));
-	QObject::connect(ui->brokenList,		SIGNAL(itemClicked(QListWidgetItem*)), m_pMainWindow,	SLOT(SetNodeId(QListWidgetItem*)));
+	QObject::connect(ui->brokenList,		SIGNAL(itemSelectionChanged()), this,		SLOT(BrokenListItemChanged()));
 	QObject::connect(ui->autoRoute,			SIGNAL(toggled(bool)),		m_pMainWindow,	SLOT(EnableRouting(bool)));
 	QObject::connect(ui->autoRoute,			SIGNAL(toggled(bool)),		ui->paste,		SLOT(setEnabled(bool)));
 	QObject::connect(ui->fast,				SIGNAL(toggled(bool)),		m_pMainWindow,	SLOT(EnableFastRouting(bool)));
@@ -112,6 +112,8 @@ ControlDialog::~ControlDialog()
 
 void ControlDialog::ClearList()
 {
+	m_bUpdatingControls = true;
+
 	auto* pList = ui->brokenList;
 	for (int i = 0; i < pList->count(); i++)
 	{
@@ -119,10 +121,14 @@ void ControlDialog::ClearList()
 		if ( p ) delete p;
 	}
 	pList->clear();
+
+	m_bUpdatingControls = false;
 }
 
 void ControlDialog::SetListItem(const int nodeId)
 {
+	m_bUpdatingControls = true;
+
 	auto* pList = ui->brokenList;
 	bool bFound(false);
 	for (int i = 0; i < pList->count() && !bFound; i++)
@@ -131,23 +137,30 @@ void ControlDialog::SetListItem(const int nodeId)
 		bFound = ( str.leftRef(str.size() - 11).toInt() == nodeId );	// 11 because of " (Floating)" suffix below
 		if ( bFound ) pList->setCurrentRow(i);
 	}
-	if ( !bFound && pList->count() > 0 )
-		pList->setCurrentRow(0, QItemSelectionModel::Clear);
+	if ( !bFound && pList->count() > 0 ) pList->setCurrentRow(0, QItemSelectionModel::Clear);
 
 	ui->tidy->setEnabled( !ui->autoRoute->isChecked() && pList->count() == 0 );
+
+	m_bUpdatingControls = false;
 }
 
 void ControlDialog::AddListItem(const int nodeId, bool bFloating)
 {
+	m_bUpdatingControls = true;
+
 	const std::string str = std::to_string(nodeId) + ( bFloating ? " (Floating)" : "           " );
 	QListWidgetItem* p = new QListWidgetItem();
 	p->setText( QString(str.c_str()) );
 	p->setFont( ui->brokenList->font() );
 	ui->brokenList->addItem(p);
+
+	m_bUpdatingControls = false;
 }
 
 void ControlDialog::UpdateCompControls()	// Component controls
 {
+	m_bUpdatingControls = true;
+
 	Board& board = m_pMainWindow->m_board;
 
 	std::string nameStr(""), valueStr(""), typeStr("");
@@ -254,10 +267,14 @@ void ControlDialog::UpdateCompControls()	// Component controls
 	ui->label_type->setDisabled(	bCompEdit || board.GetDisableChangeType() );
 	ui->label_pad->setDisabled(		bCompEdit || bNoTrackOptions || bVero || board.GetDisableChangeCustom() );
 	ui->label_hole->setDisabled(	bCompEdit || bNoTrackOptions || bVero || board.GetDisableChangeCustom() );
+
+	m_bUpdatingControls = false;
 }
 
 void ControlDialog::UpdateControls()	// Non-component controls
 {
+	m_bUpdatingControls = true;
+
 	Board& board = m_pMainWindow->m_board;
 
 	const bool bCompEdit	= board.GetCompEdit();
@@ -305,6 +322,14 @@ void ControlDialog::UpdateControls()	// Non-component controls
 
 	QColor color = bColor ? board.GetColorMgr().GetColorFromNodeId( board.GetCurrentNodeId(), false ) : Qt::black;
 	ui->setColor->setStyleSheet("border:2px solid " + color.name());
+
+	m_bUpdatingControls = false;
+}
+
+void ControlDialog::BrokenListItemChanged()
+{
+	if ( m_bUpdatingControls ) return;
+	m_pMainWindow->SetNodeId( ui->brokenList->currentItem() );
 }
 
 void ControlDialog::wheelEvent(QWheelEvent* event)

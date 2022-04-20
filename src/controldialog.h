@@ -39,6 +39,8 @@ public:
 
 	void UpdateCompControls();	// Component controls
 	void UpdateControls();		// Non-component controls
+public slots:
+	void BrokenListItemChanged();
 protected:
 	void wheelEvent(QWheelEvent* event);
 	void mousePressEvent(QMouseEvent* event);
@@ -50,4 +52,5 @@ protected:
 private:
 	Ui_ControlDialog*	ui;
 	MainWindow*			m_pMainWindow;
+	bool				m_bUpdatingControls = false;
 };
