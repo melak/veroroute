@@ -61,7 +61,7 @@ void HotkeysDialog::Setup()
 	ui->tableWidget->clear();
 	ui->tableWidget->setRowCount(static_cast<int>( list.size() ));
 	ui->tableWidget->setColumnCount(2);
-	ui->tableWidget->setColumnWidth(0,259);
+	ui->tableWidget->setColumnWidth(0,257);
 	ui->tableWidget->setColumnWidth(1,400);
 	m_tableHeader << "Action" << "Behaviour";
 	ui->tableWidget->setHorizontalHeaderLabels(m_tableHeader);
