@@ -536,11 +536,11 @@ private:
 
 		UpdateHistory("add part"); UpdateControls(); UpdateBOM(); RepaintSkipRouting();
 	}
-	void AddFromTemplate(const Component& compTemp)
+	void AddFromTemplate(bool bGeneric, const Component& compTemp)
 	{
-		if ( compTemp.GetType() != COMP::CUSTOM ) return AddPart( compTemp.GetType() );
-
 		if ( m_board.GetCompEdit() ) return;	// Do nothing in component editor mode
+
+		if ( bGeneric ) return AddPart( compTemp.GetType() );
 
 		ResetMouseMode();
 

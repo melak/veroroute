@@ -150,7 +150,7 @@ void TemplatesDialog::GenericDoubleClicked(int row, int)
 
 	const bool bGeneric = true;
 	if ( m_iRowL >= 0 && m_iRowL < static_cast<int>(mgr.GetSize(bGeneric)) )
-		m_pMainWindow->AddFromTemplate(mgr.GetNth(bGeneric, static_cast<size_t>(m_iRowL)));
+		m_pMainWindow->AddFromTemplate(bGeneric, mgr.GetNth(bGeneric, static_cast<size_t>(m_iRowL)));
 }
 
 void TemplatesDialog::UserClicked(int row)
@@ -172,7 +172,7 @@ void TemplatesDialog::UserDoubleClicked(int row, int)
 
 	const bool bGeneric = false;
 	if ( m_iRowR >= 0 && m_iRowR < static_cast<int>(mgr.GetSize(bGeneric)) )
-		m_pMainWindow->AddFromTemplate(mgr.GetNth(bGeneric, static_cast<size_t>(m_iRowR)));
+		m_pMainWindow->AddFromTemplate(bGeneric, mgr.GetNth(bGeneric, static_cast<size_t>(m_iRowR)));
 }
 
 void TemplatesDialog::AddTemplates()
