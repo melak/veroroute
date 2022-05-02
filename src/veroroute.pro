@@ -173,6 +173,9 @@ unix {
     manpage.path = $${PREFIX}/share/man/man1
     manpage.files = ../veroroute.1
 
+    # Produce "../veroroute.desktop" from "../veroroute.desktop.default"
+    system(sed 's_/usr_$${PREFIX}_' ../veroroute.desktop.default > ../veroroute.desktop)
+
     desktopentry.path = $${PREFIX}/share/applications
     desktopentry.files = ../veroroute.desktop
 
