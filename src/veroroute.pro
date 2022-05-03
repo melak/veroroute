@@ -42,7 +42,7 @@ SOURCES += bomdialog.cpp \
     CompDefiner.cpp \
     Component.cpp \
     CurveList.cpp \
-    FootPrint.cpp \  
+    FootPrint.cpp \
     GuiControl.cpp \
     GWriter.cpp \
     SimplexFont.cpp
@@ -63,14 +63,14 @@ HEADERS  += bomdialog.h \
     wiredialog.h \
     myscrollarea.h \
     AdjInfo.h \
-    AdjInfoManager.h \   
+    AdjInfoManager.h \
     Board.h \
     ColorManager.h \
     Common.h \
     CompTypes.h \
     CompDefiner.h \
     CompElement.h \
-    CompManager.h \    
+    CompManager.h \
     Component.h \
     ConnectionMatrix.h \
     CurveList.h \
@@ -124,57 +124,61 @@ RESOURCES     = veroroute.qrc
 
 DESTDIR = ..
 
-# For Android builds use the following ...
-# DISTFILES += android-sources/AndroidManifest.xml
 DISTFILES +=
 
 QMAKE_INSTALL_FILE    = install -m 644
 QMAKE_INSTALL_PROGRAM = install -m 755
 
-# For Android builds add the following ...
-# ANDROID_PACKAGE_SOURCE_DIR = $$PWD/android-sources
-
 # For Android builds, we don't want the whole unix section.  Just the following section ...
-#android {
-#    assets.files = ../tutorials/tutorial_0.vrt \
-#                   ../tutorials/tutorial_1.vrt \
-#                   ../tutorials/tutorial_2.vrt \
-#                   ../tutorials/tutorial_3.vrt \
-#                   ../tutorials/tutorial_4.vrt \
-#                   ../tutorials/tutorial_5.vrt \
-#                   ../tutorials/tutorial_6.vrt \
-#                   ../tutorials/tutorial_7.vrt \
-#                   ../tutorials/tutorial_8.vrt \
-#                   ../tutorials/tutorial_9.vrt \
-#                   ../tutorials/tutorial_10.vrt \
-#                   ../tutorials/tutorial_11.vrt \
-#                   ../tutorials/tutorial_12.vrt \
-#                   ../tutorials/tutorial_13.vrt \
-#                   ../tutorials/tutorial_14.vrt \
-#                   ../tutorials/tutorial_15.vrt \
-#                   ../tutorials/tutorial_16.vrt \
-#                   ../tutorials/tutorial_17.vrt \
-#                   ../tutorials/tutorial_18.vrt \
-#                   ../tutorials/tutorial_19.vrt \
-#                   ../tutorials/tutorial_20.vrt \
-#                   ../tutorials/tutorial_21.vrt \
-#                   ../tutorials/tutorial_22.vrt \
-#                   ../tutorials/tutorial_23.vrt \
-#                   ../tutorials/tutorial_24.vrt \
-#                   ../tutorials/tutorial_25.vrt
-#    assets.path = /assets/tutorials/
-#INSTALLS += target assets
-#}
+android {
+ANDROID_PACKAGE_SOURCE_DIR = $$PWD/android-sources
 
-unix {
+DISTFILES += android-sources/AndroidManifest.xml \
+
+assets.files = ../tutorials/tutorial_0.vrt \
+    ../tutorials/tutorial_1.vrt \
+    ../tutorials/tutorial_2.vrt \
+    ../tutorials/tutorial_3.vrt \
+    ../tutorials/tutorial_4.vrt \
+    ../tutorials/tutorial_5.vrt \
+    ../tutorials/tutorial_6.vrt \
+    ../tutorials/tutorial_7.vrt \
+    ../tutorials/tutorial_8.vrt \
+    ../tutorials/tutorial_9.vrt \
+    ../tutorials/tutorial_10.vrt \
+    ../tutorials/tutorial_11.vrt \
+    ../tutorials/tutorial_12.vrt \
+    ../tutorials/tutorial_13.vrt \
+    ../tutorials/tutorial_14.vrt \
+    ../tutorials/tutorial_15.vrt \
+    ../tutorials/tutorial_16.vrt \
+    ../tutorials/tutorial_17.vrt \
+    ../tutorials/tutorial_18.vrt \
+    ../tutorials/tutorial_19.vrt \
+    ../tutorials/tutorial_20.vrt \
+    ../tutorials/tutorial_21.vrt \
+    ../tutorials/tutorial_22.vrt \
+    ../tutorials/tutorial_23.vrt \
+    ../tutorials/tutorial_24.vrt \
+    ../tutorials/tutorial_25.vrt
+
+assets.path = /assets/tutorials/
+
+INSTALLS += target assets
+}
+
+unix : !android {
     target.path = $${PREFIX}/bin/
     target.files = ../veroroute
 
     manpage.path = $${PREFIX}/share/man/man1
     manpage.files = ../veroroute.1
 
-    # Produce "../veroroute.desktop" from "../veroroute.desktop.default"
-    system(sed 's_/usr_$${PREFIX}_' ../veroroute.desktop.default > ../veroroute.desktop)
+    # If we've specified a PREFIX then replace the existing "../veroroute.desktop"
+    # with one produced from "../veroroute.desktop.default"
+    !isEmpty(PREFIX) {
+        system(sed 's_/usr_$${PREFIX}_' ../veroroute.desktop.default > ../veroroute.desktop)
+    }
 
     desktopentry.path = $${PREFIX}/share/applications
     desktopentry.files = ../veroroute.desktop
