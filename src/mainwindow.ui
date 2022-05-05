@@ -45,7 +45,7 @@
      <x>0</x>
      <y>0</y>
      <width>1350</width>
-     <height>26</height>
+     <height>22</height>
     </rect>
    </property>
    <property name="focusPolicy">
@@ -337,8 +337,6 @@
    <addaction name="actionZoom_In"/>
    <addaction name="actionZoom_Out"/>
    <addaction name="separator"/>
-   <addaction name="actionToggleGrid"/>
-   <addaction name="separator"/>
    <addaction name="actionPinDlg"/>
    <addaction name="separator"/>
    <addaction name="actionTemplatesDlg"/>
@@ -408,10 +406,6 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="separator"/>
-   <addaction name="actionToggleText"/>
-   <addaction name="separator"/>
-   <addaction name="actionTogglePinLabels"/>
    <addaction name="separator"/>
    <addaction name="actionPaintGrid"/>
    <addaction name="actionEraseGrid"/>

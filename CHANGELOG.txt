@@ -1,3 +1,4 @@
+V2.26  Removed infrequently used icons from the toolbar.  Added tutorial info on text boxes.
 V2.25  Bug fix: Major bug.  Double-clicking on a user-defined template to add the part to the layout
                 can give the wrong footprint unless the part was created using component editor.
        Bug fix: Some actions in the Key/Mouse Actions Dialog were removed in V2.20 but still listed.
