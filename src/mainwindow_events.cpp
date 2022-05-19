@@ -582,6 +582,7 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 	}
 
 	// Handle component rotation
+	/*
 	if ( bCompsOn && ( m_eMouseMode == MOUSE_MODE::SELECT || GetPaintPins() || GetErasePins() ) && GetCurrentCompId() != BAD_COMPID )
 	{
 		if ( !bTruePin )	//	... Only allow rotate if we did not click on a pin
@@ -591,6 +592,7 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 			return CompRotateCW();
 		}
 	}
+	*/
 
 	// Handle selection of nodeId (fallback case)
 	if ( bTrackOn && !GetPaintAction() )
@@ -962,8 +964,8 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
 		}
 	}
 
-	const bool	bPlural	= ( m_board.GetGroupMgr().GetNumUserComps() > 1 );
-	const int	objID	= ( bPlural ) ? -1 : m_board.GetUserComponent().GetId();
+	const bool	bSingle	= ( m_board.GetGroupMgr().GetNumUserComps() == 1 );
+	const int	objID	= ( bSingle ) ? m_board.GetUserComponent().GetId() : -1;
 	// Component manipulation
 	switch( event->key() )
 	{
@@ -971,10 +973,10 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
 		case Qt::Key_Minus:		CompShrink();	break;
 		case Qt::Key_Plus:
 		case Qt::Key_Equal:		CompGrow();		break;
-		case Qt::Key_Left:		if ( !m_board.GetDisableMove() ) { m_board.MoveUserComps(0,-1);	UpdateHistory(bPlural ? "move parts" : "move part", objID); RepaintWithRouting(); } break;
-		case Qt::Key_Right:		if ( !m_board.GetDisableMove() ) { m_board.MoveUserComps(0, 1);	UpdateHistory(bPlural ? "move parts" : "move part", objID); RepaintWithRouting(); } break;
-		case Qt::Key_Up:		if ( !m_board.GetDisableMove() ) { m_board.MoveUserComps(-1,0);	UpdateHistory(bPlural ? "move parts" : "move part", objID); RepaintWithRouting(); } break;
-		case Qt::Key_Down:		if ( !m_board.GetDisableMove() ) { m_board.MoveUserComps( 1,0);	UpdateHistory(bPlural ? "move parts" : "move part", objID); RepaintWithRouting(); } break;
+		case Qt::Key_Left:		if ( !m_board.GetDisableMove() ) { m_board.MoveUserComps(0,-1);	UpdateHistory(bSingle ? "move part" : "move parts", objID); RepaintWithRouting(); } break;
+		case Qt::Key_Right:		if ( !m_board.GetDisableMove() ) { m_board.MoveUserComps(0, 1);	UpdateHistory(bSingle ? "move part" : "move parts", objID); RepaintWithRouting(); } break;
+		case Qt::Key_Up:		if ( !m_board.GetDisableMove() ) { m_board.MoveUserComps(-1,0);	UpdateHistory(bSingle ? "move part" : "move parts", objID); RepaintWithRouting(); } break;
+		case Qt::Key_Down:		if ( !m_board.GetDisableMove() ) { m_board.MoveUserComps( 1,0);	UpdateHistory(bSingle ? "move part" : "move parts", objID); RepaintWithRouting(); } break;
 	}
 	if ( !bIsAutoRepeat )
 	{
@@ -1108,7 +1110,7 @@ void MainWindow::dropEvent(QDropEvent *e)
 		SetCtrlKeyDown(false);	// Clear flag since key release can get missed.
 		if ( GetIsModified() )
 			if ( QMessageBox::question(this, tr("Confirm Open"),
-											 tr("Your circuit is not saved. You will lose changes if you open a new one.  Continue?"),
+											 tr("Your layout is not saved. You will lose changes if you open a new one.  Continue?"),
 											 QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::No ) return;
 		OpenVrt(fileName, false);
 	}

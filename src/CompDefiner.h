@@ -153,6 +153,10 @@ public:
 			if ( (*iterA) != (*iterB) ) return false;
 		return true;
 	}
+	bool operator!=(const CompDefiner& o) const
+	{
+		return !(*this == o);
+	}
 	bool SetCurrentPinId(const int& i)		{ const bool bChanged = ( m_currentPinId	!= i );	m_currentPinId		= i; return bChanged; }
 	bool SetCurrentShapeId(const int& i)	{ const bool bChanged = ( m_currentShapeId	!= i );	m_currentShapeId	= i; return bChanged; }
 	bool SetPinFlags(const uchar& i)		{ const bool bChanged = ( m_iPinFlags		!= i );	m_iPinFlags			= i; return bChanged; }

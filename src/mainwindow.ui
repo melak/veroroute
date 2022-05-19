@@ -562,7 +562,7 @@
     <string>Auto-Crop</string>
    </property>
    <property name="toolTip">
-    <string>Auto-crop the grid to the circuit</string>
+    <string>Auto-crop the grid to the layout</string>
    </property>
    <property name="autoRepeat">
     <bool>false</bool>

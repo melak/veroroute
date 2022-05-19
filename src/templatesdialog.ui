@@ -41,7 +41,7 @@
     <enum>Qt::NoFocus</enum>
    </property>
    <property name="toolTip">
-    <string>Double click on a part to add it to the circuit</string>
+    <string>Double click on a part to add it to the layout</string>
    </property>
    <property name="tabKeyNavigation">
     <bool>false</bool>
@@ -60,10 +60,10 @@
     <enum>Qt::TabFocus</enum>
    </property>
    <property name="toolTip">
-    <string>Update the templates with the selected parts from the current circuit.</string>
+    <string>Update the templates with the selected parts from the current layout.</string>
    </property>
    <property name="text">
-    <string>Add from current circuit</string>
+    <string>Add from current layout</string>
    </property>
   </widget>
   <widget class="QPushButton" name="pushButton_2">
@@ -98,7 +98,7 @@
     <enum>Qt::NoFocus</enum>
    </property>
    <property name="toolTip">
-    <string>Double click on a part to add it to the circuit</string>
+    <string>Double click on a part to add it to the layout</string>
    </property>
    <property name="tabKeyNavigation">
     <bool>false</bool>

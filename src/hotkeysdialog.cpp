@@ -40,7 +40,7 @@ void HotkeysDialog::Setup()
 {
 	typedef std::pair<std::string, std::string> KEY_ACTION ;
 	std::list<KEY_ACTION> list;
-	list.push_back( KEY_ACTION("Ctrl + click-drag mouse",		"Move whole circuit") );
+	list.push_back( KEY_ACTION("Ctrl + click-drag mouse",		"Move whole layout") );
 	list.push_back( KEY_ACTION("R + click-drag mouse",			"Select parts/tracks by area") );
 	list.push_back( KEY_ACTION("Ctrl+A",						"Select all parts") );
 	list.push_back( KEY_ACTION("Shift + mouse button",			"Add/Remove to selected parts") );

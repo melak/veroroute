@@ -341,7 +341,7 @@
     <enum>Qt::TabFocus</enum>
    </property>
    <property name="toolTip">
-    <string>Auto-crop the grid to the circuit</string>
+    <string>Auto-crop the grid to the layout</string>
    </property>
    <property name="text">
     <string>Auto-Crop</string>

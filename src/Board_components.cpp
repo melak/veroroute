@@ -800,6 +800,8 @@ void Board::DestroyUserComps()	// Destroy components in the user-group
 
 void Board::MoveUserCompText(const int& deltaRow, const int& deltaCol)	// Move text label
 {
+	if ( m_groupMgr.GetNumUserComps() != 1 ) return;
+
 	Component& comp	= GetUserComponent();
 	if ( deltaRow == 0 && deltaCol == 0 )	// (0,0) ==> reset rather than shift
 		comp.SetDefaultLabelOffsets();
@@ -809,6 +811,8 @@ void Board::MoveUserCompText(const int& deltaRow, const int& deltaCol)	// Move t
 
 void Board::StretchUserComp(const bool& bGrow)	// Stretch the selected component length
 {
+	if ( m_groupMgr.GetNumUserComps() != 1 ) return;
+
 	Component& comp	= GetUserComponent();
 	if ( bGrow )
 	{
@@ -836,6 +840,8 @@ void Board::StretchUserComp(const bool& bGrow)	// Stretch the selected component
 
 void Board::StretchWidthUserComp(const bool& bGrow)	// Stretch the selected component width (just for DIPs)
 {
+	if ( m_groupMgr.GetNumUserComps() != 1 ) return;
+
 	Component& comp	= GetUserComponent();
 	if ( bGrow )
 	{
@@ -863,6 +869,8 @@ void Board::StretchWidthUserComp(const bool& bGrow)	// Stretch the selected comp
 
 void Board::ChangeTypeUserComp(const COMP& eType)
 {
+	if ( m_groupMgr.GetNumUserComps() != 1 ) return;
+
 	Component& comp	= GetUserComponent();
 	assert( comp.GetType() != eType );	// Current type must differ from new type
 
