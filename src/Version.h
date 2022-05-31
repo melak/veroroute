@@ -2,7 +2,8 @@
 
 static const char* szVEROROUTE_VERSION =
 
-"2.27";		// Bug fix: Bug in component manager leads to incorrect warning about circuit not being saved (even if it has been).
+"2.28";		// Bug fix: Code for X-thermals not properly handling isolated ground pad on 2-layer board.
+//"2.27";	// Bug fix: Bug in component manager leads to incorrect warning about circuit not being saved (even if it has been).
 			// Disabled use of double-click for rotating parts.
 //"2.26";	// Removed infrequently used icons from the toolbar.  Added tutorial info on text boxes.
 //"2.25";	// Bug fix: Major bug.  Double-clicking on a user-defined template to add the part to the layout
