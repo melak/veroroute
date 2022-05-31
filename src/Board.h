@@ -266,18 +266,19 @@ public:
 
 	int GetTagCode(const Element* p, const int& iPerimeterCode) const	// Helper for the GUI "blobs"
 	{
-		const int	iGndNodeId		= p->GetNodeId();
-		const bool	bBottomLayer	= p->IsLayer0();	// true ==> p is on bottom layer			
+		const int&	iNodeId			= p->GetNodeId();
+		const bool	bBottomLayer	= p->IsLayer0();	// true ==> p is on bottom layer
 		const int	iLayerPrefP		= ( GetLyrs() == 1 || !p->GetHasPin() || p->GetHasWire() ) ? LAYER_X : GetLayerPref(p);
 
 #ifdef _DEBUG
 		const bool&	bVero			= GetVeroTracks();
 		const bool	bMonoPCB		= GetTrackMode() == TRACKMODE::MONO || GetTrackMode() == TRACKMODE::PCB;
 		const bool	bGroundFill		= !bVero && bMonoPCB && GetGroundFill();
-		assert(bGroundFill && p->GetHasPin() && iGndNodeId == GetGroundNodeId(k) && iGndNodeId != BAD_NODEID);
+		const int&	iGndNodeId		= GetGroundNodeId(bBottomLayer ? 0 : 1);
+		assert(bGroundFill && p->GetHasPin() && iNodeId == iGndNodeId && iNodeId != BAD_NODEID);
 #endif
 
-		if ( GetXthermals() && GetLyrs() == 1 && GetGroundNodeId(bBottomLayer ? 0 : 1) == iGndNodeId ) return CODEBITS_DIAGS;
+		if ( GetXthermals() && GetLyrs() == 1 ) return CODEBITS_DIAGS;
 
 		int iCandidateTagBits(0);
 		for (int iNbr = 0; iNbr < 8; iNbr ++)	// Loop nbrs in layer
@@ -288,8 +289,8 @@ public:
 			if ( ReadCodeBit(iNbr , iPerimeterCode) ) continue;			// Skip if direction already has connection
 			if ( ReadCodeBit((iNbr+1)%8 , iPerimeterCode) ) continue;	// Skip if adjacent CW  direction already has connection
 			if ( ReadCodeBit((iNbr+7)%8, iPerimeterCode) ) continue;	// Skip if adjacent CCW direction already has connection
-			if ( ( q->GetHasPin() || iNbrNodeId != BAD_NODEID ) && iNbrNodeId != iGndNodeId ) continue;	// Skip if direction is not empty, or has non-ground NodeID
-			if ( p->IsBlocked(iNbr, iGndNodeId) ) continue;							// Skip is direction is blocked
+			if ( ( q->GetHasPin() || iNbrNodeId != BAD_NODEID ) && iNbrNodeId != iNodeId ) continue;	// Skip if direction is not empty, or has wrong NodeID
+			if ( p->IsBlocked(iNbr, iNodeId) ) continue;				// Skip is direction is blocked
 
 			const int	iLayerPrefQ	= ( GetLyrs() == 1 || !q->GetHasPin() || q->GetHasWire() ) ? LAYER_X : GetLayerPref(q);
 
@@ -298,7 +299,14 @@ public:
 											: ( iLayerPrefP == LAYER_T || iLayerPrefQ == LAYER_T ) );
 			if ( bOK ) SetCodeBit(iNbr, iCandidateTagBits);	// Update iCandidateTagBits
 		}
-		if ( iCandidateTagBits == 0 ) return 0;							// No candidate tags, so we're done
+
+		if ( iCandidateTagBits == 0 )
+		{
+			if ( GetXthermals() && ( ( iLayerPrefP == LAYER_X ) || ( iLayerPrefP == ( bBottomLayer ? LAYER_B : LAYER_T ) ) ) )
+				return CODEBITS_DIAGS;	// If forcing X-thermals and we have no connections in the layer, rely on layer preference alone
+			else
+				return 0;	// No candidate tags, so we're done
+		}
 
 		if ( GetXthermals() ) return CODEBITS_DIAGS;
 
