@@ -29,7 +29,7 @@ void Board::DestroyComponent(Component& comp)	// Destroys a component on the boa
 	m_compMgr.DestroyComp(comp);			// Destroy the component in the m_compMgr
 }
 
-int Board::CreateComponent(int iRow, int iCol, const COMP& eType, const Component* pComp)
+int Board::CreateComponent(int iRow, int iCol, COMP eType, const Component* pComp)
 {
 	assert( pComp == nullptr || pComp->GetType() == eType );	// Sanity check
 	assert( eType != COMP::INVALID );
@@ -798,7 +798,7 @@ void Board::DestroyUserComps()	// Destroy components in the user-group
 	m_compMgr.ClearTrax();	// Clear the trax object
 }
 
-void Board::MoveUserCompText(const int& deltaRow, const int& deltaCol)	// Move text label
+void Board::MoveUserCompText(int deltaRow, int deltaCol)	// Move text label
 {
 	if ( m_groupMgr.GetNumUserComps() != 1 ) return;
 
@@ -809,7 +809,7 @@ void Board::MoveUserCompText(const int& deltaRow, const int& deltaCol)	// Move t
 		comp.MoveLabelOffsets(deltaRow, deltaCol);
 }
 
-void Board::StretchUserComp(const bool& bGrow)	// Stretch the selected component length
+void Board::StretchUserComp(bool bGrow)	// Stretch the selected component length
 {
 	if ( m_groupMgr.GetNumUserComps() != 1 ) return;
 
@@ -838,7 +838,7 @@ void Board::StretchUserComp(const bool& bGrow)	// Stretch the selected component
 	PlaceFloaters();	// See if we can now place floating components down
 }
 
-void Board::StretchWidthUserComp(const bool& bGrow)	// Stretch the selected component width (just for DIPs)
+void Board::StretchWidthUserComp(bool bGrow)	// Stretch the selected component width (just for DIPs)
 {
 	if ( m_groupMgr.GetNumUserComps() != 1 ) return;
 
@@ -867,7 +867,7 @@ void Board::StretchWidthUserComp(const bool& bGrow)	// Stretch the selected comp
 	PlaceFloaters();	// See if we can now place floating components down
 }
 
-void Board::ChangeTypeUserComp(const COMP& eType)
+void Board::ChangeTypeUserComp(COMP eType)
 {
 	if ( m_groupMgr.GetNumUserComps() != 1 ) return;
 
@@ -918,7 +918,7 @@ void Board::CopyUserComps()	// Make a blank copy of the user-group components an
 	CopyComps(userCompIds);
 }
 
-bool Board::MoveUserComps(const int& deltaRow, const int& deltaCol)	// Move user-group components, and return true if the grid was panned
+bool Board::MoveUserComps(int deltaRow, int deltaCol)	// Move user-group components, and return true if the grid was panned
 {
 	if ( deltaRow == 0 && deltaCol == 0 ) return false;
 	if ( GetDisableMove() ) return false;
@@ -929,7 +929,7 @@ bool Board::MoveUserComps(const int& deltaRow, const int& deltaCol)	// Move user
 	return MoveComps(userCompIds, deltaRow, deltaCol);
 }
 
-void Board::RotateUserComps(const bool& bCW)	// Rotate the selected components
+void Board::RotateUserComps(bool bCW)	// Rotate the selected components
 {
 	std::list<int> userCompIds;
 	m_groupMgr.GetUserCompIds(userCompIds);
@@ -954,7 +954,7 @@ void Board::CopyComps(const std::list<int>& compIds)	// Make a blank copy of the
 	}
 }
 
-bool Board::MoveTextBox(const int& deltaRow, const int& deltaCol)	// Move text box, and return true if the grid was panned
+bool Board::MoveTextBox(int deltaRow, int deltaCol)	// Move text box, and return true if the grid was panned
 {
 	bool bPanned(false);	// Set true if we pan the grid
 
@@ -979,7 +979,7 @@ bool Board::MoveTextBox(const int& deltaRow, const int& deltaCol)	// Move text b
 	return bPanned;
 }
 
-bool Board::MoveComps(const std::list<int>& compIds, const int& deltaRow, const int& deltaCol)	// Move components and return true if the grid was panned
+bool Board::MoveComps(const std::list<int>& compIds, int deltaRow, int deltaCol)	// Move components and return true if the grid was panned
 {
 	assert( deltaRow != 0 || deltaCol != 0 );
 	assert( !GetDisableMove() );
@@ -1045,7 +1045,7 @@ bool Board::MoveComps(const std::list<int>& compIds, const int& deltaRow, const 
 	return bPanned;
 }
 
-void Board::RotateComps(const std::list<int>& compIds, const bool& bCW)	// Rotate components
+void Board::RotateComps(const std::list<int>& compIds, bool bCW)	// Rotate components
 {
 	// Treat the components as a single large footprint with LT at (minRow, minCol)
 	Rect rect = GetFootprintBounds(compIds);

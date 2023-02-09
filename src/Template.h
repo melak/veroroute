@@ -61,7 +61,7 @@ public:
 			default: return false;
 		}
 	}
-	bool IsLessThan(const Template& o, const bool bGeneric) const
+	bool IsLessThan(const Template& o, bool bGeneric) const
 	{
 		if ( bGeneric ) return *this < o;
 

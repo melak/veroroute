@@ -58,12 +58,12 @@ public:
 	{
 		return !(*this == o);
 	}
-	void StartNewRect(const int& row, const int& col)
+	void StartNewRect(int row, int col)
 	{
 		m_current.m_rowMin = m_current.m_rowMax = m_startRow = row;
 		m_current.m_colMin = m_current.m_colMax = m_startCol = col;
 	}
-	void UpdateNewRect(const int& row, const int& col)
+	void UpdateNewRect(int row, int col)
 	{
 		m_current.m_rowMin = std::min(m_startRow, row);
 		m_current.m_rowMax = std::max(m_startRow, row);

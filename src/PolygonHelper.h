@@ -29,7 +29,7 @@ struct MyPointF : public QPointF		// A point + the pen radius for drawing it
 {
 	MyPointF(qreal x = 0, qreal y = 0, qreal radius = 0) : QPointF(x,y), m_radius(radius) {}
 	~MyPointF() {}
-	MyPointF(const QPointF& p, const qreal& radius) : QPointF(p), m_radius(radius) {}
+	MyPointF(const QPointF& p, qreal radius) : QPointF(p), m_radius(radius) {}
 	MyPointF(const MyPointF& o) : QPointF(o), m_radius(o.m_radius) {}
 	MyPointF& operator=(const MyPointF& o)	{ QPointF::operator=(o); m_radius = o.m_radius; return *this; }
 	qreal	m_radius	= 0;		// Pen radius
@@ -39,7 +39,7 @@ struct MyPolygonF : public QPolygonF	// A polygon + the pen radii for drawing it
 {
 	MyPolygonF() {}
 	~MyPolygonF() {}
-	MyPolygonF(const QPolygonF& p, const GPEN& eTrkPen, const GPEN& ePadPen, const qreal& radiusTrk, const qreal& radiusPad, bool bClosed)
+	MyPolygonF(const QPolygonF& p, GPEN eTrkPen, GPEN ePadPen, qreal radiusTrk, qreal radiusPad, bool bClosed)
 		: QPolygonF(p), m_eTrkPen(eTrkPen), m_ePadPen(ePadPen), m_radiusTrk(radiusTrk), m_radiusPad(radiusPad), m_bClosed(bClosed)
 	{
 		Process();
@@ -146,7 +146,7 @@ private:
 		const qreal		lambda = std::max(0.0, std::min(1.0, QPointF::dotProduct(AB,AX) / QPointF::dotProduct(AB,AB)));
 		return A + (AB * lambda);
 	}
-	inline void Update(const QPointF& X, const QPointF& Y, const qreal& sum, const qreal& semi)	// Sum of radii, and semi-diff of radii
+	inline void Update(const QPointF& X, const QPointF& Y, qreal sum, qreal semi)	// Sum of radii, and semi-diff of radii
 	{
 		const QPointF	L(Y - X);
 		const qreal		l = Length(L);

@@ -72,7 +72,7 @@ public:
 	}
 	void   Clear()			{ m_list.clear(); }
 	size_t GetSize() const	{ return m_list.size(); }
-	bool GetIsUserComp(const int& compId) const	// Check if the component is in the user-group
+	bool GetIsUserComp(int compId) const	// Check if the component is in the user-group
 	{
 		if ( compId == TRAX_COMPID ) return true;
 		for (auto iter = m_list.begin(); iter != m_list.end() && iter->first == USER_GROUPID; ++iter)
@@ -85,13 +85,13 @@ public:
 		assert( GetNumUserComps() == 1 );
 		return m_list.begin()->second;
 	}
-	void ResetUserGroup(const int& compId)	// Reset the user-group with the comp (and its siblings)
+	void ResetUserGroup(int compId)	// Reset the user-group with the comp (and its siblings)
 	{
 		if ( compId == TRAX_COMPID ) return;
 		RemoveGroup(USER_GROUPID);	// Wipe the user-group ...
 		UpdateUserGroup(compId);	// ... then put the comp (and its siblings) in it
 	}
-	void UpdateUserGroup(const int& compId)	// Add/Remove comp (and its siblings) to user-group
+	void UpdateUserGroup(int compId)	// Add/Remove comp (and its siblings) to user-group
 	{
 		if ( compId == TRAX_COMPID ) return;
 		if ( !GetIsUserComp(compId) ) return AddToUserGroup(compId);		// Comp not in group, so add it
@@ -108,14 +108,14 @@ public:
 		for (auto iter = m_list.begin(); iter != m_list.end() && iter->first == USER_GROUPID; ++iter)
 			Add(newGroupId, iter->second);		// Copy comps from the user-group to the new group
 	}
-	void UnGroup(const int& compId)		// When user hits "U"
+	void UnGroup(int compId)	// When user hits "U"
 	{
 		if ( !CanUnGroup() ) return;		// User-group components are not grouped so quit
 		RemoveGroup( GetSiblingGroupId() );	// Wipe the sibling group
 		RemoveGroup(USER_GROUPID);			// Wipe the user-group ...
 		UpdateUserGroup(compId);			// ... and put the specified comp (and its siblings) in it
 	}
-	void RemoveComp(const int& compId)	// Remove all entries with the specified compId
+	void RemoveComp(int compId)	// Remove all entries with the specified compId
 	{
 		if ( compId == TRAX_COMPID ) return;
 		while(true)	// Keep going till we've erased all relevant entries
@@ -126,14 +126,14 @@ public:
 			if ( !bErased ) return;
 		}
 	}
-	void Add(const int& groupId, const int& compId)
+	void Add(int groupId, int compId)
 	{
 		if ( groupId == BAD_GROUPID || compId == BAD_COMPID || compId == TRAX_COMPID ) return;
 		const std::pair<int,int> entry(groupId, compId);
 		if ( std::find(m_list.begin(), m_list.end(), entry) != m_list.end() ) return;	// Entry exists
 		if ( groupId == USER_GROUPID ) m_list.push_front(entry); else m_list.push_back(entry);
 	}
-	void Remove(const int& groupId, const int& compId)
+	void Remove(int groupId, int compId)
 	{
 		if ( groupId == BAD_GROUPID || compId == BAD_COMPID || compId == TRAX_COMPID ) return;
 		const std::pair<int,int> entry(groupId, compId);
@@ -200,27 +200,27 @@ public:
 			userCompIds.push_back(iter->second);
 	}
 private:
-	int  GetSiblingGroupId(const int& compId) const	// Get highest groupId that the comp belongs to
+	int  GetSiblingGroupId(int compId) const	// Get highest groupId that the comp belongs to
 	{
 		for (auto riter = m_list.rbegin(); riter != m_list.rend(); ++riter)	// Loop groups in reverse order
 			if ( riter->second == compId ) return riter->first;
 		return BAD_GROUPID;
 	}
-	void AddToUserGroup(const int& compId)	// Add comp (and its siblings) to user-group
+	void AddToUserGroup(int compId)	// Add comp (and its siblings) to user-group
 	{
 		const int iSiblingGroupId = GetSiblingGroupId(compId);
 		if ( iSiblingGroupId <= USER_GROUPID ) return Add(USER_GROUPID, compId);	// No siblings. Add comp only.
 		for (auto iter = m_list.begin(); iter != m_list.end() && iter->first <= iSiblingGroupId; ++iter)
 			if ( iter->first == iSiblingGroupId ) Add(USER_GROUPID, iter->second);
 	}
-	int  GetNumGroupComps(const int& groupId) const	// Get number of components with specified groupId
+	int  GetNumGroupComps(int groupId) const	// Get number of components with specified groupId
 	{
 		int count(0);
 		for (auto iter = m_list.begin(); iter != m_list.end() && iter->first <= groupId; ++iter)
 			if ( iter->first == groupId ) count++;
 		return count;
 	}
-	void RemoveGroup(const int& groupId)	// Remove all entries with the specified groupId
+	void RemoveGroup(int groupId)	// Remove all entries with the specified groupId
 	{
 		auto iterBegin = m_list.begin();	// Slide iterBegin to the first entry with the correct group
 		while( iterBegin != m_list.end() && iterBegin->first != groupId ) ++iterBegin;
@@ -240,7 +240,7 @@ private:
 		}
 		return iSiblingGroupId;	// > USER_GROUPID only if all comps in the user-group are siblings
 	}
-	void RemoveFromUserGroup(const int& compId)	// Remove comp (and its siblings) from user-group
+	void RemoveFromUserGroup(int compId)	// Remove comp (and its siblings) from user-group
 	{
 		const int iSiblingGroupId = GetSiblingGroupId(compId);
 		if ( iSiblingGroupId <= USER_GROUPID ) return Remove(USER_GROUPID, compId);	// No siblings. Remove comp only.

@@ -39,7 +39,7 @@ public:
 		auto iter = m_mapIdtoAdjInfo.find(nodeId);
 		return ( iter != m_mapIdtoAdjInfo.end() ) ? iter->second : nullptr;
 	}
-	bool GetNodeIdExists(const int& nodeId) const	// true ==> the nodeId exists on the board
+	bool GetNodeIdExists(int nodeId) const	// true ==> the nodeId exists on the board
 	{
 		return GetAdjInfo(nodeId) != nullptr;
 	}
@@ -94,7 +94,7 @@ public:
 		std::stable_sort(out.begin(), out.end());	// Sort nodeIds to help keep coloring consistent
 	}
 private:
-	void ModifyCount(AdjInfo* pOld, AdjInfo* pNew, const int& nbrNodeId)
+	void ModifyCount(AdjInfo* pOld, AdjInfo* pNew, int nbrNodeId)
 	{
 		if ( nbrNodeId == BAD_NODEID ) return;
 		if ( pOld && pNew && pOld->GetNodeId() == pNew->GetNodeId() ) return;	// No change in nodeId

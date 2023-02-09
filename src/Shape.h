@@ -94,37 +94,37 @@ public:
 		if ( m_a2 - o.m_a2	!= 0.0 )			return m_a2 < o.m_a2;
 		return m_a3 < o.m_a3;
 	}
-	void SetType(const SHAPE& c)		{ m_type = c; }
-	void SetX1(const double& d)			{ m_x1 = d; }
-	void SetX2(const double& d)			{ m_x2 = d; }
-	void SetY1(const double& d)			{ m_y1 = d; }
-	void SetY2(const double& d)			{ m_y2 = d; }
-	void SetA1(const double& d)			{ m_a1 = d; }
-	void SetA2(const double& d)			{ m_a2 = d; }
-	void SetA3(const double& d)			{ m_a3 = d; }
-	void SetDrawLine(const bool& b)		{ m_bDrawLine = b; }
-	void SetDrawFill(const bool& b)		{ m_bDrawFill = b; }
+	void SetType(SHAPE c)				{ m_type = c; }
+	void SetX1(double d)				{ m_x1 = d; }
+	void SetX2(double d)				{ m_x2 = d; }
+	void SetY1(double d)				{ m_y1 = d; }
+	void SetY2(double d)				{ m_y2 = d; }
+	void SetA1(double d)				{ m_a1 = d; }
+	void SetA2(double d)				{ m_a2 = d; }
+	void SetA3(double d)				{ m_a3 = d; }
+	void SetDrawLine(bool b)			{ m_bDrawLine = b; }
+	void SetDrawFill(bool b)			{ m_bDrawFill = b; }
 	void SetLineColor(const MyRGB& r)	{ m_lineColor = r; }
 	void SetFillColor(const MyRGB& r)	{ m_fillColor = r; }
-	void Set(const double& x1, const double& x2,
-			 const double& y1, const double& y2,
-			 const double& a1, const double& a2, const double& a3)
+	void Set(double x1, double x2,
+			 double y1, double y2,
+			 double a1, double a2, double a3)
 	{
 		m_x1 = x1;	m_x2 = x2;
 		m_y1 = y1;	m_y2 = y2;
 		m_a1 = a1;	m_a2 = a2;	m_a3 = a3;
 	}
 
-	void SetCX(const double& d)	{ Move(0, d - GetCX()); }
-	void SetCY(const double& d)	{ Move(d - GetCY(), 0); }
-	void SetDX(const double& d)	{ Expand( d - GetDX(), 0 ); }
-	void SetDY(const double& d)	{ Expand( 0, d - GetDY() ); }
-	void Move(const double& dDown, const double& dRight)
+	void SetCX(double d)	{ Move(0, d - GetCX()); }
+	void SetCY(double d)	{ Move(d - GetCY(), 0); }
+	void SetDX(double d)	{ Expand( d - GetDX(), 0 ); }
+	void SetDY(double d)	{ Expand( 0, d - GetDY() ); }
+	void Move(double dDown, double dRight)
 	{
 		m_x1 += dRight;		m_x2 += dRight;
 		m_y1 += dDown;		m_y2 += dDown;
 	}
-	void Expand(const double& dx, const double& dy)
+	void Expand(double dx, double dy)
 	{
 		m_x1 -= 0.5 * dx;	m_x2 += 0.5 * dx;
 		m_y1 -= 0.5 * dy;	m_y2 += 0.5 * dy;
@@ -141,17 +141,17 @@ public:
 	const bool&		GetDrawFill() const		{ return m_bDrawFill; }
 	const MyRGB&	GetLineColor() const	{ return m_lineColor; }
 	const MyRGB&	GetFillColor() const	{ return m_fillColor; }
-	const double&	GetXmin() const	{ return std::min(m_x1, m_x2); }
-	const double&	GetXmax() const	{ return std::max(m_x1, m_x2); }
-	const double&	GetYmin() const	{ return std::min(m_y1, m_y2); }
-	const double&	GetYmax() const	{ return std::max(m_y1, m_y2); }
-	double			GetCX() const	{ return 0.5 * ( m_x1 + m_x2 ); }
-	double			GetCY() const	{ return 0.5 * ( m_y1 + m_y2 ); }
-	double			GetDX() const	{ return m_x2 - m_x1; }
-	double			GetDY() const	{ return m_y2 - m_y1; }
-	double			GetXlen() const	{ return fabs(GetDX()); }
-	double			GetYlen() const	{ return fabs(GetDY()); }
-	double			GetAlen() const	{ double d = m_a2 - m_a1; while ( d < 0 ) d += 360.0; return d; }
+	const double&	GetXmin() const			{ return std::min(m_x1, m_x2); }
+	const double&	GetXmax() const			{ return std::max(m_x1, m_x2); }
+	const double&	GetYmin() const			{ return std::min(m_y1, m_y2); }
+	const double&	GetYmax() const			{ return std::max(m_y1, m_y2); }
+	double			GetCX() const			{ return 0.5 * ( m_x1 + m_x2 ); }
+	double			GetCY() const			{ return 0.5 * ( m_y1 + m_y2 ); }
+	double			GetDX() const			{ return m_x2 - m_x1; }
+	double			GetDY() const			{ return m_y2 - m_y1; }
+	double			GetXlen() const			{ return fabs(GetDX()); }
+	double			GetYlen() const			{ return fabs(GetDY()); }
+	double			GetAlen() const			{ double d = m_a2 - m_a1; while ( d < 0 ) d += 360.0; return d; }
 	void GetSafeBounds(double& L, double& R, double& T, double& B) const	// Allows for worst case rotation "A3"
 	{
 		if ( GetA3() == 0.0 )

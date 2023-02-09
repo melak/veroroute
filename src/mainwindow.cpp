@@ -940,7 +940,7 @@ void MainWindow::WritePDF()
 	QDesktopServices::openUrl(m_pdfFileName);	// Ask the system to open the PDF file.
 }
 
-void MainWindow::WriteGerber(const bool& bTwoLayerGerber, const bool& bMetric)
+void MainWindow::WriteGerber(bool bTwoLayerGerber, bool bMetric)
 {
 	m_bTwoLayerGerber = bTwoLayerGerber;
 	m_board.SetHoleType(m_bTwoLayerGerber ? HOLETYPE::PTH : HOLETYPE::NPTH);
@@ -1744,7 +1744,7 @@ void MainWindow::SetCompType(const QString& str)
 	UpdateControls();
 	RepaintWithListNodes();
 }
-void MainWindow::SetCompCustomFlag(const bool& b)
+void MainWindow::SetCompCustomFlag(bool b)
 {
 	if ( m_board.GetDisableChangeCustom() ) return;
 	if ( m_board.GetGroupMgr().GetNumUserComps() != 1 ) return;
@@ -1755,7 +1755,7 @@ void MainWindow::SetCompCustomFlag(const bool& b)
 	UpdateControls();
 	RepaintWithListNodes();
 }
-void MainWindow::SetCompPadWidth(const int& i)
+void MainWindow::SetCompPadWidth(int i)
 {
 	if ( m_board.GetDisableChangeCustom() ) return;
 	if ( m_board.GetGroupMgr().GetNumUserComps() != 1 ) return;
@@ -1767,7 +1767,7 @@ void MainWindow::SetCompPadWidth(const int& i)
 	UpdateControls();
 	RepaintWithListNodes();
 }
-void MainWindow::SetCompHoleWidth(const int& i)
+void MainWindow::SetCompHoleWidth(int i)
 {
 	if ( m_board.GetDisableChangeCustom() ) return;
 	if ( m_board.GetGroupMgr().GetNumUserComps() != 1 ) return;
@@ -1779,7 +1779,7 @@ void MainWindow::SetCompHoleWidth(const int& i)
 	UpdateControls();
 	RepaintWithListNodes();
 }
-void MainWindow::CompRotate(const bool& bCW)
+void MainWindow::CompRotate(bool bCW)
 {
 	if ( m_board.GetDisableRotate() ) return;
 
@@ -1793,7 +1793,7 @@ void MainWindow::CompRotate(const bool& bCW)
 	UpdateControls();
 	RepaintWithListNodes();
 }
-void MainWindow::CompStretch(const bool& bGrow)
+void MainWindow::CompStretch(bool bGrow)
 {
 	if ( m_board.GetDisableStretch(bGrow) ) return;
 
@@ -1803,7 +1803,7 @@ void MainWindow::CompStretch(const bool& bGrow)
 	UpdateControls();
 	RepaintWithListNodes();
 }
-void MainWindow::CompStretchWidth(const bool& bGrow)
+void MainWindow::CompStretchWidth(bool bGrow)
 {
 	if ( m_board.GetDisableStretchWidth(bGrow) ) return;
 
@@ -1813,7 +1813,7 @@ void MainWindow::CompStretchWidth(const bool& bGrow)
 	UpdateControls();
 	RepaintWithListNodes();
 }
-void MainWindow::CompTextMove(const int& deltaRow, const int& deltaCol)
+void MainWindow::CompTextMove(int deltaRow, int deltaCol)
 {
 	if ( m_board.GetDisableCompText() ) return;
 
@@ -1823,7 +1823,7 @@ void MainWindow::CompTextMove(const int& deltaRow, const int& deltaCol)
 	RepaintSkipRouting();
 }
 
-void MainWindow::PadMove(const int& deltaRowMil, const int& deltaColMil)
+void MainWindow::PadMove(int deltaRowMil, int deltaColMil)
 {
 	// Pad offsets
 	if ( m_board.GetVeroTracks() || m_board.GetCompEdit() ) return;

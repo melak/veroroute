@@ -21,7 +21,7 @@
 #include "CompManager.h"
 #include "RectManager.h"
 
-void FootPrint::BuildDefault(const COMP& type)
+void FootPrint::BuildDefault(COMP type)
 {
 	assert(type != COMP::INVALID);
 
@@ -55,7 +55,7 @@ void FootPrint::BuildDefault(const COMP& type)
 	SetupOccupancies();	// Setup hole use (and for wires setup surface use too)
 }
 
-void FootPrint::BuildTrax(CompManager* pCompMgr, const RectManager& rectMgr, const ElementGrid& o, const int& nLyr, const int& nRowMin, const int& nRowMax, const int& nColMin, const int& nColMax)
+void FootPrint::BuildTrax(CompManager* pCompMgr, const RectManager& rectMgr, const ElementGrid& o, int nLyr, int nRowMin, int nRowMax, int nColMin, int nColMax)
 {
 	// This method is for building a "tracks" component
 	SetType(COMP::TRACKS);

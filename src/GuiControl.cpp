@@ -20,10 +20,10 @@
 #include "GuiControl.h"
 #include "PolygonHelper.h"
 
-void GuiControl::CalcBlob(const qreal& W, const QPointF& pC, const QPointF& pCoffset,
-						  const int& iPadWidthMIL, const int& iPerimeterCode, const int& iTagCode,
+void GuiControl::CalcBlob(qreal W, const QPointF& pC, const QPointF& pCoffset,
+						  int iPadWidthMIL, int iPerimeterCode, int iTagCode,
 						  std::list<MyPolygonF>& out,
-						  const bool bHavePad, const bool bIsGnd, const bool bGap) const
+						  bool bHavePad, bool bIsGnd, bool bGap) const
 {
 	// Given a grid point (pC) and its perimeter code, this method populates "out" with a
 	// description of the local track pattern at the grid point (or "blob").

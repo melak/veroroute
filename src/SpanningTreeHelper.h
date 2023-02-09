@@ -29,7 +29,7 @@ struct SpanningTreeHelper
 {
 	typedef std::pair<QPointF, QPointF>	LINE;
 
-	static inline void Build(const std::list<QPointF>& pointsIn, std::list<LINE>& linesOut, const bool& bDaisyChain = false)
+	static inline void Build(const std::list<QPointF>& pointsIn, std::list<LINE>& linesOut, bool bDaisyChain = false)
 	{
 		typedef std::pair<size_t, size_t>	INDICES;
 		typedef std::pair<INDICES, qreal>	EDGE;

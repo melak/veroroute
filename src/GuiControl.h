@@ -377,64 +377,64 @@ public:
 		outStream.Save(m_bXthermals);		// Added in VRT_VERSION_53
 	}
 	bool SetBackgroundColor(const MyRGB& o)	{ const bool bChanged = m_backgroundColor	!= o; m_backgroundColor	= o; return bChanged;}
-	bool SetCurrentLayer(const int& i)		{ const bool bChanged = m_currentLayer		!= i; m_currentLayer	= i; return bChanged; }
-	bool SetCurrentNodeId(const int& i)		{ const bool bChanged = m_currentNodeId		!= i; m_currentNodeId	= i; return bChanged; }
-	bool SetCurrentCompId(const int& i)		{ const bool bChanged = m_currentCompId		!= i; m_currentCompId	= i; return bChanged; }
-	bool SetGroundNodeId0(const int& i)		{ const bool bChanged = m_groundNodeId0		!= i; m_groundNodeId0	= i; return bChanged; }
-	bool SetGroundNodeId1(const int& i)		{ const bool bChanged = m_groundNodeId1		!= i; m_groundNodeId1	= i; return bChanged; }
-	bool SetCurrentTextId(const int& i)		{ const bool bChanged = m_currentTextId		!= i; m_currentTextId	= i; return bChanged; }
-	bool SetDiagsMode(const DIAGSMODE& e)	{ const bool bChanged = m_diagsMode			!= e; m_diagsMode		= e; return bChanged; }
-	bool SetTrackMode(const TRACKMODE& e)	{ const bool bChanged = m_iTrackMode		!= e; m_iTrackMode		= e; return bChanged; }
-	bool SetCompMode(const COMPSMODE& e)	{ const bool bChanged = m_iCompMode			!= e; m_iCompMode		= e; return bChanged; }
-	bool SetHoleType(const HOLETYPE& e)		{ const bool bChanged = m_iHoleType			!= e; m_iHoleType		= e; return bChanged; }
-	bool SetGRIDPIXELS(const int& i)		{ const bool bChanged = m_GRIDPIXELS		!= i; m_GRIDPIXELS		= i; return bChanged; }
-	bool SetPAD_MIL(const int& i)			{ const bool bChanged = m_PAD_MIL			!= i; m_PAD_MIL			= i;
+	bool SetCurrentLayer(int i)				{ const bool bChanged = m_currentLayer		!= i; m_currentLayer	= i; return bChanged; }
+	bool SetCurrentNodeId(int i)			{ const bool bChanged = m_currentNodeId		!= i; m_currentNodeId	= i; return bChanged; }
+	bool SetCurrentCompId(int i)			{ const bool bChanged = m_currentCompId		!= i; m_currentCompId	= i; return bChanged; }
+	bool SetGroundNodeId0(int i)			{ const bool bChanged = m_groundNodeId0		!= i; m_groundNodeId0	= i; return bChanged; }
+	bool SetGroundNodeId1(int i)			{ const bool bChanged = m_groundNodeId1		!= i; m_groundNodeId1	= i; return bChanged; }
+	bool SetCurrentTextId(int i)			{ const bool bChanged = m_currentTextId		!= i; m_currentTextId	= i; return bChanged; }
+	bool SetDiagsMode(DIAGSMODE e)			{ const bool bChanged = m_diagsMode			!= e; m_diagsMode		= e; return bChanged; }
+	bool SetTrackMode(TRACKMODE e)			{ const bool bChanged = m_iTrackMode		!= e; m_iTrackMode		= e; return bChanged; }
+	bool SetCompMode(COMPSMODE e)			{ const bool bChanged = m_iCompMode			!= e; m_iCompMode		= e; return bChanged; }
+	bool SetHoleType(HOLETYPE e)			{ const bool bChanged = m_iHoleType			!= e; m_iHoleType		= e; return bChanged; }
+	bool SetGRIDPIXELS(int i)				{ const bool bChanged = m_GRIDPIXELS		!= i; m_GRIDPIXELS		= i; return bChanged; }
+	bool SetPAD_MIL(int i)					{ const bool bChanged = m_PAD_MIL			!= i; m_PAD_MIL			= i;
 											  if ( bChanged && GetHOLE_MIL() > i-8 ) SetHOLE_MIL( i-8 );		// 8 ==> minimum annular ring = 4 mil
 											  return bChanged; }
-	bool SetTRACK_MIL(const int& i)			{ const bool bChanged = m_TRACK_MIL			!= i; m_TRACK_MIL		= i; return bChanged; }
-	bool SetTAG_MIL(const int& i)			{ const bool bChanged = m_TAG_MIL			!= i; m_TAG_MIL			= i; return bChanged; }
-	bool SetHOLE_MIL(const int& i)			{ const bool bChanged = m_HOLE_MIL			!= i; m_HOLE_MIL		= i;
+	bool SetTRACK_MIL(int i)				{ const bool bChanged = m_TRACK_MIL			!= i; m_TRACK_MIL		= i; return bChanged; }
+	bool SetTAG_MIL(int i)					{ const bool bChanged = m_TAG_MIL			!= i; m_TAG_MIL			= i; return bChanged; }
+	bool SetHOLE_MIL(int i)					{ const bool bChanged = m_HOLE_MIL			!= i; m_HOLE_MIL		= i;
 											  if ( bChanged && GetPAD_MIL() < i+8 ) SetPAD_MIL( i+8 );			// 8 ==> minimum annular ring = 4 mil
 											  return bChanged; }
-	bool SetGAP_MIL(const int& i)			{ const bool bChanged = m_GAP_MIL			!= i; m_GAP_MIL			= i; return bChanged; }
-	bool SetMASK_MIL(const int& i)			{ const bool bChanged = m_MASK_MIL			!= i; m_MASK_MIL		= i; return bChanged; }
-	bool SetSILK_MIL(const int& i)			{ const bool bChanged = m_SILK_MIL			!= i; m_SILK_MIL		= i; return bChanged; }
-	bool SetEDGE_MIL(const int& i)			{ const bool bChanged = m_EDGE_MIL			!= i; m_EDGE_MIL		= i; return bChanged; }
-	bool SetVIAPAD_MIL(const int& i)		{ const bool bChanged = m_VIAPAD_MIL		!= i; m_VIAPAD_MIL		= i;
+	bool SetGAP_MIL(int i)					{ const bool bChanged = m_GAP_MIL			!= i; m_GAP_MIL			= i; return bChanged; }
+	bool SetMASK_MIL(int i)					{ const bool bChanged = m_MASK_MIL			!= i; m_MASK_MIL		= i; return bChanged; }
+	bool SetSILK_MIL(int i)					{ const bool bChanged = m_SILK_MIL			!= i; m_SILK_MIL		= i; return bChanged; }
+	bool SetEDGE_MIL(int i)					{ const bool bChanged = m_EDGE_MIL			!= i; m_EDGE_MIL		= i; return bChanged; }
+	bool SetVIAPAD_MIL(int i)				{ const bool bChanged = m_VIAPAD_MIL		!= i; m_VIAPAD_MIL		= i;
 											  if ( bChanged && GetVIAHOLE_MIL() > i-8 ) SetVIAHOLE_MIL( i-8 );	// 8 ==> minimum annular ring = 4 mil
 											  return bChanged;
 											}
-	bool SetVIAHOLE_MIL(const int& i)		{ const bool bChanged = m_VIAHOLE_MIL		!= i; m_VIAHOLE_MIL		= i;
+	bool SetVIAHOLE_MIL(int i)				{ const bool bChanged = m_VIAHOLE_MIL		!= i; m_VIAHOLE_MIL		= i;
 											  if ( bChanged && GetVIAPAD_MIL() < i+8 ) SetVIAPAD_MIL( i+8 );	// 8 ==> minimum annular ring = 4 mil
 											  return bChanged; }
-	bool SetRenderQuality(const int& i)		{ const bool bChanged = m_iRenderQuality	!= i; m_iRenderQuality	= i; return bChanged; }
-	bool SetSaturation(const int& i)		{ const bool bChanged = m_iSaturation		!= i; m_iSaturation		= i; return bChanged; }
-	bool SetFillSaturation(const int& i)	{ const bool bChanged = m_iFillSaturation	!= i; m_iFillSaturation	= i; return bChanged; }
-	bool SetCropMargin(const int& i)		{ const bool bChanged = m_iCropMargin		!= i; m_iCropMargin		= i; return bChanged; }
-	bool SetTargetRows(const int& i)		{ const bool bChanged = m_iTargetRows		!= i; m_iTargetRows		= i; return bChanged; }
-	bool SetTargetCols(const int& i)		{ const bool bChanged = m_iTargetCols		!= i; m_iTargetCols		= i; return bChanged; }
-	bool SetTextSizeComp(const int& i)		{ const bool bChanged = m_iTextSizeComp		!= i; m_iTextSizeComp	= i; return bChanged; }
-	bool SetTextSizePins(const int& i)		{ const bool bChanged = m_iTextSizePins		!= i; m_iTextSizePins	= i; return bChanged; }
-	bool SetRoutingMethod(const int& i)		{ const bool bChanged = m_iRoutingMethod	!= i; m_iRoutingMethod	= i; return bChanged; }
-	bool SetShowTarget(const bool& b)		{ const bool bChanged = m_bShowTarget		!= b; m_bShowTarget		= b; return bChanged; }
-	bool SetShowCloseTracks(const bool& b)	{ const bool bChanged = m_bShowCloseTracks	!= b; m_bShowCloseTracks= b; return bChanged; }
-	bool SetWireShare(const bool& b)		{ const bool bChanged = m_bWireShare		!= b; m_bWireShare		= b; return bChanged; }
-	bool SetWireCross(const bool& b)		{ const bool bChanged = m_bWireCross		!= b; m_bWireCross		= b; return bChanged; }
-	bool SetVeroTracks(const bool& b)		{ const bool bChanged = m_bVeroTracks		!= b; m_bVeroTracks		= b; return bChanged; }
-	bool SetCurvedTracks(const bool& b)		{ const bool bChanged = m_bCurvedTracks		!= b; m_bCurvedTracks	= b; return bChanged; }
-	bool SetFatTracks(const bool& b)		{ const bool bChanged = m_bFatTracks		!= b; m_bFatTracks		= b; return bChanged; }
-	bool SetRoutingEnabled(const bool& b)	{ const bool bChanged = m_bRoutingEnabled	!= b; m_bRoutingEnabled	= b; return bChanged; }
-	bool SetViasEnabled(const bool& b)		{ const bool bChanged = m_bViasEnabled		!= b; m_bViasEnabled	= b; return bChanged; }
-	bool SetShowGrid(const bool& b)			{ const bool bChanged = m_bShowGrid			!= b; m_bShowGrid		= b; return bChanged; }
-	bool SetShowText(const bool& b)			{ const bool bChanged = m_bShowText			!= b; m_bShowText		= b; return bChanged; }
-	bool SetFlipH(const bool& b)			{ const bool bChanged = m_bFlipH			!= b; m_bFlipH			= b; return bChanged; }
-	bool SetFlipV(const bool& b)			{ const bool bChanged = m_bFlipV			!= b; m_bFlipV			= b; return bChanged; }
-	bool SetShowPinLabels(const bool& b)	{ const bool bChanged = m_bPinLabels		!= b; m_bPinLabels		= b; return bChanged; }
-	bool SetShowFlyWires(const bool& b)		{ const bool bChanged = m_bFlyWires			!= b; m_bFlyWires		= b; return bChanged; }
-	bool SetGroundFill(const bool& b)		{ const bool bChanged = m_bGroundFill		!= b; m_bGroundFill		= b; return bChanged; }
-	bool SetVerticalStrips(const bool& b)	{ const bool bChanged = m_bVerticalStrips	!= b; m_bVerticalStrips	= b; return bChanged; }
-	bool SetCompEdit(const bool& b)			{ const bool bChanged = m_bCompEdit			!= b; m_bCompEdit		= b; return bChanged; }
-	bool SetXthermals(const bool& b)		{ const bool bChanged = m_bXthermals		!= b; m_bXthermals		= b; return bChanged; }
+	bool SetRenderQuality(int i)			{ const bool bChanged = m_iRenderQuality	!= i; m_iRenderQuality	= i; return bChanged; }
+	bool SetSaturation(int i)				{ const bool bChanged = m_iSaturation		!= i; m_iSaturation		= i; return bChanged; }
+	bool SetFillSaturation(int i)			{ const bool bChanged = m_iFillSaturation	!= i; m_iFillSaturation	= i; return bChanged; }
+	bool SetCropMargin(int i)				{ const bool bChanged = m_iCropMargin		!= i; m_iCropMargin		= i; return bChanged; }
+	bool SetTargetRows(int i)				{ const bool bChanged = m_iTargetRows		!= i; m_iTargetRows		= i; return bChanged; }
+	bool SetTargetCols(int i)				{ const bool bChanged = m_iTargetCols		!= i; m_iTargetCols		= i; return bChanged; }
+	bool SetTextSizeComp(int i)				{ const bool bChanged = m_iTextSizeComp		!= i; m_iTextSizeComp	= i; return bChanged; }
+	bool SetTextSizePins(int i)				{ const bool bChanged = m_iTextSizePins		!= i; m_iTextSizePins	= i; return bChanged; }
+	bool SetRoutingMethod(int i)			{ const bool bChanged = m_iRoutingMethod	!= i; m_iRoutingMethod	= i; return bChanged; }
+	bool SetShowTarget(bool b)				{ const bool bChanged = m_bShowTarget		!= b; m_bShowTarget		= b; return bChanged; }
+	bool SetShowCloseTracks(bool b)			{ const bool bChanged = m_bShowCloseTracks	!= b; m_bShowCloseTracks= b; return bChanged; }
+	bool SetWireShare(bool b)				{ const bool bChanged = m_bWireShare		!= b; m_bWireShare		= b; return bChanged; }
+	bool SetWireCross(bool b)				{ const bool bChanged = m_bWireCross		!= b; m_bWireCross		= b; return bChanged; }
+	bool SetVeroTracks(bool b)				{ const bool bChanged = m_bVeroTracks		!= b; m_bVeroTracks		= b; return bChanged; }
+	bool SetCurvedTracks(bool b)			{ const bool bChanged = m_bCurvedTracks		!= b; m_bCurvedTracks	= b; return bChanged; }
+	bool SetFatTracks(bool b)				{ const bool bChanged = m_bFatTracks		!= b; m_bFatTracks		= b; return bChanged; }
+	bool SetRoutingEnabled(bool b)			{ const bool bChanged = m_bRoutingEnabled	!= b; m_bRoutingEnabled	= b; return bChanged; }
+	bool SetViasEnabled(bool b)				{ const bool bChanged = m_bViasEnabled		!= b; m_bViasEnabled	= b; return bChanged; }
+	bool SetShowGrid(bool b)				{ const bool bChanged = m_bShowGrid			!= b; m_bShowGrid		= b; return bChanged; }
+	bool SetShowText(bool b)				{ const bool bChanged = m_bShowText			!= b; m_bShowText		= b; return bChanged; }
+	bool SetFlipH(bool b)					{ const bool bChanged = m_bFlipH			!= b; m_bFlipH			= b; return bChanged; }
+	bool SetFlipV(bool b)					{ const bool bChanged = m_bFlipV			!= b; m_bFlipV			= b; return bChanged; }
+	bool SetShowPinLabels(bool b)			{ const bool bChanged = m_bPinLabels		!= b; m_bPinLabels		= b; return bChanged; }
+	bool SetShowFlyWires(bool b)			{ const bool bChanged = m_bFlyWires			!= b; m_bFlyWires		= b; return bChanged; }
+	bool SetGroundFill(bool b)				{ const bool bChanged = m_bGroundFill		!= b; m_bGroundFill		= b; return bChanged; }
+	bool SetVerticalStrips(bool b)			{ const bool bChanged = m_bVerticalStrips	!= b; m_bVerticalStrips	= b; return bChanged; }
+	bool SetCompEdit(bool b)				{ const bool bChanged = m_bCompEdit			!= b; m_bCompEdit		= b; return bChanged; }
+	bool SetXthermals(bool b)				{ const bool bChanged = m_bXthermals		!= b; m_bXthermals		= b; return bChanged; }
 	const MyRGB&		GetBackgroundColor() const	{ return m_backgroundColor; }
 	const int&			GetCurrentLayer() const		{ return m_currentLayer; }
 	const int&			GetCurrentNodeId() const	{ return m_currentNodeId; }
@@ -486,28 +486,28 @@ public:
 	const bool&			GetCompEdit() const			{ return m_bCompEdit; }
 	const bool&			GetXthermals() const		{ return m_bXthermals; }
 	// Helpers
-	bool		SetGroundNodeId()				{ return ( GetCurrentLayer() == 0 ) ? SetGroundNodeId0( GetCurrentNodeId() ) : SetGroundNodeId1( GetCurrentNodeId() ); }
-	const int&	GetGroundNodeId(int lyr) const	{ return ( lyr == 0 ) ? GetGroundNodeId0() : GetGroundNodeId1(); }
-	bool		GetUsePCBshapes()				{ return GetTrackMode() == TRACKMODE::PCB; }
-	bool		GetMirrored() const				{ return GetFlipH() || GetFlipV(); }
-	bool		SetTrackSliderValue(int i)		{ const bool bChanged = ( GetTrackSliderValue() != i ); SetTrackMode( static_cast<TRACKMODE>(i) ); return bChanged; }
-	bool		SetCompSliderValue(int i)		{ const bool bChanged = ( GetCompSliderValue()  != i ); SetCompMode(  static_cast<COMPSMODE>(i) ); return bChanged; }
-	int			GetTrackSliderValue() const		{ return static_cast<int>(GetTrackMode()); }
-	int			GetCompSliderValue() const		{ return static_cast<int>(GetCompMode());  }
-	double		GetSilkWidth() const			{ return std::max(1.0, GetGRIDPIXELS() * GetSILK_MIL() * 0.010 );  }	// Silk-screen pen width in pixels
-	double		GetEdgeWidth() const			{ return std::max(1.0, GetGRIDPIXELS() * GetEDGE_MIL() * 0.010 );  }	// Board edge margin in pixels
-	int			GetHalfPixelsFromMIL(const int& iMIL) const
+	bool		SetGroundNodeId()					{ return ( GetCurrentLayer() == 0 ) ? SetGroundNodeId0( GetCurrentNodeId() ) : SetGroundNodeId1( GetCurrentNodeId() ); }
+	const int&	GetGroundNodeId(int lyr) const		{ return ( lyr == 0 ) ? GetGroundNodeId0() : GetGroundNodeId1(); }
+	bool		GetUsePCBshapes()					{ return GetTrackMode() == TRACKMODE::PCB; }
+	bool		GetMirrored() const					{ return GetFlipH() || GetFlipV(); }
+	bool		SetTrackSliderValue(int i)			{ const bool bChanged = ( GetTrackSliderValue() != i ); SetTrackMode( static_cast<TRACKMODE>(i) ); return bChanged; }
+	bool		SetCompSliderValue(int i)			{ const bool bChanged = ( GetCompSliderValue()  != i ); SetCompMode(  static_cast<COMPSMODE>(i) ); return bChanged; }
+	int			GetTrackSliderValue() const			{ return static_cast<int>(GetTrackMode()); }
+	int			GetCompSliderValue() const			{ return static_cast<int>(GetCompMode());  }
+	double		GetSilkWidth() const				{ return std::max(1.0, GetGRIDPIXELS() * GetSILK_MIL() * 0.010 );  }	// Silk-screen pen width in pixels
+	double		GetEdgeWidth() const				{ return std::max(1.0, GetGRIDPIXELS() * GetEDGE_MIL() * 0.010 );  }	// Board edge margin in pixels
+	int			GetHalfPixelsFromMIL(int iMIL) const
 	{
 		return std::max(1, static_cast<int> (GetGRIDPIXELS() * iMIL	* 0.005 ));
 	}
-	int		GetPixelsFromMIL(const int& iMIL) const
+	int		GetPixelsFromMIL(int iMIL) const
 	{
 		return std::max(1, static_cast<int> (GetGRIDPIXELS() * iMIL	* 0.010 ));
 	}
-	void	CalcBlob(const qreal& W, const QPointF& pC, const QPointF& pCoffset,
-					 const int& iPadWidthMIL, const int& iPerimeterCode, const int& iTagCode,
+	void	CalcBlob(qreal W, const QPointF& pC, const QPointF& pCoffset,
+					 int iPadWidthMIL, int iPerimeterCode, int iTagCode,
 					 std::list<MyPolygonF>& out,
-					 const bool bHavePad, const bool bIsGnd, const bool bGap = false) const;
+					 bool bHavePad, bool bIsGnd, bool bGap = false) const;
 	void Reset()	// For use with File->New()
 	{
 		m_currentLayer		= 0;

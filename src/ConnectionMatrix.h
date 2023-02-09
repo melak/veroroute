@@ -28,7 +28,7 @@ class ConnectionMatrix
 public:
 	ConnectionMatrix() {}
 	~ConnectionMatrix() { DeAllocate(); }
-	void Allocate(const size_t& N)
+	void Allocate(size_t N)
 	{
 		m_N				= N;
 		const size_t N2	= m_N * m_N;
@@ -46,7 +46,7 @@ public:
 		m_pp = nullptr;
 		m_p	 = nullptr;
 	}
-	void Connect(const size_t& j, const size_t& k)
+	void Connect(size_t j, size_t k)
 	{
 		// Make j-k connection and enforce transitivity
 
@@ -78,7 +78,7 @@ public:
 			}
 		}
 	}
-	const bool& GetAreConnected(const size_t& j, const size_t& k) const { return m_pp[j][k]; }
+	const bool& GetAreConnected(size_t j, size_t k) const { return m_pp[j][k]; }
 	const unsigned int&	GetCost() const { return m_cost; }
 private:
 	size_t			m_N		= 0;		// Number of points in the set

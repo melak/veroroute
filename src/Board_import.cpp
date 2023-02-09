@@ -573,7 +573,7 @@ bool Board::BreakComponentIntoPads(Component& comp)
 	return true;
 }
 
-bool Board::GetPinRowCol(const int& compId, const size_t& iPinIndex, int& row, int& col) const
+bool Board::GetPinRowCol(int compId, size_t iPinIndex, int& row, int& col) const
 {
 	if ( compId == BAD_COMPID || iPinIndex == BAD_PININDEX ) return false;
 

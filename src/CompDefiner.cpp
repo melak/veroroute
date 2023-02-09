@@ -109,7 +109,7 @@ void CompDefiner::Build(Component& comp) const
 		comp.AddOne(mapObj.second);
 }
 
-void CompDefiner::MoveCurrentShape(const double& dDown, const double& dRight)
+void CompDefiner::MoveCurrentShape(double dDown, double dRight)
 {
 	Shape& s = GetCurrentShape();
 	double dCentreCol(0), dCentreRow(0);
@@ -153,7 +153,7 @@ int CompDefiner::GetNewShapeId() const
 	}
 	return ( shapeId == INT_MAX ) ? BAD_ID : shapeId;
 }
-bool CompDefiner::SetWidth(const int& i)
+bool CompDefiner::SetWidth(int i)
 {
 	assert( i > 0 );
 	const bool bChanged = m_grid.GetCols() != i;
@@ -169,7 +169,7 @@ bool CompDefiner::SetWidth(const int& i)
 	}
 	return bChanged;
 }
-bool CompDefiner::SetHeight(const int& i)
+bool CompDefiner::SetHeight(int i)
 {
 	assert( i > 0 );
 	const bool bChanged = m_grid.GetRows() != i;
@@ -186,7 +186,7 @@ bool CompDefiner::SetHeight(const int& i)
 	return bChanged;
 }
 
-int CompDefiner::GetPinId(const int& row, const int& col) const	// Pick the most relevant pin at the location
+int CompDefiner::GetPinId(int row, int col) const	// Pick the most relevant pin at the location
 {
 	const int iRow = row - GetGridRowMin();
 	const int iCol = col - GetGridColMin();
@@ -195,7 +195,7 @@ int CompDefiner::GetPinId(const int& row, const int& col) const	// Pick the most
 	return ( bOK ) ? iCol + iRow * m_grid.GetCols() : BAD_ID;
 }
 
-int CompDefiner::GetShapeId(const double& dRowIn, const double& dColIn) const	// Pick the most relevant shape at the location
+int CompDefiner::GetShapeId(double dRowIn, double dColIn) const	// Pick the most relevant shape at the location
 {
 	double dCentreRow(0), dCentreCol(0);
 	GetGridCentre(dCentreRow, dCentreCol);	// Footprint centre w.r.t. screen

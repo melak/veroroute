@@ -264,7 +264,7 @@ public:
 		return iCode;
 	}
 
-	int GetTagCode(const Element* p, const int& iPerimeterCode) const	// Helper for the GUI "blobs"
+	int GetTagCode(const Element* p, int iPerimeterCode) const	// Helper for the GUI "blobs"
 	{
 		const int&	iNodeId			= p->GetNodeId();
 		const bool	bBottomLayer	= p->IsLayer0();	// true ==> p is on bottom layer
@@ -458,7 +458,7 @@ public:
 		return true;
 	}
 
-	void GrowThenPan(const int& incLyrs, const int& incRows, const int& incCols, const int& iDown, const int& iRight)
+	void GrowThenPan(int incLyrs, int incRows, int incCols, int iDown, int iRight)
 	{
 		ElementGrid::Grow(incLyrs, incRows, incCols);	// Grow the base class
 		ElementGrid::Pan(iDown, iRight);				// Pan the base class
@@ -581,28 +581,28 @@ public:
 	void	GetGroundFillBounds(int& L, int& R, int& T, int& B) const;
 
 	// Methods to paint/unpaint nodeIds
-	void SetNodeId(Element* p, const int& nodeId, const bool bAllLyrs);	// Helper to make sure we do UpdateCounts() before painting an element
-	void WipeFlagBits(Element* p, const char& i, const bool bAllLyrs);
-	void MarkFlagBits(Element* p, const char& i, const bool bAllLyrs);
-	bool SetNodeIdByUser(const int& lyr, const int& row, const int& col, const int& nodeId, const bool& bPaintPins);
-	void FloodNodeId(const int& nodeId);
+	void SetNodeId(Element* p, int nodeId, bool bAllLyrs);	// Helper to make sure we do UpdateCounts() before painting an element
+	void WipeFlagBits(Element* p, char i, bool bAllLyrs);
+	void MarkFlagBits(Element* p, char i, bool bAllLyrs);
+	bool SetNodeIdByUser(int lyr, int row, int col, int nodeId, bool bPaintPins);
+	void FloodNodeId(int nodeId);
 	void AutoFillVero();
 	void CalcSolder();	// Work out locations of solder blobs to join veroboard tracks together
-	void SetSolder(const int& nodeId, const int& col, const bool& bVertical);
+	void SetSolder(int nodeId, int col, bool bVertical);
 
 	// Routing methods
-	void WipeAutoSetPoints(const int nodeId = BAD_NODEID);
-	void BuildTargetPins(const int& nodeId);
+	void WipeAutoSetPoints(int nodeId = BAD_NODEID);
+	void BuildTargetPins(int nodeId);
 	void Route(bool bMinimal);
 	void UpdateVias();
 	const bool& GetHasVias() const { return m_bHasVias; }
-	unsigned int Flood(const int& nodeId);
-	unsigned int Flood(const bool bSingleRoute = false);
-	void Flood_Helper(const bool bBuildTracks);
-	void Flood_Grow(const int& iFloodNodeId, Element* pJ, const int& iNbr, const bool& bBuildTracks, unsigned int& iMH, unsigned int& iMaxMH, bool& bDone);
-	void Backtrace(Element* pEnd, const int& nodeId);
-	bool BacktraceHelper(Element*& p, unsigned int& MH, const int& nodeId, const unsigned int& iDeltaMH, const int& iNbr, const int& iLoop);
-	void Manhatten(Element* p, const bool bSingleRoute);
+	unsigned int Flood(int nodeId);
+	unsigned int Flood(bool bSingleRoute = false);
+	void Flood_Helper(bool bBuildTracks);
+	void Flood_Grow(int iFloodNodeId, Element* pJ, int iNbr, bool bBuildTracks, unsigned int& iMH, unsigned int& iMaxMH, bool& bDone);
+	void Backtrace(Element* pEnd, int nodeId);
+	bool BacktraceHelper(Element*& p, unsigned int& MH, int nodeId, unsigned int iDeltaMH, int iNbr, int iLoop);
+	void Manhatten(Element* p, bool bSingleRoute);
 	Element* GetConnPin();
 	unsigned int GetConnRID() const;
 	void CheckAllComplete();
@@ -611,7 +611,7 @@ public:
 
 	// Methods for component creation/destruction
 	void DestroyComponent(Component& comp);	// Destroys a component on the board
-	int  CreateComponent(int iRow, int iCol, const COMP& eType, const Component* pComp = nullptr);
+	int  CreateComponent(int iRow, int iCol, COMP eType, const Component* pComp = nullptr);
 	int  AddComponent(int iRow, int iCol, const Component& tmp, bool bDoPlace = true);
 	void AddTextBox(int iRow, int iCol);
 
@@ -625,19 +625,19 @@ public:
 
 	// GUI helpers for manipulating user-selected components
 	void SelectAllComps(bool bRestrictToRects);
-	bool ConfirmDestroyUserComps();	// returns false if user-group is empty or has only wires and markers
-	void DestroyUserComps();		// Destroy components in the user-group
-	void MoveUserCompText(const int& deltaRow, const int& deltaCol);	// Move text label
-	void StretchUserComp(const bool& bGrow);		// Stretch the selected component length
-	void StretchWidthUserComp(const bool& bGrow);	// Stretch the selected component width (just for DIPs)
-	void ChangeTypeUserComp(const COMP& eType);
-	void CopyUserComps();											// Make a blank copy of the user-group components and float them
-	bool MoveUserComps(const int& deltaRow, const int& deltaCol);	// Move user-group components, and return true if the grid was panned
-	void RotateUserComps(const bool& bCW);							// Rotate the selected components
-	void CopyComps(const std::list<int>& compIds);					// Make a blank copy of the components and float them
-	bool MoveTextBox(const int& deltaRow, const int& deltaCol);		// Move text box, and return true if the grid was panned
-	bool MoveComps(const std::list<int>& compIds, const int& deltaRow, const int& deltaCol);	// Move components and return true if the grid was panned
-	void RotateComps(const std::list<int>& compIds, const bool& bCW);	// Rotate components
+	bool ConfirmDestroyUserComps();		// returns false if user-group is empty or has only wires and markers
+	void DestroyUserComps();			// Destroy components in the user-group
+	void MoveUserCompText(int deltaRow, int deltaCol);	// Move text label
+	void StretchUserComp(bool bGrow);					// Stretch the selected component length
+	void StretchWidthUserComp(bool bGrow);				// Stretch the selected component width (just for DIPs)
+	void ChangeTypeUserComp(COMP eType);
+	void CopyUserComps();								// Make a blank copy of the user-group components and float them
+	bool MoveUserComps(int deltaRow, int deltaCol);		// Move user-group components, and return true if the grid was panned
+	void RotateUserComps(bool bCW);						// Rotate the selected components
+	void CopyComps(const std::list<int>& compIds);		// Make a blank copy of the components and float them
+	bool MoveTextBox(int deltaRow, int deltaCol);		// Move text box, and return true if the grid was panned
+	bool MoveComps(const std::list<int>& compIds, int deltaRow, int deltaCol);	// Move components and return true if the grid was panned
+	void RotateComps(const std::list<int>& compIds, bool bCW);	// Rotate components
 	Rect GetFootprintBounds(const std::list<int>& compIds) const;
 	void CustomPCBshapes();	// Allow some parts (e.g. DIPs) to be drawn differently in PCB mode
 
@@ -669,8 +669,8 @@ public:
 	CompDefiner&		GetCompDefiner()	{ return m_compDefiner; }
 	int	 GetCurrentPinId() const			{ return m_compDefiner.GetCurrentPinId(); }
 	int	 GetCurrentShapeId() const			{ return m_compDefiner.GetCurrentShapeId(); }
-	bool SetCurrentPinId(const int& i)		{ return m_compDefiner.SetCurrentPinId(i); }
-	bool SetCurrentShapeId(const int& i)	{ return m_compDefiner.SetCurrentShapeId(i); }
+	bool SetCurrentPinId(int i)				{ return m_compDefiner.SetCurrentPinId(i); }
+	bool SetCurrentShapeId(int i)			{ return m_compDefiner.SetCurrentShapeId(i); }
 
 	// Helper for flying wires
 	bool GetAllowFlyWire(Element* p) const
@@ -688,7 +688,7 @@ public:
 	// Import OrcadPCB2 netlist (exported from KiCAD)
 	bool ImportOrcad(const TemplateManager& templateMgr, const std::string& filename, std::string& errorStr);
 	bool BreakComponentIntoPads(Component& comp);
-	bool GetPinRowCol(const int& compId, const size_t& iPinIndex, int& row, int& col) const;
+	bool GetPinRowCol(int compId, size_t iPinIndex, int& row, int& col) const;
 
 	// Merge interface functions
 	virtual void UpdateMergeOffsets(MergeOffsets& o) override
@@ -820,7 +820,7 @@ public:
 		m_colorMgr.Save(outStream);		// Call Save() on color manager			// Added in VRT_VERSION_41
 	}
 private:
-	inline void UpdateMH(Element* p, const unsigned int& iRouteID, const unsigned int& iMH, unsigned int& iMaxMH)
+	inline void UpdateMH(Element* p, unsigned int iRouteID, unsigned int iMH, unsigned int& iMaxMH)
 	{
 		m_growingRoutes[static_cast<size_t>(iRouteID)] = true;
 		m_tmpVec[m_tmpVecSize++] = p;	// Add p to set of visited points

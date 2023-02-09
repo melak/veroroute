@@ -36,7 +36,7 @@ static const int	BAD_ID	= -1;
 // Quicker to use struct than a std::pair
 struct IntShape
 {
-	IntShape(const int& i, Shape s) : first(i), second(s) {}
+	IntShape(int i, const Shape& s) : first(i), second(s) {}
 	IntShape(const IntShape& o) { *this = o; }
 	IntShape& operator=(const IntShape& o)
 	{
@@ -105,13 +105,13 @@ public:
 	{
 		return m_pinLabels.size();
 	}
-	void AllocatePins(const size_t numPins)
+	void AllocatePins(size_t numPins)
 	{
 		m_pinLabels.clear();	m_pinLabels.resize(numPins, "");
 		m_pinAligns.clear();	m_pinAligns.resize(numPins, Qt::AlignHCenter);
 		SetDefaultPinLabels();
 	}
-	void ReAllocatePins(const size_t maxPinNumber)
+	void ReAllocatePins(size_t maxPinNumber)
 	{
 		// Take copy of old array values
 		std::vector<std::string>	labels;	labels.resize(GetNumPins());
@@ -157,32 +157,32 @@ public:
 	{
 		return !(*this == o);
 	}
-	bool SetCurrentPinId(const int& i)		{ const bool bChanged = ( m_currentPinId	!= i );	m_currentPinId		= i; return bChanged; }
-	bool SetCurrentShapeId(const int& i)	{ const bool bChanged = ( m_currentShapeId	!= i );	m_currentShapeId	= i; return bChanged; }
-	bool SetPinFlags(const uchar& i)		{ const bool bChanged = ( m_iPinFlags		!= i );	m_iPinFlags			= i; return bChanged; }
-	bool SetPadWidth(const int& i)			{ const bool bChanged = ( m_iPadWidth		!= i );	m_iPadWidth			= i;
+	bool SetCurrentPinId(int i)				{ const bool bChanged = ( m_currentPinId	!= i );	m_currentPinId		= i; return bChanged; }
+	bool SetCurrentShapeId(int i)			{ const bool bChanged = ( m_currentShapeId	!= i );	m_currentShapeId	= i; return bChanged; }
+	bool SetPinFlags(uchar i)				{ const bool bChanged = ( m_iPinFlags		!= i );	m_iPinFlags			= i; return bChanged; }
+	bool SetPadWidth(int i)					{ const bool bChanged = ( m_iPadWidth		!= i );	m_iPadWidth			= i;
 											  if ( bChanged && GetHoleWidth() > i-8 ) SetHoleWidth( i-8 );	// 8 ==> minimum annular ring = 4 mil
 											  return bChanged;
 											}
-	bool SetHoleWidth(const int& i)			{ const bool bChanged = ( m_iHoleWidth		!= i );	m_iHoleWidth		= i;
+	bool SetHoleWidth(int i)				{ const bool bChanged = ( m_iHoleWidth		!= i );	m_iHoleWidth		= i;
 											  if ( bChanged && GetPadWidth() < i+8 ) SetPadWidth( i+8 );	// 8 ==> minimum annular ring = 4 mil
 											  return bChanged;
 											}
-	bool SetAllowFlyWire(const bool& b)		{ const bool bChanged = ( m_bAllowFlyWire	!= b );	m_bAllowFlyWire		= b; return bChanged; }
+	bool SetAllowFlyWire(bool b)			{ const bool bChanged = ( m_bAllowFlyWire	!= b );	m_bAllowFlyWire		= b; return bChanged; }
 	bool SetValueStr(const std::string& s)	{ const bool bChanged = ( m_valueStr		!= s );	m_valueStr			= s; return bChanged; }
 	bool SetPrefixStr(const std::string& s)	{ const bool bChanged = ( m_prefixStr		!= s );	m_prefixStr			= s; return bChanged; }
 	bool SetTypeStr(const std::string& s)	{ const bool bChanged = ( m_typeStr			!= s );	m_typeStr			= s; return bChanged; }
 	bool SetImportStr(const std::string& s)	{ const bool bChanged = ( m_importStr		!= s );	m_importStr			= s; return bChanged; }
 	bool SetGrid(const PinGrid& o)			{ const bool bChanged = ( m_grid			!= o );	m_grid				= o; return bChanged; }
-	void SetPinLabel(const size_t& iPinIndex, const std::string& s)
+	void SetPinLabel(size_t iPinIndex, const std::string& s)
 	{
 		if ( iPinIndex < m_pinLabels.size() ) m_pinLabels[iPinIndex] = s;
 	}
-	void SetPinAlign(const size_t& iPinIndex, const int& i)
+	void SetPinAlign(size_t iPinIndex, int i)
 	{
 		if ( iPinIndex < m_pinAligns.size() ) m_pinAligns[iPinIndex] = i;
 	}
-	void AddShape(const int& id, const Shape& o)	{ assert( id != BAD_ID );	m_mapShapes.push_back( IntShape(id, o) ); }
+	void AddShape(int id, const Shape& o)	{ assert( id != BAD_ID );	m_mapShapes.push_back( IntShape(id, o) ); }
 	const int&				GetCurrentPinId() const		{ return m_currentPinId; }
 	const int&				GetCurrentShapeId() const	{ return m_currentShapeId; }
 	const uchar&			GetPinFlags() const			{ return m_iPinFlags; }
@@ -194,12 +194,12 @@ public:
 	const std::string&		GetTypeStr() const			{ return m_typeStr; }
 	const std::string&		GetImportStr() const		{ return m_importStr; }
 	const PinGrid&			GetGrid() const				{ return m_grid; }
-	const std::string&		GetPinLabel(const size_t& iPinIndex) const
+	const std::string&		GetPinLabel(size_t iPinIndex) const
 	{
 		static const std::string emptyStr("");
 		return ( iPinIndex < m_pinLabels.size() ) ? m_pinLabels[iPinIndex] : emptyStr;
 	}
-	const int&				GetPinAlign(const size_t& iPinIndex) const
+	const int&				GetPinAlign(size_t iPinIndex) const
 	{
 		static int defaultAlign(Qt::AlignHCenter);
 		return ( iPinIndex < m_pinAligns.size() ) ? m_pinAligns[iPinIndex] : defaultAlign;
@@ -231,7 +231,7 @@ public:
 		assert(0);
 		return m_mapShapes.begin()->second;
 	}
-	void	MoveCurrentShape(const double& dDown, const double& dRight);
+	void	MoveCurrentShape(double dDown, double dRight);
 	size_t	GetNumTruePins() const
 	{
 		size_t count(0);
@@ -251,7 +251,7 @@ public:
 		return maxPinNumber;
 	}
 	void Build(Component& comp) const;
-	bool SetPinNumber(const int& i)
+	bool SetPinNumber(int i)
 	{
 		if ( GetCurrentPinId() == BAD_ID ) return false;
 		auto& o =  GetCurrentPin();
@@ -351,15 +351,15 @@ public:
 		else
 			return SetPinFlags( GetPinFlags() & ~PIN_RECT );	// Clear bit
 	}
-	bool SetCX(const double& d)			{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetCX(d); return true; }
-	bool SetCY(const double& d)			{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetCY(d); return true; }
-	bool SetDX(const double& d)			{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetDX(d); return true; }
-	bool SetDY(const double& d)			{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetDY(d); return true; }
-	bool SetA1(const double& d)			{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetA1(d); return true; }
-	bool SetA2(const double& d)			{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetA2(d); return true; }
-	bool SetA3(const double& d)			{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetA3(d); return true; }
-	bool SetLine(const bool& b)			{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetDrawLine(b); return true; }
-	bool SetFill(const bool& b)			{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetDrawFill(b); return true; }
+	bool SetCX(double d)				{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetCX(d); return true; }
+	bool SetCY(double d)				{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetCY(d); return true; }
+	bool SetDX(double d)				{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetDX(d); return true; }
+	bool SetDY(double d)				{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetDY(d); return true; }
+	bool SetA1(double d)				{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetA1(d); return true; }
+	bool SetA2(double d)				{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetA2(d); return true; }
+	bool SetA3(double d)				{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetA3(d); return true; }
+	bool SetLine(bool b)				{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetDrawLine(b); return true; }
+	bool SetFill(bool b)				{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetDrawFill(b); return true; }
 	bool SetFillColor(const MyRGB& r)	{ if ( GetCurrentShapeId() == BAD_ID ) return false; GetCurrentShape().SetFillColor(r); return true; }
 	bool GetCanLower() const
 	{
@@ -408,10 +408,10 @@ public:
 	int  CopyShape();
 	int  DestroyShape();
 	int  GetNewShapeId() const;
-	bool SetWidth(const int& i);
-	bool SetHeight(const int& i);
-	int  GetPinId(const int& row, const int& col) const;				// Pick the most relevant pin at the location
-	int  GetShapeId(const double& dRowIn, const double& dColIn) const;	// Pick the most relevant shape at the location
+	bool SetWidth(int i);
+	bool SetHeight(int i);
+	int  GetPinId(int row, int col) const;					// Pick the most relevant pin at the location
+	int  GetShapeId(double dRowIn, double dColIn) const;	// Pick the most relevant shape at the location
 	bool GetIsValid() const;
 	// Persist functions
 	virtual void Load(DataStream& inStream) override

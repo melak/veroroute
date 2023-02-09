@@ -63,7 +63,7 @@ public:
 	{
 		return !(*this == o);
 	}
-	int AddNewRect(const int& row, const int& col)
+	int AddNewRect(int row, int col)
 	{
 		TextRect tmp(row, row+2, col, col+8);
 
@@ -75,11 +75,11 @@ public:
 		m_mapIdtoText[textId] = tmp;	// tmp is ***copied*** into the map
 		return textId;
 	}
-	void MoveRect(const int& iTextId, const int& deltaRow, const int& deltaCol)
+	void MoveRect(int iTextId, int deltaRow, int deltaCol)
 	{
 		GetTextRectById(iTextId).Move(deltaRow, deltaCol);
 	}
-	void UpdateRect(const int& iTextId, const int& row, const int& col)
+	void UpdateRect(int iTextId, int row, int col)
 	{
 		auto& rect = GetTextRectById(iTextId);
 		rect.m_rowMax = std::max(rect.m_rowMin, row);
@@ -89,13 +89,13 @@ public:
 	{
 		for (auto& mapObj : m_mapIdtoText) mapObj.second.Move(iDown, iRight);
 	}
-	const TextRect& GetTextRectById(const int& textId) const
+	const TextRect& GetTextRectById(int textId) const
 	{
 		static TextRect dummy;
 		auto iter = m_mapIdtoText.find(textId);
 		return ( iter != m_mapIdtoText.end() ) ? iter->second : dummy;
 	}
-	TextRect& GetTextRectById(const int& textId)
+	TextRect& GetTextRectById(int textId)
 	{
 		return m_mapIdtoText[textId];
 	}
@@ -103,7 +103,7 @@ public:
 	{
 		return m_mapIdtoText;
 	}
-	void DestroyRect(const int& iTextId)
+	void DestroyRect(int iTextId)
 	{
 		const auto iter = m_mapIdtoText.find(iTextId);
 		if ( iter != m_mapIdtoText.end() )
@@ -164,7 +164,7 @@ public:
 		}
 	}
 private:
-	bool GetTextRectExists(const int& textId) const
+	bool GetTextRectExists(int textId) const
 	{
 		return m_mapIdtoText.find(textId) != m_mapIdtoText.end();
 	}

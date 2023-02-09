@@ -53,8 +53,8 @@ class Curve : public std::list<QPoint>	// A curve drawn in a fixed size pen
 {
 public:
 	Curve() {}
-	Curve(const QPoint& p, const GPEN& ePen, const int& width = 0);
-	Curve(const QPolygon& polygon, const GPEN& ePen, const int& width = 0);
+	Curve(const QPoint& p, GPEN ePen, int width = 0);
+	Curve(const QPolygon& polygon, GPEN ePen, int width = 0);
 	~Curve() { clear(); }
 	void Compress();		// Removes redundant points
 	bool Splice(Curve* pB);	// Tries to splice curve B to this

@@ -151,7 +151,7 @@ bool MainWindow::GetHaveFloatingPin(int& iFloatingNodeId)
 	return false;
 }
 
-void MainWindow::MousePressEvent(const QPoint& pos, const bool& bLeftClick, const bool& bRightClick)
+void MainWindow::MousePressEvent(const QPoint& pos, bool bLeftClick, bool bRightClick)
 {
 	SetMouseActionString("");
 

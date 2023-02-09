@@ -19,12 +19,12 @@
 
 #include "CurveList.h"
 
-Curve::Curve(const QPoint& p, const GPEN& ePen, const int& width) : m_ePen(ePen), m_width(width)
+Curve::Curve(const QPoint& p, GPEN ePen, int width) : m_ePen(ePen), m_width(width)
 {
 	push_back(p);
 }
 
-Curve::Curve(const QPolygon& polygon, const GPEN& ePen, const int& width) : m_ePen(ePen), m_width(width)
+Curve::Curve(const QPolygon& polygon, GPEN ePen, int width) : m_ePen(ePen), m_width(width)
 {
 	for (const auto& p : polygon) push_back(p);
 	// DO NOT COMPRESS BY DEFAULT.  That's only OK for open line segments

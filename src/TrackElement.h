@@ -44,10 +44,10 @@ Q_DECL_CONSTEXPR static inline int	Opposite(int NBR)	// Helper to get opposite n
 }
 
 // Functions for mapping NBR indices to "code bits" and manipulating them
-Q_DECL_CONSTEXPR static inline bool ReadCodeBit(const int& NBR, const int& iCode)	{ return ( iCode & (1<<NBR) ) != 0; }
-static inline void SetCodeBit(const int& NBR, int& iCode)		{ iCode |=  (1<<NBR); }
-static inline void ClearCodeBit(const int& NBR, int& iCode)		{ iCode &= ~(1<<NBR); }
-static inline void ToggleCodeBit(const int& NBR, int& iCode)	{ iCode ^=  (1<<NBR); }
+Q_DECL_CONSTEXPR static inline bool ReadCodeBit(int NBR, int iCode)	{ return ( iCode & (1<<NBR) ) != 0; }
+static inline void SetCodeBit(int NBR, int& iCode)		{ iCode |=  (1<<NBR); }
+static inline void ClearCodeBit(int NBR, int& iCode)	{ iCode &= ~(1<<NBR); }
+static inline void ToggleCodeBit(int NBR, int& iCode)	{ iCode ^=  (1<<NBR); }
 static const int CODEBITS_DIAGS	= 0xAA;		// All diagonal neighbours in same layer
 static const int CODEBITS_LYR	= 0xFF;		// All neighbours in same layer
 static const int CODEBITS_ALL	= 0x1FF;	// All neighbours in same layer + the neighbour in the layer above/below
@@ -89,28 +89,28 @@ public:
 	{
 		return !(*this == o);
 	}
-	void SetNodeId(const int& i)	{ m_nodeId	= i; }
-	void SetCode(const int& i)		{ m_iCode	= i; }
-	void SetFlag(const char& i)		{ m_flag	= i; }
+	void SetNodeId(int i)			{ m_nodeId	= i; }
+	void SetCode(int i)				{ m_iCode	= i; }
+	void SetFlag(char i)			{ m_flag	= i; }
 
 	const int&	GetNodeId() const	{ return m_nodeId; }
 	const int&	GetCode() const		{ return m_iCode; }
 	const char&	GetFlag() const		{ return m_flag; }
 
 	// Connectivity helpers
-	void SetUsed(const int& iNbr, const bool& b)
+	void SetUsed(int iNbr, bool b)
 	{
 		if ( b ) SetCodeBit(iNbr, m_iCode); else ClearCodeBit(iNbr, m_iCode);
 	}
-	bool GetUsed(const int& iNbr) const
+	bool GetUsed(int iNbr) const
 	{
 		return ReadCodeBit(iNbr, m_iCode);
 	}
-	bool IsClash(const int& nodeId) const
+	bool IsClash(int nodeId) const
 	{
 		return nodeId != BAD_NODEID && m_nodeId != BAD_NODEID && nodeId != m_nodeId;
 	}
-	int GetPerimeterCode(const bool& bDiagsOK, const bool& bMinDiags)	const // Helper for the GUI "blobs"
+	int GetPerimeterCode(bool bDiagsOK, bool bMinDiags)	const // Helper for the GUI "blobs"
 	{
 		int iCode = GetCode() & CODEBITS_LYR;	// Take a copy of the connection code, and restrict to same-layer neighbours
 
@@ -125,9 +125,9 @@ public:
 	}
 
 	// Flag Helpers
-	bool ReadFlagBits(const char& i) const	{ return ( m_flag & i ) != 0; }
-	void MarkFlagBits(const char& i)		{ m_flag |=  i; }
-	void WipeFlagBits(const char& i)		{ m_flag &= ~i; }
+	bool ReadFlagBits(char i) const	{ return ( m_flag & i ) != 0; }
+	void MarkFlagBits(char i)		{ m_flag |=  i; }
+	void WipeFlagBits(char i)		{ m_flag &= ~i; }
 
 	// Merge interface functions
 	virtual void UpdateMergeOffsets(MergeOffsets& o) override

@@ -34,8 +34,8 @@ public:
 		for (auto& pNodeInfo : m_list) delete pNodeInfo;
 		m_list.clear();
 	}
-	size_t		GetSize() const	{ return m_list.size(); }
-	NodeInfo*	GetAt(size_t i)	{ return m_list[i]; }
+	size_t		GetSize() const		{ return m_list.size(); }
+	NodeInfo*	GetAt(size_t i)		{ return m_list[i]; }
 	void AddComp(const Component& comp)	// Call this after creating a comp, or calling comp.SetNodeId()
 	{
 		if ( !comp.GetIsTrueComp() ) return;

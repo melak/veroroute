@@ -58,7 +58,7 @@ public:
 		if ( m_G != o.m_G ) return m_G < o.m_G;
 		return m_B < o.m_B;
 	}
-	bool SetRGB(const int& R, const int& G, const int& B)
+	bool SetRGB(int R, int G, int B)
 	{
 		const bool bChanged = (m_R != R || m_G != G || m_B != B);
 		m_R = R; m_G = G; m_B = B;

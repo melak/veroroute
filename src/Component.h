@@ -73,7 +73,7 @@ public:
 
 		definer.Build(*this);		// Use component definer to make the footprint and shapes
 	}
-	Component(CompManager* pCompMgr, const RectManager& rectMgr, const ElementGrid& grid, const int& nLyr, const int& nRowMin, const int& nRowMax, const int& nColMin, const int& nColMax)
+	Component(CompManager* pCompMgr, const RectManager& rectMgr, const ElementGrid& grid, int nLyr, int nRowMin, int nRowMax, int nColMin, int nColMax)
 	{
 		Clear();
 
@@ -86,7 +86,7 @@ public:
 		m_col = nColMin;
 		m_bIsPlaced = false;	// Trax are always created from the board
 	}
-	Component(const std::string& name, const std::string& value, const COMP& eType, std::vector<int>& nodeIdPins)
+	Component(const std::string& name, const std::string& value, COMP eType, std::vector<int>& nodeIdPins)
 	{
 		Clear();
 
@@ -204,17 +204,17 @@ public:
 	}
 	bool operator<(const Component& o) const	{ return m_id < o.m_id; }
 	bool operator==(const Component& o) const	{ return m_id == o.m_id; }
-	void SetId(const int& i)					{ m_id = i; }
+	void SetId(int i)							{ m_id = i; }
 	void SetNameStr(const std::string& s)		{ m_nameStr = s; }
 	void SetValueStr(const std::string& s)		{ m_valueStr = s; }
 	void SetPrefixStr(const std::string& s)		{ m_prefixStr = s; }
 	void SetTypeStr(const std::string& s)		{ m_typeStr = s; }
 	void SetImportStr(const std::string& s)		{ m_importStr = s; }
-	void SetNodeId(const size_t& iPinIndex, const int& i)
+	void SetNodeId(size_t iPinIndex, int i)
 	{
 		if ( iPinIndex < m_nodeIdPins.size() ) m_nodeIdPins[iPinIndex] = i;
 	}
-	void SetOrigId(const int& lyr, const size_t& iPinIndex, const int& i)
+	void SetOrigId(int lyr, size_t iPinIndex, int i)
 	{
 		assert( lyr == 0 || lyr == 1 );
 		if ( lyr == 0 )
@@ -226,27 +226,27 @@ public:
 			if ( iPinIndex < m_origIdPins2.size() ) m_origIdPins2[iPinIndex] = i;
 		}
 	}
-	void SetLayerPref(const size_t& iPinIndex, const uchar& iPref)
+	void SetLayerPref(size_t iPinIndex, uchar iPref)
 	{
 		if ( iPinIndex < m_layerPrefs.size() ) m_layerPrefs[iPinIndex] = iPref;
 	}
-	void SetPinOffsetRow(const size_t& iPinIndex, const int& i)
+	void SetPinOffsetRow(size_t iPinIndex, int i)
 	{
 		if ( iPinIndex < m_pinOffsetRow.size() ) m_pinOffsetRow[iPinIndex] = std::max(-MAX_PAD_OFFSET_MIL, std::min(MAX_PAD_OFFSET_MIL, i));
 	}
-	void SetPinOffsetCol(const size_t& iPinIndex, const int& i)
+	void SetPinOffsetCol(size_t iPinIndex, int i)
 	{
 		if ( iPinIndex < m_pinOffsetCol.size() ) m_pinOffsetCol[iPinIndex] = std::max(-MAX_PAD_OFFSET_MIL, std::min(MAX_PAD_OFFSET_MIL, i));
 	}
-	void SetPinLabel(const size_t& iPinIndex, const std::string& s)
+	void SetPinLabel(size_t iPinIndex, const std::string& s)
 	{
 		if ( iPinIndex < m_pinLabels.size() ) m_pinLabels[iPinIndex] = s;
 	}
-	void SetPinAlign(const size_t& iPinIndex, const int& i)
+	void SetPinAlign(size_t iPinIndex, int i)
 	{
 		if ( iPinIndex < m_pinAligns.size() ) m_pinAligns[iPinIndex] = i;
 	}
-	void SetShape(const size_t& iShapeIndex, const Shape& o)
+	void SetShape(size_t iShapeIndex, const Shape& o)
 	{
 		if ( iShapeIndex < m_shapes.size() ) m_shapes[iShapeIndex] = o;
 	}
@@ -262,7 +262,7 @@ public:
 		AllocateShapes( o.GetNumShapes() );
 		std::copy(o.m_shapes.begin(), o.m_shapes.end(), m_shapes.begin());
 	}
-	void AllocatePins(const size_t numPins)
+	void AllocatePins(size_t numPins)
 	{
 		m_nodeIdPins.clear();	m_nodeIdPins.resize(numPins, BAD_NODEID);
 		m_origIdPins1.clear();	m_origIdPins1.resize(numPins, BAD_NODEID);
@@ -274,22 +274,22 @@ public:
 		m_pinAligns.clear();	m_pinAligns.resize(numPins, Qt::AlignHCenter);
 		SetDefaultPinLabels();
 	}
-	void AllocateShapes(const size_t numShapes)
+	void AllocateShapes(size_t numShapes)
 	{
 		m_shapes.clear();	m_shapes.resize(numShapes, Shape());
 	}
-	void SetLyr(const int& i)					{ m_lyr = i; }
-	void SetRow(const int& i)					{ m_row = i; }
-	void SetCol(const int& i)					{ m_col = i; }
-//	void SetLabelOffsetRow(const int& i)		{ m_iLabelOffsetRow = i; }
-//	void SetLabelOffsetCol(const int& i)		{ m_iLabelOffsetCol = i; }
-	void SetDirection(const char& d)			{ m_direction = d; }
-	void SetIsPlaced(const bool& b)				{ m_bIsPlaced = b; }
-	void SetPinFlags(const uchar& i)			{ m_iPinFlags = i; }
-	void SetPadWidth(const int& i)				{ m_iPadWidth = i; }
-	void SetHoleWidth(const int& i)				{ m_iHoleWidth = i; }
-	void SetAllowFlyWire(const bool& b)			{ m_bAllowFlyWire = b; }
-	void AddOne(const Shape& s)					{ m_shapes.push_back(s); }
+	void SetLyr(int i)				{ m_lyr = i; }
+	void SetRow(int i)				{ m_row = i; }
+	void SetCol(int i)				{ m_col = i; }
+//	void SetLabelOffsetRow(int i)	{ m_iLabelOffsetRow = i; }
+//	void SetLabelOffsetCol(int i)	{ m_iLabelOffsetCol = i; }
+	void SetDirection(char d)		{ m_direction = d; }
+	void SetIsPlaced(bool b)		{ m_bIsPlaced = b; }
+	void SetPinFlags(uchar i)		{ m_iPinFlags = i; }
+	void SetPadWidth(int i)			{ m_iPadWidth = i; }
+	void SetHoleWidth(int i)		{ m_iHoleWidth = i; }
+	void SetAllowFlyWire(bool b)	{ m_bAllowFlyWire = b; }
+	void AddOne(const Shape& s)		{ m_shapes.push_back(s); }
 	void AddTwo(const Shape& s)	// Adds the shape twice.  Once with fill only, and once with line only
 	{
 		Shape tmp(s);
@@ -305,12 +305,12 @@ public:
 	const std::string&	GetImportStr() const	{ return m_importStr; }
 	size_t				GetNumPins() const		{ return m_nodeIdPins.size(); }
 	size_t				GetNumShapes() const	{ return m_shapes.size(); }
-	const int&			GetNodeId(const size_t& iPinIndex) const
+	const int&			GetNodeId(size_t iPinIndex) const
 	{
 		static int badNodeId(BAD_NODEID);
 		return ( iPinIndex < m_nodeIdPins.size() ) ? m_nodeIdPins[iPinIndex] : badNodeId;
 	}
-	const int&			GetOrigId(const int& lyr, const size_t& iPinIndex) const
+	const int&			GetOrigId(int lyr, size_t iPinIndex) const
 	{
 		static int badNodeId(BAD_NODEID);
 		if ( lyr == 0 )
@@ -318,32 +318,32 @@ public:
 		else
 			return ( iPinIndex < m_origIdPins2.size() ) ? m_origIdPins2[iPinIndex] : badNodeId;
 	}
-	const uchar&		GetLayerPref(const size_t& iPinIndex) const
+	const uchar&		GetLayerPref(size_t iPinIndex) const
 	{
 		static uchar noPref(LAYER_X);
 		return ( iPinIndex < m_layerPrefs.size() ) ? m_layerPrefs[iPinIndex] : noPref;
 	}
-	const int&			GetPinOffsetRow(const size_t& iPinIndex) const
+	const int&			GetPinOffsetRow(size_t iPinIndex) const
 	{
 		static int defaultOffset(0);
 		return ( iPinIndex < m_pinOffsetRow.size() ) ? m_pinOffsetRow[iPinIndex] : defaultOffset;
 	}
-	const int&			GetPinOffsetCol(const size_t& iPinIndex) const
+	const int&			GetPinOffsetCol(size_t iPinIndex) const
 	{
 		static int defaultOffset(0);
 		return ( iPinIndex < m_pinOffsetCol.size() ) ? m_pinOffsetCol[iPinIndex] : defaultOffset;
 	}
-	const std::string&	GetPinLabel(const size_t& iPinIndex) const
+	const std::string&	GetPinLabel(size_t iPinIndex) const
 	{
 		static const std::string emptyStr("");
 		return ( iPinIndex < m_pinLabels.size() ) ? m_pinLabels[iPinIndex] : emptyStr;
 	}
-	const int&			GetPinAlign(const size_t& iPinIndex) const
+	const int&			GetPinAlign(size_t iPinIndex) const
 	{
 		static int defaultAlign(Qt::AlignHCenter);
 		return ( iPinIndex < m_pinAligns.size() ) ? m_pinAligns[iPinIndex] : defaultAlign;
 	}
-	const Shape&		GetShape(const size_t& iShapeIndex) const
+	const Shape&		GetShape(size_t iShapeIndex) const
 	{
 		static Shape	defaultShape;
 		return ( iShapeIndex < m_shapes.size() ) ? m_shapes[iShapeIndex] : defaultShape;
@@ -363,14 +363,14 @@ public:
 
 	// Helpers for labels
 	void SetDefaultLabelOffsets();
-	void GetLabelOffsets(int& offsetRow, int& offsetCol) const;			// w.r.t. screen, not comp rotation
-	void MoveLabelOffsets(const int& deltaRow, const int& deltaCol);	// w.r.t. screen, not comp rotation
+	void GetLabelOffsets(int& offsetRow, int& offsetCol) const;	// w.r.t. screen, not comp rotation
+	void MoveLabelOffsets(int deltaRow, int deltaCol);			// w.r.t. screen, not comp rotation
 	void HandleLegacyLabelOffsets();	// For old VRT files
 
 	// Helpers for custom pads
-	void SetCustomPads(const bool& b)	{ if ( b )	SetPinFlags( m_iPinFlags |  PIN_CUSTOM );
-										  else		SetPinFlags( m_iPinFlags & ~PIN_CUSTOM ); }
-	bool GetCustomPads() const			{ return ( GetPinFlags() & PIN_CUSTOM ) != 0; }
+	void SetCustomPads(bool b)	{ if ( b )	SetPinFlags( m_iPinFlags |  PIN_CUSTOM );
+								  else		SetPinFlags( m_iPinFlags & ~PIN_CUSTOM ); }
+	bool GetCustomPads() const	{ return ( GetPinFlags() & PIN_CUSTOM ) != 0; }
 
 	void GetSafeBounds(double& L, double& R, double& T, double& B, bool bFill = true) const
 	{
@@ -419,7 +419,7 @@ public:
 	const int&	GetCompCols() const	{ return GetCols( GetDirection() ); }
 	int			GetLastRow() const	{ return GetRow() + GetCompRows() - 1; }
 	int			GetLastCol() const	{ return GetCol() + GetCompCols() - 1; }
-	void GetCompPinOffsets(const size_t& iPinIndex, int& Xmil, int& Ymil) const
+	void GetCompPinOffsets(size_t iPinIndex, int& Xmil, int& Ymil) const
 	{
 		switch ( GetDirection() )
 		{
@@ -429,7 +429,7 @@ public:
 			default:	Xmil =  GetPinOffsetCol(iPinIndex);	Ymil =  GetPinOffsetRow(iPinIndex); return;
 		}
 	}
-	void SetCompPinOffsets(const size_t& iPinIndex, const int& Xmil, const int& Ymil)
+	void SetCompPinOffsets(size_t iPinIndex, int Xmil, int Ymil)
 	{
 		switch ( GetDirection() )
 		{
@@ -439,7 +439,7 @@ public:
 			default:	SetPinOffsetCol(iPinIndex,  Xmil);	SetPinOffsetRow(iPinIndex,  Ymil); return;
 		}
 	}
-	void IncCompPinOffsets(const size_t& iPinIndex, const int& dX, const int& dY)
+	void IncCompPinOffsets(size_t iPinIndex, int dX, int dY)
 	{
 		if ( dX == 0 && dY == 0 )
 			return SetCompPinOffsets(iPinIndex, 0, 0);	// Reset
@@ -470,7 +470,7 @@ public:
 		}
 		Xmil = Ymil = 0;	// Default to 0 offsets
 	}
-	const CompElement*	GetCompElement(const int& compRow, const int& compCol) const
+	const CompElement*	GetCompElement(int compRow, int compCol) const
 	{
 		return FootPrint::Get(0, compRow, compCol, GetDirection());
 	}
@@ -479,7 +479,7 @@ public:
 		for (const auto& i : m_nodeIdPins) if ( i == nodeId ) return true;
 		return false;
 	}
-	void Rotate(const bool& bClockWise)
+	void Rotate(bool bClockWise)
 	{
 		switch( GetDirection() )	// Component direction: 'W','E','N','S'
 		{
@@ -508,7 +508,7 @@ public:
 			default:			return GetNumPins() > 0;
 		}
 	}
-	bool CanStretch(const bool& bGrow) const
+	bool CanStretch(bool bGrow) const
 	{
 		if ( !FootPrint::CanStretch(bGrow) ) return false;
 		switch( GetType() )
@@ -524,7 +524,7 @@ public:
 			default:					return true;
 		}
 	}
-	void Stretch(const bool& bGrow, const bool& bUsePCBshapes = false)
+	void Stretch(bool bGrow, bool bUsePCBshapes = false)
 	{
 		FootPrint::Stretch(bGrow);
 		SetDefaultShapes(bUsePCBshapes);	// Rebuild the shapes list
@@ -542,7 +542,7 @@ public:
 			default:					return;
 		}
 	}
-	void StretchWidth(const bool& bGrow, const bool& bUsePCBshapes = false)
+	void StretchWidth(bool bGrow, bool bUsePCBshapes = false)
 	{
 		FootPrint::StretchWidth(bGrow);
 		SetDefaultShapes(bUsePCBshapes);	// Rebuild the shapes list
@@ -630,7 +630,7 @@ public:
 		if ( GetImportStr().empty() || bForce || GetType() != COMP::CUSTOM )
 			SetImportStr( CompTypes::GetDefaultImportStr( GetType() ) );
 	}
-	void SetDefaultShapes(const bool& bUsePCBshapes = false);
+	void SetDefaultShapes(bool bUsePCBshapes = false);
 	void SetDefaultColor();
 	// Persist interface functions
 	virtual void Load(DataStream& inStream) override
@@ -773,6 +773,6 @@ private:
 	int							m_col;				// Board col for top-left element of footprint
 	int							m_iLabelOffsetRow;	// Label offset in units of 1/16 of a grid square
 	int							m_iLabelOffsetCol;	// Label offset in units of 1/16 of a grid square
-	char						m_direction;		// Component orienation:  'W', 'E', 'N', 'S'
+	char						m_direction;		// Component orientation:  'W', 'E', 'N', 'S'
 	bool						m_bIsPlaced;		// true ==> placed on board,  false ==> floating
 };

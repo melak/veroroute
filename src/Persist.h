@@ -60,15 +60,15 @@ struct DataStream
 	void Load(std::string& o)			{ QString	t;	m_ios >> t; o = t.toStdString();}
 	void Load(QString& o)				{				m_ios >> o; }
 
-	void Save(const bool& o)			{ m_ios << o; }
-	void Save(const char& o)			{ m_ios << static_cast<qint8>	(o); }
-	void Save(const unsigned char& o)	{ m_ios << static_cast<quint8>	(o); }
-	void Save(const short& o)			{ m_ios << static_cast<qint16>	(o); }
-	void Save(const unsigned short& o)	{ m_ios << static_cast<quint16>	(o); }
-	void Save(const int& o)				{ m_ios << static_cast<qint32>	(o); }
-	void Save(const unsigned int& o)	{ m_ios << static_cast<quint32>	(o); }
-	void Save(const float& o)			{ m_ios << o; }
-	void Save(const double& o)			{ m_ios << o; }
+	void Save(bool o)					{ m_ios << o; }
+	void Save(char o)					{ m_ios << static_cast<qint8>	(o); }
+	void Save(unsigned char o)			{ m_ios << static_cast<quint8>	(o); }
+	void Save(short o)					{ m_ios << static_cast<qint16>	(o); }
+	void Save(unsigned short o)			{ m_ios << static_cast<quint16>	(o); }
+	void Save(int o)					{ m_ios << static_cast<qint32>	(o); }
+	void Save(unsigned int o)			{ m_ios << static_cast<quint32>	(o); }
+	void Save(float o)					{ m_ios << o; }
+	void Save(double o)					{ m_ios << o; }
 	void Save(const std::string& o)		{ m_ios << QString::fromStdString(o); }
 	void Save(const QString& o)			{ m_ios << o; }
 

@@ -49,7 +49,7 @@ void GStream::Close()
 	if ( m_file.isOpen() )
 		m_file.close();
 }
-bool GStream::Open(const QString& fileName, const GFILE& eType, const bool& bMetric, const Board& board, const bool& bVias, const bool& bConfirmEachFile)
+bool GStream::Open(const QString& fileName, GFILE eType, bool bMetric, const Board& board, bool bVias, bool bConfirmEachFile)
 {
 	Clear();
 	m_eType		= eType;
@@ -321,7 +321,7 @@ bool GStream::GetOK() const
 		default:		 return m_pBoard->GetCurrentLayer() == 0 && m_eType == GFILE::DRL;
 	}
 }
-void GStream::SetPolarity(const GPOLARITY& ePolarity, bool bCheckOK)
+void GStream::SetPolarity(GPOLARITY ePolarity, bool bCheckOK)
 {
 	if ( !m_file.isOpen() || m_ePolarity == ePolarity || m_eType == GFILE::DRL ) return;
 	if ( bCheckOK && !GetOK() ) return;
@@ -340,28 +340,28 @@ void GStream::Drill(const QPoint& p)
 	m_os << "Y";  WriteDrillOrdinate( p.y() );
 	QtEndline();;
 }
-void GStream::AddPad(const QPointF& pF, const GPEN& ePen, const int& w)		// Add to m_pads buffer for later writing to file
+void GStream::AddPad(const QPointF& pF, GPEN ePen, int w)	// Add to m_pads buffer for later writing to file
 {
 	if ( !GetOK() ) return;
 	QPoint p;
 	GetQPoint(pF, p);
 	m_pads.push_back( new Curve(p, ePen, w) );
 }
-void GStream::AddViaPad(const QPointF& pF, const GPEN& ePen)	// Add to m_viapads buffer for later writing to file
+void GStream::AddViaPad(const QPointF& pF, GPEN ePen)	// Add to m_viapads buffer for later writing to file
 {
 	if ( !GetOK() ) return;
 	QPoint p;
 	GetQPoint(pF, p);
 	m_viapads.push_back( new Curve(p, ePen) );
 }
-void GStream::AddTrack(const QPolygonF& pF, const GPEN& ePen)	// Add to m_tracks buffer for later writing to file
+void GStream::AddTrack(const QPolygonF& pF, GPEN ePen)	// Add to m_tracks buffer for later writing to file
 {
 	if ( !GetOK() ) return;
 	QPolygon p;
 	GetQPolygon(pF, p);
 	m_tracks.push_back( new Curve(p, ePen) );
 }
-void GStream::AddVariTrack(const QPolygonF& pF, const GPEN& ePenHV, const GPEN& ePen)	// Add to m_tracks buffer for later writing to file
+void GStream::AddVariTrack(const QPolygonF& pF, GPEN ePenHV, GPEN ePen)	// Add to m_tracks buffer for later writing to file
 {
 	if ( !GetOK() ) return;
 	QPolygon p;
@@ -378,7 +378,7 @@ void GStream::AddVariTrack(const QPolygonF& pF, const GPEN& ePenHV, const GPEN& 
 		m_tracks.push_back( new Curve(temp, bHV ? ePenHV : ePen) );
 	}
 }
-void GStream::AddLoop(const QPolygonF& pF, const GPEN& ePen)	// Add to m_loops buffer for later writing to file
+void GStream::AddLoop(const QPolygonF& pF, GPEN ePen)	// Add to m_loops buffer for later writing to file
 {
 	if ( !GetOK() ) return;
 	assert( pF.size() >= 3 );
@@ -396,7 +396,7 @@ void GStream::AddRegion(const QPolygonF& pF)	// Add to m_regions buffer for late
 	GetQPolygon(pF, p);
 	m_regions.push_back( new Curve(p, GPEN::NONE) );
 }
-void GStream::AddHole(const QPointF& pF, const GPEN& ePen, const int& w)	// Add to m_holes buffer for later writing to file
+void GStream::AddHole(const QPointF& pF, GPEN ePen, int w)	// Add to m_holes buffer for later writing to file
 {
 	if ( !GetOK() ) return;
 	QPoint p;
@@ -453,7 +453,7 @@ void GStream::OutLine(const Curve& curve, bool bForceClose)	// Outline of a curv
 		Draw(*iter);	// Draw line to next point in curve
 	if ( bForceClose && front != curve.back() ) Draw( front );
 }
-void GStream::SetPen(const GPEN& ePen, const int& w)
+void GStream::SetPen(GPEN ePen, int w)
 {
 	if ( !m_file.isOpen() ) return;
 	assert( m_pBoard );
@@ -519,7 +519,7 @@ void GStream::Line(const QPoint& pA, const QPoint& pB)
 	Move(pA);
 	Draw(pB);
 }
-void GStream::WriteXY(const QPoint& p,  const bool& bFullLine)
+void GStream::WriteXY(const QPoint& p, bool bFullLine)
 {
 	// p has deciMil units (since GRIDPIXELS == 1000 for Gerber Export)
 	if ( !m_file.isOpen() ) return;
@@ -530,7 +530,7 @@ void GStream::WriteXY(const QPoint& p,  const bool& bFullLine)
 	m_iLastX = p.x();
 	m_iLastY = p.y();
 }
-void GStream::WriteDrillOrdinate(const int& iDeciMils)
+void GStream::WriteDrillOrdinate(int iDeciMils)
 {
 	if ( !m_file.isOpen() || m_eType != GFILE::DRL ) return;
 	m_os << ( iDeciMils >= 0 ? "+" : "-" );	// Write sign
@@ -561,7 +561,7 @@ void GStream::WriteDrillOrdinate(const int& iDeciMils)
 		m_os << iAbs;
 	}
 }
-QString GStream::MilToInch(const int& iMil, const bool& bLZ) const	// Get inches in format AA.BBBB (for defining drills and apertures)
+QString GStream::MilToInch(int iMil, bool bLZ) const	// Get inches in format AA.BBBB (for defining drills and apertures)
 {
 	QString str;
 	const int i		 = iMil * 10;				// deciMil
@@ -576,7 +576,7 @@ QString GStream::MilToInch(const int& iMil, const bool& bLZ) const	// Get inches
 	str += QString::fromStdString( std::to_string(remain) );
 	return str;
 }
-QString GStream::MilToMM(const int& iMil, const bool& bLZ) const	// Get mm in format AAAA.BBBBBB (for defining drills and apertures)
+QString GStream::MilToMM(int iMil, bool bLZ) const	// Get mm in format AAAA.BBBBBB (for defining drills and apertures)
 {
 	QString str;
 	const int i		 = iMil * 25400;			// nanometres
@@ -610,7 +610,7 @@ void GStream::GetQPolygon(const QPolygonF& in, QPolygon& out) const
 }
 
 // Wrapper for handling a set of Gerber files
-bool GWriter::Open(const QString& fileName, const Board& board, const bool& bVias, const bool& bTwoLayerGerber, const bool& bMetric, const bool& bConfirmEachFile)
+bool GWriter::Open(const QString& fileName, const Board& board, bool bVias, bool bTwoLayerGerber, bool bMetric, bool bConfirmEachFile)
 {
 	QDateTime	local(QDateTime::currentDateTime());
 	QString		UTC = local.toTimeSpec(Qt::UTC).toString(Qt::ISODate);
@@ -649,7 +649,7 @@ void GWriter::Close()	// Write footers, and close all file streams
 		m_os[i].Close();
 	}
 }
-GStream& GWriter::GetStream(const GFILE& eType)
+GStream& GWriter::GetStream(GFILE eType)
 {
 	return m_os[static_cast<size_t>(eType)];
 }

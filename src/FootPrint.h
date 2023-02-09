@@ -47,12 +47,12 @@ public:
 		return !(*this == o);
 	}
 	virtual ~FootPrint() override {}
-	void SetType(const COMP& type)	{ m_type = type; }
-	const COMP& GetType() const		{ return m_type; }
-	void BuildDefault(const COMP& type);
+	void SetType(COMP type)		{ m_type = type; }
+	const COMP& GetType() const	{ return m_type; }
+	void BuildDefault(COMP type);
 	void BuildTrax(CompManager* pCompMgr, const RectManager& rectMgr, const ElementGrid& o,
-				   const int& nLyr, const int& nRowMin, const int& nRowMax, const int& nColMin, const int& nColMax);
-	bool CanStretch(const bool& bGrow) const
+				   int nLyr, int nRowMin, int nRowMax, int nColMin, int nColMax);
+	bool CanStretch(bool bGrow) const
 	{
 		switch( m_type )
 		{
@@ -77,7 +77,7 @@ public:
 			default:					return false;
 		}
 	}
-	bool CanStretchWidth(const bool& bGrow) const
+	bool CanStretchWidth(bool bGrow) const
 	{
 		const int& width = GetRows();
 		switch( m_type )
@@ -86,7 +86,7 @@ public:
 			default:		return false;
 		}
 	}
-	void Stretch(const bool& bGrow)
+	void Stretch(bool bGrow)
 	{
 		assert( CanStretch(bGrow) );	// Sanity check.  We should have already checked that we can stretch
 		const bool	bPlug = CompTypes::IsPlug(m_type);
@@ -195,7 +195,7 @@ public:
 			default:	assert(0);	// Unhandled m_type
 		}
 	}
-	void StretchWidth(const bool& bGrow)
+	void StretchWidth(bool bGrow)
 	{
 		assert( CanStretchWidth(bGrow) );	// Sanity check.  We should have already checked that we can stretch the width
 

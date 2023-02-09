@@ -107,7 +107,7 @@ enum class COMP {	INVALID					=   -1,
 
 struct CompTypes
 {
-	static void UpdateMaps(const COMP& eType, const std::string& typeStr, const std::string& importStr)
+	static void UpdateMaps(COMP eType, const std::string& typeStr, const std::string& importStr)
 	{
 		sm_mapCompTypeToTypeStr[eType]		= typeStr;
 		sm_mapCompTypeToImportStr[eType]	= importStr;
@@ -205,21 +205,21 @@ struct CompTypes
 			if ( mapObj.second == str ) return mapObj.first;
 		return COMP::INVALID;
 	}
-	static std::string GetDefaultImportStr(const COMP& eType)
+	static std::string GetDefaultImportStr(COMP eType)
 	{
 		InitMapsCompTypeToStr();
 		const auto iter = sm_mapCompTypeToImportStr.find(eType);
 		if ( iter != sm_mapCompTypeToImportStr.end() ) return iter->second;
 		return "INVALID";
 	}
-	static std::string GetDefaultTypeStr(const COMP& eType)
+	static std::string GetDefaultTypeStr(COMP eType)
 	{
 		InitMapsCompTypeToStr();
 		const auto iter = sm_mapCompTypeToTypeStr.find(eType);
 		if ( iter != sm_mapCompTypeToTypeStr.end() ) return iter->second;
 		return "INVALID";
 	}
-	static int GetListOrder(const COMP& eType)	// For dialogs/menus.  Lower number ==> higher up list
+	static int GetListOrder(COMP eType)	// For dialogs/menus.  Lower number ==> higher up list
 	{
 		switch( eType )
 		{
@@ -300,7 +300,7 @@ struct CompTypes
 			default:						return 1000;	// Unhandled eType
 		}
 	}
-	static bool IsPlug(const COMP& type)	// true ==> Can plug gap between rows of IC pins
+	static bool IsPlug(COMP type)	// true ==> Can plug gap between rows of IC pins
 	{
 		switch( type )
 		{
@@ -314,7 +314,7 @@ struct CompTypes
 			default:				return false;
 		}
 	}
-	static std::string GetFamilyStr(const COMP& eType)	// For grouping in the templates
+	static std::string GetFamilyStr(COMP eType)	// For grouping in the templates
 	{
 		switch( eType )
 		{
@@ -376,7 +376,7 @@ struct CompTypes
 			default:						return "";
 		}
 	}
-	static std::string GetDefaultPrefixStr(const COMP& eType)	// Prefix for name on creation
+	static std::string GetDefaultPrefixStr(COMP eType)	// Prefix for name on creation
 	{
 		switch( eType )
 		{
@@ -458,7 +458,7 @@ struct CompTypes
 			default:						return "INVALID";	// Unhandled eType
 		}
 	}
-	static bool AllowCustomPCBshapes(const COMP& eType)
+	static bool AllowCustomPCBshapes(COMP eType)
 	{
 		switch(eType)
 		{
@@ -472,7 +472,7 @@ struct CompTypes
 			default:					return false;
 		}
 	}
-	static bool AllowTypeChange(const COMP& eTypeA, const COMP& eTypeB)
+	static bool AllowTypeChange(COMP eTypeA, COMP eTypeB)
 	{
 		const std::string prefixA = GetDefaultPrefixStr(eTypeA);
 		const std::string prefixB = GetDefaultPrefixStr(eTypeB);
@@ -484,7 +484,7 @@ struct CompTypes
 		if ( prefixA == std::string("Strip") )	return true;
 		return false;
 	}
-	static int GetPinSeparation(const COMP& eType)	// To handle change of component type for LEDs and electro-caps.
+	static int GetPinSeparation(COMP eType)	// To handle change of component type for LEDs and electro-caps.
 	{
 		switch( eType )
 		{
@@ -512,7 +512,7 @@ struct CompTypes
 			if ( mapObj.second == str ) return mapObj.first;
 		return COMP::INVALID;
 	}
-	static std::string GetMakeInstructions(const COMP& eType, int& rows, int& cols)
+	static std::string GetMakeInstructions(COMP eType, int& rows, int& cols)
 	{
 		switch( eType )
 		{
@@ -599,7 +599,7 @@ struct CompTypes
 	{
 		return std::to_string(iPinIndex + 1);	// Pin numbers on screen start at 1
 	}
-	static int GetDefaultPinAlign(size_t iPinIndex, size_t iNumPins, const COMP& eType)
+	static int GetDefaultPinAlign(size_t iPinIndex, size_t iNumPins, COMP eType)
 	{
 		switch( eType )
 		{
@@ -608,7 +608,7 @@ struct CompTypes
 			default:					return Qt::AlignHCenter;
 		}
 	}
-	static int GetDefaultNumPins(const COMP& eType)
+	static int GetDefaultNumPins(COMP eType)
 	{
 		switch( eType )
 		{
@@ -690,7 +690,7 @@ struct CompTypes
 			default:						return 0;	// Unhandled eType
 		}
 	}
-	static int GetMinNumPins(const COMP& eType)
+	static int GetMinNumPins(COMP eType)
 	{
 		switch( eType )
 		{
@@ -705,7 +705,7 @@ struct CompTypes
 			default:					return GetDefaultNumPins(eType);
 		}
 	}
-	static int GetMaxNumPins(const COMP& eType)
+	static int GetMaxNumPins(COMP eType)
 	{
 		switch( eType )
 		{
@@ -720,7 +720,7 @@ struct CompTypes
 			default:					return GetDefaultNumPins(eType);
 		}
 	}
-	static int GetStretchIncrement(const COMP& eType)	// For stretchable components
+	static int GetStretchIncrement(COMP eType)	// For stretchable components
 	{
 		switch( eType )
 		{
@@ -730,7 +730,7 @@ struct CompTypes
 			default:				return 1;
 		}
 	}
-	static int GetMinLength(const COMP& eType)	// For stretchable components
+	static int GetMinLength(COMP eType)	// For stretchable components
 	{
 		switch( eType )
 		{
@@ -754,7 +754,7 @@ struct CompTypes
 			default:	assert(0);		return 1;	// Non-stretchable component
 		}
 	}
-	static int GetMaxLength(const COMP& eType)	// For stretchable components
+	static int GetMaxLength(COMP eType)	// For stretchable components
 	{
 		switch( eType )
 		{

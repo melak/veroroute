@@ -147,7 +147,7 @@ void MainWindow::PaintViaGrey(const GuiControl& guiCtrl, QPainter& painter, cons
 	painter.drawPoint(pC);
 }
 
-void MainWindow::PaintPadGrey(const GuiControl& guiCtrl, QPainter& painter, QPen& pen, const QPointF& pC, const int& iPadWidthMIL)
+void MainWindow::PaintPadGrey(const GuiControl& guiCtrl, QPainter& painter, QPen& pen, const QPointF& pC, int iPadWidthMIL)
 {
 	assert(!m_bWriteGerber);
 
@@ -159,7 +159,7 @@ void MainWindow::PaintPadGrey(const GuiControl& guiCtrl, QPainter& painter, QPen
 	painter.drawPoint(pC);
 }
 
-void MainWindow::PaintVia(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, const bool& bGap)
+void MainWindow::PaintVia(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, bool bGap)
 {
 	if ( m_bWriteGerber )
 	{
@@ -185,7 +185,7 @@ void MainWindow::PaintVia(const GuiControl& guiCtrl, QPainter& painter, const QC
 	}
 }
 
-void MainWindow::PaintPad(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, const int& iPadWidthMIL, const int& iHoleWidthMIL, const bool& bGap)
+void MainWindow::PaintPad(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, int iPadWidthMIL, int iHoleWidthMIL, bool bGap)
 {
 	if ( m_bWriteGerber )
 	{
@@ -213,8 +213,8 @@ void MainWindow::PaintPad(const GuiControl& guiCtrl, QPainter& painter, const QC
 }
 
 void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, const QPointF& pCoffset,
-						   const int& iPadWidthMIL, const int& iPerimeterCode, const int& iTagCode,
-						   const bool bHavePad, const bool bIsGnd, const bool bGap)
+						   int iPadWidthMIL, int iPerimeterCode, int iTagCode,
+						   bool bHavePad, bool bIsGnd, bool bGap)
 {
 	std::list<MyPolygonF> polygonList;
 	guiCtrl.CalcBlob(guiCtrl.GetGRIDPIXELS(), pC, pCoffset, iPadWidthMIL, iPerimeterCode, iTagCode, polygonList, bHavePad, bIsGnd, bGap);	// Populate polygonList

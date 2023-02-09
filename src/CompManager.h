@@ -96,15 +96,15 @@ public:
 		}
 		return BAD_COMPID;
 	}
-	const Component& GetComponentById(const int& compId) const
+	const Component& GetComponentById(int compId) const
 	{
 		return LookupCompById(compId);
 	}
-	Component& GetComponentById(const int& compId)
+	Component& GetComponentById(int compId)
 	{
 		return const_cast<Component&> ( LookupCompById(compId) );
 	}
-	bool GetAllowFlyWire(const int& compId) const
+	bool GetAllowFlyWire(int compId) const
 	{
 		auto iter = m_mapIdToComp.find(compId);
 		return ( iter != m_mapIdToComp.end() ) ? iter->second.GetAllowFlyWire() : false;
@@ -119,7 +119,7 @@ public:
 		for (const auto& mapObj : m_mapIdToComp) comps.push_back(&mapObj.second);
 		std::sort(comps.begin(), comps.end(), HasLowerRenderOrder());
 	}
-	int CreateComp(const Component& tmp, const bool& bUsePCBshapes)	// Creates a copy of tmp and returns its compId
+	int CreateComp(const Component& tmp, bool bUsePCBshapes)	// Creates a copy of tmp and returns its compId
 	{
 		assert(tmp.GetType() != COMP::INVALID);
 		assert(tmp.GetType() != COMP::TRACKS);
@@ -171,7 +171,7 @@ public:
 		}
 		return false;
 	}
-	void GetPadWidths(std::list<int>& o, const int& iDefaultWidth) const
+	void GetPadWidths(std::list<int>& o, int iDefaultWidth) const
 	{
 		o.clear();
 		for (const auto& mapObj : m_mapIdToComp)
@@ -183,7 +183,7 @@ public:
 			if ( iterFind == o.end() ) o.push_back( iWidth );
 		}
 	}
-	void GetHoleWidths(std::list<int>& o, const int& iDefaultWidth) const
+	void GetHoleWidths(std::list<int>& o, int iDefaultWidth) const
 	{
 		o.clear();
 		for (const auto& mapObj : m_mapIdToComp)
@@ -312,7 +312,7 @@ public:
 		const bool bH = pWire->GetDirection() == 'W' || pWire->GetDirection() == 'E';
 		return ( iter != m_mapWireToInfo.end() ) ? ( iter->second.m_iShift == 0  && (bH || iter->second.m_iCross == 0) ) : false;
 	}
-	void CustomPCBshapes(const bool bUsePCBshapes)
+	void CustomPCBshapes(bool bUsePCBshapes)
 	{
 		for (auto& mapObj : m_mapIdToComp)
 		{
@@ -324,7 +324,7 @@ public:
 	{
 		m_foundId.clear();
 	}
-	void Find(const bool bUseName, const bool bExact, const std::string& str)
+	void Find(bool bUseName, bool bExact, const std::string& str)
 	{
 		ClearFind();
 		if ( str.empty() ) return;	// Don't search with an empty string
@@ -339,7 +339,7 @@ public:
 			if ( bFound ) m_foundId.insert( mapObj.first );
 		}
 	}
-	bool GetFound(const int& compId) const
+	bool GetFound(int compId) const
 	{
 		return m_foundId.find(compId) != m_foundId.end();
 	}
@@ -413,7 +413,7 @@ public:
 	}
 	const Component&	GetTrax() const	{ return m_trax; }
 	Component&			GetTrax()		{ return m_trax; }
-	void				ClearTrax()	{ m_trax.DeAllocate(); m_trax.SetType(COMP::TRACKS); m_trax.SetId(TRAX_COMPID); m_trax.SetIsPlaced(false); m_trax.SetRow(0); m_trax.SetCol(0); }
+	void				ClearTrax()		{ m_trax.DeAllocate(); m_trax.SetType(COMP::TRACKS); m_trax.SetId(TRAX_COMPID); m_trax.SetIsPlaced(false); m_trax.SetRow(0); m_trax.SetCol(0); }
 	void				BuildTrax(const RectManager& rectMgr, const ElementGrid& grid, const int& nLyr, const int& nRowMin, const int& nRowMax, const int& nColMin, const int& nColMax)
 	{
 		m_trax = Component(this, rectMgr, grid, nLyr, nRowMin, nRowMax, nColMin, nColMax);
@@ -421,11 +421,11 @@ public:
 		m_trax.SetIsPlaced(true);
 	}
 private:
-	bool GetComponentExists(const int& compId) const
+	bool GetComponentExists(int compId) const
 	{
 		return m_mapIdToComp.find(compId) != m_mapIdToComp.end();
 	}
-	const Component& LookupCompById(const int& compId) const
+	const Component& LookupCompById(int compId) const
 	{
 		if ( compId == TRAX_COMPID ) return m_trax;
 

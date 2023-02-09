@@ -61,7 +61,7 @@ public:
 	HistoryManager() {}
 	~HistoryManager() { Clear(); }
 	void SetPathStr(const std::string& str)		{ m_pathStr = str; }
-	void SetInstanceID(const unsigned int& ID)	{ m_ID = ID; }
+	void SetInstanceID(unsigned int ID)			{ m_ID = ID; }
 	bool GetIsLocked() const					{ return m_bLocked; }
 	bool GetCanUndo() const						{ return !m_list.empty() && m_currentIter != m_list.begin(); }
 	bool GetCanRedo() const						{ return !m_list.empty() && GetNextIter() != m_list.end();   }
@@ -94,7 +94,7 @@ public:
 		return strLastHistoryFile;
 	}
 #endif
-	bool Reset(const std::string& str, Board& board, const QString& lastFileName, const int& iTutorialNumber)
+	bool Reset(const std::string& str, Board& board, const QString& lastFileName, int iTutorialNumber)
 	{
 		if ( m_bLocked ) return false;
 
@@ -170,7 +170,7 @@ public:
 			outStream.Close();
 		}
 	}
-	bool Update(const std::string& str, const int objId, Board& board)
+	bool Update(const std::string& str, int objId, Board& board)
 	{
 		if ( m_bLocked ) return false;
 
@@ -245,7 +245,7 @@ public:
 			inStream.Close();
 		}
 	}
-	void SaveCircuitFile(const QString& lastFileName, const int& iTutorialNumber)
+	void SaveCircuitFile(const QString& lastFileName, int iTutorialNumber)
 	{
 		DataStream outStream(DataStream::WRITE);
 		if ( outStream.Open( GetCircuitFileName() ) )
@@ -257,7 +257,7 @@ public:
 		}
 	}
 private:
-	void AddEntry(const unsigned int& index, const int objId, const std::string& str)
+	void AddEntry(unsigned int index, int objId, const std::string& str)
 	{
 		m_list.push_back( HistoryItem(index % MAX_HISTORY_FILES, objId, str) );
 		m_currentIter = m_list.end();
@@ -281,7 +281,7 @@ private:
 		return true;
 	}
 	HistoryItemIter GetNextIter() const { auto iter = m_currentIter; ++iter; return iter; }
-	const char* GetHistoryFilename(const unsigned int& index) const
+	const char* GetHistoryFilename(unsigned int index) const
 	{
 		assert( index < MAX_HISTORY_FILES );	// Sanity check
 		memset(m_buffer, 0, 256 * sizeof(char));

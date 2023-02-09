@@ -24,7 +24,7 @@
 struct Simplex
 {
 public:
-	static int GetLetterIndex(const char& c)
+	static int GetLetterIndex(char c)
 	{
 		const int index = ( c - ' ' );
 		return ( index >= 0 && index < 95 ) ? index : -1;	// -1 ==> unsupported character
@@ -33,7 +33,7 @@ public:
 	{
 		return ( i < 95 && j < 112 ) ? sm_data[static_cast<size_t>(i)][static_cast<size_t>(j)] : -1;
 	}
-	static void CalcXlimits(const int& i, std::pair<int,int>& o)
+	static void CalcXlimits(int i, std::pair<int,int>& o)
 	{
 		if ( i == 0 ) { o.first = 0; o.second = 5; return; }	// ' ' character
 		o.first = INT_MAX;	o.second = INT_MIN;
@@ -47,7 +47,7 @@ public:
 			o.second = std::max(o.second, ix);
 		}
 	}
-	static const std::pair<int,int>& GetXlimits(const int& i)
+	static const std::pair<int,int>& GetXlimits(int i)
 	{
 		if ( sm_xLimits.empty() )	// If cache is empty ...
 		{

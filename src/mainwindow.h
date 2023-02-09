@@ -104,7 +104,7 @@ public:
 	// Helper for mouse
 	void GetPixMapXY(const QPoint& currentPoint, int& pixmapX, int& pixmapY) const;
 	bool GetRowCol(const QPoint& currentPoint, int& row, int& col, double& deltaRow, double& deltaCol) const;
-	bool GetRowCol(const QPoint& currentPoint, const int rows, const int cols, int& row, int& col, double& deltaRow, double& deltaCol) const;
+	bool GetRowCol(const QPoint& currentPoint, int rows, int cols, int& row, int& col, double& deltaRow, double& deltaCol) const;
 	bool HaveZeroDeltaRowCol(int& deltaRow, int& deltaCol);
 
 	// Helpers for rendering
@@ -143,7 +143,7 @@ public:
 	const QString&	GetFileName() const { return m_fileName; }
 
 	bool GetHaveFloatingPin(int& iFloatingNodeId);
-	void MousePressEvent(const QPoint& pos, const bool& bLeftClick = true, const bool& bRightClick = true);
+	void MousePressEvent(const QPoint& pos, bool bLeftClick = true, bool bRightClick = true);
 	void MouseDoubleClickEvent(const QPoint& pos);
 	void MouseMoveEvent(const QPoint& pos);
 	void MouseReleaseEvent(const QPoint& pos);
@@ -173,7 +173,7 @@ public slots:
 	void ImportOrcad();
 	void WritePDF();
 	void WritePNG();
-	void WriteGerber(const bool& bTwoLayerGerber, const bool& bMetric);
+	void WriteGerber(bool bTwoLayerGerber, bool bMetric);
 	void WriteGerber1in()	{ WriteGerber(false, false); }
 	void WriteGerber1mm()	{ WriteGerber(false, true); }
 	void WriteGerber2in()	{ WriteGerber(true, false); }
@@ -346,9 +346,9 @@ public slots:
 	void SetCompName(const QString& str);
 	void SetCompValue(const QString& str);
 	void SetCompType(const QString& str);
-	void SetCompCustomFlag(const bool& b);
-	void SetCompPadWidth(const int& i);
-	void SetCompHoleWidth(const int& i);
+	void SetCompCustomFlag(bool b);
+	void SetCompPadWidth(int i);
+	void SetCompHoleWidth(int i);
 	void CompRotateCCW()	{ CompRotate(false); }
 	void CompRotateCW()		{ CompRotate(true); }
 	void CompGrow()			{ CompStretch(true); }
@@ -492,31 +492,31 @@ private:
 	void PaintDiag(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pCorner, bool bLT);
 #endif
 	void PaintViaGrey(const GuiControl& guiCtrl, QPainter& painter, const QPointF& pC);
-	void PaintPadGrey(const GuiControl& guiCtrl, QPainter& painter, QPen& pen, const QPointF& pC, const int& iPadWidthMIL = 0);
-	void PaintVia(const GuiControl& guiCtrl, QPainter& painter,  const QColor& color, const QPointF& pC, const bool& bGap = false);	// Helper
-	void PaintPad(const GuiControl& guiCtrl, QPainter& painter,  const QColor& color, const QPointF& pC, const int& iPadWidthMIL = 0, const int& iHoleWidth_MIL = 0, const bool& bGap = false);	// Helper
+	void PaintPadGrey(const GuiControl& guiCtrl, QPainter& painter, QPen& pen, const QPointF& pC, int iPadWidthMIL = 0);
+	void PaintVia(const GuiControl& guiCtrl, QPainter& painter,  const QColor& color, const QPointF& pC, bool bGap = false);	// Helper
+	void PaintPad(const GuiControl& guiCtrl, QPainter& painter,  const QColor& color, const QPointF& pC, int iPadWidthMIL = 0, int iHoleWidth_MIL = 0, bool bGap = false);	// Helper
 	void PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, const QPointF& pCoffset,
-				   const int& iPadWidthMIL, const int& iPerimeterCode, const int& iTagCode,
-				   const bool bHavePad, const bool bIsGnd, const bool bGap = false);	// Helper
+				   int iPadWidthMIL, int iPerimeterCode, int iTagCode,
+				   bool bHavePad, bool bIsGnd, bool bGap = false);	// Helper
 	void PaintBoard();
 	void PaintCompDefiner();
-	void HandleRouting(const bool bSingleRoute = false);
+	void HandleRouting(bool bSingleRoute = false);
 	void RepaintWithListNodes(bool bNow = false);
 	void RepaintWithRouting(bool bNow = false);
 	void RepaintSkipRouting(bool bNow = false);
 	void ShowCurrentRectSize();	// Show current rect size in status bar
-	int	 GetCurrentLayer() const			{ return m_board.GetCurrentLayer(); }
-	int	 GetCurrentNodeId() const			{ return m_board.GetCurrentNodeId(); }
-	int  GetCurrentCompId() const			{ return m_board.GetCurrentCompId(); }
-	int  GetCurrentTextId() const			{ return m_board.GetCurrentTextId(); }
-	int  GetCurrentPinId() const			{ return m_board.GetCurrentPinId(); }
-	int  GetCurrentShapeId() const			{ return m_board.GetCurrentShapeId(); }
-	void SetCurrentNodeId(const int& i)		{ m_board.SetCurrentNodeId(i);	ListNodes(false); }
-	void SetCurrentCompId(const int& i)		{ m_board.SetCurrentCompId(i);	UpdateControls(); }
-	void SetCurrentTextId(const int& i)		{ m_board.SetCurrentTextId(i);	UpdateControls(); }
-	void SetCurrentPinId(const int& i)		{ m_board.SetCurrentPinId(i);	UpdateCompDialog(); }
-	void SetCurrentShapeId(const int& i)	{ m_board.SetCurrentShapeId(i);	UpdateCompDialog(); UpdateControls(); }
-	TextRect& GetCurrentTextRect()			{ return m_board.GetTextMgr().GetTextRectById( GetCurrentTextId() ); }
+	int	 GetCurrentLayer() const	{ return m_board.GetCurrentLayer(); }
+	int	 GetCurrentNodeId() const	{ return m_board.GetCurrentNodeId(); }
+	int  GetCurrentCompId() const	{ return m_board.GetCurrentCompId(); }
+	int  GetCurrentTextId() const	{ return m_board.GetCurrentTextId(); }
+	int  GetCurrentPinId() const	{ return m_board.GetCurrentPinId(); }
+	int  GetCurrentShapeId() const	{ return m_board.GetCurrentShapeId(); }
+	void SetCurrentNodeId(int i)	{ m_board.SetCurrentNodeId(i);	ListNodes(false); }
+	void SetCurrentCompId(int i)	{ m_board.SetCurrentCompId(i);	UpdateControls(); }
+	void SetCurrentTextId(int i)	{ m_board.SetCurrentTextId(i);	UpdateControls(); }
+	void SetCurrentPinId(int i)		{ m_board.SetCurrentPinId(i);	UpdateCompDialog(); }
+	void SetCurrentShapeId(int i)	{ m_board.SetCurrentShapeId(i);	UpdateCompDialog(); UpdateControls(); }
+	TextRect& GetCurrentTextRect()	{ return m_board.GetTextMgr().GetTextRectById( GetCurrentTextId() ); }
 	// Helpers for slots
 	void ZoomHelper(int delta);
 	void AddPart(COMP eType)
@@ -555,11 +555,11 @@ private:
 
 		UpdateHistory("add part"); UpdateControls(); UpdateBOM(); RepaintSkipRouting();
 	}
-	void CompRotate(const bool& bCW);
-	void CompStretch(const bool& bGrow);
-	void CompStretchWidth(const bool& bGrow);
-	void CompTextMove(const int& deltaRow, const int& deltaCol);
-	void PadMove(const int& deltaRowMil, const int& deltaColMil);
+	void CompRotate(bool bCW);
+	void CompStretch(bool bGrow);
+	void CompStretchWidth(bool bGrow);
+	void CompTextMove(int deltaRow, int deltaCol);
+	void PadMove(int deltaRowMil, int deltaColMil);
 	void UpdatePadInfo();
 
 	// Helpers
@@ -573,9 +573,9 @@ private:
 	bool GetIsModified() const;
 	bool GetMatchesVrtFile(const std::string& fileName) const;
 	void ResetHistory(const std::string& str);
-	void UpdateHistory(const std::string& str, const int objId = -1);
+	void UpdateHistory(const std::string& str, int objId = -1);
 	void UpdateUndoRedoControls();
-	void SetMouseActionString(const std::string& str, const int objId = -1);
+	void SetMouseActionString(const std::string& str, int objId = -1);
 
 	// Helper to auto-append suffix when writing a file
 	QString GetSaveFileName(const QString& caption, const QString& nameFilter, const QString& defaultSuffix);

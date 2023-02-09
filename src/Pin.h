@@ -63,7 +63,7 @@ static const uchar  HOLE_FREE			= 0;
 static const uchar  HOLE_WIRE			= 1;	// Hence: "HOLE_WIRE + HOLE_WIRE == HOLE_FULL"
 static const uchar  HOLE_FULL			= 2;
 
-static size_t GetPinIndexFromLegacyPinChar(const uchar& c)	// Legacy VRT format had messy mapping of pinChar to pinIndex
+static size_t GetPinIndexFromLegacyPinChar(uchar c)	// Legacy VRT format had messy mapping of pinChar to pinIndex
 {
 	if ( c <  '1' )	return BAD_PININDEX;	// Handles the '.', '-', '+' characters used by GetMakeInstructions()
 	if ( c <= '9' )	return      c - '1';	// Char '1' to '9' ==> Index 0  to 8
@@ -74,7 +74,7 @@ static size_t GetPinIndexFromLegacyPinChar(const uchar& c)	// Legacy VRT format 
 	else			return 74 + c - '{';	// Char '{' to 255 ==> Index 74 to 206
 }
 
-static uchar GetSurfaceFromLegacySurfaceChar(const uchar& c)
+static uchar GetSurfaceFromLegacySurfaceChar(uchar c)
 {
 	// The following are the old SURFACE codes before the introduction of SURFACE_WIRE_END and SURFACE_WIRE
 	switch( c )
@@ -116,10 +116,10 @@ public:
 	{
 		return !(*this == o);
 	}
-	void		 SetPinIndex(const size_t& i)	{ m_pinChar = ( i >= BAD_PINCHAR ) ? BAD_PINCHAR : static_cast<uchar> (i); }
-	void		 SetSurface(const uchar& c)		{ m_surface = c; }
-	void		 SetHoleUse(const uchar& c)		{ m_holeUse = c; }
-	void		 SetOccupancy(const bool& bWire)	// Helper
+	void		 SetPinIndex(size_t i)		{ m_pinChar = ( i >= BAD_PINCHAR ) ? BAD_PINCHAR : static_cast<uchar> (i); }
+	void		 SetSurface(uchar c)		{ m_surface = c; }
+	void		 SetHoleUse(uchar c)		{ m_holeUse = c; }
+	void		 SetOccupancy(bool bWire)	// Helper
 	{
 		if ( bWire )
 		{

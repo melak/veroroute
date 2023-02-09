@@ -76,7 +76,7 @@ void Board::WipeAutoSetPoints(int nodeId)
 	}
 }
 
-void Board::BuildTargetPins(const int& nodeId)
+void Board::BuildTargetPins(int nodeId)
 {
 	// Populate m_targetPins with all (non-wire) component pins with the specified NodeId.
 	// These are the things on the board that the routing algorithm will try and connect together.
@@ -244,13 +244,13 @@ void Board::UpdateVias()	// Sets the via flag to true on all candidate vias
 	CalcMIN_SEPARATION();
 }
 
-unsigned int Board::Flood(const int& iFloodNodeId)
+unsigned int Board::Flood(int iFloodNodeId)
 {
 	BuildTargetPins(iFloodNodeId);	// Populate m_targetPins
 	return Flood();
 }
 
-unsigned int Board::Flood(const bool bSingleRoute)
+unsigned int Board::Flood(bool bSingleRoute)
 {
 	// Flood the board with MH values, starting from the m_targetPins.
 	// The return value is a cost that shows how unconnected the pins are.
@@ -410,7 +410,7 @@ void Board::Flood_Helper(const bool bBuildTracks)
 	}
 }
 
-void Board::Flood_Grow(const int& iFloodNodeId, Element* pJ, const int& iNbr, const bool& bBuildTracks, unsigned int& iMH, unsigned int& iMaxMH, bool& bDone)
+void Board::Flood_Grow(int iFloodNodeId, Element* pJ, int iNbr, bool bBuildTracks, unsigned int& iMH, unsigned int& iMaxMH, bool& bDone)
 {
 	WIRELIST wireList;	// Helper for chains of wires
 
@@ -464,7 +464,7 @@ void Board::Flood_Grow(const int& iFloodNodeId, Element* pJ, const int& iNbr, co
 		bDone = m_connectionMatrix.GetCost() == 0;	// Zero cost ==> done
 }
 
-void Board::Backtrace(Element* pEnd, const int& nodeId)
+void Board::Backtrace(Element* pEnd, int nodeId)
 {
 	// Backtrace route from pEnd to point with MH = 0
 
@@ -567,7 +567,7 @@ void Board::Backtrace(Element* pEnd, const int& nodeId)
 	}
 }
 
-bool Board::BacktraceHelper(Element*& p, unsigned int& MH, const int& nodeId, const unsigned int& iDeltaMH, const int& iNbr, const int& iLoop)
+bool Board::BacktraceHelper(Element*& p, unsigned int& MH, int nodeId, unsigned int iDeltaMH, int iNbr, int iLoop)
 {
 	Element* pNbr = p->GetNbr(iNbr);
 	if ( pNbr->GetRouteId() != p->GetRouteId() ) return false;	// Skip if nbr has wrong routeId
@@ -580,7 +580,7 @@ bool Board::BacktraceHelper(Element*& p, unsigned int& MH, const int& nodeId, co
 	return true;	// We backtraced OK, and have modified p and MH
 }
 
-void Board::Manhatten(Element* p, const bool bSingleRoute)
+void Board::Manhatten(Element* p, bool bSingleRoute)
 {
 	const int iTraceNodeId = p->GetNodeId();	// The NodeID to trace
 	if ( iTraceNodeId == BAD_NODEID ) return;	// Don't trace invalid NodeID

@@ -319,7 +319,7 @@ void Board::GetGroundFillBounds(int& L, int& R, int& T, int& B) const
 
 // Methods to paint/unpaint nodeIds
 
-void Board::SetNodeId(Element* p, const int& nodeId, const bool bAllLyrs)	// Helper to make sure we do UpdateCounts() before painting an element
+void Board::SetNodeId(Element* p, int nodeId, bool bAllLyrs)	// Helper to make sure we do UpdateCounts() before painting an element
 {
 	// For all layers case, always write base layer first
 	Element* q	= bAllLyrs ? p->GetNbr(NBR_X) : nullptr;
@@ -339,7 +339,7 @@ void Board::SetNodeId(Element* p, const int& nodeId, const bool bAllLyrs)	// Hel
 	}
 }
 
-void Board::WipeFlagBits(Element* p, const char& i, const bool bAllLyrs)
+void Board::WipeFlagBits(Element* p, char i, bool bAllLyrs)
 {
 	// For all layers case, always write base layer first
 	Element* q	= bAllLyrs ? p->GetNbr(NBR_X) : nullptr;
@@ -349,7 +349,7 @@ void Board::WipeFlagBits(Element* p, const char& i, const bool bAllLyrs)
 	if ( p2 ) p2->WipeFlagBits(i);
 }
 
-void Board::MarkFlagBits(Element* p, const char& i, const bool bAllLyrs)
+void Board::MarkFlagBits(Element* p, char i, bool bAllLyrs)
 {
 	// For all layers case, always write base layer first
 	Element* q	= bAllLyrs ? p->GetNbr(NBR_X) : nullptr;
@@ -359,7 +359,7 @@ void Board::MarkFlagBits(Element* p, const char& i, const bool bAllLyrs)
 	if ( p2 ) p2->MarkFlagBits(i);
 }
 
-bool Board::SetNodeIdByUser(const int& lyr, const int& row, const int& col, const int& nodeId, const bool& bPaintPins)
+bool Board::SetNodeIdByUser(int lyr, int row, int col, int nodeId, bool bPaintPins)
 {
 	Element*		p			= Get(lyr, row, col);
 	const bool		bHole		= p->GetIsHole();
@@ -479,7 +479,7 @@ bool Board::SetNodeIdByUser(const int& lyr, const int& row, const int& col, cons
 	return true;
 }
 
-void Board::FloodNodeId(const int& nodeId)
+void Board::FloodNodeId(int nodeId)
 {
 	for (int lyr = 0, lyrs = GetLyrs(); lyr < lyrs; lyr++)
 	for (int row = 0, rows = GetRows(); row < rows; row++)
@@ -595,7 +595,7 @@ void Board::CalcSolder()	// Work out locations of solder blobs to join veroboard
 			SetSolder(nodeIds[n], col, bVertical);
 }
 
-void Board::SetSolder(const int& nodeId, const int& col, const bool& bVertical)
+void Board::SetSolder(int nodeId, int col, bool bVertical)
 {
 	// Sets elements of bSolderR to indicate solder blob between col and col+1
 	const int colMax = ( bVertical ) ? GetCols() : GetRows();

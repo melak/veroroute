@@ -34,8 +34,8 @@ public:
 
 	void SetMainWindow(MainWindow* p);
 	void ClearList();
-	void AddListItem(const int nodeId, bool bFloating);
-	void SetListItem(const int nodeId);
+	void AddListItem(int nodeId, bool bFloating);
+	void SetListItem(int nodeId);
 
 	void UpdateCompControls();	// Component controls
 	void UpdateControls();		// Non-component controls

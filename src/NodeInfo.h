@@ -42,15 +42,15 @@ public:
 		std::copy(o.m_compIds.begin(), o.m_compIds.end(), m_compIds.begin());
 		return *this;
 	}
-	void				SetComplete(bool b)		{ m_bComplete = b; }
-	void				SetCost(unsigned int i)	{ m_iCost = i; }
-	void				SetNodeId(int i)		{ m_nodeId = i; }
-	const bool&			GetComplete() const		{ return m_bComplete; }
-	const unsigned int&	GetCost() const			{ return m_iCost; }
-	const int&			GetNodeId() const		{ return m_nodeId; }
-	size_t		GetNumComps() const				{ return m_compIds.size(); }
-	const int&	GetCompId(size_t i) const		{ return m_compIds[i]; }
-	bool		GetHasCompId(int compId) const	{ return std::find(m_compIds.begin(), m_compIds.end(), compId) != m_compIds.end(); }
+	void				SetComplete(bool b)				{ m_bComplete = b; }
+	void				SetCost(unsigned int i)			{ m_iCost = i; }
+	void				SetNodeId(int i)				{ m_nodeId = i; }
+	const bool&			GetComplete() const				{ return m_bComplete; }
+	const unsigned int&	GetCost() const					{ return m_iCost; }
+	const int&			GetNodeId() const				{ return m_nodeId; }
+	size_t				GetNumComps() const				{ return m_compIds.size(); }
+	const int&			GetCompId(size_t i) const		{ return m_compIds[i]; }
+	bool				GetHasCompId(int compId) const	{ return std::find(m_compIds.begin(), m_compIds.end(), compId) != m_compIds.end(); }
 	void AddComp(const Component& comp)
 	{
 		assert( comp.GetIsTrueComp() );	// A true component has pins and "owns" the nodeIds on them

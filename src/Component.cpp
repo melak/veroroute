@@ -105,7 +105,7 @@ void Component::SetDefaultPinFlags()
 	}
 }
 
-void Component::SetDefaultShapes(const bool& bUsePCBshapes)
+void Component::SetDefaultShapes(bool bUsePCBshapes)
 {
 	switch( GetType() )
 	{
@@ -439,7 +439,7 @@ void Component::GetLabelOffsets(int& offsetRow, int& offsetCol) const	// w.r.t. 
 	}
 }
 
-void Component::MoveLabelOffsets(const int& deltaRow, const int& deltaCol)	// w.r.t. screen, not comp rotation
+void Component::MoveLabelOffsets(int deltaRow, int deltaCol)	// w.r.t. screen, not comp rotation
 {
 	switch( GetDirection() )
 	{

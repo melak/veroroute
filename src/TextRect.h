@@ -61,10 +61,10 @@ public:
 		return !(*this == o);
 	}
 	bool SetStr(const std::string& s)	{ const bool bChanged = (m_str    != s);	m_str    = s; return bChanged; }
-	bool SetSize(const int& i)			{ const bool bChanged = (m_size   != i);	m_size   = i; return bChanged; }
-	bool SetStyle(const int& i)			{ const bool bChanged = (m_style  != i);	m_style  = i; return bChanged; }
-	bool SetFlagsH(const int& i)		{ const bool bChanged = (m_flagsH != i);	m_flagsH = i; return bChanged; }
-	bool SetFlagsV(const int& i)		{ const bool bChanged = (m_flagsV != i);	m_flagsV = i; return bChanged; }
+	bool SetSize(int i)					{ const bool bChanged = (m_size   != i);	m_size   = i; return bChanged; }
+	bool SetStyle(int i)				{ const bool bChanged = (m_style  != i);	m_style  = i; return bChanged; }
+	bool SetFlagsH(int i)				{ const bool bChanged = (m_flagsH != i);	m_flagsH = i; return bChanged; }
+	bool SetFlagsV(int i)				{ const bool bChanged = (m_flagsV != i);	m_flagsV = i; return bChanged; }
 	const std::string&	GetStr() const		{ return m_str; }
 	const int&			GetSize() const		{ return m_size; }
 	const int&			GetStyle() const	{ return m_style; }

@@ -179,7 +179,7 @@ public:
 	CompElementGrid(const CompElementGrid& o) : Grid<CompElement>(o) { *this = o; }
 	virtual ~CompElementGrid() override {}
 	CompElementGrid& operator=(const CompElementGrid& o) { Grid<CompElement>::operator=(o); return *this; }
-	bool operator==(const CompElementGrid& o) const { return Grid<CompElement>::operator==(o); }
+	bool operator==(const CompElementGrid& o) const	{ return Grid<CompElement>::operator==(o); }
 	bool operator!=(const CompElementGrid& o) const	{ return Grid<CompElement>::operator!=(o); }
 	const int& GetCols(char direction = 'W') const
 	{
@@ -222,7 +222,7 @@ public:
 			*GetAt(0) = a; *GetAt(GetCols()-1) = b;	// Set ends
 		}
 	}
-	void StretchComplex(const COMP& eType, bool bGrow)	// For ICs and switches
+	void StretchComplex(COMP eType, bool bGrow)	// For ICs and switches
 	{
 		assert( GetLyrs() == 1 );	
 		if ( !bGrow && GetCols() == CompTypes::GetMinLength(eType) ) return;	// Don't shrink to less than min allowed length

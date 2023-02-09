@@ -70,15 +70,15 @@ public:
 	void ReAssignColors()			{ m_bReAssign = true; }
 	void SetSaturation(int i)		{ m_iSaturation = i; }
 	void SetFillSaturation(int i)	{ m_iFillSaturation = i; }
-	void SetNodeColor(const int& nodeId, const QColor& color)
+	void SetNodeColor(int nodeId, const QColor& color)
 	{
 		if ( nodeId != BAD_NODEID ) m_mapNodeIdToCustomColor[nodeId] = MyRGB(color);
 	}
-	bool GetIsFixed(const int& nodeId) const
+	bool GetIsFixed(int nodeId) const
 	{
 		return m_mapNodeIdToCustomColor.find(nodeId) != m_mapNodeIdToCustomColor.end();
 	}
-	void Fix(const int& nodeId)
+	void Fix(int nodeId)
 	{
 		if ( nodeId == BAD_NODEID || GetIsFixed(nodeId) ) return;	// Already fixed
 		const int colorId = m_mapNodeIdToColorId[nodeId];
@@ -86,7 +86,7 @@ public:
 		if ( bOK )
 			m_mapNodeIdToCustomColor[nodeId] = GetPixmapRGB(colorId, false);
 	}
-	void Unfix(const int& nodeId)
+	void Unfix(int nodeId)
 	{
 		auto iter = m_mapNodeIdToCustomColor.find(nodeId);
 		if ( iter != m_mapNodeIdToCustomColor.end() )
@@ -158,13 +158,13 @@ public:
 			cnList[iUnusedColor].push_back(iNodeId);		// Add nodeId to list of iUnusedColor
 		}
 	}
-	int GetColorId(const int& nodeId) const
+	int GetColorId(int nodeId) const
 	{
 		if ( nodeId == BAD_NODEID ) return BAD_COLORID;
 		const auto iter = m_mapNodeIdToColorId.find(nodeId);
 		return ( iter != m_mapNodeIdToColorId.end() ) ? iter->second : BAD_COLORID;
 	}
-	QColor GetColorFromNodeId(const int& nodeId, bool bUseSaturation = true) const
+	QColor GetColorFromNodeId(int nodeId, bool bUseSaturation = true) const
 	{
 		// First check if the nodeId is in the custom list
 		const auto iter = m_mapNodeIdToCustomColor.find(nodeId);
@@ -179,7 +179,7 @@ public:
 		// Use auto-calculated colors
 		return GetPixmapColor(GetColorId(nodeId), bUseSaturation);
 	}
-	MyRGB GetPixmapRGB(const int& colorId, bool bUseSaturation = true) const
+	MyRGB GetPixmapRGB(int colorId, bool bUseSaturation = true) const
 	{
 		int R(0), G(0), B(0);
 		if		( colorId == BAD_COLORID )	{ R = G = B = 255; }
@@ -200,7 +200,7 @@ public:
 		rgb.SetRGB(R, G, B);
 		return rgb;
 	}
-	QColor GetPixmapColor(const int& colorId, bool bUseSaturation = true) const
+	QColor GetPixmapColor(int colorId, bool bUseSaturation = true) const
 	{
 		return GetPixmapRGB(colorId, bUseSaturation).GetQColor();
 	}
