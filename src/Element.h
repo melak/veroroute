@@ -34,10 +34,10 @@
 // each Element knows what it can be connected to without having
 // to go through the parent Grid object.
 
-static const int			TRAX_COMPID	= -2;		// The component manager member m_trax has this ID
-static const int			BAD_COMPID	= -1;		// Invalid component ID
-static const unsigned int	BAD_ROUTEID	= UINT_MAX;	// Invalid route (i.e. track section) ID
-static const unsigned int	BAD_MH		= UINT_MAX;	// "Infinite" MH distance
+Q_DECL_CONSTEXPR static const int			TRAX_COMPID	= -2;		// The component manager member m_trax has this ID
+Q_DECL_CONSTEXPR static const int			BAD_COMPID	= -1;		// Invalid component ID
+Q_DECL_CONSTEXPR static const unsigned int	BAD_ROUTEID	= UINT_MAX;	// Invalid route (i.e. track section) ID
+Q_DECL_CONSTEXPR static const unsigned int	BAD_MH		= UINT_MAX;	// "Infinite" MH distance
 
 class Element;
 
@@ -276,10 +276,9 @@ public:
 		// Take "this" to be the bottom right element in group of 4 squares
 		// "LT"  is the diagonal from "this" to m_pLT
 		// "LTX" is the diagonal that cuts across it (from m_pL to m_pT)
-		const bool bCanSwap = GetNodeId() == GetNbr(NBR_LT)->GetNodeId()				&&	// LT:  "this" and LT must have same nodeId
-							  GetNbr(NBR_L)->GetNodeId() == GetNbr(NBR_T)->GetNodeId()	&&	// LTX: L and T must have same nodeId
-							  GetNbr(NBR_L)->IsClash( GetNodeId() );						// L and "this" must have clashing nodeIds
-		return bCanSwap;
+		return	GetNodeId() == GetNbr(NBR_LT)->GetNodeId()					&&	// LT:  "this" and LT must have same nodeId
+				GetNbr(NBR_L)->GetNodeId() == GetNbr(NBR_T)->GetNodeId()	&&	// LTX: L and T must have same nodeId
+				GetNbr(NBR_L)->IsClash( GetNodeId() );							// L and "this" must have clashing nodeIds
 	}
 	bool SwapDiagLinks()
 	{
@@ -311,8 +310,7 @@ public:
 			for (int iNbr = 0; iNbr < NUM_NBRS; iNbr++)
 			{
 				const Element* p = pWA->GetNbr(iNbr);
-				if ( p == nullptr ) continue;
-				if ( p->GetNodeId() != nodeId ) continue;
+				if ( p == nullptr || p->GetNodeId() != nodeId ) continue;
 				if ( pWB0 != nullptr && pWB0->IsNbr(p) ) return true;
 				if ( pWB1 != nullptr && pWB1->IsNbr(p) ) return true;
 			}
@@ -399,8 +397,8 @@ public:
 		outStream.Save(m_pinChar2);		// Added in VRT_VERSION_27
 	}
 private:
-	Element*		GetBase()				{ Element*		 pBase = GetNbr(NBR_X);	return pBase == nullptr || pBase > this ? this : pBase; }
-	const Element*	GetBaseConst() const	{ const Element* pBase = GetNbr(NBR_X);	return pBase == nullptr || pBase > this ? this : pBase; }
+	Element*		GetBase()				{ Element*		 p = GetNbr(NBR_X);	return p == nullptr || p > this ? this : p; }
+	const Element*	GetBaseConst() const	{ const Element* p = GetNbr(NBR_X);	return p == nullptr || p > this ? this : p; }
 	bool WireListHelper(WIRELIST& wireList, const Element* p, unsigned int iStep) const
 	{
 		for (auto& o : wireList)
@@ -414,8 +412,8 @@ private:
 	void UpdateWireList(WIRELIST& wireList, unsigned int iStep) const
 	{
 		WireListHelper(wireList, this, iStep);
-		bool bOK_0	= GetW(0) != nullptr && WireListHelper(wireList, GetW(0), iStep + 1);
-		bool bOK_1	= GetW(1) != nullptr && WireListHelper(wireList, GetW(1), iStep + 1);
+		const bool bOK_0 = GetW(0) != nullptr && WireListHelper(wireList, GetW(0), iStep + 1);
+		const bool bOK_1 = GetW(1) != nullptr && WireListHelper(wireList, GetW(1), iStep + 1);
 
 		if ( bOK_0 ) GetW(0)->UpdateWireList(wireList, iStep + 1);
 		if ( bOK_1 ) GetW(1)->UpdateWireList(wireList, iStep + 1);

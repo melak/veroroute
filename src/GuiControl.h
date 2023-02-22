@@ -33,7 +33,7 @@ enum class HOLETYPE  { NPTH = 0, PTH };
 
 // A class to hold the variables set via the GUI
 
-static const int BAD_TEXTID = -1;
+Q_DECL_CONSTEXPR static const int BAD_TEXTID = -1;
 
 class GuiControl : public Persist, public Merge
 {

@@ -38,8 +38,8 @@
 //
 //  There is a history vrt file for each entry in the Undo/Redo list.
 
-static const int HISTORY_VERSION_1  =  1;
-static const int HISTORY_VERSION_CURRENT = HISTORY_VERSION_1;
+Q_DECL_CONSTEXPR static const int HISTORY_VERSION_1 = 1;
+Q_DECL_CONSTEXPR static const int HISTORY_VERSION_CURRENT = HISTORY_VERSION_1;
 
 #include "Board.h"
 #include "VeroRouteAndroid.h"
@@ -47,9 +47,9 @@ static const int HISTORY_VERSION_CURRENT = HISTORY_VERSION_1;
 #include <QDateTime>
 
 #ifdef VEROROUTE_ANDROID
-static const unsigned int MAX_HISTORY_FILES = 100;
+	Q_DECL_CONSTEXPR static const unsigned int MAX_HISTORY_FILES = 100;
 #else
-static const unsigned int MAX_HISTORY_FILES = 1000;
+	Q_DECL_CONSTEXPR static const unsigned int MAX_HISTORY_FILES = 1000;
 #endif
 
 typedef std::tuple<unsigned int, int, std::string>	HistoryItem;	// <index, object id, description>

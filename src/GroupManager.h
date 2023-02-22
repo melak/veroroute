@@ -38,8 +38,8 @@
 
 class Board;
 
-static const int USER_GROUPID = 0;	// Kept at the beginning of the list
-static const int BAD_GROUPID  = -1;	// Never allowed in the list.
+Q_DECL_CONSTEXPR static const int USER_GROUPID = 0;		// Kept at the beginning of the list
+Q_DECL_CONSTEXPR static const int BAD_GROUPID  = -1;	// Never allowed in the list.
 
 class GroupManager : public Persist, public Merge
 {

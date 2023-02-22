@@ -33,12 +33,7 @@ public:
 	TextManager& operator=(const TextManager& o)
 	{
 		m_mapIdtoText.clear();
-		for (const auto& mapObj : o.m_mapIdtoText)
-		{
-			const int&		iTextId		= mapObj.first;
-			const TextRect& rect		= mapObj.second;
-			m_mapIdtoText[ iTextId ]	= rect;
-		}
+		m_mapIdtoText.insert(o.m_mapIdtoText.begin(), o.m_mapIdtoText.end());
 		return *this;
 	}
 	bool operator==(const TextManager& o) const	// Compare persisted info
@@ -106,8 +101,7 @@ public:
 	void DestroyRect(int iTextId)
 	{
 		const auto iter = m_mapIdtoText.find(iTextId);
-		if ( iter != m_mapIdtoText.end() )
-			m_mapIdtoText.erase(iter);
+		if ( iter != m_mapIdtoText.end() ) m_mapIdtoText.erase(iter);
 	}
 	Rect GetBounding() const
 	{

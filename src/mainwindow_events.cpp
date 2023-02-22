@@ -26,8 +26,8 @@
 #include "pindialog.h"
 #include <QtGlobal>
 
-static const bool ALLOW_DELAY_BASED_SMART_PAN = true;
-static const bool ALLOW_DELAY_BASED_PAD_SHIFT = true;
+Q_DECL_CONSTEXPR static const bool ALLOW_DELAY_BASED_SMART_PAN = true;
+Q_DECL_CONSTEXPR static const bool ALLOW_DELAY_BASED_PAD_SHIFT = true;
 
 // Following 2 are to slow down the auto-panning while moving components with the mouse
 static std::chrono::steady_clock::time_point g_lastAutoPanTime;

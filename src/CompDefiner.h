@@ -27,11 +27,11 @@ class Component;
 // Class used to build a description of a custom component
 
 // The following flags are used to form a bitfield that determine how pins may be drawn
-static const uchar	PIN_RECT	= 1;	// Draw pin as a rectangle instead of circle (e.g. for switches/relays)
-static const uchar	PIN_LABELS	= 2;	// Allow pin labels to be drawn
-static const uchar	PIN_CUSTOM	= 4;	// Allow over-ride of pad and hole size
+Q_DECL_CONSTEXPR static const uchar	PIN_RECT	= 1;	// Draw pin as a rectangle instead of circle (e.g. for switches/relays)
+Q_DECL_CONSTEXPR static const uchar	PIN_LABELS	= 2;	// Allow pin labels to be drawn
+Q_DECL_CONSTEXPR static const uchar	PIN_CUSTOM	= 4;	// Allow over-ride of pad and hole size
 
-static const int	BAD_ID	= -1;
+Q_DECL_CONSTEXPR static const int	BAD_ID		= -1;
 
 // Quicker to use struct than a std::pair
 struct IntShape

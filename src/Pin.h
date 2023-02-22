@@ -47,31 +47,31 @@
 //		HOLE_WIRE			==> the hole is occupied by one wire.
 //		HOLE_FULL			==> the hole is fully occupied.  (By a regular component pin, or by 2 wires).
 
-static const uchar	BAD_PINCHAR			= 255;
-static const size_t	BAD_PININDEX		= static_cast<size_t>(-1);
+Q_DECL_CONSTEXPR static const uchar  BAD_PINCHAR		= 255;
+Q_DECL_CONSTEXPR static const size_t BAD_PININDEX		= static_cast<size_t>(-1);
 
-static const uchar  SURFACE_FREE		= 0;
-static const uchar  SURFACE_GAP			= 1;
-static const uchar  SURFACE_WIRE_END	= 2;	// Hence: "SURFACE_WIRE_END + SURFACE_WIRE_END == SURFACE_WIRE"
-static const uchar  SURFACE_WIRE		= 4;	// Hence: "SURFACE_WIRE + SURFACE_WIRE == SURFACE_PLUG"
-static const uchar  SURFACE_PLUG		= 8;
-static const uchar  SURFACE_FULL		= 9;	// Hence: "SURFACE_PLUG + SURFACE_GAP == SURFACE_FULL"
-static const uchar  SURFACE_NOPAINT		= 16;	// Should only be used as part of SURFACE_HOLE
-static const uchar  SURFACE_HOLE		= 25;	// Hence: "SURFACE_FULL + SURFACE_NOPAINT = SURFACE_HOLE"
+Q_DECL_CONSTEXPR static const uchar  SURFACE_FREE		= 0;
+Q_DECL_CONSTEXPR static const uchar  SURFACE_GAP		= 1;
+Q_DECL_CONSTEXPR static const uchar  SURFACE_WIRE_END	= 2;	// Hence: "SURFACE_WIRE_END + SURFACE_WIRE_END == SURFACE_WIRE"
+Q_DECL_CONSTEXPR static const uchar  SURFACE_WIRE		= 4;	// Hence: "SURFACE_WIRE + SURFACE_WIRE == SURFACE_PLUG"
+Q_DECL_CONSTEXPR static const uchar  SURFACE_PLUG		= 8;
+Q_DECL_CONSTEXPR static const uchar  SURFACE_FULL		= 9;	// Hence: "SURFACE_PLUG + SURFACE_GAP == SURFACE_FULL"
+Q_DECL_CONSTEXPR static const uchar  SURFACE_NOPAINT	= 16;	// Should only be used as part of SURFACE_HOLE
+Q_DECL_CONSTEXPR static const uchar  SURFACE_HOLE		= 25;	// Hence: "SURFACE_FULL + SURFACE_NOPAINT = SURFACE_HOLE"
 
-static const uchar  HOLE_FREE			= 0;
-static const uchar  HOLE_WIRE			= 1;	// Hence: "HOLE_WIRE + HOLE_WIRE == HOLE_FULL"
-static const uchar  HOLE_FULL			= 2;
+Q_DECL_CONSTEXPR static const uchar  HOLE_FREE			= 0;
+Q_DECL_CONSTEXPR static const uchar  HOLE_WIRE			= 1;	// Hence: "HOLE_WIRE + HOLE_WIRE == HOLE_FULL"
+Q_DECL_CONSTEXPR static const uchar  HOLE_FULL			= 2;
 
-static size_t GetPinIndexFromLegacyPinChar(uchar c)	// Legacy VRT format had messy mapping of pinChar to pinIndex
+Q_DECL_CONSTEXPR static size_t GetPinIndexFromLegacyPinChar(uchar c)	// Legacy VRT format had messy mapping of pinChar to pinIndex
 {
-	if ( c <  '1' )	return BAD_PININDEX;	// Handles the '.', '-', '+' characters used by GetMakeInstructions()
-	if ( c <= '9' )	return      c - '1';	// Char '1' to '9' ==> Index 0  to 8
-	if ( c <= '@' )	return 61 + c - ':';	// Char ':' to '@' ==> Index 61 to 67
-	if ( c <= 'Z' )	return 9  + c - 'A';	// Char 'A' to 'Z' ==> Index 9  to 34
-	if ( c <= '`' )	return 68 + c - '[';	// Char '[' to '`' ==> Index 68 to 73
-	if ( c <= 'z' )	return 35 + c - 'a';	// Char 'a' to 'z' ==> Index 35 to 60
-	else			return 74 + c - '{';	// Char '{' to 255 ==> Index 74 to 206
+	return ( c <  '1' ) ? BAD_PININDEX		// Handles the '.', '-', '+' characters used by GetMakeInstructions()
+		 : ( c <= '9' ) ? (     c - '1')	// Char '1' to '9' ==> Index 0  to 8
+		 : ( c <= '@' ) ? (61 + c - ':')	// Char ':' to '@' ==> Index 61 to 67
+		 : ( c <= 'Z' ) ? (9  + c - 'A')	// Char 'A' to 'Z' ==> Index 9  to 34
+		 : ( c <= '`' ) ? (68 + c - '[')	// Char '[' to '`' ==> Index 68 to 73
+		 : ( c <= 'z' ) ? (35 + c - 'a')	// Char 'a' to 'z' ==> Index 35 to 60
+						: (74 + c - '{');	// Char '{' to 255 ==> Index 74 to 206
 }
 
 static uchar GetSurfaceFromLegacySurfaceChar(uchar c)
@@ -116,10 +116,10 @@ public:
 	{
 		return !(*this == o);
 	}
-	void		 SetPinIndex(size_t i)		{ m_pinChar = ( i >= BAD_PINCHAR ) ? BAD_PINCHAR : static_cast<uchar> (i); }
-	void		 SetSurface(uchar c)		{ m_surface = c; }
-	void		 SetHoleUse(uchar c)		{ m_holeUse = c; }
-	void		 SetOccupancy(bool bWire)	// Helper
+	void SetPinIndex(size_t i)	{ m_pinChar = ( i >= BAD_PINCHAR ) ? BAD_PINCHAR : static_cast<uchar> (i); }
+	void SetSurface(uchar c)	{ m_surface = c; }
+	void SetHoleUse(uchar c)	{ m_holeUse = c; }
+	void SetOccupancy(bool bWire)	// Helper
 	{
 		if ( bWire )
 		{
@@ -131,11 +131,11 @@ public:
 			SetHoleUse( GetIsPin() ? HOLE_FULL			: HOLE_FREE );		// Set hole occupancy for pins/non-pins
 		}
 	}
-	size_t		 GetPinIndex() const			{ return ( m_pinChar == BAD_PINCHAR ) ? BAD_PININDEX : m_pinChar; }
-	const uchar& GetSurface() const				{ return m_surface; }
-	const uchar& GetHoleUse() const				{ return m_holeUse; }
-	bool		 GetIsPin() const				{ return m_pinChar != BAD_PINCHAR; }
-	bool		 GetIsHole() const				{ return m_surface == SURFACE_HOLE; }
+	size_t		 GetPinIndex() const	{ return ( m_pinChar == BAD_PINCHAR ) ? BAD_PININDEX : m_pinChar; }
+	const uchar& GetSurface() const		{ return m_surface; }
+	const uchar& GetHoleUse() const		{ return m_holeUse; }
+	bool		 GetIsPin() const		{ return m_pinChar != BAD_PINCHAR; }
+	bool		 GetIsHole() const		{ return m_surface == SURFACE_HOLE; }
 
 	static const std::map<uchar, std::string>& GetMapSurfaceStrings()
 	{
@@ -161,16 +161,9 @@ public:
 	}
 
 	// Merge interface functions
-	virtual void UpdateMergeOffsets(MergeOffsets&) override
-	{
-	}
-	virtual void ApplyMergeOffsets(const MergeOffsets&) override
-	{
-	}
-	void Merge(const Pin& o)
-	{
-		*this = o;
-	}
+	virtual void UpdateMergeOffsets(MergeOffsets&) override {}
+	virtual void ApplyMergeOffsets(const MergeOffsets&) override {}
+	void Merge(const Pin& o) { *this = o; }
 	// Persist interface functions
 	virtual void Load(DataStream& inStream) override
 	{

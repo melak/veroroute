@@ -31,12 +31,12 @@
 // then setting the code appropriately at each point will allow
 // a single diagonal connection to exist, either (A-A) or (B-B).
 
-static const int	NUM_NBRS = 9;	// (NBR_L to NBR_LB) + NBR_X
+Q_DECL_CONSTEXPR static const int	NUM_NBRS = 9;	// (NBR_L to NBR_LB) + NBR_X
 
 // Indexes for the 8 neighbour elements in the same layer, starting on the left and going clockwise
-static const int	NBR_L(0), NBR_LT(1), NBR_T(2), NBR_RT(3),	// Left,  Left-Top,     Top,    Right-Top,
-					NBR_R(4), NBR_RB(5), NBR_B(6), NBR_LB(7);	// Right, Right-Bottom, Bottom, Left-Bottom
-static const int	NBR_X(8);	// Index for the neighbour element in the layer above/below
+Q_DECL_CONSTEXPR static const int	NBR_L(0), NBR_LT(1), NBR_T(2), NBR_RT(3),	// Left,  Left-Top,     Top,    Right-Top,
+									NBR_R(4), NBR_RB(5), NBR_B(6), NBR_LB(7);	// Right, Right-Bottom, Bottom, Left-Bottom
+Q_DECL_CONSTEXPR static const int	NBR_X(8);	// Index for the neighbour element in the layer above/below
 
 Q_DECL_CONSTEXPR static inline int	Opposite(int NBR)	// Helper to get opposite neighbour index
 {
@@ -48,22 +48,22 @@ Q_DECL_CONSTEXPR static inline bool ReadCodeBit(int NBR, int iCode)	{ return ( i
 static inline void SetCodeBit(int NBR, int& iCode)		{ iCode |=  (1<<NBR); }
 static inline void ClearCodeBit(int NBR, int& iCode)	{ iCode &= ~(1<<NBR); }
 static inline void ToggleCodeBit(int NBR, int& iCode)	{ iCode ^=  (1<<NBR); }
-static const int CODEBITS_DIAGS	= 0xAA;		// All diagonal neighbours in same layer
-static const int CODEBITS_LYR	= 0xFF;		// All neighbours in same layer
-static const int CODEBITS_ALL	= 0x1FF;	// All neighbours in same layer + the neighbour in the layer above/below
+Q_DECL_CONSTEXPR static const int CODEBITS_DIAGS	= 0xAA;		// All diagonal neighbours in same layer
+Q_DECL_CONSTEXPR static const int CODEBITS_LYR		= 0xFF;		// All neighbours in same layer
+Q_DECL_CONSTEXPR static const int CODEBITS_ALL		= 0x1FF;	// All neighbours in same layer + the neighbour in the layer above/below
 
 // Flag is a bitfield describing the status of the nodeId at point.
 // USERSET points will not have their nodeId modified during the auto-routing.
 // The algorithm will change the flag from USERSET to AUTOKEPT if it thinks the point is useful.
 // On hitting "Tidy", only AUTOKEPT and AUTOSET points are kept, and any USERSET
 // points will be wiped (if they are not component pins).
-static const char USERSET	= 1;					// ==> user assigned the nodeId
-static const char AUTOSET	= 2;					// ==> routing algorithm assigned the nodeId
-static const char AUTOKEPT	= (USERSET | AUTOSET);	// ==> user assigned the nodeId, and routing algorithm agrees it is useful
-static const char VEROSET	= 4;					// ==> auto assigned to create Vero strips
-static const char RECTSET	= 8;					// ==> is within a user-defined rect
+Q_DECL_CONSTEXPR static const char USERSET	= 1;					// ==> user assigned the nodeId
+Q_DECL_CONSTEXPR static const char AUTOSET	= 2;					// ==> routing algorithm assigned the nodeId
+Q_DECL_CONSTEXPR static const char AUTOKEPT	= (USERSET | AUTOSET);	// ==> user assigned the nodeId, and routing algorithm agrees it is useful
+Q_DECL_CONSTEXPR static const char VEROSET	= 4;					// ==> auto assigned to create Vero strips
+Q_DECL_CONSTEXPR static const char RECTSET	= 8;					// ==> is within a user-defined rect
 
-static const int  BAD_NODEID = 0;	// Invalid node ID (i.e. netlist ID)
+Q_DECL_CONSTEXPR static const int BAD_NODEID = 0;	// Invalid node ID (i.e. netlist ID)
 
 class TrackElement : public Persist, public Merge
 {
@@ -98,18 +98,9 @@ public:
 	const char&	GetFlag() const		{ return m_flag; }
 
 	// Connectivity helpers
-	void SetUsed(int iNbr, bool b)
-	{
-		if ( b ) SetCodeBit(iNbr, m_iCode); else ClearCodeBit(iNbr, m_iCode);
-	}
-	bool GetUsed(int iNbr) const
-	{
-		return ReadCodeBit(iNbr, m_iCode);
-	}
-	bool IsClash(int nodeId) const
-	{
-		return nodeId != BAD_NODEID && m_nodeId != BAD_NODEID && nodeId != m_nodeId;
-	}
+	void SetUsed(int iNbr, bool b)	{ if ( b ) SetCodeBit(iNbr, m_iCode); else ClearCodeBit(iNbr, m_iCode); }
+	bool GetUsed(int iNbr) const	{ return ReadCodeBit(iNbr, m_iCode); }
+	bool IsClash(int nodeId) const	{ return nodeId != BAD_NODEID && m_nodeId != BAD_NODEID && nodeId != m_nodeId; }
 	int GetPerimeterCode(bool bDiagsOK, bool bMinDiags)	const // Helper for the GUI "blobs"
 	{
 		int iCode = GetCode() & CODEBITS_LYR;	// Take a copy of the connection code, and restrict to same-layer neighbours
@@ -138,10 +129,7 @@ public:
 	{
 		if ( m_nodeId != BAD_NODEID ) m_nodeId += o.deltaNodeId;
 	}
-	void Merge(const TrackElement& o)
-	{
-		*this = o;
-	}
+	void Merge(const TrackElement& o) { *this = o; }
 	// Persist interface functions
 	virtual void Load(DataStream& inStream) override
 	{

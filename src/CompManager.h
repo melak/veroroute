@@ -64,7 +64,7 @@ public:
 	CompManager& operator=(const CompManager& o)
 	{
 		Clear();
-		for (const auto& mapObj : o.m_mapIdToComp) m_mapIdToComp[ mapObj.first ] = mapObj.second;
+		m_mapIdToComp.insert(o.m_mapIdToComp.begin(), o.m_mapIdToComp.end());
 		m_trax = o.m_trax;
 		// Don't copy m_mapWireToInfo (it's just a helper)
 		// Don't copy m_foundId       (it's just a helper)
