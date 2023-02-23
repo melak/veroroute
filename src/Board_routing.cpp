@@ -110,6 +110,8 @@ void Board::Route(bool bMinimal)
 	for (size_t i = 0; i < numNodes; i++)
 		m_nodeInfoMgr.GetAt(i)->SetCost(UINT_MAX);	// i.e. Mark all nodesIds as unrouted
 
+	m_bHasPlacedWires = GetCompMgr().GetHasPlacedWires();	// Must set m_bHasPlacedWires before calling Flood() in loop below
+
 	int iPasses(0);
 	bool bImproved(true), bAllowRipUp( bRipUpEnabled && GetRoutingEnabled() );
 	while ( bImproved )
@@ -211,6 +213,9 @@ void Board::UpdateVias()	// Sets the via flag to true on all candidate vias
 			iRID[i]	= GetAt(i)->GetRouteId();
 		}
 	}
+
+	if ( bViasEnabled )
+		m_bHasPlacedWires = GetCompMgr().GetHasPlacedWires();	// Must set m_bHasPlacedWires before calling Flood() in loop below
 
 	for (int i = 0, iSize = ( GetLyrs() == 1 ) ? GetSize() : ( GetSize() / 2 ); i < iSize; i++)	// Loop layer 0 only
 	{
@@ -422,7 +427,7 @@ void Board::Flood_Grow(int iFloodNodeId, Element* pJ, int iNbr, bool bBuildTrack
 	const unsigned int&	k	= pK->GetRouteId();
 
 	const bool bDirOK = ( bOK && pJ->GetUsed(iNbr) ) ||	// i.e. if already painted with correct nodeId
-						( bBuildTracks && pJ->HaveNoBlankPins(iNbr) && !pJ->IsBlocked(iNbr, iFloodNodeId) && !pJ->IsUselessWire(iNbr, iFloodNodeId) );
+						( bBuildTracks && pJ->HaveNoBlankPins(iNbr) && !pJ->IsBlocked(iNbr, iFloodNodeId) && !(m_bHasPlacedWires && pJ->IsUselessWire(iNbr, iFloodNodeId)) );
 	if ( !bDirOK ) return;
 
 	if ( pK->GetMH() == BAD_MH ) // Grow route with ID j (from pJ to pK)
@@ -607,6 +612,8 @@ void Board::Manhatten(Element* p, bool bSingleRoute)
 			m_targetPins.push_back(q);
 	}
 
+	m_bHasPlacedWires = GetCompMgr().GetHasPlacedWires();	// Must set m_bHasPlacedWires before calling Flood()
+
 	Flood(bSingleRoute);
 
 	SetRoutingEnabled(bRoutingEnabled);	// Restore routing state
@@ -669,7 +676,7 @@ void Board::PasteTracks(bool bTidy)
 	const int	rows		= bRestrict ? trax.GetCompRows() : GetRows();
 	const int	cols		= bRestrict ? trax.GetCompCols() : GetCols();
 
-	for (int k = bRestrict ? trax.GetLyr() : 0;			k < lyrs; k++)
+	for (int k = bRestrict ? trax.GetLyr() : 0;				k < lyrs; k++)
 	for (int j = 0, jRow = bRestrict ? trax.GetRow() : 0;	j < rows; j++, jRow++)
 	for (int i = 0, iCol = bRestrict ? trax.GetCol() : 0;	i < cols; i++, iCol++)
 	{
@@ -731,7 +738,7 @@ void Board::WipeTracks()
 	const int	rows		= bRestrict ? trax.GetCompRows() : GetRows();
 	const int	cols		= bRestrict ? trax.GetCompCols() : GetCols();
 
-	for (int k = bRestrict ? trax.GetLyr() : 0;			k < lyrs; k++)
+	for (int k = bRestrict ? trax.GetLyr() : 0;				k < lyrs; k++)
 	for (int j = 0, jRow = bRestrict ? trax.GetRow() : 0;	j < rows; j++, jRow++)
 	for (int i = 0, iCol = bRestrict ? trax.GetCol() : 0;	i < cols; i++, iCol++)
 	{

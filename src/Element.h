@@ -295,7 +295,7 @@ public:
 		for (int iNbr = 0; iNbr < NUM_NBRS; iNbr++)
 			if ( GetNbr(iNbr) == p ) return true;
 		return false;
-	}			
+	}
 	bool IsUselessWire(int iNbr, int nodeId) const	// Helper: true ==> painting nbr with nodeId is wasteful
 	{
 		const Element* pWA = GetNbr(iNbr);

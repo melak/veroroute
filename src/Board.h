@@ -104,6 +104,7 @@ public:
 		m_tmpVecSize	= 0;
 		m_bRouteMinimal	= true;
 		m_bHasVias = false;
+		m_bHasPlacedWires = false;
 		return *this;
 	}
 
@@ -888,4 +889,5 @@ private:
 	unsigned int			m_iConnRID = BAD_ROUTEID;	// ... and its route ID
 	bool					m_bRouteMinimal;			// true ==> don't build tracks between pins that are already connected
 	bool					m_bHasVias;					// true ==> there are routed vias in the design (as opposed to "wires-as-tracks" vias)
+	bool					m_bHasPlacedWires;			// true ==> there are placed wires in the design
 };
