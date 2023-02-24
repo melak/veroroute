@@ -38,7 +38,7 @@
 
 // Routing methods
 
-void Board::WipeAutoSetPoints(int nodeId)
+void Board::WipeAutoSetPoints(int nodeId, bool bHavePlacedWires)
 {
 	WIRELIST wireList;	// Helper for chains of wires
 
@@ -49,7 +49,7 @@ void Board::WipeAutoSetPoints(int nodeId)
 		if ( !bWipeAll && p->GetNodeId() != nodeId ) continue;	// Skip points with wrong nodeId
 		const bool bAllLyrs = p->GetHasPin();
 		bool bWipe = p->ReadFlagBits(AUTOSET) && !p->ReadFlagBits(USERSET);
-		if ( p->GetHasWire() )
+		if ( bHavePlacedWires && p->GetHasWire() )
 		{
 			p->GetWireList(wireList);	// Get list containing p and its wired points ...
 			for (const auto& o : wireList)	// ... and disable wipe if any of them are USERSET
@@ -83,23 +83,25 @@ void Board::BuildTargetPins(int nodeId)
 
 	assert( nodeId != BAD_NODEID );
 	m_targetPins.clear();
-	for (int i = 0, iSize = GetSize(); i < iSize; i++)
+	for (int i = 0, iSize = ( GetLyrs() == 1 ) ? GetSize() : ( GetSize() / 2 ); i < iSize; i++)	// Use layer 0 only for pins
 	{
 		Element* p = GetAt(i);
-		if ( p->IsLayer0() && p->GetHasPin() && p->GetNodeId() == nodeId && !p->GetHasWire() )
+		if ( p->GetHasPin() && p->GetNodeId() == nodeId && !(m_bHavePlacedWires && p->GetHasWire()) )
 			m_targetPins.push_back(p);
 	}
 }
 
 void Board::Route(bool bMinimal)
 {
-	m_bRouteMinimal	= bMinimal;
-
 //	const auto start = std::chrono::steady_clock::now();
+
+	SetHavePlacedWires();	// Set up m_bHavePlacedWires at very start of routing
+
+	m_bRouteMinimal = bMinimal;
 
 	// When routing is enabled,  this method will build tracks and update the cost in each NodeInfo.
 	// When routing is disabled, this method will update each NodeInfo cost without building new tracks.
-	if ( GetRoutingEnabled() ) WipeAutoSetPoints();
+	if ( GetRoutingEnabled() ) WipeAutoSetPoints(BAD_NODEID, m_bHavePlacedWires);
 
 	m_nodeInfoMgr.SortByLowestDifficulty(m_compMgr);
 
@@ -109,8 +111,6 @@ void Board::Route(bool bMinimal)
 
 	for (size_t i = 0; i < numNodes; i++)
 		m_nodeInfoMgr.GetAt(i)->SetCost(UINT_MAX);	// i.e. Mark all nodesIds as unrouted
-
-	m_bHasPlacedWires = GetCompMgr().GetHasPlacedWires();	// Must set m_bHasPlacedWires before calling Flood() in loop below
 
 	int iPasses(0);
 	bool bImproved(true), bAllowRipUp( bRipUpEnabled && GetRoutingEnabled() );
@@ -143,7 +143,7 @@ void Board::Route(bool bMinimal)
 
 				CopyTo(Ibest);
 
-				WipeAutoSetPoints(nodeIdI);	// Rip-up I
+				WipeAutoSetPoints(nodeIdI, m_bHavePlacedWires);	// Rip-up I
 
 				CopyTo(Iripped);
 
@@ -154,7 +154,7 @@ void Board::Route(bool bMinimal)
 					const int& nodeIdJ = pJ->GetNodeId();
 					if ( pJ->GetCost() == 0 )	// Only consider J if it is fully routed
 					{
-						WipeAutoSetPoints(nodeIdJ);	// Rip-up J
+						WipeAutoSetPoints(nodeIdJ, m_bHavePlacedWires);	// Rip-up J
 
 						const unsigned int costI = Flood(nodeIdI);	// Route I ...
 						if ( costI < pI->GetCost() )				// ... and if I improved
@@ -214,8 +214,7 @@ void Board::UpdateVias()	// Sets the via flag to true on all candidate vias
 		}
 	}
 
-	if ( bViasEnabled )
-		m_bHasPlacedWires = GetCompMgr().GetHasPlacedWires();	// Must set m_bHasPlacedWires before calling Flood() in loop below
+	if ( bViasEnabled ) SetHavePlacedWires();	// Set up m_bHavePlacedWires before calling Flood() in loop below
 
 	for (int i = 0, iSize = ( GetLyrs() == 1 ) ? GetSize() : ( GetSize() / 2 ); i < iSize; i++)	// Loop layer 0 only
 	{
@@ -315,7 +314,6 @@ void Board::Flood_Helper(const bool bBuildTracks)
 		UpdateMH(p, iRouteID, iMH, iMaxMH);				// Add p to set of visited points
 	}
 
-	const bool			bHaveWires	 = m_compMgr.GetHavePlacedWires();
 	const bool			bMultiLayer	 = GetLyrs() > 1;
 	const bool			bViasEnabled = bMultiLayer && GetViasEnabled();
 	const int&			iFloodNodeId = m_targetPins[0]->GetNodeId();
@@ -323,7 +321,7 @@ void Board::Flood_Helper(const bool bBuildTracks)
 	const unsigned int	iMaxDeltaMH	 = ( bViasEnabled ) ? MH_LVIA : bDiagsOK ? MH_DIAG : MH_LRTB;	// The max MH increment in single-layer mode depends on if diagonals are allowed
 
 	// If any of the target pins are wires, we have to handle those first
-	for (size_t n = 0; n < N && bHaveWires; n++)
+	for (size_t n = 0; n < N && m_bHavePlacedWires; n++)
 	{
 		Element* p = m_targetPins[n];
 		if ( !p->GetHasWire() ) continue;
@@ -398,7 +396,7 @@ void Board::Flood_Helper(const bool bBuildTracks)
 
 		// Periodically (every sufficiently large MH increase) examine which routes have grown.
 		// If all growing routes are connected to each other then we're done.
-		if ( N > 1 && !bDone && iMH >= iMHlastGrowthCheck + iMaxDeltaMH + (bHaveWires ? MH_WIRE : 0) )
+		if ( N > 1 && !bDone && iMH >= iMHlastGrowthCheck + iMaxDeltaMH + (m_bHavePlacedWires ? MH_WIRE : 0) )
 		{
 			bDone = true;
 			for (size_t i = 0; i < N && bDone; i++)
@@ -427,7 +425,7 @@ void Board::Flood_Grow(int iFloodNodeId, Element* pJ, int iNbr, bool bBuildTrack
 	const unsigned int&	k	= pK->GetRouteId();
 
 	const bool bDirOK = ( bOK && pJ->GetUsed(iNbr) ) ||	// i.e. if already painted with correct nodeId
-						( bBuildTracks && pJ->HaveNoBlankPins(iNbr) && !pJ->IsBlocked(iNbr, iFloodNodeId) && !(m_bHasPlacedWires && pJ->IsUselessWire(iNbr, iFloodNodeId)) );
+						( bBuildTracks && pJ->HaveNoBlankPins(iNbr) && !pJ->IsBlocked(iNbr, iFloodNodeId) && !(m_bHavePlacedWires && pJ->IsUselessWire(iNbr, iFloodNodeId)) );
 	if ( !bDirOK ) return;
 
 	if ( pK->GetMH() == BAD_MH ) // Grow route with ID j (from pJ to pK)
@@ -437,7 +435,7 @@ void Board::Flood_Grow(int iFloodNodeId, Element* pJ, int iNbr, bool bBuildTrack
 		{
 			UpdateMH(pK, j, iMH, iMaxMH);	// Add pK to set of visited points
 
-			const bool bWire = pK->IsLayer0() && pK->GetHasWire();	// Constrain wire-routing to layer 0
+			const bool bWire = m_bHavePlacedWires && pK->IsLayer0() && pK->GetHasWire();	// Constrain wire-routing to layer 0
 			if ( bWire )
 			{
 				pK->GetWireList(wireList);	// Get list of pK and its wired points
@@ -491,7 +489,7 @@ void Board::Backtrace(Element* pEnd, int nodeId)
 
 		Element* pW0 = p->GetW(0);
 		Element* pW1 = p->GetW(1);
-		const bool bWire = p->IsLayer0() && p->GetHasWire();	// Constrain wire-routing to layer 0
+		const bool bWire = m_bHavePlacedWires && p->IsLayer0() && p->GetHasWire();	// Constrain wire-routing to layer 0
 		if ( !bHasPin || bWire ) // For non-pins and wires
 		{
 			if ( p->GetNodeId() == BAD_NODEID )	// Set NodeId if not set yet.
@@ -576,7 +574,7 @@ bool Board::BacktraceHelper(Element*& p, unsigned int& MH, int nodeId, unsigned 
 {
 	Element* pNbr = p->GetNbr(iNbr);
 	if ( pNbr->GetRouteId() != p->GetRouteId() ) return false;	// Skip if nbr has wrong routeId
-	const bool bWire = pNbr->IsLayer0() && pNbr->GetHasWire();	// Constrain wire-routing to layer 0
+	const bool bWire = m_bHavePlacedWires && pNbr->IsLayer0() && pNbr->GetHasWire();	// Constrain wire-routing to layer 0
 	if ( iLoop == 0 &&  bWire ) return false;					// Skip if nbr is a wire
 	if ( iLoop == 1 && !bWire ) return false;					// Skip if nbr is a non-wire
 	if ( p->IsBlocked(iNbr, nodeId) ) return false;				// Skip if blocked
@@ -593,6 +591,8 @@ void Board::Manhatten(Element* p, bool bSingleRoute)
 	const bool bRouteMinimal	= m_bRouteMinimal;		// Log m_bRouteMinimal state
 	const bool bRoutingEnabled	= GetRoutingEnabled();	// Log routing state
 
+	SetHavePlacedWires();	// Set up m_bHavePlacedWires so we can skip calls to GetHasWire() here, and in Flood()
+
 	m_bRouteMinimal	= true;
 	SetRoutingEnabled(false);	// Don't build tracks
 
@@ -608,11 +608,9 @@ void Board::Manhatten(Element* p, bool bSingleRoute)
 	{
 		Element* q = GetAt(i);
 		if ( q == p ) continue;	// Skip self
-		if ( q && q->GetHasPin() && !q->GetHasWire() && q->GetNodeId() == iTraceNodeId )	// Skip wires
+		if ( q && q->GetHasPin() && !(m_bHavePlacedWires && q->GetHasWire()) && q->GetNodeId() == iTraceNodeId )	// Skip wires
 			m_targetPins.push_back(q);
 	}
-
-	m_bHasPlacedWires = GetCompMgr().GetHasPlacedWires();	// Must set m_bHasPlacedWires before calling Flood()
 
 	Flood(bSingleRoute);
 
@@ -623,7 +621,7 @@ void Board::Manhatten(Element* p, bool bSingleRoute)
 	for (int i = 0, iSize = GetSize(); i < iSize && m_iConnPin == -1; i++)
 	{
 		Element* q = GetAt(i);
-		if ( q->GetMH() != BAD_MH && q->GetHasPin() && !q->GetHasWire() )
+		if ( q->GetMH() != BAD_MH && q->GetHasPin() && !(m_bHavePlacedWires && q->GetHasWire()) )
 		{
 			m_iConnPin = i;
 			m_iConnRID = q->GetRouteId();

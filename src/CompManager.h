@@ -195,15 +195,6 @@ public:
 			if ( iterFind == o.end() ) o.push_back( iWidth );
 		}
 	}
-	bool GetHasPlacedWires() const
-	{
-		for (const auto& mapObj : m_mapIdToComp)
-		{
-			const Component& comp = mapObj.second;
-			if ( comp.GetType() == COMP::WIRE && comp.GetIsPlaced() ) return true;
-		}
-		return false;
-	}
 	void CalculateWireInfo()	// Calculate wire shifts and crossing flags
 	{
 		m_mapWireToInfo.clear();

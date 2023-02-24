@@ -104,7 +104,7 @@ public:
 		m_tmpVecSize	= 0;
 		m_bRouteMinimal	= true;
 		m_bHasVias = false;
-		m_bHasPlacedWires = false;
+		m_bHavePlacedWires = false;
 		return *this;
 	}
 
@@ -592,7 +592,8 @@ public:
 	void SetSolder(int nodeId, int col, bool bVertical);
 
 	// Routing methods
-	void WipeAutoSetPoints(int nodeId = BAD_NODEID);
+	void WipeAutoSetPoints() { WipeAutoSetPoints(BAD_NODEID, true); }
+	void WipeAutoSetPoints(int nodeId, bool bHavePlacedWires);
 	void BuildTargetPins(int nodeId);
 	void Route(bool bMinimal);
 	void UpdateVias();
@@ -854,6 +855,7 @@ private:
 			}
 		}
 	}
+	void SetHavePlacedWires() { m_bHavePlacedWires = GetCompMgr().GetHavePlacedWires(); }
 private:
 	std::string				m_infoStr;		// General info
 
@@ -889,5 +891,5 @@ private:
 	unsigned int			m_iConnRID = BAD_ROUTEID;	// ... and its route ID
 	bool					m_bRouteMinimal;			// true ==> don't build tracks between pins that are already connected
 	bool					m_bHasVias;					// true ==> there are routed vias in the design (as opposed to "wires-as-tracks" vias)
-	bool					m_bHasPlacedWires;			// true ==> there are placed wires in the design
+	bool					m_bHavePlacedWires;			// true ==> there are placed wires in the design
 };
