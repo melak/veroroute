@@ -55,18 +55,18 @@ typedef std::list<ElementInt> WIRELIST;	// Helper for chains of wires
 class Element : public Pin, public TrackElement
 {
 public:
-	virtual void		 SetPinIndex(size_t i)		{ auto pBase = GetBase();		return pBase == this ? Pin::SetPinIndex(i)		 : pBase->SetPinIndex(i); }
-	virtual void		 SetSurface(uchar c)		{ auto pBase = GetBase();		return pBase == this ? Pin::SetSurface(c)		 : pBase->SetSurface(c); }
-	virtual void		 SetHoleUse(uchar c)		{ auto pBase = GetBase();		return pBase == this ? Pin::SetHoleUse(c)		 : pBase->SetHoleUse(c); }
-	virtual void		 SetOccupancy(bool bWire)	{ auto pBase = GetBase();		return pBase == this ? Pin::SetOccupancy(bWire)	 : pBase->SetOccupancy(bWire); }
-	virtual size_t		 GetPinIndex() const		{ auto pBase = GetBaseConst();	return pBase == this ? Pin::GetPinIndex()		 : pBase->GetPinIndex(); }
-	virtual const uchar& GetSurface() const			{ auto pBase = GetBaseConst();	return pBase == this ? Pin::GetSurface()		 : pBase->GetSurface(); }
-	virtual const uchar& GetHoleUse() const			{ auto pBase = GetBaseConst();	return pBase == this ? Pin::GetHoleUse()		 : pBase->GetHoleUse(); }
-	virtual bool		 GetIsPin() const			{ auto pBase = GetBaseConst();	return pBase == this ? Pin::GetIsPin()			 : pBase->GetIsPin(); }
-	virtual bool		 GetIsHole() const			{ auto pBase = GetBaseConst();	return pBase == this ? Pin::GetIsHole()			 : pBase->GetIsHole(); }
+	virtual void		 SetPinIndex(size_t i)		{ return GetBase()->Pin::SetPinIndex(i); }
+	virtual void		 SetSurface(uchar c)		{ return GetBase()->Pin::SetSurface(c); }
+	virtual void		 SetHoleUse(uchar c)		{ return GetBase()->Pin::SetHoleUse(c); }
+	virtual void		 SetOccupancy(bool bWire)	{ return GetBase()->Pin::SetOccupancy(bWire); }
+	virtual size_t		 GetPinIndex() const		{ return GetBaseConst()->Pin::GetPinIndex(); }
+	virtual const uchar& GetSurface() const			{ return GetBaseConst()->Pin::GetSurface(); }
+	virtual const uchar& GetHoleUse() const			{ return GetBaseConst()->Pin::GetHoleUse(); }
+	virtual bool		 GetIsPin() const			{ return GetBaseConst()->Pin::GetIsPin(); }
+	virtual bool		 GetIsHole() const			{ return GetBaseConst()->Pin::GetIsHole(); }
 	virtual const int&	 GetNodeId() const
 	{
-		auto pBase = GetBaseConst();	return ( pBase != this && GetHasPin() ) ? pBase->GetNodeId() : TrackElement::GetNodeId();
+		auto pBase = GetBaseConst();	return ( pBase != this && GetHasPin() ) ? pBase->TrackElement::GetNodeId() : TrackElement::GetNodeId();
 	}
 	virtual void		 SetNodeId(int i)	// Only called via the parent board method Board::SetNodeId()
 	{
@@ -127,19 +127,12 @@ public:
 	{
 		return !(*this == o);
 	}
-	void SetIsMark(bool b)			{ auto pBase = GetBase(); if ( pBase == this ) m_bIsMark = b; else pBase->SetIsMark(b); }
-	void SetCompId(int i)			{ auto pBase = GetBase(); if ( pBase == this ) m_compId  = i; else pBase->SetCompId(i); }
-	void SetCompId2(int i)			{ auto pBase = GetBase(); if ( pBase == this ) m_compId2 = i; else pBase->SetCompId2(i); }
-	void SetPinIndex2(size_t i)
-	{
-		auto pBase = GetBase();
-		if ( pBase == this )
-			m_pinChar2 = ( i >= BAD_PINCHAR ) ? BAD_PINCHAR : static_cast<uchar> (i);
-		else
-			pBase->SetPinIndex2(i);
-	}
-	void SetSolderR(bool b)			{ auto pBase = GetBase(); if ( pBase == this ) m_bSolderR = b; else pBase->SetSolderR(b); }
-	void SetIsVia(bool b)			{ auto pBase = GetBase(); if ( pBase == this ) m_bIsVia	  = b; else pBase->SetIsVia(b); }
+	void SetIsMark(bool b)			{ GetBase()->m_bIsMark = b; }
+	void SetCompId(int i)			{ GetBase()->m_compId  = i; }
+	void SetCompId2(int i)			{ GetBase()->m_compId2 = i; }
+	void SetPinIndex2(size_t i)		{ GetBase()->m_pinChar2 = ( i >= BAD_PINCHAR ) ? BAD_PINCHAR : static_cast<uchar> (i); }
+	void SetSolderR(bool b)			{ GetBase()->m_bSolderR = b; }
+	void SetIsVia(bool b)			{ GetBase()->m_bIsVia	= b; }
 	void SetRoutable(int i)			{ m_iRoutable	= i; }
 	void SetRouteId(unsigned int i)	{ m_routeId = i; }
 	void ResetMH()
@@ -214,25 +207,25 @@ public:
 	{
 		assert( !GetWireExists(p) );	// No duplicates allowed
 		assert( iSlot == 0 || iSlot == 1 );
-		auto pBase = GetBase();	if ( pBase == this ) m_pW[iSlot] = p; else pBase->SetW(iSlot, p);
+		GetBase()->m_pW[iSlot] = p;
 	}
 	void				SetMH(unsigned int iMH)	{ m_MH = iMH; }
-	const bool&			GetIsMark() const		{ auto pBase = GetBaseConst(); return pBase == this ? m_bIsMark		: pBase->GetIsMark(); }
-	const int&			GetCompId() const		{ auto pBase = GetBaseConst(); return pBase == this ? m_compId		: pBase->GetCompId(); }
-	const int&			GetCompId2() const		{ auto pBase = GetBaseConst(); return pBase == this ? m_compId2		: pBase->GetCompId2(); }
-	const uchar&		GetPinChar2() const		{ auto pBase = GetBaseConst(); return pBase == this ? m_pinChar2	: pBase->GetPinChar2(); }
+	const bool&			GetIsMark() const		{ return GetBaseConst()->m_bIsMark; }
+	const int&			GetCompId() const		{ return GetBaseConst()->m_compId; }
+	const int&			GetCompId2() const		{ return GetBaseConst()->m_compId2; }
+	const uchar&		GetPinChar2() const		{ return GetBaseConst()->m_pinChar2; }
 	int					GetNumCompIds() const	{ int i(0); if ( GetCompId() != BAD_COMPID ) i++; if ( GetCompId2() != BAD_COMPID ) i++; return i; }
 	bool				GetHasComp() const		{ return GetCompId() != BAD_COMPID || GetCompId2() != BAD_COMPID; }
 	bool				GetHasPin() const		{ return GetIsPin() || GetPinChar2() != BAD_PINCHAR; }
 	size_t				GetPinIndex2() const	{ return ( GetPinChar2() == BAD_PINCHAR ) ? BAD_PININDEX : GetPinChar2(); }
-	const bool&			GetSolderR() const		{ auto pBase = GetBaseConst(); return pBase == this ? m_bSolderR	: pBase->GetSolderR(); }
-	const bool&			GetIsVia() const		{ auto pBase = GetBaseConst(); return pBase == this ? m_bIsVia		: pBase->GetIsVia(); }
+	const bool&			GetSolderR() const		{ return GetBaseConst()->m_bSolderR; }
+	const bool&			GetIsVia() const		{ return GetBaseConst()->m_bIsVia; }
 	const int&			GetRoutable() const		{ return m_iRoutable; }
 	const unsigned int&	GetRouteId() const		{ return m_routeId; }
 	const unsigned int&	GetMH() const			{ return m_MH; }
 	const unsigned int&	GetMaxMH() const		{ return m_maxMH; }
 	Element*			GetNbr(int iNbr) const	{ return m_pNbr[iNbr]; }
-	Element*			GetW(int i) const		{ auto pBase = GetBaseConst(); return pBase == this ? m_pW[i]		: pBase->GetW(i); }
+	Element*			GetW(int i) const		{ return GetBaseConst()->m_pW[i]; }
 	bool				IsLayer0() const 		{ return GetBaseConst() == this; }
 
 	// Helpers
