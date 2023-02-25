@@ -91,9 +91,13 @@ void Board::BuildTargetPins(int nodeId)
 	}
 }
 
+//#define ROUTE_ALGORITHM_TIMER
+
 void Board::Route(bool bMinimal)
 {
-//	const auto start = std::chrono::steady_clock::now();
+#ifdef ROUTE_ALGORITHM_TIMER
+	const auto start = std::chrono::steady_clock::now();
+#endif
 
 	SetHavePlacedWires();	// Set up m_bHavePlacedWires at very start of routing
 
@@ -184,9 +188,11 @@ void Board::Route(bool bMinimal)
 
 	RebuildAdjacencies();
 
-//	const auto elapsed = std::chrono::steady_clock::now() - start;
-//	const auto duration_ms	= std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
-//	std::cout << "Time : " << duration_ms << std::endl;
+#ifdef ROUTE_ALGORITHM_TIMER
+	const auto elapsed = std::chrono::steady_clock::now() - start;
+	const auto duration_ms	= std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
+	std::cout << "Time : " << duration_ms << std::endl;
+#endif
 }
 
 void Board::UpdateVias()	// Sets the via flag to true on all candidate vias
@@ -487,9 +493,9 @@ void Board::Backtrace(Element* pEnd, int nodeId)
 
 		const bool bHasPin = p->GetHasPin();
 
-		Element* pW0 = p->GetW(0);
-		Element* pW1 = p->GetW(1);
-		const bool bWire = m_bHavePlacedWires && p->IsLayer0() && p->GetHasWire();	// Constrain wire-routing to layer 0
+		Element* pW0 = m_bHavePlacedWires ? p->GetW(0) : nullptr;
+		Element* pW1 = m_bHavePlacedWires ? p->GetW(1) : nullptr;
+		const bool bWire = (pW0 || pW1) && p->IsLayer0();	// Constrain wire-routing to layer 0
 		if ( !bHasPin || bWire ) // For non-pins and wires
 		{
 			if ( p->GetNodeId() == BAD_NODEID )	// Set NodeId if not set yet.
@@ -533,21 +539,23 @@ void Board::Backtrace(Element* pEnd, int nodeId)
 		// Now decide where to back trace to.
 
 		// Check wires first...
-		bOK = ( pW0 && pW0->GetMH() == MH - MH_WIRE );
-		if ( bOK ) { p = pW0; MH -= MH_WIRE; continue; }
-		bOK = ( pW1 && pW1->GetMH() == MH - MH_WIRE );
-		if ( bOK ) { p = pW1; MH -= MH_WIRE; continue; }
+		if ( m_bHavePlacedWires )
+		{
+			bOK = ( pW0 && pW0->GetMH() == MH - MH_WIRE );
+			if ( bOK ) { p = pW0; MH -= MH_WIRE; continue; }
+			bOK = ( pW1 && pW1->GetMH() == MH - MH_WIRE );
+			if ( bOK ) { p = pW1; MH -= MH_WIRE; continue; }
+		}
 
 		for (int iLoop = 0; iLoop < 2 && !bOK; iLoop++)	// First pass to give preference to nbrs that are not wire ends
 		{
-			const bool bHasPin = ( bMultiLayer ) ? p->GetHasPin() : false;	// Only care if p has a pin if multilayer routing
 			const int iTypeMin(bMultiLayer ? 0 : 1), iTypeMax(bViasEnabled ? 2 : 1);
 			for (int iType = iTypeMin; iType <= iTypeMax && !bOK; iType++)
 			{
 				switch( iType )
 				{
-					case 0:	// Type 0 ==> Change layer at a pin
-						if ( bHasPin ) bOK = BacktraceHelper(p, MH, nodeId, MH_LPIN, NBR_X, iLoop);
+					case 0:	// Type 0 ==> Change layer at a pin if multi-layer routing
+						if ( bMultiLayer && bHasPin ) bOK = BacktraceHelper(p, MH, nodeId, MH_LPIN, NBR_X, iLoop);
 						break;
 					case 1:	// Type 1 ==> Move within layer
 						for (int iDiag = 0, iDiagMax = ( bDiagsOK ) ? 2 : 1; iDiag < iDiagMax && !bOK; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
