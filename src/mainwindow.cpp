@@ -642,7 +642,7 @@ void MainWindow::ShowCurrentRectSize()
 	const auto& rect = m_board.GetRectMgr().GetCurrent();
 	char buffer[256] = {'\0'};
 	sprintf(buffer,"Current rectangle = (%.1fin x %.1fin), (%.2fmm x %.2fmm)", rect.GetCols()*0.1, rect.GetRows()*0.1, rect.GetCols()*2.54, rect.GetRows()*2.54);
-	ui->statusBar->showMessage(QString(buffer), 1000);
+	ui->statusBar->showMessage(QString(buffer), 1500);
 }
 
 void MainWindow::OpenVrt(const QString& fileName, bool bMerge, bool bCrashRecovery)	// Helper for opening a vrt using Open(), Merge(), dropEvent(), or the command line
@@ -2329,7 +2329,7 @@ void MainWindow::UpdateRulerInfo()
 		const qreal	d_mm	= d_mil * 0.0254;
 		char buffer[256] = {'\0'};
 		sprintf(buffer,"Distance = %.2f mil   (%.4f mm)", d_mil, d_mm);
-		ui->statusBar->showMessage(QString(buffer), 1000);
+		ui->statusBar->showMessage(QString(buffer), 1500);
 	}
 }
 

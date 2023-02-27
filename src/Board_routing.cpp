@@ -486,6 +486,8 @@ void Board::Backtrace(Element* pEnd, int nodeId)
 	const bool bViasEnabled	= bMultiLayer && GetViasEnabled();
 	const bool bDiagsOK		= ( GetDiagsMode() != DIAGSMODE::OFF );
 
+	int iLastDirection(-1);	// To avoid ping-pong between layers
+
 	unsigned int MH = p->GetMH();
 	while ( true )	// Backtrace
 	{
@@ -555,18 +557,29 @@ void Board::Backtrace(Element* pEnd, int nodeId)
 				switch( iType )
 				{
 					case 0:	// Type 0 ==> Change layer at a pin if multi-layer routing
-						if ( bMultiLayer && bHasPin ) bOK = BacktraceHelper(p, MH, nodeId, MH_LPIN, NBR_X, iLoop);
+						if ( bMultiLayer && bHasPin && iLastDirection != NBR_X )
+						{
+							bOK = BacktraceHelper(p, MH, nodeId, MH_LPIN, NBR_X, iLoop);
+							if ( bOK ) iLastDirection = NBR_X;
+						}
 						break;
 					case 1:	// Type 1 ==> Move within layer
-						for (int iDiag = 0, iDiagMax = ( bDiagsOK ) ? 2 : 1; iDiag < iDiagMax && !bOK; iDiag++)	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
+						for (int iDiag = 0, iDiagMax = ( bDiagsOK ) ? 2 : 1; iDiag < iDiagMax && !bOK; iDiag++)	// Loop for diagonal/non-diagonal directions
 						{
-							const unsigned int iDeltaMH = ( iDiag ) ? MH_DIAG : MH_LRTB;
+							const unsigned int iDeltaMH = ( iDiag ) ? MH_DIAG : MH_LRTB;	// First pass ==> Non-diagonal nbrs.  Second pass diagonal nbrs
 							for (int iNbr = iDiag; iNbr < 8 && !bOK; iNbr += 2)	// Even/Odd iNbr ==> Non-diagonal/Diagonal
+							{
 								bOK = BacktraceHelper(p, MH, nodeId, iDeltaMH, iNbr, iLoop);
+								if ( bOK ) iLastDirection = iNbr;
+							}
 						}
 						break;
 					case 2:	// Type 2 ==> Change layer at a via
-						if ( !bHasPin ) bOK = BacktraceHelper(p, MH, nodeId, MH_LVIA, NBR_X, iLoop);
+						if ( !bHasPin && iLastDirection != NBR_X )
+						{
+							bOK = BacktraceHelper(p, MH, nodeId, MH_LVIA, NBR_X, iLoop);
+							if ( bOK ) iLastDirection = NBR_X;
+						}
 						break;
 				}
 			}
