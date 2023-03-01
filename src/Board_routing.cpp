@@ -200,57 +200,58 @@ void Board::UpdateVias()	// Sets the via flag to true on all candidate vias
 	m_bRouteMinimal	= true;
 	m_bHasVias = false;	// Reset the flag indicating if the board has routed vias (as opposed to "wires-as-tracks" vias)
 
-	// If the ends of a candidate via can be connected through a pin on the board then it is not a via.
-	const bool bRoutingEnabled	= GetRoutingEnabled();	// Log routing state
-	const bool bViasEnabled		= GetViasEnabled();		// Log vias state
-	SetRoutingEnabled(false);	// Don't build tracks
-	SetViasEnabled(false);		// Disable routing through vias to perform test
-
-	std::vector<unsigned int> iMH;
-	std::vector<unsigned int> iRID;
-	if ( bViasEnabled )
+	if ( GetViasEnabled() )
 	{
+		// If the ends of a candidate via can be connected through a pin on the board then it is not a via.
+		const bool bRoutingEnabled	= GetRoutingEnabled();	// Log routing state
+		SetRoutingEnabled(false);	// Don't build tracks while performing test
+		SetViasEnabled(false);		// Disable routing through vias to perform test
+
 		// Store existing MH values and route IDs (used for showing connected areas) because Flood() will wipe them
-		iMH.resize( GetSize() );
-		iRID.resize( GetSize() );
+		std::vector<unsigned int> iMH;	iMH.resize( GetSize() );
+		std::vector<unsigned int> iRID;	iRID.resize( GetSize() );
 		for (int i = 0, iSize = GetSize(); i < iSize; i++)
 		{
-			iMH[i]	= GetAt(i)->GetMH();
-			iRID[i]	= GetAt(i)->GetRouteId();
+			Element* const p = GetAt(i);
+			iMH[i]	= p->GetMH();
+			iRID[i]	= p->GetRouteId();
 		}
-	}
 
-	if ( bViasEnabled ) SetHavePlacedWires();	// Set up m_bHavePlacedWires before calling Flood() in loop below
+		SetHavePlacedWires();	// Set up m_bHavePlacedWires before calling Flood() in loop below
 
-	for (int i = 0, iSize = ( GetLyrs() == 1 ) ? GetSize() : ( GetSize() / 2 ); i < iSize; i++)	// Loop layer 0 only
-	{
-		Element* p = GetAt(i);
-		Element* q = p->GetNbr(NBR_X);
-		bool bIsVia = false;
-		if ( bViasEnabled && q && !p->GetHasPin() && p->GetNodeId() == q->GetNodeId() && p->GetNodeId() != BAD_NODEID )	// If candidate via ...
+		for (int i = 0, iSize = ( GetLyrs() == 1 ) ? GetSize() : ( GetSize() / 2 ); i < iSize; i++)	// Loop layer 0 only
 		{
-			m_targetPins.clear();
-			m_targetPins.push_back(p);
-			m_targetPins.push_back(q);
-			bIsVia = Flood() > 0;
-			m_bHasVias |= bIsVia;	// Update m_bHasVias
+			Element* const p = GetAt(i);
+			Element* const q = p->GetNbr(NBR_X);
+			bool bIsVia(false);
+			if ( q && !p->GetHasPin() && p->GetNodeId() == q->GetNodeId() && p->GetNodeId() != BAD_NODEID )	// If candidate via ...
+			{
+				m_targetPins.clear();
+				m_targetPins.push_back(p);
+				m_targetPins.push_back(q);
+				bIsVia = Flood() > 0;
+				m_bHasVias |= bIsVia;	// Update m_bHasVias
+			}
+			p->SetIsVia(bIsVia);
 		}
-		p->SetIsVia(bIsVia);
-	}
 
-	if ( bViasEnabled )
-	{
 		// Restore MH values and route IDs
 		for (int i = 0, iSize = GetSize(); i < iSize; i++)
 		{
-			GetAt(i)->SetMH( iMH[i] );
-			GetAt(i)->SetRouteId( iRID[i] );
+			Element* const p = GetAt(i);
+			p->SetMH( iMH[i] );
+			p->SetRouteId( iRID[i] );
 		}
+
+		SetViasEnabled(true);				// Restore vias state
+		SetRoutingEnabled(bRoutingEnabled);	// Restore routing state
 	}
-
-	SetViasEnabled(bViasEnabled);		// Restore vias state
-	SetRoutingEnabled(bRoutingEnabled);	// Restore routing state
-
+	else
+	{
+		// No test needed.  Just wipe the via flag on the base elements
+		for (int i = 0, iSize = ( GetLyrs() == 1 ) ? GetSize() : ( GetSize() / 2 ); i < iSize; i++)	// Loop layer 0 only
+			GetAt(i)->SetIsVia(false);
+	}
 	CalcMIN_SEPARATION();
 }
 
