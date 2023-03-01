@@ -17,6 +17,8 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+//#define ROUTE_ALGORITHM_TIMER
+
 #include "Board.h"
 
 // MH_LRTB = Manhatten "distance" for horizontally/vertically adjacent grid points.
@@ -90,8 +92,6 @@ void Board::BuildTargetPins(int nodeId)
 			m_targetPins.push_back(p);
 	}
 }
-
-//#define ROUTE_ALGORITHM_TIMER
 
 void Board::Route(bool bMinimal)
 {

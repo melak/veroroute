@@ -55,20 +55,20 @@ typedef std::list<ElementInt> WIRELIST;	// Helper for chains of wires
 class Element : public Pin, public TrackElement
 {
 public:
-	virtual void		 SetPinIndex(size_t i)		{ return GetBase()->Pin::SetPinIndex(i); }
-	virtual void		 SetSurface(uchar c)		{ return GetBase()->Pin::SetSurface(c); }
-	virtual void		 SetHoleUse(uchar c)		{ return GetBase()->Pin::SetHoleUse(c); }
-	virtual void		 SetOccupancy(bool bWire)	{ return GetBase()->Pin::SetOccupancy(bWire); }
-	virtual size_t		 GetPinIndex() const		{ return GetBaseConst()->Pin::GetPinIndex(); }
-	virtual const uchar& GetSurface() const			{ return GetBaseConst()->Pin::GetSurface(); }
-	virtual const uchar& GetHoleUse() const			{ return GetBaseConst()->Pin::GetHoleUse(); }
-	virtual bool		 GetIsPin() const			{ return GetBaseConst()->Pin::GetIsPin(); }
-	virtual bool		 GetIsHole() const			{ return GetBaseConst()->Pin::GetIsHole(); }
-	virtual const int&	 GetNodeId() const
+	void		 SetPinIndex(size_t i)		{ return GetBase()->Pin::SetPinIndex(i); }
+	void		 SetSurface(uchar c)		{ return GetBase()->Pin::SetSurface(c); }
+	void		 SetHoleUse(uchar c)		{ return GetBase()->Pin::SetHoleUse(c); }
+	void		 SetOccupancy(bool bWire)	{ return GetBase()->Pin::SetOccupancy(bWire); }
+	size_t		 GetPinIndex() const		{ return GetBaseConst()->Pin::GetPinIndex(); }
+	const uchar& GetSurface() const			{ return GetBaseConst()->Pin::GetSurface(); }
+	const uchar& GetHoleUse() const			{ return GetBaseConst()->Pin::GetHoleUse(); }
+	bool		 GetIsPin() const			{ return GetBaseConst()->Pin::GetIsPin(); }
+	bool		 GetIsHole() const			{ return GetBaseConst()->Pin::GetIsHole(); }
+	const int&	 GetNodeId() const
 	{
 		auto pBase = GetBaseConst();	return ( pBase != this && GetHasPin() ) ? pBase->TrackElement::GetNodeId() : TrackElement::GetNodeId();
 	}
-	virtual void		 SetNodeId(int i)	// Only called via the parent board method Board::SetNodeId()
+	void		 SetNodeId(int i)	// Only called via the parent board method Board::SetNodeId()
 	{
 		TrackElement::SetNodeId(i);
 
