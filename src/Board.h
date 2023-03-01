@@ -602,7 +602,9 @@ public:
 	unsigned int Flood(bool bSingleRoute = false);
 	void Flood_Helper(bool bBuildTracks);
 	void Flood_Grow(int iFloodNodeId, Element* pJ, int iNbr, bool bBuildTracks, unsigned int& iMH, unsigned int& iMaxMH, bool& bDone);
-	void Backtrace(Element* pEnd, int nodeId);
+	Element* Backtrace(Element* pEnd, int nodeId);
+	void BacktracePaint(Element* p, int nodeId, bool bHasPin, bool bWire);
+	void BacktraceErase(Element* p);
 	bool BacktraceHelper(Element*& p, unsigned int& MH, int nodeId, unsigned int iDeltaMH, int iNbr, int iLoop);
 	void Manhatten(Element* p, bool bSingleRoute);
 	Element* GetConnPin();

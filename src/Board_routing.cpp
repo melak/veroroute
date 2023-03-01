@@ -463,8 +463,14 @@ void Board::Flood_Grow(int iFloodNodeId, Element* pJ, int iNbr, bool bBuildTrack
 	// Routes with IDs j and k have met and don't have a connection yet ...
 	if ( bBuildTracks )	// If building tracks ...
 	{
-		Backtrace(pJ, iFloodNodeId);	// ... trace pJ back to its source, painting iFloodNodeId along the way
-		Backtrace(pK, iFloodNodeId);	// ... trace pK back to its source, painting iFloodNodeId along the way
+		Backtrace(pJ, iFloodNodeId);					// ... trace pJ back to its source, painting iFloodNodeId along the way
+		Element* pKprev = Backtrace(pK, iFloodNodeId);	// ... trace pK back to its source, painting iFloodNodeId along the way
+		// pKprev is the first backtraced element from pK.
+		// If diagonal connections are allowed, and if pJ and pKprev are diagonal neighbours,
+		// then remove pK from the backtrace.  This will give a direct diagonal connection between pJ and pKprev.
+		const bool bDiagsOK = ( GetDiagsMode() != DIAGSMODE::OFF );
+		if ( bDiagsOK && pKprev && pKprev->IsDiagNbr(pJ) )
+			BacktraceErase(pK);
 	}
 
 	m_connectionMatrix.Connect(j, k);	// Make j-k connection and enforce transitivity
@@ -473,14 +479,13 @@ void Board::Flood_Grow(int iFloodNodeId, Element* pJ, int iNbr, bool bBuildTrack
 		bDone = m_connectionMatrix.GetCost() == 0;	// Zero cost ==> done
 }
 
-void Board::Backtrace(Element* pEnd, int nodeId)
+Element* Board::Backtrace(Element* pEnd, int nodeId)
 {
 	// Backtrace route from pEnd to point with MH = 0
+	Element* pOut = nullptr;	// We will return the first traced element from pEnd (if there is one)
 
 	Element* p = pEnd;
-	if ( p->GetMH() == BAD_MH ) return;
-
-	WIRELIST wireList;	// Helper for chains of wires
+	if ( p->GetMH() == BAD_MH ) return pOut;
 
 	const bool bMultiLayer	= GetLyrs() > 1;
 	const bool bViasEnabled	= bMultiLayer && GetViasEnabled();
@@ -493,49 +498,15 @@ void Board::Backtrace(Element* pEnd, int nodeId)
 	{
 		assert( !p->GetIsHole() );
 
-		const bool bHasPin = p->GetHasPin();
-
 		Element* pW0 = m_bHavePlacedWires ? p->GetW(0) : nullptr;
 		Element* pW1 = m_bHavePlacedWires ? p->GetW(1) : nullptr;
-		const bool bWire = (pW0 || pW1) && p->IsLayer0();	// Constrain wire-routing to layer 0
+		const bool bWire	= (pW0 || pW1) && p->IsLayer0();	// Constrain wire-routing to layer 0
+		const bool bHasPin	= bWire || p->GetHasPin();
 		if ( !bHasPin || bWire ) // For non-pins and wires
-		{
-			if ( p->GetNodeId() == BAD_NODEID )	// Set NodeId if not set yet.
-			{
-				SetNodeId(p, nodeId, bHasPin);
-				WipeFlagBits(p, USERSET, bHasPin);
-				MarkFlagBits(p, AUTOSET, bHasPin);
-				if ( bWire )
-				{
-					p->GetWireList(wireList);	// Get list of p and its wired points
-					for (const auto& o : wireList)
-					{
-						Element* pW = const_cast<Element*> (o.first);
-						if ( pW == p ) continue;	// Skip p
-						SetNodeId(pW, nodeId, bHasPin);
-						WipeFlagBits(pW, USERSET, bHasPin);
-						MarkFlagBits(pW, AUTOSET, bHasPin);
-					}
-				}
-			}
-			else if ( p->ReadFlagBits(USERSET) )
-			{
-				assert( p->GetNodeId() == nodeId );
-				MarkFlagBits(p, AUTOSET, bHasPin);
-				if ( bWire )
-				{
-					p->GetWireList(wireList);	// Get list of p and its wired points
-					for (const auto& o : wireList)
-					{
-						Element* pW = const_cast<Element*> (o.first);
-						if ( pW == p ) continue;	// Skip p
-						MarkFlagBits(pW, AUTOSET, bHasPin);
-					}
-				}
-			}
-		}
+			BacktracePaint(p, nodeId, bHasPin, bWire);	// Paint element p
 
-		if ( MH == 0 ) break;
+		if ( !pOut && p != pEnd ) pOut = p;
+		if ( MH == 0 ) return pOut;	// We're done backtracing once MH == 0
 
 		bool bOK(false);	// Will be set true after a successful backtrace (with modified p and MH)
 		// Now decide where to back trace to.
@@ -584,10 +555,77 @@ void Board::Backtrace(Element* pEnd, int nodeId)
 				}
 			}
 		}
-		if ( bOK ) continue;
+		if ( !bOK ) break;
+	}
+	assert(0);	// Oh dear. Something went badly wrong !!!
+	return pOut;
+}
 
-		assert(0);	// Oh dear. Something went badly wrong !!!
-		break;
+void Board::BacktracePaint(Element* p, int nodeId, bool bHasPin, bool bWire)
+{
+	const bool bPaintNodeId = ( p->GetNodeId() == BAD_NODEID );	// Set NodeId if not set yet.
+	if ( !bPaintNodeId && !p->ReadFlagBits(USERSET) ) return;
+
+	assert( bPaintNodeId || p->GetNodeId() == nodeId );	// If USERSET then nodeId must be OK
+
+	if ( bPaintNodeId )
+	{
+		SetNodeId(p, nodeId, bHasPin);
+		WipeFlagBits(p, USERSET, bHasPin);
+	}
+	MarkFlagBits(p, AUTOSET, bHasPin);
+
+	if ( bWire )
+	{
+		WIRELIST wireList;			// Helper for chains of wires
+		p->GetWireList(wireList);	// Get list of p and its wired points
+		for (const auto& o : wireList)
+		{
+			Element* pW = const_cast<Element*> (o.first);
+			if ( pW == p ) continue;	// Skip p
+			if ( bPaintNodeId )
+			{
+				SetNodeId(pW, nodeId, bHasPin);
+				WipeFlagBits(pW, USERSET, bHasPin);
+			}
+			MarkFlagBits(pW, AUTOSET, bHasPin);
+		}
+	}
+}
+
+void Board::BacktraceErase(Element* p)
+{
+	assert( !p->GetIsHole() );
+	assert( p->GetNodeId() != BAD_NODEID );
+
+	Element* pW0 = m_bHavePlacedWires ? p->GetW(0) : nullptr;
+	Element* pW1 = m_bHavePlacedWires ? p->GetW(1) : nullptr;
+	const bool bWire		= (pW0 || pW1) && p->IsLayer0();	// Constrain wire-routing to layer 0
+	const bool bHasPin		= bWire || p->GetHasPin();
+	const bool bWipeNodeId	= !p->ReadFlagBits(USERSET);
+
+	if ( bWipeNodeId )
+	{
+		SetNodeId(p, BAD_NODEID, bHasPin);
+		WipeFlagBits(p, USERSET, bHasPin);
+	}
+	WipeFlagBits(p, AUTOSET, bHasPin);
+
+	if ( bWire )
+	{
+		WIRELIST wireList;			// Helper for chains of wires
+		p->GetWireList(wireList);	// Get list of p and its wired points
+		for (const auto& o : wireList)
+		{
+			Element* pW = const_cast<Element*> (o.first);
+			if ( pW == p ) continue;	// Skip p
+			if ( bWipeNodeId )
+			{
+				SetNodeId(pW, BAD_NODEID, bHasPin);
+				WipeFlagBits(pW, USERSET, bHasPin);
+			}
+			WipeFlagBits(pW, AUTOSET, bHasPin);
+		}
 	}
 }
 

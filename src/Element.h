@@ -282,6 +282,13 @@ public:
 		GetNbr(NBR_L)->ToggleUsed(NBR_RT);
 		return true;
 	}
+	bool IsDiagNbr(const Element* p) const
+	{
+		assert( p != nullptr );	// Sanity check
+		for (int iNbr = 1; iNbr < 8; iNbr += 2)
+			if ( GetNbr(iNbr) == p ) return true;
+		return false;
+	}
 	bool IsNbr(const Element* p) const
 	{
 		assert( p != nullptr );	// Sanity check
