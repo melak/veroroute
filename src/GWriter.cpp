@@ -17,7 +17,6 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "VeroRouteAndroid.h"
 #include "Version.h"
 #include "Board.h"
 #include "GWriter.h"
@@ -368,9 +367,9 @@ void GStream::AddVariTrack(const QPolygonF& pF, GPEN ePenHV, GPEN ePen)	// Add t
 	GetQPolygon(pF, p);
 
 	QPolygon temp;
-	auto A = p.begin();
+	auto A = p.cbegin();
 	auto B = A; ++B;
-	for (; B != p.end(); A++, B++)
+	for (; B != p.cend(); A++, B++)
 	{
 		temp.clear();
 		temp << *A << *B;

@@ -19,7 +19,6 @@
 
 #pragma once
 
-#include "VeroRouteAndroid.h"
 #include <QtGui>
 #include <QApplication>
 #include <QColorDialog>

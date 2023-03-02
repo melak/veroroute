@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QtGlobal>
+
 Q_DECL_CONSTEXPR static const int VRT_VERSION_1  =  1;	// Original version
 Q_DECL_CONSTEXPR static const int VRT_VERSION_2  =  2;	// Added ability to show IC pin numbers
 Q_DECL_CONSTEXPR static const int VRT_VERSION_3  =  3;	// Added ground fill parameters
