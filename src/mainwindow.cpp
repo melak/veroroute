@@ -463,7 +463,7 @@ void MainWindow::CheckFolders()
 		else
 			messageStr += "Cannot find the folder " + templatesFolder;
 
-		messageStr += "\n\nAny part templates you create will not be saved.";
+		messageStr += "\n\nAny parts you create will not be saved to the parts library.";
 
 		QMessageBox::warning(this, tr("Templates folder is not available "), tr(messageStr.c_str()));
 	}
@@ -2510,7 +2510,7 @@ void MainWindow::UpdateControls()
 
 	ui->actionControlDlg->setText(	m_dockControlDlg->isVisible()	? QString("(Hide) Control Dialog")			: QString("Control Dialog"));
 	ui->actionCompDlg->setText(		m_dockCompDlg->isVisible()		? QString("(Hide) Component Definition")	: QString("Component Definition"));
-	ui->actionTemplatesDlg->setText(m_dockTemplatesDlg->isVisible() ? QString("(Hide) Parts / Templates")		: QString("Parts / Templates"));
+	ui->actionTemplatesDlg->setText(m_dockTemplatesDlg->isVisible() ? QString("(Hide) Parts Library")			: QString("Parts Library"));
 	ui->actionTemplatesDlg->setChecked( m_dockTemplatesDlg->isVisible() );
 	ui->actionInfoDlg->setText(	m_dockInfoDlg->isVisible()			? QString("(Hide) Info")					: QString("Info"));
 	ui->actionRenderingDlg->setText(m_dockRenderingDlg->isVisible() ? QString("(Hide) Rendering Options")		: QString("Rendering Options"));

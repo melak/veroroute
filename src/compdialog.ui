@@ -154,7 +154,7 @@
     <enum>Qt::TabFocus</enum>
    </property>
    <property name="text">
-    <string>Add To Part Templates</string>
+    <string>Add To Parts Library</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_units_3">

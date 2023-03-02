@@ -26,7 +26,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>Parts / Templates</string>
+   <string>Parts Library</string>
   </property>
   <widget class="QTableWidget" name="tableWidget">
    <property name="geometry">
@@ -60,7 +60,7 @@
     <enum>Qt::TabFocus</enum>
    </property>
    <property name="toolTip">
-    <string>Update the templates with the selected parts from the current layout.</string>
+    <string>Add selected parts in the current layout to the library</string>
    </property>
    <property name="text">
     <string>Add from current layout</string>
@@ -79,10 +79,10 @@
     <enum>Qt::TabFocus</enum>
    </property>
    <property name="toolTip">
-    <string>Deletes the selected template.  There is no undo option.</string>
+    <string>Delete the selected library part.  There is no undo option.</string>
    </property>
    <property name="text">
-    <string>Delete selected template</string>
+    <string>Delete selected library part</string>
    </property>
   </widget>
   <widget class="QTableWidget" name="tableWidget_2">
@@ -117,7 +117,7 @@
     <enum>Qt::TabFocus</enum>
    </property>
    <property name="toolTip">
-    <string>Update the templates with parts from a VRT file</string>
+    <string>Update the library with parts from a VRT file</string>
    </property>
    <property name="text">
     <string>Add from VRT</string>
@@ -136,7 +136,7 @@
     <enum>Qt::TabFocus</enum>
    </property>
    <property name="toolTip">
-    <string>Save all templates to a VRT file</string>
+    <string>Save the library to a VRT file</string>
    </property>
    <property name="text">
     <string>Save to VRT</string>
@@ -180,7 +180,7 @@
     </font>
    </property>
    <property name="text">
-    <string>User-Defined Templates</string>
+    <string>Library Parts</string>
    </property>
    <property name="alignment">
     <set>Qt::AlignCenter</set>

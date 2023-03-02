@@ -918,13 +918,13 @@
      <normaloff>:/images/templates.png</normaloff>:/images/templates.png</iconset>
    </property>
    <property name="text">
-    <string>Parts / Templates</string>
+    <string>Parts Library</string>
    </property>
    <property name="iconText">
-    <string>Parts / Templates</string>
+    <string>Parts Library</string>
    </property>
    <property name="toolTip">
-    <string>Parts / Templates</string>
+    <string>Parts Library</string>
    </property>
   </action>
   <action name="actionInfoDlg">
