@@ -189,6 +189,9 @@ unix : !android {
     pixmapB.path = $${PREFIX}/share/veroroute
     pixmapB.files = ../veroroute.png
 
+    pixmapC.path = $${PREFIX}/share/icons/hicolor/72x72/apps
+    pixmapC.files = ../veroroute.png
+
     tutorials.path = $${PREFIX}/share/veroroute/tutorials
     tutorials.files = ../tutorials/*
 
@@ -198,6 +201,6 @@ unix : !android {
     gedalib.path = $${PREFIX}/share/gEDA/gafrc.d
     gedalib.files = ../libraries/gEDA/veroroute-clib.scm
 
-    INSTALLS += target manpage desktopentry pixmapA pixmapB tutorials gedasymbols gedalib
+    INSTALLS += target manpage desktopentry pixmapA pixmapB pixmapC tutorials gedasymbols gedalib
 }
 

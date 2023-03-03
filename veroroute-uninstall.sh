@@ -21,6 +21,10 @@ rm -f  "$pkgdir/usr/share/pixmaps/veroroute.png"
 if find -- "$pkgdir/usr/share/pixmaps/" -prune -type d -empty | grep -q .; then
    rmdir "$pkgdir/usr/share/pixmaps/"
 fi
+rm -f  "$pkgdir/usr/share/icons/hicolor/72x72/apps/veroroute.png"
+if find -- "$pkgdir/usr/share/icons/hicolor/72x72/apps/" -prune -type d -empty | grep -q .; then
+   rmdir "$pkgdir/usr/share/icons/hicolor/72x72/apps/"
+fi
 rm -f  "$pkgdir/usr/share/veroroute/veroroute.png"
 rm -rf "$pkgdir/usr/share/veroroute/tutorials"
 rmdir  "$pkgdir/usr/share/veroroute"
