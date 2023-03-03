@@ -2,7 +2,8 @@
 
 static const char* szVEROROUTE_VERSION =
 
-"2.28";		// Bug fix: Code for X-thermals not properly handling isolated ground pad on 2-layer board.
+"2.29";		// Increased routing algorithm speed by 30%.  Replaced "Templates" terminology with "Parts Library" and updated tutorials.
+//"2.28";	// Bug fix: Code for X-thermals not properly handling isolated ground pad on 2-layer board.
 //"2.27";	// Bug fix: Bug in component manager leads to incorrect warning about circuit not being saved (even if it has been).
 			// Disabled use of double-click for rotating parts.
 //"2.26";	// Removed infrequently used icons from the toolbar.  Added tutorial info on text boxes.
