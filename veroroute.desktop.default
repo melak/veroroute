@@ -1,10 +1,10 @@
 [Desktop Entry]
-Categories=Development;Electronics
+Categories=Engineering;Electronics;
 Comment=Qt based Veroboard/Perfboard/PCB layout and routing application
 # TRANSLATORS: Search terms to find this application. Do NOT translate or localize the semicolons! The list MUST also end with a semicolon!
 Keywords=veroboard;stripboard;perfboard;pcb;layout;routing;eda;circuit;electronics;
 Exec=/usr/bin/veroroute
-Icon=/usr/share/pixmaps/veroroute.png
+Icon=veroroute
 Name=VeroRoute
 Path=/usr/share/veroroute/
 StartupNotify=false
