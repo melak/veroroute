@@ -333,7 +333,8 @@ static const char* szVEROROUTE_VERSION =
 //"1.24";	// Added IC Pin Labels dialog.
 //"1.23";	// Fixed memory leak on shutdown.
 //			// Updated Tutorial 19 with info on creating a registry key for MS Windows.
-//			// Added more JFETs to the symbol libraries.//"1.22";	// Added command line options to specify VRT file and path to VeroRoute home directory.
+//			// Added more JFETs to the symbol libraries.
+//"1.22";	// Added command line options to specify VRT file and path to VeroRoute home directory.
 //			// Support drag and drop of VRT files from file explorer.
 //			// Allow multiple VeroRoute instances to run at the same time.
 //			// Improved error reporting during netlist import.
