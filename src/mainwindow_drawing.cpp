@@ -23,6 +23,8 @@
 #include "GPainter.h"
 #include "SpanningTreeHelper.h"
 
+//#define PAINTBOARD_TIMER
+
 void MainWindow::DestroyPixmapCache()
 {
 #ifdef USE_PIXMAP_CACHE
@@ -496,7 +498,9 @@ void MainWindow::PaintCompDefiner()	// The paint method in "component editor mod
 
 void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 {
-//	const auto start = std::chrono::steady_clock::now();
+#ifdef PAINTBOARD_TIMER
+	const auto start = std::chrono::steady_clock::now();
+#endif
 
 	Board&			 board			= m_board;
 	CompManager&	 compMgr		= board.GetCompMgr();
@@ -1723,9 +1727,11 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 	delete pdfWriter;
 
-//	const auto elapsed = std::chrono::steady_clock::now() - start;
-//	const auto duration_ms	= std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
-//	std::cout << "Time : " << duration_ms << std::endl;
+#ifdef PAINTBOARD_TIMER
+	const auto elapsed = std::chrono::steady_clock::now() - start;
+	const auto duration_ms	= std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
+	std::cout << "Time : " << duration_ms << std::endl;
+#endif
 }
 
 void MainWindow::GetFirstRowCol(int& iRow, int& iCol) const
