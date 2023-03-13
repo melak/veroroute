@@ -327,8 +327,8 @@ public:
 		{
 			case NBR_LT: return GetNbr(NBR_L)->IsClash(nodeId) && GetNbr(NBR_L)->GetUsed(NBR_RT);
 			case NBR_RT: return GetNbr(NBR_R)->IsClash(nodeId) && GetNbr(NBR_R)->GetUsed(NBR_LT);
-			case NBR_LB: return GetNbr(NBR_B)->IsClash(nodeId) && GetNbr(NBR_B)->GetUsed(NBR_LT);
-			case NBR_RB: return GetNbr(NBR_B)->IsClash(nodeId) && GetNbr(NBR_B)->GetUsed(NBR_RT);
+			case NBR_LB: return GetNbr(NBR_L)->IsClash(nodeId) && GetNbr(NBR_L)->GetUsed(NBR_RB);
+			case NBR_RB: return GetNbr(NBR_R)->IsClash(nodeId) && GetNbr(NBR_R)->GetUsed(NBR_LB);
 			default:	 return false;
 		}
 	}

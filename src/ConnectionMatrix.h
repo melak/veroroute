@@ -23,6 +23,14 @@
 
 // Keeps track of connectivity between a set of points (e.g. target pins in the routing algorithm)
 
+// Quicker to use struct than a std::pair
+struct CONNECTION
+{
+	CONNECTION(size_t a, size_t b) : first(a), second(b) {}
+	size_t	first	= 0;
+	size_t	second	= 0;
+};
+
 class ConnectionMatrix
 {
 public:
@@ -50,7 +58,6 @@ public:
 	{
 		// Make j-k connection and enforce transitivity
 
-		typedef std::pair<size_t, size_t> CONNECTION;
 		std::list<CONNECTION> list;		// Helper for updating the connection matrix
 		list.push_back( CONNECTION(j,k) );
 		while ( !list.empty() )

@@ -462,6 +462,7 @@ struct CompTypes
 	{
 		switch(eType)
 		{
+			case COMP::PAD:
 			case COMP::RESISTOR:
 			case COMP::INDUCTOR:
 			case COMP::DIODE:
