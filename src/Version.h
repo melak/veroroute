@@ -2,13 +2,15 @@
 
 static const char* szVEROROUTE_VERSION =
 
-"2.29";		// Increased routing algorithm speed by 30%.  Replaced "Templates" terminology with "Parts Library" and updated tutorials.
+"2.30";		// Gerber Generator version 1.0.  Write drill file using XNC format as defined in Ucamco specification.
+			// Draw pads as squares in PCB mode.  Increased size of LED symbol.
+//"2.29";	// Increased routing algorithm speed by 30%.  Replaced "Templates" terminology with "Parts Library" and updated tutorials.
 //"2.28";	// Bug fix: Code for X-thermals not properly handling isolated ground pad on 2-layer board.
 //"2.27";	// Bug fix: Bug in component manager leads to incorrect warning about circuit not being saved (even if it has been).
 			// Disabled use of double-click for rotating parts.
 //"2.26";	// Removed infrequently used icons from the toolbar.  Added tutorial info on text boxes.
 //"2.25";	// Bug fix: Major bug.  Double-clicking on a user-defined template to add the part to the layout
-			//			can give the wrong footprint unless the part was created using component editor.
+			//          can give the wrong footprint unless the part was created using component editor.
 			// Bug fix: Some actions in the Key/Mouse Actions Dialog were removed in V2.20 but still listed.
 //"2.24";	// Bug fix: Broken Nets list was not updating the main view if user scrolled to a list item instead of clicking on it.
 //"2.23";	// New feature: Option to force thermal reliefs to use an X-shaped pattern of tags.
