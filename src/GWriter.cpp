@@ -25,8 +25,9 @@
 #include <QTimeZone>
 #include <QtGlobal>
 
-Q_DECL_CONSTEXPR static const bool FULL_LINE  = false;	// Set to true to force each Gerber line to be written in long format
-Q_DECL_CONSTEXPR static const bool XNC_FORMAT = true;	// true ==> XNC Format / Excellon Format 2.		false ==> Excellon Format 1.
+Q_DECL_CONSTEXPR static const bool FULL_LINE		= false;	// Set to true to force each Gerber line to be written in long format
+Q_DECL_CONSTEXPR static const bool XNC_FORMAT		= true;		// true ==> XNC Format,  false ==> Excellon Format 1 or 2
+Q_DECL_CONSTEXPR static const bool EXCELLON2_FORMAT	= true;		// true ==> Excellon Format 2,  false ==> Excellon Format 1.  Ignored if XNC_FORMAT.
 
 // Wrapper for a stream to a Gerber file
 void GStream::Clear()
@@ -102,7 +103,7 @@ void GStream::WriteHeader(const QString& UTC)	// Write header for current stream
 	QString	strLayer	= "Layer: ";
 	QString	strProgram	= "VeroRoute V" + QString(szVEROROUTE_VERSION);
 	QString	strUTC		= QString::fromStdString( UTC.toStdString() );
-	QString	strGen		= QString("Gerber Generator version 0.9");
+	QString	strGen		= QString("Gerber Generator version 1.0");
 	switch(m_eType)
 	{
 		case GFILE::GKO: strLayer += "BoardOutline";			break;
@@ -124,16 +125,20 @@ void GStream::WriteHeader(const QString& UTC)	// Write header for current stream
 		m_os << "M48";	EndLine();	// M48 is start of header
 		if ( m_bMetric )
 		{
-			m_os << "METRIC,LZ,0000.000000";	EndLine();	// Millimetres.  Leading zeros INCLUDED.  4 integer and 6 decimal
+			m_os << "METRIC";		// Millimetres
+			if ( !XNC_FORMAT ) m_os << ",LZ,0000.000000";	// Leading zeros INCLUDED.  4 integer and 6 decimal
+			EndLine();
 		}
 		else
 		{
-			m_os << "INCH,LZ,00.0000";			EndLine();	// Inches.  Leading zeros INCLUDED.  2 integer and 4 decimal
+			m_os << "INCH";			// Inches
+			if ( !XNC_FORMAT ) m_os << ",LZ,00.0000";		// Leading zeros INCLUDED.  2 integer and 4 decimal
+			EndLine();
 		}
 		MakeDrills();
 		m_os << "%";	EndLine();							// Rewind Stop.  Often used instead of M95.
-		m_os << ( XNC_FORMAT ? "G05" : "G81" );	EndLine();	// Turn on drill
-		m_os << "G90";	EndLine();							// Absolute mode
+		m_os << ( XNC_FORMAT || EXCELLON2_FORMAT ? "G05" : "G81" );	EndLine();	// Turn on drill
+		if ( !XNC_FORMAT ) m_os << "G90";	EndLine();		// Absolute mode
 	}
 	else
 	{
@@ -183,7 +188,7 @@ void GStream::MakeDrills()
 		m_ePenList.push_back( GPenInfo(GPEN::VIA_HLE, viahole, code++, "Via Hole = ") );
 
 	// Write drill list to file
-	const bool bLZ(true);	// Include leading zeros
+	const bool bLZ( !XNC_FORMAT );	// true ==> Include leading zeros
 	for (const auto& o : m_ePenList)
 	{
 		QString codeStr("T");
@@ -533,6 +538,14 @@ void GStream::WriteDrillOrdinate(int iDeciMils)
 {
 	if ( !m_file.isOpen() || m_eType != GFILE::DRL ) return;
 	m_os << ( iDeciMils >= 0 ? "+" : "-" );	// Write sign
+	if ( XNC_FORMAT )
+	{
+		if ( m_bMetric )
+			m_os << MilToMM(iDeciMils/10, false);	// false ==> no leading zeros
+		else
+			m_os << MilToInch(iDeciMils/10, false);	// false ==> no leading zeros
+		return;
+	}
 	if ( m_bMetric )	// Writes mm in format AAAABBBBBB
 	{
 		// Millimetres in 4.6 format, 1 deciMil = 0000.002540 mm

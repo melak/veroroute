@@ -85,11 +85,11 @@ public:
 	void Drill(const QPoint& pF);
 	void SetPolarity(GPOLARITY ePolarity, bool bCheckOK = true);
 	void AddPad(const QPointF& pF, GPEN ePen, int w = 0);			// Add to m_pads buffer
-	void AddViaPad(const QPointF& pF, GPEN ePen);							// Add to m_viapads buffer
-	void AddTrack(const QPolygonF& pF, GPEN ePen);						// Add to m_tracks buffer
+	void AddViaPad(const QPointF& pF, GPEN ePen);					// Add to m_viapads buffer
+	void AddTrack(const QPolygonF& pF, GPEN ePen);					// Add to m_tracks buffer
 	void AddVariTrack(const QPolygonF& pF, GPEN ePenHV, GPEN ePen);	// Add to m_tracks buffer
-	void AddLoop(const QPolygonF& pF, GPEN ePen);							// Add to m_loops buffer
-	void AddRegion(const QPolygonF& pF);										// Add to m_regions buffer
+	void AddLoop(const QPolygonF& pF, GPEN ePen);					// Add to m_loops buffer
+	void AddRegion(const QPolygonF& pF);							// Add to m_regions buffer
 	void AddHole(const QPointF& pF, GPEN ePen, int w = 0);			// Add to m_holes buffer
 	void ClearBuffers(bool bCheckOK = true);
 	void DrawBuffers();
@@ -111,8 +111,8 @@ private:
 	void Move(const QPoint& p);
 	void Draw(const QPoint& p);
 	void Line(const QPoint& pA, const QPoint& pB);
-	void Region(const Curve& curve)	;						// A filled curve (with zero width pen)
-	void Polygon(const Curve& curve);						// Filled polygon (with non-zero width pen)
+	void Region(const Curve& curve)	;				// A filled curve (with zero width pen)
+	void Polygon(const Curve& curve);				// Filled polygon (with non-zero width pen)
 	void OutLine(const Curve& curve, bool bClose);	// Outline of a curve (can be closed)
 	void WriteXY(const QPoint& p, bool bFullLine);
 	void WriteDrillOrdinate(int iDeciMils);
