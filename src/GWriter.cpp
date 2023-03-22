@@ -138,7 +138,7 @@ void GStream::WriteHeader(const QString& UTC)	// Write header for current stream
 		MakeDrills();
 		m_os << "%";	EndLine();							// Rewind Stop.  Often used instead of M95.
 		m_os << ( XNC_FORMAT || EXCELLON2_FORMAT ? "G05" : "G81" );	EndLine();	// Turn on drill
-		if ( !XNC_FORMAT ) m_os << "G90";	EndLine();		// Absolute mode
+		if ( !XNC_FORMAT ) { m_os << "G90";	EndLine(); }	// Absolute mode
 	}
 	else
 	{
