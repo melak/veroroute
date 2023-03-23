@@ -42,9 +42,9 @@ For MS Windows:  A pre-compiled version of VeroRoute for Windows 7 is available,
 should also work on later versions of Windows.
 There is no installer.  Just unzip everything to a folder and run it from there.
 
-For Linux:  A precompiled 64-bit version for Linux Mint 19.3 is available.
+For Linux:  A precompiled 64-bit version for Linux Mint 20.3 is available.
 It may also work on other recent 64-bit Linux distributions depending on whether
-they have the necessary Qt libraries installed (it needs Qt version 5.9.5 or later).
+they have the necessary Qt libraries installed (it needs Qt version 5.12.8 or later).
 
 To install on Linux:  Unzip everything to a folder.  Then open a command line prompt in that folder and type
 
