@@ -125,7 +125,7 @@ void GStream::WriteHeader(const QString& UTC)	// Write header for current stream
 		m_os << "M48";	EndLine();	// M48 is start of header
 		if ( m_bMetric )
 		{
-			m_os << "METRIC";		// Millimetres
+			m_os << "METRIC";		// Millimetres			// Excellon only lists 3.2, 4.2, or 3.3 metric formats (so 4.6 format can only work for XNC format) !!!
 			if ( !XNC_FORMAT ) m_os << ",LZ,0000.000000";	// Leading zeros INCLUDED.  4 integer and 6 decimal
 			EndLine();
 		}
@@ -136,7 +136,7 @@ void GStream::WriteHeader(const QString& UTC)	// Write header for current stream
 			EndLine();
 		}
 		MakeDrills();
-		m_os << "%";	EndLine();							// Rewind Stop.  Often used instead of M95.
+		m_os << "%";	EndLine();							// Rewind Stop.  Often used instead of M95 for end of header.
 		m_os << ( XNC_FORMAT || EXCELLON2_FORMAT ? "G05" : "G81" );	EndLine();	// Turn on drill
 		if ( !XNC_FORMAT ) { m_os << "G90";	EndLine(); }	// Absolute mode
 	}
@@ -168,7 +168,7 @@ void GStream::WriteFooter()
 	if ( !m_file.isOpen() ) return;
 	switch( m_eType )
 	{
-		case GFILE::DRL:	m_os << "M30";	EndLine();	return;	// End of program
+		case GFILE::DRL:	m_os << "M30";	EndLine();	return;	// End of file
 		default:			m_os << "M02";	EndLine();	return;	// End of file
 	}
 }
