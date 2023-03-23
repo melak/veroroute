@@ -71,7 +71,20 @@ void GuiControl::CalcBlob(qreal W, const QPointF& pC, const QPointF& pCoffset,
 		if		( bUsed[( 1 + iFirst ) % 8] )	polygon << pC << p[iFirst] << p[( 1 + iFirst ) % 8];	// Done making polygon
 		else if	( bUsed[( 7 + iFirst ) % 8] )	polygon << pC << p[iFirst] << p[( 7 + iFirst ) % 8];	// Done making polygon
 	}
-	const bool bClosed = ( N > 2 ) || ( polygon.size() == 3 );	// true ==> closed polygon
+	bool bClosed = ( polygon.size() == 3 );	// true ==> closed polygon
+	if ( !bClosed && N > 2 )
+	{
+		if ( !bHavePad )
+			bClosed = true;
+		else
+		{
+			// If we have a pad, and no connections to consecutive perimeter points,
+			// then we have a polygon with zero area (e.g.  L -> C -> T -> B -> C -> L).
+			// We must set bClosed to false in this case so we draw a "loop" (using a non-zero width pen)
+			for (int i = 0; i < 8 && !bClosed; i++)
+				bClosed = bUsed[i] && bUsed[(i+1)%8];	// Consecutive perimeter points used ==> closed
+		}
+	}
 
 	if ( N > 2 || ( N == 2 && !bClosed ) )	// If not done making polygon ...
 	{
