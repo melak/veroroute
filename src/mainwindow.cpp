@@ -34,6 +34,8 @@
 #include "padoffsetdialog.h"
 #include "PolygonHelper.h"
 
+#define AUTO_OPEN_GERBERS
+
 MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorialsPathStr, QWidget* parent)
 : QMainWindow(parent)
 , ui(new Ui::MainWindow)
@@ -998,6 +1000,7 @@ void MainWindow::WriteGerber(bool bTwoLayerGerber, bool bMetric)
 		m_board.SetGRIDPIXELS(oldGridPixels);	// Restore number of pixels per grid square
 
 #ifndef VEROROUTE_ANDROID
+#ifdef AUTO_OPEN_GERBERS
 		// Ask the system to open the Gerber files
 		QDesktopServices::openUrl(m_gerberFileName + ".GKO");
 		QDesktopServices::openUrl(m_gerberFileName + ".GBL");
@@ -1010,6 +1013,7 @@ void MainWindow::WriteGerber(bool bTwoLayerGerber, bool bMetric)
 		}
 		QDesktopServices::openUrl(m_gerberFileName + ".GTO");
 		QDesktopServices::openUrl(m_gerberFileName + ".DRL");
+#endif
 #endif
 	}
 }

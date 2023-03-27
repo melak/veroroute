@@ -691,7 +691,11 @@ public:
 	bool ImportTango(const TemplateManager& templateMgr, const std::string& filename, std::string& errorStr);
 	// Import OrcadPCB2 netlist (exported from KiCAD)
 	bool ImportOrcad(const TemplateManager& templateMgr, const std::string& filename, std::string& errorStr);
-	bool BreakComponentIntoPads(Component& comp);
+	bool BuildAndPlacePart(const TemplateManager& templateMgr,
+						   const std::string& nameStr, const std::string& valueStr, const std::string& typeStr, std::string& typeStrCut, std::string& pinStr,
+						   std::list<std::string>& offBoard, std::string& errorStr, bool bTango);
+	void BreakSIPSintoPADS(const std::list<std::string>& offBoard);
+	void BreakComponentIntoPads(Component& comp);
 	bool GetPinRowCol(int compId, size_t iPinIndex, int& row, int& col) const;
 
 	// Merge interface functions
