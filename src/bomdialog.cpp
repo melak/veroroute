@@ -79,8 +79,8 @@ void BomDialog::Update()
 	// Set up the table
 	ui->tableWidget->clear();
 	ui->tableWidget->setColumnCount(4);
-	ui->tableWidget->setColumnWidth(0,130);
-	ui->tableWidget->setColumnWidth(1,250);
+	ui->tableWidget->setColumnWidth(0,190);
+	ui->tableWidget->setColumnWidth(1,310);
 	ui->tableWidget->setColumnWidth(2,100);
 	ui->tableWidget->setColumnWidth(3,80);	// Allow for vertical scroll bar
 	m_tableHeader << "Name" << "Type" << "Value" << "Quantity";
