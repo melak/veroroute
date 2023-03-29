@@ -859,6 +859,15 @@ void MainWindow::Import(bool bTango)
 	if ( !fileName.isEmpty() )
 	{
 		m_aliasDlg->Configure(fileName.toStdString(), bTango);
+
+		std::list<CompStrings> compStrList;
+		if ( m_board.GetImportParts(fileName.toStdString(), compStrList, bTango) )	// Get all part info in the file
+		{
+			for (auto& compStrings : compStrList)
+				if ( !m_templateMgr.CheckPartOK(compStrings) )
+					m_templateMgr.AddAlias(compStrings.m_typeStr, "");	// Don't have a valid import string yet
+		}
+
 		ShowAliasDialog();
 		ReImport();
 	}

@@ -233,9 +233,12 @@ public:
 		return bOK;
 	}
 	// Following is a helper for the import code
-	bool CheckPartOK(const std::string& nameStr, const std::string& valueStr, const std::string& typeStr,
-					 std::list<std::string>* pOffBoard = nullptr, std::string* pErrorStr = nullptr, Component* pComp = nullptr)
+	bool CheckPartOK(const CompStrings& compStrings, std::list<std::string>* pOffBoard = nullptr, std::string* pErrorStr = nullptr, Component* pComp = nullptr) const
 	{
+		const std::string& nameStr	= compStrings.m_nameStr;
+		const std::string& valueStr	= compStrings.m_valueStr;
+		const std::string& typeStr	= compStrings.m_typeStr;
+
 		std::string dummyStr;
 		std::string& errorStr = ( pErrorStr ) ? *pErrorStr : dummyStr;
 

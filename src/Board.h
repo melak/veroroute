@@ -692,6 +692,10 @@ public:
 	{
 		return ( bTango ) ? ImportTango(templateMgr, filename, errorStr, bPartTypeOK) : ImportOrcad(templateMgr, filename, errorStr, bPartTypeOK);
 	}
+	bool GetImportParts(const std::string& filename, std::list<CompStrings>& listOut, bool bTango) const
+	{
+		return ( bTango ) ? GetPartsTango(filename, listOut) : GetPartsOrcad(filename, listOut);
+	}
 
 	// Merge interface functions
 	virtual void UpdateMergeOffsets(MergeOffsets& o) override
@@ -858,10 +862,11 @@ private:
 	}
 	void SetHavePlacedWires() { m_bHavePlacedWires = GetCompMgr().GetHavePlacedWires(); }
 	// Netlist Import
+	bool GetPartsTango(const std::string& filename, std::list<CompStrings>& listOut) const;
+	bool GetPartsOrcad(const std::string& filename, std::list<CompStrings>& listOut) const;
 	bool ImportTango(TemplateManager& templateMgr, const std::string& filename, std::string& errorStr, bool& bPartTypeOK);
 	bool ImportOrcad(TemplateManager& templateMgr, const std::string& filename, std::string& errorStr, bool& bPartTypeOK);
-	bool BuildAndPlacePart(TemplateManager& templateMgr, const std::string& nameStr, const std::string& valueStr, const std::string& typeStr,
-						   std::list<std::string>& offBoard, std::string& errorStr, bool& bPartTypeOK);
+	bool BuildAndPlacePart(TemplateManager& templateMgr, const CompStrings& compStrings, std::list<std::string>& offBoard, std::string& errorStr, bool& bPartTypeOK);
 	void BreakSIPSintoPADS(const std::list<std::string>& offBoard);
 	void BreakComponentIntoPads(Component& comp);
 	bool GetPinRowCol(int compId, size_t iPinIndex, int& row, int& col) const;

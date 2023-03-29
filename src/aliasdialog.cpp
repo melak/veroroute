@@ -229,7 +229,7 @@ void AliasDialog::CellChanged(int row, int col)		// For alias table
 	const std::string aliasStr	= ui->tableWidget_2->item(row, 0)->text().toStdString();
 	const std::string importStr	= ui->tableWidget_2->item(row, 1)->text().toStdString();
 
-	const bool bOK = m_pMainWindow->m_templateMgr.CheckPartOK("", "", importStr);
+	const bool bOK = m_pMainWindow->m_templateMgr.CheckPartOK(CompStrings("", "", importStr));
 	if ( bOK )	// If importStr is valid ...
 		m_pMainWindow->m_templateMgr.AddAlias(aliasStr, importStr);  // ... we can use aliasStr as an alias for it
 }

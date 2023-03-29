@@ -19,28 +19,150 @@
 
 #include "Board.h"
 
-bool Board::BuildAndPlacePart(TemplateManager& templateMgr, 
-							  const std::string& nameStr, const std::string& valueStr, const std::string& typeStr,
-							  std::list<std::string>& offBoard, std::string& errorStr, bool& bPartTypeOK)
+bool Board::BuildAndPlacePart(TemplateManager& templateMgr, const CompStrings& compStrings, std::list<std::string>& offBoard, std::string& errorStr, bool& bPartTypeOK)
 {
-	// First see if typeStr can be mapped to a valid import string
-	const std::string& importStr	= templateMgr.GetImportStrFromAlias(typeStr);
-	const std::string& rTypeStr		= importStr.empty() ? typeStr : importStr;
-
 	Component comp;	// Only configured if the part type is OK
 
-	bool bOK = bPartTypeOK = templateMgr.CheckPartOK(nameStr, valueStr, rTypeStr, &offBoard, &errorStr, &comp);
+	// First see if typeStr is an alias for a valid import string
+	const std::string& importStr = templateMgr.GetImportStrFromAlias(compStrings.m_typeStr);
+
+	CompStrings test(compStrings);	// A working copy of compStrings (with possibly modified m_typeStr)
+	if ( !importStr.empty() ) test.m_typeStr = importStr;
+
+	bool bOK = bPartTypeOK = templateMgr.CheckPartOK(test, &offBoard, &errorStr, &comp);
 	if ( !bOK )
-		templateMgr.AddAlias(typeStr, "");	// Don't have a valid import string yet
+		templateMgr.AddAlias(compStrings.m_typeStr, "");	// Don't have a valid import string yet
 	else
 	{
 		bOK = ( AddComponent(-1, -1, comp) != BAD_COMPID );	// Create the part and place it
 		if ( !bOK ) 
 		{
-			const std::string strID = "Part: Name = " + nameStr + ", Value = " + valueStr + ", Type = " + typeStr;
+			const std::string strID = "Part: Name = " + compStrings.m_nameStr + ", Value = " + compStrings.m_valueStr + ", Type = " + compStrings.m_typeStr;
 			errorStr = strID + "\nInternal error creating and placing part";
 		}
 	}
+	return bOK;
+}
+
+// Helper to get all part info from a Protel V1 / Tango file
+bool Board::GetPartsTango(const std::string& filename, std::list<CompStrings>& listOut) const
+{
+	CompStrings compStrings;
+
+	// References to keep code tidy
+	std::string& nameStr	= compStrings.m_nameStr;	// TinyCAD "Ref"     / gEDA "refdes"	==> VeroRoute "Name"	(e.g. "U4")
+	std::string& valueStr	= compStrings.m_valueStr;	// TinyCAD "Name"    / gEDA "device"	==> VeroRoute "Value"	(e.g. "TL072")
+	std::string& typeStr	= compStrings.m_typeStr;	// TinyCAD "Package" / gEDA "footprint"	==> VeroRoute "Type"	(e.g. "DIP8")
+
+	std::ifstream inStream;
+	inStream.open(filename.c_str(), std::ios::in | std::ios::binary);
+	bool bOK = inStream.is_open();
+	bool bPart(false), bNet(false);	// Flags indicating "part" and "netlist" sections
+	int iRow(0);					// Row counter within "part" and "netlist" sections
+
+	while( bOK )	// Loop through file
+	{
+		if ( inStream.eof() ) break;
+
+		std::string str;							// For reading from file.  Ensure clear before reading
+		StringHelper::getline_safe(inStream, str);	// Read the whole line and handle line-ending nicely
+
+		if ( str == "[" ) { bOK = !bPart && !bNet;	bPart = true;	iRow = 0;	compStrings.Clear();	continue; }
+		if ( str == "]" ) { bOK =  bPart && !bNet;	bPart = false;				continue; }
+		if ( str == "(" ) { bOK = !bPart && !bNet;	bNet  = true;	iRow = 0; 	continue; }
+		if ( str == ")" ) { bOK = !bPart &&  bNet;	bNet  = false;				continue; }
+
+		if ( bPart )	// We're in a "Part" description section
+		{
+			switch(iRow)
+			{
+				case 0:	nameStr		= str;	break;
+				case 1:	typeStr		= str;	break;
+				case 2:	valueStr	= str;	listOut.push_back(compStrings);	break;
+			}
+		}
+		iRow++;
+	}
+	if ( inStream.is_open() ) inStream.close();
+
+	return bOK;
+}
+
+// Helper to get all part info from an OrcadPCB2 file
+bool Board::GetPartsOrcad(const std::string& filename, std::list<CompStrings>& listOut) const
+{
+	CompStrings compStrings;
+
+	// References to keep code tidy
+	std::string& nameStr	= compStrings.m_nameStr;	// KiCAD "Reference" ==> VeroRoute "Name"	(e.g. "U4")
+	std::string& valueStr	= compStrings.m_valueStr;	// KiCAD "Value"	 ==> VeroRoute "Value"	(e.g. "TL072")
+	std::string& typeStr	= compStrings.m_typeStr;	// KiCAD "Footprint" ==> VeroRoute "Type"	(e.g. "DIP8")
+
+	std::ifstream inStream;
+	inStream.open(filename.c_str(), std::ios::in | std::ios::binary);
+	bool bOK = inStream.is_open();
+
+	bool bPartStart(false);
+	while( bOK )	// Loop through file
+	{
+		if ( inStream.eof() ) break;
+
+		std::string str;							// For reading from file.  Ensure clear before reading
+		StringHelper::getline_safe(inStream, str);	// Read the whole line and handle line-ending nicely
+		if ( str.empty() ) continue;	// Skip blank lines
+
+		// First non-blank char on every line should be '(' or ')' or '*'
+		const bool bCurvedOpen	= str.find("(")	!= std::string::npos;
+		const bool bCurvedClose	= str.find(")")	!= std::string::npos;
+
+		if ( bCurvedOpen && str.find("{") != std::string::npos && str.find("}") != std::string::npos )
+			continue;	// Line is a comment so skip it
+
+		if ( !bCurvedOpen && !bCurvedClose )
+		{
+			if ( str.find("*") != std::string::npos )
+				break;	// reached the '*'
+
+			bOK = false;
+			//errorStr = "Expecting all lines to start with '('' or ')'' or '*'";
+			break;
+		}
+
+		if ( bCurvedOpen && !bPartStart )
+		{
+			// We're expecting the line to say something like "( /5D5ADFE2 DIP16 IC1 SAD1024"
+
+			std::vector<std::string> strList;
+
+			StringHelper::GetSubStrings(str, strList);	// Break str into space separated list
+			const size_t numSubStrings = strList.size();
+
+			bOK = ( numSubStrings == 4 || numSubStrings == 5 );
+			//if ( !bOK ) errorStr = "Expecting format:  ( /5D5ADFE2 FOOTPRINT NAME VALUE  , but got:" + str;
+			if ( !bOK ) break;
+
+			typeStr		= strList[2];
+			nameStr		= strList[3];
+			valueStr	= ( numSubStrings == 5 ) ? strList[4] : "";
+
+			listOut.push_back(compStrings);
+
+			bPartStart = true;
+		}
+		else
+		{
+			// We're in the pin section...
+			assert( bCurvedClose );	// Should have ')' on every line
+			if ( !bCurvedOpen )
+			{
+				// If we have just a ')' on the line then we're done with the pins ...
+				bPartStart = false;	// ... and we're done with the part, move onto the next one
+				continue;
+			}
+		}
+	}
+	if ( inStream.is_open() ) inStream.close();
+
 	return bOK;
 }
 
@@ -49,9 +171,13 @@ bool Board::ImportTango(TemplateManager& templateMgr, const std::string& filenam
 {
 	Clear();
 
-	std::string	nameStr;	// TinyCAD "Ref"     / gEDA "refdes"	==> VeroRoute "Name"	(e.g. "R27")
-	std::string	typeStr;	// TinyCAD "Package" / gEDA "footprint"	==> VeroRoute "Type"	(e.g. "DIP8")
-	std::string	netStr;		// Net name
+	CompStrings compStrings;
+
+	// References to keep code tidy
+	std::string& nameStr	= compStrings.m_nameStr;	// TinyCAD "Ref"     / gEDA "refdes"	==> VeroRoute "Name"	(e.g. "U4")
+	std::string& valueStr	= compStrings.m_valueStr;	// TinyCAD "Name"    / gEDA "device"	==> VeroRoute "Value"	(e.g. "TL072")
+	std::string& typeStr	= compStrings.m_typeStr;	// TinyCAD "Package" / gEDA "footprint"	==> VeroRoute "Type"	(e.g. "DIP8")
+	std::string netStr;	// Net name
 
 	std::ifstream inStream;
 	inStream.open(filename.c_str(), std::ios::in | std::ios::binary);
@@ -78,7 +204,7 @@ bool Board::ImportTango(TemplateManager& templateMgr, const std::string& filenam
 		{
 			if ( iRow == 0 )
 			{
-				nameStr = str;	// TinyCAD "Ref" / gEDA "refdes"	==> VeroRoute "Name"	(e.g. "R27")
+				nameStr = str;
 				bOK  = ( nameStr.find("-") == std::string::npos );	// Name should not have a "-"
 				if ( !bOK ) errorStr = "Part section: " + nameStr + "\nPart names must not contain a minus sign";
 				if ( !bOK ) break;
@@ -89,14 +215,14 @@ bool Board::ImportTango(TemplateManager& templateMgr, const std::string& filenam
 			}
 			if ( iRow == 1 )
 			{
-				typeStr = str;	// TinyCAD "Package" / gEDA "footprint"	==> VeroRoute "Type"
+				typeStr = str;
 			}
 			if ( iRow == 2 )
 			{
-				const std::string valueStr = str;	// TinyCAD "Name" / gEDA "device"		==> VeroRoute "Value"	(e.g "TL072")
+				valueStr = str;
 
 				// Build the part and place it ...
-				bOK = BuildAndPlacePart(templateMgr, nameStr, valueStr, typeStr, offBoard, errorStr, bPartTypeOK);
+				bOK = BuildAndPlacePart(templateMgr, compStrings, offBoard, errorStr, bPartTypeOK);
 				if ( !bOK ) break;
 			}
 		}
@@ -163,6 +289,13 @@ bool Board::ImportOrcad(TemplateManager& templateMgr, const std::string& filenam
 {
 	Clear();
 
+	CompStrings compStrings;
+
+	// References to keep code tidy
+	std::string& nameStr	= compStrings.m_nameStr;	// KiCAD "Reference" ==> VeroRoute "Name"	(e.g. "U4")	
+	std::string& valueStr	= compStrings.m_valueStr;	// KiCAD "Value"	 ==> VeroRoute "Value"	(e.g. "TL072")
+	std::string& typeStr	= compStrings.m_typeStr;	// KiCAD "Footprint" ==> VeroRoute "Type"	(e.g. "DIP8")
+
 	std::ifstream inStream;
 	inStream.open(filename.c_str(), std::ios::in | std::ios::binary);
 	bool bOK = inStream.is_open();
@@ -173,10 +306,6 @@ bool Board::ImportOrcad(TemplateManager& templateMgr, const std::string& filenam
 	std::list<std::string> offBoard;	// List of off-board part names
 
 	bool bPartStart(false);
-
-	std::string typeStr;	// KiCAD "Footprint" ==> VeroRoute "Type"	(e.g. "DIP8")
-	std::string	nameStr;	// KiCAD "Reference" ==> VeroRoute "Name"	(e.g. "R23")
-	std::string valueStr;	// KiCAD "Value"	 ==> VeroRoute "Value"	(e.g. "TL072")
 
 	while( bOK )	// Loop through file
 	{
@@ -216,16 +345,16 @@ bool Board::ImportOrcad(TemplateManager& templateMgr, const std::string& filenam
 			if ( !bOK ) errorStr = "Expecting format:  ( /5D5ADFE2 FOOTPRINT NAME VALUE  , but got:" + str;
 			if ( !bOK ) break;
 
-			typeStr		= strList[2];	// KiCAD "Footprint" ==> VeroRoute "Type"	(e.g. "DIP8")
-			nameStr		= strList[3];	// KiCAD "Reference" ==> VeroRoute "Name"	(e.g. "R23")
-			valueStr	= ( numSubStrings == 5 ) ? strList[4] : "";	// KiCAD "Value" ==> VeroRoute "Value"	(e.g. "TL072")
+			typeStr		= strList[2];
+			nameStr		= strList[3];
+			valueStr	= ( numSubStrings == 5 ) ? strList[4] : "";
 
 			bOK = ( m_compMgr.GetComponentIdFromName(nameStr) == BAD_COMPID );	// Name must be unique
 			if ( !bOK ) errorStr = "\nPart name " + nameStr + " is not unique";
 			if ( !bOK ) break;
 
 			// Build the part and place it ...
-			bOK = BuildAndPlacePart(templateMgr, nameStr, valueStr, typeStr, offBoard, errorStr, bPartTypeOK);
+			bOK = BuildAndPlacePart(templateMgr, compStrings, offBoard, errorStr, bPartTypeOK);
 			if ( !bOK ) break;
 
 			bPartStart = true;
