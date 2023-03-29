@@ -550,7 +550,6 @@ void MainWindow::ResetView(MOUSE_MODE eMouseMode, bool bTutorial)
 	if ( !bTutorial ) m_iTutorialNumber = -1;	// Cancel tutorial mode
 	UpdateControls();
 	UpdateBOM();
-//	if ( !bUndoRedo ) UpdateAliasDialog();		// For Undo/Redo, don't update the Alias dialog	//TODO Investigate this
 	if ( !bUndoRedo ) UpdateTemplatesDialog();	// For Undo/Redo, don't update the Templates dialog
 
 	UpdateCompDialog();
@@ -874,12 +873,15 @@ void MainWindow::ReImport()
 	if ( bOK )
 		HideAliasDialog();
 	else if ( !bPartTypeOK )
-		ShowAliasDialog();	//TODO Needed to force a redraw ?
+		ShowAliasDialog();
 
 	m_fileName.clear();
 	m_iTutorialNumber = -1;
 	ResetHistory("File->Import Netlist");
 	ResetView();
+	
+	if ( !bOK )
+		QMessageBox::information(this, tr("Error Importing Netlist"), tr(m_aliasDlg->GetErrorStr().c_str()));
 }
 
 void MainWindow::WritePDF()

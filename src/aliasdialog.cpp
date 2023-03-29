@@ -56,7 +56,7 @@ void AliasDialog::Configure(const std::string& filename, bool bTango)
 
 struct RowData
 {
-	RowData(std::string aliasStr, std::string importStr) : m_aliasStr(aliasStr), m_importStr(importStr) {}
+	RowData(const std::string& aliasStr, const std::string& importStr) : m_aliasStr(aliasStr), m_importStr(importStr) {}
 	std::string m_aliasStr;		// Alias string
 	std::string m_importStr;	// Valid import string
 };
@@ -75,13 +75,16 @@ struct IsEarlierRow
 
 void AliasDialog::Update()
 {
+	m_pMainWindow->m_templateMgr.CalcValidImportStrings();	// Calculate valid import strings, and make sure each one is not listed as an alias
+
 	ui->pushButton->setEnabled( !m_filename.empty() );	// Disable Re-Import button if no filename
 
 	// Set up the table of (valid) import strings
 	ui->tableWidget->clear();
-	ui->tableWidget->setColumnCount(1);
-	ui->tableWidget->setColumnWidth(0,700);
-	m_tableHeader << "Valid Import Strings";
+	ui->tableWidget->setColumnCount(2);
+	ui->tableWidget->setColumnWidth(0,200);
+	ui->tableWidget->setColumnWidth(1,490);
+	m_tableHeader << "Valid Import Strings" << "Notes";
 	ui->tableWidget->setHorizontalHeaderLabels(m_tableHeader);
 	ui->tableWidget->verticalHeader()->setVisible(false);
 	ui->tableWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -91,14 +94,16 @@ void AliasDialog::Update()
 
 	// Populate the table with data
 	int nImport(0);
-	m_pMainWindow->m_templateMgr.CalcAllowedImportStrings();
 	const auto& strList = m_pMainWindow->m_templateMgr.GetImportStrings();
-	for (auto& str : strList)
+	for (auto& strPair : strList)
 	{
 		// Write row to table.	Note: No memory leak since setItem() takes ownership.
-		auto pItem = new QTableWidgetItem(QString::fromStdString(str));
-		pItem->setFlags(Qt::NoItemFlags);
-		ui->tableWidget->setItem(nImport, 0, pItem);
+		auto pItemA = new QTableWidgetItem(QString::fromStdString(strPair.m_importStr));
+		auto pItemB = new QTableWidgetItem(QString::fromStdString(strPair.m_notesStr));
+		pItemA->setFlags(Qt::NoItemFlags);
+		pItemB->setFlags(Qt::NoItemFlags);
+		ui->tableWidget->setItem(nImport, 0, pItemA);
+		ui->tableWidget->setItem(nImport, 1, pItemB);
 		nImport++;		
 	}
 	ui->tableWidget->setRowCount(nImport);
@@ -151,10 +156,7 @@ void AliasDialog::Update()
 bool AliasDialog::Import(bool& bPartTypeOK)
 {
 	m_errorStr.clear();
-	const bool bOK = m_pMainWindow->m_board.Import(m_pMainWindow->m_templateMgr, m_filename, m_errorStr, m_bTango, bPartTypeOK);
-	if ( !bOK )
-		QMessageBox::information(this, tr("Error Importing Netlist"), tr(m_errorStr.c_str()));
-	return bOK;
+	return m_pMainWindow->m_board.Import(m_pMainWindow->m_templateMgr, m_filename, m_errorStr, m_bTango, bPartTypeOK);
 }
 
 void AliasDialog::keyPressEvent(QKeyEvent* event)

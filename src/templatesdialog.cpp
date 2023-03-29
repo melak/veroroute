@@ -198,7 +198,7 @@ void TemplatesDialog::DeleteTemplate()
 		if ( mgr.Remove(comp) )
 		{
 			Update();
-			m_pMainWindow->UpdateAliasDialog();	//TODO Check this works
+			m_pMainWindow->UpdateAliasDialog();
 		}
 	}
 }
@@ -308,7 +308,7 @@ void TemplatesDialog::AddTemplatesFromBoard(Board& board, bool bAllComps, bool b
 	if ( nCount > 0 )
 	{
 		Update();
-		m_pMainWindow->UpdateAliasDialog();	//TODO Check this works
+		m_pMainWindow->UpdateAliasDialog();
 	}
 
 	if ( bInfoMsg )

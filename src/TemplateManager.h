@@ -23,6 +23,24 @@
 
 // Manager class to handle component templates
 
+struct StringPair
+{
+	StringPair(const std::string& importStr) : m_importStr(importStr) {}
+	StringPair(const std::string& importStr, const std::string& notesStr) : m_importStr(importStr), m_notesStr(notesStr) {}
+	bool operator<(const StringPair& o) const
+	{
+		if ( m_importStr != o.m_importStr ) return m_importStr < o.m_importStr;
+		return m_notesStr < o.m_notesStr;	// Should not happen in practice
+	}
+	bool operator==(const StringPair& o) const
+	{
+		return m_importStr	== o.m_importStr
+			&& m_notesStr	== o.m_notesStr;
+	}
+	std::string m_importStr;
+	std::string m_notesStr;
+};
+
 class TemplateManager : public Persist
 {
 public:
@@ -79,22 +97,24 @@ public:
 		m_mapAliasToImportStr[aliasStr] = importStr;
 	}
 	const std::map<std::string, std::string>&	GetMapAliasToImportStr() const	{ return m_mapAliasToImportStr; }
-	const std::list<std::string>&				GetImportStrings() const		{ return m_importStrings; }
-	void CalcAllowedImportStrings()
+	const std::list<StringPair>&				GetImportStrings() const		{ return m_importStrings; }
+	void CalcValidImportStrings()
 	{
 		m_importStrings.clear();
-		m_importStrings.push_back("PADS");	// Special case.  PADS is an allowed import string (like a SIP but broken into separate objects)
+		m_importStrings.push_back( StringPair("PADS") );	// Special case.  PADS is an allowed import string (like a SIP but broken into separate objects)
 		for (const auto& o : m_listGeneric)
 			if ( !o.GetImportStr().empty() )
-				m_importStrings.push_back( o.GetImportStr() );
+				m_importStrings.push_back( StringPair(o.GetImportStr()) );
 		for (const auto& o : m_listUser)
 			if ( o.GetType() == COMP::CUSTOM && !o.GetImportStr().empty() )
-				m_importStrings.push_back( o.GetImportStr() );
+				m_importStrings.push_back( StringPair(o.GetImportStr()) );
 
 		// Also see how suffices are handled in CheckPartOK() below
-		for (auto& str : m_importStrings)
+		for (auto& strPair : m_importStrings)
 		{
-			const COMP eType = ( str == "PADS" ) ? COMP::SIP : CompTypes::GetTypeFromImportStr(str);	// Treat PADS like SIP regarding number of pins
+			const std::string& str = strPair.m_importStr;
+			const bool bPADS = ( str == "PADS" );
+			const COMP eType = bPADS ? COMP::SIP : CompTypes::GetTypeFromImportStr(str);	// Treat PADS like SIP regarding number of pins
 			switch(eType)
 			{
 				case COMP::SIP:
@@ -105,21 +125,28 @@ public:
 				case COMP::STRIP_100:
 				case COMP::BLOCK_100:
 				case COMP::BLOCK_200:
-					m_importStrings.push_back(str + "x  where  x=[" + std::to_string(CompTypes::GetMinNumPins(eType)) + "," + std::to_string(CompTypes::GetMaxNumPins(eType)) +"] is the number of pins");
+					m_importStrings.push_back( StringPair(str + "x", "x=[" + std::to_string(CompTypes::GetMinNumPins(eType))
+																	 + "," + std::to_string(CompTypes::GetMaxNumPins(eType)) +"] is the number of pins."
+																	 + ( bPADS ? "  Each pin becomes a 'Pad' in VeroRoute." : "")) );
 					break;
-				//TODO The following dont have need numbers appending, and can be changed after import anyway
-				/*
 				case COMP::RESISTOR:
+				case COMP::INDUCTOR:
 				case COMP::DIODE:
 				case COMP::CAP_CERAMIC:
 				case COMP::CAP_FILM:
-					m_importStrings.push_back(str + "x  where  x=[" + std::to_string(CompTypes::GetMinLength(eType)-1) + "," + std::to_string(CompTypes::GetMaxLength(eType)-1) +"] is the length x 100mil);
-				*/
+				case COMP::CAP_FILM_WIDE:
+					m_importStrings.push_back( StringPair(str + "x", "x=[" + std::to_string(CompTypes::GetMinLength(eType)-1)
+																	 + "," + std::to_string(CompTypes::GetMaxLength(eType)-1) +"] is the length in units of 100 mil.") );
+					break;
 				default: break;
 			}
 		}
 		m_importStrings.sort();
 		m_importStrings.unique();
+
+		// Make sure each import string is not listed as an alias
+		for (auto& strPair : m_importStrings)
+			RemoveAlias(strPair.m_importStr);
 	}
 	void AddDefaults()
 	{
@@ -218,8 +245,8 @@ public:
 		// List of package identifiers for footprints with variable numbers of pins/lengths.
 		// "PADS" ==> Create separate on-board PAD objects for an off-board part.
 		// "SWITCH_ST_DIP" must be tested before "SWITCH_ST_DIP".
-		Q_DECL_CONSTEXPR size_t NUM_VARIABLE_PIN_PARTS = 13;
-		const std::string strVar[NUM_VARIABLE_PIN_PARTS] = {"SIP", "DIP", "PADS", "SWITCH_ST_DIP", "SWITCH_ST", "SWITCH_DT", "STRIP_100MIL", "BLOCK_100MIL", "BLOCK_200MIL", "RESISTOR", "DIODE", "CAP_CERAMIC", "CAP_FILM"};
+		Q_DECL_CONSTEXPR size_t NUM_VARIABLE_PIN_PARTS = 15;
+		const std::string strVar[NUM_VARIABLE_PIN_PARTS] = {"SIP", "DIP", "PADS", "SWITCH_ST_DIP", "SWITCH_ST", "SWITCH_DT", "STRIP_100MIL", "BLOCK_100MIL", "BLOCK_200MIL", "RESISTOR", "INDUCTOR", "DIODE", "CAP_CERAMIC", "CAP_FILM", "CAP_FILM_WIDE"};
 
 		// If footprint is variable length, then get the number of pins/length from typeStr.
 		std::string	typeStrCut( typeStr );	// Cut down version of typeStr. e.g.  DIP40 ==> DIP
@@ -240,13 +267,13 @@ public:
 					bOffBoard = true;
 					typeStrCut = "SIP";					// ... treat it as a SIP for the moment
 				}
-				if ( typeStrCut == "RESISTOR" || typeStrCut == "DIODE" || typeStrCut == "CAP_CERAMIC" || typeStrCut == "CAP_FILM" )
+				if ( typeStrCut == "RESISTOR" || typeStrCut == "INDUCTOR" || typeStrCut == "DIODE" || typeStrCut == "CAP_CERAMIC" || typeStrCut == "CAP_FILM" || typeStrCut == "CAP_FILM_WIDE" )
 				{
 					nLength = atoi( pinStr.c_str() );	// Missing or zero ==> Use default length
 					if ( nLength > 0 )					// The length is in 100ths of a mil ...
 						nLength += 1;					// ... so must add 1 to get part length in grid squares
 				}
-				else	// DIP/SIP/SWITCH/STRIP/BLOCK
+				else	// SIP, DIP, SWITCH_ST_DIP, SWITCH_ST, SWITCH_DT, STRIP_100MIL, BLOCK_100MIL, BLOCK_200MIL
 				{
 					numPins = atoi( pinStr.c_str() );
 					if ( numPins == 0 )					// Missing or zero ...
@@ -335,6 +362,6 @@ private:
 	std::list<Template>		m_listGeneric;		// List of generic components
 	std::list<Template>		m_listUser;			// List of template components
 	// Helpers.  Don't persist or copy
-	std::list<std::string>				m_importStrings;
+	std::list<StringPair>				m_importStrings;
 	std::map<std::string, std::string>	m_mapAliasToImportStr;	// Aliases for VeroRoute import strings
 };

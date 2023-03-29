@@ -48,9 +48,9 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>240</y>
+     <y>260</y>
      <width>701</width>
-     <height>231</height>
+     <height>211</height>
     </rect>
    </property>
    <property name="sizePolicy">
@@ -100,6 +100,22 @@
    </property>
    <property name="text">
     <string>Delete All Aliases</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>232</y>
+     <width>701</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Enter a valid import string for each Alias in the list below</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
    </property>
   </widget>
  </widget>
