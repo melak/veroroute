@@ -62,6 +62,65 @@ public:
 			if ( o.GetType() == COMP::CUSTOM && o.GetImportStr() == importStr ) { out = o; return true; }
 		return false;
 	}
+	const std::string& GetImportStrFromAlias(const std::string& aliasStr) const
+	{
+		static std::string emptyStr("");
+		auto iter = m_mapAliasToImportStr.find(aliasStr);
+		return ( iter != m_mapAliasToImportStr.end() ) ? iter->second : emptyStr;
+	}
+	void RemoveAlias(const std::string& aliasStr)
+	{
+		const auto iter = m_mapAliasToImportStr.find(aliasStr);
+		if ( iter != m_mapAliasToImportStr.end() )
+			m_mapAliasToImportStr.erase(iter);
+	}
+	void AddAlias(const std::string& aliasStr, const std::string& importStr)
+	{
+		m_mapAliasToImportStr[aliasStr] = importStr;
+	}
+	const std::map<std::string, std::string>&	GetMapAliasToImportStr() const	{ return m_mapAliasToImportStr; }
+	const std::list<std::string>&				GetImportStrings() const		{ return m_importStrings; }
+	void CalcAllowedImportStrings()
+	{
+		m_importStrings.clear();
+		m_importStrings.push_back("PADS");	// Special case.  PADS is an allowed import string (like a SIP but broken into separate objects)
+		for (const auto& o : m_listGeneric)
+			if ( !o.GetImportStr().empty() )
+				m_importStrings.push_back( o.GetImportStr() );
+		for (const auto& o : m_listUser)
+			if ( o.GetType() == COMP::CUSTOM && !o.GetImportStr().empty() )
+				m_importStrings.push_back( o.GetImportStr() );
+
+		// Also see how suffices are handled in CheckPartOK() below
+		for (auto& str : m_importStrings)
+		{
+			const COMP eType = ( str == "PADS" ) ? COMP::SIP : CompTypes::GetTypeFromImportStr(str);	// Treat PADS like SIP regarding number of pins
+			switch(eType)
+			{
+				case COMP::SIP:
+				case COMP::DIP:
+				case COMP::SWITCH_ST_DIP:
+				case COMP::SWITCH_ST:
+				case COMP::SWITCH_DT:
+				case COMP::STRIP_100:
+				case COMP::BLOCK_100:
+				case COMP::BLOCK_200:
+					m_importStrings.push_back(str + "x  where  x=[" + std::to_string(CompTypes::GetMinNumPins(eType)) + "," + std::to_string(CompTypes::GetMaxNumPins(eType)) +"] is the number of pins");
+					break;
+				//TODO The following dont have need numbers appending, and can be changed after import anyway
+				/*
+				case COMP::RESISTOR:
+				case COMP::DIODE:
+				case COMP::CAP_CERAMIC:
+				case COMP::CAP_FILM:
+					m_importStrings.push_back(str + "x  where  x=[" + std::to_string(CompTypes::GetMinLength(eType)-1) + "," + std::to_string(CompTypes::GetMaxLength(eType)-1) +"] is the length x 100mil);
+				*/
+				default: break;
+			}
+		}
+		m_importStrings.sort();
+		m_importStrings.unique();
+	}
 	void AddDefaults()
 	{
 		std::string nameStr(""), valueStr("");
@@ -146,6 +205,112 @@ public:
 		if ( bOK ) m_listUser.erase(iter);	// Erase entry if it exists
 		return bOK;
 	}
+	// Following is a helper for the import code
+	bool CheckPartOK(const std::string& nameStr, const std::string& valueStr, const std::string& typeStr,
+					 std::list<std::string>* pOffBoard = nullptr, std::string* pErrorStr = nullptr, Component* pComp = nullptr)
+	{
+		std::string dummyStr;
+		std::string& errorStr = ( pErrorStr ) ? *pErrorStr : dummyStr;
+
+		Component dummyComp;
+		Component& comp = ( pComp ) ? *pComp : dummyComp;
+
+		// List of package identifiers for footprints with variable numbers of pins/lengths.
+		// "PADS" ==> Create separate on-board PAD objects for an off-board part.
+		// "SWITCH_ST_DIP" must be tested before "SWITCH_ST_DIP".
+		Q_DECL_CONSTEXPR size_t NUM_VARIABLE_PIN_PARTS = 13;
+		const std::string strVar[NUM_VARIABLE_PIN_PARTS] = {"SIP", "DIP", "PADS", "SWITCH_ST_DIP", "SWITCH_ST", "SWITCH_DT", "STRIP_100MIL", "BLOCK_100MIL", "BLOCK_200MIL", "RESISTOR", "DIODE", "CAP_CERAMIC", "CAP_FILM"};
+
+		// If footprint is variable length, then get the number of pins/length from typeStr.
+		std::string	typeStrCut( typeStr );	// Cut down version of typeStr. e.g.  DIP40 ==> DIP
+		std::string	pinStr;					// Number of pins
+		int numPins(0), nLength(0);	// Invalid by default
+
+		bool bOffBoard(false);
+		for (size_t i = 0; i < NUM_VARIABLE_PIN_PARTS; i++)
+		{
+			const std::string&	strTmp	= strVar[i];	// e.g. "SIP", "DIP, etc
+			const auto			L		= strTmp.length();
+			if ( typeStr.length() >= L && typeStr.substr(0, L) == strTmp )
+			{
+				pinStr		= typeStr.substr(L);	// e.g. "DIP40" ==> "40"
+				typeStrCut	= typeStr.substr(0, L);	// e.g. "DIP40" ==> "DIP"
+				if ( typeStrCut == "PADS" )				// If we have an off-board part ...
+				{
+					bOffBoard = true;
+					typeStrCut = "SIP";					// ... treat it as a SIP for the moment
+				}
+				if ( typeStrCut == "RESISTOR" || typeStrCut == "DIODE" || typeStrCut == "CAP_CERAMIC" || typeStrCut == "CAP_FILM" )
+				{
+					nLength = atoi( pinStr.c_str() );	// Missing or zero ==> Use default length
+					if ( nLength > 0 )					// The length is in 100ths of a mil ...
+						nLength += 1;					// ... so must add 1 to get part length in grid squares
+				}
+				else	// DIP/SIP/SWITCH/STRIP/BLOCK
+				{
+					numPins = atoi( pinStr.c_str() );
+					if ( numPins == 0 )					// Missing or zero ...
+						numPins = -1;					// ... use -1 instead.  Don't use 0 as that implies "use default".
+				}
+				break;
+			}
+		}
+
+		const std::string strID = "Part: Name = " + nameStr + ", Value = " + valueStr + ", Type = " + typeStr;
+
+		bool bCustom(false);	// true ==> We've found a custom template with matching import string
+
+		const COMP eType = CompTypes::GetTypeFromImportStr(typeStrCut);
+		bool bOK = ( eType != COMP::CUSTOM && eType != COMP::TRACKS && eType != COMP::VERO_NUMBER && eType != COMP::VERO_LETTER && eType != COMP::INVALID );
+		if ( !bOK )	// Search template manager
+			bOK = bCustom = GetFromImportStr(typeStrCut, comp);
+		if ( !bOK ) { errorStr = strID + "\nError: Unknown part type"; return bOK; }
+
+		// Check pins per component is within limits
+		if ( numPins == 0 ) numPins = ( bCustom ) ? static_cast<int>( comp.GetNumPins() ) : CompTypes::GetDefaultNumPins(eType);
+		bOK = ( numPins > 0 );
+		if ( !bOK ) { errorStr = strID + "\nError: Part has no pins"; return bOK; }
+
+		bOK = bCustom || ( numPins >= CompTypes::GetMinNumPins(eType) );
+		if ( !bOK ) { errorStr = strID + "\nError: Part has fewer pins than VeroRoute supports"; return bOK; }
+
+		bOK = bCustom || ( numPins <= CompTypes::GetMaxNumPins(eType) );
+		if ( !bOK ) { errorStr = strID + "\nError: Part has more pins than VeroRoute supports"; return bOK; }
+
+		// Check length is within limits for components with fixed numbers of pins
+		if ( nLength > 0 )
+		{
+			bOK = bCustom || ( nLength >= CompTypes::GetMinLength(eType) );
+			if ( !bOK ) { errorStr = strID + "\nError: Part length is smaller than VeroRoute support"; return bOK; }
+
+			bOK = bCustom || ( nLength <= CompTypes::GetMaxLength(eType) );
+			if ( !bOK ) { errorStr = strID + "\nError: Part length is larger than VeroRoute supports"; return bOK; }
+		}
+
+		if ( bCustom )
+		{
+			assert( comp.GetType() == COMP::CUSTOM );
+			comp.SetNameStr(nameStr);
+			comp.SetValueStr(valueStr);
+		}
+		else
+		{
+			assert( eType != COMP::INVALID );
+			std::vector<int>	nodeList;
+			nodeList.resize(static_cast<size_t>(numPins), BAD_NODEID);
+
+			comp = Component(nameStr, valueStr, eType, nodeList);
+			if ( nLength > 0 )
+			{
+				while ( comp.GetCols() < nLength ) comp.Stretch(true);	// grow
+				while ( comp.GetCols() > nLength ) comp.Stretch(false);	// shrink
+			}
+		}
+
+		if ( bOK && bOffBoard && pOffBoard )	// If have a valid offboard part (i.e. PADS with a valid suffix)
+			pOffBoard->push_back(nameStr);		// ... add it to the list of off-board parts
+		return bOK;
+	}
 	// Persist interface functions
 	virtual void Load(DataStream& inStream) override
 	{
@@ -166,7 +331,10 @@ public:
 		for (auto& o : m_listUser) o.Save(outStream);
 	}
 private:
-	std::string			m_pathStr;		// Path to the "templates" folder
-	std::list<Template>	m_listGeneric;	// List of generic components
-	std::list<Template>	m_listUser;		// List of template components
+	std::string				m_pathStr;			// Path to the "templates" folder
+	std::list<Template>		m_listGeneric;		// List of generic components
+	std::list<Template>		m_listUser;			// List of template components
+	// Helpers.  Don't persist or copy
+	std::list<std::string>				m_importStrings;
+	std::map<std::string, std::string>	m_mapAliasToImportStr;	// Aliases for VeroRoute import strings
 };

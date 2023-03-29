@@ -17,6 +17,7 @@ TEMPLATE = app
 
 
 SOURCES += bomdialog.cpp \
+    aliasdialog.cpp \
     compdialog.cpp \
     controldialog.cpp \
     finddialog.cpp \
@@ -49,6 +50,7 @@ SOURCES += bomdialog.cpp \
 
 
 HEADERS  += bomdialog.h \
+    aliasdialog.h \
     controldialog.h \
     compdialog.h \
     finddialog.h \
@@ -106,6 +108,7 @@ HEADERS  += bomdialog.h \
    
 
 FORMS    += bomdialog.ui \
+    aliasdialog.ui \
     compdialog.ui \
     controldialog.ui \
     finddialog.ui \

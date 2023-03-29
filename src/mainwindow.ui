@@ -222,6 +222,7 @@
     <addaction name="actionRenderingDlg"/>
     <addaction name="actionWireDlg"/>
     <addaction name="actionBomDlg"/>
+    <addaction name="actionAliasDlg"/>
     <addaction name="actionInfoDlg"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
@@ -947,6 +948,11 @@
   <action name="actionBomDlg">
    <property name="text">
     <string>B.O.M.</string>
+   </property>
+  </action>
+  <action name="actionAliasDlg">
+   <property name="text">
+    <string>Part Aliases</string>
    </property>
   </action>
   <action name="actionPinDlg">

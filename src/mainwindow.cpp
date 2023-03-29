@@ -28,6 +28,7 @@
 #include "pindialog.h"
 #include "wiredialog.h"
 #include "bomdialog.h"
+#include "aliasdialog.h"
 #include "textdialog.h"
 #include "finddialog.h"
 #include "hotkeysdialog.h"
@@ -101,6 +102,15 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 #endif
 	setCentralWidget(m_scrollArea);
 
+	// First create dialogs that do not dock
+	m_wireDlg		= new WireDialog(this);
+	m_hotkeysDlg	= new HotkeysDialog(this);
+	m_textDlg		= new TextDialog(this);
+	m_bomDlg		= new BomDialog(this);
+	m_aliasDlg		= new AliasDialog(this);
+	m_padOffsetDlg	= new PadOffsetDialog(this);
+	m_findDlg		= new FindDialog(this);
+	
 	// Control dialog goes on right
 	m_dockControlDlg = new QDockWidget("",this);
 	m_dockControlDlg->setAllowedAreas(Qt::RightDockWidgetArea);
@@ -155,13 +165,6 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	m_dockPinDlg->setWidget(m_pinDlg);
 	m_dockPinDlg->setTitleBarWidget( new QWidget(this) );	// Hide the title bar
 	addDockWidget(Qt::LeftDockWidgetArea, m_dockPinDlg);
-
-	m_wireDlg		= new WireDialog(this);
-	m_hotkeysDlg	= new HotkeysDialog(this);
-	m_textDlg		= new TextDialog(this);
-	m_bomDlg		= new BomDialog(this);
-	m_padOffsetDlg	= new PadOffsetDialog(this);
-	m_findDlg		= new FindDialog(this);
 
 	ui->toolBar_2->setIconSize(QSize(32,32));	// 32x32 instead of 24x24
 	ui->toolBar_2->setMovable(false);			// Keep docked
@@ -340,6 +343,7 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	QObject::connect(ui->actionRenderingDlg,			SIGNAL(triggered()), this, SLOT(ToggleRenderingDialog()));
 	QObject::connect(ui->actionWireDlg,					SIGNAL(triggered()), this, SLOT(ShowWireDialog()));
 	QObject::connect(ui->actionBomDlg,					SIGNAL(triggered()), this, SLOT(ShowBomDialog()));
+	QObject::connect(ui->actionAliasDlg,				SIGNAL(triggered()), this, SLOT(ShowAliasDialog_NoFile()));
 	QObject::connect(ui->actionPinDlg,					SIGNAL(triggered()), this, SLOT(TogglePinDialog()));
 	QObject::connect(ui->actionCompDlg,					SIGNAL(triggered()), this, SLOT(ToggleCompDialog()));
 	// Layers menu actions
@@ -546,7 +550,7 @@ void MainWindow::ResetView(MOUSE_MODE eMouseMode, bool bTutorial)
 	if ( !bTutorial ) m_iTutorialNumber = -1;	// Cancel tutorial mode
 	UpdateControls();
 	UpdateBOM();
-
+//	if ( !bUndoRedo ) UpdateAliasDialog();		// For Undo/Redo, don't update the Alias dialog	//TODO Investigate this
 	if ( !bUndoRedo ) UpdateTemplatesDialog();	// For Undo/Redo, don't update the Templates dialog
 
 	UpdateCompDialog();
@@ -844,7 +848,7 @@ void MainWindow::SaveAs()
 	UpdateRecentFiles(&fileName, bOK);	// Remove file from list if bOK == false
 }
 
-void MainWindow::ImportTango()
+void MainWindow::Import(bool bTango)
 {
 	if ( GetIsModified() )
 	{
@@ -855,47 +859,27 @@ void MainWindow::ImportTango()
 	QString fileName = QFileDialog::getOpenFileName(this, tr("Open file"), ""/*directory*/,	tr("Protel Netlist (*.net);;All Files (*)"));
 	if ( !fileName.isEmpty() )
 	{
-		ui->statusBar->showMessage( tr("Importing..."), 500 );
-
-		const std::string	fileNameStr = fileName.toStdString();
-		std::string			errorStr;
-		const bool bOK = m_board.ImportTango(GetTemplateManager(), fileNameStr, errorStr);
-		m_fileName.clear();
-		m_iTutorialNumber = -1;
-		ResetHistory("File->Import Netlist");
-		ResetView();
-		if ( !bOK )
-		{
-			QMessageBox::information(this, tr("Error Importing Netlist"), tr(errorStr.c_str()));
-		}
+		m_aliasDlg->Configure(fileName.toStdString(), bTango);
+		ShowAliasDialog();
+		ReImport();
 	}
 }
 
-void MainWindow::ImportOrcad()
+void MainWindow::ReImport()
 {
-	if ( GetIsModified() )
-	{
-		if ( QMessageBox::question(this, tr("Confirm Import"),
-										 tr("Your layout is not saved. You will lose changes if you Import a new one.  Continue?"),
-										 QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::No ) return;
-	}
-	QString fileName = QFileDialog::getOpenFileName(this, tr("Open file"), ""/*directory*/,	tr("OrcadPCB2 Netlist (*.net);;All Files (*)"));
-	if ( !fileName.isEmpty() )
-	{
-		ui->statusBar->showMessage( tr("Importing..."), 500 );
+	ui->statusBar->showMessage( tr("Importing..."), 500 );
 
-		const std::string	fileNameStr = fileName.toStdString();
-		std::string			errorStr;
-		const bool bOK = m_board.ImportOrcad(GetTemplateManager(), fileNameStr, errorStr);
-		m_fileName.clear();
-		m_iTutorialNumber = -1;
-		ResetHistory("File->Import Netlist");
-		ResetView();
-		if ( !bOK )
-		{
-			QMessageBox::information(this, tr("Error Importing Netlist"), tr(errorStr.c_str()));
-		}
-	}
+	bool bPartTypeOK(false);
+	const bool bOK = m_aliasDlg->Import(bPartTypeOK);
+	if ( bOK )
+		HideAliasDialog();
+	else if ( !bPartTypeOK )
+		ShowAliasDialog();	//TODO Needed to force a redraw ?
+
+	m_fileName.clear();
+	m_iTutorialNumber = -1;
+	ResetHistory("File->Import Netlist");
+	ResetView();
 }
 
 void MainWindow::WritePDF()
@@ -1413,7 +1397,8 @@ void MainWindow::HidePadOffsetDialog(bool bForce)
 }
 void MainWindow::ShowBomDialog()
 {
-	// (m_bomDlg, m_wireDlg, m_findDlg, m_textDlg) are mutually exclusive
+	// (m_bomDlg, m_aliasDlg, m_wireDlg, m_findDlg, m_textDlg) are mutually exclusive
+	m_aliasDlg->hide();
 	m_wireDlg->hide();
 	m_findDlg->hide();
 	m_textDlg->hide();
@@ -1425,10 +1410,31 @@ void MainWindow::HideBomDialog()
 {
 	HideDlg(m_bomDlg);
 }
+void MainWindow::ShowAliasDialog_NoFile()
+{
+	m_aliasDlg->Configure("",true);	// Clear filename so import will be disabled
+	ShowAliasDialog();
+}
+void MainWindow::ShowAliasDialog()
+{
+	// (m_bomDlg, m_aliasDlg, m_wireDlg, m_findDlg, m_textDlg) are mutually exclusive
+	m_bomDlg->hide();
+	m_wireDlg->hide();
+	m_findDlg->hide();
+	m_textDlg->hide();
+	ResetMouseMode();
+	UpdateAliasDialog();
+	ShowDlg(m_aliasDlg);
+}
+void MainWindow::HideAliasDialog()
+{
+	HideDlg(m_aliasDlg);
+}
 void MainWindow::ShowWireDialog()
 {
-	// (m_bomDlg, m_wireDlg, m_findDlg, m_textDlg) are mutually exclusive
+	// (m_bomDlg, m_aliasDlg, m_wireDlg, m_findDlg, m_textDlg) are mutually exclusive
 	m_bomDlg->hide();
+	m_aliasDlg->hide();
 	m_findDlg->hide();
 	m_textDlg->hide();
 	ResetMouseMode();
@@ -1440,8 +1446,9 @@ void MainWindow::HideWireDialog()
 }
 void MainWindow::ShowFindDialog()
 {
-	// (m_bomDlg, m_wireDlg, m_findDlg, m_textDlg) are mutually exclusive
+	// (m_bomDlg, m_aliasDlg, m_wireDlg, m_findDlg, m_textDlg) are mutually exclusive
 	m_bomDlg->hide();
+	m_aliasDlg->hide();
 	m_wireDlg->hide();
 	m_textDlg->hide();
 	ResetMouseMode();
@@ -1453,8 +1460,9 @@ void MainWindow::HideFindDialog()
 }
 void MainWindow::ShowTextDialog()
 {
-	// (m_bomDlg, m_wireDlg, m_findDlg, m_textDlg) are mutually exclusive
+	// (m_bomDlg, m_aliasDlg, m_wireDlg, m_findDlg, m_textDlg) are mutually exclusive
 	m_bomDlg->hide();
+	m_aliasDlg->hide();
 	m_wireDlg->hide();
 	m_findDlg->hide();
 	ResetMouseMode();
@@ -2212,7 +2220,9 @@ void MainWindow::DefinerBuild()
 
 	std::string errorStr;
 	const bool bOK = GetTemplateManager().Add(false, comp, &errorStr);
-	if ( !bOK )
+	if ( bOK )
+		UpdateAliasDialog();
+	else
 		QMessageBox::warning(this, tr("Failed to add part to templates"), tr(errorStr.c_str()));
 	EnableCompDialogControls();
 }
@@ -2458,6 +2468,7 @@ void MainWindow::UpdateControls()
 	ui->actionRenderingDlg->setEnabled( !bCompEdit );	ui->actionRenderingDlg->setVisible( !bCompEdit );
 	ui->actionWireDlg->setEnabled( !bCompEdit );		ui->actionWireDlg->setVisible( !bCompEdit );
 	ui->actionBomDlg->setEnabled( !bCompEdit );			ui->actionBomDlg->setVisible( !bCompEdit );
+	ui->actionAliasDlg->setEnabled( !bCompEdit );		ui->actionAliasDlg->setVisible( !bCompEdit );
 
 	ui->menuTrack_Style->setEnabled(	bTracks );
 	ui->actionVeroV->setEnabled(		bTracks && (bNoTracks || bColor) );	// No Vero tracks in PCB or Mono mode
@@ -2497,7 +2508,7 @@ void MainWindow::UpdateControls()
 	ui->actionErasePins->setEnabled(	bPaintPinsOK);
 	ui->actionPaintFlood->setEnabled(	bPaintPinsOK && !m_board.GetRoutingEnabled() );
 
-	ui->actionPaintPins->setChecked(	m_eMouseMode == MOUSE_MODE::PAINT_PINS );
+	ui->actionPaintPins->setChecked(	m_eMouseMode == MOUSE_MODE::PAINT_PINS);
 	ui->actionErasePins->setChecked(	m_eMouseMode == MOUSE_MODE::ERASE_PINS);
 	ui->actionPaintGrid->setChecked(	m_eMouseMode == MOUSE_MODE::PAINT_GRID);
 	ui->actionEraseGrid->setChecked(	m_eMouseMode == MOUSE_MODE::ERASE_GRID);
@@ -2529,6 +2540,7 @@ void MainWindow::UpdateControls()
 void MainWindow::UpdateCompDialog()			{ m_compDlg->Update(); m_pinDlg->Update(); }
 void MainWindow::EnableCompDialogControls()	{ m_compDlg->EnableControls(); }
 void MainWindow::UpdateBOM()				{ m_bomDlg->Update(); if ( m_bomDlg->isVisible() ) { HideBomDialog(); ShowBomDialog(); } }	// Hide/Show needed to make the list refresh
+void MainWindow::UpdateAliasDialog()		{ m_aliasDlg->Update(); if ( m_aliasDlg->isVisible() ) { HideAliasDialog(); ShowAliasDialog(); } }	// Hide/Show needed to make the list refresh
 void MainWindow::UpdateTemplatesDialog()	{ m_templatesDlg->Update(); }
 void MainWindow::UpdateTextDialog(bool bFull)
 {

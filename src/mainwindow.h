@@ -51,6 +51,7 @@ class InfoDialog;
 class CompDialog;
 class TextDialog;
 class BomDialog;
+class AliasDialog;
 class PinDialog;
 class PadOffsetDialog;
 class FindDialog;
@@ -73,6 +74,7 @@ class MainWindow : public QMainWindow
 	friend class CompDialog;
 	friend class TextDialog;
 	friend class BomDialog;
+	friend class AliasDialog;
 	friend class PinDialog;
 	friend class PadOffsetDialog;
 	friend class FindDialog;
@@ -168,8 +170,10 @@ public slots:
 	void Merge();
 	void Save();
 	void SaveAs();
-	void ImportTango();
-	void ImportOrcad();
+	void ReImport();
+	void Import(bool bTango);
+	void ImportTango() { Import(true); }	// true  ==> Tango
+	void ImportOrcad() { Import(false); }	// false ==> Orcad
 	void WritePDF();
 	void WritePNG();
 	void WriteGerber(bool bTwoLayerGerber, bool bMetric);
@@ -291,6 +295,9 @@ public slots:
 	void HidePinDialog();
 	void ShowBomDialog();
 	void HideBomDialog();
+	void ShowAliasDialog();
+	void ShowAliasDialog_NoFile();
+	void HideAliasDialog();
 	void ShowWireDialog();
 	void HideWireDialog();
 	void ShowFindDialog();
@@ -482,6 +489,7 @@ private:
 	void UpdateCompDialog();
 	void EnableCompDialogControls();
 	void UpdateBOM();
+	void UpdateAliasDialog();
 	void UpdateTemplatesDialog();
 	void UpdateTextDialog(bool bFull = false);
 
@@ -621,6 +629,7 @@ private:
 	HotkeysDialog*			m_hotkeysDlg		= nullptr;
 	TextDialog*				m_textDlg			= nullptr;
 	BomDialog*				m_bomDlg			= nullptr;
+	AliasDialog*			m_aliasDlg			= nullptr;
 	PadOffsetDialog*		m_padOffsetDlg		= nullptr;
 	FindDialog*				m_findDlg			= nullptr;
 

@@ -687,16 +687,11 @@ public:
 	void ClearWarnPoints()							{ m_warnPoints[0].clear(); m_warnPoints[1].clear(); }
 	bool GetHaveWarnPoints() const					{ return !m_warnPoints[0].empty() || !m_warnPoints[1].empty(); }
 
-	// Import Protel V1 / Tango netlist (exported from TinyCAD / gEDA)
-	bool ImportTango(const TemplateManager& templateMgr, const std::string& filename, std::string& errorStr);
-	// Import OrcadPCB2 netlist (exported from KiCAD)
-	bool ImportOrcad(const TemplateManager& templateMgr, const std::string& filename, std::string& errorStr);
-	bool BuildAndPlacePart(const TemplateManager& templateMgr,
-						   const std::string& nameStr, const std::string& valueStr, const std::string& typeStr, std::string& typeStrCut, std::string& pinStr,
-						   std::list<std::string>& offBoard, std::string& errorStr, bool bTango);
-	void BreakSIPSintoPADS(const std::list<std::string>& offBoard);
-	void BreakComponentIntoPads(Component& comp);
-	bool GetPinRowCol(int compId, size_t iPinIndex, int& row, int& col) const;
+	// Netlist Import
+	bool Import(TemplateManager& templateMgr, const std::string& filename, std::string& errorStr, bool bTango, bool& bPartTypeOK)
+	{
+		return ( bTango ) ? ImportTango(templateMgr, filename, errorStr, bPartTypeOK) : ImportOrcad(templateMgr, filename, errorStr, bPartTypeOK);
+	}
 
 	// Merge interface functions
 	virtual void UpdateMergeOffsets(MergeOffsets& o) override
@@ -862,6 +857,14 @@ private:
 		}
 	}
 	void SetHavePlacedWires() { m_bHavePlacedWires = GetCompMgr().GetHavePlacedWires(); }
+	// Netlist Import
+	bool ImportTango(TemplateManager& templateMgr, const std::string& filename, std::string& errorStr, bool& bPartTypeOK);
+	bool ImportOrcad(TemplateManager& templateMgr, const std::string& filename, std::string& errorStr, bool& bPartTypeOK);
+	bool BuildAndPlacePart(TemplateManager& templateMgr, const std::string& nameStr, const std::string& valueStr, const std::string& typeStr,
+						   std::list<std::string>& offBoard, std::string& errorStr, bool& bPartTypeOK);
+	void BreakSIPSintoPADS(const std::list<std::string>& offBoard);
+	void BreakComponentIntoPads(Component& comp);
+	bool GetPinRowCol(int compId, size_t iPinIndex, int& row, int& col) const;
 private:
 	std::string				m_infoStr;		// General info
 

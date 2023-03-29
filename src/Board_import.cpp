@@ -19,113 +19,38 @@
 
 #include "Board.h"
 
-bool Board::BuildAndPlacePart(const TemplateManager& templateMgr, 
-							  const std::string& nameStr, const std::string& valueStr, const std::string& typeStr, std::string& typeStrCut, std::string& pinStr,
-							  std::list<std::string>& offBoard, std::string& errorStr, bool bTango)
+bool Board::BuildAndPlacePart(TemplateManager& templateMgr, 
+							  const std::string& nameStr, const std::string& valueStr, const std::string& typeStr,
+							  std::list<std::string>& offBoard, std::string& errorStr, bool& bPartTypeOK)
 {
-	// List of package identifiers for footprints with variable numbers of pins/lengths.
-	// "PADS" ==> Create separate on-board PAD objects for an off-board part.
-	// "SWITCH_ST_DIP" must be tested before "SWITCH_ST_DIP".
-	Q_DECL_CONSTEXPR size_t NUM_VARIABLE_PIN_PARTS = 13;
-	const std::string strVar[NUM_VARIABLE_PIN_PARTS] = {"SIP", "DIP", "PADS", "SWITCH_ST_DIP", "SWITCH_ST", "SWITCH_DT", "STRIP_100MIL", "BLOCK_100MIL", "BLOCK_200MIL", "RESISTOR", "DIODE", "CAP_CERAMIC", "CAP_FILM"};
+	// First see if typeStr can be mapped to a valid import string
+	const std::string& importStr	= templateMgr.GetImportStrFromAlias(typeStr);
+	const std::string& rTypeStr		= importStr.empty() ? typeStr : importStr;
 
-	// If footprint is variable length, then get the number of pins/length from typeStr.
-	int numPins(0), nLength(0);	// Invalid by default
-	for (size_t i = 0; i < NUM_VARIABLE_PIN_PARTS; i++)
-	{
-		const std::string&	strTmp	= strVar[i];	// e.g. "SIP", "DIP, etc
-		const auto			L		= strTmp.length();
-		if ( typeStr.length() >= L && typeStr.substr(0, L) == strTmp )
-		{
-			pinStr		= typeStr.substr(L);	// e.g. "DIP40" ==> "40"
-			typeStrCut	= typeStr.substr(0, L);	// e.g. "DIP40" ==> "DIP"
-			if ( typeStrCut == "PADS" )				// If we have an off-board part ...
-			{
-				typeStrCut = "SIP";					// ... treat it as a SIP for the moment
-				offBoard.push_back(nameStr);		// ... and add it to the list of off-board parts
-			}
-			if ( typeStrCut == "RESISTOR" || typeStrCut == "DIODE" || typeStrCut == "CAP_CERAMIC" || typeStrCut == "CAP_FILM" )
-			{
-				nLength = atoi( pinStr.c_str() );	// Missing or zero ==> Use default length
-				if ( nLength > 0 )					// The length is in 100ths of a mil ...
-					nLength += 1;					// ... so must add 1 to get part length in grid squares
-			}
-			else	// DIP/SIP/SWITCH/STRIP/BLOCK
-			{
-				numPins = atoi( pinStr.c_str() );
-				if ( numPins == 0 )					// Missing or zero ...
-					numPins = -1;					// ... use -1 instead.  Don't use 0 as that implies "use default".
-			}
-			break;
-		}
-	}
+	Component comp;	// Only configured if the part type is OK
 
-	const std::string partErrorStr = ( bTango ? "Part section: " :  "Part: ") + nameStr;
-
-	bool bCustom(false);	// true ==> We've found a custom template with matching import string
-	Component custom;		// The matching custom template
-
-	const COMP eType = CompTypes::GetTypeFromImportStr(typeStrCut);
-	bool bOK = ( eType != COMP::CUSTOM && eType != COMP::TRACKS && eType != COMP::VERO_NUMBER && eType != COMP::VERO_LETTER && eType != COMP::INVALID );
-	if ( !bOK )	// Search template manager
-		bOK = bCustom = templateMgr.GetFromImportStr(typeStrCut, custom);
-	if ( !bOK ) { errorStr = partErrorStr + "\nVeroRoute does not support the part type: " + typeStr; return bOK; }
-
-	// Check pins per component is within limits
-	if ( numPins == 0 ) numPins = ( bCustom ) ? static_cast<int>( custom.GetNumPins() ) : CompTypes::GetDefaultNumPins(eType);
-	bOK = ( numPins > 0 );
-	if ( !bOK ) { errorStr = partErrorStr + "\nInternal error: Part type has no pins " + typeStr; return bOK; }
-
-	// Check length is within limits for components with fixed numbers of pins
-	if ( nLength > 0 )
-	{
-		bOK = bCustom || ( nLength >= CompTypes::GetMinLength(eType) );
-		if ( !bOK ) { errorStr = partErrorStr + "\nInternal error: Part length is too small " + typeStr; return bOK; }
-
-		bOK = bCustom || ( nLength <= CompTypes::GetMaxLength(eType) );
-		if ( !bOK ) { errorStr = partErrorStr + "\nInternal error: Part length is too large " + typeStr; return bOK; }
-	}
-
-	bOK = bCustom || ( numPins >= CompTypes::GetMinNumPins(eType) );
-	if ( !bOK ) { errorStr = partErrorStr + "\nPart type has fewer pins than VeroRoute supports: " + typeStr; return bOK; }
-	
-	bOK = bCustom || ( numPins <= CompTypes::GetMaxNumPins(eType) );
-	if ( !bOK ) { errorStr = partErrorStr + "\nPart type has more pins than VeroRoute supports: " + typeStr; return bOK; }
-
-	if ( bCustom )
-	{
-		assert( custom.GetType() == COMP::CUSTOM );
-		custom.SetNameStr(nameStr);
-		custom.SetValueStr(valueStr);
-		bOK = ( AddComponent(-1, -1, custom) != BAD_COMPID );	// Create part and place it
-	}
+	bool bOK = bPartTypeOK = templateMgr.CheckPartOK(nameStr, valueStr, rTypeStr, &offBoard, &errorStr, &comp);
+	if ( !bOK )
+		templateMgr.AddAlias(typeStr, "");	// Don't have a valid import string yet
 	else
 	{
-		assert( eType != COMP::INVALID );
-		std::vector<int>	nodeList;
-		nodeList.resize(static_cast<size_t>(numPins), BAD_NODEID);
-		Component tmp(nameStr, valueStr, eType, nodeList);
-		if ( nLength > 0 )
+		bOK = ( AddComponent(-1, -1, comp) != BAD_COMPID );	// Create the part and place it
+		if ( !bOK ) 
 		{
-			while ( tmp.GetCols() < nLength ) tmp.Stretch(true);	// grow
-			while ( tmp.GetCols() > nLength ) tmp.Stretch(false);	// shrink
+			const std::string strID = "Part: Name = " + nameStr + ", Value = " + valueStr + ", Type = " + typeStr;
+			errorStr = strID + "\nInternal error creating and placing part";
 		}
-		bOK = ( AddComponent(-1, -1, tmp) != BAD_COMPID );	// Create part and place it
 	}
-	if ( !bOK ) errorStr = partErrorStr + "\nInternal error creating and placing the part";
 	return bOK;
 }
 
 // Import Protel V1 / Tango netlist (exported from TinyCAD / gEDA)
-bool Board::ImportTango(const TemplateManager& templateMgr, const std::string& filename, std::string& errorStr)
+bool Board::ImportTango(TemplateManager& templateMgr, const std::string& filename, std::string& errorStr, bool& bPartTypeOK)
 {
 	Clear();
 
-	std::string	nameStr;	// "R23","U1"			==> TinyCAD "Ref"     / gEDA "refdes"
-	std::string	valueStr;	// "4k7", "TL072"		==> TinyCAD "Name"    / gEDA "device"
-	std::string	typeStr;	// "RESISTOR","DIP8"	==> TinyCAD "Package" / gEDA "footprint"
-	std::string	typeStrCut;	// Cut down version of typeStr. e.g.  DIP40 ==> DIP
-	std::string	pinStr;		// Number of pins, or pin number
+	std::string	nameStr;	// TinyCAD "Ref"     / gEDA "refdes"	==> VeroRoute "Name"	(e.g. "R27")
+	std::string	typeStr;	// TinyCAD "Package" / gEDA "footprint"	==> VeroRoute "Type"	(e.g. "DIP8")
 	std::string	netStr;		// Net name
 
 	std::ifstream inStream;
@@ -135,7 +60,8 @@ bool Board::ImportTango(const TemplateManager& templateMgr, const std::string& f
 	int iRow(0);					// Row counter within "part" and "netlist" sections
 	int iNodeId(BAD_NODEID);		// Increase this with each imported net
 
-	std::list<std::string> offBoard;	// List of off-board part names
+	std::list<std::string> offBoard;	// List of off-board part names (for breaking into pads)
+
 	while( bOK )	// Loop through file
 	{
 		if ( inStream.eof() ) break;
@@ -152,8 +78,8 @@ bool Board::ImportTango(const TemplateManager& templateMgr, const std::string& f
 		{
 			if ( iRow == 0 )
 			{
-				nameStr = str;	// TinyCAD "Ref" / gEDA "refdes"	==> VeroRoute "Name"
-				bOK  = ( str.find("-") == std::string::npos );	// Name should not have a "-"
+				nameStr = str;	// TinyCAD "Ref" / gEDA "refdes"	==> VeroRoute "Name"	(e.g. "R27")
+				bOK  = ( nameStr.find("-") == std::string::npos );	// Name should not have a "-"
 				if ( !bOK ) errorStr = "Part section: " + nameStr + "\nPart names must not contain a minus sign";
 				if ( !bOK ) break;
 
@@ -163,14 +89,14 @@ bool Board::ImportTango(const TemplateManager& templateMgr, const std::string& f
 			}
 			if ( iRow == 1 )
 			{
-				typeStrCut = typeStr = str;	// TinyCAD "Package" / gEDA "footprint"	==> VeroRoute "Type"
+				typeStr = str;	// TinyCAD "Package" / gEDA "footprint"	==> VeroRoute "Type"
 			}
 			if ( iRow == 2 )
 			{
-				valueStr = str;	// TinyCAD "Name" / gEDA "device"	==> VeroRoute "Value"
+				const std::string valueStr = str;	// TinyCAD "Name" / gEDA "device"		==> VeroRoute "Value"	(e.g "TL072")
 
 				// Build the part and place it ...
-				bOK = BuildAndPlacePart(templateMgr, nameStr, valueStr, typeStr, typeStrCut, pinStr, offBoard, errorStr, true);	// true ==> Tango
+				bOK = BuildAndPlacePart(templateMgr, nameStr, valueStr, typeStr, offBoard, errorStr, bPartTypeOK);
 				if ( !bOK ) break;
 			}
 		}
@@ -189,7 +115,7 @@ bool Board::ImportTango(const TemplateManager& templateMgr, const std::string& f
 				if ( !bOK ) errorStr = "Net section: " + netStr + "\nLine has no minus sign: " + str;
 				if ( !bOK ) break;
 
-				pinStr = str.substr(pos+1);
+				const std::string pinStr = str.substr(pos+1);;		// Pin number
 				bOK = ( pinStr.find("-") == std::string::npos );	// Should only have one "-" on the line
 				if ( !bOK ) errorStr = "Net section: " + netStr + "\nLine has more than one minus sign: " + str;
 				if ( !bOK ) break;
@@ -227,24 +153,15 @@ bool Board::ImportTango(const TemplateManager& templateMgr, const std::string& f
 	if ( inStream.is_open() ) inStream.close();
 
 	// Break the SIPs representing off-board parts into PADs
-	if ( bOK )
-		BreakSIPSintoPADS(offBoard);
+	BreakSIPSintoPADS(offBoard);
 
 	return bOK;
 }
 
-
 // Import OrcadPCB2 netlist (exported from KiCAD)
-bool Board::ImportOrcad(const TemplateManager& templateMgr, const std::string& filename, std::string& errorStr)
+bool Board::ImportOrcad(TemplateManager& templateMgr, const std::string& filename, std::string& errorStr, bool& bPartTypeOK)
 {
 	Clear();
-
-	std::string	nameStr;	// "R23"		==> KiCAD "Reference"
-	std::string	valueStr;	// "4k7"		==> KiCAD "Value"
-	std::string	typeStr;	// "RESISTOR"	==> KiCAD "Footprint"
-	std::string	typeStrCut;	// Cut down version of typeStr. e.g.  DIP40 ==> DIP
-	std::string	pinStr;		// Number of pins, or pin number
-	std::string	netStr;		// Net name
 
 	std::ifstream inStream;
 	inStream.open(filename.c_str(), std::ios::in | std::ios::binary);
@@ -253,8 +170,13 @@ bool Board::ImportOrcad(const TemplateManager& templateMgr, const std::string& f
 
 	std::unordered_map<std::string, int> mapNetToNodeId;
 
-	bool bPartStart(false);
 	std::list<std::string> offBoard;	// List of off-board part names
+
+	bool bPartStart(false);
+
+	std::string typeStr;	// KiCAD "Footprint" ==> VeroRoute "Type"	(e.g. "DIP8")
+	std::string	nameStr;	// KiCAD "Reference" ==> VeroRoute "Name"	(e.g. "R23")
+	std::string valueStr;	// KiCAD "Value"	 ==> VeroRoute "Value"	(e.g. "TL072")
 
 	while( bOK )	// Loop through file
 	{
@@ -294,23 +216,25 @@ bool Board::ImportOrcad(const TemplateManager& templateMgr, const std::string& f
 			if ( !bOK ) errorStr = "Expecting format:  ( /5D5ADFE2 FOOTPRINT NAME VALUE  , but got:" + str;
 			if ( !bOK ) break;
 
-			typeStrCut	= typeStr = strList[2];
-			nameStr		= strList[3];
-			valueStr	= ( numSubStrings == 5 ) ? strList[4] : "";
+			typeStr		= strList[2];	// KiCAD "Footprint" ==> VeroRoute "Type"	(e.g. "DIP8")
+			nameStr		= strList[3];	// KiCAD "Reference" ==> VeroRoute "Name"	(e.g. "R23")
+			valueStr	= ( numSubStrings == 5 ) ? strList[4] : "";	// KiCAD "Value" ==> VeroRoute "Value"	(e.g. "TL072")
 
 			bOK = ( m_compMgr.GetComponentIdFromName(nameStr) == BAD_COMPID );	// Name must be unique
 			if ( !bOK ) errorStr = "\nPart name " + nameStr + " is not unique";
 			if ( !bOK ) break;
 
 			// Build the part and place it ...
-			bOK = BuildAndPlacePart(templateMgr, nameStr, valueStr, typeStr, typeStrCut, pinStr, offBoard, errorStr, false);	// false ==> Orcad
+			bOK = BuildAndPlacePart(templateMgr, nameStr, valueStr, typeStr, offBoard, errorStr, bPartTypeOK);
 			if ( !bOK ) break;
 
 			bPartStart = true;
 		}
 		else
 		{
-			// we're in the pin section...
+			const std::string strID = "Part: Type = " + typeStr + ", Name = " + nameStr + ", Value = " + valueStr;
+	
+			// We're in the pin section...
 			assert( bCurvedClose );	// Should have ')' on every line
 			if ( !bCurvedOpen )
 			{
@@ -322,11 +246,11 @@ bool Board::ImportOrcad(const TemplateManager& templateMgr, const std::string& f
 			std::vector<std::string> strList;
 			StringHelper::GetSubStrings(str, strList);	// Break str into space separated list
 			bOK = ( strList.size() == 4 );
-			if ( !bOK ) errorStr = "Expecting format:  ( PINNUMBER NETNAME )  , but got:" + str;
+			if ( !bOK ) errorStr = strID + "\nLine: " + str + "\nError: Expecting line with format: ( PINNUMBER NETNAME )";
 			if ( !bOK ) break;
 
-			pinStr = strList[1];
-			netStr = strList[2];
+			const std::string pinStr = strList[1];;	// Pin number
+			const std::string netStr = strList[2];;	// Net name
 
 			int nodeId(BAD_NODEID);
 			auto iter = mapNetToNodeId.find(netStr);
@@ -338,7 +262,7 @@ bool Board::ImportOrcad(const TemplateManager& templateMgr, const std::string& f
 				mapNetToNodeId[netStr] = nodeId = maxNodeId;
 			}
 			bOK = ( nodeId != BAD_NODEID );
-			if ( !bOK ) errorStr = "Internal error: VeroRoute has run out of net IDs";
+			if ( !bOK ) errorStr = strID + "\nInternal error: VeroRoute has run out of net IDs";
 			if ( !bOK ) break;
 
 			// Paint the component pin using SetNodeIdByUser
@@ -346,19 +270,19 @@ bool Board::ImportOrcad(const TemplateManager& templateMgr, const std::string& f
 			const int		compId		= m_compMgr.GetComponentIdFromName( nameStr );
 
 			bOK = compId != BAD_COMPID;
-			if ( !bOK ) errorStr = "Internal error: VeroRoute lost the component ID";
+			if ( !bOK ) errorStr = strID + "\nInternal error: VeroRoute lost the component ID";
 			if ( !bOK ) break;
 
 			const Component& comp = m_compMgr.GetComponentById( compId );
 			assert( comp.GetType() != COMP::INVALID );
 
 			bOK = iPinIndex < comp.GetNumPins();
-			if ( !bOK ) errorStr = "Part: " + nameStr + "\nLine has invalid pin number: " + str;
+			if ( !bOK ) errorStr = strID + "\nLine: " + str + "\nError: Line has invalid pin number";
 			if ( !bOK ) break;
 			
 			int row, col;
 			bOK = GetPinRowCol(compId, iPinIndex, row, col);
-			if ( !bOK ) errorStr = "Part: " + nameStr + "\nLine: " + str + "\nInternal error mapping the pin to a board location";
+			if ( !bOK ) errorStr = strID + "\nLine: " + str + "\nInternal error mapping the pin to a board location";
 			if ( !bOK ) break;
 
 			SetNodeIdByUser(0, row, col, nodeId, true);	// true ==> paint pins
@@ -367,8 +291,7 @@ bool Board::ImportOrcad(const TemplateManager& templateMgr, const std::string& f
 	if ( inStream.is_open() ) inStream.close();
 
 	// Break the SIPs representing off-board parts into PADs
-	if ( bOK )
-		BreakSIPSintoPADS(offBoard);
+	BreakSIPSintoPADS(offBoard);
 
 	return bOK;
 }

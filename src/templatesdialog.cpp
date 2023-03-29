@@ -194,9 +194,12 @@ void TemplatesDialog::DeleteTemplate()
 									 + "(Value = " + comp.GetValueStr() + ") is about to be deleted.  There is no undo for this operation.  Continue?";
 		if ( QMessageBox::question(this, tr("Confirm Delete Template"),
 										 tr(messageStr.c_str()),
-										 QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::No ) return;	
+										 QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::No ) return;
 		if ( mgr.Remove(comp) )
+		{
 			Update();
+			m_pMainWindow->UpdateAliasDialog();	//TODO Check this works
+		}
 	}
 }
 
@@ -302,7 +305,11 @@ void TemplatesDialog::AddTemplatesFromBoard(Board& board, bool bAllComps, bool b
 		if ( bAllComps || groupMgr.GetIsUserComp(mapObj.first) )
 			if ( mgr.Add(bGeneric, mapObj.second) ) nCount++;
 	}
-	if ( nCount > 0 ) Update();
+	if ( nCount > 0 )
+	{
+		Update();
+		m_pMainWindow->UpdateAliasDialog();	//TODO Check this works
+	}
 
 	if ( bInfoMsg )
 		QMessageBox::information(this, tr("Information"), QString::number(nCount) + QString(" new templates added."));
