@@ -49,8 +49,6 @@ void TemplatesDialog::SetMainWindow(MainWindow* p)
 	QObject::connect(ui->pushButton_2,	SIGNAL(clicked()),					this,	SLOT(DeleteTemplate()));
 	QObject::connect(ui->pushButton_3,	SIGNAL(clicked()),					this,	SLOT(LoadFromVrt()));
 	QObject::connect(ui->pushButton_4,	SIGNAL(clicked()),					this,	SLOT(SaveToVrt()));
-
-	m_pMainWindow->GetTemplateManager().LoadAliasFile();	// Must do this BEFORE LoadFromUserVrt() as that will cause an Update() of this dialog and then the Alias Dialog
 	LoadFromUserVrt(false);	// false ==> no message box
 }
 

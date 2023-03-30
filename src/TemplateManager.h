@@ -48,24 +48,9 @@ class TemplateManager
 {
 public:
 	TemplateManager()	{}
-	virtual ~TemplateManager()	{}
-	TemplateManager(const TemplateManager& o) { *this = o; }
-	TemplateManager& operator=(const TemplateManager& o)
-	{
-		for (int i = 0; i < 2; i++ )
-		{
-			const bool bGeneric = (i == 0);
-			auto& listThis	= bGeneric ? m_listGeneric : m_listUser;
-			auto& listOther	= bGeneric ? o.m_listGeneric : o.m_listUser;
-
-			listThis.clear();
-			for (const auto& r : listOther)
-				listThis.push_back( Template(r) );
-		}
-		return *this;
-	}
+	~TemplateManager()	{ SaveAliasFile(); }
 	const std::string& GetPathStr() const { return m_pathStr; }
-	void SetPathStr(const std::string& str)	{ m_pathStr = str; }
+	void SetPathStr(const std::string& str)	{ m_pathStr = str; LoadAliasFile(); }
 	size_t GetSize(bool bGeneric) const
 	{
 		return bGeneric ? m_listGeneric.size() : m_listUser.size();
@@ -84,39 +69,8 @@ public:
 			if ( o.GetType() == COMP::CUSTOM && o.GetImportStr() == importStr ) { out = o; return true; }
 		return false;
 	}
-	const std::string& GetImportStrFromAlias(const std::string& aliasStr) const
-	{
-		static std::string emptyStr("");
-		auto iter = m_mapAliasToImportStr.find(aliasStr);
-		return ( iter != m_mapAliasToImportStr.end() ) ? iter->second : emptyStr;
-	}
-	void RemoveAlias(const std::string& aliasStr)
-	{
-		const auto iter = m_mapAliasToImportStr.find(aliasStr);
-		if ( iter != m_mapAliasToImportStr.end() )
-		{
-			m_mapAliasToImportStr.erase(iter);
-			SaveAliasFile();
-		}
-	}
-	void RemoveAllAliases()
-	{
-		m_mapAliasToImportStr.clear();
-		SaveAliasFile();
-	}
-	void AddAlias(const std::string& aliasStr, const std::string& importStr)
-	{
-		m_mapAliasToImportStr[aliasStr] = importStr;
-		SaveAliasFile();
-	}
-	void ClearInvalidAliases()
-	{
-		for (auto& o : m_mapAliasToImportStr)
-			if ( !CheckPartOK(o.second) )
-				o.second = "";
-		SaveAliasFile();
-	}
-	const std::map<std::string, std::string>&	GetMapAliasToImportStr() const	{ return m_mapAliasToImportStr; }
+
+	// Valid import strings
 	const std::list<StringPair>& GetImportStrings() const { return m_importStrings; }
 	void CalcValidImportStrings()
 	{
@@ -165,9 +119,27 @@ public:
 		m_importStrings.unique();
 
 		// Make sure each import string is not listed as an alias
-		for (auto& strPair : m_importStrings)
-			RemoveAlias(strPair.m_importStr);
+		for (auto& strPair : m_importStrings) RemoveAlias(strPair.m_importStr);
 	}
+
+	// Aliases for part types (footprints)
+	const std::map<std::string, std::string>&	GetMapAliasToImportStr() const	{ return m_mapAliasToImportStr; }
+	const std::string& GetImportStrFromAlias(const std::string& aliasStr) const
+	{
+		static std::string emptyStr("");
+		auto iter = m_mapAliasToImportStr.find(aliasStr);
+		return ( iter != m_mapAliasToImportStr.end() ) ? iter->second : emptyStr;
+	}
+	void RemoveAlias(const std::string& aliasStr)
+	{
+		const auto iter = m_mapAliasToImportStr.find(aliasStr);
+		if ( iter != m_mapAliasToImportStr.end() ) m_mapAliasToImportStr.erase(iter);
+	}
+	void RemoveAllAliases() { m_mapAliasToImportStr.clear(); }
+	void AddAlias(const std::string& aliasStr, const std::string& importStr) { m_mapAliasToImportStr[aliasStr] = importStr; }
+	void ClearInvalidAliases() { for (auto& o : m_mapAliasToImportStr) if ( !CheckPartOK(o.second) ) o.second = ""; }
+
+	// Persistance of aliases between sessions
 	QString GetAliasFilename() const
 	{
 		char buffer[256] = {'\0'};
@@ -209,6 +181,7 @@ public:
 			outStream.Close();
 		}
 	}
+
 	void AddDefaults()
 	{
 		std::string nameStr(""), valueStr("");
@@ -407,6 +380,6 @@ private:
 	std::string							m_pathStr;				// Path to the "templates" and "aliases" folders
 	std::list<Template>					m_listGeneric;			// List of generic components
 	std::list<Template>					m_listUser;				// List of template components
-	std::list<StringPair>				m_importStrings;		// Helper.  Don't persist
+	std::list<StringPair>				m_importStrings;		// Helper for valid import strings.  Don't persist.
 	std::map<std::string, std::string>	m_mapAliasToImportStr;	// Aliases for VeroRoute import strings
 };
