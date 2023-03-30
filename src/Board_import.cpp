@@ -23,21 +23,21 @@ bool Board::BuildAndPlacePart(TemplateManager& templateMgr, const CompStrings& c
 {
 	Component comp;	// Only configured if the part type is OK
 
-	// First see if typeStr is an alias for a valid import string
-	const std::string& importStr = templateMgr.GetImportStrFromAlias(compStrings.m_typeStr);
+	// First see if m_importStr is an alias for a valid import string
+	const std::string& validImportStr = templateMgr.GetImportStrFromAlias(compStrings.m_importStr);
 
-	CompStrings test(compStrings);	// A working copy of compStrings (with possibly modified m_typeStr)
-	if ( !importStr.empty() ) test.m_typeStr = importStr;
+	CompStrings test(compStrings);	// A working copy of compStrings (with possibly modified m_importStr)
+	if ( !validImportStr.empty() ) test.m_importStr = validImportStr;
 
 	bool bOK = bPartTypeOK = templateMgr.CheckPartOK(test, &offBoard, &errorStr, &comp);
 	if ( !bOK )
-		templateMgr.AddAlias(compStrings.m_typeStr, "");	// Don't have a valid import string yet
+		templateMgr.AddAlias(compStrings.m_importStr, "");	// Don't have a valid import string yet
 	else
 	{
 		bOK = ( AddComponent(-1, -1, comp) != BAD_COMPID );	// Create the part and place it
 		if ( !bOK ) 
 		{
-			const std::string strID = "Part: Name = " + compStrings.m_nameStr + ", Value = " + compStrings.m_valueStr + ", Type = " + compStrings.m_typeStr;
+			const std::string strID = "Part: Name = " + compStrings.m_nameStr + ", Value = " + compStrings.m_valueStr + ", Type = " + compStrings.m_importStr;
 			errorStr = strID + "\nInternal error creating and placing part";
 		}
 	}
@@ -50,9 +50,9 @@ bool Board::GetPartsTango(const std::string& filename, std::list<CompStrings>& l
 	CompStrings compStrings;
 
 	// References to keep code tidy
-	std::string& nameStr	= compStrings.m_nameStr;	// TinyCAD "Ref"     / gEDA "refdes"	==> VeroRoute "Name"	(e.g. "U4")
-	std::string& valueStr	= compStrings.m_valueStr;	// TinyCAD "Name"    / gEDA "device"	==> VeroRoute "Value"	(e.g. "TL072")
-	std::string& typeStr	= compStrings.m_typeStr;	// TinyCAD "Package" / gEDA "footprint"	==> VeroRoute "Type"	(e.g. "DIP8")
+	std::string& nameStr	= compStrings.m_nameStr;	// TinyCAD "Ref"	 / gEDA "refdes"	==> VeroRoute "Name"	(e.g. "U4")
+	std::string& valueStr	= compStrings.m_valueStr;	// TinyCAD "Name"	 / gEDA "device"	==> VeroRoute "Value"	(e.g. "TL072")
+	std::string& importStr	= compStrings.m_importStr;	// TinyCAD "Package" / gEDA "footprint"	==> VeroRoute "Type"	(e.g. "DIP8")
 
 	std::ifstream inStream;
 	inStream.open(filename.c_str(), std::ios::in | std::ios::binary);
@@ -77,7 +77,7 @@ bool Board::GetPartsTango(const std::string& filename, std::list<CompStrings>& l
 			switch(iRow)
 			{
 				case 0:	nameStr		= str;	break;
-				case 1:	typeStr		= str;	break;
+				case 1:	importStr	= str;	break;
 				case 2:	valueStr	= str;	listOut.push_back(compStrings);	break;
 			}
 		}
@@ -96,7 +96,7 @@ bool Board::GetPartsOrcad(const std::string& filename, std::list<CompStrings>& l
 	// References to keep code tidy
 	std::string& nameStr	= compStrings.m_nameStr;	// KiCAD "Reference" ==> VeroRoute "Name"	(e.g. "U4")
 	std::string& valueStr	= compStrings.m_valueStr;	// KiCAD "Value"	 ==> VeroRoute "Value"	(e.g. "TL072")
-	std::string& typeStr	= compStrings.m_typeStr;	// KiCAD "Footprint" ==> VeroRoute "Type"	(e.g. "DIP8")
+	std::string& importStr	= compStrings.m_importStr;	// KiCAD "Footprint" ==> VeroRoute "Type"	(e.g. "DIP8")
 
 	std::ifstream inStream;
 	inStream.open(filename.c_str(), std::ios::in | std::ios::binary);
@@ -141,7 +141,7 @@ bool Board::GetPartsOrcad(const std::string& filename, std::list<CompStrings>& l
 			//if ( !bOK ) errorStr = "Expecting format:  ( /5D5ADFE2 FOOTPRINT NAME VALUE  , but got:" + str;
 			if ( !bOK ) break;
 
-			typeStr		= strList[2];
+			importStr	= strList[2];
 			nameStr		= strList[3];
 			valueStr	= ( numSubStrings == 5 ) ? strList[4] : "";
 
@@ -174,9 +174,9 @@ bool Board::ImportTango(TemplateManager& templateMgr, const std::string& filenam
 	CompStrings compStrings;
 
 	// References to keep code tidy
-	std::string& nameStr	= compStrings.m_nameStr;	// TinyCAD "Ref"     / gEDA "refdes"	==> VeroRoute "Name"	(e.g. "U4")
-	std::string& valueStr	= compStrings.m_valueStr;	// TinyCAD "Name"    / gEDA "device"	==> VeroRoute "Value"	(e.g. "TL072")
-	std::string& typeStr	= compStrings.m_typeStr;	// TinyCAD "Package" / gEDA "footprint"	==> VeroRoute "Type"	(e.g. "DIP8")
+	std::string& nameStr	= compStrings.m_nameStr;	// TinyCAD "Ref"	 / gEDA "refdes"	==> VeroRoute "Name"	(e.g. "U4")
+	std::string& valueStr	= compStrings.m_valueStr;	// TinyCAD "Name"	 / gEDA "device"	==> VeroRoute "Value"	(e.g. "TL072")
+	std::string& importStr	= compStrings.m_importStr;	// TinyCAD "Package" / gEDA "footprint"	==> VeroRoute "Type"	(e.g. "DIP8")
 	std::string netStr;	// Net name
 
 	std::ifstream inStream;
@@ -215,7 +215,7 @@ bool Board::ImportTango(TemplateManager& templateMgr, const std::string& filenam
 			}
 			if ( iRow == 1 )
 			{
-				typeStr = str;
+				importStr = str;
 			}
 			if ( iRow == 2 )
 			{
@@ -294,7 +294,7 @@ bool Board::ImportOrcad(TemplateManager& templateMgr, const std::string& filenam
 	// References to keep code tidy
 	std::string& nameStr	= compStrings.m_nameStr;	// KiCAD "Reference" ==> VeroRoute "Name"	(e.g. "U4")	
 	std::string& valueStr	= compStrings.m_valueStr;	// KiCAD "Value"	 ==> VeroRoute "Value"	(e.g. "TL072")
-	std::string& typeStr	= compStrings.m_typeStr;	// KiCAD "Footprint" ==> VeroRoute "Type"	(e.g. "DIP8")
+	std::string& importStr	= compStrings.m_importStr;	// KiCAD "Footprint" ==> VeroRoute "Type"	(e.g. "DIP8")
 
 	std::ifstream inStream;
 	inStream.open(filename.c_str(), std::ios::in | std::ios::binary);
@@ -345,7 +345,7 @@ bool Board::ImportOrcad(TemplateManager& templateMgr, const std::string& filenam
 			if ( !bOK ) errorStr = "Expecting format:  ( /5D5ADFE2 FOOTPRINT NAME VALUE  , but got:" + str;
 			if ( !bOK ) break;
 
-			typeStr		= strList[2];
+			importStr	= strList[2];
 			nameStr		= strList[3];
 			valueStr	= ( numSubStrings == 5 ) ? strList[4] : "";
 
@@ -361,7 +361,7 @@ bool Board::ImportOrcad(TemplateManager& templateMgr, const std::string& filenam
 		}
 		else
 		{
-			const std::string strID = "Part: Type = " + typeStr + ", Name = " + nameStr + ", Value = " + valueStr;
+			const std::string strID = "Part: Type = " + importStr + ", Name = " + nameStr + ", Value = " + valueStr;
 	
 			// We're in the pin section...
 			assert( bCurvedClose );	// Should have ')' on every line

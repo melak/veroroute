@@ -742,12 +742,6 @@ struct CompTypes
 			default:				return 1;
 		}
 	}
-	/*static int GetDefaultLength(COMP eType)	// For length info in alias dialog
-	{
-		int rows(0), cols(0);
-		GetMakeInstructions(eType, rows, cols);
-		return cols;
-	}*/
 	static int GetMinLength(COMP eType)	// For stretchable components
 	{
 		switch( eType )

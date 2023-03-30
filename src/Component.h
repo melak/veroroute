@@ -38,21 +38,21 @@ class CompManager;
 struct CompStrings	// Mainly for handling netlist import
 {
 	CompStrings() {}
-	CompStrings(const std::string& nameStr, const std::string& valueStr, const std::string& typeStr)
-	: m_nameStr(nameStr), m_valueStr(valueStr), m_typeStr(typeStr) {}
+	CompStrings(const std::string& nameStr, const std::string& valueStr, const std::string& importStr)
+	: m_nameStr(nameStr), m_valueStr(valueStr), m_importStr(importStr) {}
 	~CompStrings() {}
 	CompStrings(const CompStrings& o) { *this = o; }
 	CompStrings& operator=(const CompStrings& o)
 	{
 		m_nameStr	= o.m_nameStr;
 		m_valueStr	= o.m_valueStr;
-		m_typeStr	= o.m_typeStr;
+		m_importStr	= o.m_importStr;
 		return *this;
 	}
-	void Clear() { m_nameStr.clear(); m_valueStr.clear(); m_typeStr.clear(); }
-	std::string	m_nameStr;	// e.q. "U1"
-	std::string	m_valueStr;	// e.g. "TL072"
-	std::string	m_typeStr;	// e.g. "DIP8"
+	void Clear() { m_nameStr.clear(); m_valueStr.clear(); m_importStr.clear(); }
+	std::string	m_nameStr;		// e.q. "U1"
+	std::string	m_valueStr;		// e.g. "TL072"
+	std::string	m_importStr;	// e.g. "DIP8"
 };
 
 // Class to describe a component.

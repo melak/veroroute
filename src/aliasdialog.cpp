@@ -77,7 +77,8 @@ void AliasDialog::Update()
 {
 	m_bUpdating = true;
 
-	m_pMainWindow->m_templateMgr.CalcValidImportStrings();	// Calculate valid import strings, and make sure each one is not listed as an alias
+	std::list<StringPair> strList;	// List of valid import strings
+	m_pMainWindow->m_templateMgr.CalcValidImportStrings(strList);	// Calculate list, and make sure each one is not listed as an alias
 
 	ui->pushButton->setEnabled( !m_filename.empty() );	// Disable Re-Import button if no filename
 
@@ -96,7 +97,6 @@ void AliasDialog::Update()
 
 	// Populate the table with data
 	int nImport(0);
-	const auto& strList = m_pMainWindow->m_templateMgr.GetImportStrings();
 	for (auto& strPair : strList)
 	{
 		// Write row to table.	Note: No memory leak since setItem() takes ownership.

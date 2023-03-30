@@ -889,13 +889,13 @@ void MainWindow::Import(bool bTango)
 		{
 			for (auto& compStrings : compStrList)
 			{
-				const std::string&	typeStr		= compStrings.m_typeStr;
-				const std::string&	importStr	= m_templateMgr.GetImportStrFromAlias(typeStr);	// See if typeStr is an alias for a valid import string
+				const std::string&	importStr		= compStrings.m_importStr;
+				const std::string&	validImportStr	= m_templateMgr.GetImportStrFromAlias(importStr);	// See if importStr is an alias for a valid import string
 
-				if ( m_templateMgr.CheckPartOK(typeStr) )			// If typeStr is already a valid import string ...
-					m_templateMgr.RemoveAlias(typeStr);				// ... remove it from the alias list (if it is listed as an alias).
-				else if ( !m_templateMgr.CheckPartOK(importStr) )
-					m_templateMgr.AddAlias(typeStr, "");			// Put it in the alias list with a blank import string
+				if ( m_templateMgr.CheckPartOK(importStr) )		// If importStr is already a valid import string ...
+					m_templateMgr.RemoveAlias(importStr);		// ... remove it from the alias list (if it is listed as an alias).
+				else if ( !m_templateMgr.CheckPartOK(validImportStr) )
+					m_templateMgr.AddAlias(importStr, "");		// Put it in the alias list with a blank import string
 			}
 		}
 
