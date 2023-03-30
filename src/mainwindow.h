@@ -674,6 +674,7 @@ private:
 	bool		m_bTwoLayerGerber	= false;	// true ==> 2-layer Gerber output instead of 1-layer
 	bool		m_bHistoryDir		= false;	// true ==> have "history" folder
 	bool		m_bTemplatesDir		= false;	// true ==> have "templates" folder
+	bool		m_bAliasesDir		= false;	// true ==> have "aliases" folder
 	bool		m_bRuler			= false;
 	bool		m_bModifyRulerA		= false;
 	bool		m_bUpdatingControls	= false;

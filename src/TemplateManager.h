@@ -23,6 +23,9 @@
 
 // Manager class to handle component templates
 
+Q_DECL_CONSTEXPR static const int ALIASES_FILE_VERSION_1 = 1;
+Q_DECL_CONSTEXPR static const int ALIASES_FILE_VERSION_CURRENT = ALIASES_FILE_VERSION_1;
+
 struct StringPair
 {
 	StringPair(const std::string& importStr) : m_importStr(importStr) {}
@@ -41,7 +44,7 @@ struct StringPair
 	std::string m_notesStr;
 };
 
-class TemplateManager : public Persist
+class TemplateManager
 {
 public:
 	TemplateManager()	{}
@@ -76,6 +79,7 @@ public:
 	}
 	bool GetFromImportStr(const std::string& importStr, Component& out) const
 	{
+		if ( importStr.empty() ) return false;
 		for (const auto& o : m_listUser)
 			if ( o.GetType() == COMP::CUSTOM && o.GetImportStr() == importStr ) { out = o; return true; }
 		return false;
@@ -90,14 +94,30 @@ public:
 	{
 		const auto iter = m_mapAliasToImportStr.find(aliasStr);
 		if ( iter != m_mapAliasToImportStr.end() )
+		{
 			m_mapAliasToImportStr.erase(iter);
+			SaveAliasFile();
+		}
+	}
+	void RemoveAllAliases()
+	{
+		m_mapAliasToImportStr.clear();
+		SaveAliasFile();
 	}
 	void AddAlias(const std::string& aliasStr, const std::string& importStr)
 	{
 		m_mapAliasToImportStr[aliasStr] = importStr;
+		SaveAliasFile();
+	}
+	void ClearInvalidAliases()
+	{
+		for (auto& o : m_mapAliasToImportStr)
+			if ( !CheckPartOK(o.second) )
+				o.second = "";
+		SaveAliasFile();
 	}
 	const std::map<std::string, std::string>&	GetMapAliasToImportStr() const	{ return m_mapAliasToImportStr; }
-	const std::list<StringPair>&				GetImportStrings() const		{ return m_importStrings; }
+	const std::list<StringPair>& GetImportStrings() const { return m_importStrings; }
 	void CalcValidImportStrings()
 	{
 		m_importStrings.clear();
@@ -147,6 +167,47 @@ public:
 		// Make sure each import string is not listed as an alias
 		for (auto& strPair : m_importStrings)
 			RemoveAlias(strPair.m_importStr);
+	}
+	QString GetAliasFilename() const
+	{
+		char buffer[256] = {'\0'};
+		sprintf(buffer, "%s/aliases/all.dat", GetPathStr().c_str());	// Maybe use separate files for Tango and Orcad in future
+		return QString(buffer);
+	}
+	void LoadAliasFile()
+	{
+		m_mapAliasToImportStr.clear();
+		DataStream inStream(DataStream::READ);
+		if ( inStream.Open( GetAliasFilename() ) )
+		{
+			int iAliasFileVersion(0);
+			inStream.Load(iAliasFileVersion);
+			unsigned int iSize(0);
+			inStream.Load(iSize);
+			for(unsigned int i = 0; i < iSize; i++)
+			{
+				std::string A, B;
+				inStream.Load(A);
+				inStream.Load(B);
+				m_mapAliasToImportStr[A] = B;
+			}
+			inStream.Close();
+		}
+	}
+	void SaveAliasFile()
+	{
+		DataStream outStream(DataStream::WRITE);
+		if ( outStream.Open( GetAliasFilename() ) )
+		{
+			outStream.Save(ALIASES_FILE_VERSION_CURRENT);
+			outStream.Save(static_cast<unsigned int>( m_mapAliasToImportStr.size() ));
+			for (const auto& o : m_mapAliasToImportStr)
+			{
+				outStream.Save(o.first);
+				outStream.Save(o.second);
+			}
+			outStream.Close();
+		}
 	}
 	void AddDefaults()
 	{
@@ -233,6 +294,7 @@ public:
 		return bOK;
 	}
 	// Following is a helper for the import code
+	bool CheckPartOK(const std::string& typeStr) const { return CheckPartOK(CompStrings("", "", typeStr)); }
 	bool CheckPartOK(const CompStrings& compStrings, std::list<std::string>* pOffBoard = nullptr, std::string* pErrorStr = nullptr, Component* pComp = nullptr) const
 	{
 		const std::string& nameStr	= compStrings.m_nameStr;
@@ -341,30 +403,10 @@ public:
 			pOffBoard->push_back(nameStr);		// ... add it to the list of off-board parts
 		return bOK;
 	}
-	// Persist interface functions
-	virtual void Load(DataStream& inStream) override
-	{
-		m_listUser.clear();
-		unsigned int iSize(0);
-		inStream.Load(iSize);
-		for (unsigned int i = 0; i < iSize; i++)
-		{
-			Template entry;
-			entry.Load(inStream);
-			m_listUser.push_back(entry);
-		}
-	}
-	virtual void Save(DataStream& outStream) override
-	{
-		const unsigned int iSize = static_cast<unsigned int>( m_listUser.size() );
-		outStream.Save(iSize);
-		for (auto& o : m_listUser) o.Save(outStream);
-	}
 private:
-	std::string				m_pathStr;			// Path to the "templates" folder
-	std::list<Template>		m_listGeneric;		// List of generic components
-	std::list<Template>		m_listUser;			// List of template components
-	// Helpers.  Don't persist or copy
-	std::list<StringPair>				m_importStrings;
+	std::string							m_pathStr;				// Path to the "templates" and "aliases" folders
+	std::list<Template>					m_listGeneric;			// List of generic components
+	std::list<Template>					m_listUser;				// List of template components
+	std::list<StringPair>				m_importStrings;		// Helper.  Don't persist
 	std::map<std::string, std::string>	m_mapAliasToImportStr;	// Aliases for VeroRoute import strings
 };

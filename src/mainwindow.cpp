@@ -473,6 +473,30 @@ void MainWindow::CheckFolders()
 
 		QMessageBox::warning(this, tr("Templates folder is not available "), tr(messageStr.c_str()));
 	}
+	
+	// Check for "aliases" folder
+	m_bAliasesDir = false;
+	const std::string aliasesFolder = m_localDataPathStr + "/aliases";
+	testStr = aliasesFolder + "/TEST\0";
+
+	if ( outStream.Open( testStr.c_str() ) )
+	{
+		outStream.Close();
+		remove( testStr.c_str() );
+		m_bAliasesDir = true;
+	}
+	else
+	{
+		std::string messageStr;
+		if ( QDir( aliasesFolder.c_str() ).exists() )
+			messageStr += "Cannot write to the folder " + aliasesFolder;
+		else
+			messageStr += "Cannot find the folder " + aliasesFolder;
+
+		messageStr += "\n\nAliases for part types will not be saved between sessions.";
+
+		QMessageBox::warning(this, tr("Aliases folder is not available "), tr(messageStr.c_str()));
+	}
 }
 
 void MainWindow::CheckHistory()
@@ -864,8 +888,15 @@ void MainWindow::Import(bool bTango)
 		if ( m_board.GetImportParts(fileName.toStdString(), compStrList, bTango) )	// Get all part info in the file
 		{
 			for (auto& compStrings : compStrList)
-				if ( !m_templateMgr.CheckPartOK(compStrings) )
-					m_templateMgr.AddAlias(compStrings.m_typeStr, "");	// Don't have a valid import string yet
+			{
+				const std::string&	typeStr		= compStrings.m_typeStr;
+				const std::string&	importStr	= m_templateMgr.GetImportStrFromAlias(typeStr);	// See if typeStr is an alias for a valid import string
+
+				if ( m_templateMgr.CheckPartOK(typeStr) )			// If typeStr is already a valid import string ...
+					m_templateMgr.RemoveAlias(typeStr);				// ... remove it from the alias list (if it is listed as an alias).
+				else if ( !m_templateMgr.CheckPartOK(importStr) )
+					m_templateMgr.AddAlias(typeStr, "");			// Put it in the alias list with a blank import string
+			}
 		}
 
 		ShowAliasDialog();
@@ -876,6 +907,8 @@ void MainWindow::Import(bool bTango)
 void MainWindow::ReImport()
 {
 	ui->statusBar->showMessage( tr("Importing..."), 500 );
+
+	m_templateMgr.ClearInvalidAliases();
 
 	bool bPartTypeOK(false);
 	const bool bOK = m_aliasDlg->Import(bPartTypeOK);

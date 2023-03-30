@@ -83,6 +83,10 @@ int main(int argc, char *argv[])
 	QDir templatesDir(appDataPathStr + QString("/templates"));
 	if ( !templatesDir.exists() ) templatesDir.mkpath(".");
 
+	// If the "aliases" folder doesn't exist then create it
+	QDir aliasesDir(appDataPathStr + QString("/aliases"));
+	if ( !aliasesDir.exists() ) aliasesDir.mkpath(".");
+	
 #ifdef Q_OS_ANDROID
 	QString tutorialsPathStr = "assets:/";
 #else

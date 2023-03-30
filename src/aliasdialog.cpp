@@ -205,12 +205,8 @@ void AliasDialog::DeleteAllRows()
 	if ( QMessageBox::question(this, tr("Confirm delete all aliases"),
 									 tr(messageStr.c_str()),
 									 QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::No ) return;
-	for (int iRow = ui->tableWidget_2->rowCount() - 1; iRow >= 0; iRow--)
-	{
-		const std::string aliasStr = ui->tableWidget_2->item(iRow, 0)->text().toStdString();
-		m_pMainWindow->m_templateMgr.RemoveAlias(aliasStr);
-		ui->tableWidget_2->removeRow(m_iRow);
-	}
+	m_pMainWindow->m_templateMgr.RemoveAllAliases();
+	ui->tableWidget_2->setRowCount(0);
 	m_iRow = -1;
 	Update();
 }
@@ -229,7 +225,6 @@ void AliasDialog::CellChanged(int row, int col)		// For alias table
 	const std::string aliasStr	= ui->tableWidget_2->item(row, 0)->text().toStdString();
 	const std::string importStr	= ui->tableWidget_2->item(row, 1)->text().toStdString();
 
-	const bool bOK = m_pMainWindow->m_templateMgr.CheckPartOK(CompStrings("", "", importStr));
-	if ( bOK )	// If importStr is valid ...
-		m_pMainWindow->m_templateMgr.AddAlias(aliasStr, importStr);  // ... we can use aliasStr as an alias for it
+	// Allow invalid aliases to be entered at ths stage.  Let ClearInvalidAliases() take care of them before (re)import.
+	m_pMainWindow->m_templateMgr.AddAlias(aliasStr, importStr);
 }
