@@ -721,6 +721,17 @@ struct CompTypes
 			default:					return GetDefaultNumPins(eType);
 		}
 	}
+	static int GetModuloNumPins(COMP eType)
+	{
+		switch( eType )
+		{
+			case COMP::DIP:
+			case COMP::SWITCH_ST:
+			case COMP::SWITCH_ST_DIP:	return 2;
+			case COMP::SWITCH_DT:		return 3;
+			default:					return 1;
+		}
+	}
 	static int GetStretchIncrement(COMP eType)	// For stretchable components
 	{
 		switch( eType )
@@ -731,6 +742,12 @@ struct CompTypes
 			default:				return 1;
 		}
 	}
+	/*static int GetDefaultLength(COMP eType)	// For length info in alias dialog
+	{
+		int rows(0), cols(0);
+		GetMakeInstructions(eType, rows, cols);
+		return cols;
+	}*/
 	static int GetMinLength(COMP eType)	// For stretchable components
 	{
 		switch( eType )

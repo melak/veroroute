@@ -86,9 +86,13 @@ public:
 		// Also see how suffices are handled in CheckPartOK() below
 		for (auto& strPair : m_importStrings)
 		{
-			const std::string& str = strPair.m_importStr;
+			std::string& str = strPair.m_importStr;
 			const bool bPADS = ( str == "PADS" );
 			const COMP eType = bPADS ? COMP::SIP : CompTypes::GetTypeFromImportStr(str);	// Treat PADS like SIP regarding number of pins
+			const int minPins	= CompTypes::GetMinNumPins(eType);
+			const int maxPins	= CompTypes::GetMaxNumPins(eType);
+			const int modPins	= CompTypes::GetModuloNumPins(eType);
+
 			switch(eType)
 			{
 				case COMP::SIP:
@@ -99,20 +103,27 @@ public:
 				case COMP::STRIP_100:
 				case COMP::BLOCK_100:
 				case COMP::BLOCK_200:
-					m_importStrings.push_back( StringPair(str + "x", "x=[" + std::to_string(CompTypes::GetMinNumPins(eType))
-																	 + "," + std::to_string(CompTypes::GetMaxNumPins(eType)) +"] is the number of pins."
-																	 + ( bPADS ? "  Each pin becomes a 'Pad' in VeroRoute." : "")) );
+					str += "x";
+					strPair.m_notesStr = "x=[" + std::to_string(minPins)
+										+ ","  + std::to_string(maxPins) + "] is the number of pins."
+										+ ( modPins != 1 ? ("  x must divide by " + std::to_string(modPins) + ".") : "" ) +
+										+ ( bPADS ? "  Each pin becomes a separate 'Pad' object." : "" );
 					break;
+				// No point mentioning these parts as they can be resized at any time
+				/*
 				case COMP::RESISTOR:
 				case COMP::INDUCTOR:
 				case COMP::DIODE:
 				case COMP::CAP_CERAMIC:
 				case COMP::CAP_FILM:
 				case COMP::CAP_FILM_WIDE:
-					m_importStrings.push_back( StringPair(str + "x", "x=[" + std::to_string(CompTypes::GetMinLength(eType)-1)
-																	 + "," + std::to_string(CompTypes::GetMaxLength(eType)-1) +"] is the length in units of 100 mil.") );
+					str += "x";
+					strPair.m_notesStr = "x=[" + std::to_string(CompTypes::GetMinLength(eType)-1)
+										 + "," + std::to_string(CompTypes::GetMaxLength(eType)-1) + "] is the length in units of 100 mil.  "
+										 + "Omit x ==> " + std::to_string(CompTypes::GetDefaultLength(eType)-1) + "00 mil (default).";
 					break;
-				default: break;
+				*/
+				default:	break;
 			}
 		}
 		m_importStrings.sort();
@@ -336,11 +347,18 @@ public:
 		bOK = ( numPins > 0 );
 		if ( !bOK ) { errorStr = strID + "\nError: Part has no pins"; return bOK; }
 
-		bOK = bCustom || ( numPins >= CompTypes::GetMinNumPins(eType) );
+		const int minPins	= CompTypes::GetMinNumPins(eType);
+		const int maxPins	= CompTypes::GetMaxNumPins(eType);
+		const int modPins	= CompTypes::GetModuloNumPins(eType);
+
+		bOK = bCustom || ( numPins >= minPins );
 		if ( !bOK ) { errorStr = strID + "\nError: Part has fewer pins than VeroRoute supports"; return bOK; }
 
-		bOK = bCustom || ( numPins <= CompTypes::GetMaxNumPins(eType) );
+		bOK = bCustom || ( numPins <= maxPins );
 		if ( !bOK ) { errorStr = strID + "\nError: Part has more pins than VeroRoute supports"; return bOK; }
+
+		bOK = bCustom || ( 0 == numPins % modPins );
+		if ( !bOK ) { errorStr = strID + "\nError: Part has pins that is not a multiple of " + std::to_string(modPins); return bOK; }
 
 		// Check length is within limits for components with fixed numbers of pins
 		if ( nLength > 0 )

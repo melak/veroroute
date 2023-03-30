@@ -57,4 +57,5 @@ private:
 	std::string			m_errorStr;
 	bool				m_bTango = false;
 	int					m_iRow;
+	bool				m_bUpdating = false;
 };

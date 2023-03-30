@@ -75,6 +75,8 @@ struct IsEarlierRow
 
 void AliasDialog::Update()
 {
+	m_bUpdating = true;
+
 	m_pMainWindow->m_templateMgr.CalcValidImportStrings();	// Calculate valid import strings, and make sure each one is not listed as an alias
 
 	ui->pushButton->setEnabled( !m_filename.empty() );	// Disable Re-Import button if no filename
@@ -82,8 +84,8 @@ void AliasDialog::Update()
 	// Set up the table of (valid) import strings
 	ui->tableWidget->clear();
 	ui->tableWidget->setColumnCount(2);
-	ui->tableWidget->setColumnWidth(0,200);
-	ui->tableWidget->setColumnWidth(1,490);
+	ui->tableWidget->setColumnWidth(0,180);
+	ui->tableWidget->setColumnWidth(1,510);
 	m_tableHeader << "Valid Import Strings" << "Notes";
 	ui->tableWidget->setHorizontalHeaderLabels(m_tableHeader);
 	ui->tableWidget->verticalHeader()->setVisible(false);
@@ -113,9 +115,9 @@ void AliasDialog::Update()
 	// Set up the table of aliases for (valid) import strings
 	ui->tableWidget_2->clear();
 	ui->tableWidget_2->setColumnCount(2);
-	ui->tableWidget_2->setColumnWidth(0,510);
-	ui->tableWidget_2->setColumnWidth(1,180);
-	m_tableHeader_2 << "Alias (Footprint/Package)" << "Import String";
+	ui->tableWidget_2->setColumnWidth(0,180);
+	ui->tableWidget_2->setColumnWidth(1,510);
+	m_tableHeader_2 << "Import String" << "Alias (Footprint/Package)" ;
 	ui->tableWidget_2->setHorizontalHeaderLabels(m_tableHeader_2);
 	ui->tableWidget_2->verticalHeader()->setVisible(false);
 	ui->tableWidget_2->setEditTriggers(QAbstractItemView::AllEditTriggers);
@@ -136,21 +138,24 @@ void AliasDialog::Update()
 	for (auto& pRowData : rowDataVec)
 	{
 		// Write row to table.	Note: No memory leak since setItem() takes ownership.
-		auto pItemA	= new QTableWidgetItem(QString::fromStdString(pRowData->m_aliasStr));
-		auto pItemB = new QTableWidgetItem(QString::fromStdString(pRowData->m_importStr));
+		auto pItemA	= new QTableWidgetItem(QString::fromStdString(pRowData->m_importStr));
+		auto pItemB = new QTableWidgetItem(QString::fromStdString(pRowData->m_aliasStr));
 
-		pItemA->setFlags(Qt::NoItemFlags);
-		pItemB->setFlags(Qt::ItemIsEditable | Qt::ItemIsEnabled);
+		pItemA->setFlags(Qt::ItemIsEditable | Qt::ItemIsEnabled);
+		pItemB->setFlags(Qt::NoItemFlags);
 
 		ui->tableWidget_2->setItem(nAlias, 0, pItemA);
 		ui->tableWidget_2->setItem(nAlias, 1, pItemB);
-		nAlias++;		
+
+		nAlias++;
 	}
 	ui->tableWidget_2->setRowCount(nAlias);
 	ui->tableWidget_2->verticalScrollBar()->setSliderPosition( ui->tableWidget_2->verticalScrollBar()->maximum() );
 	CellPressed(-1,-1);	// Deselect row in alias table so we disable the Delete button
 
 	for (auto& pRowData : rowDataVec) delete pRowData;	// Deallocate objects in vector
+
+	m_bUpdating = false;
 }
 
 bool AliasDialog::Import(bool& bPartTypeOK)
@@ -187,7 +192,7 @@ void AliasDialog::DeleteRow()
 {
 	if ( m_iRow >= 0 && m_iRow < ui->tableWidget_2->rowCount() )
 	{
-		const std::string aliasStr = ui->tableWidget_2->item(m_iRow, 0)->text().toStdString();
+		const std::string aliasStr = ui->tableWidget_2->item(m_iRow, 1)->text().toStdString();
 		const std::string messageStr = "The alias\n" + aliasStr + "\nis about to be deleted.  There is no undo for this operation.  Continue?";
 		if ( QMessageBox::question(this, tr("Confirm delete alias"),
 										 tr(messageStr.c_str()),
@@ -220,10 +225,11 @@ void AliasDialog::CellPressed(int row, int /*col*/)	// For alias
 
 void AliasDialog::CellChanged(int row, int col)		// For alias table
 {
-	if ( col == 0 ) return;
+	if ( m_bUpdating ) return;
+	if ( col == 1 ) return;
 
-	const std::string aliasStr	= ui->tableWidget_2->item(row, 0)->text().toStdString();
-	const std::string importStr	= ui->tableWidget_2->item(row, 1)->text().toStdString();
+	const std::string importStr	= ui->tableWidget_2->item(row, 0)->text().toStdString();
+	const std::string aliasStr	= ui->tableWidget_2->item(row, 1)->text().toStdString();
 
 	// Allow invalid aliases to be entered at ths stage.  Let ClearInvalidAliases() take care of them before (re)import.
 	m_pMainWindow->m_templateMgr.AddAlias(aliasStr, importStr);
