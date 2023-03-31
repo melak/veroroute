@@ -210,9 +210,17 @@ public:
 		Transform(row, col, direction);	// Handle direction transformation
 		return Grid<CompElement>::Get(lyr, row, col);
 	}
+	void SwapEnds()	// For Diodes and LEDs (import from KiCAD netlist needs to swap anode and cathode)
+	{
+		const bool bOK = ( GetLyrs() == 1 && GetRows() == 1 && GetCols() > 1 );	assert(bOK);
+		if ( !bOK ) return;
+		// Pins are assumed to be first and last element on the row
+		CompElement a(*GetAt(0)), b(*GetAt(GetCols()-1));	// Read ends
+		*GetAt(0) = b; *GetAt(GetCols()-1) = a;	// Swap ends
+	}
 	void StretchSimple(bool bGrow, const CompElement& initVal)	// For simple 2-pin components like resistors, wires, diodes, caps
 	{
-		assert( GetLyrs() == 1 );	
+		assert( GetLyrs() == 1 );
 		// Pins are assumed to be first and last element on the row
 		if ( GetRows() == 1 && ( bGrow || GetCols() > 2 ) )
 		{

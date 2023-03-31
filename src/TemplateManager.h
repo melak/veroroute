@@ -217,7 +217,9 @@ public:
 	void CalcValidImportStrings(std::list<StringPair>& outList)
 	{
 		outList.clear();
-		outList.push_back( StringPair("PADS") );	// Special case.  PADS is an allowed import string (like a SIP but broken into separate objects)
+		outList.push_back( StringPair("PADS") );		// Special case.  PADS is an allowed import string (like a SIP but broken into separate objects)
+		outList.push_back( StringPair("DIODE_KICAD") );	// Special case.  DIODE but using KiCAD pin numbering (opposite to VeroRoute)
+		outList.push_back( StringPair("LED_KICAD") );	// Special case.  LED   but using KiCAD pin numbering (opposite to VeroRoute)
 		for (const auto& o : m_listGeneric)
 			if ( !o.GetImportStr().empty() )
 				outList.push_back( StringPair(o.GetImportStr()) );
@@ -225,15 +227,26 @@ public:
 			if ( o.GetType() == COMP::CUSTOM && !o.GetImportStr().empty() )
 				outList.push_back( StringPair(o.GetImportStr()) );
 
-		// Also see how suffices are handled in CheckPartOK() below
+		// Append 'x' for import strings with a suffix.  Also see how suffices are handled in CheckPartOK() below
 		for (auto& o : outList)
 		{
-			const bool bPADS = ( o.m_importStr == "PADS" );
-			const COMP eType = bPADS ? COMP::SIP : CompTypes::GetTypeFromImportStr(o.m_importStr);	// Treat PADS like SIP regarding number of pins
+			const bool bPADS		= ( o.m_importStr == "PADS" );
+			const bool bKiCadDiode	= ( o.m_importStr == "DIODE_KICAD" );
+			const bool bKiCadLED	= ( o.m_importStr == "LED_KICAD" );
+			const COMP eType = bPADS		? COMP::SIP		// Treat PADS like SIP (regarding number of pins)
+							 : bKiCadDiode	? COMP::DIODE
+							 : bKiCadLED	? COMP::LED
+							 : CompTypes::GetTypeFromImportStr(o.m_importStr);
+
+			if (eType == COMP::DIODE || eType == COMP::LED)
+			{
+				if ( bKiCadDiode || bKiCadLED ) o.m_notesStr += "Pin 2 is Anode.  ";
+				else							o.m_notesStr += "Pin 1 is Anode.  ";
+			}
+
 			const int minPins = CompTypes::GetMinNumPins(eType);
 			const int maxPins = CompTypes::GetMaxNumPins(eType);
 			const int modPins = CompTypes::GetModuloNumPins(eType);
-
 			switch(eType)
 			{
 				case COMP::SIP:
@@ -245,7 +258,7 @@ public:
 				case COMP::BLOCK_100:
 				case COMP::BLOCK_200:
 					o.m_importStr += "x";
-					o.m_notesStr = "x=[" + std::to_string(minPins) + "," + std::to_string(maxPins) + "] is number of pins."
+					o.m_notesStr += "x=[" + std::to_string(minPins) + "," + std::to_string(maxPins) + "] is number of pins."
 								 + ( modPins != 1 ? ("  x must divide by " + std::to_string(modPins) + ".") : "" )
 								 + ( bPADS ? "  Each pin becomes a 'Pad' object." : "" );
 					break;
@@ -253,15 +266,15 @@ public:
 				case COMP::INDUCTOR:
 				case COMP::DIODE:
 					o.m_importStr += "x";
-					o.m_notesStr = "x=[" + std::to_string(CompTypes::GetMinLength(eType)-1) + ","
-										 + std::to_string(CompTypes::GetMaxLength(eType)-1) + "] is length in units of 100 mil.  Omit x for 300 mil default.";
+					o.m_notesStr  += "x=[" + std::to_string(CompTypes::GetMinLength(eType)-1) + ","
+										   + std::to_string(CompTypes::GetMaxLength(eType)-1) + "] is length in units of 100 mil.  Omit x for 300 mil default.";
 					break;
 				case COMP::CAP_CERAMIC:
 				case COMP::CAP_FILM:
 				case COMP::CAP_FILM_WIDE:
 					o.m_importStr += "x";
-					o.m_notesStr = "x=[" + std::to_string(CompTypes::GetMinLength(eType)-1) + ","
-										 + std::to_string(CompTypes::GetMaxLength(eType)-1) + "] is length in units of 100 mil.  Omit x for 200 mil default.";
+					o.m_notesStr  += "x=[" + std::to_string(CompTypes::GetMinLength(eType)-1) + ","
+										   + std::to_string(CompTypes::GetMaxLength(eType)-1) + "] is length in units of 100 mil.  Omit x for 200 mil default.";
 					break;
 				default:	break;
 			}
@@ -287,9 +300,10 @@ public:
 
 		// List of package identifiers for footprints with variable numbers of pins/lengths.
 		// "PADS" ==> Create separate on-board PAD objects for an off-board part.
-		// "SWITCH_ST_DIP" must be tested before "SWITCH_ST_DIP".
-		Q_DECL_CONSTEXPR size_t NUM_VARIABLE_PIN_PARTS = 15;
-		const std::string strVar[NUM_VARIABLE_PIN_PARTS] = {"SIP", "DIP", "PADS", "SWITCH_ST_DIP", "SWITCH_ST", "SWITCH_DT", "STRIP_100MIL", "BLOCK_100MIL", "BLOCK_200MIL", "RESISTOR", "INDUCTOR", "DIODE", "CAP_CERAMIC", "CAP_FILM", "CAP_FILM_WIDE"};
+		// "SWITCH_ST_DIP" must be tested before "SWITCH_ST".
+		// "DIODE_KICAD" must be tested before "DIODE".
+		Q_DECL_CONSTEXPR size_t NUM_VARIABLE_PIN_PARTS = 16;
+		const std::string strVar[NUM_VARIABLE_PIN_PARTS] = {"SIP", "DIP", "PADS", "SWITCH_ST_DIP", "SWITCH_ST", "SWITCH_DT", "STRIP_100MIL", "BLOCK_100MIL", "BLOCK_200MIL", "RESISTOR", "INDUCTOR", "DIODE_KICAD", "DIODE", "CAP_CERAMIC", "CAP_FILM", "CAP_FILM_WIDE"};
 
 		// If footprint is variable length, then get the number of pins/length from importStr.
 		std::string	importStrCut( importStr );	// Cut down version of importStr. e.g.  DIP40 ==> DIP
@@ -310,7 +324,7 @@ public:
 					bOffBoard		= true;
 					importStrCut	= "SIP";	// ... treat it as a SIP for the moment
 				}
-				if ( importStrCut == "RESISTOR" || importStrCut == "INDUCTOR" || importStrCut == "DIODE" || importStrCut == "CAP_CERAMIC" || importStrCut == "CAP_FILM" || importStrCut == "CAP_FILM_WIDE" )
+				if ( importStrCut == "RESISTOR" || importStrCut == "INDUCTOR" || importStrCut == "DIODE_KICAD" || importStrCut == "DIODE" || importStrCut == "CAP_CERAMIC" || importStrCut == "CAP_FILM" || importStrCut == "CAP_FILM_WIDE" )
 				{
 					if ( !pinStr.empty() )	// If we have a suffix for the number of pins ...
 					{
@@ -334,6 +348,9 @@ public:
 		const std::string strID = "Part: Name = " + nameStr + ", Value = " + valueStr + ", Type = " + importStr;
 
 		bool bCustom(false);	// true ==> We've found a custom template with matching import string
+		bool bSwapPinOrder(false);
+		if ( importStrCut == "DIODE_KICAD" )	{ bSwapPinOrder = true;	importStrCut = "DIODE"; }
+		if ( importStrCut == "LED_KICAD" )		{ bSwapPinOrder = true;	importStrCut = "LED"; }
 
 		const COMP eType = CompTypes::GetTypeFromImportStr(importStrCut);
 		bool bOK = ( eType != COMP::CUSTOM && eType != COMP::TRACKS && eType != COMP::VERO_NUMBER && eType != COMP::VERO_LETTER && eType != COMP::INVALID );
@@ -392,6 +409,8 @@ public:
 			}
 		}
 
+		if ( bSwapPinOrder ) comp.SwapEnds();
+		
 		if ( bOK && bOffBoard && pOffBoard )	// If have a valid offboard part (i.e. PADS with a valid suffix)
 			pOffBoard->push_back(nameStr);		// ... add it to the list of off-board parts
 		return bOK;
