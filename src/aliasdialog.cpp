@@ -38,8 +38,9 @@ AliasDialog::AliasDialog(MainWindow* parent)
 	QObject::connect(ui->pushButton,	SIGNAL(clicked()),				m_pMainWindow,	SLOT(ReImport()));
 	QObject::connect(ui->pushButton_2,	SIGNAL(clicked()),				this,			SLOT(DeleteRow()));
 	QObject::connect(ui->pushButton_3,	SIGNAL(clicked()),				this,			SLOT(DeleteAllRows()));
-	QObject::connect(ui->tableWidget_2,	SIGNAL(cellChanged(int,int)),	this,			SLOT(CellChanged(int,int)));
 	QObject::connect(ui->tableWidget_2,	SIGNAL(cellPressed(int, int)),	this,			SLOT(CellPressed(int,int)));
+	QObject::connect(ui->tableWidget_2,	SIGNAL(cellChanged(int,int)),	this,			SLOT(CellChanged(int,int)));
+	QObject::connect(ui->tableWidget,	SIGNAL(cellChanged(int,int)),	this,			SLOT(CellChangedTop(int,int)));
 	QObject::connect(this,				SIGNAL(rejected()),				m_pMainWindow,	SLOT(UpdateControls()));	// Close using X button
 }
 
@@ -90,9 +91,9 @@ void AliasDialog::Update()
 	m_tableHeader << "Valid Import Strings" << "Notes";
 	ui->tableWidget->setHorizontalHeaderLabels(m_tableHeader);
 	ui->tableWidget->verticalHeader()->setVisible(false);
-	ui->tableWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
-	ui->tableWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
-	ui->tableWidget->setSelectionMode(QAbstractItemView::SingleSelection);
+	ui->tableWidget->setEditTriggers(QAbstractItemView::CurrentChanged);
+	ui->tableWidget->setSelectionBehavior(QAbstractItemView::SelectItems);
+	ui->tableWidget->setSelectionMode(QAbstractItemView::NoSelection);
 	ui->tableWidget->setShowGrid(true);
 
 	// Populate the table with data
@@ -102,8 +103,10 @@ void AliasDialog::Update()
 		// Write row to table.	Note: No memory leak since setItem() takes ownership.
 		auto pItemA = new QTableWidgetItem(QString::fromStdString(strPair.m_importStr));
 		auto pItemB = new QTableWidgetItem(QString::fromStdString(strPair.m_notesStr));
-		pItemA->setFlags(Qt::NoItemFlags);
-		pItemB->setFlags(Qt::NoItemFlags);
+
+		pItemA->setFlags(Qt::ItemIsEnabled | Qt::ItemIsEditable);
+		pItemB->setFlags(Qt::ItemIsEnabled);
+
 		ui->tableWidget->setItem(nImport, 0, pItemA);
 		ui->tableWidget->setItem(nImport, 1, pItemB);
 		nImport++;		
@@ -141,8 +144,8 @@ void AliasDialog::Update()
 		auto pItemA	= new QTableWidgetItem(QString::fromStdString(pRowData->m_importStr));
 		auto pItemB = new QTableWidgetItem(QString::fromStdString(pRowData->m_aliasStr));
 
-		pItemA->setFlags(Qt::ItemIsEditable | Qt::ItemIsEnabled);
-		pItemB->setFlags(Qt::NoItemFlags);
+		pItemA->setFlags(Qt::ItemIsEnabled | Qt::ItemIsEditable);
+		pItemB->setFlags(Qt::ItemIsEnabled);
 
 		ui->tableWidget_2->setItem(nAlias, 0, pItemA);
 		ui->tableWidget_2->setItem(nAlias, 1, pItemB);
@@ -155,6 +158,8 @@ void AliasDialog::Update()
 
 	for (auto& pRowData : rowDataVec) delete pRowData;	// Deallocate objects in vector
 
+	ui->pushButton_3->setEnabled(nAlias > 0);
+		
 	m_bUpdating = false;
 }
 
@@ -216,21 +221,41 @@ void AliasDialog::DeleteAllRows()
 	Update();
 }
 
-void AliasDialog::CellPressed(int row, int /*col*/)	// For alias
+void AliasDialog::CellPressed(int row, int /*col*/)	// For alias table
 {
 	m_iRow = row;
 	ui->pushButton_2->setEnabled(m_iRow != -1);
-	ui->pushButton_3->setEnabled(m_iRow != -1);
 }
 
-void AliasDialog::CellChanged(int row, int col)		// For alias table
+void AliasDialog::CellChanged(int row, int /*col*/)		// For alias table
 {
 	if ( m_bUpdating ) return;
-	if ( col == 1 ) return;
 
 	const std::string importStr	= ui->tableWidget_2->item(row, 0)->text().toStdString();
 	const std::string aliasStr	= ui->tableWidget_2->item(row, 1)->text().toStdString();
 
 	// Allow invalid aliases to be entered at ths stage.  Let ClearInvalidAliases() take care of them before (re)import.
 	m_pMainWindow->m_templateMgr.AddAlias(aliasStr, importStr);
+}
+
+void AliasDialog::CellChangedTop(int row, int /*col*/)	// For valid import strings table
+{
+	if ( m_bUpdating ) return;
+
+	// We want to allow copying of text from the valid import strings table, but not editing.
+	// If user tries to change text in the table, the code below will revert it.
+
+	std::list<StringPair> strList;	// List of valid import strings
+	m_pMainWindow->m_templateMgr.CalcValidImportStrings(strList);	// Calculate list, and make sure each one is not listed as an alias
+
+	int nImport(0);
+	for (auto& strPair : strList)
+	{
+		if ( nImport == row )
+		{
+			ui->tableWidget->item(row, 0)->setText(QString::fromStdString(strPair.m_importStr));
+			return Update();
+		}
+		nImport++;		
+	}
 }

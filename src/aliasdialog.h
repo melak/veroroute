@@ -44,10 +44,11 @@ protected:
 	void keyPressEvent(QKeyEvent* event);
 	void keyReleaseEvent(QKeyEvent* event);
 public slots:
-	void DeleteRow();					// For alias table
-	void DeleteAllRows();				// For alias table
-	void CellPressed(int row, int col);	// For alias table
-	void CellChanged(int row, int col);	// For alias table
+	void DeleteRow();						// For alias table
+	void DeleteAllRows();					// For alias table
+	void CellPressed(int row, int col);		// For alias table
+	void CellChanged(int row, int col);		// For alias table
+	void CellChangedTop(int row, int col);	// For valid import strings table
 private:
 	Ui_AliasDialog*	ui;
 	MainWindow*			m_pMainWindow;

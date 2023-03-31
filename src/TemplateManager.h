@@ -245,23 +245,23 @@ public:
 				case COMP::BLOCK_100:
 				case COMP::BLOCK_200:
 					o.m_importStr += "x";
-					o.m_notesStr = "x=[" + std::to_string(minPins) + "," + std::to_string(maxPins) + "] is the number of pins."
+					o.m_notesStr = "x=[" + std::to_string(minPins) + "," + std::to_string(maxPins) + "] is number of pins."
 								 + ( modPins != 1 ? ("  x must divide by " + std::to_string(modPins) + ".") : "" )
-								 + ( bPADS ? "  Each pin becomes a separate 'Pad' object." : "" );
+								 + ( bPADS ? "  Each pin becomes a 'Pad' object." : "" );
 					break;
 				case COMP::RESISTOR:
 				case COMP::INDUCTOR:
 				case COMP::DIODE:
 					o.m_importStr += "x";
 					o.m_notesStr = "x=[" + std::to_string(CompTypes::GetMinLength(eType)-1) + ","
-										 + std::to_string(CompTypes::GetMaxLength(eType)-1) + "] is the length in units of 100 mil.  Omit x for 300 mil default.";
+										 + std::to_string(CompTypes::GetMaxLength(eType)-1) + "] is length in units of 100 mil.  Omit x for 300 mil default.";
 					break;
 				case COMP::CAP_CERAMIC:
 				case COMP::CAP_FILM:
 				case COMP::CAP_FILM_WIDE:
 					o.m_importStr += "x";
 					o.m_notesStr = "x=[" + std::to_string(CompTypes::GetMinLength(eType)-1) + ","
-										 + std::to_string(CompTypes::GetMaxLength(eType)-1) + "] is the length in units of 100 mil.  Omit x for 200 mil default.";
+										 + std::to_string(CompTypes::GetMaxLength(eType)-1) + "] is length in units of 100 mil.  Omit x for 200 mil default.";
 					break;
 				default:	break;
 			}
@@ -293,7 +293,7 @@ public:
 
 		// If footprint is variable length, then get the number of pins/length from importStr.
 		std::string	importStrCut( importStr );	// Cut down version of importStr. e.g.  DIP40 ==> DIP
-		std::string	pinStr;					// Number of pins
+		std::string	pinStr;						// Number of pins
 		int numPins(0), nLength(0);	// Invalid by default
 
 		bool bOffBoard(false);
@@ -312,15 +312,20 @@ public:
 				}
 				if ( importStrCut == "RESISTOR" || importStrCut == "INDUCTOR" || importStrCut == "DIODE" || importStrCut == "CAP_CERAMIC" || importStrCut == "CAP_FILM" || importStrCut == "CAP_FILM_WIDE" )
 				{
-					nLength = atoi( pinStr.c_str() );	// Missing or zero ==> Use default length
-					if ( nLength > 0 )					// The length is in 100ths of a mil ...
-						nLength += 1;					// ... so must add 1 to get part length in grid squares
+					if ( !pinStr.empty() )	// If we have a suffix for the number of pins ...
+					{
+						nLength = atoi( pinStr.c_str() );
+						if ( nLength > 0 )	// The length is in 100ths of a mil ...
+							nLength += 1;	// ... so must add 1 to get part length in grid squares
+						else
+							nLength = -1;	// Use invalid length of -1.  Don't use 0 as that implies "use default".
+					}
 				}
 				else	// SIP, DIP, SWITCH_ST_DIP, SWITCH_ST, SWITCH_DT, STRIP_100MIL, BLOCK_100MIL, BLOCK_200MIL
 				{
 					numPins = atoi( pinStr.c_str() );
-					if ( numPins == 0 )					// Missing or zero ...
-						numPins = -1;					// ... use -1 instead.  Don't use 0 as that implies "use default".
+					if ( numPins == 0 )		// Missing or zero ...
+						numPins = -1;		// ... use -1 instead.  Don't use 0 as that implies "use default".
 				}
 				break;
 			}
@@ -341,29 +346,6 @@ public:
 		bOK = ( numPins > 0 );
 		if ( !bOK ) { errorStr = strID + "\nError: Part has no pins"; return bOK; }
 
-		const int minPins	= CompTypes::GetMinNumPins(eType);
-		const int maxPins	= CompTypes::GetMaxNumPins(eType);
-		const int modPins	= CompTypes::GetModuloNumPins(eType);
-
-		bOK = bCustom || ( numPins >= minPins );
-		if ( !bOK ) { errorStr = strID + "\nError: Part has fewer pins than VeroRoute supports"; return bOK; }
-
-		bOK = bCustom || ( numPins <= maxPins );
-		if ( !bOK ) { errorStr = strID + "\nError: Part has more pins than VeroRoute supports"; return bOK; }
-
-		bOK = bCustom || ( 0 == numPins % modPins );
-		if ( !bOK ) { errorStr = strID + "\nError: Part has pins that is not a multiple of " + std::to_string(modPins); return bOK; }
-
-		// Check length is within limits for components with fixed numbers of pins
-		if ( nLength > 0 )
-		{
-			bOK = bCustom || ( nLength >= CompTypes::GetMinLength(eType) );
-			if ( !bOK ) { errorStr = strID + "\nError: Part length is smaller than VeroRoute support"; return bOK; }
-
-			bOK = bCustom || ( nLength <= CompTypes::GetMaxLength(eType) );
-			if ( !bOK ) { errorStr = strID + "\nError: Part length is larger than VeroRoute supports"; return bOK; }
-		}
-
 		if ( bCustom )
 		{
 			assert( comp.GetType() == COMP::CUSTOM );
@@ -372,8 +354,34 @@ public:
 		}
 		else
 		{
+			const int minPins = CompTypes::GetMinNumPins(eType);
+			const int maxPins = CompTypes::GetMaxNumPins(eType);
+			const int modPins = CompTypes::GetModuloNumPins(eType);
+
+			bOK = numPins >= minPins;
+			if ( !bOK ) { errorStr = strID + "\nError: Pin value in import string is too small"; return bOK; }
+
+			bOK = numPins <= maxPins;
+			if ( !bOK ) { errorStr = strID + "\nError: Pin value in import string is too large"; return bOK; }
+
+			bOK = ( 0 == numPins % modPins );
+			if ( !bOK ) { errorStr = strID + "\nError: Pin value in import string is not a multiple of " + std::to_string(modPins); return bOK; }
+
+			// Check length is within limits (for "RESISTOR", "INDUCTOR", "DIODE", "CAP_CERAMIC", "CAP_FILM", "CAP_FILM_WIDE")
+			if ( nLength != 0 )	// Length of 0 ==> use default
+			{
+				bOK = nLength > 0;
+				if ( !bOK ) { errorStr = strID + "\nError: Part length value in import string is invalid"; return bOK; }
+			
+				bOK = nLength >= CompTypes::GetMinLength(eType);
+				if ( !bOK ) { errorStr = strID + "\nError: Part length is smaller than VeroRoute supports"; return bOK; }
+			
+				bOK = nLength <= CompTypes::GetMaxLength(eType);
+				if ( !bOK ) { errorStr = strID + "\nError: Part length is larger than VeroRoute supports"; return bOK; }
+			}
+
 			assert( eType != COMP::INVALID );
-			std::vector<int>	nodeList;
+			std::vector<int> nodeList;
 			nodeList.resize(static_cast<size_t>(numPins), BAD_NODEID);
 
 			comp = Component(nameStr, valueStr, eType, nodeList);
