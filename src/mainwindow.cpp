@@ -2263,11 +2263,22 @@ void MainWindow::DefinerBuild()
 	const Component comp( GetCompDefiner() );
 
 	std::string errorStr;
-	const bool bOK = GetTemplateManager().Add(false, comp, &errorStr);
+	bool bAlreadyExists(false);	// Gets set true if template already exists
+	bool bOK = GetTemplateManager().Add(false, comp, bAlreadyExists, &errorStr);
+	if ( !bOK && bAlreadyExists )
+	{
+		if ( QMessageBox::question(this, tr("Confirm Overwrite"),
+										 tr("The part already exists in the library and will be overwritten.  There is no undo for this operation.  Continue?"),
+										 QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::Yes )
+			bOK = GetTemplateManager().Add(false, comp, bAlreadyExists, &errorStr);	// Repeat Add() with bAlreadyExists set true to allow overwrite
+		else
+			return EnableCompDialogControls();
+	}
 	if ( bOK )
 		UpdateAliasDialog();
 	else
-		QMessageBox::warning(this, tr("Failed to add part to templates"), tr(errorStr.c_str()));
+		QMessageBox::warning(this, tr("Failed to add part to library"), tr(errorStr.c_str()));
+
 	EnableCompDialogControls();
 }
 void MainWindow::DefinerToggleEditor()

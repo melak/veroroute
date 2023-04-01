@@ -142,10 +142,15 @@ public:
 	}
 	bool Add(bool bGeneric, const Component& comp, std::string* pErrorStr = nullptr)
 	{
+		bool bAlreadyExists(false);
+		return Add(bGeneric, comp, bAlreadyExists, pErrorStr);
+	}
+	bool Add(bool bGeneric, const Component& comp, bool& bAlreadyExists, std::string* pErrorStr = nullptr)
+	{
 		Template entry;
 		if ( !entry.MakeTemplate(comp) )
 		{
-			if ( pErrorStr ) *pErrorStr = "MakeTemplate() failed";
+			if ( pErrorStr ) *pErrorStr = "Internal Error: MakeTemplate() failed";
 			return false;
 		}
 
@@ -158,16 +163,20 @@ public:
 				// ... it must have a unique (TypeStr,ValueStr) combination
 				if ( entry.GetFullTypeStr() == o.GetFullTypeStr() && entry.GetValueStr() == o.GetValueStr() )
 				{
-					if ( pErrorStr ) *pErrorStr = "The template (Type = " + o.GetFullTypeStr() + ") "
-												+ "(Value = " + o.GetValueStr() + ") already exists";
-					return false;
+					if ( !bAlreadyExists )
+					{
+						bAlreadyExists = true;
+						if ( pErrorStr ) *pErrorStr = "The library part (Type = " + o.GetFullTypeStr() + ") "
+													+ "(Value = " + o.GetValueStr() + ") already exists";
+						return false;
+					}
 				}
-				// ... if its a COMP::CUSTOM part, then it must have a unique import string
-				if ( entry.GetType() == COMP::CUSTOM )
+				else if ( entry.GetType() == COMP::CUSTOM )
 				{
+					// ... if its a COMP::CUSTOM part, then it must have a unique import string
 					if ( !entry.GetImportStr().empty() && entry.GetImportStr() == o.GetImportStr() )
 					{
-						if ( pErrorStr ) *pErrorStr = "The template (Type = " + o.GetFullTypeStr() + ") "
+						if ( pErrorStr ) *pErrorStr = "The library part (Type = " + o.GetFullTypeStr() + ") "
 													+ "(Value = " + o.GetValueStr() + ") "
 													+ "already has the Import string " + o.GetImportStr();
 						return false;
@@ -177,6 +186,16 @@ public:
 		}
 
 		// We've got a valid entry, so insert it at the relevant place in the list
+
+		// If we are allowed to replace an entry, delete the old entry
+		for (auto iter = lst.begin(); iter != lst.end() && bAlreadyExists; ++iter)
+		{
+			if ( entry.GetFullTypeStr() == iter->GetFullTypeStr() && entry.GetValueStr() == iter->GetValueStr() )
+			{
+				lst.erase(iter);
+				break;
+			}
+		}
 
 		auto iter = lst.begin();
 		bool bOK = iter == lst.end() || entry.IsLessThan(*iter, bGeneric);
@@ -192,7 +211,7 @@ public:
 		}
 		if ( !bOK )
 		{
-			if ( pErrorStr ) *pErrorStr = "Could not insert template in list";
+			if ( pErrorStr ) *pErrorStr = "Could not add part to library";
 		}
 		return bOK;
 	}
@@ -218,8 +237,8 @@ public:
 	{
 		outList.clear();
 		outList.push_back( StringPair("PADS") );		// Special case.  PADS is an allowed import string (like a SIP but broken into separate objects)
-		outList.push_back( StringPair("DIODE_KICAD") );	// Special case.  DIODE but using KiCAD pin numbering (opposite to VeroRoute)
-		outList.push_back( StringPair("LED_KICAD") );	// Special case.  LED   but using KiCAD pin numbering (opposite to VeroRoute)
+		outList.push_back( StringPair("DIODE_IPC") );	// Special case.  DIODE using IPC standard pin numbering like KiCaD (opposite to VeroRoute)
+		outList.push_back( StringPair("LED_IPC") );		// Special case.  LED   using IPC standard pin numbering like KiCaD (opposite to VeroRoute)
 		for (const auto& o : m_listGeneric)
 			if ( !o.GetImportStr().empty() )
 				outList.push_back( StringPair(o.GetImportStr()) );
@@ -231,16 +250,16 @@ public:
 		for (auto& o : outList)
 		{
 			const bool bPADS		= ( o.m_importStr == "PADS" );
-			const bool bKiCadDiode	= ( o.m_importStr == "DIODE_KICAD" );
-			const bool bKiCadLED	= ( o.m_importStr == "LED_KICAD" );
+			const bool bDIODE_IPC	= ( o.m_importStr == "DIODE_IPC" );
+			const bool bLED_IPC		= ( o.m_importStr == "LED_IPC" );
 			const COMP eType = bPADS		? COMP::SIP		// Treat PADS like SIP (regarding number of pins)
-							 : bKiCadDiode	? COMP::DIODE
-							 : bKiCadLED	? COMP::LED
+							 : bDIODE_IPC	? COMP::DIODE
+							 : bLED_IPC		? COMP::LED
 							 : CompTypes::GetTypeFromImportStr(o.m_importStr);
 
 			if (eType == COMP::DIODE || eType == COMP::LED)
 			{
-				if ( bKiCadDiode || bKiCadLED ) o.m_notesStr += "Pin 2 is Anode.  ";
+				if ( bDIODE_IPC || bLED_IPC )	o.m_notesStr += "Pin 2 is Anode.  ";
 				else							o.m_notesStr += "Pin 1 is Anode.  ";
 			}
 
@@ -301,9 +320,9 @@ public:
 		// List of package identifiers for footprints with variable numbers of pins/lengths.
 		// "PADS" ==> Create separate on-board PAD objects for an off-board part.
 		// "SWITCH_ST_DIP" must be tested before "SWITCH_ST".
-		// "DIODE_KICAD" must be tested before "DIODE".
+		// "DIODE_IPC" must be tested before "DIODE".
 		Q_DECL_CONSTEXPR size_t NUM_VARIABLE_PIN_PARTS = 16;
-		const std::string strVar[NUM_VARIABLE_PIN_PARTS] = {"SIP", "DIP", "PADS", "SWITCH_ST_DIP", "SWITCH_ST", "SWITCH_DT", "STRIP_100MIL", "BLOCK_100MIL", "BLOCK_200MIL", "RESISTOR", "INDUCTOR", "DIODE_KICAD", "DIODE", "CAP_CERAMIC", "CAP_FILM", "CAP_FILM_WIDE"};
+		const std::string strVar[NUM_VARIABLE_PIN_PARTS] = {"SIP", "DIP", "PADS", "SWITCH_ST_DIP", "SWITCH_ST", "SWITCH_DT", "STRIP_100MIL", "BLOCK_100MIL", "BLOCK_200MIL", "RESISTOR", "INDUCTOR", "DIODE_IPC", "DIODE", "CAP_CERAMIC", "CAP_FILM", "CAP_FILM_WIDE"};
 
 		// If footprint is variable length, then get the number of pins/length from importStr.
 		std::string	importStrCut( importStr );	// Cut down version of importStr. e.g.  DIP40 ==> DIP
@@ -324,7 +343,7 @@ public:
 					bOffBoard		= true;
 					importStrCut	= "SIP";	// ... treat it as a SIP for the moment
 				}
-				if ( importStrCut == "RESISTOR" || importStrCut == "INDUCTOR" || importStrCut == "DIODE_KICAD" || importStrCut == "DIODE" || importStrCut == "CAP_CERAMIC" || importStrCut == "CAP_FILM" || importStrCut == "CAP_FILM_WIDE" )
+				if ( importStrCut == "RESISTOR" || importStrCut == "INDUCTOR" || importStrCut == "DIODE_IPC" || importStrCut == "DIODE" || importStrCut == "CAP_CERAMIC" || importStrCut == "CAP_FILM" || importStrCut == "CAP_FILM_WIDE" )
 				{
 					if ( !pinStr.empty() )	// If we have a suffix for the number of pins ...
 					{
@@ -349,8 +368,8 @@ public:
 
 		bool bCustom(false);	// true ==> We've found a custom template with matching import string
 		bool bSwapPinOrder(false);
-		if ( importStrCut == "DIODE_KICAD" )	{ bSwapPinOrder = true;	importStrCut = "DIODE"; }
-		if ( importStrCut == "LED_KICAD" )		{ bSwapPinOrder = true;	importStrCut = "LED"; }
+		if ( importStrCut == "DIODE_IPC" )	{ bSwapPinOrder = true;	importStrCut = "DIODE"; }
+		if ( importStrCut == "LED_IPC" )	{ bSwapPinOrder = true;	importStrCut = "LED"; }
 
 		const COMP eType = CompTypes::GetTypeFromImportStr(importStrCut);
 		bool bOK = ( eType != COMP::CUSTOM && eType != COMP::TRACKS && eType != COMP::VERO_NUMBER && eType != COMP::VERO_LETTER && eType != COMP::INVALID );
