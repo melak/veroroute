@@ -2268,7 +2268,7 @@ void MainWindow::DefinerBuild()
 	if ( !bOK && bAlreadyExists )
 	{
 		if ( QMessageBox::question(this, tr("Confirm Overwrite"),
-										 tr("The part already exists in the library and will be overwritten.  There is no undo for this operation.  Continue?"),
+										 tr(errorStr.c_str()) + tr(" and will be overwritten.  There is no undo for this operation.  Continue?"),
 										 QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::Yes )
 			bOK = GetTemplateManager().Add(false, comp, bAlreadyExists, &errorStr);	// Repeat Add() with bAlreadyExists set true to allow overwrite
 		else

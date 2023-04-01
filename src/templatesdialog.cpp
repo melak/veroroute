@@ -299,11 +299,32 @@ void TemplatesDialog::AddTemplatesFromBoard(Board& board, bool bAllComps, bool b
 	
 	const bool bGeneric = false;
 
+	std::list< std::string > errorStrList;
 	int nCount(0);
 	for (const auto& mapObj : compMgr.GetMapIdToComp())
 	{
 		if ( bAllComps || groupMgr.GetIsUserComp(mapObj.first) )
-			if ( mgr.Add(bGeneric, mapObj.second) ) nCount++;
+		{
+			bool bAlreadyExists(false);
+			std::string errorStr;
+			bool bOK = mgr.Add(bGeneric, mapObj.second, bAlreadyExists, &errorStr);
+			if ( !bOK && bAlreadyExists )
+			{
+				bool bFound(false);	// true ==> we've encountered the error before (i.e. a part with same type and value)
+				for (auto& str : errorStrList )
+					if ( str == errorStr ) { bFound = true;  break; }
+				if ( !bFound )
+				{
+					errorStrList.push_back(errorStr);
+					if ( QMessageBox::question(this, tr("Confirm Overwrite"),
+													 tr(errorStr.c_str()) + tr(" and will be overwritten.  There is no undo for this operation.  Continue?"),
+													 QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::Yes )
+						bOK = mgr.Add(bGeneric, mapObj.second, bAlreadyExists, &errorStr);	// Repeat Add() with bAlreadyExists set true to allow overwrite
+				}
+			}
+			if ( bOK )
+				nCount++;
+		}
 	}
 	if ( nCount > 0 )
 	{
