@@ -125,7 +125,7 @@ void AliasDialog::Update()
 
 	// Set up the table of aliases for (valid) import strings
 	ui->tableWidget_2->clear();
-	ui->tableWidget->setRowCount(static_cast<int>(rowDataVec.size()));
+	ui->tableWidget_2->setRowCount(static_cast<int>(rowDataVec.size()));
 	ui->tableWidget_2->setColumnCount(2);
 	ui->tableWidget_2->setColumnWidth(0,180);
 	ui->tableWidget_2->setColumnWidth(1,510);
