@@ -85,6 +85,7 @@ void AliasDialog::Update()
 
 	// Set up the table of (valid) import strings
 	ui->tableWidget->clear();
+	ui->tableWidget->setRowCount(static_cast<int>(strList.size()));
 	ui->tableWidget->setColumnCount(2);
 	ui->tableWidget->setColumnWidth(0,180);
 	ui->tableWidget->setColumnWidth(1,510);
@@ -111,12 +112,20 @@ void AliasDialog::Update()
 		ui->tableWidget->setItem(nImport, 1, pItemB);
 		nImport++;		
 	}
-	ui->tableWidget->setRowCount(nImport);
 
 	//=============================================================
 
+	auto& mapAliasToImportStr = m_pMainWindow->m_templateMgr.GetMapAliasToImportStr();
+
+	// Copy the info in the map to a std::vector and sort it for display
+	std::vector<RowData*> rowDataVec; rowDataVec.resize(mapAliasToImportStr.size(), nullptr);
+	size_t iCounter(0);
+	for (auto& mapObj : mapAliasToImportStr) rowDataVec[iCounter++] = new RowData(mapObj.first, mapObj.second);
+	std::stable_sort(rowDataVec.begin(), rowDataVec.end(), IsEarlierRow());	// Sort the list appropriately
+
 	// Set up the table of aliases for (valid) import strings
 	ui->tableWidget_2->clear();
+	ui->tableWidget->setRowCount(static_cast<int>(rowDataVec.size()));
 	ui->tableWidget_2->setColumnCount(2);
 	ui->tableWidget_2->setColumnWidth(0,180);
 	ui->tableWidget_2->setColumnWidth(1,510);
@@ -129,14 +138,6 @@ void AliasDialog::Update()
 	ui->tableWidget_2->setShowGrid(true);
 
 	// Populate the table with data
-	auto& mapAliasToImportStr = m_pMainWindow->m_templateMgr.GetMapAliasToImportStr();
-
-	// Copy the info in the map to a std::vector and sort it for display
-	std::vector<RowData*> rowDataVec; rowDataVec.resize(mapAliasToImportStr.size(), nullptr);
-	size_t iCounter(0);
-	for (auto& mapObj : mapAliasToImportStr) rowDataVec[iCounter++] = new RowData(mapObj.first, mapObj.second);
-	std::stable_sort(rowDataVec.begin(), rowDataVec.end(), IsEarlierRow());	// Sort the list appropriately
-
 	int nAlias(0);
 	for (auto& pRowData : rowDataVec)
 	{
@@ -152,7 +153,6 @@ void AliasDialog::Update()
 
 		nAlias++;
 	}
-	ui->tableWidget_2->setRowCount(nAlias);
 	ui->tableWidget_2->verticalScrollBar()->setSliderPosition( ui->tableWidget_2->verticalScrollBar()->maximum() );
 	CellPressed(-1,-1);	// Deselect row in alias table so we disable the Delete button
 

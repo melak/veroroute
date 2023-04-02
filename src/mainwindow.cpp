@@ -2594,8 +2594,8 @@ void MainWindow::UpdateControls()
 }
 void MainWindow::UpdateCompDialog()			{ m_compDlg->Update(); m_pinDlg->Update(); }
 void MainWindow::EnableCompDialogControls()	{ m_compDlg->EnableControls(); }
-void MainWindow::UpdateBOM()				{ m_bomDlg->Update(); if ( m_bomDlg->isVisible() ) { HideBomDialog(); ShowBomDialog(); } }	// Hide/Show needed to make the list refresh
-void MainWindow::UpdateAliasDialog()		{ m_aliasDlg->Update(); if ( m_aliasDlg->isVisible() ) { HideAliasDialog(); ShowAliasDialog(); } }	// Hide/Show needed to make the list refresh
+void MainWindow::UpdateBOM()				{ m_bomDlg->Update(); }
+void MainWindow::UpdateAliasDialog()		{ m_aliasDlg->Update(); }
 void MainWindow::UpdateTemplatesDialog()	{ m_templatesDlg->Update(); }
 void MainWindow::UpdateTextDialog(bool bFull)
 {

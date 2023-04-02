@@ -92,52 +92,58 @@ void BomDialog::Update()
 	ui->tableWidget->setShowGrid(true);
 
 	// Populate the table with data
-	std::string rowNames(""), rowType(""), rowValue("");
-	int row(-1), rowQuantity(0);
-	for (const auto& p : pComps)
+	int numRows(0);
+	for (int iLoop = 0; iLoop < 2; iLoop++)	// First pass only counts number of rows
 	{
-		const bool	bLast		= ( p == pComps.back() );
-		auto&		strNewValue	= p->GetValueStr();
+		if ( iLoop == 1 )							// If second pass ...
+			ui->tableWidget->setRowCount(numRows);	// ... set row count
 
-		auto		strNewType	= CompTypes::GetFamilyStr( p->GetType() );
-		if ( !StringHelper::IsEmptyStr(strNewType) ) strNewType += ": ";
-		strNewType += p->GetFullTypeStr();
-
-		const bool bNewRow = ( row == -1) || ( strNewValue != rowValue ) || ( strNewType != rowType );
-		if ( bNewRow )
+		std::string rowNames(""), rowType(""), rowValue("");
+		int row(-1), rowQuantity(0);
+		for (const auto& p : pComps)
 		{
-			if ( row != -1 )	// If have a previous row ...
+			const bool	bLast		= ( p == pComps.back() );
+			auto&		strNewValue	= p->GetValueStr();
+
+			auto		strNewType	= CompTypes::GetFamilyStr( p->GetType() );
+			if ( !StringHelper::IsEmptyStr(strNewType) ) strNewType += ": ";
+			strNewType += p->GetFullTypeStr();
+
+			const bool bNewRow = ( row == -1) || ( strNewValue != rowValue ) || ( strNewType != rowType );
+			if ( bNewRow )
 			{
-				// Write previous row to table.	Note: No memory leak since setItem() takes ownership.
+				if ( row != -1 && iLoop == 1 )	// If have a previous row ...
+				{
+					// Write previous row to table.	Note: No memory leak since setItem() takes ownership.
+					ui->tableWidget->setItem(row, 0, new QTableWidgetItem(QString::fromStdString(rowNames)));
+					ui->tableWidget->setItem(row, 1, new QTableWidgetItem(QString::fromStdString(rowType)));
+					ui->tableWidget->setItem(row, 2, new QTableWidgetItem(QString::fromStdString(rowValue)));
+					ui->tableWidget->setItem(row, 3, new QTableWidgetItem(QString::number(rowQuantity)));
+				}
+				// Initialise data for new row
+				row++;
+				rowQuantity	= 1;
+				rowNames	= p->GetNameStr();
+				rowValue	= strNewValue;
+				rowType		= strNewType;
+			}
+			else
+			{
+				// Update data for row
+				rowQuantity++;
+				rowNames = rowNames + ", " + p->GetNameStr();
+			}
+			if ( bLast && iLoop == 1 )	// Very last component in the B.O.M.
+			{
+				// Write current row to table.	Note: No memory leak since setItem() takes ownership.
 				ui->tableWidget->setItem(row, 0, new QTableWidgetItem(QString::fromStdString(rowNames)));
 				ui->tableWidget->setItem(row, 1, new QTableWidgetItem(QString::fromStdString(rowType)));
 				ui->tableWidget->setItem(row, 2, new QTableWidgetItem(QString::fromStdString(rowValue)));
 				ui->tableWidget->setItem(row, 3, new QTableWidgetItem(QString::number(rowQuantity)));
 			}
-			// Initialise data for new row
-			row++;
-			rowQuantity	= 1;
-			rowNames	= p->GetNameStr();
-			rowValue	= strNewValue;
-			rowType		= strNewType;
 		}
-		else
-		{
-			// Update data for row
-			rowQuantity++;
-			rowNames = rowNames + ", " + p->GetNameStr();
-		}
-		if ( bLast )	// Very last component in the B.O.M.
-		{
-			// Write current row to table.	Note: No memory leak since setItem() takes ownership.
-			ui->tableWidget->setItem(row, 0, new QTableWidgetItem(QString::fromStdString(rowNames)));
-			ui->tableWidget->setItem(row, 1, new QTableWidgetItem(QString::fromStdString(rowType)));
-			ui->tableWidget->setItem(row, 2, new QTableWidgetItem(QString::fromStdString(rowValue)));
-			ui->tableWidget->setItem(row, 3, new QTableWidgetItem(QString::number(rowQuantity)));
-		}
+		numRows = row + 1;
 	}
-	const int numRows(row + 1);
-	ui->tableWidget->setRowCount(numRows);
 	ui->pushButton->setDisabled( pComps.empty() );
 }
 
