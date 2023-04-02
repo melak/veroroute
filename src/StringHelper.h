@@ -37,33 +37,6 @@ struct StringHelper
 		s.erase(std::remove_if(s.begin(), s.end(), ::isspace), s.end());
 		return s.size() < in.size();
 	}
-	// Helper function for reading a line from a file during the netlist import.
-	// Handles differing line-ending conventions between the file and the operating system.
-	static std::istream& getline_safe(std::istream& inStream, std::string& str)
-	{
-		std::istream::sentry	se(inStream, true);	// Sentry object to protect and manage the stream buffer
-		std::streambuf*			sb = inStream.rdbuf();
-		str.clear();
-		while(true)
-		{
-			const int c = sb->sbumpc();
-			switch( c )
-			{
-				case '\n':
-					return inStream;
-				case '\r':
-					if ( sb->sgetc() == '\n' )
-						sb->sbumpc();
-					return inStream;
-				case EOF:
-					if ( str.empty() )	// In case last line has no ending
-						inStream.setstate(std::ios::eofbit);
-					return inStream;
-				default:
-					str += static_cast<char>( c );
-			}
-		}
-	}
 	static void GetSubStrings(const std::string& in, std::vector<std::string>& strList)
 	{
 		strList.clear();
@@ -103,7 +76,6 @@ private:
 		std::vector<std::string>	strList;
 		StringHelper::IsEmptyStr("");
 		StringHelper::HasSpaces("");
-		StringHelper::getline_safe(inStream, str);
 		StringHelper::GetSubStrings(str, strList);
 		StringHelper::GetTidyFileName(QString(""));
 		StringHelper::RemoveDotSuffix(QString(""));

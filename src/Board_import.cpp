@@ -18,6 +18,8 @@
 */
 
 #include "Board.h"
+#include <QTextStream>
+#include <QFile>
 
 bool Board::BuildAndPlacePart(TemplateManager& templateMgr, const CompStrings& compStrings, std::list<std::string>& offBoard, std::string& errorStr, bool& bPartTypeOK)
 {
@@ -54,18 +56,19 @@ bool Board::GetPartsTango(const std::string& filename, std::list<CompStrings>& l
 	std::string& valueStr	= compStrings.m_valueStr;	// TinyCAD "Name"	 / gEDA "device"	==> VeroRoute "Value"	(e.g. "TL072")
 	std::string& importStr	= compStrings.m_importStr;	// TinyCAD "Package" / gEDA "footprint"	==> VeroRoute "Type"	(e.g. "DIP8")
 
-	std::ifstream inStream;
-	inStream.open(filename.c_str(), std::ios::in | std::ios::binary);
-	bool bOK = inStream.is_open();
+	QFile file( QString::fromStdString(filename) );
+	bool bOK = file.open(QIODevice::ReadOnly);
+	if ( !bOK ) return bOK;
+	QTextStream	inStream(&file);
+
 	bool bPart(false), bNet(false);	// Flags indicating "part" and "netlist" sections
 	int iRow(0);					// Row counter within "part" and "netlist" sections
 
 	while( bOK )	// Loop through file
 	{
-		if ( inStream.eof() ) break;
+		if ( inStream.atEnd() ) break;
 
-		std::string str;							// For reading from file.  Ensure clear before reading
-		StringHelper::getline_safe(inStream, str);	// Read the whole line and handle line-ending nicely
+		const std::string str = inStream.readLine().toStdString();
 
 		if ( str == "[" ) { bOK = !bPart && !bNet;	bPart = true;	iRow = 0;	compStrings.Clear();	continue; }
 		if ( str == "]" ) { bOK =  bPart && !bNet;	bPart = false;				continue; }
@@ -83,7 +86,7 @@ bool Board::GetPartsTango(const std::string& filename, std::list<CompStrings>& l
 		}
 		iRow++;
 	}
-	if ( inStream.is_open() ) inStream.close();
+	if ( file.isOpen() ) file.close();
 
 	return bOK;
 }
@@ -98,17 +101,17 @@ bool Board::GetPartsOrcad(const std::string& filename, std::list<CompStrings>& l
 	std::string& valueStr	= compStrings.m_valueStr;	// KiCAD "Value"	 ==> VeroRoute "Value"	(e.g. "TL072")
 	std::string& importStr	= compStrings.m_importStr;	// KiCAD "Footprint" ==> VeroRoute "Type"	(e.g. "DIP8")
 
-	std::ifstream inStream;
-	inStream.open(filename.c_str(), std::ios::in | std::ios::binary);
-	bool bOK = inStream.is_open();
+	QFile file( QString::fromStdString(filename) );
+	bool bOK = file.open(QIODevice::ReadOnly);
+	if ( !bOK ) return bOK;
+	QTextStream	inStream(&file);
 
 	bool bPartStart(false);
 	while( bOK )	// Loop through file
 	{
-		if ( inStream.eof() ) break;
+		if ( inStream.atEnd() ) break;
 
-		std::string str;							// For reading from file.  Ensure clear before reading
-		StringHelper::getline_safe(inStream, str);	// Read the whole line and handle line-ending nicely
+		const std::string str = inStream.readLine().toStdString();
 		if ( str.empty() ) continue;	// Skip blank lines
 
 		// First non-blank char on every line should be '(' or ')' or '*'
@@ -161,7 +164,7 @@ bool Board::GetPartsOrcad(const std::string& filename, std::list<CompStrings>& l
 			}
 		}
 	}
-	if ( inStream.is_open() ) inStream.close();
+	if ( file.isOpen() ) file.close();
 
 	return bOK;
 }
@@ -179,9 +182,11 @@ bool Board::ImportTango(TemplateManager& templateMgr, const std::string& filenam
 	std::string& importStr	= compStrings.m_importStr;	// TinyCAD "Package" / gEDA "footprint"	==> VeroRoute "Type"	(e.g. "DIP8")
 	std::string netStr;	// Net name
 
-	std::ifstream inStream;
-	inStream.open(filename.c_str(), std::ios::in | std::ios::binary);
-	bool bOK = inStream.is_open();
+	QFile file( QString::fromStdString(filename) );
+	bool bOK = file.open(QIODevice::ReadOnly);
+	if ( !bOK ) return bOK;
+	QTextStream	inStream(&file);
+
 	bool bPart(false), bNet(false);	// Flags indicating "part" and "netlist" sections
 	int iRow(0);					// Row counter within "part" and "netlist" sections
 	int iNodeId(BAD_NODEID);		// Increase this with each imported net
@@ -190,10 +195,9 @@ bool Board::ImportTango(TemplateManager& templateMgr, const std::string& filenam
 
 	while( bOK )	// Loop through file
 	{
-		if ( inStream.eof() ) break;
+		if ( inStream.atEnd() ) break;
 
-		std::string str;							// For reading from file.  Ensure clear before reading
-		StringHelper::getline_safe(inStream, str);	// Read the whole line and handle line-ending nicely
+		const std::string str = inStream.readLine().toStdString();
 
 		if ( str == "[" ) { bOK = !bPart && !bNet;	bPart = true;	iRow = 0;	continue; }
 		if ( str == "]" ) { bOK =  bPart && !bNet;	bPart = false;				continue; }
@@ -276,7 +280,7 @@ bool Board::ImportTango(TemplateManager& templateMgr, const std::string& filenam
 		}
 		iRow++;
 	}
-	if ( inStream.is_open() ) inStream.close();
+	if ( file.isOpen() ) file.close();
 
 	// Break the SIPs representing off-board parts into PADs
 	BreakSIPSintoPADS(offBoard);
@@ -296,9 +300,11 @@ bool Board::ImportOrcad(TemplateManager& templateMgr, const std::string& filenam
 	std::string& valueStr	= compStrings.m_valueStr;	// KiCAD "Value"	 ==> VeroRoute "Value"	(e.g. "TL072")
 	std::string& importStr	= compStrings.m_importStr;	// KiCAD "Footprint" ==> VeroRoute "Type"	(e.g. "DIP8")
 
-	std::ifstream inStream;
-	inStream.open(filename.c_str(), std::ios::in | std::ios::binary);
-	bool bOK = inStream.is_open();
+	QFile file( QString::fromStdString(filename) );
+	bool bOK = file.open(QIODevice::ReadOnly);
+	if ( !bOK ) return bOK;
+	QTextStream	inStream(&file);
+
 	int maxNodeId(BAD_NODEID);		// Increase this with each new node we encounter
 
 	std::unordered_map<std::string, int> mapNetToNodeId;
@@ -309,10 +315,10 @@ bool Board::ImportOrcad(TemplateManager& templateMgr, const std::string& filenam
 
 	while( bOK )	// Loop through file
 	{
-		if ( inStream.eof() ) break;
+		if ( inStream.atEnd() ) break;
 
-		std::string str;							// For reading from file.  Ensure clear before reading
-		StringHelper::getline_safe(inStream, str);	// Read the whole line and handle line-ending nicely
+		const std::string str = inStream.readLine().toStdString();
+
 		if ( str.empty() ) continue;	// Skip blank lines
 
 		// First non-blank char on every line should be '(' or ')' or '*'
@@ -417,7 +423,7 @@ bool Board::ImportOrcad(TemplateManager& templateMgr, const std::string& filenam
 			SetNodeIdByUser(0, row, col, nodeId, true);	// true ==> paint pins
 		}
 	}
-	if ( inStream.is_open() ) inStream.close();
+	if ( file.isOpen() ) file.close();
 
 	// Break the SIPs representing off-board parts into PADs
 	BreakSIPSintoPADS(offBoard);
