@@ -38,7 +38,7 @@ AliasDialog::AliasDialog(MainWindow* parent)
 	QObject::connect(ui->pushButton,	SIGNAL(clicked()),				m_pMainWindow,	SLOT(ReImport()));
 	QObject::connect(ui->pushButton_2,	SIGNAL(clicked()),				this,			SLOT(DeleteRow()));
 	QObject::connect(ui->pushButton_3,	SIGNAL(clicked()),				this,			SLOT(DeleteAllRows()));
-	QObject::connect(ui->tableWidget_2,	SIGNAL(cellPressed(int, int)),	this,			SLOT(CellPressed(int,int)));
+	QObject::connect(ui->tableWidget_2,	SIGNAL(cellPressed(int,int)),	this,			SLOT(CellPressed(int,int)));
 	QObject::connect(ui->tableWidget_2,	SIGNAL(cellChanged(int,int)),	this,			SLOT(CellChanged(int,int)));
 	QObject::connect(ui->tableWidget,	SIGNAL(cellChanged(int,int)),	this,			SLOT(CellChangedTop(int,int)));
 	QObject::connect(this,				SIGNAL(rejected()),				m_pMainWindow,	SLOT(UpdateControls()));	// Close using X button

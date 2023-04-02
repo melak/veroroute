@@ -1,3 +1,5 @@
+V2.31  New feature: Part Aliases dialog for easier import of netlists with unknown footprint/package types.
+       Improvement: Allow library parts to be overwritten.
 V2.30  Gerber Generator version 1.0.  Write drill file using XNC format as defined in Ucamco specification.
        Draw pads as squares in PCB mode.  Increased size of LED symbol.
 V2.29  Increased routing algorithm speed by 30%.  Replaced "Templates" terminology with "Parts Library" and updated tutorials.

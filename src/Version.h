@@ -1,8 +1,9 @@
 #pragma once
 
 static const char* szVEROROUTE_VERSION =
-
-"2.30";		// Gerber Generator version 1.0.  Write drill file using XNC format as defined in Ucamco specification.
+"2.31";		// New feature: Part Aliases dialog for easier import of netlists with unknown footprint/package types.
+			// Improvement: Allow library parts to be overwritten.
+//"2.30";	// Gerber Generator version 1.0.  Write drill file using XNC format as defined in Ucamco specification.
 			// Draw pads as squares in PCB mode.  Increased size of LED symbol.
 //"2.29";	// Increased routing algorithm speed by 30%.  Replaced "Templates" terminology with "Parts Library" and updated tutorials.
 //"2.28";	// Bug fix: Code for X-thermals not properly handling isolated ground pad on 2-layer board.
