@@ -387,6 +387,8 @@ bool Board::ImportOrcad(TemplateManager& templateMgr, const std::string& filenam
 			const std::string pinStr = strList[1];;	// Pin number
 			const std::string netStr = strList[2];;	// Net name
 
+			if ( netStr == "?" ) continue;	// KiCad outputs a net name of "?" for unused pins instead of omitting them from the netlist
+
 			int nodeId(BAD_NODEID);
 			auto iter = mapNetToNodeId.find(netStr);
 			if ( iter != mapNetToNodeId.end() )
