@@ -6,6 +6,8 @@
 #
 
 install -Dm755 veroroute "$pkgdir/usr/bin/veroroute"
+mkdir -p "$pkgdir/usr/share/metainfo/"
+install -Dm644 "veroroute.appdata.xml" "$pkgdir/usr/share/metainfo/"
 mkdir -p "$pkgdir/usr/share/man/"
 mkdir -p "$pkgdir/usr/share/man/man1"
 install -Dm644 "veroroute.1" "$pkgdir/usr/share/man/man1/"

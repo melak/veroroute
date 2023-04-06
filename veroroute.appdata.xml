@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (C) 2017-2023 Alex Lawrow <alawrow@gmail.com> -->
+<component type="desktop">
+  <id>veroroute.desktop</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <name>VeroRoute</name>
+  <summary>Circuit layout software for Veroboard (stripboard), Perfboard and simple PCBs</summary>
+  <description>
+    <p>
+     Cross-platform software for producing Veroboard (stripboard), perfboard, and 1-layer or 2-layer PCB layouts.
+    </p>
+    <p>
+     Automatically prevents short-circuits and checks for open-circuits.
+    </p>
+    <p>
+     Import a netlist from a gEDA or KiCad schematic, or specify the netlist graphically.
+    </p>
+    <p>
+     Gerber export for easy 1-layer or 2-layer professional PCB manufacture.
+    </p>
+  </description>
+  <categories>
+​    <category>Electronics</category>
+​  </categories>
+  <keywords>
+    <keyword>VeroRoute</keyword>
+    <keyword>CAD</keyword>    
+    <keyword>EDA</keyword>
+    <keyword>PCB</keyword>
+    <keyword>Veroboard</keyword>
+    <keyword>Perfboard</keyword>
+    <keyword>Gerber</keyword>
+  </keywords>
+  <url type="homepage">https://sourceforge.net/projects/veroroute/</url>
+  <developer_name>Alex Lawrow</developer_name>
+  <provides>
+    <binary>veroroute</binary>
+  </provides>
+  <icon type="stock">veroroute</icon>
+</component>

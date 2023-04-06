@@ -6,6 +6,10 @@
 #
 
 rm -f  "$pkgdir/usr/bin/veroroute"
+rm -f  "$pkgdir/usr/share/metainfo/veroroute.appdata.xml"
+if find -- "$pkgdir/usr/share/metainfo/" -prune -type d -empty | grep -q .; then
+   rmdir "$pkgdir/usr/share/metainfo/"
+fi
 rm -f  "$pkgdir/usr/share/man/man1/veroroute.1"
 if find -- "$pkgdir/usr/share/man/man1/" -prune -type d -empty | grep -q .; then
    rmdir "$pkgdir/usr/share/man/man1/"

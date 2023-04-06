@@ -177,6 +177,9 @@ unix : !android {
     manpage.path = $${PREFIX}/share/man/man1
     manpage.files = ../veroroute.1
 
+    metainfo.path = $${PREFIX}/share/metainfo
+    metainfo.files = ../veroroute.appdata.xml
+
     # If we've specified a PREFIX then replace the existing "../veroroute.desktop"
     # with one produced from "../veroroute.desktop.default"
     !isEmpty(PREFIX) {
@@ -204,6 +207,6 @@ unix : !android {
     gedalib.path = $${PREFIX}/share/gEDA/gafrc.d
     gedalib.files = ../libraries/gEDA/veroroute-clib.scm
 
-    INSTALLS += target manpage desktopentry pixmapA pixmapB pixmapC tutorials gedasymbols gedalib
+    INSTALLS += target manpage metainfo desktopentry pixmapA pixmapB pixmapC tutorials gedasymbols gedalib
 }
 
