@@ -5,16 +5,25 @@
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-or-later</project_license>
   <name>VeroRoute</name>
-  <summary>Circuit layout software for Veroboard (stripboard), Perfboard and simple PCBs</summary>
+  <summary>Electronic circuit layout software for Veroboard (stripboard), Perfboard and simple PCBs</summary>
   <description>
     <p>
-     Cross-platform software for producing Veroboard (stripboard), perfboard, and 1-layer or 2-layer PCB layouts.
+     Cross-platform software for producing Veroboard (stripboard), Perfboard, and 1-layer or 2-layer PCB layouts.
     </p>
     <p>
      Automatically prevents short-circuits and checks for open-circuits.
     </p>
     <p>
+     Interactive auto-routing.
+    </p>
+    <p>
+     Connectivity checking & visualisation.
+    </p>
+    <p>
      Import a netlist from a gEDA or KiCad schematic, or specify the netlist graphically.
+    </p>
+    <p>
+     1:1 scale PDF output suitable for toner-transfer based PCB creation.
     </p>
     <p>
      Gerber export for easy 1-layer or 2-layer professional PCB manufacture.
@@ -25,10 +34,15 @@
 ​  </categories>
   <keywords>
     <keyword>VeroRoute</keyword>
+    <keyword>Electronics</keyword>
+    <keyword>Circuit</keyword>
+    <keyword>Layout</keyword>
+    <keyword>Routing</keyword>
     <keyword>CAD</keyword>    
     <keyword>EDA</keyword>
     <keyword>PCB</keyword>
     <keyword>Veroboard</keyword>
+    <keyword>Stripboard</keyword>
     <keyword>Perfboard</keyword>
     <keyword>Gerber</keyword>
   </keywords>
