@@ -296,7 +296,7 @@ void TemplatesDialog::AddTemplatesFromBoard(Board& board, bool bAllComps, bool b
 		QMessageBox::information(this, tr("Information"), tr("No parts are currently selected in the main view."));
 		return;
 	}
-	
+
 	const bool bGeneric = false;
 
 	std::list< std::string > errorStrList;
@@ -305,10 +305,11 @@ void TemplatesDialog::AddTemplatesFromBoard(Board& board, bool bAllComps, bool b
 	{
 		if ( bAllComps || groupMgr.GetIsUserComp(mapObj.first) )
 		{
-			bool bAlreadyExists(false);
+			bool bAlreadyExists(false), bUsedImportStr(false);	// Gets set true if template already exists, or import string is already in use 
 			std::string errorStr;
-			bool bOK = mgr.Add(bGeneric, mapObj.second, bAlreadyExists, &errorStr);
-			if ( !bOK && bAlreadyExists )
+			const Component& comp =  mapObj.second;
+			bool bOK = mgr.Add(bGeneric, comp, bAlreadyExists, bUsedImportStr, &errorStr);
+			if ( !bOK && ( bAlreadyExists || bUsedImportStr ) )
 			{
 				bool bFound(false);	// true ==> we've encountered the error before (i.e. a part with same type and value)
 				for (auto& str : errorStrList )
@@ -316,20 +317,28 @@ void TemplatesDialog::AddTemplatesFromBoard(Board& board, bool bAllComps, bool b
 				if ( !bFound )
 				{
 					errorStrList.push_back(errorStr);
-					if ( QMessageBox::question(this, tr("Confirm Overwrite"),
-													 tr(errorStr.c_str()) + tr(" and will be overwritten.  There is no undo for this operation.  Continue?"),
-													 QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::Yes )
-						bOK = mgr.Add(bGeneric, mapObj.second, bAlreadyExists, &errorStr);	// Repeat Add() with bAlreadyExists set true to allow overwrite
+
+					bool bOverWrite(false);
+					if ( bAlreadyExists )
+						bOverWrite = QMessageBox::question(this, tr("Confirm Overwrite"),
+																 tr(errorStr.c_str()) + tr(" and will be overwritten.  There is no undo for this operation.  Continue?"),
+																 QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::Yes;
+					else if ( bUsedImportStr )
+						bOverWrite = QMessageBox::question(this, tr("Confirm Overwrite"),
+																 tr(errorStr.c_str()) + tr(".  It will be overwritten with (Value ='") + tr(comp.GetValueStr().c_str()) +
+																 tr("').  There is no undo for this operation.  Continue?"),
+																 QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::Yes;
+					if ( bOverWrite )
+						bOK = mgr.Add(bGeneric, comp, bAlreadyExists, bUsedImportStr, &errorStr);	// Repeat Add() with bAlreadyExists or bUsedImportStr set true to allow overwrite
 				}
 			}
 			if ( bOK )
+			{
 				nCount++;
+				Update();
+				m_pMainWindow->UpdateAliasDialog();
+			}
 		}
-	}
-	if ( nCount > 0 )
-	{
-		Update();
-		m_pMainWindow->UpdateAliasDialog();
 	}
 
 	if ( bInfoMsg )

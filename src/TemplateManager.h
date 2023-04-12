@@ -142,10 +142,10 @@ public:
 	}
 	bool Add(bool bGeneric, const Component& comp, std::string* pErrorStr = nullptr)
 	{
-		bool bAlreadyExists(false);
-		return Add(bGeneric, comp, bAlreadyExists, pErrorStr);
+		bool bAlreadyExists(false), bUsedImportStr(false);
+		return Add(bGeneric, comp, bAlreadyExists, bUsedImportStr, pErrorStr);
 	}
-	bool Add(bool bGeneric, const Component& comp, bool& bAlreadyExists, std::string* pErrorStr = nullptr)
+	bool Add(bool bGeneric, const Component& comp, bool& bAlreadyExists, bool& bUsedImportStr, std::string* pErrorStr = nullptr)
 	{
 		Template entry;
 		if ( !entry.MakeTemplate(comp) )
@@ -160,27 +160,29 @@ public:
 		{
 			for (const auto& o : lst)
 			{
+				const bool bSameTypeStr		= entry.GetFullTypeStr() == o.GetFullTypeStr();
+				const bool bSameValueStr	= entry.GetValueStr() == o.GetValueStr();
+				const bool bSameImportStr	= entry.GetType() == COMP::CUSTOM  && !entry.GetImportStr().empty() && entry.GetImportStr() == o.GetImportStr();
 				// ... it must have a unique (TypeStr,ValueStr) combination
-				if ( entry.GetFullTypeStr() == o.GetFullTypeStr() && entry.GetValueStr() == o.GetValueStr() )
+				if ( bSameTypeStr && bSameValueStr )
 				{
-					if ( !bAlreadyExists )
-					{
-						bAlreadyExists = true;
-						if ( pErrorStr ) *pErrorStr = "The library part (Type = " + o.GetFullTypeStr() + ") "
-													+ "(Value = " + o.GetValueStr() + ") already exists";
-						return false;
-					}
+					if ( bAlreadyExists ) continue;
+					bAlreadyExists = true;
+					if ( pErrorStr ) *pErrorStr = "The library part (Type = '" + o.GetFullTypeStr() + "') "
+												+ "(Value = '" + o.GetValueStr() + "') already exists";
+					return false;
 				}
-				else if ( entry.GetType() == COMP::CUSTOM )
+				else if ( bSameImportStr )	// ... if its a COMP::CUSTOM part, then it must have a unique import string
 				{
-					// ... if its a COMP::CUSTOM part, then it must have a unique import string
-					if ( !entry.GetImportStr().empty() && entry.GetImportStr() == o.GetImportStr() )
+					if ( bSameTypeStr )	// Type string and import string are same but value string differs
 					{
-						if ( pErrorStr ) *pErrorStr = "The library part (Type = " + o.GetFullTypeStr() + ") "
-													+ "(Value = " + o.GetValueStr() + ") "
-													+ "already has the Import string " + o.GetImportStr();
-						return false;
+						if ( bUsedImportStr ) continue;
+						bUsedImportStr = true;
 					}
+					if ( pErrorStr ) *pErrorStr = "The library part (Type = '" + o.GetFullTypeStr() + "') "
+												+ "(Value = '" + o.GetValueStr() + "') "
+												+ "already has the Import string '" + o.GetImportStr() + "'";
+					return false;
 				}
 			}
 		}
@@ -188,9 +190,13 @@ public:
 		// We've got a valid entry, so insert it at the relevant place in the list
 
 		// If we are allowed to replace an entry, delete the old entry
-		for (auto iter = lst.begin(); iter != lst.end() && bAlreadyExists; ++iter)
+		for (auto iter = lst.begin(); iter != lst.end() && (bAlreadyExists || bUsedImportStr); ++iter)
 		{
-			if ( entry.GetFullTypeStr() == iter->GetFullTypeStr() && entry.GetValueStr() == iter->GetValueStr() )
+			const bool bSameTypeStr		= entry.GetFullTypeStr() == iter->GetFullTypeStr();
+			if ( !bSameTypeStr ) continue;
+			const bool bSameValueStr	= entry.GetValueStr() == iter->GetValueStr();
+			const bool bSameImportStr	= entry.GetType() == COMP::CUSTOM  && !entry.GetImportStr().empty() && entry.GetImportStr() == iter->GetImportStr();
+			if ( (bAlreadyExists && bSameValueStr) || (bUsedImportStr && bSameImportStr) )
 			{
 				lst.erase(iter);
 				break;

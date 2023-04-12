@@ -2263,14 +2263,22 @@ void MainWindow::DefinerBuild()
 	const Component comp( GetCompDefiner() );
 
 	std::string errorStr;
-	bool bAlreadyExists(false);	// Gets set true if template already exists
-	bool bOK = GetTemplateManager().Add(false, comp, bAlreadyExists, &errorStr);
-	if ( !bOK && bAlreadyExists )
+	bool bAlreadyExists(false), bUsedImportStr(false);	// Gets set true if template already exists, or import string is already in use 
+	bool bOK = GetTemplateManager().Add(false, comp, bAlreadyExists, bUsedImportStr, &errorStr);
+	if ( !bOK && (bAlreadyExists || bUsedImportStr) )
 	{
-		if ( QMessageBox::question(this, tr("Confirm Overwrite"),
-										 tr(errorStr.c_str()) + tr(" and will be overwritten.  There is no undo for this operation.  Continue?"),
-										 QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::Yes )
-			bOK = GetTemplateManager().Add(false, comp, bAlreadyExists, &errorStr);	// Repeat Add() with bAlreadyExists set true to allow overwrite
+		bool bOverWrite(false);
+		if ( bAlreadyExists )
+			bOverWrite = QMessageBox::question(this, tr("Confirm Overwrite"),
+													 tr(errorStr.c_str()) + tr(" and will be overwritten.  There is no undo for this operation.  Continue?"),
+													 QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::Yes;
+		else if ( bUsedImportStr )
+			bOverWrite = QMessageBox::question(this, tr("Confirm Overwrite"),
+													 tr(errorStr.c_str()) + tr(".  It will be overwritten with (Value ='") + tr(comp.GetValueStr().c_str()) +
+													 tr("').  There is no undo for this operation.  Continue?"),
+													 QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::Yes;
+		if ( bOverWrite )
+			bOK = GetTemplateManager().Add(false, comp, bAlreadyExists, bUsedImportStr, &errorStr);	// Repeat Add() with bAlreadyExists or bUsedImportStr set true to allow overwrite
 		else
 			return EnableCompDialogControls();
 	}
