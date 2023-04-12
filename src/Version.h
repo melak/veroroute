@@ -1,7 +1,10 @@
 #pragma once
 
 static const char* szVEROROUTE_VERSION =
-"2.31";		// New feature: Part Aliases dialog for easier import of netlists with unknown footprint/package types.
+"2.32";		// Bug fix: When adding a new library part, should allow overwrite of an existing library part
+			//          with matching Type string and matching (non-empty) Import string, but different Value string.
+			// Added veroroute.appdata.xml metainfo to installation.
+//"2.31";	// New feature: Part Aliases dialog for easier import of netlists with unknown footprint/package types.
 			// Improvement: Allow library parts to be overwritten.
 //"2.30";	// Gerber Generator version 1.0.  Write drill file using XNC format as defined in Ucamco specification.
 			// Draw pads as squares in PCB mode.  Increased size of LED symbol.
