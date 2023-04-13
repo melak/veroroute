@@ -61,6 +61,8 @@ struct IntShape
 	Shape	second;
 };
 
+class TemplateManager;
+
 class CompDefiner : public Persist
 {
 public:
@@ -74,6 +76,7 @@ public:
 		m_iPinFlags = 0; m_iPadWidth = 70; m_iHoleWidth = 35;
 		m_bAllowFlyWire = false;
 		m_valueStr = m_prefixStr = m_typeStr = m_importStr = "";
+		m_iLabelOffsetRow	= m_iLabelOffsetCol = 0;
 		m_grid.Allocate(1,4,4);
 		m_grid.Clear( Pin(BAD_PINCHAR, SURFACE_FULL, HOLE_FREE) );
 		m_pinLabels.clear();
@@ -93,6 +96,8 @@ public:
 		m_prefixStr			= o.m_prefixStr;
 		m_typeStr			= o.m_typeStr;
 		m_importStr			= o.m_importStr;
+		m_iLabelOffsetRow	= o.m_iLabelOffsetRow;
+		m_iLabelOffsetCol	= o.m_iLabelOffsetCol;
 		m_grid				= o.m_grid;
 		AllocatePins( o.GetNumPins() );
 		std::copy(o.m_pinLabels.begin(), o.m_pinLabels.end(), m_pinLabels.begin());
@@ -140,6 +145,8 @@ public:
 				&& m_prefixStr			== o.m_prefixStr
 				&& m_typeStr			== o.m_typeStr
 				&& m_importStr			== o.m_importStr
+				&& m_iLabelOffsetRow	== o.m_iLabelOffsetRow
+				&& m_iLabelOffsetCol	== o.m_iLabelOffsetCol
 				&& m_grid				== o.m_grid
 				&& m_pinLabels.size()	== o.m_pinLabels.size()
 				&& m_pinAligns.size()	== o.m_pinAligns.size()
@@ -173,6 +180,8 @@ public:
 	bool SetPrefixStr(const std::string& s)	{ const bool bChanged = ( m_prefixStr		!= s );	m_prefixStr			= s; return bChanged; }
 	bool SetTypeStr(const std::string& s)	{ const bool bChanged = ( m_typeStr			!= s );	m_typeStr			= s; return bChanged; }
 	bool SetImportStr(const std::string& s)	{ const bool bChanged = ( m_importStr		!= s );	m_importStr			= s; return bChanged; }
+	bool SetLabelOffsetRow(int i)			{ const bool bChanged = ( m_iLabelOffsetRow	!= i );	m_iLabelOffsetRow	= i; return bChanged; }
+	bool SetLabelOffsetCol(int i)			{ const bool bChanged = ( m_iLabelOffsetCol	!= i );	m_iLabelOffsetCol	= i; return bChanged; }
 	bool SetGrid(const PinGrid& o)			{ const bool bChanged = ( m_grid			!= o );	m_grid				= o; return bChanged; }
 	void SetPinLabel(size_t iPinIndex, const std::string& s)
 	{
@@ -193,6 +202,8 @@ public:
 	const std::string&		GetPrefixStr() const		{ return m_prefixStr; }
 	const std::string&		GetTypeStr() const			{ return m_typeStr; }
 	const std::string&		GetImportStr() const		{ return m_importStr; }
+	const int&				GetLabelOffsetRow() const	{ return m_iLabelOffsetRow; }
+	const int&				GetLabelOffsetCol() const	{ return m_iLabelOffsetCol; }
 	const PinGrid&			GetGrid() const				{ return m_grid; }
 	const std::string&		GetPinLabel(size_t iPinIndex) const
 	{
@@ -250,7 +261,7 @@ public:
 		}
 		return maxPinNumber;
 	}
-	void Build(Component& comp) const;
+	void Build(const TemplateManager& templateMgr, Component& comp) const;
 	bool SetPinNumber(int i)
 	{
 		if ( GetCurrentPinId() == BAD_ID ) return false;
@@ -412,7 +423,7 @@ public:
 	bool SetHeight(int i);
 	int  GetPinId(int row, int col) const;					// Pick the most relevant pin at the location
 	int  GetShapeId(double dRowIn, double dColIn) const;	// Pick the most relevant shape at the location
-	bool GetIsValid() const;
+	bool GetIsValid(const TemplateManager& templateMgr) const;
 	// Persist functions
 	virtual void Load(DataStream& inStream) override
 	{
@@ -433,6 +444,12 @@ public:
 		inStream.Load(m_prefixStr);
 		inStream.Load(m_typeStr);
 		inStream.Load(m_importStr);
+		m_iLabelOffsetRow = m_iLabelOffsetCol = 0;
+		if ( inStream.GetVersion() >= VRT_VERSION_54 )
+		{
+			inStream.Load(m_iLabelOffsetRow);	// Added in VRT_VERSION_54
+			inStream.Load(m_iLabelOffsetCol);	// Added in VRT_VERSION_54
+		}
 		m_grid.Load(inStream);
 
 		unsigned int numPins(0);
@@ -472,6 +489,8 @@ public:
 		outStream.Save(m_prefixStr);
 		outStream.Save(m_typeStr);
 		outStream.Save(m_importStr);
+		outStream.Save(m_iLabelOffsetRow);	// Added in VRT_VERSION_54
+		outStream.Save(m_iLabelOffsetCol);	// Added in VRT_VERSION_54
 		m_grid.Save(outStream);
 
 		const unsigned int numPins = static_cast<unsigned int>( GetNumPins() );
@@ -512,6 +531,8 @@ private:
 	std::string					m_prefixStr;		// Prefix string (e.g. "IC")
 	std::string					m_typeStr;			// Component type (e.g. "BBD")
 	std::string					m_importStr;		// For Planet/Tango import
+	int							m_iLabelOffsetRow;	// Label offset in units of 1/16 of a grid square
+	int							m_iLabelOffsetCol;	// Label offset in units of 1/16 of a grid square
 	PinGrid						m_grid;
 	std::vector<std::string>	m_pinLabels;		// Pin labels
 	std::vector<int>			m_pinAligns;		// Pin label alignments (Qt::AlignLeft,Qt::AlignRight,Qt::AlignHCenter)

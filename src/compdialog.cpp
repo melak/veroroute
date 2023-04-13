@@ -178,7 +178,7 @@ void CompDialog::EnableControls()	// Enable/disable controls
 	CompDefiner&	def					= m_pMainWindow->GetCompDefiner();
 	const bool		bValidPinId			= BAD_ID != def.GetCurrentPinId();
 	const bool		bValidShapeId		= BAD_ID != def.GetCurrentShapeId();
-	const bool		bValidDefinition	= def.GetIsValid();
+	const bool		bValidDefinition	= def.GetIsValid(m_pMainWindow->GetTemplateManager());
 	const bool		bCustom				= def.GetPinFlags() & PIN_CUSTOM;
 	if ( bCustom )
 	{

@@ -34,6 +34,7 @@ Q_DECL_CONSTEXPR static const uchar	LAYER_T	= 2;	// Prefer top layer
 Q_DECL_CONSTEXPR static const int	MAX_PAD_OFFSET_MIL = 50;
 
 class CompManager;
+class TemplateManager;
 
 struct CompStrings	// Mainly for handling netlist import
 {
@@ -87,12 +88,7 @@ public:
 		m_pinAligns.clear();
 		m_shapes.clear();
 	}
-	Component(const CompDefiner& definer)	// This method is for building a custom component
-	{
-		Clear();
-
-		definer.Build(*this);		// Use component definer to make the footprint and shapes
-	}
+	Component(const TemplateManager& templateMgr, const CompDefiner& definer);	// This method is for building a custom component
 	Component(CompManager* pCompMgr, const RectManager& rectMgr, const ElementGrid& grid, int nLyr, int nRowMin, int nRowMax, int nColMin, int nColMax)
 	{
 		Clear();
@@ -301,8 +297,8 @@ public:
 	void SetLyr(int i)				{ m_lyr = i; }
 	void SetRow(int i)				{ m_row = i; }
 	void SetCol(int i)				{ m_col = i; }
-//	void SetLabelOffsetRow(int i)	{ m_iLabelOffsetRow = i; }
-//	void SetLabelOffsetCol(int i)	{ m_iLabelOffsetCol = i; }
+	void SetLabelOffsetRow(int i)	{ m_iLabelOffsetRow = i; }
+	void SetLabelOffsetCol(int i)	{ m_iLabelOffsetCol = i; }
 	void SetDirection(char d)		{ m_direction = d; }
 	void SetIsPlaced(bool b)		{ m_bIsPlaced = b; }
 	void SetPinFlags(uchar i)		{ m_iPinFlags = i; }
@@ -371,8 +367,8 @@ public:
 	const int&			GetLyr() const				{ return m_lyr; }
 	const int&			GetRow() const				{ return m_row; }
 	const int&			GetCol() const				{ return m_col; }
-//	const int&			GetLabelOffsetRow() const	{ return m_iLabelOffsetRow; }
-//	const int&			GetLabelOffsetCol() const	{ return m_iLabelOffsetCol; }
+	const int&			GetLabelOffsetRow() const	{ return m_iLabelOffsetRow; }
+	const int&			GetLabelOffsetCol() const	{ return m_iLabelOffsetCol; }
 	const char&			GetDirection() const		{ return m_direction; }
 	const bool&			GetIsPlaced() const			{ return m_bIsPlaced; }
 	const uchar&		GetPinFlags() const			{ return m_iPinFlags; }
@@ -418,21 +414,19 @@ public:
 	}
 	std::string GetFullTypeStr() const		// For SIP/DIP types, append the number of pins
 	{
-		std::string str = GetTypeStr();
 		if ( GetType() == COMP::DIP || GetType() == COMP::SIP )
-			str += std::to_string(GetNumPins());	// e.g. "DIP16"
+			return CompTypes::GetDefaultTypeStr( GetType() ) + std::to_string(GetNumPins());	// e.g. "DIP16"
 		if ( GetType() == COMP::STRIP_100 || GetType() == COMP::BLOCK_100 || GetType() == COMP::BLOCK_200 )
-			str += std::string(" (") + std::to_string(GetNumPins()) + std::string(" pins)");
-		return str;
+			return CompTypes::GetDefaultTypeStr( GetType() ) + std::string(" (") + std::to_string(GetNumPins()) + std::string(" pins)");
+		return GetTypeStr();
 	}
 	std::string GetFullImportStr() const	// For SIP/DIP/SWITCH/STRIP/BLOCK types, append the number of pins
 	{
-		std::string str = GetImportStr();
 		if ( GetType() == COMP::DIP || GetType() == COMP::SIP ||
 			 GetType() == COMP::SWITCH_DT || GetType() == COMP::SWITCH_ST || GetType() == COMP::SWITCH_ST_DIP ||
 			 GetType() == COMP::STRIP_100 || GetType() == COMP::BLOCK_100 || GetType() == COMP::BLOCK_200 )
-			str += std::to_string(GetNumPins());	// e.g. "DIP16"
-		return str;
+			return CompTypes::GetDefaultImportStr( GetType() ) + std::to_string(GetNumPins());	// e.g. "DIP16"
+		return GetImportStr();
 	}
 	// Helpers (account for component direction)
 	const int&	GetCompRows() const	{ return GetRows( GetDirection() ); }

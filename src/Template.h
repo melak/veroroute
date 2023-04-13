@@ -35,6 +35,7 @@ public:
 	bool MakeTemplate(const Component& o)	// Clears data not relevant to the template definition
 	{
 		Component::operator=(o);	// Call operator= in base class
+		SetImportStr( GetFullImportStr() );
 		if ( GetIsTemplate() ) return true;	// Nothing more to do
 		switch( GetType() )
 		{

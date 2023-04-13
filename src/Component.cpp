@@ -18,6 +18,14 @@
 */
 
 #include "Component.h"
+#include "TemplateManager.h"
+
+Component::Component(const TemplateManager& templateMgr, const CompDefiner& definer)	// This method is for building a custom component
+{
+	Clear();
+
+	definer.Build(templateMgr, *this);	// Use component definer to make the footprint and shapes
+}
 
 void Component::SetDefaultPinFlags()
 {

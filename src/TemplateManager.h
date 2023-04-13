@@ -162,7 +162,7 @@ public:
 			{
 				const bool bSameTypeStr		= entry.GetFullTypeStr() == o.GetFullTypeStr();
 				const bool bSameValueStr	= entry.GetValueStr() == o.GetValueStr();
-				const bool bSameImportStr	= entry.GetType() == COMP::CUSTOM  && !entry.GetImportStr().empty() && entry.GetImportStr() == o.GetImportStr();
+				const bool bSameImportStr	= entry.GetType() == COMP::CUSTOM && !entry.GetImportStr().empty() && entry.GetImportStr() == o.GetImportStr();
 				// ... it must have a unique (TypeStr,ValueStr) combination
 				if ( bSameTypeStr && bSameValueStr )
 				{
@@ -195,7 +195,7 @@ public:
 			const bool bSameTypeStr		= entry.GetFullTypeStr() == iter->GetFullTypeStr();
 			if ( !bSameTypeStr ) continue;
 			const bool bSameValueStr	= entry.GetValueStr() == iter->GetValueStr();
-			const bool bSameImportStr	= entry.GetType() == COMP::CUSTOM  && !entry.GetImportStr().empty() && entry.GetImportStr() == iter->GetImportStr();
+			const bool bSameImportStr	= entry.GetType() == COMP::CUSTOM && !entry.GetImportStr().empty() && entry.GetImportStr() == iter->GetImportStr();
 			if ( (bAlreadyExists && bSameValueStr) || (bUsedImportStr && bSameImportStr) )
 			{
 				lst.erase(iter);
@@ -220,6 +220,20 @@ public:
 			if ( pErrorStr ) *pErrorStr = "Could not add part to library";
 		}
 		return bOK;
+	}
+	bool CheckAllowOverWrite(const Component& comp) const	// For CompDefiner::Build()
+	{
+		Template entry;
+		if ( !entry.MakeTemplate(comp) )
+			return false;
+		for (const auto& o : m_listUser)	//	Must have same (Type, Value, Import) strings
+		{
+			if ( entry.GetFullTypeStr()	== o.GetFullTypeStr() &&
+				 entry.GetValueStr()	== o.GetValueStr() && 
+				 entry.GetImportStr()	== o.GetImportStr() )
+				return true;
+		}
+		return false;
 	}
 	bool Remove(const Component& comp)
 	{
@@ -323,52 +337,10 @@ public:
 		Component dummyComp;
 		Component& comp = ( pComp ) ? *pComp : dummyComp;
 
-		// List of package identifiers for footprints with variable numbers of pins/lengths.
-		// "PADS" ==> Create separate on-board PAD objects for an off-board part.
-		// "SWITCH_ST_DIP" must be tested before "SWITCH_ST".
-		// "DIODE_IPC" must be tested before "DIODE".
-		Q_DECL_CONSTEXPR size_t NUM_VARIABLE_PIN_PARTS = 16;
-		const std::string strVar[NUM_VARIABLE_PIN_PARTS] = {"SIP", "DIP", "PADS", "SWITCH_ST_DIP", "SWITCH_ST", "SWITCH_DT", "STRIP_100MIL", "BLOCK_100MIL", "BLOCK_200MIL", "RESISTOR", "INDUCTOR", "DIODE_IPC", "DIODE", "CAP_CERAMIC", "CAP_FILM", "CAP_FILM_WIDE"};
-
 		// If footprint is variable length, then get the number of pins/length from importStr.
-		std::string	importStrCut( importStr );	// Cut down version of importStr. e.g.  DIP40 ==> DIP
-		std::string	pinStr;						// Number of pins
 		int numPins(0), nLength(0);	// Invalid by default
-
 		bool bOffBoard(false);
-		for (size_t i = 0; i < NUM_VARIABLE_PIN_PARTS; i++)
-		{
-			const std::string&	strTmp	= strVar[i];	// e.g. "SIP", "DIP, etc
-			const auto			L		= strTmp.length();
-			if ( importStr.length() >= L && importStr.substr(0, L) == strTmp )
-			{
-				pinStr			= importStr.substr(L);		// e.g. "DIP40" ==> "40"
-				importStrCut	= importStr.substr(0, L);	// e.g. "DIP40" ==> "DIP"
-				if ( importStrCut == "PADS" )	// If we have an off-board part ...
-				{
-					bOffBoard		= true;
-					importStrCut	= "SIP";	// ... treat it as a SIP for the moment
-				}
-				if ( importStrCut == "RESISTOR" || importStrCut == "INDUCTOR" || importStrCut == "DIODE_IPC" || importStrCut == "DIODE" || importStrCut == "CAP_CERAMIC" || importStrCut == "CAP_FILM" || importStrCut == "CAP_FILM_WIDE" )
-				{
-					if ( !pinStr.empty() )	// If we have a suffix for the number of pins ...
-					{
-						nLength = atoi( pinStr.c_str() );
-						if ( nLength > 0 )	// The length is in 100ths of a mil ...
-							nLength += 1;	// ... so must add 1 to get part length in grid squares
-						else
-							nLength = -1;	// Use invalid length of -1.  Don't use 0 as that implies "use default".
-					}
-				}
-				else	// SIP, DIP, SWITCH_ST_DIP, SWITCH_ST, SWITCH_DT, STRIP_100MIL, BLOCK_100MIL, BLOCK_200MIL
-				{
-					numPins = atoi( pinStr.c_str() );
-					if ( numPins == 0 )		// Missing or zero ...
-						numPins = -1;		// ... use -1 instead.  Don't use 0 as that implies "use default".
-				}
-				break;
-			}
-		}
+		std::string importStrCut = GetImportStrCut(importStr, numPins, nLength, bOffBoard);	// Cut down version of importStr. e.g.  DIP40 ==> DIP
 
 		const std::string strID = "Part: Name = " + nameStr + ", Value = " + valueStr + ", Type = " + importStr;
 
@@ -439,6 +411,63 @@ public:
 		if ( bOK && bOffBoard && pOffBoard )	// If have a valid offboard part (i.e. PADS with a valid suffix)
 			pOffBoard->push_back(nameStr);		// ... add it to the list of off-board parts
 		return bOK;
+	}
+	const std::string& GetImportStrCut(const std::string& importStr) const
+	{
+		int nDummyPins(0), nDummyLength(0);
+		bool bDummyOffBoard(false);
+		return GetImportStrCut(importStr, nDummyPins, nDummyLength, bDummyOffBoard);
+	}
+	const std::string& GetImportStrCut(const std::string& importStr, int& numPins, int& nLength, bool& bOffBoard) const
+	{
+		static std::string importStrCut;	// Cut down version of importStr. e.g.  DIP40 ==> DIP
+
+		// List of package identifiers for footprints with variable numbers of pins/lengths.
+		// "PADS" ==> Create separate on-board PAD objects for an off-board part.
+		// "SWITCH_ST_DIP" must be tested before "SWITCH_ST".
+		// "DIODE_IPC" must be tested before "DIODE".
+		Q_DECL_CONSTEXPR size_t NUM_VARIABLE_PIN_PARTS = 16;
+		const std::string strVar[NUM_VARIABLE_PIN_PARTS] = {"SIP", "DIP", "PADS", "SWITCH_ST_DIP", "SWITCH_ST", "SWITCH_DT", "STRIP_100MIL", "BLOCK_100MIL", "BLOCK_200MIL", "RESISTOR", "INDUCTOR", "DIODE_IPC", "DIODE", "CAP_CERAMIC", "CAP_FILM", "CAP_FILM_WIDE"};
+
+		importStrCut = importStr;
+		std::string	pinStr;			// Number of pins
+		numPins = nLength = 0;		// Invalid by default
+		bOffBoard = false;
+
+		for (size_t i = 0; i < NUM_VARIABLE_PIN_PARTS; i++)
+		{
+			const std::string&	strTmp	= strVar[i];	// e.g. "SIP", "DIP, etc
+			const auto			L		= strTmp.length();
+			if ( importStr.length() >= L && importStr.substr(0, L) == strTmp )
+			{
+				pinStr			= importStr.substr(L);		// e.g. "DIP40" ==> "40"
+				importStrCut	= importStr.substr(0, L);	// e.g. "DIP40" ==> "DIP"
+				if ( importStrCut == "PADS" )	// If we have an off-board part ...
+				{
+					bOffBoard		= true;
+					importStrCut	= "SIP";	// ... treat it as a SIP for the moment
+				}
+				if ( importStrCut == "RESISTOR" || importStrCut == "INDUCTOR" || importStrCut == "DIODE_IPC" || importStrCut == "DIODE" || importStrCut == "CAP_CERAMIC" || importStrCut == "CAP_FILM" || importStrCut == "CAP_FILM_WIDE" )
+				{
+					if ( !pinStr.empty() )	// If we have a suffix for the number of pins ...
+					{
+						nLength = atoi( pinStr.c_str() );
+						if ( nLength > 0 )	// The length is in 100ths of a mil ...
+							nLength += 1;	// ... so must add 1 to get part length in grid squares
+						else
+							nLength = -1;	// Use invalid length of -1.  Don't use 0 as that implies "use default".
+					}
+				}
+				else	// SIP, DIP, SWITCH_ST_DIP, SWITCH_ST, SWITCH_DT, STRIP_100MIL, BLOCK_100MIL, BLOCK_200MIL
+				{
+					numPins = atoi( pinStr.c_str() );
+					if ( numPins == 0 )		// Missing or zero ...
+						numPins = -1;		// ... use -1 instead.  Don't use 0 as that implies "use default".
+				}
+				break;
+			}
+		}
+		return importStrCut;
 	}
 private:
 	std::string							m_pathStr;				// Path to the "templates" and "aliases" folders

@@ -19,6 +19,7 @@
 
 #include "CompDefiner.h"
 #include "Component.h"
+#include "TemplateManager.h"
 
 void CompDefiner::Populate(const Component& o)
 {
@@ -34,6 +35,9 @@ void CompDefiner::Populate(const Component& o)
 	SetPrefixStr( o.GetPrefixStr() );
 	SetTypeStr( o.GetFullTypeStr() );
 	SetImportStr( o.GetFullImportStr() );
+
+	SetLabelOffsetRow( o.GetLabelOffsetRow() );
+	SetLabelOffsetCol( o.GetLabelOffsetCol() );
 
 	// Copy footprint to PinInfo map
 	m_grid.Allocate(o.GetLyrs(), o.GetRows(), o.GetCols());
@@ -75,7 +79,7 @@ void CompDefiner::Populate(const Component& o)
 	}
 }
 
-void CompDefiner::Build(Component& comp) const
+void CompDefiner::Build(const TemplateManager& templateMgr, Component& comp) const
 {
 	assert( GetIsValid() );
 
@@ -88,8 +92,15 @@ void CompDefiner::Build(Component& comp) const
 	comp.SetPrefixStr( GetPrefixStr() );
 	comp.SetTypeStr( GetTypeStr() );
 	comp.SetImportStr( GetImportStr() );
-
+	comp.SetLabelOffsetRow( GetLabelOffsetRow() );
+	comp.SetLabelOffsetCol( GetLabelOffsetCol() );
+	
 	comp.SetType(COMP::CUSTOM);
+
+	const COMP eType = CompTypes::GetTypeFromImportStr( templateMgr.GetImportStrCut(m_importStr) );
+	if ( eType != COMP::INVALID && templateMgr.CheckAllowOverWrite(comp) )	// If import string is reserved (e.g. TO92, DIP) and a user-template has that string ...
+		comp.SetType(eType);												// ... change type from COMP::CUSTOM to eType
+
 	assert( m_grid.GetLyrs() == 1 );
 	comp.Allocate(m_grid.GetLyrs(), m_grid.GetRows(), m_grid.GetCols());
 	for (int i = 0, iSize = m_grid.GetSize(); i < iSize; i++)
@@ -274,21 +285,28 @@ int CompDefiner::GetShapeId(double dRowIn, double dColIn) const	// Pick the most
 	return iBestId;
 }
 
-bool CompDefiner::GetIsValid() const
+bool CompDefiner::GetIsValid(const TemplateManager& templateMgr) const
 {
 	if ( StringHelper::IsEmptyStr(m_typeStr) ) return false;
 	if ( StringHelper::IsEmptyStr(m_valueStr) ) return false;
 	if ( StringHelper::HasSpaces(m_importStr) ) return false;	// Import string must not have spaces
-	if ( CompTypes::GetTypeFromImportStr(m_importStr) != COMP::INVALID ) return false;	// Reserved string
-	// Following is copied from Board::Import() method.
-	// List of package identifiers for footprints with variable numbers of pins/lengths.
-	const int NUM_VARIABLE_PIN_PARTS = 13;
-	const std::string strVar[NUM_VARIABLE_PIN_PARTS] = {"SIP", "DIP", "PADS", "SWITCH_ST_DIP", "SWITCH_ST", "SWITCH_DT", "STRIP_100MIL", "BLOCK_100MIL", "BLOCK_200MIL", "RESISTOR", "DIODE", "CAP_CERAMIC", "CAP_FILM"};
-	for (int i = 0; i < NUM_VARIABLE_PIN_PARTS; i++)
+
+	Component comp;
+	Build(templateMgr, comp);
+
+	if ( comp.GetType() == COMP::CUSTOM )
 	{
-		const std::string&	strTmp	= strVar[i];	// e.g. "SIP", "DIP, etc
-		const auto			L		= strTmp.length();
-		if ( m_importStr.length() >= L && m_importStr.substr(0, L) == strTmp ) return false;
+		if ( CompTypes::GetTypeFromImportStr( templateMgr.GetImportStrCut(m_importStr) ) != COMP::INVALID ) return false;	// Reserved string (e.g. TO92)
+		// Following is copied from Board::Import() method.
+		// List of package identifiers for footprints with variable numbers of pins/lengths.
+		const int NUM_VARIABLE_PIN_PARTS = 13;
+		const std::string strVar[NUM_VARIABLE_PIN_PARTS] = {"SIP", "DIP", "PADS", "SWITCH_ST_DIP", "SWITCH_ST", "SWITCH_DT", "STRIP_100MIL", "BLOCK_100MIL", "BLOCK_200MIL", "RESISTOR", "DIODE", "CAP_CERAMIC", "CAP_FILM"};
+		for (int i = 0; i < NUM_VARIABLE_PIN_PARTS; i++)
+		{
+			const std::string&	strTmp	= strVar[i];	// e.g. "SIP", "DIP, etc
+			const auto			L		= strTmp.length();
+			if ( m_importStr.length() >= L && m_importStr.substr(0, L) == strTmp ) return false;
+		}
 	}
 	if ( m_grid.GetSize() == 0 ) return false;	// Should not be possible
 	bool bOK(false);

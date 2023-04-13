@@ -2260,7 +2260,7 @@ void MainWindow::DefinerSetA3(double d)					{ if ( GetCompDefiner().SetA3(d)	) {
 void MainWindow::DefinerBuild()
 {
 	assert( GetCompDefiner().GetIsValid() );
-	const Component comp( GetCompDefiner() );
+	const Component comp( GetTemplateManager(), GetCompDefiner() );
 
 	std::string errorStr;
 	bool bAlreadyExists(false), bUsedImportStr(false);	// Gets set true if template already exists, or import string is already in use 
