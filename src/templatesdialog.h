@@ -24,6 +24,7 @@
 class MainWindow;
 class Ui_TemplatesDialog;
 class Board;
+class Component;
 
 class TemplatesDialog : public QWidget
 {
@@ -36,6 +37,7 @@ public:
 	void SetMainWindow(MainWindow* p);
 
 	void Update();
+	const Component* GetCurrentUserComp() const;
 protected:
 	void keyPressEvent(QKeyEvent* event);
 	void keyReleaseEvent(QKeyEvent* event);

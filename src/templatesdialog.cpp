@@ -175,6 +175,16 @@ void TemplatesDialog::UserDoubleClicked(int row, int)
 		m_pMainWindow->AddFromTemplate(bGeneric, mgr.GetNth(bGeneric, static_cast<size_t>(m_iRowR)));
 }
 
+const Component* TemplatesDialog::GetCurrentUserComp() const
+{
+	TemplateManager& mgr = m_pMainWindow->GetTemplateManager();
+
+	const bool bGeneric = false;
+	if ( m_iRowR >= 0 && m_iRowR < static_cast<int>(mgr.GetSize(bGeneric)) )
+		return &mgr.GetNth(bGeneric, static_cast<size_t>(m_iRowR));
+	return nullptr;
+}
+
 void TemplatesDialog::AddTemplates()
 {
 	AddTemplatesFromBoard(m_pMainWindow->m_board, false, true);	// false ==> Restrict to user-group

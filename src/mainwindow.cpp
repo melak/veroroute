@@ -2294,12 +2294,11 @@ void MainWindow::DefinerToggleEditor()
 	m_board.SetCompEdit( !m_board.GetCompEdit() );
 	if ( m_board.GetCompEdit() )
 	{
-		if ( m_board.GetGroupMgr().GetNumUserComps() == 1 )
-		{
-			const Component& comp = m_board.GetUserComponent();
-			if ( !comp.GetShapes().empty() )
-				GetCompDefiner().Populate( comp );
-		}
+		const Component* pComp = ( m_dockTemplatesDlg->isVisible() ) ? m_templatesDlg->GetCurrentUserComp() : nullptr;
+		if ( pComp == nullptr && m_board.GetGroupMgr().GetNumUserComps() == 1 )
+			pComp = &m_board.GetUserComponent();
+		if ( pComp && !pComp->GetShapes().empty() )
+			GetCompDefiner().Populate( *pComp );
 		UpdateHistory("enter component editor mode", 0);
 		UpdateCompDialog();
 		ShowCompDialog();		// Show component definition dialog
