@@ -226,3 +226,127 @@ void GuiControl::CalcBlob(qreal W, const QPointF& pC, const QPointF& pCoffset,
 		}
 	}
 }
+
+#ifdef _TEST_SOIC
+void Bezier(MyPolygonF& polygon, const QPointF& pL, const QPointF& pC, const QPointF& pR)
+{
+	// Make an N-point curve from L to R passing near central control point C
+	// Current interpolation is quadratic.
+	// Using higher order (e.g. 2.5) gives bends passing closer to C (hence sharper corners)
+	static int		N = 10;
+	static double	d = 1.0 / N;
+	const QPointF	pLC(pL - pC), pRC(pR - pC);
+	for (int i = 0; i <= N; i++)
+	{
+		const double t(i * d), u(1 - t);
+		polygon << pC + pLC*(u*u) + pRC*(t*t);	// Bezier curve (quadratic interpolation)
+	//	polygon << pC + pLC*pow(u,2.5) + pRC*pow(t,2.5);	// Sharper bends
+	}
+}
+
+void GuiControl::CalcSOIC(qreal W, const QPointF& pLT, std::list<MyPolygonF>& out, bool bGap) const
+{
+	// Given a grid point (pLT) this method populates "out" with a description of a/ SOIC track pattern.
+	// The scale parameter W represents the width of a 100 mil grid square.
+
+	// We have Gerber pen widths tied to the polygons but nodeId info.
+	// So that either needs to change, or we have to tag each polygon track/pad with a pin number
+	// so the rendering code in Color mode can choose colours for eaxh track/pad
+
+	out.clear();
+
+	const qreal	Q			= W * 0.25;	// 1/4 square width
+	const qreal	padWidth	= 0.01 * ( GetPAD_IC_MIL() + 2 * ( bGap ? GetPAD_IC_MIL() : 0 ) );
+	const qreal	trkWidth	= 0.01 * ( GetTRACK_IC_MIL() + 2 * ( bGap ? GetTRACK_IC_MIL() : 0 ) );
+
+	const QPointF pC = pLT + QPointF(4.5*W,4*W);	// Centre of the shape
+
+	MyPolygonF polygon;
+
+	if ( bGap )
+	{
+		polygon.m_eTrkPen	= GPEN::NONE;
+		polygon.m_ePadPen	= GPEN::NONE;
+		polygon.m_radiusTrk	= 0;
+		polygon.m_radiusPad	= 0;
+		polygon.m_bClosed	= true;
+		polygon << pC + QPointF(-4.5*W, -4*W) 
+				<< pC + QPointF( 4.5*W, -4*W)
+				<< pC - QPointF( 4.5*W,  4*W)
+				<< pC - QPointF(-4.5*W,  4*W)
+				<< pC - QPointF(-4.5*W, -4*W);
+		out.push_back(polygon);
+		return;
+	}
+
+	// SOIC Pads ----------------------------------------------------------------------------
+	polygon.m_eTrkPen	= GPEN::NONE;
+	polygon.m_ePadPen	= GPEN::PAD_IC;
+	polygon.m_radiusTrk	= 0;
+	polygon.m_radiusPad	= padWidth * 0.5;
+	polygon.m_bClosed	= false;
+
+	for (int iPinIndex = 0; iPinIndex < 28; iPinIndex++)
+	{
+		polygon.m_pinIndex = iPinIndex;
+		polygon.clear();
+
+		const bool bLeft = iPinIndex < 14;
+		const qreal x    = Q * ( - 13 + 2 * ( bLeft ? iPinIndex : (27-iPinIndex) ) );
+		const qreal yLo	 = Q * ( bLeft ? 2 : -9 );
+		const qreal yHi	 = Q * ( bLeft ? 9 : -2 );
+		polygon.clear();
+		
+		polygon << pC + QPointF(x, yLo) << pC  + QPointF(x , yHi);	out.push_back(polygon);
+	}
+
+	// SOIC tracks -------------------------------------------------------------------------
+	polygon.m_eTrkPen	= GPEN::TRK_IC;
+	polygon.m_ePadPen	= GPEN::NONE;
+	polygon.m_radiusTrk	= trkWidth * 0.5;
+	polygon.m_radiusPad	= 0;
+	polygon.m_bClosed	= false;
+
+	polygon.clear();
+	polygon.m_pinIndex = 27;	polygon << pC+QPointF(-18*Q,-8*Q) << pC+QPointF(-13*Q,-8*Q);out.push_back(polygon);
+	polygon.m_pinIndex =  0;	polygon.flipV();	polygon.translate( QPointF(0,4*W) );	out.push_back(polygon);
+	polygon.m_pinIndex = 13;	polygon.flipH();	polygon.translate( QPointF(9*W,0) );	out.push_back(polygon);
+	polygon.m_pinIndex = 14;	polygon.flipV();	polygon.translate( QPointF(0,-4*W) );	out.push_back(polygon);
+
+	polygon.clear();
+	polygon.m_pinIndex = 26;	Bezier(polygon, pC+QPointF(-18*Q,-12*Q), pC+QPointF(-12*Q,-11.5*Q), pC+QPointF(-11*Q,-9*Q));	out.push_back(polygon);
+	polygon.m_pinIndex =  1;	polygon.flipV();	polygon.translate( QPointF(0,6*W) );	out.push_back(polygon);
+	polygon.m_pinIndex = 12;	polygon.flipH();	polygon.translate( QPointF(9*W,0) );	out.push_back(polygon);
+	polygon.m_pinIndex = 15;	polygon.flipV();	polygon.translate( QPointF(0,-6*W) );	out.push_back(polygon);
+
+	polygon.clear();
+	polygon.m_pinIndex = 25;	Bezier(polygon, pC+QPointF(-18*Q,-16*Q), pC+QPointF(-9*Q,-10.6*Q), pC+QPointF(-9*Q,-9*Q) );		out.push_back(polygon);
+	polygon.m_pinIndex =  2;	polygon.flipV();	polygon.translate( QPointF(0,8*W) );	out.push_back(polygon);
+	polygon.m_pinIndex = 11;	polygon.flipH();	polygon.translate( QPointF(9*W,0) );	out.push_back(polygon);
+	polygon.m_pinIndex = 16;	polygon.flipV();	polygon.translate( QPointF(0,-8*W) );	out.push_back(polygon);
+
+	polygon.clear();
+	polygon.m_pinIndex = 24;	Bezier(polygon, pC+QPointF(-14*Q,-16*Q), pC+QPointF(-7*Q,-11.5*Q), pC+QPointF(-7*Q,-9*Q));		out.push_back(polygon);
+	polygon.m_pinIndex =  3;	polygon.flipV();	polygon.translate( QPointF(0,8*W) );	out.push_back(polygon);
+	polygon.m_pinIndex = 10;	polygon.flipH();	polygon.translate( QPointF(7*W,0) );	out.push_back(polygon);
+	polygon.m_pinIndex = 17;	polygon.flipV();	polygon.translate( QPointF(0,-8*W) );	out.push_back(polygon);
+
+	polygon.clear();
+	polygon.m_pinIndex = 23;	Bezier(polygon, pC+QPointF(-10*Q,-16*Q), pC-QPointF(18*Q,16*Q)+QPointF(13*Q,3.5*Q), pC+QPointF(-5*Q,-9*Q));	out.push_back(polygon);
+	polygon.m_pinIndex =  4;	polygon.flipV();	polygon.translate( QPointF(0,8*W) );	out.push_back(polygon);
+	polygon.m_pinIndex =  9;	polygon.flipH();	polygon.translate( QPointF(5*W,0) );	out.push_back(polygon);
+	polygon.m_pinIndex = 18;	polygon.flipV();	polygon.translate( QPointF(0,-8*W) );	out.push_back(polygon);
+
+	polygon.clear(); 
+	polygon.m_pinIndex = 22;	Bezier(polygon, pC+QPointF(-6*Q,-16*Q), pC+QPointF(-3*Q,-13.5*Q), pC+QPointF(-3*Q,-9*Q));	out.push_back(polygon);
+	polygon.m_pinIndex =  5;	polygon.flipV();	polygon.translate( QPointF(0,8*W) );	out.push_back(polygon);
+	polygon.m_pinIndex =  8;	polygon.flipH();	polygon.translate( QPointF(3*W,0) );	out.push_back(polygon);
+	polygon.m_pinIndex = 19;	polygon.flipV();	polygon.translate( QPointF(0,-8*W) );	out.push_back(polygon);
+
+	polygon.clear();
+	polygon.m_pinIndex = 21;	Bezier(polygon, pC+QPointF(-2*Q,-16*Q), pC+QPointF(-Q,-14*Q), pC+QPointF(-Q,-9*Q) );	out.push_back(polygon);
+	polygon.m_pinIndex =  6;	polygon.flipV();	polygon.translate( QPointF(0,8*W) );	out.push_back(polygon);
+	polygon.m_pinIndex =  7;	polygon.flipH();	polygon.translate( QPointF(W,0) );		out.push_back(polygon);
+	polygon.m_pinIndex = 20;	polygon.flipV();	polygon.translate( QPointF(0,-8*W) );	out.push_back(polygon);
+}
+#endif

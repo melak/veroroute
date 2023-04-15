@@ -171,6 +171,15 @@ public:
 		}
 		return false;
 	}
+	bool GetHasSOIC() const
+	{
+		for (const auto& mapObj : m_mapIdToComp)
+		{
+			const Component& comp = mapObj.second;
+			if ( comp.GetIsSOIC() ) return true;
+		}
+		return false;
+	}
 	void GetPadWidths(std::list<int>& o, int iDefaultWidth) const
 	{
 		o.clear();

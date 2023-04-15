@@ -79,7 +79,7 @@ public:
 	~GStream()	{ Close(); Clear(); }
 	void Clear();
 	void Close();
-	bool Open(const QString& fileName, GFILE eType, bool bMetric, const Board& board, bool bVias, bool bConfirmEachFile);
+	bool Open(const QString& fileName, GFILE eType, bool bMetric, const Board& board, bool bVias, bool bSOIC, bool bConfirmEachFile);
 	void WriteHeader(const QString& UTC);
 	void WriteFooter();
 	void Drill(const QPoint& pF);
@@ -128,6 +128,7 @@ private:
 	GPOLARITY			m_ePolarity	= GPOLARITY::UNKNOWN;
 	const Board*		m_pBoard	= nullptr;		// The board, so we can get dimensions and track sizes
 	bool				m_bVias		= false;		// true ==> the board has vias
+	bool				m_bSOIC		= false;
 	int					m_iLastX	= INT_MAX;		// Last X used
 	int					m_iLastY	= INT_MAX;		// Last Y used
 	bool				m_bMetric	= false;		// true ==> use mm as units instead of inches
@@ -149,7 +150,7 @@ class GWriter
 public:
 	GWriter()	{}
 	~GWriter()	{ Close(); }
-	bool		Open(const QString& fileName, const Board& board, bool bVias, bool bTwoLayerGerber, bool bMetric, bool bConfirmEachFile);
+	bool		Open(const QString& fileName, const Board& board, bool bVias, bool bSOIC, bool bTwoLayerGerber, bool bMetric, bool bConfirmEachFile);
 	void		Close();
 	GStream&	GetStream(GFILE eType);
 private:

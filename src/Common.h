@@ -24,6 +24,9 @@
 #define NDEBUG
 #endif
 
+// Uncomment next line to test SOIC stuff	//TODO
+//#define _TEST_SOIC
+
 #include <cmath>
 #include <stdio.h>
 #include <string.h>

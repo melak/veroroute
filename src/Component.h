@@ -376,6 +376,11 @@ public:
 	const int&			GetHoleWidth() const		{ return m_iHoleWidth; }
 	const bool&			GetAllowFlyWire() const		{ return m_bAllowFlyWire; }
 	const std::vector<Shape>& GetShapes() const		{ return m_shapes; }
+#ifdef _TEST_SOIC
+	bool				GetIsSOIC() const			{ return GetValueStr() == "SOIC28_TEST"; };	//TODO Take out this hack and use a proper COMP type
+#else
+	bool				GetIsSOIC() const			{ return false; };
+#endif	
 
 	// Helpers for labels
 	void SetDefaultLabelOffsets();

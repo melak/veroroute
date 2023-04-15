@@ -49,13 +49,14 @@ void GStream::Close()
 	if ( m_file.isOpen() )
 		m_file.close();
 }
-bool GStream::Open(const QString& fileName, GFILE eType, bool bMetric, const Board& board, bool bVias, bool bConfirmEachFile)
+bool GStream::Open(const QString& fileName, GFILE eType, bool bMetric, const Board& board, bool bVias, bool bSOIC, bool bConfirmEachFile)
 {
 	Clear();
 	m_eType		= eType;
 	m_bMetric	= bMetric;
 	m_pBoard	= &board;
 	m_bVias		= bVias;
+	m_bSOIC		= bSOIC;
 
 	QString str(fileName);
 	QString suffix;
@@ -220,6 +221,8 @@ void GStream::MakeApertures()	// Make "pens" for current stream
 	const int		msk		= m_pBoard->GetMASK_MIL();
 	const int		slk		= m_pBoard->GetSILK_MIL();
 	const int		gko		= 10;	// Draw border in 10 mil pen
+	const int		padIC	= m_pBoard->GetPAD_IC_MIL();
+	const int		trkIC	= m_pBoard->GetTRACK_IC_MIL();
 
 	// Build aperture list
 	int code = 10;	// Start with aperture D10
@@ -238,6 +241,11 @@ void GStream::MakeApertures()	// Make "pens" for current stream
 				m_ePenList.push_back( GPenInfo(GPEN::TRK, trk, code++, " is for tracks") );
 			if ( true )
 				m_ePenList.push_back( GPenInfo(GPEN::TAG, tag, code++, " is for tracks") );
+			if ( m_eType == GFILE::GTL && m_bSOIC )
+			{
+				m_ePenList.push_back( GPenInfo(GPEN::PAD_IC, padIC, code++, " is for SOIC pads") );
+				m_ePenList.push_back( GPenInfo(GPEN::TRK_IC, trkIC, code++, " is for SOIC tracks") );
+			}
 			if ( !m_pBoard->GetGroundFill() ) break;
 			for (const auto& pad : pads)
 				m_ePenList.push_back( GPenInfo(GPEN::PAD_GAP, pad + 2 * gap, code++, " is for separating pads from fill", pad != padDefault) );
@@ -622,7 +630,7 @@ void GStream::GetQPolygon(const QPolygonF& in, QPolygon& out) const
 }
 
 // Wrapper for handling a set of Gerber files
-bool GWriter::Open(const QString& fileName, const Board& board, bool bVias, bool bTwoLayerGerber, bool bMetric, bool bConfirmEachFile)
+bool GWriter::Open(const QString& fileName, const Board& board, bool bVias, bool bSOIC, bool bTwoLayerGerber, bool bMetric, bool bConfirmEachFile)
 {
 	QDateTime	local(QDateTime::currentDateTime());
 	QString		UTC = local.toTimeSpec(Qt::UTC).toString(Qt::ISODate);
@@ -643,7 +651,7 @@ bool GWriter::Open(const QString& fileName, const Board& board, bool bVias, bool
 		if ( GFILE(i) == GFILE::GTL ) bDoFileClose = !bTwoLayerGerber;
 		if ( GFILE(i) == GFILE::GTS ) bDoFileClose = !bTwoLayerGerber;
 
-		bOK = m_os[i].Open(fileName, GFILE(i), bMetric, board, bVias, bConfirmEachFile);
+		bOK = m_os[i].Open(fileName, GFILE(i), bMetric, board, bVias, bSOIC, bConfirmEachFile);
 
 		if ( bDoFileClose )
 			m_os[i].Close();

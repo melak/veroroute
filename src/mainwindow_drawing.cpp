@@ -161,6 +161,110 @@ void MainWindow::PaintPadGrey(const GuiControl& guiCtrl, QPainter& painter, QPen
 	painter.drawPoint(pC);
 }
 
+#ifdef _TEST_SOIC
+void MainWindow::PaintSOIC(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pLT, const Component* pComp, bool bGap)
+{
+	std::vector<QColor> soicColors;
+	soicColors.resize(28, color);
+	PaintSOIC(guiCtrl, painter, soicColors, pLT, pComp, bGap);
+}
+
+void MainWindow::PaintSOIC(const GuiControl& guiCtrl, QPainter& painter, const std::vector<QColor>& soicColors, const QPointF& pLT, const Component* pComp, bool bGap)
+{
+	const int W = guiCtrl.GetGRIDPIXELS();
+	const int C = W >> 1;	// Half square width in pixels
+	
+	std::list<MyPolygonF> polygonList;
+	guiCtrl.CalcSOIC(W, pLT, polygonList, bGap);	// Populate polygonList
+
+	QPointF pCentre(0,0);
+	if ( !polygonList.empty() )
+	{
+		const int dY = C*(pComp->GetCompRows() - pComp->GetRows());	//TODO
+		const int dX = C*(pComp->GetCompCols() - pComp->GetCols());	//TODO
+		if ( dX || dY )
+			for (auto & polygon : polygonList) polygon.translate(dX, dY);
+
+		qreal xMin(DBL_MAX), yMin(DBL_MAX), xMax(-DBL_MAX), yMax(-DBL_MAX);
+		for (auto & polygon : polygonList)
+			polygon.UpdateBounds(xMin, yMin, xMax, yMax);
+		pCentre = QPointF(0.5*(xMin + xMax), 0.5*(yMin + yMax));
+
+		switch( pComp->GetDirection() )	//TODO Assuming H and V mirror symmetry of track pattern
+		{
+			case 'N':
+			case 'S':	for (auto & polygon : polygonList)	polygon.rotateCW( pCentre );
+		}
+	}
+
+	if ( m_bWriteGerber )	// Write to Gerber
+	{
+		for (int k = 0; k < m_board.GetLyrs(); k++)
+		{
+			GStream& os = m_gWriter.GetStream(k == 0 ? GFILE::GBL : GFILE::GTL);	// Bottom/Top copper layer
+
+			for (auto& polygon : polygonList)
+			{
+				const bool bTrk	= polygon.m_eTrkPen != GPEN::NONE;
+				const bool bPad	= polygon.m_ePadPen != GPEN::NONE;
+				if ( !bTrk && !bPad && !polygon.m_bClosed ) continue;
+
+				const GPEN& ePen = bTrk ? polygon.m_eTrkPen : polygon.m_ePadPen;
+				if ( polygon.m_bClosed )
+				{
+					if ( bPad || bTrk )
+						os.AddLoop(polygon, ePen);	// Closed polygon outline
+					if ( !bGap )
+						os.AddRegion(polygon);		// Only non-Gap polygon needs filling
+				}
+				else
+					os.AddTrack(polygon, ePen);
+			}
+		}
+	}
+	else	// Draw to pixmap
+	{
+		const int	gapWidth	= bGap ? guiCtrl.GetPixelsFromMIL( guiCtrl.GetTRACK_IC_MIL() ) : 0;
+		const int	padWidth	= ( guiCtrl.GetHalfPixelsFromMIL( guiCtrl.GetPAD_IC_MIL() ) + gapWidth ) << 1;		// Pad width in pixels
+		const int	trackWidth	= ( guiCtrl.GetHalfPixelsFromMIL( guiCtrl.GetTRACK_IC_MIL() ) + gapWidth ) << 1;	// Track width in pixels
+
+		static QPen		pen(Qt::black, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+		static QBrush	brush(Qt::black,  Qt::SolidPattern);
+		//pen.setColor(color);
+		//brush.setColor(color);
+		//painter.setBrush(brush);
+
+		for (auto& polygon : polygonList)
+		{
+			const int iPinIndex = polygon.m_pinIndex;
+			QColor color = soicColors[iPinIndex];
+			pen.setColor(color);
+			brush.setColor(color);
+			painter.setBrush(brush);
+			
+			const bool bTrk	= polygon.m_eTrkPen != GPEN::NONE;
+			const bool bPad	= polygon.m_ePadPen != GPEN::NONE;
+			if ( !bTrk && !bPad && !polygon.m_bClosed ) continue;
+
+			pen.setWidth(bTrk ? trackWidth : bPad ? padWidth : 0);
+			painter.setPen(pen);
+
+			if ( polygon.m_bClosed )
+				painter.drawPolygon(polygon);
+			else if ( bPad || bTrk )
+			{
+				auto iterA = polygon.begin();
+				auto iterB = iterA; iterB++;
+				while( iterB != polygon.end() )
+				{
+					painter.drawLine(*iterA, *iterB); ++iterA; ++iterB;
+				}
+			}
+		}
+	}
+}
+#endif
+
 void MainWindow::PaintVia(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, bool bGap)
 {
 	if ( m_bWriteGerber )
@@ -711,6 +815,69 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				const bool		bIsGnd			= bGroundFill && nodeId == groundNodeId;
 				const int		iTagCode		= ( bPad && bIsGnd && nodeId != BAD_NODEID ) ? board.GetTagCode(pC, iPerimeterCode) : 0;
 
+				bool bSOIC(false);
+	#ifdef _TEST_SOIC
+				const Component* pCompSOIC = nullptr;
+				if ( layer == 1 )	//TODO Top layer only
+				{
+					for (auto& pComp : sortedComps)
+					{
+						bSOIC = ( pComp->GetRow() == j && pComp->GetCol() == i && pComp->GetIsSOIC() );
+						pCompSOIC = pComp;
+						if ( bSOIC ) break;
+					}
+				}
+
+				std::vector< QColor > soicColors;	soicColors.resize(28);	//TODO Hard coded limit
+				if ( bSOIC )
+				{
+					const char direction	= pCompSOIC->GetDirection();
+					const bool bSwapXY		= ( direction == 'N' || direction == 'S' );
+
+					//TODO "pinIndex" here is subjective because of how SOIC patterns are defined.  Not nice.  Will give confusion later.
+					// Problem is that the "pinIndex" member in MyPolygonF is set up in Gui::Control::CalcSOIC()
+					// assuming we have ***either** the 'W' or 'E" directions, and is assuming SOIC pattern has H/V mirror symmetry.
+					for (int iPinIndex = 0; iPinIndex < 28; iPinIndex++)	//TODO Hard coded limit
+					{
+						const int iEffPinIndex = ( bSwapXY ) ? ( 27 - iPinIndex ) : iPinIndex;	// Not obvious. Consider the W vs S case
+						int dx(0), dy(0);
+						switch(iEffPinIndex)	//TODO Hard coded mapping
+						{
+							case 0:	 dx = 0; dy = 6;break;		case 27: dx = 0; dy = 2; break;
+							case 1:	 dx = 0; dy = 7;break;		case 26: dx = 0; dy = 1; break;
+							case 2:	 dx = 0; dy = 8;break;		case 25: dx = 0; dy = 0; break;
+							case 3:	 dx = 1; dy = 8;break;		case 24: dx = 1; dy = 0; break;
+							case 4:	 dx = 2; dy = 8;break;		case 23: dx = 2; dy = 0; break;
+							case 5:	 dx = 3; dy = 8;break;		case 22: dx = 3; dy = 0; break;
+							case 6:	 dx = 4; dy = 8;break;		case 21: dx = 4; dy = 0; break;
+							case 7:	 dx = 5; dy = 8;break;		case 20: dx = 5; dy = 0; break;
+							case 8:	 dx = 6; dy = 8;break;		case 19: dx = 6; dy = 0; break;
+							case 9:	 dx = 7; dy = 8;break;		case 18: dx = 7; dy = 0; break;
+							case 10: dx = 8; dy = 8;break;		case 17: dx = 8; dy = 0; break;
+							case 11: dx = 9; dy = 8;break;		case 16: dx = 9; dy = 0; break;
+							case 12: dx = 9; dy = 7;break;		case 15: dx = 9; dy = 1; break;
+							case 13: dx = 9; dy = 6;break;		case 14: dx = 9; dy = 2; break;
+						}
+						if ( bSwapXY ) std::swap(dx, dy);
+
+						const int&	nodeId				= board.Get(layer, j+dy, i+dx)->GetNodeId();
+						const int	colorId				= colorMgr.GetColorId(nodeId);
+						const bool	bInvalidColor		= colorId == BAD_COLORID || ( bMonoPCB && nodeId != GetCurrentNodeId() );
+						const int	iEffColorId			= ( bInvalidColor )	? ( bPCB ? ( layer == 0 ? MY_LYR_BOT : MY_LYR_TOP ) : MY_BLACK )
+														: ( nodeId == GetCurrentNodeId() ) ? MY_GREY : ( colorId % MYNUMCOLORS );
+	
+						const bool	 bAllowCustomColor	=	iEffColorId != MY_GREY		&&	iEffColorId != MY_BLACK
+														&&	iEffColorId != MY_LYR_BOT	&&	iEffColorId != MY_LYR_TOP;
+						const QColor color				= bAllowCustomColor ? colorMgr.GetColorFromNodeId(nodeId)
+																			: colorMgr.GetPixmapColor(iEffColorId);
+						soicColors[iPinIndex] = color;
+					}
+				}
+	#endif
+				// Skip places with no NodeID assigned unless they are wire ends, or pins in Mono/PCB mode
+				const bool bPointOK = ( nodeId != BAD_NODEID || bWire || (bMonoPCB && bPad) );	// Point OK ==> We have some track/pad to draw
+				if ( !bPointOK && !bSOIC ) continue;	//TODO Added !bSOIC so we don't continue
+
 				if ( bForceXthermal && !bPad && bIsGnd ) continue;	// Don't render ground tracks if forcing X shaped thermal reliefs
 
 				bool	bCustomSize(false);
@@ -743,13 +910,10 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					}
 				}
 				const bool bPadOffset	= ( padOffsetX != 0 || padOffsetY != 0 );
-				const bool bBlob		= !bPadOffset || iPerimeterCode != 0 || ( bForceXthermal && bIsGnd );
+				const bool bBlob		= bPointOK && ( !bPadOffset || iPerimeterCode != 0 || ( bForceXthermal && bIsGnd ) );	//TODO Added bPointOK to make SOIC test work
 
 				QPen& greyPen = ( layerPref == LAYER_X ) ? penGry :
 								( layerPref == LAYER_T ) ? penTop : penBot;
-
-				// Skip places with no NodeID assigned unless they are wire ends, or pins in Mono/PCB mode
-				if ( nodeId == BAD_NODEID && !bWire && !(bMonoPCB && bPad) ) continue;
 
 				// Use GetPixmapRGB for pixmaps.  It can handle MY_GREY, MY_BLACK as special cases
 				const int	colorId				= colorMgr.GetColorId(nodeId);
@@ -883,6 +1047,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						if ( bBlob ) PaintBlob(board, painter, color, pCentre, pCentreOff, iPadWidthMIL, iPerimeterCode, iTagCode, bPad, false);
 						if ( bPad )  PaintPad(board, painter, color, pCentreOff, iPadWidthMIL, iHoleWidthMIL);
 					}
+	#ifdef _TEST_SOIC
+					if ( bSOIC ) PaintSOIC(board, painter, soicColors, pCentre, pCompSOIC);	//TODO
+	#endif
 #endif	// USE_PIXMAP_CACHE
 				}
 				if ( bGroundFill )	// Draw track "blobs" and pads directly (PDF/Gerber)
@@ -893,12 +1060,18 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 							PaintBlob(board, painter, backgroundColor, pCentre, pCentreOff, iPadWidthMIL, iPerimeterCode, iTagCode, bPad, bIsGnd, true);	// Draw fat "white" track blob
 						if ( bVia ) PaintVia(board, painter, backgroundColor, pCentre, true);										// Draw fat "white" via
 						if ( bPad ) PaintPad(board, painter, backgroundColor, pCentreOff, iPadWidthMIL, iHoleWidthMIL, true);		// Draw fat "white" pad
+	#ifdef _TEST_SOIC
+						if ( bSOIC ) PaintSOIC(board, painter, backgroundColor, pCentre, pCompSOIC, true);	//TODO
+	#endif
 					}
 					else if ( iLoop == 1 )	// Draw track "blobs" and pads directly
 					{
 						if ( bBlob ) PaintBlob(board, painter, color, pCentre, pCentreOff, iPadWidthMIL, iPerimeterCode, iTagCode, bPad, bIsGnd);	// Draw track blob
 						if ( bVia )  PaintVia(board, painter, color, pCentre);									// Draw via same color as track
 						if ( bPad )  PaintPad(board, painter, color, pCentreOff, iPadWidthMIL, iHoleWidthMIL);	// Draw pad same color as track
+	#ifdef _TEST_SOIC
+						if ( bSOIC ) PaintSOIC(board, painter, soicColors, pCentre, pCompSOIC);	//TODO
+	#endif
 					}
 					else if ( bDrawGrey )
 					{
@@ -913,6 +1086,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						if ( bBlob ) PaintBlob(board, painter, color, pCentre, pCentreOff, iPadWidthMIL, iPerimeterCode, iTagCode, bPad, false);	// Draw track blob
 						if ( bVia )  PaintVia(board, painter, color, pCentre);									// Draw via same color as track
 						if ( bPad )  PaintPad(board, painter, color, pCentreOff, iPadWidthMIL, iHoleWidthMIL);	// Draw pad same color as track
+	#ifdef _TEST_SOIC
+						if ( bSOIC ) PaintSOIC(board, painter, soicColors, pCentre, pCompSOIC, false);	//TODO
+	#endif
 					}
 					else if ( bDrawGrey )
 					{

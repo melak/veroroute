@@ -45,7 +45,7 @@ struct MyPolygonF : public QPolygonF	// A polygon + the pen radii for drawing it
 		Process();
 	}
 	MyPolygonF(const MyPolygonF& o)
-		: QPolygonF(o), m_eTrkPen(o.m_eTrkPen), m_ePadPen(o.m_ePadPen), m_radiusTrk(o.m_radiusTrk), m_radiusPad(o.m_radiusPad), m_bClosed(o.m_bClosed)
+		: QPolygonF(o), m_eTrkPen(o.m_eTrkPen), m_ePadPen(o.m_ePadPen), m_radiusTrk(o.m_radiusTrk), m_radiusPad(o.m_radiusPad), m_pinIndex(o.m_pinIndex), m_bClosed(o.m_bClosed)
 	{
 		Process();
 	}
@@ -56,9 +56,54 @@ struct MyPolygonF : public QPolygonF	// A polygon + the pen radii for drawing it
 		m_ePadPen	= o.m_ePadPen;
 		m_radiusTrk	= o.m_radiusTrk;
 		m_radiusPad	= o.m_radiusPad;
+		m_pinIndex	= o.m_pinIndex;
 		m_bClosed	= o.m_bClosed;
 		Process();
 		return *this;
+	}
+	void flipV() // Flip vertically keep first point fixed
+	{
+		const int iSize = QPolygonF::size();
+		if ( iSize < 2 ) return;
+		const QPointF& p0 = operator[](0);
+		for (int i = 1; i < iSize; i++)
+		{
+			QPointF& p = operator[](i);
+			p.setY( 2 * p0.y() - p.y() );
+		}
+	}
+	void flipH() // Flip vertically keep first point fixed
+	{
+		const int iSize = QPolygonF::size();
+		if ( iSize < 2 ) return;
+		const QPointF& p0 = operator[](0);
+		for (int i = 1; i < iSize; i++)
+		{
+			QPointF& p = operator[](i);
+			p.setX( 2 * p0.x() - p.x() );
+		}
+	}
+	void UpdateBounds(qreal& xMin, qreal& yMin, qreal& xMax, qreal& yMax) const
+	{
+		const int iSize = QPolygonF::size();
+		for (int i = 0; i < iSize; i++)
+		{
+			const QPointF& p = operator[](i);
+			xMin = std::min(xMin, p.x());
+			xMax = std::max(xMax, p.x());
+			yMin = std::min(yMin, p.y());
+			yMax = std::max(yMax, p.y());
+		}
+	}
+	void rotateCW(const QPointF& origin)
+	{
+		const int iSize = QPolygonF::size();
+		for (int i = 0; i < iSize; i++)
+		{
+			QPointF& p = operator[](i);
+			const QPointF d(p - origin);
+			p = origin + QPointF(-d.y(), d.x());
+		}
 	}
 	bool HaveVariTracks() const { return QPolygonF::size() > 1 && m_radiusPad > m_radiusTrk && m_radiusTrk > 0; }
 	void Process(bool bForce = false) const
@@ -86,6 +131,7 @@ struct MyPolygonF : public QPolygonF	// A polygon + the pen radii for drawing it
 	GPEN	m_ePadPen	= GPEN::NONE;	// PAD, PAD_GAP, or NONE
 	qreal	m_radiusTrk	= 0;			// Trk radius
 	qreal	m_radiusPad	= 0;			// Pen radius
+	int		m_pinIndex	= 0;			// For SOIC pads/tracks only
 	bool	m_bClosed	= false;		// Flag to indicate closed polygon
 	// A cache indicating the points and edges that are fat (i.e. have pad radius)
 	mutable std::vector<bool> m_bFatPoint;	//

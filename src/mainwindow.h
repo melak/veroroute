@@ -500,6 +500,10 @@ private:
 #endif
 	void PaintViaGrey(const GuiControl& guiCtrl, QPainter& painter, const QPointF& pC);
 	void PaintPadGrey(const GuiControl& guiCtrl, QPainter& painter, QPen& pen, const QPointF& pC, int iPadWidthMIL = 0);
+#ifdef _TEST_SOIC
+	void PaintSOIC(const GuiControl& guiCtrl, QPainter& painter,  const std::vector<QColor>& soicColors, const QPointF& pC, const Component* pComp, bool bGap = false);
+	void PaintSOIC(const GuiControl& guiCtrl, QPainter& painter,  const QColor& color, const QPointF& pC, const Component* pComp, bool bGap = false);
+#endif
 	void PaintVia(const GuiControl& guiCtrl, QPainter& painter,  const QColor& color, const QPointF& pC, bool bGap = false);	// Helper
 	void PaintPad(const GuiControl& guiCtrl, QPainter& painter,  const QColor& color, const QPointF& pC, int iPadWidthMIL = 0, int iHoleWidth_MIL = 0, bool bGap = false);	// Helper
 	void PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, const QPointF& pCoffset,

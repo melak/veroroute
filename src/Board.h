@@ -598,6 +598,7 @@ public:
 	void Route(bool bMinimal);
 	void UpdateVias();
 	const bool& GetHasVias() const { return m_bHasVias; }
+	bool		GetHasSOIC() const { return m_compMgr.GetHasSOIC(); }
 	unsigned int Flood(int nodeId);
 	unsigned int Flood(bool bSingleRoute = false);
 	void Flood_Helper(bool bBuildTracks);
