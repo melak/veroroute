@@ -272,9 +272,9 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pLT, std::list<MyPolygonF>& ou
 		polygon.m_bClosed	= true;
 		polygon << pC + QPointF(-4.5*W, -4*W) 
 				<< pC + QPointF( 4.5*W, -4*W)
-				<< pC - QPointF( 4.5*W,  4*W)
-				<< pC - QPointF(-4.5*W,  4*W)
-				<< pC - QPointF(-4.5*W, -4*W);
+				<< pC + QPointF( 4.5*W,  4*W)
+				<< pC + QPointF(-4.5*W,  4*W)
+				<< pC + QPointF(-4.5*W, -4*W);
 		out.push_back(polygon);
 		return;
 	}
