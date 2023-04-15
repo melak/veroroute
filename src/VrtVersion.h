@@ -56,4 +56,5 @@ Q_DECL_CONSTEXPR static const int VRT_VERSION_51 = 51;	// Added pinlabels to com
 Q_DECL_CONSTEXPR static const int VRT_VERSION_52 = 52;	// Added thermal relief tag size
 Q_DECL_CONSTEXPR static const int VRT_VERSION_53 = 53;	// Added X-thermals flag
 Q_DECL_CONSTEXPR static const int VRT_VERSION_54 = 54;	// Added label offsets to CompDefiner
-Q_DECL_CONSTEXPR static const int VRT_VERSION_CURRENT = VRT_VERSION_54;
+Q_DECL_CONSTEXPR static const int VRT_VERSION_55 = 55;	// Added SOIC attribute to Pin class
+Q_DECL_CONSTEXPR static const int VRT_VERSION_CURRENT = VRT_VERSION_55;

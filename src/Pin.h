@@ -25,7 +25,7 @@
 //	A component's spatial layout (or "Footprint") is a two-dimensional array of "CompElement" objects.
 //	The "Board" object used for designing a circuit is a two-dimensional array of "Element" objects.
 //
-//	There are 3 parts to the description of a "Pin":
+//	There are 4 parts to the description of a "Pin":
 //
 //	1)	The pin character "m_pinChar" is just a pinIndex in the range 0 to 254.
 //		Places with no pin (e.g. the middle of a resistor) have m_pinChar of 255 and an invalid pinIndex.
@@ -46,6 +46,12 @@
 //		HOLE_FREE			==> the hole is not occupied.
 //		HOLE_WIRE			==> the hole is occupied by one wire.
 //		HOLE_FULL			==> the hole is fully occupied.  (By a regular component pin, or by 2 wires).
+//
+//	4)	SOIC info.  We store this info on the base layer of the grid, but it refers to whatever
+//		layer displays the SOIC pattern (i.e. "the SOIC layer").
+//
+//		SOIC_NO			==> No SOIC pattern 
+//		SOIC_YES		==> Have SOIC pattern (so not point is not paintable on the SOIC layer)
 
 Q_DECL_CONSTEXPR static const uchar  BAD_PINCHAR		= 255;
 Q_DECL_CONSTEXPR static const size_t BAD_PININDEX		= static_cast<size_t>(-1);
@@ -62,6 +68,10 @@ Q_DECL_CONSTEXPR static const uchar  SURFACE_HOLE		= 25;	// Hence: "SURFACE_FULL
 Q_DECL_CONSTEXPR static const uchar  HOLE_FREE			= 0;
 Q_DECL_CONSTEXPR static const uchar  HOLE_WIRE			= 1;	// Hence: "HOLE_WIRE + HOLE_WIRE == HOLE_FULL"
 Q_DECL_CONSTEXPR static const uchar  HOLE_FULL			= 2;
+
+Q_DECL_CONSTEXPR static const uchar  SOIC_NO			= 0;
+Q_DECL_CONSTEXPR static const uchar  SOIC_YES			= 1;
+
 
 Q_DECL_CONSTEXPR static size_t GetPinIndexFromLegacyPinChar(uchar c)	// Legacy VRT format had messy mapping of pinChar to pinIndex
 {
@@ -92,10 +102,11 @@ static uchar GetSurfaceFromLegacySurfaceChar(uchar c)
 class Pin : public Persist, public Merge
 {
 public:
-	Pin(uchar pinChar = BAD_PINCHAR, uchar surface = SURFACE_FREE, uchar holeUse = HOLE_FREE)
+	Pin(uchar pinChar = BAD_PINCHAR, uchar surface = SURFACE_FREE, uchar holeUse = HOLE_FREE, uchar soicChar = SOIC_NO)
 	: m_pinChar(pinChar)
 	, m_surface(surface)
 	, m_holeUse(holeUse)
+	, m_soicChar(soicChar)
 	{}
 	Pin(const Pin& o) { *this = o; }
 	virtual ~Pin() {}
@@ -104,13 +115,15 @@ public:
 		m_pinChar	= o.m_pinChar;
 		m_surface	= o.m_surface;
 		m_holeUse	= o.m_holeUse;
+		m_soicChar	= o.m_soicChar;
 		return *this;
 	}
 	bool operator==(const Pin& o) const	// Compare persisted info
 	{
-		return m_pinChar == o.m_pinChar
-			&& m_surface == o.m_surface
-			&& m_holeUse == o.m_holeUse;
+		return m_pinChar	== o.m_pinChar
+			&& m_surface	== o.m_surface
+			&& m_holeUse	== o.m_holeUse
+			&& m_soicChar	== o.m_soicChar; 
 	}
 	bool operator!=(const Pin& o) const
 	{
@@ -119,6 +132,7 @@ public:
 	void SetPinIndex(size_t i)	{ m_pinChar = ( i >= BAD_PINCHAR ) ? BAD_PINCHAR : static_cast<uchar> (i); }
 	void SetSurface(uchar c)	{ m_surface = c; }
 	void SetHoleUse(uchar c)	{ m_holeUse = c; }
+	void SetSoicChar(uchar c)	{ m_soicChar = c; }
 	void SetOccupancy(bool bWire)	// Helper
 	{
 		if ( bWire )
@@ -131,11 +145,12 @@ public:
 			SetHoleUse( GetIsPin() ? HOLE_FULL			: HOLE_FREE );		// Set hole occupancy for pins/non-pins
 		}
 	}
-	size_t		 GetPinIndex() const	{ return ( m_pinChar == BAD_PINCHAR ) ? BAD_PININDEX : m_pinChar; }
-	const uchar& GetSurface() const		{ return m_surface; }
-	const uchar& GetHoleUse() const		{ return m_holeUse; }
-	bool		 GetIsPin() const		{ return m_pinChar != BAD_PINCHAR; }
-	bool		 GetIsHole() const		{ return m_surface == SURFACE_HOLE; }
+	size_t		 GetPinIndex() const		{ return ( m_pinChar == BAD_PINCHAR ) ? BAD_PININDEX : m_pinChar; }
+	const uchar& GetSurface() const			{ return m_surface; }
+	const uchar& GetHoleUse() const			{ return m_holeUse; }
+	const uchar& GetSoicChar() const		{ return m_soicChar; }
+	bool		 GetIsPin() const			{ return m_pinChar != BAD_PINCHAR; }
+	bool		 GetIsHole() const			{ return m_surface == SURFACE_HOLE; }
 
 	static const std::map<uchar, std::string>& GetMapSurfaceStrings()
 	{
@@ -178,16 +193,21 @@ public:
 			inStream.Load(m_holeUse);	// Added in VRT_VERSION_26
 		if ( inStream.GetVersion() <= VRT_VERSION_39 )
 			if ( GetIsPin() && m_holeUse == HOLE_FREE ) m_holeUse = HOLE_FULL;	// Bug-fix non-wire hole-use
+		m_soicChar = SOIC_NO;
+		if ( inStream.GetVersion() >= VRT_VERSION_55 )
+			inStream.Load(m_soicChar);	// Added in VRT_VERSION_55
 	}
 	virtual void Save(DataStream& outStream) override
 	{
 		outStream.Save(m_pinChar);	// New mapping from VRT_VERSION_4
 		outStream.Save(m_surface);	// New mapping from VRT_VERSION_26
 		outStream.Save(m_holeUse);	// Added in VRT_VERSION_26
+		outStream.Save(m_soicChar);	// Added in VRT_VERSION_55
 	}
 private:
 	// Data
 	uchar	m_pinChar;
 	uchar	m_surface;
 	uchar	m_holeUse;
+	uchar	m_soicChar;
 };

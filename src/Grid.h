@@ -76,10 +76,11 @@ public:
 		m_pData   = nullptr;
 		m_lyrs = m_rows = m_cols = 0;
 	}
-	const int& GetLyrs() const	{ return m_lyrs; }
-	const int& GetRows() const	{ return m_rows; }
-	const int& GetCols() const	{ return m_cols; }
-	int		   GetSize() const	{ return m_lyrs * m_rows * m_cols; }
+	const int& GetLyrs() const		{ return m_lyrs; }
+	const int& GetRows() const		{ return m_rows; }
+	const int& GetCols() const		{ return m_cols; }
+	int		   GetSize() const		{ return m_lyrs * m_rows * m_cols; }
+	int		   GetSOIClayer() const { return m_lyrs - 1; }	// Layer with SOIC pattern
 	void GetRowCol(const T* p, int& row, int& col) const
 	{
 		int lyr;	// dummy

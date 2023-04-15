@@ -245,6 +245,7 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 				const uchar& compSurface	= pComp->GetSurface();
 				const uchar& boardHoleUse	= pGrid->GetHoleUse();
 				const uchar& compHoleUse	= pComp->GetHoleUse();
+				const uchar& compSoicChar	= pComp->GetSoicChar();
 
 				// Check surface and hole use.
 				// Need separate checks for SURFACE_FREE since that can be
@@ -253,6 +254,7 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 						( compSurface  == SURFACE_FREE ) ||
 						( boardSurface + compSurface <= SURFACE_FULL );
 				bOK &=	( boardHoleUse + compHoleUse <= HOLE_FULL );
+				bOK &=	( !compSoicChar || Get(GetSOIClayer(), jRow, iCol)->GetNodeId() == BAD_NODEID );	// Can place SOIC if board is painted in SOIC area
 				bOK &=	( !bWire || bAllowHoleShare || ( boardHoleUse + compHoleUse <= HOLE_WIRE ) );
 				bOK &=	( !bWire || bAllowWireCross || ( boardSurface <= ( bAllowHoleShare ? SURFACE_WIRE_END | SURFACE_GAP : SURFACE_GAP ) ) );
 				if ( !bOK ) continue;
@@ -422,8 +424,9 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 				assert( !(pGrid->GetIsHole() && pComp->GetIsHole()) );	// Can't overlay holes
 
 				// Update surface and hole use
-				pGrid->SetSurface( pGrid->GetSurface() + pComp->GetSurface() );
-				pGrid->SetHoleUse( pGrid->GetHoleUse() + pComp->GetHoleUse() );
+				pGrid->SetSurface(  pGrid->GetSurface()  + pComp->GetSurface() );
+				pGrid->SetHoleUse(  pGrid->GetHoleUse()  + pComp->GetHoleUse() );
+				pGrid->SetSoicChar( pGrid->GetSoicChar() + pComp->GetSoicChar() );
 
 				// Update IDs at pin location (No pin ==> Leave existing pinIndexes and compIds)
 				const size_t pinIndex = pComp->GetPinIndex();
@@ -583,8 +586,9 @@ bool Board::TakeOff(Component& comp)
 				assert( !pComp->GetIsHole() || pGrid->GetIsHole() );	// Component hole can only be taken off a grid hole
 
 				// Update surface and hole use
-				pGrid->SetSurface( pGrid->GetSurface() - pComp->GetSurface() );
-				pGrid->SetHoleUse( pGrid->GetHoleUse() - pComp->GetHoleUse() );
+				pGrid->SetSurface(  pGrid->GetSurface()  - pComp->GetSurface() );
+				pGrid->SetHoleUse(  pGrid->GetHoleUse()  - pComp->GetHoleUse() );
+				pGrid->SetSoicChar( pGrid->GetSoicChar() - pComp->GetSoicChar() );
 				if ( pGrid->GetHoleUse() == HOLE_FREE )
 				{
 					pGrid->SetSlotInfo(0, BAD_PININDEX, BAD_COMPID);	// Slot 0

@@ -1528,6 +1528,7 @@ void MainWindow::RemoveLayer()
 	assert( m_board.GetLyrs() == 2 );
 	m_board.GrowThenPan(-1, 0, 0, 0, 0);
 	m_board.SetCurrentLayer(0);
+	m_board.WipeSoicAreas();
 	UpdateHistory("remove top layer");
 	UpdateControls();
 	RepaintWithListNodes();

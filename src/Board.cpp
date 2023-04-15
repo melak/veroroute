@@ -361,11 +361,11 @@ void Board::MarkFlagBits(Element* p, char i, bool bAllLyrs)
 
 bool Board::SetNodeIdByUser(int lyr, int row, int col, int nodeId, bool bPaintPins)
 {
-	Element*		p			= Get(lyr, row, col);
-	const bool		bHole		= p->GetIsHole();
-	if ( bHole ) return false;	// No change
-	const bool		bWire		= p->GetHasWire();
-	const bool		bPin		= p->GetHasPin();
+	Element*	p		= Get(lyr, row, col);
+	if ( p->GetIsHole() || ( p->GetSoicProtected() && nodeId != BAD_NODEID ) ) return false;	// No change
+
+	const bool	bWire	= p->GetHasWire();
+	const bool	bPin	= p->GetHasPin();
 	assert( !bPin || p->GetHasComp() );	// Sanity check
 	assert( !bWire || bPin );			// Wires must have pins
 
@@ -535,8 +535,9 @@ void Board::AutoFillVero()
 				}
 				continue;
 			}
-			if ( pC->GetHasPin() ) continue;	// Can't assign pins, so skip
-			if ( pC->GetIsHole() ) continue;	// Can't assign holes, so skip
+			if ( pC->GetHasPin() ) continue;		// Can't assign pins, so skip
+			if ( pC->GetIsHole() ) continue;		// Can't assign holes, so skip
+			if ( pC->GetSoicProtected() ) continue;	// Can't assign in SOIC area, so skip
 
 			// Have a blank non-pin element at this point
 			// Search for first used nodeId below

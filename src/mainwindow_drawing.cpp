@@ -626,6 +626,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	const bool		 bDirect		= !bVero && !bPixmapCache && !bGroundFill;	// true ==> Draw track "blobs" and pads directly (PDF/Gerber)
 	const int&		 layer			= board.GetCurrentLayer();
 	const int&		 groundNodeId	= board.GetGroundNodeId(layer);
+	const bool		 bSOIClayer		= ( layer == board.GetSOIClayer() );
 	const bool		 bWiresAsTracks	= m_bWriteGerber && m_bTwoLayerGerber && board.GetLyrs() == 1;	// true ==> Convert wires to tracks on the top layer
 	const int&		 W				= board.GetGRIDPIXELS();		// Square width in pixels
 	const int		 C				= W >> 1;						// Half square width in pixels
@@ -818,7 +819,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				bool bSOIC(false);
 	#ifdef _TEST_SOIC
 				const Component* pCompSOIC = nullptr;
-				if ( layer == 1 )	//TODO Top layer only
+				if ( bSOIClayer )	// Only show SOIC patterns on SOIC layer
 				{
 					for (auto& pComp : sortedComps)
 					{

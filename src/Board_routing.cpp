@@ -497,7 +497,7 @@ Element* Board::Backtrace(Element* const pEnd, int nodeId)
 	unsigned int MH = p->GetMH();
 	while ( true )	// Backtrace
 	{
-		assert( !p->GetIsHole() );
+		assert( !p->GetIsHole() && !(p->GetSoicProtected() && nodeId != BAD_NODEID) );
 
 		Element* const pW0 = m_bHavePlacedWires ? p->GetW(0) : nullptr;
 		Element* const pW1 = m_bHavePlacedWires ? p->GetW(1) : nullptr;
@@ -596,7 +596,7 @@ void Board::BacktracePaint(Element* const p, int nodeId, bool bHasPin, bool bWir
 
 void Board::BacktraceErase(Element* const p)
 {
-	assert( !p->GetIsHole() );
+	assert( !p->GetIsHole() && !p->GetSoicProtected() );
 	assert( p->GetNodeId() != BAD_NODEID );
 
 	Element* const pW0 = m_bHavePlacedWires ? p->GetW(0) : nullptr;
@@ -803,7 +803,6 @@ void Board::WipeTracks()
 		if ( bRestrict && !trax.GetCompElement(j,i)->ReadFlagBits(RECTSET) ) continue;	// Skip points outside grey area
 		Element* const p = Get(k, jRow, iCol);
 		assert( !p->GetHasPin() && !p->GetIsHole() && !p->GetHasComp() );	// Sanity check
-
 		SetNodeId(p, BAD_NODEID, !bRestrict);
 		p->SetSurface(SURFACE_FREE);
 		WipeFlagBits(p, bRestrict ? (AUTOSET|VEROSET|RECTSET) : (AUTOSET|VEROSET), !bRestrict);

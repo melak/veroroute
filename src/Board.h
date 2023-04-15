@@ -515,7 +515,18 @@ public:
 		for (auto& o : m_warnPoints[0])	o += QPointF(iRight, iDown);
 		for (auto& o : m_warnPoints[1])	o += QPointF(iRight, iDown);
 	}
-
+	void WipeSoicAreas()
+	{
+		const int numRows( GetRows() ), numCols( GetCols() );
+		const int k = GetSOIClayer();
+		for (int j = 0; j < numRows; j++)
+		for (int i = 0; i < numCols; i++)
+		{
+			Element* p = Get(k,j,i);
+			if ( p->GetSoicProtected() )
+				SetNodeIdByUser(k, j, i, BAD_NODEID, false);
+		}
+	}
 	bool GetBounds(int& minRow, int& minCol, int& maxRow, int& maxCol) const
 	{
 		bool bOK(false);

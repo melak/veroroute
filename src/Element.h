@@ -58,12 +58,20 @@ public:
 	void		 SetPinIndex(size_t i)		{ return GetBase()->Pin::SetPinIndex(i); }
 	void		 SetSurface(uchar c)		{ return GetBase()->Pin::SetSurface(c); }
 	void		 SetHoleUse(uchar c)		{ return GetBase()->Pin::SetHoleUse(c); }
+	void		 SetSoicChar(uchar c)		{ return GetBase()->Pin::SetSoicChar(c); }
 	void		 SetOccupancy(bool bWire)	{ return GetBase()->Pin::SetOccupancy(bWire); }
 	size_t		 GetPinIndex() const		{ return GetBaseConst()->Pin::GetPinIndex(); }
 	const uchar& GetSurface() const			{ return GetBaseConst()->Pin::GetSurface(); }
 	const uchar& GetHoleUse() const			{ return GetBaseConst()->Pin::GetHoleUse(); }
 	bool		 GetIsPin() const			{ return GetBaseConst()->Pin::GetIsPin(); }
 	bool		 GetIsHole() const			{ return GetBaseConst()->Pin::GetIsHole(); }
+	bool		 GetSoicChar() const		{ return GetBaseConst()->Pin::GetSoicChar(); }
+	bool		 GetSoicProtected() const
+	{
+		if ( GetSoicChar() == SOIC_NO ) return false;	// Not an SOIC area
+		// We have an SOIC area.  Whether it's protected or not depends on the layer we are on.
+		return GetNbr(NBR_X) < this;	// Either we have no NBR_X (i.e. single layer), or we are on the top layer
+	}
 	const int&	 GetNodeId() const
 	{
 		auto pBase = GetBaseConst();	return ( pBase != this && GetHasPin() ) ? pBase->TrackElement::GetNodeId() : TrackElement::GetNodeId();
@@ -320,8 +328,10 @@ public:
 	bool IsBlocked(int iNbr, int nodeId) const	// Helper: true ==> assiging nodeId to "this" blocks the iNbr direction
 	{
 		if ( !ReadCodeBit(iNbr, GetRoutable() ) ) return true;	// Block toroidal connections at board edges
-		if ( GetNbr(iNbr)->IsClash(nodeId) ) return true;		// Check if nbr has a clashing nodeId assigned to it
-		if ( GetNbr(iNbr)->GetIsHole() ) return true;			// Block connections to holes
+		auto pNbr = GetNbr(iNbr);
+		if ( pNbr->IsClash(nodeId) ) return true;		// Check if nbr has a clashing nodeId assigned to it
+		if ( pNbr->GetIsHole() ) return true;			// Block connections to holes
+		if ( pNbr->GetSoicProtected() ) return true;	// Block connections to SOIC area
 
 		switch( iNbr )	// Then do additional checks for competing diagonals
 		{
