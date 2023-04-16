@@ -224,8 +224,8 @@ void MainWindow::PaintSOIC(const GuiControl& guiCtrl, QPainter& painter, const s
 	}
 	else	// Draw to pixmap
 	{
-		const int	gapWidth	= bGap ? guiCtrl.GetPixelsFromMIL( guiCtrl.GetTRACK_IC_MIL() ) : 0;
-		const int	padWidth	= ( guiCtrl.GetHalfPixelsFromMIL( guiCtrl.GetPAD_IC_MIL() ) + gapWidth ) << 1;		// Pad width in pixels
+		const int	gapWidth	= bGap ? guiCtrl.GetPixelsFromMIL( guiCtrl.GetGAP_MIL() ) : 0;
+		const int	padWidth	= guiCtrl.GetHalfPixelsFromMIL( guiCtrl.GetPAD_IC_MIL() ) << 1;						// Pad width in pixels
 		const int	trackWidth	= ( guiCtrl.GetHalfPixelsFromMIL( guiCtrl.GetTRACK_IC_MIL() ) + gapWidth ) << 1;	// Track width in pixels
 
 		static QPen		pen(Qt::black, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
@@ -626,7 +626,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	const bool		 bDirect		= !bVero && !bPixmapCache && !bGroundFill;	// true ==> Draw track "blobs" and pads directly (PDF/Gerber)
 	const int&		 layer			= board.GetCurrentLayer();
 	const int&		 groundNodeId	= board.GetGroundNodeId(layer);
+#ifdef _TEST_SOIC	
 	const bool		 bSOIClayer		= ( layer == board.GetSOIClayer() );
+#endif
 	const bool		 bWiresAsTracks	= m_bWriteGerber && m_bTwoLayerGerber && board.GetLyrs() == 1;	// true ==> Convert wires to tracks on the top layer
 	const int&		 W				= board.GetGRIDPIXELS();		// Square width in pixels
 	const int		 C				= W >> 1;						// Half square width in pixels
@@ -1184,7 +1186,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		painter.restore();
 	}
 
-	/*if ( bColor )	//TODO debug stuff
+#ifdef _TEST_SOIC
+	if ( m_iDebugMode == DEBUGMODE_SOICINFO )	//TODO debug stuff
 	{
 		painter.save();
 		painter.setPen(Qt::NoPen);
@@ -1203,7 +1206,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			painter.restore();
 		}
 		painter.restore();
-	}*/
+	}
+#endif
 
 	
 	// Draw solder ===============================================================================
@@ -1273,9 +1277,10 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			const int		 iPadWidthMIL	= bCustomSize ? comp.GetPadWidth()  : board.GetPAD_MIL();
 			const int		 iHoleWidthMIL	= bCustomSize ? comp.GetHoleWidth() : board.GetHOLE_MIL();
 			const bool		 blankWire		= bWire && comp.GetNodeId(0) == BAD_NODEID;
+			const bool		 bSOIC			= comp.GetIsSOIC();
 
 			// Begin draw component pins ---------------------------------------------------------
-			if ( !m_bWriteGerber && !blankWire && ( compMode != COMPSMODE::OFF || ( bMonoPCB && bPlaced ) ) ) 	// Skip blank wires
+			if ( !m_bWriteGerber && !blankWire && !bSOIC && ( compMode != COMPSMODE::OFF || ( bMonoPCB && bPlaced ) ) ) 	// Skip blank wires and SOIC parts
 			{
 				painter.save();
 

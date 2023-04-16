@@ -246,6 +246,7 @@ void GStream::MakeApertures()	// Make "pens" for current stream
 				m_ePenList.push_back( GPenInfo(GPEN::PAD_IC, padIC, code++, " is for SOIC pads") );
 				m_ePenList.push_back( GPenInfo(GPEN::TRK_IC, trkIC, code++, " is for SOIC tracks") );
 			}
+			// Ground fill pens ...
 			if ( !m_pBoard->GetGroundFill() ) break;
 			for (const auto& pad : pads)
 				m_ePenList.push_back( GPenInfo(GPEN::PAD_GAP, pad + 2 * gap, code++, " is for separating pads from fill", pad != padDefault) );
@@ -253,6 +254,8 @@ void GStream::MakeApertures()	// Make "pens" for current stream
 				m_ePenList.push_back( GPenInfo(GPEN::VIA_GAP, via + 2 * gap, code++, " is for separating via-pads from fill") );
 			if ( true )
 				m_ePenList.push_back( GPenInfo(GPEN::TRK_GAP, trk + 2 * gap, code++, " is for separating tracks from fill") );
+			if ( m_eType == GFILE::GTL && m_bSOIC )
+				m_ePenList.push_back( GPenInfo(GPEN::TRK_IC_GAP, trkIC + 2 * gap, code++, " is for separating SOIC tracks from fill") );
 			break;
 		case GFILE::GBS:
 		case GFILE::GTS:

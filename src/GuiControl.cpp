@@ -256,8 +256,8 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pLT, std::list<MyPolygonF>& ou
 	out.clear();
 
 	const qreal	Q			= W * 0.25;	// 1/4 square width
-	const qreal	padWidth	= 0.01 * ( GetPAD_IC_MIL() + 2 * ( bGap ? GetPAD_IC_MIL() : 0 ) );
-	const qreal	trkWidth	= 0.01 * ( GetTRACK_IC_MIL() + 2 * ( bGap ? GetTRACK_IC_MIL() : 0 ) );
+	const qreal	padWidth	= 0.01 * GetPAD_IC_MIL();
+	const qreal	trkWidth	= 0.01 * ( GetTRACK_IC_MIL() + 2 * ( bGap ? GetGAP_MIL() : 0 ) );
 
 	const QPointF pC = pLT + QPointF(4.5*W,4*W);	// Centre of the shape
 
@@ -276,32 +276,34 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pLT, std::list<MyPolygonF>& ou
 				<< pC + QPointF(-4.5*W,  4*W)
 				<< pC + QPointF(-4.5*W, -4*W);
 		out.push_back(polygon);
-		return;
 	}
 
 	// SOIC Pads ----------------------------------------------------------------------------
-	polygon.m_eTrkPen	= GPEN::NONE;
-	polygon.m_ePadPen	= GPEN::PAD_IC;
-	polygon.m_radiusTrk	= 0;
-	polygon.m_radiusPad	= padWidth * 0.5;
-	polygon.m_bClosed	= false;
-
-	for (int iPinIndex = 0; iPinIndex < 28; iPinIndex++)
+	if ( !bGap )
 	{
-		polygon.m_pinIndex = iPinIndex;
-		polygon.clear();
-
-		const bool bLeft = iPinIndex < 14;
-		const qreal x    = Q * ( - 13 + 2 * ( bLeft ? iPinIndex : (27-iPinIndex) ) );
-		const qreal yLo	 = Q * ( bLeft ? 2 : -9 );
-		const qreal yHi	 = Q * ( bLeft ? 9 : -2 );
-		polygon.clear();
+		polygon.m_eTrkPen	= GPEN::NONE;
+		polygon.m_ePadPen	= GPEN::PAD_IC;
+		polygon.m_radiusTrk	= 0;
+		polygon.m_radiusPad	= padWidth * 0.5;
+		polygon.m_bClosed	= false;
 		
-		polygon << pC + QPointF(x, yLo) << pC  + QPointF(x , yHi);	out.push_back(polygon);
+		for (int iPinIndex = 0; iPinIndex < 28; iPinIndex++)
+		{
+			polygon.m_pinIndex = iPinIndex;
+			polygon.clear();
+		
+			const bool bLeft = iPinIndex < 14;
+			const qreal x    = Q * ( - 13 + 2 * ( bLeft ? iPinIndex : (27-iPinIndex) ) );
+			const qreal yLo	 = Q * ( bLeft ? 2 : -9 );
+			const qreal yHi	 = Q * ( bLeft ? 9 : -2 );
+			polygon.clear();
+			
+			polygon << pC + QPointF(x, yLo) << pC  + QPointF(x , yHi);	out.push_back(polygon);
+		}
 	}
 
 	// SOIC tracks -------------------------------------------------------------------------
-	polygon.m_eTrkPen	= GPEN::TRK_IC;
+	polygon.m_eTrkPen	= bGap ?  GPEN::TRK_IC_GAP : GPEN::TRK_IC;
 	polygon.m_ePadPen	= GPEN::NONE;
 	polygon.m_radiusTrk	= trkWidth * 0.5;
 	polygon.m_radiusPad	= 0;

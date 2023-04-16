@@ -40,6 +40,10 @@
 #define USE_PIXMAP_CACHE
 #endif
 
+#ifdef _TEST_SOIC
+enum DEBUGMODE { DEBUGMODE_OFF = 0 , DEBUGMODE_SOICINFO, DEBUGMODE_END };
+#endif
+
 namespace Ui { class MainWindow; }
 
 class ControlDialog;
@@ -693,4 +697,7 @@ private:
 	QPoint		m_rulerA;
 	QPoint		m_rulerB;
 	int			m_iTutorialNumber	= -1;		// Tutorial file number 0,1,2,... (or -1 if not in tutorial mode)
+#ifdef _TEST_SOIC
+	int			m_iDebugMode = DEBUGMODE_OFF;
+#endif
 };

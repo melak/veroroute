@@ -929,6 +929,13 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
 	const int			nComps			= groupMgr.GetNumUserComps();
 	const bool			bIsAutoRepeat	= event->isAutoRepeat();
 
+#ifdef _TEST_SOIC
+	switch(event->key())
+	{
+		case Qt::Key_F4: m_iDebugMode = ( m_iDebugMode + 1 ) % DEBUGMODE_END;	break;
+	}
+#endif
+	
 	if ( m_board.GetCompEdit() )
 	{
 		if ( GetCurrentShapeId() != BAD_ID )
