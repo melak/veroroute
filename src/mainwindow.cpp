@@ -2260,7 +2260,7 @@ void MainWindow::DefinerSetA2(double d)					{ if ( GetCompDefiner().SetA2(d)	) {
 void MainWindow::DefinerSetA3(double d)					{ if ( GetCompDefiner().SetA3(d)	) { UpdateHistory("change shape rotate angle",	GetCurrentShapeId()); EnableCompDialogControls(); RepaintSkipRouting(); } }
 void MainWindow::DefinerBuild()
 {
-	assert( GetCompDefiner().GetIsValid() );
+	assert( GetCompDefiner().GetIsValid( GetTemplateManager() ) );
 	const Component comp( GetTemplateManager(), GetCompDefiner() );
 
 	std::string errorStr;
