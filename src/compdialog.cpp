@@ -143,9 +143,9 @@ void CompDialog::Update()
 	ui->padWidth->setValue( def.GetPadWidth() );
 	ui->holeWidth->setValue( def.GetHoleWidth() );
 
-	const Pin& pin = def.GetCurrentPin();
 	if ( bValidPinId )
 	{
+		const Pin& pin = def.GetCurrentPin();
 		ui->spinBox_PinNumber->setValue( static_cast<int>(pin.GetPinIndex() + 1) );
 		ui->comboBox_Surface->setCurrentIndex( pin.GetSurface() == SURFACE_FULL ? 0 :
 											   pin.GetSurface() == SURFACE_FREE ? 1 : 2 );	// Set to match order in which combo was populated
