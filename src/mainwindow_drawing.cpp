@@ -811,7 +811,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				const bool		bWireAsVia		= bWire && bWiresAsTracks;	// true ==> draw small via pad
 				const int		iPerimeterCode	= board.GetPerimeterCode(pC);	// 0 to 255
 				const bool		bVia			= pC->GetIsVia()  ||  bWireAsVia;
-				const bool		bPad			= !bWireAsVia && pC->GetHasPin();
+				const bool		bPad			= !bWireAsVia && pC->GetHasPin() && ( pC->GetSoicChar() & SOIC_THL );	// Only want through-hole pads
 				assert( !(bVia && bPad) );	// Can't be both a via and a regular pad
 				const bool		bIsGnd			= bGroundFill && nodeId == groundNodeId;
 				const int		iTagCode		= ( bPad && bIsGnd && nodeId != BAD_NODEID ) ? board.GetTagCode(pC, iPerimeterCode) : 0;
@@ -911,7 +911,10 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					}
 				}
 				const bool bPadOffset	= ( padOffsetX != 0 || padOffsetY != 0 );
-				const bool bBlob		= bPointOK && ( !bPadOffset || iPerimeterCode != 0 || ( bForceXthermal && bIsGnd ) );	//TODO Added bPointOK to make SOIC test work
+				const bool bBlob		= ( !bPadOffset || iPerimeterCode != 0 || ( bForceXthermal && bIsGnd ) );
+				const bool bDrawBlob	= bPointOK && bBlob;
+				const bool bDrawPad		= bPointOK && bPad;
+				const bool bDrawVia		= bPointOK && bVia;
 
 				QPen& greyPen = ( layerPref == LAYER_X ) ? penGry :
 								( layerPref == LAYER_T ) ? penTop : penBot;
@@ -938,7 +941,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					painter.setPen(wirePen);
 					painter.setBrush(Qt::NoBrush);
 					painter.drawRect(X-iWireBoxWidth, Y-iWireBoxWidth, iWireBoxWidth*2, iWireBoxWidth*2);
-					continue;	// Next grid square
+					if ( !bSOIC ) continue;	// Next grid square
 				}
 
 				// Note that bVero, bPixmapCache, bGroundFill, bDirect are mutually exclusive
@@ -990,7 +993,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						painter.setPen(Qt::NoPen);
 						painter.setBrush(color);
 						// Draw blob
-						if ( bBlob && !bCustomSize && !bPadOffset )		// Custom/offset stuff is rendered on last loop
+						if ( bDrawBlob && !bCustomSize && !bPadOffset )		// Custom/offset stuff is rendered on last loop
 						{
 							// Draw background square first in relevant color
 							painter.drawRect(L+C-m_radPixmapBlob, T+C-m_radPixmapBlob, m_radPixmapBlob << 1, m_radPixmapBlob << 1);
@@ -1001,20 +1004,20 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						// Draw pad/via
 						if ( bCustomColor )
 						{
-							if ( bVia )
+							if ( bDrawVia )
 								PaintVia(board, painter, color, pCentre);
-							if ( bPad && !bCustomSize && !bPadOffset )	// Custom/offset stuff is rendered on last loop
+							if ( bDrawPad && !bCustomSize && !bPadOffset )	// Custom/offset stuff is rendered on last loop
 								PaintPad(board, painter, color, pCentre);
 						}
 						else	// Non-custom color means we can use a cached pixmap
 						{
-							if ( bVia )
+							if ( bDrawVia )
 								painter.drawPixmap(L+C-m_radPixmapVia, T+C-m_radPixmapVia, *(m_ppPixmapVia[iEffColorId]));
-							if ( bPad && !bCustomSize && !bPadOffset )	// Custom/offset stuff is rendered on last loop
+							if ( bDrawPad && !bCustomSize && !bPadOffset )	// Custom/offset stuff is rendered on last loop
 								painter.drawPixmap(L+C-m_radPixmapPad, T+C-m_radPixmapPad, *(m_ppPixmapPad[iEffColorId]));
 						}
 					}
-					else if ( iLoop == 1 )
+					else if ( iLoop == 1 && bPointOK )
 					{
 						// Read flags for LT and RT so we can fill diagonal gaps produced on previous iLoop
 						const bool bUsedLT = ReadCodeBit(NBR_LT, iPerimeterCode);
@@ -1043,10 +1046,10 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 							if ( bUsedRT ) painter.drawPixmap(R-m_radPixmapDiag, T-m_radPixmapDiag, *pRT);
 						}
 					}
-					else if (  bCustomSize || bPadOffset )	// Custom/offset stuff ...
+					else if ( bCustomSize || bPadOffset )	// Custom/offset stuff ...
 					{
-						if ( bBlob ) PaintBlob(board, painter, color, pCentre, pCentreOff, iPadWidthMIL, iPerimeterCode, iTagCode, bPad, false);
-						if ( bPad )  PaintPad(board, painter, color, pCentreOff, iPadWidthMIL, iHoleWidthMIL);
+						if ( bDrawBlob ) PaintBlob(board, painter, color, pCentre, pCentreOff, iPadWidthMIL, iPerimeterCode, iTagCode, bPad, false);
+						if ( bDrawPad )  PaintPad(board, painter, color, pCentreOff, iPadWidthMIL, iHoleWidthMIL);
 					}
 	#ifdef _TEST_SOIC
 					if ( bSOIC ) PaintSOIC(board, painter, soicColors, pCentre, pCompSOIC);	//TODO
@@ -1057,44 +1060,44 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				{
 					if ( iLoop == 0 )
 					{
-						if ( !bIsGnd && bBlob )	// Only the non-ground tracks have a "white" surround
+						if ( !bIsGnd && bDrawBlob )	// Only the non-ground tracks have a "white" surround
 							PaintBlob(board, painter, backgroundColor, pCentre, pCentreOff, iPadWidthMIL, iPerimeterCode, iTagCode, bPad, bIsGnd, true);	// Draw fat "white" track blob
-						if ( bVia ) PaintVia(board, painter, backgroundColor, pCentre, true);										// Draw fat "white" via
-						if ( bPad ) PaintPad(board, painter, backgroundColor, pCentreOff, iPadWidthMIL, iHoleWidthMIL, true);		// Draw fat "white" pad
+						if ( bDrawVia ) PaintVia(board, painter, backgroundColor, pCentre, true);										// Draw fat "white" via
+						if ( bDrawPad ) PaintPad(board, painter, backgroundColor, pCentreOff, iPadWidthMIL, iHoleWidthMIL, true);		// Draw fat "white" pad
 	#ifdef _TEST_SOIC
 						if ( bSOIC ) PaintSOIC(board, painter, backgroundColor, pCentre, pCompSOIC, true);	//TODO
 	#endif
 					}
 					else if ( iLoop == 1 )	// Draw track "blobs" and pads directly
 					{
-						if ( bBlob ) PaintBlob(board, painter, color, pCentre, pCentreOff, iPadWidthMIL, iPerimeterCode, iTagCode, bPad, bIsGnd);	// Draw track blob
-						if ( bVia )  PaintVia(board, painter, color, pCentre);									// Draw via same color as track
-						if ( bPad )  PaintPad(board, painter, color, pCentreOff, iPadWidthMIL, iHoleWidthMIL);	// Draw pad same color as track
+						if ( bDrawBlob ) PaintBlob(board, painter, color, pCentre, pCentreOff, iPadWidthMIL, iPerimeterCode, iTagCode, bPad, bIsGnd);	// Draw track blob
+						if ( bDrawVia )  PaintVia(board, painter, color, pCentre);									// Draw via same color as track
+						if ( bDrawPad )  PaintPad(board, painter, color, pCentreOff, iPadWidthMIL, iHoleWidthMIL);	// Draw pad same color as track
 	#ifdef _TEST_SOIC
 						if ( bSOIC ) PaintSOIC(board, painter, soicColors, pCentre, pCompSOIC);	//TODO
 	#endif
 					}
 					else if ( bDrawGrey )
 					{
-						if ( bVia ) PaintViaGrey(board, painter, pCentre);								// Draw grey via
-						if ( bPad ) PaintPadGrey(board, painter, greyPen, pCentreOff, iPadWidthMIL);	// Draw "grey" pad
+						if ( bDrawVia ) PaintViaGrey(board, painter, pCentre);								// Draw grey via
+						if ( bDrawPad ) PaintPadGrey(board, painter, greyPen, pCentreOff, iPadWidthMIL);	// Draw "grey" pad
 					}
 				}
 				if ( bDirect )	// Draw track "blobs" and pads directly (PDF/Gerber)
 				{
 					if ( iLoop == 0 )
 					{
-						if ( bBlob ) PaintBlob(board, painter, color, pCentre, pCentreOff, iPadWidthMIL, iPerimeterCode, iTagCode, bPad, false);	// Draw track blob
-						if ( bVia )  PaintVia(board, painter, color, pCentre);									// Draw via same color as track
-						if ( bPad )  PaintPad(board, painter, color, pCentreOff, iPadWidthMIL, iHoleWidthMIL);	// Draw pad same color as track
+						if ( bDrawBlob ) PaintBlob(board, painter, color, pCentre, pCentreOff, iPadWidthMIL, iPerimeterCode, iTagCode, bPad, false);	// Draw track blob
+						if ( bDrawVia )  PaintVia(board, painter, color, pCentre);									// Draw via same color as track
+						if ( bDrawPad )  PaintPad(board, painter, color, pCentreOff, iPadWidthMIL, iHoleWidthMIL);	// Draw pad same color as track
 	#ifdef _TEST_SOIC
 						if ( bSOIC ) PaintSOIC(board, painter, soicColors, pCentre, pCompSOIC, false);	//TODO
 	#endif
 					}
 					else if ( bDrawGrey )
 					{
-						if ( bVia ) PaintViaGrey(board, painter, pCentre);								// Draw grey via
-						if ( bPad ) PaintPadGrey(board, painter, greyPen, pCentreOff, iPadWidthMIL);	// Draw "grey" pad
+						if ( bDrawVia ) PaintViaGrey(board, painter, pCentre);								// Draw grey via
+						if ( bDrawPad ) PaintPadGrey(board, painter, greyPen, pCentreOff, iPadWidthMIL);	// Draw "grey" pad
 					}
 				}
 			}
@@ -1195,7 +1198,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			painter.save();
 			painter.translate((L+R)/2, (T+B)/2);
 			painter.scale(dTextScale, dTextScale);
-			painter.setPen(m_redPen);
+			painter.setPen(m_blackPen);
 			painter.drawText(0,0,0,0, Qt::TextDontClip | Qt::AlignVCenter | Qt::AlignHCenter, std::to_string(iVal).c_str());
 			painter.restore();
 		}
@@ -1859,7 +1862,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	if ( !m_bWriteGerber && !bVero && m_padOffsetDlg->isVisible() )
 	{
 		const Element* pC = m_board.Get(layer, m_gridRow, m_gridCol);
-		if ( pC->GetHasPin() && !pC->GetHasWire() )
+		if ( pC->GetHasPin() && !pC->GetHasWire() && !( pC->GetSoicChar() & SOIC_PAD ) )	//TODO Should only allow non-shifted pads to share holes with SOIC parts
 		{
 			GetXY(board, m_gridRow, m_gridCol, X, Y);
 
