@@ -81,8 +81,6 @@ void CompDefiner::Populate(const Component& o)
 
 void CompDefiner::Build(const TemplateManager& templateMgr, Component& comp) const
 {
-	assert( GetIsValid(templateMgr) );
-
 	// Build component from definition
 	comp.SetPinFlags( GetPinFlags() );
 	comp.SetPadWidth( GetPadWidth() );

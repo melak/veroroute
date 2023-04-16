@@ -267,7 +267,7 @@ unsigned int Board::Flood(bool bSingleRoute)
 	// The return value is a cost that shows how unconnected the pins are.
 	// Zero cost means the pins are all inter-connected.
 
-	const size_t N = m_targetPins.size();	assert( bSingleRoute == ( N == 1) );
+	const size_t N = m_targetPins.size();	assert( !bSingleRoute || ( N == 1 ) );
 
 	if ( !bSingleRoute && N < 2 ) return 0;	// Return cost of zero
 
@@ -805,6 +805,7 @@ void Board::WipeTracks()
 		assert( !p->GetHasPin() && !p->GetIsHole() && !p->GetHasComp() );	// Sanity check
 		SetNodeId(p, BAD_NODEID, !bRestrict);
 		p->SetSurface(SURFACE_FREE);
+		p->SetSoicChar(SOIC_FREE);
 		WipeFlagBits(p, bRestrict ? (AUTOSET|VEROSET|RECTSET) : (AUTOSET|VEROSET), !bRestrict);
 		MarkFlagBits(p, USERSET, !bRestrict);
 	}
