@@ -658,16 +658,18 @@ void Board::Manhatten(Element* p, bool bSingleRoute)
 
 	m_targetPins.clear();
 
+	Element* pFirst = p;
+
 	if ( p->GetHasPin() )	// p could be a wire end
-		m_targetPins.push_back( p->IsLayer0() ? p : p->GetNbr(NBR_X) );	// Always want target pins on layer 0
-	else
-		m_targetPins.push_back(p);
+		pFirst = p->IsLayer0() ? p : p->GetNbr(NBR_X);	// Always want target pins on layer 0
+
+	m_targetPins.push_back(pFirst);
 
 	// If we haven't specified bSingleRoute, then build additional routes from all true component pins
 	for (int i = 0, iSize = ( GetLyrs() == 1 ) ? GetSize() : ( GetSize() / 2 ); i < iSize && !bSingleRoute; i++)	// Use layer 0 only for pins
 	{
 		Element* const q = GetAt(i);
-		if ( q == p ) continue;	// Skip self
+		if ( q == pFirst ) continue;	// Skip first
 		if ( q && q->GetHasPin() && !(m_bHavePlacedWires && q->GetHasWire()) && q->GetNodeId() == iTraceNodeId )	// Skip wires
 			m_targetPins.push_back(q);
 	}
