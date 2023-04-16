@@ -327,6 +327,7 @@ public:
 	}
 	bool IsBlocked(int iNbr, int nodeId) const	// Helper: true ==> assiging nodeId to "this" blocks the iNbr direction
 	{
+		assert(nodeId != BAD_NODEID);
 		if ( !ReadCodeBit(iNbr, GetRoutable() ) ) return true;	// Block toroidal connections at board edges
 		auto pNbr = GetNbr(iNbr);
 		if ( pNbr->IsClash(nodeId) ) return true;		// Check if nbr has a clashing nodeId assigned to it

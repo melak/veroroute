@@ -808,7 +808,7 @@ public:
 
 		if ( inStream.GetVersion() < VRT_VERSION_55 )
 			FixSoicInfo();
-	
+
 		m_groupMgr.Load(inStream);			// Call Load() on group manager
 
 		if ( inStream.GetVersion() >= VRT_VERSION_10 )

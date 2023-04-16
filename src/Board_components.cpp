@@ -202,7 +202,7 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 
 				bOK =  ( traxNodeId == BAD_NODEID )
 					|| ( traxNodeId == pGrid->GetNodeId() )
-					|| ( !pGrid->GetHasPin() && pGrid->GetNodeId() == BAD_NODEID && !pGrid->GetIsHole() );
+					|| ( !pGrid->GetHasPin() && pGrid->GetNodeId() == BAD_NODEID && !pGrid->GetIsHole() && !(pGrid->GetSoicProtected() && traxNodeId != BAD_NODEID) );
 
 				if ( !bOK ) // Special check for unpainted wires on the board
 				{
@@ -255,7 +255,7 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 						( compSurface  == SURFACE_FREE ) ||
 						( boardSurface + compSurface <= SURFACE_FULL );
 				bOK &=	( boardHoleUse + compHoleUse <= HOLE_FULL );
-				bOK &=	( !compSoicChar || Get(GetSOIClayer(), jRow, iCol)->GetNodeId() == BAD_NODEID );	// Cannot place SOIC if board is painted in SOIC area
+				bOK &=	( (compSoicChar != SOIC_PATTERN) || Get(GetSOIClayer(), jRow, iCol)->GetNodeId() == BAD_NODEID );	// Cannot place SOIC if board is painted in SOIC area
 				bOK &=	( boardSoicChar + compSoicChar <= SOIC_FULL );
 				bOK &=	( !bWire || bAllowHoleShare || ( boardHoleUse + compHoleUse <= HOLE_WIRE ) );
 				bOK &=	( !bWire || bAllowWireCross || ( boardSurface <= ( bAllowHoleShare ? SURFACE_WIRE_END | SURFACE_GAP : SURFACE_GAP ) ) );
