@@ -245,6 +245,7 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 				const uchar& compSurface	= pComp->GetSurface();
 				const uchar& boardHoleUse	= pGrid->GetHoleUse();
 				const uchar& compHoleUse	= pComp->GetHoleUse();
+				const uchar& boardSoicChar	= pGrid->GetSoicChar();
 				const uchar& compSoicChar	= pComp->GetSoicChar();
 
 				// Check surface and hole use.
@@ -254,7 +255,8 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 						( compSurface  == SURFACE_FREE ) ||
 						( boardSurface + compSurface <= SURFACE_FULL );
 				bOK &=	( boardHoleUse + compHoleUse <= HOLE_FULL );
-				bOK &=	( !compSoicChar || Get(GetSOIClayer(), jRow, iCol)->GetNodeId() == BAD_NODEID );	// Can place SOIC if board is painted in SOIC area
+				bOK &=	( !compSoicChar || Get(GetSOIClayer(), jRow, iCol)->GetNodeId() == BAD_NODEID );	// Cannot place SOIC if board is painted in SOIC area
+				bOK &=	( boardSoicChar + compSoicChar <= SOIC_FULL );
 				bOK &=	( !bWire || bAllowHoleShare || ( boardHoleUse + compHoleUse <= HOLE_WIRE ) );
 				bOK &=	( !bWire || bAllowWireCross || ( boardSurface <= ( bAllowHoleShare ? SURFACE_WIRE_END | SURFACE_GAP : SURFACE_GAP ) ) );
 				if ( !bOK ) continue;

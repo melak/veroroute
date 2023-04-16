@@ -215,7 +215,11 @@ public:
 		const bool bWire = m_type == COMP::WIRE;
 		assert( GetLyrs() == 1 );
 		assert( !bWire || (GetRows() == 1 && GetCols() > 1) );
-		for (int i = 0, iSize = GetSize(); i < iSize; i++) GetAt(i)->SetOccupancy(bWire);
+		for (int i = 0, iSize = GetSize(); i < iSize; i++)
+		{
+			GetAt(i)->SetOccupancy(bWire);
+			GetAt(i)->SetSoicChar( GetAt(i)->GetIsPin() ? SOIC_THL : SOIC_FREE );
+		}
 	}
 	// Persist interface functions
 	virtual void Load(DataStream& inStream) override

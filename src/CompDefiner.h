@@ -267,22 +267,8 @@ public:
 		if ( GetCurrentPinId() == BAD_ID ) return false;
 		auto& o =  GetCurrentPin();
 		o.SetPinIndex( static_cast<size_t>(i - 1) );
-#ifdef _TEST_SOIC
-		o.SetSoicChar(SOIC_NO);
-		const bool bSOIC = ( GetValueStr() == "SOIC28_TEST" );	//TODO
-#else
-		const bool bSOIC = false;
-#endif
-		if ( bSOIC )
-		{
-			o.SetSurface(SURFACE_FREE);
-			o.SetHoleUse(HOLE_FREE);
-		}
-		else
-		{
-			o.SetSurface(SURFACE_FULL);
-			o.SetHoleUse(HOLE_FULL);
-		}
+		o.SetSurface(SURFACE_FULL);
+		o.SetHoleUse(HOLE_FULL);
 		ReAllocatePins( GetMaxPinNumber() );
 		return true;
 	}
@@ -291,42 +277,16 @@ public:
 		if ( GetCurrentPinId() == BAD_ID ) return false;
 		auto& o = GetCurrentPin();
 		const size_t iPinIndex = o.GetPinIndex();
-#ifdef _TEST_SOIC
-		const bool bSOIC = ( GetValueStr() == "SOIC28_TEST" );	//TODO
-#else
-		const bool bSOIC = false;
-#endif
 		// If we end up with a valid pinIndex (>= 0 and <= 254) then set HOLE_FULL, else set HOLE_FREE
 		if ( bInc )
 		{
 			if ( iPinIndex == BAD_PININDEX )
 			{
-#ifdef _TEST_SOIC
-				o.SetSoicChar(SOIC_NO);	// Only set true when going from FREE to FULL
-#endif
 				switch( o.GetSurface() )
 				{
 					case SURFACE_HOLE:	o.SetSurface(SURFACE_FREE);	o.SetHoleUse(HOLE_FREE);	return true;
-					case SURFACE_FREE:
-					{
-						if ( bSOIC )		//TODO
-						{
-							o.SetSurface(SURFACE_FULL);	o.SetHoleUse(HOLE_FREE);	o.SetSoicChar(SOIC_YES);	return true;
-						}
-						else
-						{
-							o.SetSurface(SURFACE_FULL);	o.SetHoleUse(HOLE_FREE);	return true;
-						}
-					}
-					case SURFACE_FULL:	
-						if ( bSOIC )		//TODO
-						{
-							o.SetPinIndex(0);	o.SetSurface(SURFACE_FREE);		o.SetHoleUse(HOLE_FREE);	return true;
-						}
-						else
-						{
-							o.SetPinIndex(0);	o.SetHoleUse(HOLE_FULL);	return true;
-						}
+					case SURFACE_FREE:	o.SetSurface(SURFACE_FULL);	o.SetHoleUse(HOLE_FREE);	return true;
+					case SURFACE_FULL:	o.SetPinIndex(0);			o.SetHoleUse(HOLE_FULL);	return true;
 					default:			assert(0);					return false;	// Don't yet handle SURFACE_GAP / SURFACE_PLUG
 				}
 			}
@@ -341,9 +301,6 @@ public:
 		{
 			if ( iPinIndex == BAD_PININDEX )
 			{
-#ifdef _TEST_SOIC
-				o.SetSoicChar(SOIC_NO);	// Only set true when going from pinIndex 0 to BAD_PININDEX
-#endif
 				switch( o.GetSurface() )
 				{
 					case SURFACE_HOLE:								return false;
@@ -355,22 +312,12 @@ public:
 			else if ( iPinIndex > 0 )
 			{
 				o.SetPinIndex(iPinIndex-1);
-				if ( bSOIC )		//TODO
-				{
-					o.SetSurface(SURFACE_FREE);		o.SetHoleUse(HOLE_FREE);
-				}
-				else
-				{
-					o.SetHoleUse(HOLE_FULL);
-				}
+				o.SetHoleUse(HOLE_FULL);
 			}
 			else	// iPinIndex == 0
 			{
 				o.SetPinIndex(BAD_PININDEX);
 				o.SetHoleUse(HOLE_FREE);
-#ifdef _TEST_SOIC
-				o.SetSoicChar(SOIC_YES);
-#endif
 			}
 			return true;
 		}

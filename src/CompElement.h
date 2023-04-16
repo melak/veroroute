@@ -78,6 +78,8 @@ public:
 			Pin::Load(inStream);			// Load() base class
 			TrackElement::Load(inStream);	// Load() base class
 		}
+		if ( inStream.GetVersion() < VRT_VERSION_55 )
+			Pin::SetSoicChar( Pin::GetIsPin() ? SOIC_THL : SOIC_FREE );
 	}
 	virtual void Save(DataStream& outStream) override
 	{

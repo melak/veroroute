@@ -47,11 +47,15 @@
 //		HOLE_WIRE			==> the hole is occupied by one wire.
 //		HOLE_FULL			==> the hole is fully occupied.  (By a regular component pin, or by 2 wires).
 //
-//	4)	SOIC info.  We store this info on the base layer of the grid, but it refers to whatever
+//	4)	SOIC bitfield.  We store this info on the base layer of the grid, but it refers to whatever
 //		layer displays the SOIC pattern (i.e. "the SOIC layer").
 //
-//		SOIC_NO			==> No SOIC pattern 
-//		SOIC_YES		==> Have SOIC pattern (so not point is not paintable on the SOIC layer)
+//		SOIC_FREE		==> No pads and no SOIC pattern.
+//		SOIC_PATTERN	==> No pads but have SOIC pattern (so point is not paintable on the SOIC layer).
+//		SOIC_THL		==> One through-hole component or wire.  Regular components/wires use this with their pins.
+//		SOIC_WIRES		==> Two through-hole components (i.e. wires sharing a hole on the board).
+//		SOIC_PAD		==> SOIC pad and no SOIC pattern.  SOIC components use this with their pins.
+//		SOIC_FULL		==> Cannot place any more parts at the location.
 
 Q_DECL_CONSTEXPR static const uchar  BAD_PINCHAR		= 255;
 Q_DECL_CONSTEXPR static const size_t BAD_PININDEX		= static_cast<size_t>(-1);
@@ -69,8 +73,12 @@ Q_DECL_CONSTEXPR static const uchar  HOLE_FREE			= 0;
 Q_DECL_CONSTEXPR static const uchar  HOLE_WIRE			= 1;	// Hence: "HOLE_WIRE + HOLE_WIRE == HOLE_FULL"
 Q_DECL_CONSTEXPR static const uchar  HOLE_FULL			= 2;
 
-Q_DECL_CONSTEXPR static const uchar  SOIC_NO			= 0;
-Q_DECL_CONSTEXPR static const uchar  SOIC_YES			= 1;
+Q_DECL_CONSTEXPR static const uchar  SOIC_FREE			= 0;	// Free space
+Q_DECL_CONSTEXPR static const uchar  SOIC_PATTERN		= 1;	// SOIC Pattern
+Q_DECL_CONSTEXPR static const uchar  SOIC_THL			= 2;	// One through-hole component or wire
+Q_DECL_CONSTEXPR static const uchar  SOIC_WIRES			= 4;	// Two through-hole components (i.e. two wires)
+Q_DECL_CONSTEXPR static const uchar  SOIC_PAD			= 8;	// An SOIC pad
+Q_DECL_CONSTEXPR static const uchar  SOIC_FULL			= 10;	// Hence can handle at most (1xSOIC_THL + 1xSOIC_PAD) not (2xSOIC_PADs). (2xSOIC_THL is blocked by the SURFACE and HOLE info).
 
 
 Q_DECL_CONSTEXPR static size_t GetPinIndexFromLegacyPinChar(uchar c)	// Legacy VRT format had messy mapping of pinChar to pinIndex
@@ -102,7 +110,7 @@ static uchar GetSurfaceFromLegacySurfaceChar(uchar c)
 class Pin : public Persist, public Merge
 {
 public:
-	Pin(uchar pinChar = BAD_PINCHAR, uchar surface = SURFACE_FREE, uchar holeUse = HOLE_FREE, uchar soicChar = SOIC_NO)
+	Pin(uchar pinChar = BAD_PINCHAR, uchar surface = SURFACE_FREE, uchar holeUse = HOLE_FREE, uchar soicChar = SOIC_FREE)
 	: m_pinChar(pinChar)
 	, m_surface(surface)
 	, m_holeUse(holeUse)
@@ -133,7 +141,7 @@ public:
 	void SetSurface(uchar c)	{ m_surface = c; }
 	void SetHoleUse(uchar c)	{ m_holeUse = c; }
 	void SetSoicChar(uchar c)	{ m_soicChar = c; }
-	void SetOccupancy(bool bWire)	// Helper
+	void SetOccupancy(bool bWire)	// Helper for components
 	{
 		if ( bWire )
 		{
@@ -193,7 +201,7 @@ public:
 			inStream.Load(m_holeUse);	// Added in VRT_VERSION_26
 		if ( inStream.GetVersion() <= VRT_VERSION_39 )
 			if ( GetIsPin() && m_holeUse == HOLE_FREE ) m_holeUse = HOLE_FULL;	// Bug-fix non-wire hole-use
-		m_soicChar = SOIC_NO;
+		m_soicChar = SOIC_FREE;	// Can't set a default for all legacy cases here.  Need to handle things in CompElement::Load() and Board::Load()
 		if ( inStream.GetVersion() >= VRT_VERSION_55 )
 			inStream.Load(m_soicChar);	// Added in VRT_VERSION_55
 	}

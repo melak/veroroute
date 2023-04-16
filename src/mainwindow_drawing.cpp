@@ -1181,6 +1181,28 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		painter.restore();
 	}
 
+	/*if ( bColor )	//TODO debug stuff
+	{
+		painter.save();
+		painter.setPen(Qt::NoPen);
+		painter.setBrush(m_darkBrush);
+		for (int j = minRow; j <= maxRow; j++)
+		for (int i = minCol; i <= maxCol; i++)
+		{
+			const Element* pC = board.Get(layer, j, i);
+			int iVal = (int) pC->GetSoicChar();
+			GetLRTB(board, 100, j, i, L, R, T, B);	// 100% size square
+			painter.save();
+			painter.translate((L+R)/2, (T+B)/2);
+			painter.scale(dTextScale, dTextScale);
+			painter.setPen(m_redPen);
+			painter.drawText(0,0,0,0, Qt::TextDontClip | Qt::AlignVCenter | Qt::AlignHCenter, std::to_string(iVal).c_str());
+			painter.restore();
+		}
+		painter.restore();
+	}*/
+
+	
 	// Draw solder ===============================================================================
 	if ( ( bColor || bMono ) && bVero )
 	{

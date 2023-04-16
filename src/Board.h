@@ -806,6 +806,9 @@ public:
 		if ( inStream.GetVersion() < VRT_VERSION_26 )
 			FixLegacyWires();
 
+		if ( inStream.GetVersion() < VRT_VERSION_55 )
+			FixSoicInfo();
+	
 		m_groupMgr.Load(inStream);			// Call Load() on group manager
 
 		if ( inStream.GetVersion() >= VRT_VERSION_10 )
@@ -870,6 +873,15 @@ private:
 					}
 				}
 			}
+		}
+	}
+	void FixSoicInfo()
+	{
+		for (int iRow = 0, iRows = GetRows(); iRow < iRows; iRow++)
+		for (int iCol = 0, iCols = GetCols(); iCol < iCols; iCol++)
+		{
+			Element* p = Get(0, iRow, iCol);	// Only need to check base layer
+			p->SetSoicChar( ( p->GetNumWires() == 2 ) ? SOIC_WIRES : p->GetHasPin() ? SOIC_THL : SOIC_FREE );
 		}
 	}
 	void SetHavePlacedWires() { m_bHavePlacedWires = GetCompMgr().GetHavePlacedWires(); }

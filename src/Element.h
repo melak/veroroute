@@ -65,10 +65,10 @@ public:
 	const uchar& GetHoleUse() const			{ return GetBaseConst()->Pin::GetHoleUse(); }
 	bool		 GetIsPin() const			{ return GetBaseConst()->Pin::GetIsPin(); }
 	bool		 GetIsHole() const			{ return GetBaseConst()->Pin::GetIsHole(); }
-	bool		 GetSoicChar() const		{ return GetBaseConst()->Pin::GetSoicChar(); }
+	uchar		 GetSoicChar() const		{ return GetBaseConst()->Pin::GetSoicChar(); }
 	bool		 GetSoicProtected() const
 	{
-		if ( GetSoicChar() == SOIC_NO ) return false;	// Not an SOIC area
+		if ( GetSoicChar() != SOIC_PATTERN ) return false;	// Not an SOIC area if the SOIC_PATTERN bit is not set
 		// We have an SOIC area.  Whether it's protected or not depends on the layer we are on.
 		return GetNbr(NBR_X) < this;	// Either we have no NBR_X (i.e. single layer), or we are on the top layer
 	}
