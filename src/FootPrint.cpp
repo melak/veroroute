@@ -52,7 +52,11 @@ void FootPrint::BuildDefault(COMP type)
 		}
 		p->SetPinIndex( GetPinIndexFromLegacyPinChar(static_cast<uchar>(pinChar)) );
 	}
-	SetupOccupancies();	// Setup hole use (and for wires setup surface use too)
+	bool bIsSOIC(false);	//TODO If SOIC parts are introduced as a COMP type, then we need to set this as necessary
+	if ( bIsSOIC )
+		SetupOccupanciesSOIC();	// Setup hole use, and SOIC info
+	else
+		SetupOccupanciesTH();	// Setup hole use (and for wires setup surface use too), and SOIC info
 }
 
 void FootPrint::BuildTrax(CompManager* pCompMgr, const RectManager& rectMgr, const ElementGrid& o, int nLyr, int nRowMin, int nRowMax, int nColMin, int nColMax)

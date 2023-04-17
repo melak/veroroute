@@ -100,7 +100,7 @@ public:
 			case COMP::VERO_NUMBER:
 			case COMP::VERO_LETTER:
 				StretchComplex(m_type, bGrow);
-				return SetupOccupancies();
+				return SetupOccupanciesTH();
 			case COMP::WIRE:
 			case COMP::DIODE:
 			case COMP::RESISTOR:
@@ -108,7 +108,7 @@ public:
 			case COMP::CAP_CERAMIC:
 			case COMP::CAP_FILM:
 				StretchSimple(bGrow, initVal);
-				return SetupOccupancies();
+				return SetupOccupanciesTH();
 			case COMP::CAP_FILM_WIDE:
 				StretchComplex(m_type, bGrow);
 				for (int iRow = 0, rows = GetRows(); iRow < rows; iRow++)
@@ -119,7 +119,7 @@ public:
 									( iRow == 1 && iCol == GetCols()-1 ) ? 1 : BAD_PININDEX );
 					p->SetSurface( SURFACE_FULL );
 				}
-				return SetupOccupancies();
+				return SetupOccupanciesTH();
 			case COMP::SIP:
 				StretchComplex(m_type, bGrow);
 				for (int i = 0; i < GetSize(); i++)
@@ -128,7 +128,7 @@ public:
 					p->SetPinIndex( static_cast<size_t>(i) );
 					p->SetSurface( SURFACE_FULL );
 				}
-				return SetupOccupancies();
+				return SetupOccupanciesTH();
 			case COMP::DIP:
 				StretchComplex(m_type, bGrow);
 				for (int iRow = 0, rows = GetRows(); iRow < rows; iRow++)
@@ -139,7 +139,7 @@ public:
 									( iRow == GetRows()-1 ) ? static_cast<size_t>(iCol) : BAD_PININDEX );
 					p->SetSurface( p->GetIsPin() ? SURFACE_FULL : SURFACE_GAP );
 				}
-				return SetupOccupancies();
+				return SetupOccupanciesTH();
 			case COMP::STRIP_100:
 				StretchComplex(m_type, bGrow);
 				for (int i = 0, iSize = GetSize(); i < iSize; i++)
@@ -148,7 +148,7 @@ public:
 					p->SetPinIndex( static_cast<size_t>(i) );
 					p->SetSurface( SURFACE_FULL );
 				}
-				return SetupOccupancies();
+				return SetupOccupanciesTH();
 			case COMP::BLOCK_100:
 				StretchComplex(m_type, bGrow);
 				for (int iRow = 0, rows = GetRows(); iRow < rows; iRow++)
@@ -158,7 +158,7 @@ public:
 					p->SetPinIndex( ( iRow == 1 ) ? static_cast<size_t>(iCol) : BAD_PININDEX );
 					p->SetSurface( SURFACE_FULL );
 				}
-				return SetupOccupancies();
+				return SetupOccupanciesTH();
 			case COMP::BLOCK_200:
 				StretchComplex(m_type, bGrow);
 				for (int iRow = 0, rows = GetRows(); iRow < rows; iRow++)
@@ -168,7 +168,7 @@ public:
 					p->SetPinIndex( ( iRow == 1 && iCol % 2 == 1 ) ? static_cast<size_t>(( iCol - 1 ) / 2) : BAD_PININDEX );
 					p->SetSurface( ( iCol == 0 || iCol == GetCols()-1 ) ? SURFACE_FREE : SURFACE_FULL );
 				}
-				return SetupOccupancies();
+				return SetupOccupanciesTH();
 			case COMP::SWITCH_ST:
 			case COMP::SWITCH_DT:
 				StretchComplex(m_type, bGrow);
@@ -179,7 +179,7 @@ public:
 					p->SetPinIndex( ( iCol % 2 == 0 && iRow % 2 == 0 ) ? static_cast<size_t>(iCol/2 + (iRow/2)*((1 + GetCols())/2)) : BAD_PININDEX );
 					p->SetSurface( SURFACE_FULL );
 				}
-				return SetupOccupancies();
+				return SetupOccupanciesTH();
 			case COMP::SWITCH_ST_DIP:
 				assert( GetRows() == 4 );	// DIPs should have 4 rows on construction
 				StretchComplex(m_type, bGrow);
@@ -191,7 +191,7 @@ public:
 									( iRow == 3 ) ? static_cast<size_t>(iCol + GetCols()) : BAD_PININDEX );
 					p->SetSurface( SURFACE_FULL );
 				}
-				return SetupOccupancies();
+				return SetupOccupanciesTH();
 			default:	assert(0);	// Unhandled m_type
 		}
 	}
@@ -208,18 +208,21 @@ public:
 							( iRow == GetRows()-1 ) ? static_cast<size_t>(iCol) : BAD_PININDEX );
 			p->SetSurface( ( iRow == 0 || iRow == GetRows()-1 ) ? SURFACE_FULL : SURFACE_GAP );
 		}
-		return SetupOccupancies();
+		return SetupOccupanciesTH();
 	}
-	void SetupOccupancies()
+	void SetupOccupanciesTH()
 	{
-		const bool bWire = m_type == COMP::WIRE;
+		const bool bWire = ( m_type == COMP::WIRE );
 		assert( GetLyrs() == 1 );
 		assert( !bWire || (GetRows() == 1 && GetCols() > 1) );
 		for (int i = 0, iSize = GetSize(); i < iSize; i++)
-		{
-			GetAt(i)->SetOccupancy(bWire);
-			GetAt(i)->SetSoicChar( GetAt(i)->GetIsPin() ? SOIC_THL : SOIC_FREE );
-		}
+			GetAt(i)->SetOccupancyTH(bWire);
+	}
+	void SetupOccupanciesSOIC()
+	{
+		assert( GetLyrs() == 1 );
+		for (int i = 0, iSize = GetSize(); i < iSize; i++)
+			GetAt(i)->SetOccupancySOIC();
 	}
 	// Persist interface functions
 	virtual void Load(DataStream& inStream) override
@@ -229,7 +232,7 @@ public:
 		inStream.Load(type);
 		m_type = static_cast<COMP> (type);
 		if ( inStream.GetVersion() < VRT_VERSION_26 )
-			SetupOccupancies();
+			SetupOccupanciesTH();
 	}
 	virtual void Save(DataStream& outStream) override
 	{

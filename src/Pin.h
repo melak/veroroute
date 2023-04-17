@@ -141,7 +141,7 @@ public:
 	void SetSurface(uchar c)	{ m_surface = c; }
 	void SetHoleUse(uchar c)	{ m_holeUse = c; }
 	void SetSoicChar(uchar c)	{ m_soicChar = c; }
-	void SetOccupancy(bool bWire)	// Helper for components
+	void SetOccupancyTH(bool bWire)	// Helper for TH components
 	{
 		if ( bWire )
 		{
@@ -152,6 +152,18 @@ public:
 		{
 			SetHoleUse( GetIsPin() ? HOLE_FULL			: HOLE_FREE );		// Set hole occupancy for pins/non-pins
 		}
+		SetSoicChar( GetIsPin() ? SOIC_THL : SOIC_FREE );
+	}
+	void SetOccupancySOIC()	// Helper for SOIC components.
+	{
+		SetHoleUse(HOLE_FREE);
+		if ( GetIsPin() )
+		{
+			SetSurface(SURFACE_FREE);
+			SetSoicChar(SOIC_PAD);
+		}
+		else
+			SetSoicChar( GetSurface() == SURFACE_FULL ? SOIC_PATTERN : SOIC_FREE );
 	}
 	size_t		 GetPinIndex() const		{ return ( m_pinChar == BAD_PINCHAR ) ? BAD_PININDEX : m_pinChar; }
 	const uchar& GetSurface() const			{ return m_surface; }

@@ -125,7 +125,7 @@ bool MainWindow::CanModifyRuler() const
 						  GetDefiningRect() || GetPaintPins() || GetErasePins() || GetPaintBoard() || GetEraseBoard() || GetPaintFlood() );
 }
 
-bool MainWindow::GetHaveFloatingPin(int& iFloatingNodeId)
+bool MainWindow::GetHaveFloatingPinTH(int& iFloatingNodeId)	// Checks for a floating through-hole pin
 {
 	iFloatingNodeId = BAD_NODEID;
 
@@ -138,6 +138,7 @@ bool MainWindow::GetHaveFloatingPin(int& iFloatingNodeId)
 		if ( comp.GetIsPlaced() ) continue;	// Only want floating components
 		const auto& eType = comp.GetType();
 		if ( eType == COMP::WIRE || eType == COMP::MARK || eType == COMP::VERO_NUMBER || eType == COMP::VERO_LETTER ) continue;
+		if ( comp.GetIsSOIC() ) continue;	// SOIC parts are not through-hole
 
 		const int j(m_gridRow - comp.GetRow());		if ( j < 0 || j >= comp.GetCompRows() ) continue;
 		const int i(m_gridCol - comp.GetCol());		if ( i < 0 || i >= comp.GetCompCols() ) continue;
@@ -436,9 +437,9 @@ void MainWindow::MousePressEvent(const QPoint& pos, bool bLeftClick, bool bRight
 		{
 			// Erase both layers if it makes it easier to let a floating part fall into place.
 			int iFloatingNodeId(BAD_NODEID);
-			const bool bEraseBothLayers = m_board.GetLyrs() > 1 &&				// If 2-layer board ...
-										  !GetPaintPins() && !GetErasePins() &&	// ... and not erasing a pin
-										  GetHaveFloatingPin(iFloatingNodeId);	// ... then see if we have a floating pin and gets its nodeId
+			const bool bEraseBothLayers = m_board.GetLyrs() > 1 &&					// If 2-layer board ...
+										  !GetPaintPins() && !GetErasePins() &&		// ... and not erasing a pin
+										  GetHaveFloatingPinTH(iFloatingNodeId);	// ... then see if we have a floating through-hole pin and gets its nodeId
 
 			bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, BAD_NODEID, GetPaintPins() || GetErasePins());
 			if ( bEraseBothLayers )
@@ -734,9 +735,9 @@ void MainWindow::MouseMoveEvent(const QPoint& pos)
 		{
 			// Erase both layers if it makes it easier to let a floating part fall into place.
 			int iFloatingNodeId(BAD_NODEID);
-			const bool bEraseBothLayers = m_board.GetLyrs() > 1 && 				// If 2-layer board, and not erasing a pin ...
-										  !GetPaintPins() && !GetErasePins() &&	// ... and not erasing a pin
-										  GetHaveFloatingPin(iFloatingNodeId);	// ... then see if we have a floating pin and gets its nodeId
+			const bool bEraseBothLayers = m_board.GetLyrs() > 1 &&					// If 2-layer board ...
+										  !GetPaintPins() && !GetErasePins() &&		// ... and not erasing a pin
+										  GetHaveFloatingPinTH(iFloatingNodeId);	// ... then see if we have a floating through-hole pin and gets its nodeId
 
 			bool bChanged = m_board.SetNodeIdByUser(layer, m_gridRow, m_gridCol, BAD_NODEID, false);	// false ==> Only allow erase board (not pins)
 			if ( bEraseBothLayers )

@@ -147,7 +147,7 @@ public:
 
 	const QString&	GetFileName() const { return m_fileName; }
 
-	bool GetHaveFloatingPin(int& iFloatingNodeId);
+	bool GetHaveFloatingPinTH(int& iFloatingNodeId);
 	void MousePressEvent(const QPoint& pos, bool bLeftClick = true, bool bRightClick = true);
 	void MouseDoubleClickEvent(const QPoint& pos);
 	void MouseMoveEvent(const QPoint& pos);

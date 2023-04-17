@@ -118,24 +118,8 @@ void CompDefiner::Build(const TemplateManager& templateMgr, Component& comp) con
 		comp.AddOne(mapObj.second);
 
 	// Setup SOIC info
-	const bool bIsSOIC = comp.GetIsSOIC();
-	for (int i = 0, iSize = comp.GetSize(); i < iSize; i++)
-	{
-		auto p = comp.GetAt(i);
-		if ( bIsSOIC )
-		{
-			p->SetHoleUse(HOLE_FREE);
-			if ( p->GetIsPin() )
-			{
-				p->SetSurface(SURFACE_FREE);
-				p->SetSoicChar(SOIC_PAD);
-			}
-			else
-				p->SetSoicChar( p->GetSurface() == SURFACE_FULL ? SOIC_PATTERN : SOIC_FREE );
-		}
-		else
-			p->SetSoicChar( p->GetHoleUse() == HOLE_FULL ? SOIC_THL : SOIC_FREE );
-	}
+	if ( comp.GetIsSOIC() )
+		comp.SetupOccupanciesSOIC();	// Setup hole use, and SOIC info
 }
 
 void CompDefiner::MoveCurrentShape(double dDown, double dRight)

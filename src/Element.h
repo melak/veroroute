@@ -59,7 +59,8 @@ public:
 	void		 SetSurface(uchar c)		{ return GetBase()->Pin::SetSurface(c); }
 	void		 SetHoleUse(uchar c)		{ return GetBase()->Pin::SetHoleUse(c); }
 	void		 SetSoicChar(uchar c)		{ return GetBase()->Pin::SetSoicChar(c); }
-	void		 SetOccupancy(bool bWire)	{ return GetBase()->Pin::SetOccupancy(bWire); }
+	void		 SetOccupancyTH(bool bWire)	{ return GetBase()->Pin::SetOccupancyTH(bWire); }
+	void		 SetOccupancySOIC()			{ return GetBase()->Pin::SetOccupancySOIC(); }
 	size_t		 GetPinIndex() const		{ return GetBaseConst()->Pin::GetPinIndex(); }
 	const uchar& GetSurface() const			{ return GetBaseConst()->Pin::GetSurface(); }
 	const uchar& GetHoleUse() const			{ return GetBaseConst()->Pin::GetHoleUse(); }
