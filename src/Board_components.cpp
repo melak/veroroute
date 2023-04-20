@@ -352,7 +352,7 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 
 	const bool	bDiagsOK	= GetDiagsMode() != DIAGSMODE::OFF;
 	const bool	bWire		= comp.GetType() == COMP::WIRE;	// Wire's only get NodeIDs while placed
-	const bool	bSOIC		= comp.GetIsSOIC();
+	const bool	bSOIC		= comp.GetIsSOIC();	assert( !bSOIC || GetHaveSOIClayer() );
 	const bool	bTrax		= comp.GetType() == COMP::TRACKS;
 	const int&	compId		= comp.GetId();
 	const int&	compCols	= comp.GetCompCols();
@@ -458,12 +458,7 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 					assert( iOtherPinIndex != BAD_PININDEX && iOtherCompId != BAD_COMPID );
 
 					const Component& otherComp = m_compMgr.GetComponentById( iOtherCompId );
-					//assert( otherComp.GetType() == COMP::WIRE );	//TODO
-					if ( otherComp.GetType() != COMP::WIRE )
-					{
-						int debugme(0);
-						debugme++;
-					}
+					assert( otherComp.GetType() == COMP::WIRE );
 					for (int iLyr = 0; iLyr < 2; iLyr++)
 					{
 						const int& origId = otherComp.GetOrigId(iLyr, iOtherPinIndex);
@@ -488,7 +483,7 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 				if ( !bWire )	// Write nodeId & flag
 				{
 					const bool bAllLyrs = pGrid->GetHasPinTH();
-					Element* p = ( bSOIC ) ? Get(GetSOIClayer(), jRow, iCol) : pGrid;
+					Element* p = ( bSOIC ) ? Get(GetSOIClayer(), jRow, iCol) : pGrid;	assert(p);
 					SetNodeId(p, iCompNodeId, bAllLyrs);
 					WipeFlagBits(p, AUTOSET|VEROSET, bAllLyrs);
 					MarkFlagBits(p, USERSET, bAllLyrs);
@@ -525,14 +520,7 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 				pW->GetSlotInfo(iSlot, iPinIndex, tmpCompId);
 				if ( iPinIndex == BAD_PININDEX ) continue;
 				Component& comp = m_compMgr.GetComponentById( tmpCompId );
-				//assert( comp.GetType() == COMP::WIRE );	//TODO
-				if ( comp.GetType() == COMP::WIRE )
-					comp.SetNodeId(iPinIndex, wireNodeId);
-				else
-				{
-					int debugme(0);
-					debugme++;
-				}
+				assert( comp.GetType() == COMP::WIRE );
 			}
 			// ... and on the corresponding board points
 			const bool bAllLyrs(true);
@@ -569,8 +557,6 @@ bool Board::TakeOff(Component& comp)
 	int			iOrigIdA[2]	= {BAD_NODEID, BAD_NODEID};	// 1 per layer
 	int			iOrigIdB[2]	= {BAD_NODEID, BAD_NODEID};	// 1 per layer
 	int			iSlotA(-1), iSlotB(-1), tmpCompId;
-
-	//TODO Need custom code, to handle the fact that some holes could be shared with other comps. See slot stuff below, and also wire code
 
 	size_t	iPinIndex;
 	if ( pA )
