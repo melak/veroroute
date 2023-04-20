@@ -257,6 +257,14 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 						( compSurface  == SURFACE_FREE ) ||
 						( boardSurface + compSurface <= SURFACE_FULL );
 				bOK &=	( boardHoleUse + compHoleUse <= HOLE_FULL );
+
+				if ( GetHaveSOIClayer() )
+				{
+					// TODO Have to prevent SOIC pins sharing hole with an offset pad
+					// Need to consider 2 cases...
+					// Trying to place SOIC on an existing offset pad
+					// Trying to place an offset pad on an existing SOIC
+				}
 				bOK &=	( !GetHaveSOIClayer() || (compSoicChar != SOIC_PATTERN) || Get(GetSOIClayer(), jRow, iCol)->GetNodeId() == BAD_NODEID );	// Cannot place SOIC if board is painted in SOIC area
 				bOK &=	( boardSoicChar + compSoicChar <= SOIC_FULL );
 				bOK &=	( !bWire || bAllowHoleShare || ( boardHoleUse + compHoleUse <= HOLE_WIRE ) );

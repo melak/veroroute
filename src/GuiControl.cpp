@@ -246,8 +246,11 @@ void Bezier(MyPolygonF& polygon, const QPointF& pL, const QPointF& pC, const QPo
 	}
 }
 
-void GuiControl::CalcSOIC(qreal W, const QPointF& pLT, std::list<MyPolygonF>& out, bool bGap) const
+void GuiControl::CalcSOIC(qreal W, const QPointF& pLT, /*size_t pinIndex,*/ std::list<MyPolygonF>& out, bool bGap) const
 {
+	// Really need to give two bits of info here.  A pin index and pattern type (maybe some COMP type for SOICs).
+	// The pattern info should all be in the component.
+
 	// Given a grid point (pLT) this method populates "out" with a description of a/ SOIC track pattern.
 	// The scale parameter W represents the width of a 100 mil grid square.
 
@@ -280,6 +283,121 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pLT, std::list<MyPolygonF>& ou
 		out.push_back(polygon);
 	}
 
+	// Split description into two parts.  One starting at pin and ending at pad.  Other for the pad
+	// Units of Q should suffice. If W = 100 then Q is 25 mil.
+	// So just set Q = 25 in values below to get mil
+	
+	
+
+ 	//  Coords w.r.t. pin x-> y down
+	// L ==> line   B==> Bezier
+	/*
+	enum class LINE_TYPE { LINEAR , BEZIER };
+	
+	struct Track
+	{
+		Track(const std::vector<qreal>& A, const std::vector<qreal>& B)
+		{
+			pointsA.resize(3);
+			for (size_t i = 0, k = 0; k < 3; k++, i += 2)
+				pointsA[k] = QPointF(A[i], A[i+1]);
+
+			pointsB.resize(3);
+			for (size_t i = 0, k = 0; k < 2; k++, i += 2)
+				pointsB[k] = QPointF(B[i], B[i+1]);
+		}
+		Track& operator=(const Track& o)
+		{
+			lineTypeA = o.lineTypeA;
+			pointsA.resize(o.pointsA.size());
+			pointsB.resize(o.pointsB.size());
+			std::copy(o.pointsA.begin(), o.pointsA.end(), pointsA.begin());
+			std::copy(o.pointsB.begin(), o.pointsB.end(), pointsB.begin());
+			return *this;
+		}
+		void flipV()
+		{
+			for (auto& o : pointsA) o.setY( -o.y() );
+			for (auto& o : pointsB) o.setY( -o.y() );
+		}
+		void flipH()
+		{
+			for (auto& o : pointsA) o.setX( -o.x() );
+			for (auto& o : pointsB) o.setX( -o.x() );
+		}
+		void AddPolygonA(MyPolygonF& polygon, std::list<MyPolygonF>& out)
+		{
+			polygon.clear();
+			if ( lineTypeA == LINE_TYPE::LINEAR )
+				polygon << pointsA[0] << pointsA[1] <<  pointsA[2];
+			else
+				Bezier(polygon, pointsA[0], pointsA[1], pointsA[2]);
+			out.push_back(polygon);	
+		}
+		void AddPolygonB(MyPolygonF& polygon, std::list<MyPolygonF>& out)
+		{
+			polygon.clear();
+			polygon << pointsB[0] << pointsB[1];
+			out.push_back(polygon);	
+		}
+		// Data
+		LINE_TYPE	lineTypeA = LINE_TYPE::BEZIER;	// LineTypeB is always linear
+		std::vector<QPointF> pointsA;				// For track starting at pin
+		std::vector<QPointF> pointsB;				// For pad at end of track
+	};
+
+	std::vector<Track> track; track.resize(28);	// indexed by pinIndex
+
+	track[27]	= Track( {0,0,100,0,125,0},			{125,-25,125,150} );	track[27].lineTypeA = LINE_TYPE::LINEAR;
+	track[0]	= track[27];	track[0].flipV();
+	track[13]	= track[0];		track[12].flipH();
+	track[14]	= track[13];	track[14].flipV();
+	track[26]	= Track( {0,0,150,12.5,175,75},		{0,75,175,250} );
+	track[1]	= track[26];	track[1].flipV();
+	track[12]	= track[1];		track[12].flipH();
+	track[15]	= track[12];	track[15].flipV();
+	track[25]	= Track( {0,0,225,135,225,175},		{225,175,225,350} );
+	track[2]	= track[25];	track[2].flipV();
+	track[11]	= track[2];		track[11].flipH();
+	track[16]	= track[11];	track[16].flipV();
+	track[24]	= Track( {0,0,175,112.5,175,175},	{175,175,175,350} );
+	track[3]	= track[24];	track[3].flipV();
+	track[10]	= track[3];		track[10].flipH();
+	track[17]	= track[10];	track[17].flipV();
+	track[23]	= Track( {0,0,125,87.5,125,175},	{125,175,125,350} );
+	track[4]	= track[23];	track[3].flipV();
+	track[9]	= track[4];		track[10].flipH();
+	track[18]	= track[9];		track[17].flipV();
+	track[22]	= Track( {0,0,75,62.5,75,175},		{75,175,75,350} );
+	track[5]	= track[22];	track[5].flipV();
+	track[8]	= track[5];		track[8].flipH();
+	track[19]	= track[8];		track[19].flipV();
+	track[21]	= Track( {0,0,25,50,25,175},		{25,175,25,350} );
+	track[6]	= track[21];	track[6].flipV();
+	track[7]	= track[6];		track[7].flipH();
+	track[20]	= track[7];		track[20].flipV();
+
+	
+	// SOIC tracks -------------------------------------------------------------------------
+	polygon.m_eTrkPen	= bGap ?  GPEN::TRK_IC_GAP : GPEN::TRK_IC;
+	polygon.m_ePadPen	= GPEN::NONE;
+	polygon.m_radiusTrk	= trkWidth * 0.5;
+	polygon.m_radiusPad	= 0;
+	polygon.m_bClosed	= false;
+	track[iPinIndex].AddPolygonA(polygon, out);
+
+	// SOIC Pads ----------------------------------------------------------------------------
+	if ( !bGap )
+	{
+		polygon.m_eTrkPen	= GPEN::NONE;
+		polygon.m_ePadPen	= GPEN::PAD_IC;
+		polygon.m_radiusTrk	= 0;
+		polygon.m_radiusPad	= padWidth * 0.5;
+		polygon.m_bClosed	= false;
+		track[iPinIndex].AddPolygonB(polygon, out);
+	}
+	*/
+	
 	// SOIC Pads ----------------------------------------------------------------------------
 	if ( !bGap )
 	{
@@ -336,7 +454,7 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pLT, std::list<MyPolygonF>& ou
 	polygon.m_pinIndex = 17;	polygon.flipV();	polygon.translate( QPointF(0,-8*W) );	out.push_back(polygon);
 
 	polygon.clear();
-	polygon.m_pinIndex = 23;	Bezier(polygon, pC+QPointF(-10*Q,-16*Q), pC-QPointF(18*Q,16*Q)+QPointF(13*Q,3.5*Q), pC+QPointF(-5*Q,-9*Q));	out.push_back(polygon);
+	polygon.m_pinIndex = 23;	Bezier(polygon, pC+QPointF(-10*Q,-16*Q), pC+QPointF(-5*Q,-12.5*Q), pC+QPointF(-5*Q,-9*Q));	out.push_back(polygon);
 	polygon.m_pinIndex =  4;	polygon.flipV();	polygon.translate( QPointF(0,8*W) );	out.push_back(polygon);
 	polygon.m_pinIndex =  9;	polygon.flipH();	polygon.translate( QPointF(5*W,0) );	out.push_back(polygon);
 	polygon.m_pinIndex = 18;	polygon.flipV();	polygon.translate( QPointF(0,-8*W) );	out.push_back(polygon);

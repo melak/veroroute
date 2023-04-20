@@ -229,7 +229,7 @@ public:
 	const int&			GetCompId() const		{ return GetBaseConst()->m_compId; }
 	const int&			GetCompId2() const		{ return GetBaseConst()->m_compId2; }
 	const uchar&		GetPinChar2() const		{ return GetBaseConst()->m_pinChar2; }
-	bool				GetIsPin2() const		{  return GetPinChar2() != BAD_PINCHAR; }
+	bool				GetIsPin2() const		{ return GetPinChar2() != BAD_PINCHAR; }
 	int					GetNumCompIds() const	{ int i(0); if ( GetCompId() != BAD_COMPID ) i++; if ( GetCompId2() != BAD_COMPID ) i++; return i; }
 	bool				GetHasComp() const		{ return GetCompId() != BAD_COMPID || GetCompId2() != BAD_COMPID; }
 	bool				GetHasPin() const		{ return GetIsPin() || GetIsPin2(); }
