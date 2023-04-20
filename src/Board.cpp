@@ -151,7 +151,7 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 			const Element*	pA			= Get(k, j, i);
 			const int&		nodeIdA		= pA->GetNodeId();
 			const bool		bHasPinA	= pA->GetHasPinTH();
-			const bool		bHasSoicA	= pA->GetHasPinSOIC() && k == GetSOIClayer();
+			const bool		bHasSoicA	= pA->GetHasPinSOIC() && k == LYR_TOP;
 			if ( nodeIdA == BAD_NODEID && !bHasPinA ) continue;	// Skip if no track and no pin
 			const bool		bIsGndA		= bGroundFill && nodeIdA == GetGroundNodeId(k) && nodeIdA != BAD_NODEID;
 
@@ -192,7 +192,7 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 				const Element*	pB			= Get(k, jj, ii);
 				const int&		nodeIdB		= pB->GetNodeId();
 				const bool		bHasPinB	= pB->GetHasPinTH();
-				const bool		bHasSoicB	= pB->GetHasPinSOIC() && k == GetSOIClayer();
+				const bool		bHasSoicB	= pB->GetHasPinSOIC() && k == LYR_TOP;
 				if ( nodeIdB == BAD_NODEID && !bHasPinB ) continue;	// Skip if no track and no pin
 				if ( nodeIdB == nodeIdA ) continue;
 				const bool		bIsGndB		= bGroundFill && nodeIdB == GetGroundNodeId(k) && nodeIdB != BAD_NODEID;

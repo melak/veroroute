@@ -671,7 +671,7 @@ void Board::Manhatten(Element* p, bool bSingleRoute)
 
 	if ( p->GetHasPin() )	// p could be either a TH pin (or wire end) or SOIC pad on this layer
 	{
-		assert( p->GetHasPinTH() || p->GetIsSOIClayer() );
+		assert( p->GetHasPinTH() || p->GetIsTopLyr() );	// Could have SOIC pad on top layer
 		if ( p->GetHasPinTH() )
 			pFirst = p->IsLayer0() ? p : p->GetNbr(NBR_X);	// Use layer 0 for TH pins
 	}

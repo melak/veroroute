@@ -25,6 +25,9 @@
 
 // Grid is a templatized 3-dimensional array, with data that can be indexed by layer, row and column
 
+Q_DECL_CONSTEXPR static const int LYR_BOT = 0;
+Q_DECL_CONSTEXPR static const int LYR_TOP = 1;
+
 template<class T> 
 class Grid : public Persist, public Merge
 {
@@ -80,8 +83,8 @@ public:
 	const int& GetRows() const			{ return m_rows; }
 	const int& GetCols() const			{ return m_cols; }
 	int		   GetSize() const			{ return m_lyrs * m_rows * m_cols; }
-	int		   GetSOIClayer() const		{ return 1; }	// Layer with SOIC pattern
-	bool	   GetHaveSOIClayer() const	{ return m_lyrs == 2; }
+	bool	   GetHaveBotLyr() const	{ return m_lyrs >= 1; }
+	bool	   GetHaveTopLyr() const	{ return m_lyrs == 2; }
 	void GetRowCol(const T* p, int& row, int& col) const
 	{
 		int lyr;	// dummy

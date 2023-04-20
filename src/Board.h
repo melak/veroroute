@@ -518,9 +518,8 @@ public:
 	}
 	void WipeSoicAreas()
 	{
-		if ( !GetHaveSOIClayer() ) return;
-		const int numRows( GetRows() ), numCols( GetCols() );
-		const int k = GetSOIClayer();
+		const int numLyrs( GetLyrs() ), numRows( GetRows() ), numCols( GetCols() );
+		for (int k = 0; k < numLyrs; k++)
 		for (int j = 0; j < numRows; j++)
 		for (int i = 0; i < numCols; i++)
 		{
@@ -883,7 +882,7 @@ private:
 		for (int iCol = 0, iCols = GetCols(); iCol < iCols; iCol++)
 		{
 			Element* p = Get(0, iRow, iCol);	// Only need to check base layer
-			p->SetSoicChar( ( p->GetNumWires() == 2 ) ? SOIC_WIRES : p->GetHasPin() ? SOIC_THL : SOIC_FREE );
+			p->SetSoicChar( ( p->GetNumWires() == 2 ) ? SOIC_THL_2 : p->GetHasPin() ? SOIC_THL : SOIC_FREE );
 		}
 	}
 	void SetHavePlacedWires() { m_bHavePlacedWires = GetCompMgr().GetHavePlacedWires(); }

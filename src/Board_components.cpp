@@ -174,7 +174,7 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 	const int&	colTL			= comp.GetCol();
 	const int&	boardCols		= GetCols();
 	const int&	boardRows		= GetRows();
-	if ( bSOIC && !GetHaveSOIClayer() ) return false;	// SOIC parts need to use top layer
+	if ( bSOIC && !GetHaveTopLyr() ) return false;	// SOIC parts need to use top layer
 
 	if ( bAllowHoleShare && bWire )
 	{
@@ -258,14 +258,15 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 						( boardSurface + compSurface <= SURFACE_FULL );
 				bOK &=	( boardHoleUse + compHoleUse <= HOLE_FULL );
 
-				if ( GetHaveSOIClayer() )
-				{
-					// TODO Have to prevent SOIC pins sharing hole with an offset pad
-					// Need to consider 2 cases...
-					// Trying to place SOIC on an existing offset pad
-					// Trying to place an offset pad on an existing SOIC
-				}
-				bOK &=	( !GetHaveSOIClayer() || (compSoicChar != SOIC_PATTERN) || Get(GetSOIClayer(), jRow, iCol)->GetNodeId() == BAD_NODEID );	// Cannot place SOIC if board is painted in SOIC area
+				//if ( GetHaveTopLyr() )
+				//{
+				//	// TODO Have to prevent SOIC pins sharing hole with an offset pad
+				//	// Need to consider 2 cases...
+				//	// Trying to place SOIC on an existing offset pad
+				//	// Trying to place an offset pad on an existing SOIC
+				//}
+				bOK &=	( !GetHaveTopLyr() || !(compSoicChar & SOIC_TRACKS_TOP) || Get( LYR_TOP, jRow, iCol)->GetNodeId() == BAD_NODEID );	// Cannot place SOIC if board is painted in top SOIC tracks area
+				bOK &=	(                     !(compSoicChar & SOIC_TRACKS_BOT) || Get( LYR_BOT, jRow, iCol)->GetNodeId() == BAD_NODEID );	// Cannot place SOIC if board is painted in bottom SOIC tracks area
 				bOK &=	( boardSoicChar + compSoicChar <= SOIC_FULL );
 				bOK &=	( !bWire || bAllowHoleShare || ( boardHoleUse + compHoleUse <= HOLE_WIRE ) );
 				bOK &=	( !bWire || bAllowWireCross || ( boardSurface <= ( bAllowHoleShare ? SURFACE_WIRE_END | SURFACE_GAP : SURFACE_GAP ) ) );
@@ -291,7 +292,7 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 					if ( !bOK ) continue;
 
 					// Check relevant layer to get nodeID for pin
-					const Element*	p			= ( bSOIC ) ? ( GetSOIClayer() == compLyr ? pGrid : pGrid->GetNbr(NBR_X) ) : pGrid;
+					const Element*	p			= ( bSOIC ) ? ( LYR_TOP == compLyr ? pGrid : pGrid->GetNbr(NBR_X) ) : pGrid;
 					assert(p);
 					const int&		nodeId		= p->GetNodeId();			// Read nodeID on board
 					const int&		iCompNodeId	= comp.GetNodeId(pinIndex);	// Read component nodeID
@@ -360,7 +361,7 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 
 	const bool	bDiagsOK	= GetDiagsMode() != DIAGSMODE::OFF;
 	const bool	bWire		= comp.GetType() == COMP::WIRE;	// Wire's only get NodeIDs while placed
-	const bool	bSOIC		= comp.GetIsSOIC();	assert( !bSOIC || GetHaveSOIClayer() );
+	const bool	bSOIC		= comp.GetIsSOIC();	assert( !bSOIC || GetHaveTopLyr() );
 	const bool	bTrax		= comp.GetType() == COMP::TRACKS;
 	const int&	compId		= comp.GetId();
 	const int&	compCols	= comp.GetCompCols();
@@ -491,7 +492,7 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 				if ( !bWire )	// Write nodeId & flag
 				{
 					const bool bAllLyrs = pGrid->GetHasPinTH();
-					Element* p = ( bSOIC ) ? Get(GetSOIClayer(), jRow, iCol) : pGrid;	assert(p);
+					Element* p = ( bSOIC ) ? Get(LYR_TOP, jRow, iCol) : pGrid;	assert(p);
 					SetNodeId(p, iCompNodeId, bAllLyrs);
 					WipeFlagBits(p, AUTOSET|VEROSET, bAllLyrs);
 					MarkFlagBits(p, USERSET, bAllLyrs);
@@ -631,7 +632,7 @@ bool Board::TakeOff(Component& comp)
 				{
 					for (int iLyr = 0, lyrs = std::min(GetLyrs(), 2); iLyr < lyrs; iLyr++)
 					{
-						if ( bSOIC && iLyr != GetSOIClayer() ) continue;
+						if ( bSOIC && iLyr != LYR_TOP ) continue;
 						Element* p = ( iLyr == compLyr ) ? pGrid : pGrid->GetNbr(NBR_X);
 						if ( p == nullptr ) continue;
 						const bool bAllLyrs = false;

@@ -77,8 +77,9 @@ public:
 	bool		 GetIsPin() const			{ return GetBaseConst()->Pin::GetIsPin(); }
 	bool		 GetIsHole() const			{ return GetBaseConst()->Pin::GetIsHole(); }
 	uchar		 GetSoicChar() const		{ return GetBaseConst()->Pin::GetSoicChar(); }
-	bool		 GetIsSOIClayer() const		{ const Element* const p = GetNbr(NBR_X); return p != nullptr && p < this; }	// SOIC layer is always the top layer
-	bool		 GetSoicProtected() const	{ return GetIsSOIClayer() && ( GetSoicChar() == SOIC_PATTERN ); }
+	bool		 GetIsBotLyr() const		{ const Element* const p = GetNbr(NBR_X);	return p == nullptr || p > this; }
+	bool		 GetIsTopLyr() const		{ const Element* const p = GetNbr(NBR_X);	return p != nullptr && p < this; }
+	bool		 GetSoicProtected() const	{ return GetSoicChar() & ( GetIsTopLyr() ? SOIC_TRACKS_TOP : SOIC_TRACKS_BOT ); }
 	const int&	 GetNodeId() const
 	{
 		auto pBase = GetBaseConst();	return ( pBase != this && GetHasPinTH() ) ? pBase->TrackElement::GetNodeId() : TrackElement::GetNodeId();

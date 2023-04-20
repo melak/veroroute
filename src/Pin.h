@@ -53,7 +53,7 @@
 //		SOIC_FREE		==> No pads and no SOIC pattern.
 //		SOIC_PATTERN	==> No pads but have SOIC pattern (so point is not paintable on the SOIC layer).
 //		SOIC_THL		==> One through-hole component or wire.  Regular components/wires use this with their pins.
-//		SOIC_WIRES		==> Two through-hole components (i.e. wires sharing a hole on the board).
+//		SOIC_THL_2		==> Two through-hole components (i.e. wires sharing a hole on the board).
 //		SOIC_PAD		==> SOIC pad and no SOIC pattern.  SOIC components use this with their pins.
 //		SOIC_FULL		==> Cannot place any more parts at the location.
 
@@ -74,20 +74,22 @@ Q_DECL_CONSTEXPR static const uchar  HOLE_WIRE			= 1;	// Hence: "HOLE_WIRE + HOL
 Q_DECL_CONSTEXPR static const uchar  HOLE_FULL			= 2;
 
 Q_DECL_CONSTEXPR static const uchar  SOIC_FREE			= 0;	// Free space
-Q_DECL_CONSTEXPR static const uchar  SOIC_PATTERN		= 1;	// SOIC Pattern
-Q_DECL_CONSTEXPR static const uchar  SOIC_THL			= 2;	// One through-hole component or wire
-Q_DECL_CONSTEXPR static const uchar  SOIC_WIRES			= 4;	// Two through-hole components (i.e. two wires)
-Q_DECL_CONSTEXPR static const uchar  SOIC_PAD			= 8;	// An SOIC pad
+Q_DECL_CONSTEXPR static const uchar  SOIC_TRACKS_TOP	= 1;	// Pattern of SOIC tracks on top layer
+Q_DECL_CONSTEXPR static const uchar  SOIC_TRACKS_BOT	= 2;	// Pattern of SOIC tracks on top layer
+Q_DECL_CONSTEXPR static const uchar  SOIC_THL			= 4;	// One through-hole component or wire
+Q_DECL_CONSTEXPR static const uchar  SOIC_THL_2			= 8;	// Two through-hole components (i.e. two wires)
+Q_DECL_CONSTEXPR static const uchar  SOIC_PAD			= 16;	// An SOIC pad
 Q_DECL_CONSTEXPR static const uchar  SOIC_FULL			= SOIC_PAD;	// In short term, don't allow SOICs pads to share with through-holes
-//Q_DECL_CONSTEXPR static const uchar  SOIC_FULL			= 10;	// Hence can handle at most (1xSOIC_THL + 1xSOIC_PAD) not (2xSOIC_PADs). (2xSOIC_THL is blocked by the SURFACE and HOLE info).
+//Q_DECL_CONSTEXPR static const uchar  SOIC_FULL			= 20;	// Hence can handle at most (1xSOIC_THL + 1xSOIC_PAD) not (2xSOIC_PADs). (2xSOIC_THL is blocked by the SURFACE and HOLE info).
 
 // We can extend the SOIC bit concept in future to handle multiple SOIC components.
 // The existing coding can be interpreted as follows info for a grid point ...
 //		Bit  0		= Boolean flag indicating presence of SOIC pattern on top layer
-//		Bits 1,2	= Number of TH pins.  Either 0, 1.  Or 2 if wires share a hole. 
-//		Bit  3		= Number of SOIC pads at a grid point.  Either 0 or 1
+//		Bit  1		= Boolean flag indicating presence of SOIC pattern on bottom layer
+//		Bits 2,3	= Number of TH pins.  Either 0, 1.  Or 2 if wires share a hole. 
+//		Bit  4		= Number of SOIC pads at a grid point.  Either 0 or 1
 // but we could extend this to 
-//		Bits 3,4,5	= Number of SOIC pads at a grid point.  Either 0,1,2,3,4.
+//		Bits 4,5,6	= Number of SOIC pads at a grid point.  Either 0,1,2,3,4.
 //
 // The idea being to allow 4 surface mount resistors to share a grid point.
 // With the  current SOIC coding we can update the bitfield with simple addition/subtraction whenever we place/remove
@@ -176,7 +178,7 @@ public:
 			SetSoicChar(SOIC_PAD);
 		}
 		else
-			SetSoicChar( GetSurface() == SURFACE_FULL ? SOIC_PATTERN : SOIC_FREE );
+			SetSoicChar( GetSurface() == SURFACE_FULL ? SOIC_TRACKS_TOP : SOIC_FREE );
 	}
 	size_t		 GetPinIndex() const		{ return ( m_pinChar == BAD_PINCHAR ) ? BAD_PININDEX : m_pinChar; }
 	const uchar& GetSurface() const			{ return m_surface; }

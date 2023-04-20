@@ -626,8 +626,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	const bool		 bDirect		= !bVero && !bPixmapCache && !bGroundFill;	// true ==> Draw track "blobs" and pads directly (PDF/Gerber)
 	const int&		 layer			= board.GetCurrentLayer();
 	const int&		 groundNodeId	= board.GetGroundNodeId(layer);
-	const int		 iSOIClayer		= board.GetSOIClayer();
-	const bool		 bSOIClayer		= ( layer == iSOIClayer );
+	const bool		 bTopLyr		= ( layer == LYR_TOP );
 	const bool		 bWiresAsTracks	= m_bWriteGerber && m_bTwoLayerGerber && board.GetLyrs() == 1;	// true ==> Convert wires to tracks on the top layer
 	const int&		 W				= board.GetGRIDPIXELS();		// Square width in pixels
 	const int		 C				= W >> 1;						// Half square width in pixels
@@ -814,7 +813,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				const bool		bVia			= pC->GetIsVia()  ||  bWireAsVia;
 				const bool		bPad			= !bWireAsVia && pC->GetHasPinTH();	// Only want through-hole pads
 				const bool		bSoicAny		= pC->GetSoicChar() & SOIC_PAD;	// true ==> have an SOIC pad on either this layer or the other
-				const bool		bSoicPad		= bSOIClayer && bSoicAny;
+				const bool		bSoicPad		= bTopLyr && bSoicAny;
 				assert( !(bVia && (bPad || bSoicAny)) );	// Can't be both a via and a pad
 				const bool		bIsGnd			= bGroundFill && nodeId == groundNodeId;
 				const int		iTagCode		= ( bPad && bIsGnd && nodeId != BAD_NODEID ) ? board.GetTagCode(pC, iPerimeterCode) : 0;
@@ -823,7 +822,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	#ifdef _TEST_SOIC
 				const Component* pCompSOIC = nullptr;
 				bool bPlaced(true);
-				if ( bSOIClayer )	// Only show SOIC patterns on SOIC layer
+				if ( bTopLyr )	// Only show SOIC patterns on top layer
 				{
 					for (auto& pComp : sortedComps)
 					{
@@ -1578,7 +1577,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			if ( !bPin ) continue;
 
 			// We may just have an SOIC pad on layer 1, but pD is on layer 0, so ...
-			if ( !pD->GetHasPinTH() && iSOIClayer == 1 ) pD = pD->GetNbr(NBR_X);
+			if ( !pD->GetHasPinTH() ) pD = pD->GetNbr(NBR_X);
 
 			if ( pD == nullptr || pD->GetNodeId() != GetCurrentNodeId() ) continue;
 
