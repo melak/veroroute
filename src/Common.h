@@ -27,6 +27,10 @@
 // Uncomment next line to test SOIC stuff	//TODO
 //#define _TEST_SOIC
 
+#ifdef _TEST_SOIC
+	#define SUPPORT_SOIC
+#endif
+
 #include <cmath>
 #include <stdio.h>
 #include <string.h>

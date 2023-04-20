@@ -55,6 +55,16 @@ typedef std::list<ElementInt> WIRELIST;	// Helper for chains of wires
 class Element : public Pin, public TrackElement
 {
 public:
+	// Debug methods that avoid tunneling through layers
+	size_t	GetPinIndexRaw() const	{ return Pin::GetPinIndex(); }
+	size_t	GetPinIndex2Raw() const	{ return ( m_pinChar2 == BAD_PINCHAR ) ? BAD_PININDEX : m_pinChar2; }
+	int		GetCompIdRaw() const	{ return m_compId; }
+	int		GetCompId2Raw() const	{ return m_compId2; }
+	uchar	GetSurfaceRaw() const	{ return Pin::GetSurface(); }
+	uchar	GetHoleUseRaw() const	{ return Pin::GetHoleUse(); }
+	uchar	GetSoicCharRaw() const	{ return Pin::GetSoicChar(); }
+	int		GetNodeIdRaw() const	{ return TrackElement::GetNodeId(); }
+	
 	void		 SetPinIndex(size_t i)		{ return GetBase()->Pin::SetPinIndex(i); }
 	void		 SetSurface(uchar c)		{ return GetBase()->Pin::SetSurface(c); }
 	void		 SetHoleUse(uchar c)		{ return GetBase()->Pin::SetHoleUse(c); }
@@ -67,15 +77,11 @@ public:
 	bool		 GetIsPin() const			{ return GetBaseConst()->Pin::GetIsPin(); }
 	bool		 GetIsHole() const			{ return GetBaseConst()->Pin::GetIsHole(); }
 	uchar		 GetSoicChar() const		{ return GetBaseConst()->Pin::GetSoicChar(); }
-	bool		 GetSoicProtected() const
-	{
-		if ( GetSoicChar() != SOIC_PATTERN ) return false;	// Not an SOIC area if the SOIC_PATTERN bit is not set
-		// We have an SOIC area.  Whether it's protected or not depends on the layer we are on.
-		return GetNbr(NBR_X) < this;	// Either we have no NBR_X (i.e. single layer), or we are on the top layer
-	}
+	bool		 GetIsSOIClayer() const		{ const Element* const p = GetNbr(NBR_X); return p != nullptr && p < this; }	// SOIC layer is always the top layer
+	bool		 GetSoicProtected() const	{ return GetIsSOIClayer() && ( GetSoicChar() == SOIC_PATTERN ); }
 	const int&	 GetNodeId() const
 	{
-		auto pBase = GetBaseConst();	return ( pBase != this && GetHasPin() ) ? pBase->TrackElement::GetNodeId() : TrackElement::GetNodeId();
+		auto pBase = GetBaseConst();	return ( pBase != this && GetHasPinTH() ) ? pBase->TrackElement::GetNodeId() : TrackElement::GetNodeId();
 	}
 	void		 SetNodeId(int i)	// Only called via the parent board method Board::SetNodeId()
 	{
@@ -92,7 +98,7 @@ public:
 		GetNbr(NBR_L)->UpdateUsed(NBR_RT);	GetNbr(NBR_R)->UpdateUsed(NBR_LT);	// LTX, RTX
 		GetNbr(NBR_L)->UpdateUsed(NBR_RB);	GetNbr(NBR_R)->UpdateUsed(NBR_LB);	// LBX, RBX
 
-		auto pBase = GetBase();	if ( pBase != this && GetHasPin() ) pBase->SetNodeId(i);
+		auto pBase = GetBase();	if ( pBase != this && GetHasPinTH() ) pBase->SetNodeId(i);
 	}
 
 	Element() : Pin(), TrackElement() { ZeroConnectionPointers(); }
@@ -223,9 +229,13 @@ public:
 	const int&			GetCompId() const		{ return GetBaseConst()->m_compId; }
 	const int&			GetCompId2() const		{ return GetBaseConst()->m_compId2; }
 	const uchar&		GetPinChar2() const		{ return GetBaseConst()->m_pinChar2; }
+	bool				GetIsPin2() const		{  return GetPinChar2() != BAD_PINCHAR; }
 	int					GetNumCompIds() const	{ int i(0); if ( GetCompId() != BAD_COMPID ) i++; if ( GetCompId2() != BAD_COMPID ) i++; return i; }
 	bool				GetHasComp() const		{ return GetCompId() != BAD_COMPID || GetCompId2() != BAD_COMPID; }
-	bool				GetHasPin() const		{ return GetIsPin() || GetPinChar2() != BAD_PINCHAR; }
+	bool				GetHasPin() const		{ return GetIsPin() || GetIsPin2(); }
+	bool				GetHasPinTH() const		{ return GetSoicChar() & SOIC_THL; }			// true ==> Have TH pin on either layer
+	bool				GetHasPinSOIC() const	{ return GetSoicChar() & SOIC_PAD; }			// true ==> Have SOIC pad on either layer
+	bool				GetHasPinAny() const	{ return GetSoicChar() & (SOIC_PAD|SOIC_THL); }	// true ==> Have TH pin or SOIC pad on either layer
 	size_t				GetPinIndex2() const	{ return ( GetPinChar2() == BAD_PINCHAR ) ? BAD_PININDEX : GetPinChar2(); }
 	const bool&			GetSolderR() const		{ return GetBaseConst()->m_bSolderR; }
 	const bool&			GetIsVia() const		{ return GetBaseConst()->m_bIsVia; }
@@ -236,6 +246,11 @@ public:
 	Element*			GetNbr(int iNbr) const	{ return m_pNbr[iNbr]; }
 	Element*			GetW(int i) const		{ return GetBaseConst()->m_pW[i]; }
 	bool				IsLayer0() const 		{ return GetBaseConst() == this; }
+	bool				GetPinSupportsLayerPref() const
+	{
+		// Must be a TH pin, but not a wire, and must not co-incide with an SOIC pad
+		return GetHasPinTH() && !GetHasPinSOIC() && !GetHasWire();
+	}
 
 	// Helpers
 	bool HaveNoBlankPins(int iNbr) const

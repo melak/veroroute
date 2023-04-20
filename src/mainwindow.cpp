@@ -1011,7 +1011,7 @@ void MainWindow::WriteGerber(bool bTwoLayerGerber, bool bMetric)
 
 		const bool bWireVias	= m_bTwoLayerGerber && m_board.GetLyrs() == 1 && m_board.GetCompMgr().GetHavePlacedWires();
 		const bool bVias		= m_board.GetHasVias() || bWireVias;
-		const bool bSOIC		= m_board.GetHasSOIC();
+		const bool bSOIC		= m_board.GetCompMgr().GetHaveSOIC();
 		if ( m_gWriter.Open(m_gerberFileName, m_board, bVias, bSOIC, m_bTwoLayerGerber, bMetric, bConfirmEachFile) )
 		{
 			const int origlayer = m_board.GetCurrentLayer();
@@ -1517,6 +1517,7 @@ void MainWindow::AddLayer()
 {
 	assert( m_board.GetLyrs() == 1 );
 	m_board.GrowThenPan(1, 0, 0, 0, 0);
+	m_board.PlaceFloaters();		// We may have floating SOICs
 	m_board.SetCurrentLayer(1);
 	m_board.SetViasEnabled(true);
 	UpdateHistory("add top layer");
@@ -1526,6 +1527,7 @@ void MainWindow::AddLayer()
 void MainWindow::RemoveLayer()
 {
 	assert( m_board.GetLyrs() == 2 );
+	m_board.FloatAllCompsSOIC();	// SOICs need 2 layers
 	m_board.GrowThenPan(-1, 0, 0, 0, 0);
 	m_board.SetCurrentLayer(0);
 	m_board.WipeSoicAreas();
@@ -1886,7 +1888,7 @@ void MainWindow::PadMove(int deltaRowMil, int deltaColMil)
 	if ( m_board.GetVeroTracks() || m_board.GetCompEdit() ) return;
 
 	const Element* pC =  m_board.Get(0, m_gridRow, m_gridCol);
-	if ( !pC->GetHasPin() || pC->GetHasWire() ) return;	// Wires can share holes so cannot have offset pads
+	if ( !pC->GetPinSupportsLayerPref() ) return;
 
 	Component&		comp		= m_board.GetCompMgr().GetComponentById( pC->GetCompId() );
 	const size_t	pinIndex	= pC->GetPinIndex();
@@ -1898,8 +1900,7 @@ void MainWindow::PadMove(int deltaRowMil, int deltaColMil)
 void MainWindow::UpdatePadInfo()
 {
 	const Element* pC =  m_board.Get(0, m_gridRow, m_gridCol);
-	if ( !m_padOffsetDlg->isVisible() || !pC->GetHasPin() || pC->GetHasWire() )	// Wires can share holes so cannot have offset pads
-		return;
+	if ( !m_padOffsetDlg->isVisible() || !pC->GetPinSupportsLayerPref() ) return;
 
 	const Component&	comp		= m_board.GetCompMgr().GetComponentById( pC->GetCompId() );
 	const size_t		pinIndex	= pC->GetPinIndex();

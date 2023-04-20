@@ -523,7 +523,7 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 	const bool bCloseToGridPoint = ( hypot(dRow - 0.5, dCol - 0.5) <= 0.5 );	// true ==> clicked close to grid point
 
 	// Handle changing layer preference for PCBs via double-clicking on a component pin
-	if ( bPCB && bTruePin && !GetPaintAction() && m_board.GetLyrs() == 2 && bCloseToGridPoint )	// Only consider clicks that are close to the grid point
+	if ( bPCB && pC->GetPinSupportsLayerPref() && !GetPaintAction() && m_board.GetLyrs() == 2 && bCloseToGridPoint )	// Only consider clicks that are close to the grid point
 	{
 		const bool bToggled = m_board.ToggleLyrPref(layer, m_gridRow, m_gridCol);	assert(bToggled);
 		if ( bToggled )

@@ -164,21 +164,23 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 	const bool	bAllowHoleShare	= GetWireShare();
 	const bool	bDiagsOK		= GetDiagsMode() != DIAGSMODE::OFF;
 	const bool	bWire			= comp.GetType() == COMP::WIRE;	// Wire's only get NodeIDs while placed
+	const bool	bSOIC			= comp.GetIsSOIC();
 	const bool	bMark			= comp.GetType() == COMP::MARK;	// Marker can go anywhere without a pin
 	const bool	bTrax			= comp.GetType() == COMP::TRACKS;
 	const int&	compCols		= comp.GetCompCols();
 	const int&	compRows		= comp.GetCompRows();
-	const int&	lyr				= comp.GetLyr();
+	const int&	compLyr			= comp.GetLyr();	assert(bTrax || compLyr == 0);
 	const int&	rowTL			= comp.GetRow();
 	const int&	colTL			= comp.GetCol();
 	const int&	boardCols		= GetCols();
 	const int&	boardRows		= GetRows();
+	if ( bSOIC && !GetHaveSOIClayer() ) return false;	// SOIC parts need to use top layer
 
 	if ( bAllowHoleShare && bWire )
 	{
 		// pA and pB are the opposite ends of the wire
-		Element* pA = Get(lyr, rowTL, colTL);						assert( pA );
-		Element* pB = Get(lyr, rowTL+compRows-1, colTL+compCols-1);	assert( pB );
+		Element* pA = Get(compLyr, rowTL, colTL);						assert( pA );
+		Element* pB = Get(compLyr, rowTL+compRows-1, colTL+compCols-1);	assert( pB );
 		assert( !pA->GetCompExists(comp.GetId()) && !pB->GetCompExists(comp.GetId()) );
 		if ( pA->GetWireExists(pB) || pB->GetWireExists(pA) ) return false;	// No duplicates !!!
 	}
@@ -194,7 +196,7 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 		for (int i = 0; i < compCols && bOK; i++, iCol++)
 		{
 			const CompElement*	pComp = comp.GetCompElement(j, i);
-			const Element*		pGrid = Get(lyr, jRow, iCol);
+			const Element*		pGrid = Get(compLyr, jRow, iCol);
 			if ( bTrax )
 			{
 				const int traxNodeId = pComp->GetNodeId();
@@ -255,7 +257,7 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 						( compSurface  == SURFACE_FREE ) ||
 						( boardSurface + compSurface <= SURFACE_FULL );
 				bOK &=	( boardHoleUse + compHoleUse <= HOLE_FULL );
-				bOK &=	( (compSoicChar != SOIC_PATTERN) || Get(GetSOIClayer(), jRow, iCol)->GetNodeId() == BAD_NODEID );	// Cannot place SOIC if board is painted in SOIC area
+				bOK &=	( !GetHaveSOIClayer() || (compSoicChar != SOIC_PATTERN) || Get(GetSOIClayer(), jRow, iCol)->GetNodeId() == BAD_NODEID );	// Cannot place SOIC if board is painted in SOIC area
 				bOK &=	( boardSoicChar + compSoicChar <= SOIC_FULL );
 				bOK &=	( !bWire || bAllowHoleShare || ( boardHoleUse + compHoleUse <= HOLE_WIRE ) );
 				bOK &=	( !bWire || bAllowWireCross || ( boardSurface <= ( bAllowHoleShare ? SURFACE_WIRE_END | SURFACE_GAP : SURFACE_GAP ) ) );
@@ -280,9 +282,11 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 					bOK = !pGrid->GetIsMark(); // Pin can't go on marker
 					if ( !bOK ) continue;
 
-					// Check bottom grid
-					const int& nodeId		= pGrid->GetNodeId();		// Read nodeID on board
-					const int& iCompNodeId	= comp.GetNodeId(pinIndex);	// Read component nodeID
+					// Check relevant layer to get nodeID for pin
+					const Element*	p			= ( bSOIC ) ? ( GetSOIClayer() == compLyr ? pGrid : pGrid->GetNbr(NBR_X) ) : pGrid;
+					assert(p);
+					const int&		nodeId		= p->GetNodeId();			// Read nodeID on board
+					const int&		iCompNodeId	= comp.GetNodeId(pinIndex);	// Read component nodeID
 
 					if ( bWire )	// Wires have no NodeId. Need matching IDs on both ends
 						assert( iCompNodeId == BAD_NODEID );	// Shouldn't have an ID yet
@@ -290,7 +294,7 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 					{
 						bOK = ( nodeId == BAD_NODEID || nodeId == iCompNodeId );	// Need no node ID or matching ID
 
-						if ( bOK )
+						if ( bOK && pGrid->GetHasPinTH() )
 						{
 							// Check for short-circuit between layers
 							Element* q = pGrid->GetNbr(NBR_X);
@@ -308,9 +312,9 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 	if ( bOK && bWire )
 	{
 		// Check for short-circuit in this layer
-		assert( lyr == 0 );
-		Element* pW0 = Get(lyr, rowTL, colTL);							assert( pW0 );
-		Element* pW1 = Get(lyr, rowTL+compRows-1, colTL+compCols-1);	assert( pW1 );
+		assert( compLyr == 0 );
+		Element* pW0 = Get(compLyr, rowTL, colTL);							assert( pW0 );
+		Element* pW1 = Get(compLyr, rowTL+compRows-1, colTL+compCols-1);	assert( pW1 );
 		bOK = pW0->GetNodeId() == BAD_NODEID ||
 			  pW1->GetNodeId() == BAD_NODEID ||
 			  pW0->GetNodeId() == pW1->GetNodeId();
@@ -348,11 +352,12 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 
 	const bool	bDiagsOK	= GetDiagsMode() != DIAGSMODE::OFF;
 	const bool	bWire		= comp.GetType() == COMP::WIRE;	// Wire's only get NodeIDs while placed
+	const bool	bSOIC		= comp.GetIsSOIC();	assert( !bSOIC || GetHaveSOIClayer() );
 	const bool	bTrax		= comp.GetType() == COMP::TRACKS;
 	const int&	compId		= comp.GetId();
 	const int&	compCols	= comp.GetCompCols();
 	const int&	compRows	= comp.GetCompRows();
-	const int&	lyr			= comp.GetLyr();
+	const int&	compLyr		= comp.GetLyr();	assert(bTrax || compLyr == 0);
 	const int&	rowTL		= comp.GetRow();
 	const int&	colTL		= comp.GetCol();
 
@@ -380,7 +385,7 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 			for (int i = 0; i < compCols; i++, iCol++)
 			{
 				const CompElement*	pComp = comp.GetCompElement(j, i);
-				Element*			pGrid = Get(lyr, jRow, iCol);
+				Element*			pGrid = Get(compLyr, jRow, iCol);
 				if ( !pComp->ReadFlagBits(RECTSET) ) continue;		// Skip non-rect points
 				if ( pGrid->GetNodeId() != BAD_NODEID ) continue;	// Skip painted points
 				// If have wire(s) ...
@@ -397,7 +402,7 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 		for (int i = 0; i < compCols; i++, iCol++)
 		{
 			const CompElement*	pComp = comp.GetCompElement(j, i);
-			Element*			pGrid = Get(lyr, jRow, iCol);
+			Element*			pGrid = Get(compLyr, jRow, iCol);
 			if ( bTrax )
 			{
 				const int traxNodeId = pComp->GetNodeId();
@@ -409,7 +414,7 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 											  blankWireIds.find( pGrid->GetCompId2() ) != blankWireIds.end() );
 				const bool bExistingNodeId	= !bBlankWire && ( pGrid->GetNodeId() == traxNodeId );
 
-				SetNodeIdByUser(lyr, jRow, iCol, traxNodeId, false);	// false ==> don't paint pins
+				SetNodeIdByUser(compLyr, jRow, iCol, traxNodeId, false);	// false ==> don't paint pins
 
 				const bool bAllLyrs(false);
 				if ( bExistingNodeId )						// If the board already had the NodeId ...
@@ -454,20 +459,21 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 
 					const Component& otherComp = m_compMgr.GetComponentById( iOtherCompId );
 					assert( otherComp.GetType() == COMP::WIRE );
-					for (int lyr = 0; lyr < 2; lyr++)
+					for (int iLyr = 0; iLyr < 2; iLyr++)
 					{
-						const int& origId = otherComp.GetOrigId(lyr, iOtherPinIndex);
-						comp.SetOrigId(lyr, pinIndex, origId);
+						const int& origId = otherComp.GetOrigId(iLyr, iOtherPinIndex);
+						comp.SetOrigId(iLyr, pinIndex, origId);
 					}
 				}
 				else
 				{
-					for (int lyr = 0; lyr < 2; lyr++)
+					for (int iLyr = 0; iLyr < 2; iLyr++)
 					{
-						Element* p = ( lyr == 0 ) ? pGrid : pGrid->GetNbr(NBR_X);
+						Element* p = ( iLyr == compLyr ) ? pGrid : pGrid->GetNbr(NBR_X);
 						if ( bWire && p ) wireNodeId = std::max(wireNodeId, p->GetNodeId());
-						const int origId = ( p && p->ReadFlagBits(USERSET) ) ? p->GetNodeId() : BAD_NODEID;
-						comp.SetOrigId(lyr, pinIndex, origId);
+						// SOIC parts don't have TH pins, so need the raw nodeIds.  We cant' call GetNodeId() as that can "tunnel" from top layer to bottom
+						const int origId = ( p && p->ReadFlagBits(USERSET) ) ? ( bSOIC ? p->GetNodeIdRaw() : p->GetNodeId() ) : BAD_NODEID;
+						comp.SetOrigId(iLyr, pinIndex, origId);
 					}
 				}
 
@@ -477,10 +483,11 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 				assert( !bWire || iCompNodeId == BAD_NODEID ); // Wire shouldn't have a NodeId yet
 				if ( !bWire )	// Write nodeId & flag
 				{
-					const bool bAllLyrs = pGrid->GetHasPin();	assert( bAllLyrs );
-					SetNodeId(pGrid, iCompNodeId, bAllLyrs);
-					WipeFlagBits(pGrid, AUTOSET|VEROSET, bAllLyrs);
-					MarkFlagBits(pGrid, USERSET, bAllLyrs);
+					const bool bAllLyrs = pGrid->GetHasPinTH();
+					Element* p = ( bSOIC ) ? Get(GetSOIClayer(), jRow, iCol) : pGrid;	assert(p);
+					SetNodeId(p, iCompNodeId, bAllLyrs);
+					WipeFlagBits(p, AUTOSET|VEROSET, bAllLyrs);
+					MarkFlagBits(p, USERSET, bAllLyrs);
 				}
 			}
 		}
@@ -488,8 +495,8 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 	if ( bWire )	// Handle wires setting the wire ends on the board to same value
 	{
 		// pA and pB are the opposite ends of the wire
-		Element*	pA		= Get(lyr, rowTL, colTL);						assert( pA );
-		Element*	pB		= Get(lyr, rowTL+compRows-1, colTL+compCols-1);	assert( pB );
+		Element*	pA		= Get(compLyr, rowTL, colTL);						assert( pA );
+		Element*	pB		= Get(compLyr, rowTL+compRows-1, colTL+compCols-1);	assert( pB );
 		const int	iSlotA	= pA->GetSlotFromCompId(compId);
 		const int	iSlotB	= pB->GetSlotFromCompId(compId);
 		pA->SetW(iSlotA, pB);	// Link wire ends
@@ -523,8 +530,8 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 			MarkFlagBits(pW, iWireFlag, bAllLyrs);
 		}
 	}
-	comp.SetIsPlaced(true);	
-	if ( comp.GetType() == COMP::MARK ) Get(lyr, rowTL, colTL)->SetIsMark(true);	// Set marker flag
+	comp.SetIsPlaced(true);
+	if ( comp.GetType() == COMP::MARK ) Get(compLyr, rowTL, colTL)->SetIsMark(true);	// Set marker flag
 
 	m_colorMgr.ReAssignColors();	// Forces colors to be worked out again
 	return true;
@@ -536,17 +543,18 @@ bool Board::TakeOff(Component& comp)
 
 	const bool	bWire		= comp.GetType() == COMP::WIRE;	// Wire's only get NodeIDs while placed
 	const bool	bTrax		= comp.GetType() == COMP::TRACKS;
+	const bool	bSOIC		= comp.GetIsSOIC();
 	const int&	compId		= comp.GetId();
 	const int&	compCols	= comp.GetCompCols();
 	const int&	compRows	= comp.GetCompRows();
-	const int&	lyr			= comp.GetLyr();
+	const int&	compLyr		= comp.GetLyr();	assert(bTrax || compLyr == 0);
 	const int&	rowTL		= comp.GetRow();
 	const int&	colTL		= comp.GetCol();
 
 	// If we have a wire, then pA and pB are the opposite ends of the wire.
 	// Find out which wire slots are used before we take off the wire.
-	Element*	pA			= ( bWire ) ? Get(lyr, rowTL, colTL) : nullptr;
-	Element*	pB			= ( bWire ) ? Get(lyr, rowTL+compRows-1, colTL+compCols-1) : nullptr;
+	Element*	pA			= ( bWire ) ? Get(compLyr, rowTL, colTL) : nullptr;
+	Element*	pB			= ( bWire ) ? Get(compLyr, rowTL+compRows-1, colTL+compCols-1) : nullptr;
 	assert( !bWire || (pA != nullptr && pB != nullptr) );
 	int			iOrigIdA[2]	= {BAD_NODEID, BAD_NODEID};	// 1 per layer
 	int			iOrigIdB[2]	= {BAD_NODEID, BAD_NODEID};	// 1 per layer
@@ -573,14 +581,14 @@ bool Board::TakeOff(Component& comp)
 		for (int i = 0; i < compCols; i++, iCol++)
 		{
 			const CompElement*	pComp = comp.GetCompElement(j, i);
-			Element*			pGrid = Get(lyr, jRow, iCol);
+			Element*			pGrid = Get(compLyr, jRow, iCol);
 			if ( bTrax )
 			{
 				const bool bAllLyrs(false);
 				if ( !pComp->ReadFlagBits(RECTSET) ) continue;		// Skip non-rect points
 				if ( pComp->GetNodeId() == BAD_NODEID ) continue;	// Skip blank areas of the trax comp
 				if ( !pGrid->ReadFlagBits(RECTSET) && ( !pGrid->GetHasPin() || pGrid->GetHasWire() ) )
-					SetNodeIdByUser(lyr, jRow, iCol, BAD_NODEID, false);	// false ==> don't paint pins
+					SetNodeIdByUser(compLyr, jRow, iCol, BAD_NODEID, false);	// false ==> don't paint pins
 				WipeFlagBits(pGrid, RECTSET, bAllLyrs);
 			}
 			else
@@ -615,12 +623,13 @@ bool Board::TakeOff(Component& comp)
 				// Wire-ends need special treatment, so just handle non-wire pins here
 				if ( !bWire )
 				{
-					for (int lyr = 0, lyrs = std::min(GetLyrs(), 2); lyr < lyrs; lyr++)
+					for (int iLyr = 0, lyrs = std::min(GetLyrs(), 2); iLyr < lyrs; iLyr++)
 					{
-						Element* p = ( lyr == 0 ) ? pGrid : pGrid->GetNbr(NBR_X);
+						if ( bSOIC && iLyr != GetSOIClayer() ) continue;
+						Element* p = ( iLyr == compLyr ) ? pGrid : pGrid->GetNbr(NBR_X);
 						if ( p == nullptr ) continue;
 						const bool bAllLyrs = false;
-						SetNodeId(p, origId[lyr], bAllLyrs);	// Restore grid element to original nodeId
+						SetNodeId(p, origId[iLyr], bAllLyrs);	// Restore grid element to original nodeId
 						WipeFlagBits(p, AUTOSET|VEROSET, bAllLyrs);
 						MarkFlagBits(p, USERSET, bAllLyrs);
 					}
@@ -686,11 +695,11 @@ bool Board::TakeOff(Component& comp)
 		if ( !pA->GetHasWire() )	// If we've taken off the last wire at the location
 		{
 			const bool bAllLyrs = false;
-			for (int lyr = 0, lyrs = std::min(GetLyrs(), 2); lyr < lyrs; lyr++)
+			for (int iLyr = 0, lyrs = std::min(GetLyrs(), 2); iLyr < lyrs; iLyr++)
 			{
-				Element* p = ( lyr == 0 ) ? pA : pA->GetNbr(NBR_X);
+				Element* p = ( iLyr == compLyr ) ? pA : pA->GetNbr(NBR_X);
 				if ( p == nullptr ) continue;
-				SetNodeId(p, iOrigIdA[lyr], bAllLyrs);	// Restore grid element to original nodeId
+				SetNodeId(p, iOrigIdA[iLyr], bAllLyrs);	// Restore grid element to original nodeId
 				WipeFlagBits(p, AUTOSET|VEROSET, bAllLyrs);
 				MarkFlagBits(p, USERSET, bAllLyrs);
 			}
@@ -698,24 +707,29 @@ bool Board::TakeOff(Component& comp)
 		if ( !pB->GetHasWire() )	// If we've taken off the last wire at the location
 		{
 			const bool bAllLyrs = false;
-			for (int lyr = 0, lyrs = std::min(GetLyrs(), 2); lyr < lyrs; lyr++)
+			for (int iLyr = 0, lyrs = std::min(GetLyrs(), 2); iLyr < lyrs; iLyr++)
 			{
-				Element* p = ( lyr == 0 ) ? pB : pB->GetNbr(NBR_X);
+				Element* p = ( iLyr == compLyr ) ? pB : pB->GetNbr(NBR_X);
 				if ( p == nullptr ) continue;
-				SetNodeId(p, iOrigIdB[lyr], bAllLyrs);	// Restore grid element to original nodeId
+				SetNodeId(p, iOrigIdB[iLyr], bAllLyrs);	// Restore grid element to original nodeId
 				WipeFlagBits(p, AUTOSET|VEROSET, bAllLyrs);
 				MarkFlagBits(p, USERSET, bAllLyrs);
 			}
 		}
 	}
 	comp.SetIsPlaced(false);
-	if ( comp.GetType() == COMP::MARK ) Get(lyr, rowTL, colTL)->SetIsMark(false);	// Clear marker flag
+	if ( comp.GetType() == COMP::MARK ) Get(compLyr, rowTL, colTL)->SetIsMark(false);	// Clear marker flag
 	return true;
 }
 
 void Board::FloatAllComps()	// Float all components (i.e. take them off the board)
 {
 	for (auto& mapObj : m_compMgr.m_mapIdToComp) TakeOff( mapObj.second );
+}
+
+void Board::FloatAllCompsSOIC()	// Float all SOIC components (i.e. take them off the board)
+{
+	for (auto& mapObj : m_compMgr.m_mapIdToComp) if ( mapObj.second.GetIsSOIC() ) TakeOff( mapObj.second );
 }
 
 void Board::PlaceFloaters()	// Try to place down all the floating components

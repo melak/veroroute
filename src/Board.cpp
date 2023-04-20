@@ -151,6 +151,7 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 			const Element*	pA			= Get(k, j, i);
 			const int&		nodeIdA		= pA->GetNodeId();
 			const bool		bHasPinA	= pA->GetHasPin();
+			const bool		bHasSoicA	= pA->GetHasPinSOIC() && k == GetSOIClayer();
 			if ( nodeIdA == BAD_NODEID && !bHasPinA ) continue;	// Skip if no track and no pin
 			const bool		bIsGndA		= bGroundFill && nodeIdA == GetGroundNodeId(k) && nodeIdA != BAD_NODEID;
 
@@ -181,7 +182,7 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 			const int	iTagCodeA		= ( bPadA && bIsGndA ) ? GetTagCode(pA, iPerimeterCodeA) : 0;
 			const bool	bBlobA			= !bPadOffsetA || iPerimeterCodeA != 0 || ( bForceXthermals && bIsGndA );
 			if ( bBlobA )
-				CalcBlob(1, pointA, padA, iPadWidthMIL_A, iPerimeterCodeA, iTagCodeA, blobA, bHasPinA, bIsGndA);	// 1 ==> scale of 1 grid square
+				CalcBlob(1, pointA, padA, iPadWidthMIL_A, iPerimeterCodeA, iTagCodeA, blobA, bHasPinA, bHasSoicA, bIsGndA);	// 1 ==> scale of 1 grid square
 
 			// Only need to loop half the directions in the following loop (the i,j scan takes care of the other half)
 			for (int jj = std::max(minRow,j-nRings); jj <= j; jj++)
@@ -191,6 +192,7 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 				const Element*	pB			= Get(k, jj, ii);
 				const int&		nodeIdB		= pB->GetNodeId();
 				const bool		bHasPinB	= pB->GetHasPin();
+				const bool		bHasSoicB	= pB->GetHasPinSOIC() && k == GetSOIClayer();
 				if ( nodeIdB == BAD_NODEID && !bHasPinB ) continue;	// Skip if no track and no pin
 				if ( nodeIdB == nodeIdA ) continue;
 				const bool		bIsGndB		= bGroundFill && nodeIdB == GetGroundNodeId(k) && nodeIdB != BAD_NODEID;
@@ -223,7 +225,7 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 				const int	iTagCodeB		= ( bPadB && bIsGndB ) ? GetTagCode(pB, iPerimeterCodeB) : 0;
 				const bool	bBlobB			= !bPadOffsetB || iPerimeterCodeB != 0 || ( bForceXthermals && bIsGndB );
 				if ( bBlobB )
-					CalcBlob(1, pointB, padB, iPadWidthMIL_B, iPerimeterCodeB, iTagCodeB, blobB, bHasPinB, bIsGndB);	// 1 ==> scale of 1 grid square
+					CalcBlob(1, pointB, padB, iPadWidthMIL_B, iPerimeterCodeB, iTagCodeB, blobB, bHasPinB, bHasSoicB, bIsGndB);	// 1 ==> scale of 1 grid square
 
 				const bool bCompareBlobs = !bStandardBlobs || ( abs(jj - j) < 2 && abs(ii - i) < 2 );	// Standard blobs ==> just consider neighbouring grid points
 
@@ -364,8 +366,8 @@ bool Board::SetNodeIdByUser(int lyr, int row, int col, int nodeId, bool bPaintPi
 	Element*	p		= Get(lyr, row, col);
 	if ( p->GetIsHole() || ( p->GetSoicProtected() && nodeId != BAD_NODEID ) ) return false;	// No change
 
-	const bool	bWire	= p->GetHasWire();
-	const bool	bPin	= p->GetHasPin();
+	const bool	bWire		= p->GetHasWire();
+	const bool	bPin		= p->GetHasPin();
 	assert( !bPin || p->GetHasComp() );	// Sanity check
 	assert( !bWire || bPin );			// Wires must have pins
 
@@ -418,7 +420,7 @@ bool Board::SetNodeIdByUser(int lyr, int row, int col, int nodeId, bool bPaintPi
 	for (const auto& o : wireList)
 	{
 		Element* pW = const_cast<Element*> (o.first);
-		const bool bAllLyrs = pW->GetHasPin();
+		const bool bAllLyrs = pW->GetHasPinTH();
 		SetNodeId(pW, nodeId, bAllLyrs);
 		WipeFlagBits(pW, AUTOSET|VEROSET, bAllLyrs);
 		MarkFlagBits(pW, USERSET, bAllLyrs);
@@ -616,7 +618,7 @@ void Board::SetSolder(int nodeId, int col, bool bVertical)
 		{
 			int rowPins(0), rowPads(0);	// Try avoid putting a blob where we have a pad. Otherwise prefer pin locations.
 
-			if ( pC->GetHasPin() )
+			if ( pC->GetHasPinTH() )
 			{
 				if ( pC->GetHasWire() )	// Don't treat wire like pad
 					rowPins++;
@@ -630,7 +632,7 @@ void Board::SetSolder(int nodeId, int col, bool bVertical)
 						rowPins++;
 				}
 			}
-			if ( pR->GetHasPin() )
+			if ( pR->GetHasPinTH() )
 			{
 				if ( pR->GetHasWire() )	// Don't treat wire like pad
 					rowPins++;

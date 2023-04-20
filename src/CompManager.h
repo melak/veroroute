@@ -171,7 +171,7 @@ public:
 		}
 		return false;
 	}
-	bool GetHasSOIC() const
+	bool GetHaveSOIC() const
 	{
 		for (const auto& mapObj : m_mapIdToComp)
 		{

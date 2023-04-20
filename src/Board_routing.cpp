@@ -49,7 +49,7 @@ void Board::WipeAutoSetPoints(int nodeId, bool bHavePlacedWires)
 	{
 		Element* const p = GetAt(i);
 		if ( !bWipeAll && p->GetNodeId() != nodeId ) continue;	// Skip points with wrong nodeId
-		const bool bAllLyrs = p->GetHasPin();
+		const bool bAllLyrs = p->GetHasPinTH();
 		bool bWipe = p->ReadFlagBits(AUTOSET) && !p->ReadFlagBits(USERSET);
 		if ( bHavePlacedWires && p->GetHasWire() )
 		{
@@ -85,11 +85,17 @@ void Board::BuildTargetPins(int nodeId)
 
 	assert( nodeId != BAD_NODEID );
 	m_targetPins.clear();
-	for (int i = 0, iSize = ( GetLyrs() == 1 ) ? GetSize() : ( GetSize() / 2 ); i < iSize; i++)	// Use layer 0 only for pins
+
+	// Can limit target pins (and loop) to layer-0 if we don't have SOIC parts
+	const int iSize	= ( m_compMgr.GetHaveSOIC() && GetLyrs() == 2 ) ? GetSize() : ( GetSize() / GetLyrs() );
+	for (int i = 0; i < iSize; i++)	
 	{
 		Element* const p = GetAt(i);
 		if ( p->GetHasPin() && p->GetNodeId() == nodeId && !(m_bHavePlacedWires && p->GetHasWire()) )
-			m_targetPins.push_back(p);
+		{
+			if ( p->GetHasPinTH() && !p->IsLayer0() ) continue;	// Only put through hole pins on layer-0 or we'll double count them
+			m_targetPins.push_back(p); 
+		}
 	}
 }
 
@@ -224,7 +230,7 @@ void Board::UpdateVias()	// Sets the via flag to true on all candidate vias
 			Element* const p = GetAt(i);
 			Element* const q = p->GetNbr(NBR_X);
 			bool bIsVia(false);
-			if ( q && !p->GetHasPin() && p->GetNodeId() == q->GetNodeId() && p->GetNodeId() != BAD_NODEID )	// If candidate via ...
+			if ( q && !p->GetHasPinAny() && p->GetNodeId() == q->GetNodeId() && p->GetNodeId() != BAD_NODEID )	// If candidate via ...
 			{
 				m_targetPins.clear();
 				m_targetPins.push_back(p);
@@ -380,7 +386,7 @@ void Board::Flood_Helper(const bool bBuildTracks)
 				switch( iType )
 				{
 					case 0:	// Type 0 ==> Change layer at a pin
-						if ( pJ->GetMH() + MH_LPIN == iMH && pJ->GetHasPin() )
+						if ( pJ->GetMH() + MH_LPIN == iMH && pJ->GetHasPinTH() )
 							Flood_Grow(iFloodNodeId, pJ, NBR_X, bBuildTracks, iMH, iMaxMH, bDone);
 						break;
 					case 1:	// Type 1 ==> Move within layer
@@ -394,7 +400,7 @@ void Board::Flood_Helper(const bool bBuildTracks)
 						}
 						break;
 					case 2:	// Type 2 ==> Change layer at a via
-						if ( pJ->GetMH() + MH_LVIA == iMH && !pJ->GetHasPin() )
+						if ( pJ->GetMH() + MH_LVIA == iMH && !pJ->GetHasPinAny() )
 							Flood_Grow(iFloodNodeId, pJ, NBR_X, bBuildTracks, iMH, iMaxMH, bDone);
 						break;
 				}
@@ -501,10 +507,13 @@ Element* Board::Backtrace(Element* const pEnd, int nodeId)
 
 		Element* const pW0 = m_bHavePlacedWires ? p->GetW(0) : nullptr;
 		Element* const pW1 = m_bHavePlacedWires ? p->GetW(1) : nullptr;
-		const bool bWire	= (pW0 || pW1) && p->IsLayer0();	// Constrain wire-routing to layer 0
-		const bool bHasPin	= bWire || p->GetHasPin();
+		const bool bWire		= (pW0 || pW1) && p->IsLayer0();	// Constrain wire-routing to layer 0
+		const bool bHasPin		= bWire || p->GetHasPin();		// Refers to this layer only
+		const bool bHasPinTH	= bWire || p->GetHasPinTH();	// Checks all layers 
+		const bool bHasPinAny	= bWire || p->GetHasPinAny();	// Checks all layers 
+		const bool bAllLyrs		= bHasPinTH;
 		if ( !bHasPin || bWire ) // For non-pins and wires
-			BacktracePaint(p, nodeId, bHasPin, bWire);	// Paint element p
+			BacktracePaint(p, nodeId, bAllLyrs, bWire);	// Paint element p
 
 		if ( !pOut && p != pEnd ) pOut = p;
 		if ( MH == 0 ) return pOut;	// We're done backtracing once MH == 0
@@ -529,7 +538,7 @@ Element* Board::Backtrace(Element* const pEnd, int nodeId)
 				switch( iType )
 				{
 					case 0:	// Type 0 ==> Change layer at a pin if multi-layer routing
-						if ( bMultiLayer && bHasPin && iLastDirection != NBR_X )
+						if ( bMultiLayer && bHasPinTH && iLastDirection != NBR_X )
 						{
 							bOK = BacktraceHelper(p, MH, nodeId, MH_LPIN, NBR_X, iLoop);
 							if ( bOK ) iLastDirection = NBR_X;
@@ -547,7 +556,7 @@ Element* Board::Backtrace(Element* const pEnd, int nodeId)
 						}
 						break;
 					case 2:	// Type 2 ==> Change layer at a via
-						if ( !bHasPin && iLastDirection != NBR_X )
+						if ( !bHasPinAny && iLastDirection != NBR_X )	// Was !bHasPin
 						{
 							bOK = BacktraceHelper(p, MH, nodeId, MH_LVIA, NBR_X, iLoop);
 							if ( bOK ) iLastDirection = NBR_X;
@@ -562,7 +571,7 @@ Element* Board::Backtrace(Element* const pEnd, int nodeId)
 	return pOut;
 }
 
-void Board::BacktracePaint(Element* const p, int nodeId, bool bHasPin, bool bWire)
+void Board::BacktracePaint(Element* const p, int nodeId, bool bAllLyrs, bool bWire)
 {
 	const bool bPaintNodeId = ( p->GetNodeId() == BAD_NODEID );	// Set NodeId if not set yet.
 	if ( !bPaintNodeId && !p->ReadFlagBits(USERSET) ) return;
@@ -571,10 +580,10 @@ void Board::BacktracePaint(Element* const p, int nodeId, bool bHasPin, bool bWir
 
 	if ( bPaintNodeId )
 	{
-		SetNodeId(p, nodeId, bHasPin);
-		WipeFlagBits(p, USERSET, bHasPin);
+		SetNodeId(p, nodeId, bAllLyrs);
+		WipeFlagBits(p, USERSET, bAllLyrs);
 	}
-	MarkFlagBits(p, AUTOSET, bHasPin);
+	MarkFlagBits(p, AUTOSET, bAllLyrs);
 
 	if ( bWire )
 	{
@@ -586,10 +595,10 @@ void Board::BacktracePaint(Element* const p, int nodeId, bool bHasPin, bool bWir
 			if ( pW == p ) continue;	// Skip p
 			if ( bPaintNodeId )
 			{
-				SetNodeId(pW, nodeId, bHasPin);
-				WipeFlagBits(pW, USERSET, bHasPin);
+				SetNodeId(pW, nodeId, bAllLyrs);
+				WipeFlagBits(pW, USERSET, bAllLyrs);
 			}
-			MarkFlagBits(pW, AUTOSET, bHasPin);
+			MarkFlagBits(pW, AUTOSET, bAllLyrs);
 		}
 	}
 }
@@ -602,15 +611,15 @@ void Board::BacktraceErase(Element* const p)
 	Element* const pW0 = m_bHavePlacedWires ? p->GetW(0) : nullptr;
 	Element* const pW1 = m_bHavePlacedWires ? p->GetW(1) : nullptr;
 	const bool bWire		= (pW0 || pW1) && p->IsLayer0();	// Constrain wire-routing to layer 0
-	const bool bHasPin		= bWire || p->GetHasPin();
+	const bool bAllLyrs		= bWire || p->GetHasPinTH();
 	const bool bWipeNodeId	= !p->ReadFlagBits(USERSET);
 
 	if ( bWipeNodeId )
 	{
-		SetNodeId(p, BAD_NODEID, bHasPin);
-		WipeFlagBits(p, USERSET, bHasPin);
+		SetNodeId(p, BAD_NODEID, bAllLyrs);
+		WipeFlagBits(p, USERSET, bAllLyrs);
 	}
-	WipeFlagBits(p, AUTOSET, bHasPin);
+	WipeFlagBits(p, AUTOSET, bAllLyrs);
 
 	if ( bWire )
 	{
@@ -622,10 +631,10 @@ void Board::BacktraceErase(Element* const p)
 			if ( pW == p ) continue;	// Skip p
 			if ( bWipeNodeId )
 			{
-				SetNodeId(pW, BAD_NODEID, bHasPin);
-				WipeFlagBits(pW, USERSET, bHasPin);
+				SetNodeId(pW, BAD_NODEID, bAllLyrs);
+				WipeFlagBits(pW, USERSET, bAllLyrs);
 			}
-			WipeFlagBits(pW, AUTOSET, bHasPin);
+			WipeFlagBits(pW, AUTOSET, bAllLyrs);
 		}
 	}
 }
@@ -660,18 +669,32 @@ void Board::Manhatten(Element* p, bool bSingleRoute)
 
 	Element* pFirst = p;
 
-	if ( p->GetHasPin() )	// p could be a wire end
-		pFirst = p->IsLayer0() ? p : p->GetNbr(NBR_X);	// Always want target pins on layer 0
-
-	m_targetPins.push_back(pFirst);
+	if ( p->GetHasPin() )	// p could be a wire end	//TODO Could be either a TH pin or SOIC pin on this layer
+	{
+		if ( p->GetHasPinTH() )
+			pFirst = p->IsLayer0() ? p : p->GetNbr(NBR_X);	// Use layer 0 for target pins by default
+		else 
+			pFirst = p->GetIsSOIClayer() ? p : p->GetNbr(NBR_X);	// SOIC pins must be on the SOIC layer
+	}
+	if ( pFirst )
+		m_targetPins.push_back(pFirst);
 
 	// If we haven't specified bSingleRoute, then build additional routes from all true component pins
-	for (int i = 0, iSize = ( GetLyrs() == 1 ) ? GetSize() : ( GetSize() / 2 ); i < iSize && !bSingleRoute; i++)	// Use layer 0 only for pins
+	for (int i = 0, iSize = ( GetLyrs() == 1 ) ? GetSize() : ( GetSize() / 2 ); i < iSize && !bSingleRoute; i++)	// Loop base layer only
 	{
 		Element* const q = GetAt(i);
-		if ( q == pFirst ) continue;	// Skip first
-		if ( q && q->GetHasPin() && !(m_bHavePlacedWires && q->GetHasWire()) && q->GetNodeId() == iTraceNodeId )	// Skip wires
-			m_targetPins.push_back(q);
+		if ( q && q->GetHasPinAny() && !(m_bHavePlacedWires && q->GetHasWire()) && q->GetNodeId() == iTraceNodeId )	// Skip wires
+		{
+			if ( q->GetHasPinTH() && q != pFirst )	// Skip first
+				m_targetPins.push_back(q);	// Start TH pins on base layer
+			else 
+			{
+				// Have an SOIC pin, so get the relevant layer
+				Element* const r = q->GetNbr(NBR_X);	//TODO  SOIC pins are top layer		// Old( GetSOIClayer() == 0 ) ? q : q->GetNbr(NBR_X);
+				if ( r && r != pFirst )	// Skip first
+					m_targetPins.push_back( r );
+			}
+		}
 	}
 
 	Flood(bSingleRoute);

@@ -509,7 +509,7 @@ public:
 	void	CalcBlob(qreal W, const QPointF& pC, const QPointF& pCoffset,
 					 int iPadWidthMIL, int iPerimeterCode, int iTagCode,
 					 std::list<MyPolygonF>& out,
-					 bool bHavePad, bool bIsGnd, bool bGap = false) const;
+					 bool bHavePad, bool bHaveSoic, bool bIsGnd, bool bGap = false) const;
 #ifdef _TEST_SOIC
 	void	CalcSOIC(qreal W, const QPointF& pLT, std::list<MyPolygonF>& out, bool bGap = false) const;
 #endif

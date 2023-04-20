@@ -186,10 +186,10 @@ public:
 	void ResetPinLayerPrefs()
 	{
 		assert( GetLyrs() == 2 );
-		for (int i = 0, iSize = ( GetLyrs() == 1 ) ? GetSize() : ( GetSize() / 2 ); i < iSize; i++)	// Use layer 0 only for pins
+		for (int i = 0, iSize = ( GetLyrs() == 1 ) ? GetSize() : ( GetSize() / 2 ); i < iSize; i++)	// Use layer 0 only for TH pins
 		{
 			Element* p = GetAt(i);
-			if ( !p->GetHasPin() || p->GetHasWire() ) continue;	// Want pins only, not wires.
+			if ( !p->GetPinSupportsLayerPref() ) continue;
 
 			const int&		compId		= p->GetCompId();	assert(compId != BAD_COMPID);
 			const size_t	pinIndex	= p->GetPinIndex();	assert(pinIndex != BAD_PININDEX);
@@ -201,7 +201,7 @@ public:
 	bool ToggleLyrPref(int iLyr, int iRow, int iCol)
 	{
 		Element* p = Get(iLyr, iRow, iCol);
-		if ( !p->GetHasPin() || p->GetHasWire() ) return false;	// Want pins only.  Wires sharing a hole could contradict each other, so ignore all wires
+		if ( !p->GetPinSupportsLayerPref() ) return false;
 
 		const int&		compId		= p->GetCompId();	assert(compId != BAD_COMPID);
 		const size_t	pinIndex	= p->GetPinIndex();	assert(pinIndex != BAD_PININDEX);
@@ -217,7 +217,7 @@ public:
 
 	int GetLayerPref(const Element* p) const
 	{
-		assert( GetLyrs() == 2 && p && p->GetHasPin() && !p->GetHasWire() );
+		assert( GetLyrs() == 2 && p && p->GetPinSupportsLayerPref() );
 		const int&		compId		= p->GetCompId();		assert(compId != BAD_COMPID);
 		const size_t	pinIndex	= p->GetPinIndex();		assert(pinIndex != BAD_PININDEX);
 		return m_compMgr.GetComponentById(compId).GetLayerPref(pinIndex);
@@ -231,7 +231,7 @@ public:
 
 		// Get track perimeter code on this layer (without any layer preferences)
 		int iCode = p->GetPerimeterCode(bDiagsOK, bMinDiags);	// 0 to 255
-		if ( GetLyrs() == 2 && p->GetHasPin() && !p->GetHasWire() )
+		if ( GetLyrs() == 2 && p->GetPinSupportsLayerPref() )
 		{
 			// For a 2-layer board, modify the track perimeter code on this layer to account for pin layer preferences
 			// Only true components (not wires) can have a pin layer preference.
@@ -248,7 +248,7 @@ public:
 				if ( !ReadCodeBit(iNbr, iCode) || !ReadCodeBit(iNbr, iCodeOther) ) continue;
 
 				const Element* q = p->GetNbr(iNbr);
-				if ( !q->GetHasPin() || q->GetHasWire() ) continue;
+				if ( !q->GetPinSupportsLayerPref() ) continue;
 
 				const int iLayerPrefQ = GetLayerPref(q);
 
@@ -269,14 +269,14 @@ public:
 	{
 		const int&	iNodeId			= p->GetNodeId();
 		const bool	bBottomLayer	= p->IsLayer0();	// true ==> p is on bottom layer
-		const int	iLayerPrefP		= ( GetLyrs() == 1 || !p->GetHasPin() || p->GetHasWire() ) ? LAYER_X : GetLayerPref(p);
+		const int	iLayerPrefP		= ( GetLyrs() == 1 || !p->GetPinSupportsLayerPref() ) ? LAYER_X : GetLayerPref(p);
 
 #ifdef _DEBUG
 		const bool&	bVero			= GetVeroTracks();
 		const bool	bMonoPCB		= GetTrackMode() == TRACKMODE::MONO || GetTrackMode() == TRACKMODE::PCB;
 		const bool	bGroundFill		= !bVero && bMonoPCB && GetGroundFill();
 		const int&	iGndNodeId		= GetGroundNodeId(bBottomLayer ? 0 : 1);
-		assert(bGroundFill && p->GetHasPin() && iNodeId == iGndNodeId && iNodeId != BAD_NODEID);
+		assert(bGroundFill && p->GetHasPinTH() && iNodeId == iGndNodeId && iNodeId != BAD_NODEID);
 #endif
 
 		if ( GetXthermals() && GetLyrs() == 1 ) return CODEBITS_DIAGS;
@@ -290,10 +290,10 @@ public:
 			if ( ReadCodeBit(iNbr , iPerimeterCode) ) continue;			// Skip if direction already has connection
 			if ( ReadCodeBit((iNbr+1)%8 , iPerimeterCode) ) continue;	// Skip if adjacent CW  direction already has connection
 			if ( ReadCodeBit((iNbr+7)%8, iPerimeterCode) ) continue;	// Skip if adjacent CCW direction already has connection
-			if ( ( q->GetHasPin() || iNbrNodeId != BAD_NODEID ) && iNbrNodeId != iNodeId ) continue;	// Skip if direction is not empty, or has wrong NodeID
+			if ( ( q->GetHasPinTH() || iNbrNodeId != BAD_NODEID ) && iNbrNodeId != iNodeId ) continue;	// Skip if direction is not empty, or has wrong NodeID
 			if ( p->IsBlocked(iNbr, iNodeId) ) continue;				// Skip is direction is blocked
 
-			const int	iLayerPrefQ	= ( GetLyrs() == 1 || !q->GetHasPin() || q->GetHasWire() ) ? LAYER_X : GetLayerPref(q);
+			const int	iLayerPrefQ	= ( GetLyrs() == 1 || !q->GetPinSupportsLayerPref() ) ? LAYER_X : GetLayerPref(q);
 
 			const bool bOK = ( iLayerPrefP == LAYER_X && iLayerPrefQ == LAYER_X ) ||
 							 ( bBottomLayer ? ( iLayerPrefP == LAYER_B || iLayerPrefQ == LAYER_B )
@@ -517,6 +517,7 @@ public:
 	}
 	void WipeSoicAreas()
 	{
+		if ( !GetHaveSOIClayer() ) return;
 		const int numRows( GetRows() ), numCols( GetCols() );
 		const int k = GetSOIClayer();
 		for (int j = 0; j < numRows; j++)
@@ -609,13 +610,12 @@ public:
 	void Route(bool bMinimal);
 	void UpdateVias();
 	const bool& GetHasVias() const { return m_bHasVias; }
-	bool		GetHasSOIC() const { return m_compMgr.GetHasSOIC(); }
 	unsigned int Flood(int nodeId);
 	unsigned int Flood(bool bSingleRoute = false);
 	void Flood_Helper(bool bBuildTracks);
 	void Flood_Grow(int iFloodNodeId, Element* const pJ, int iNbr, bool bBuildTracks, unsigned int& iMH, unsigned int& iMaxMH, bool& bDone);
 	Element* Backtrace(Element* const pEnd, int nodeId);
-	void BacktracePaint(Element* const p, int nodeId, bool bHasPin, bool bWire);
+	void BacktracePaint(Element* const p, int nodeId, bool bAllLyrs, bool bWire);
 	void BacktraceErase(Element* const p);
 	bool BacktraceHelper(Element*& p, unsigned int& MH, int nodeId, unsigned int iDeltaMH, int iNbr, int iLoop);
 	void Manhatten(Element* p, bool bSingleRoute);
@@ -636,6 +636,7 @@ public:
 	bool PutDown(Component& comp);		// Tries to place the (floating) component on the board
 	bool TakeOff(Component& comp);
 	void FloatAllComps();				// Float all components (i.e. take them off the board)
+	void FloatAllCompsSOIC();			// Float all SOIC components (i.e. take them off the board)
 	void PlaceFloaters();				// Try to place down all the floating components
 	void FixCorruption();
 
@@ -691,7 +692,7 @@ public:
 	// Helper for flying wires
 	bool GetAllowFlyWire(Element* p) const
 	{
-		return p->GetNodeId() != BAD_NODEID && p->GetHasPin() && !p->GetHasWire() && p->IsLayer0() && m_compMgr.GetAllowFlyWire(p->GetCompId());
+		return p->GetNodeId() != BAD_NODEID && p->GetHasPinTH() && !p->GetHasWire() && p->IsLayer0() && m_compMgr.GetAllowFlyWire(p->GetCompId());
 	}
 
 	// Helpers for locations of close tracks

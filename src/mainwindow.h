@@ -37,11 +37,13 @@
 #include "myscrollarea.h"
 
 #ifndef VEROROUTE_ANDROID
-#define USE_PIXMAP_CACHE
+	#ifndef SUPPORT_SOIC
+	#define USE_PIXMAP_CACHE
+	#endif
 #endif
 
 #ifdef _TEST_SOIC
-enum DEBUGMODE { DEBUGMODE_OFF = 0 , DEBUGMODE_SOICINFO, DEBUGMODE_END };
+enum DEBUGMODE { DEBUGMODE_OFF = 0 , DEBUGMODE_SOICINFO, DEBUGMODE_ROUTEID, DEBUGMODE_NODEID, DEBUGMODE_PININDEX, DEBUGMODE_LAYERINFO, DEBUGMODE_END };
 #endif
 
 namespace Ui { class MainWindow; }
@@ -512,7 +514,7 @@ private:
 	void PaintPad(const GuiControl& guiCtrl, QPainter& painter,  const QColor& color, const QPointF& pC, int iPadWidthMIL = 0, int iHoleWidth_MIL = 0, bool bGap = false);	// Helper
 	void PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, const QPointF& pCoffset,
 				   int iPadWidthMIL, int iPerimeterCode, int iTagCode,
-				   bool bHavePad, bool bIsGnd, bool bGap = false);	// Helper
+				   bool bHavePad, bool bHaveSoic, bool bIsGnd, bool bGap = false);	// Helper
 	void PaintBoard();
 	void PaintCompDefiner();
 	void HandleRouting(bool bSingleRoute = false);

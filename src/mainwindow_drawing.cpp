@@ -100,7 +100,7 @@ void MainWindow::CreatePixmapCache(const GuiControl& guiCtrl, ColorManager& colo
 		}
 	}
 	const QColor backgroundColor = GetBackgroundColor();
-	const bool bHavePad(false), bIsGnd(false);
+	const bool bHavePad(false), bHaveSoic(false), bIsGnd(false);
 	const int iTagCode(0), iPadWidthMIL(0);
 	for (int i = 0; i < 256; i++)	// Loop all possible perimeter codes
 	{
@@ -109,7 +109,7 @@ void MainWindow::CreatePixmapCache(const GuiControl& guiCtrl, ColorManager& colo
 
 		painter.begin(m_ppPixmapBlob[i]);
 		const QPointF pC(m_radPixmapBlob, m_radPixmapBlob);
-		PaintBlob(guiCtrl, painter, Qt::black, pC, pC, iPadWidthMIL, i, iTagCode, bHavePad, bIsGnd);
+		PaintBlob(guiCtrl, painter, Qt::black, pC, pC, iPadWidthMIL, i, iTagCode, bHavePad, bHaveSoic, bIsGnd);
 		painter.end();
 
 		// Now turn the black blob area transparent, so we can overlay it over colored nodes.
@@ -320,10 +320,10 @@ void MainWindow::PaintPad(const GuiControl& guiCtrl, QPainter& painter, const QC
 
 void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, const QPointF& pCoffset,
 						   int iPadWidthMIL, int iPerimeterCode, int iTagCode,
-						   bool bHavePad, bool bIsGnd, bool bGap)
+						   bool bHavePad, bool bHaveSoic, bool bIsGnd, bool bGap)
 {
 	std::list<MyPolygonF> polygonList;
-	guiCtrl.CalcBlob(guiCtrl.GetGRIDPIXELS(), pC, pCoffset, iPadWidthMIL, iPerimeterCode, iTagCode, polygonList, bHavePad, bIsGnd, bGap);	// Populate polygonList
+	guiCtrl.CalcBlob(guiCtrl.GetGRIDPIXELS(), pC, pCoffset, iPadWidthMIL, iPerimeterCode, iTagCode, polygonList, bHavePad, bHaveSoic, bIsGnd, bGap);	// Populate polygonList
 
 	if ( m_bWriteGerber )	// Write to Gerber
 	{
@@ -626,9 +626,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	const bool		 bDirect		= !bVero && !bPixmapCache && !bGroundFill;	// true ==> Draw track "blobs" and pads directly (PDF/Gerber)
 	const int&		 layer			= board.GetCurrentLayer();
 	const int&		 groundNodeId	= board.GetGroundNodeId(layer);
-#ifdef _TEST_SOIC	
-	const bool		 bSOIClayer		= ( layer == board.GetSOIClayer() );
-#endif
+	const int		 iSOIClayer		= board.GetSOIClayer();
+	const bool		 bSOIClayer		= ( layer == iSOIClayer );
 	const bool		 bWiresAsTracks	= m_bWriteGerber && m_bTwoLayerGerber && board.GetLyrs() == 1;	// true ==> Convert wires to tracks on the top layer
 	const int&		 W				= board.GetGRIDPIXELS();		// Square width in pixels
 	const int		 C				= W >> 1;						// Half square width in pixels
@@ -813,26 +812,29 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				const bool		bWireAsVia		= bWire && bWiresAsTracks;	// true ==> draw small via pad
 				const int		iPerimeterCode	= board.GetPerimeterCode(pC);	// 0 to 255
 				const bool		bVia			= pC->GetIsVia()  ||  bWireAsVia;
-				const bool		bPad			= !bWireAsVia && pC->GetHasPin() && ( pC->GetSoicChar() & SOIC_THL );	// Only want through-hole pads
-				assert( !(bVia && bPad) );	// Can't be both a via and a regular pad
+				const bool		bPad			= !bWireAsVia && pC->GetHasPin() && ( pC->GetSoicChar() & SOIC_THL );
+				const bool		bSoicAny		= pC->GetSoicChar() & SOIC_PAD;	// true ==> have an SOIC pad on either this layer or the other
+				const bool		bSoicPad		= bSOIClayer && bSoicAny;
+				assert( !(bVia && (bPad || bSoicAny)) );	// Can't be both a via and a pad
 				const bool		bIsGnd			= bGroundFill && nodeId == groundNodeId;
 				const int		iTagCode		= ( bPad && bIsGnd && nodeId != BAD_NODEID ) ? board.GetTagCode(pC, iPerimeterCode) : 0;
 
 				bool bSOIC(false);
 	#ifdef _TEST_SOIC
 				const Component* pCompSOIC = nullptr;
+				bool bPlaced(true);
 				if ( bSOIClayer )	// Only show SOIC patterns on SOIC layer
 				{
 					for (auto& pComp : sortedComps)
 					{
 						bSOIC = ( pComp->GetRow() == j && pComp->GetCol() == i && pComp->GetIsSOIC() );
 						pCompSOIC = pComp;
+						bPlaced = pComp->GetIsPlaced();
 						if ( bSOIC ) break;
 					}
 				}
-
-				std::vector< QColor > soicColors;	soicColors.resize(28);	//TODO Hard coded limit
-				if ( bSOIC )
+				std::vector< QColor > soicColors;	soicColors.resize(28, bPlaced ? Qt::black : Qt::red);	//TODO Hard coded limit
+				if ( bSOIC && bPlaced )
 				{
 					const char direction	= pCompSOIC->GetDirection();
 					const bool bSwapXY		= ( direction == 'N' || direction == 'S' );
@@ -1050,7 +1052,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					}
 					else if ( bCustomSize || bPadOffset )	// Custom/offset stuff ...
 					{
-						if ( bDrawBlob ) PaintBlob(board, painter, color, pCentre, pCentreOff, iPadWidthMIL, iPerimeterCode, iTagCode, bPad, false);
+						if ( bDrawBlob ) PaintBlob(board, painter, color, pCentre, pCentreOff, iPadWidthMIL, iPerimeterCode, iTagCode, bPad, bSoicPad, false);
 						if ( bDrawPad )  PaintPad(board, painter, color, pCentreOff, iPadWidthMIL, iHoleWidthMIL);
 					}
 	#ifdef _TEST_SOIC
@@ -1063,7 +1065,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					if ( iLoop == 0 )
 					{
 						if ( !bIsGnd && bDrawBlob )	// Only the non-ground tracks have a "white" surround
-							PaintBlob(board, painter, backgroundColor, pCentre, pCentreOff, iPadWidthMIL, iPerimeterCode, iTagCode, bPad, bIsGnd, true);	// Draw fat "white" track blob
+							PaintBlob(board, painter, backgroundColor, pCentre, pCentreOff, iPadWidthMIL, iPerimeterCode, iTagCode, bPad, bSoicPad, bIsGnd, true);	// Draw fat "white" track blob
 						if ( bDrawVia ) PaintVia(board, painter, backgroundColor, pCentre, true);										// Draw fat "white" via
 						if ( bDrawPad ) PaintPad(board, painter, backgroundColor, pCentreOff, iPadWidthMIL, iHoleWidthMIL, true);		// Draw fat "white" pad
 	#ifdef _TEST_SOIC
@@ -1072,7 +1074,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					}
 					else if ( iLoop == 1 )	// Draw track "blobs" and pads directly
 					{
-						if ( bDrawBlob ) PaintBlob(board, painter, color, pCentre, pCentreOff, iPadWidthMIL, iPerimeterCode, iTagCode, bPad, bIsGnd);	// Draw track blob
+						if ( bDrawBlob ) PaintBlob(board, painter, color, pCentre, pCentreOff, iPadWidthMIL, iPerimeterCode, iTagCode, bPad, bSoicPad, bIsGnd);	// Draw track blob
 						if ( bDrawVia )  PaintVia(board, painter, color, pCentre);									// Draw via same color as track
 						if ( bDrawPad )  PaintPad(board, painter, color, pCentreOff, iPadWidthMIL, iHoleWidthMIL);	// Draw pad same color as track
 	#ifdef _TEST_SOIC
@@ -1089,7 +1091,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				{
 					if ( iLoop == 0 )
 					{
-						if ( bDrawBlob ) PaintBlob(board, painter, color, pCentre, pCentreOff, iPadWidthMIL, iPerimeterCode, iTagCode, bPad, false);	// Draw track blob
+						if ( bDrawBlob ) PaintBlob(board, painter, color, pCentre, pCentreOff, iPadWidthMIL, iPerimeterCode, iTagCode, bPad, bSoicPad, false);	// Draw track blob
 						if ( bDrawVia )  PaintVia(board, painter, color, pCentre);									// Draw via same color as track
 						if ( bDrawPad )  PaintPad(board, painter, color, pCentreOff, iPadWidthMIL, iHoleWidthMIL);	// Draw pad same color as track
 	#ifdef _TEST_SOIC
@@ -1187,7 +1189,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	}
 
 #ifdef _TEST_SOIC
-	if ( m_iDebugMode == DEBUGMODE_SOICINFO )	//TODO debug stuff
+	if ( m_iDebugMode != DEBUGMODE_OFF && m_iDebugMode != DEBUGMODE_LAYERINFO )	//TODO debug stuff
 	{
 		painter.save();
 		painter.setPen(Qt::NoPen);
@@ -1196,7 +1198,14 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		for (int i = minCol; i <= maxCol; i++)
 		{
 			const Element* pC = board.Get(layer, j, i);
-			int iVal = (int) pC->GetSoicChar();
+			int iVal;
+			switch( m_iDebugMode )
+			{
+				case DEBUGMODE_SOICINFO:	iVal = (int) pC->GetSoicChar();	break;
+				case DEBUGMODE_ROUTEID:		iVal = pC->GetRouteId();		break;
+				case DEBUGMODE_NODEID:		iVal = pC->GetNodeId();			break;
+				case DEBUGMODE_PININDEX:	iVal = pC->GetPinIndex();		break;
+			}
 			GetLRTB(board, 100, j, i, L, R, T, B);	// 100% size square
 			painter.save();
 			painter.translate((L+R)/2, (T+B)/2);
@@ -1561,22 +1570,35 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 		std::list<SpanningTreeHelper::AIRWIRE_POINT> spanTreePoints;
 
+		//TODO Problem with airwires and SOICs !!!
+		// We dont draw SOIC pins on the non-SOIC layer, yet we still would like to draw airwires to them
+		// to show missing connections.
+		// So we should have some way of showing SOIC pins on the other side of the board (like an x-ray)
+		// Short term, we should draw the air-wires, even if we dont draw the SOIC pins yet
 		for (int jj = minRow; jj <= maxRow; jj++)
 		for (int ii = minCol; ii <= maxCol; ii++)
 		{
 			Element*	pD		= board.Get(0, jj, ii);	// Layer 0 only
-			const bool	bPin	= pD->GetHasPin() && !pD->GetHasWire();
+			const bool	bPin	= ( pD->GetHasPin() || (pD->GetSoicChar() & SOIC_PAD ) )&& !pD->GetHasWire();
 			if ( !bPin ) continue;
-			if ( pD->GetNodeId() != GetCurrentNodeId() ) continue;
+
+			// We may just have an SOID pad on layer 1, but pD is on layer 0, so ...
+			if ( !pD->GetHasPin() && iSOIClayer == 1 ) pD = pD->GetNbr(NBR_X);
+
+			if ( pD == nullptr || pD->GetNodeId() != GetCurrentNodeId() ) continue;
 
 			GetXY(board, jj, ii, X, Y);
 
+			// Handle offset pads
 			if ( !bVero )
 			{
 				const Component& comp = compMgr.GetComponentById( pD->GetCompId() );
-				comp.GetCompPinOffsets(pD->GetPinIndex(), padOffsetX, padOffsetY);	// Get offsets in mil
-				X += (padOffsetX * W) / 100;	// Convert from mil to pixels
-				Y += (padOffsetY * W) / 100;	// Convert from mil to pixels
+				if ( !comp.GetIsSOIC() )	// Only non-SOIC parts allow offset pads
+				{
+					comp.GetCompPinOffsets(pD->GetPinIndex(), padOffsetX, padOffsetY);	// Get offsets in mil
+					X += (padOffsetX * W) / 100;	// Convert from mil to pixels
+					Y += (padOffsetY * W) / 100;	// Convert from mil to pixels
+				}
 			}
 
 			spanTreePoints.push_back( SpanningTreeHelper::AIRWIRE_POINT(QPointF(X, Y), pD->GetRouteId()) );
@@ -1629,12 +1651,16 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 			GetXY(board, j, i, X, Y);
 
+			// Handle offset pads
 			if ( !bVero )
 			{
 				const Component& comp = compMgr.GetComponentById( pC->GetCompId() );
-				comp.GetCompPinOffsets(pC->GetPinIndex(), padOffsetX, padOffsetY);	// Get offsets in mil
-				X += (padOffsetX * W) / 100;	// Convert from mil to pixels
-				Y += (padOffsetY * W) / 100;	// Convert from mil to pixels
+				if ( !comp.GetIsSOIC() )	// No offsets pads for SOIC parts
+				{
+					comp.GetCompPinOffsets(pC->GetPinIndex(), padOffsetX, padOffsetY);	// Get offsets in mil
+					X += (padOffsetX * W) / 100;	// Convert from mil to pixels
+					Y += (padOffsetY * W) / 100;	// Convert from mil to pixels
+				}
 			}
 
 			spanTreePoints.push_back( QPointF(X, Y) );
@@ -1930,6 +1956,47 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	if ( m_bWriteGerber )
 		m_gWriter.GetStream(GFILE::GTO).DrawBuffers();	// Top silk layer
 
+	
+#ifdef _TEST_SOIC
+	if ( m_iDebugMode ==  DEBUGMODE_LAYERINFO )
+	{
+		GetLRTB(board, 100, 0, 0, L, R, T, B);	// 100% size square
+		painter.save();
+		painter.translate((L+R)/2, (T+B)/2);
+		painter.scale(dTextScale, dTextScale);
+		painter.setPen(m_blackPen);
+		std::string txt("nodeId  // nodeId  Srf  Soic  Hole //  Pin  Comp  // Pin2  Comp2");
+		painter.drawText(0,0,0,0, Qt::TextDontClip | Qt::AlignVCenter | Qt::AlignLeft, txt.c_str());
+		painter.restore();
+
+		for (int iLyr = 0; iLyr < board.GetLyrs(); iLyr++)
+		{
+			const Element* pC = m_board.Get(iLyr, m_gridRow, m_gridCol);
+			std::string txt;
+			if ( layer == iLyr )
+				txt = "*";
+			else
+				txt = " ";
+			const int iNodeId		= pC->GetNodeId();					txt += std::to_string(iNodeId) + " // ";	
+			const int iNodeIdRaw	= pC->GetNodeIdRaw();				txt += std::to_string(iNodeIdRaw) + " ";
+			const int iSurface		= (int)pC->GetSurfaceRaw();			txt += std::to_string(iSurface) + " ";
+			const int iSoic			= (int)pC->GetSoicCharRaw();		txt += std::to_string(iSoic) + " ";
+			const int iHole			= (int)pC->GetHoleUseRaw();			txt += std::to_string(iHole) + " // ";
+			const int iPinIndex		= pC->GetPinIndexRaw();				txt += std::to_string(iPinIndex) + " ";
+			const int iCompId		= pC->GetCompIdRaw();				txt += std::to_string(iCompId) + " // ";
+			const int iPinIndex2	= pC->GetPinIndex2Raw();			txt += std::to_string(iPinIndex2) + " ";
+			const int iCompId2		= pC->GetCompId2Raw();				txt += std::to_string(iCompId2) + " ";
+			GetLRTB(board, 100, 2 - iLyr, 0, L, R, T, B);	// 100% size square
+			painter.save();
+			painter.translate((L+R)/2, (T+B)/2);
+			painter.scale(dTextScale, dTextScale);
+			painter.setPen(m_blackPen);
+			painter.drawText(0,0,0,0, Qt::TextDontClip | Qt::AlignVCenter | Qt::AlignLeft, txt.c_str());
+			painter.restore();
+		}
+	}
+#endif
+	
 	painter.end();
 
 	delete pdfWriter;

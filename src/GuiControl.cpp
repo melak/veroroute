@@ -23,8 +23,10 @@
 void GuiControl::CalcBlob(qreal W, const QPointF& pC, const QPointF& pCoffset,
 						  int iPadWidthMIL, int iPerimeterCode, int iTagCode,
 						  std::list<MyPolygonF>& out,
-						  bool bHavePad, bool bIsGnd, bool bGap) const
+						  bool bHavePad, bool bHaveSoic, bool bIsGnd, bool bGap) const
 {
+	//TODO Not entirely sure of the need to pass two flags for pads (bHavePad and bHaveSoic)
+
 	// Given a grid point (pC) and its perimeter code, this method populates "out" with a
 	// description of the local track pattern at the grid point (or "blob").
 	// The scale parameter W represents the width of a 100 mil grid square.
@@ -101,7 +103,7 @@ void GuiControl::CalcBlob(qreal W, const QPointF& pC, const QPointF& pCoffset,
 			const bool bObtuse	= ( iDiff == 3 || iDiff == 5 );	// Track section bends < 90 degrees
 			if ( bOrtho || bObtuse )	// Bend <= 90 degrees
 			{
-				if ( bCurvedTracks && !bHavePad )
+				if ( bCurvedTracks && !bHavePad && !bHaveSoic )
 				{
 					// Make an N-point curve from L to R passing near central control point C
 					// Current interpolation is quadratic.
@@ -116,7 +118,7 @@ void GuiControl::CalcBlob(qreal W, const QPointF& pC, const QPointF& pCoffset,
 					//	polygon << pC + pLC*pow(u,2.5) + pRC*pow(t,2.5);	// Sharper bends
 					}
 				}
-				else if ( bOrtho && !bHavePad )	// Bend == 90 degrees (chosen to approximate the above curve)
+				else if ( bOrtho && !bHavePad && !bHaveSoic )	// Bend == 90 degrees (chosen to approximate the above curve)
 				{
 					static double r = 0.5;			// i.e. 2*t^2	when t = 0.5
 				//	static double r = 0.25*sqrt(2);	// i.e. 2*t^2.5	when t = 0.5
