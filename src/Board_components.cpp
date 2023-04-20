@@ -271,8 +271,8 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 				else if ( pComp->GetIsHole() )	// Check holes
 				{
 					// We've already checked the boardSurface is SURFACE_FREE
-					// Now test it is not a marker and not painted
-					bOK = !pGrid->GetIsMark() && pGrid->GetNodeId() == BAD_NODEID;
+					// Now test it is not a marker and not painted on any board layer
+					bOK = !pGrid->GetIsMark() && pGrid->GetNodeId() == BAD_NODEID && ( pGrid->GetNbr(NBR_X) == nullptr || pGrid->GetNbr(NBR_X)->GetNodeId() == BAD_NODEID );
 				}
 				else
 				{
@@ -352,7 +352,7 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 
 	const bool	bDiagsOK	= GetDiagsMode() != DIAGSMODE::OFF;
 	const bool	bWire		= comp.GetType() == COMP::WIRE;	// Wire's only get NodeIDs while placed
-	const bool	bSOIC		= comp.GetIsSOIC();	assert( !bSOIC || GetHaveSOIClayer() );
+	const bool	bSOIC		= comp.GetIsSOIC();
 	const bool	bTrax		= comp.GetType() == COMP::TRACKS;
 	const int&	compId		= comp.GetId();
 	const int&	compCols	= comp.GetCompCols();
@@ -458,7 +458,12 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 					assert( iOtherPinIndex != BAD_PININDEX && iOtherCompId != BAD_COMPID );
 
 					const Component& otherComp = m_compMgr.GetComponentById( iOtherCompId );
-					assert( otherComp.GetType() == COMP::WIRE );
+					//assert( otherComp.GetType() == COMP::WIRE );	//TODO
+					if ( otherComp.GetType() != COMP::WIRE )
+					{
+						int debugme(0);
+						debugme++;
+					}
 					for (int iLyr = 0; iLyr < 2; iLyr++)
 					{
 						const int& origId = otherComp.GetOrigId(iLyr, iOtherPinIndex);
@@ -471,7 +476,7 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 					{
 						Element* p = ( iLyr == compLyr ) ? pGrid : pGrid->GetNbr(NBR_X);
 						if ( bWire && p ) wireNodeId = std::max(wireNodeId, p->GetNodeId());
-						// SOIC parts don't have TH pins, so need the raw nodeIds.  We cant' call GetNodeId() as that can "tunnel" from top layer to bottom
+						// SOIC parts dont have TH pins, so need the raw nodeIds.  We cant cal; GetNodeId() as that can "tunnel" through from top layer to bottom
 						const int origId = ( p && p->ReadFlagBits(USERSET) ) ? ( bSOIC ? p->GetNodeIdRaw() : p->GetNodeId() ) : BAD_NODEID;
 						comp.SetOrigId(iLyr, pinIndex, origId);
 					}
@@ -484,7 +489,7 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 				if ( !bWire )	// Write nodeId & flag
 				{
 					const bool bAllLyrs = pGrid->GetHasPinTH();
-					Element* p = ( bSOIC ) ? Get(GetSOIClayer(), jRow, iCol) : pGrid;	assert(p);
+					Element* p = ( bSOIC ) ? Get(GetSOIClayer(), jRow, iCol) : pGrid;
 					SetNodeId(p, iCompNodeId, bAllLyrs);
 					WipeFlagBits(p, AUTOSET|VEROSET, bAllLyrs);
 					MarkFlagBits(p, USERSET, bAllLyrs);
@@ -521,8 +526,14 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 				pW->GetSlotInfo(iSlot, iPinIndex, tmpCompId);
 				if ( iPinIndex == BAD_PININDEX ) continue;
 				Component& comp = m_compMgr.GetComponentById( tmpCompId );
-				assert( comp.GetType() == COMP::WIRE );
-				comp.SetNodeId(iPinIndex, wireNodeId);
+				//assert( comp.GetType() == COMP::WIRE );	//TODO
+				if ( comp.GetType() == COMP::WIRE )
+					comp.SetNodeId(iPinIndex, wireNodeId);
+				else
+				{
+					int debugme(0);
+					debugme++;
+				}
 			}
 			// ... and on the corresponding board points
 			const bool bAllLyrs(true);
@@ -559,6 +570,8 @@ bool Board::TakeOff(Component& comp)
 	int			iOrigIdA[2]	= {BAD_NODEID, BAD_NODEID};	// 1 per layer
 	int			iOrigIdB[2]	= {BAD_NODEID, BAD_NODEID};	// 1 per layer
 	int			iSlotA(-1), iSlotB(-1), tmpCompId;
+
+	//TODO Need custom code, to handle the fact that some holes could be shared with other comps. See slot stuff below, and also wire code
 
 	size_t	iPinIndex;
 	if ( pA )
