@@ -150,7 +150,7 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 		{
 			const Element*	pA			= Get(k, j, i);
 			const int&		nodeIdA		= pA->GetNodeId();
-			const bool		bHasPinA	= pA->GetHasPin();
+			const bool		bHasPinA	= pA->GetHasPinTH();
 			const bool		bHasSoicA	= pA->GetHasPinSOIC() && k == GetSOIClayer();
 			if ( nodeIdA == BAD_NODEID && !bHasPinA ) continue;	// Skip if no track and no pin
 			const bool		bIsGndA		= bGroundFill && nodeIdA == GetGroundNodeId(k) && nodeIdA != BAD_NODEID;
@@ -191,7 +191,7 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 				if ( jj == j && ii == i ) continue;	// Skip pA
 				const Element*	pB			= Get(k, jj, ii);
 				const int&		nodeIdB		= pB->GetNodeId();
-				const bool		bHasPinB	= pB->GetHasPin();
+				const bool		bHasPinB	= pB->GetHasPinTH();
 				const bool		bHasSoicB	= pB->GetHasPinSOIC() && k == GetSOIClayer();
 				if ( nodeIdB == BAD_NODEID && !bHasPinB ) continue;	// Skip if no track and no pin
 				if ( nodeIdB == nodeIdA ) continue;
@@ -265,8 +265,8 @@ void Board::CalcGroundFillBounds()
 		const int iStep = ( j == minRow || j == maxRow ) ? 1 : std::max(1, maxCol - minCol);
 		for (int i = minCol; i <= maxCol; i += iStep)
 		{
-			const Element* p = Get(0, j, i);	// Sufficient to check layer 0 when looking for pins
-			if ( !p->GetHasPin() ) continue;
+			const Element* p = Get(0, j, i);	// Sufficient to check layer 0 when looking for TH pins
+			if ( !p->GetHasPinTH() ) continue;
 			if ( p->GetHasWire() ) continue;	// Wires can't have custom sized pads or offset pads
 
 			const int	 compId		= p->GetCompId();	assert( compId != BAD_COMPID );

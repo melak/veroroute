@@ -812,7 +812,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				const bool		bWireAsVia		= bWire && bWiresAsTracks;	// true ==> draw small via pad
 				const int		iPerimeterCode	= board.GetPerimeterCode(pC);	// 0 to 255
 				const bool		bVia			= pC->GetIsVia()  ||  bWireAsVia;
-				const bool		bPad			= !bWireAsVia && pC->GetHasPin() && ( pC->GetSoicChar() & SOIC_THL );
+				const bool		bPad			= !bWireAsVia && pC->GetHasPinTH();	// Only want through-hole pads
 				const bool		bSoicAny		= pC->GetSoicChar() & SOIC_PAD;	// true ==> have an SOIC pad on either this layer or the other
 				const bool		bSoicPad		= bSOIClayer && bSoicAny;
 				assert( !(bVia && (bPad || bSoicAny)) );	// Can't be both a via and a pad
@@ -1579,26 +1579,24 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		for (int ii = minCol; ii <= maxCol; ii++)
 		{
 			Element*	pD		= board.Get(0, jj, ii);	// Layer 0 only
-			const bool	bPin	= ( pD->GetHasPin() || (pD->GetSoicChar() & SOIC_PAD ) )&& !pD->GetHasWire();
+			const bool	bPin	= pD->GetHasPinAny() && !pD->GetHasWire();
 			if ( !bPin ) continue;
 
-			// We may just have an SOID pad on layer 1, but pD is on layer 0, so ...
-			if ( !pD->GetHasPin() && iSOIClayer == 1 ) pD = pD->GetNbr(NBR_X);
+			// We may just have an SOIC pad on layer 1, but pD is on layer 0, so ...
+			if ( !pD->GetHasPinTH() && iSOIClayer == 1 ) pD = pD->GetNbr(NBR_X);
 
 			if ( pD == nullptr || pD->GetNodeId() != GetCurrentNodeId() ) continue;
 
 			GetXY(board, jj, ii, X, Y);
 
 			// Handle offset pads
-			if ( !bVero )
+			if ( !bVero && pD->GetPinSupportsLayerPref() )
 			{
 				const Component& comp = compMgr.GetComponentById( pD->GetCompId() );
-				if ( !comp.GetIsSOIC() )	// Only non-SOIC parts allow offset pads
-				{
-					comp.GetCompPinOffsets(pD->GetPinIndex(), padOffsetX, padOffsetY);	// Get offsets in mil
-					X += (padOffsetX * W) / 100;	// Convert from mil to pixels
-					Y += (padOffsetY * W) / 100;	// Convert from mil to pixels
-				}
+				assert( !comp.GetIsSOIC() );	// Only non-SOIC parts allow offset pads
+				comp.GetCompPinOffsets(pD->GetPinIndex(), padOffsetX, padOffsetY);	// Get offsets in mil
+				X += (padOffsetX * W) / 100;	// Convert from mil to pixels
+				Y += (padOffsetY * W) / 100;	// Convert from mil to pixels
 			}
 
 			spanTreePoints.push_back( SpanningTreeHelper::AIRWIRE_POINT(QPointF(X, Y), pD->GetRouteId()) );
@@ -1893,7 +1891,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	if ( !m_bWriteGerber && !bVero && m_padOffsetDlg->isVisible() )
 	{
 		const Element* pC = m_board.Get(layer, m_gridRow, m_gridCol);
-		if ( pC->GetHasPin() && !pC->GetHasWire() && !( pC->GetSoicChar() & SOIC_PAD ) )	//TODO Should only allow non-shifted pads to share holes with SOIC parts
+		if ( pC->GetPinSupportsLayerPref() )
 		{
 			GetXY(board, m_gridRow, m_gridCol, X, Y);
 
@@ -2079,7 +2077,7 @@ void MainWindow::GetRulerExact(Board& board, const QPoint& p, QPointF& pOut) con
 	if ( !board.GetVeroTracks() )
 	{
 		const Element* pC = board.Get(0, p.y(), p.x());
-		if ( pC->GetHasPin() && !pC->GetHasWire() )
+		if ( pC->GetPinSupportsLayerPref() )
 		{
 			int padOffsetX(0), padOffsetY(0);
 			const Component& comp = board.GetCompMgr().GetComponentById( pC->GetCompId() );

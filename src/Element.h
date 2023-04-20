@@ -255,7 +255,12 @@ public:
 	// Helpers
 	bool HaveNoBlankPins(int iNbr) const
 	{
-		const Element* pLyr	= GetBaseConst();	// Use layer 0 for checking pins
+		//TODO Old code (TH only) could stick to just using the base layer because presence of (TH) pin on base
+		// layer implied TH pin on top layer also.
+		// Now with SOICs, the GetHasPin() methods are now layer specific.   So should
+		// not take elements to be in base layer.  Conform this method still works OK by testing routing
+		// with blank pins on SOICs, TH parts, and wires in the 2 layer case.
+		const Element* pLyr	= this;//???? why was doing GetBaseConst();	// Use layer 0 for checking pins	//TODO SOIC layer ??
 		const Element* pNbr = pLyr->GetNbr(iNbr);
 		return	( !pLyr->GetHasPin() || pLyr->GetNodeId() != BAD_NODEID || pLyr->GetHasWire() ) &&	// Only allow routing FROM blank pins if they are on wires
 				( !pNbr->GetHasPin() || pNbr->GetNodeId() != BAD_NODEID || pNbr->GetHasWire() );	// Only allow routing  TO  blank pins if they are on wires

@@ -259,7 +259,8 @@ public:
 			}
 		}
 
-		if ( GetXthermals() && p->GetHasPin() && (GetTrackMode() == TRACKMODE::PCB || GetTrackMode() == TRACKMODE::MONO ) && GetGroundFill() && GetGroundNodeId(bBottomLayer ? 0 : 1) == p->GetNodeId() )
+		//TODO Check if we should use GetHasPinTH() instead of GetHasPin() on next line
+		if ( GetXthermals() && p->GetHasPinTH() && (GetTrackMode() == TRACKMODE::PCB || GetTrackMode() == TRACKMODE::MONO ) && GetGroundFill() && GetGroundNodeId(bBottomLayer ? 0 : 1) == p->GetNodeId() )
 			return 0;
 
 		return iCode;

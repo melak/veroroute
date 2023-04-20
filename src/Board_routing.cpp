@@ -669,32 +669,24 @@ void Board::Manhatten(Element* p, bool bSingleRoute)
 
 	Element* pFirst = p;
 
-	if ( p->GetHasPin() )	// p could be a wire end	//TODO Could be either a TH pin or SOIC pin on this layer
+	if ( p->GetHasPin() )	// p could be either a TH pin (or wire end) or SOIC pad on this layer
 	{
+		assert( p->GetHasPinTH() || p->GetIsSOIClayer() );
 		if ( p->GetHasPinTH() )
-			pFirst = p->IsLayer0() ? p : p->GetNbr(NBR_X);	// Use layer 0 for target pins by default
-		else 
-			pFirst = p->GetIsSOIClayer() ? p : p->GetNbr(NBR_X);	// SOIC pins must be on the SOIC layer
+			pFirst = p->IsLayer0() ? p : p->GetNbr(NBR_X);	// Use layer 0 for TH pins
 	}
 	if ( pFirst )
 		m_targetPins.push_back(pFirst);
 
-	// If we haven't specified bSingleRoute, then build additional routes from all true component pins
+	// If we haven't specified bSingleRoute, then build additional routes from all true component pins (not wires)
 	for (int i = 0, iSize = ( GetLyrs() == 1 ) ? GetSize() : ( GetSize() / 2 ); i < iSize && !bSingleRoute; i++)	// Loop base layer only
 	{
-		Element* const q = GetAt(i);
-		if ( q && q->GetHasPinAny() && !(m_bHavePlacedWires && q->GetHasWire()) && q->GetNodeId() == iTraceNodeId )	// Skip wires
-		{
-			if ( q->GetHasPinTH() && q != pFirst )	// Skip first
-				m_targetPins.push_back(q);	// Start TH pins on base layer
-			else 
-			{
-				// Have an SOIC pin, so get the relevant layer
-				Element* const r = q->GetNbr(NBR_X);	//TODO  SOIC pins are top layer		// Old( GetSOIClayer() == 0 ) ? q : q->GetNbr(NBR_X);
-				if ( r && r != pFirst )	// Skip first
-					m_targetPins.push_back( r );
-			}
-		}
+		Element* const q = GetAt(i);	// q is on layer 0
+		const bool bNonWirePin = q && q->GetHasPinAny() && !(m_bHavePlacedWires && q->GetHasWire());	// Skip wires
+		if ( !bNonWirePin ) continue;
+		Element* const r = q->GetHasPinTH() ? q : q->GetNbr(NBR_X);	assert(r);	// r is on layer 0 for TH pins, and layer 1 for SOIC pads
+		if ( r && r->GetNodeId() == iTraceNodeId && r != pFirst )	// Skip first
+			m_targetPins.push_back(r);
 	}
 
 	Flood(bSingleRoute);

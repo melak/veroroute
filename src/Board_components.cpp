@@ -476,8 +476,7 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 					{
 						Element* p = ( iLyr == compLyr ) ? pGrid : pGrid->GetNbr(NBR_X);
 						if ( bWire && p ) wireNodeId = std::max(wireNodeId, p->GetNodeId());
-						// SOIC parts dont have TH pins, so need the raw nodeIds.  We cant cal; GetNodeId() as that can "tunnel" through from top layer to bottom
-						const int origId = ( p && p->ReadFlagBits(USERSET) ) ? ( bSOIC ? p->GetNodeIdRaw() : p->GetNodeId() ) : BAD_NODEID;
+						const int origId = ( p && p->ReadFlagBits(USERSET) ) ? p->GetNodeId() : BAD_NODEID;
 						comp.SetOrigId(iLyr, pinIndex, origId);
 					}
 				}
@@ -630,7 +629,7 @@ bool Board::TakeOff(Component& comp)
 										comp.GetOrigId(1, pinIndex) };	// ... on both layers
 				comp.SetOrigId(0, pinIndex, BAD_NODEID);				// ... before wiping
 				comp.SetOrigId(1, pinIndex, BAD_NODEID);				// ... them
-				assert( origId[0] == BAD_NODEID || origId[0] == comp.GetNodeId(pinIndex) );
+				assert( origId[0] == BAD_NODEID || origId[0] == comp.GetNodeId(pinIndex) || bSOIC );	// Base layer check does not apply to SOIC
 				assert( origId[1] == BAD_NODEID || origId[1] == comp.GetNodeId(pinIndex) );
 
 				// Wire-ends need special treatment, so just handle non-wire pins here
