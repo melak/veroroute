@@ -1289,7 +1289,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			const bool		 bSOIC			= comp.GetIsSOIC();
 
 			// Begin draw component pins ---------------------------------------------------------
-			if ( !m_bWriteGerber && !blankWire && !bSOIC && ( compMode != COMPSMODE::OFF || ( bMonoPCB && bPlaced ) ) ) 	// Skip blank wires and SOIC parts
+			if ( !m_bWriteGerber && !blankWire && ( compMode != COMPSMODE::OFF || ( bMonoPCB && bPlaced && !bSOIC ) ) ) 	// Skip blank wires and SOIC parts
 			{
 				painter.save();
 
@@ -1297,7 +1297,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				pinsFont.setPointSize( m_board.GetTextSizePins() );
 				painter.setFont(pinsFont);
 
-				if ( bMonoPCB && bPlaced )
+				if ( bMonoPCB && bPlaced && !bSOIC )
 				{
 					m_backgroundPen.setWidth( board.GetPixelsFromMIL(iHoleWidthMIL) );
 					painter.setPen(m_backgroundPen);
@@ -1330,7 +1330,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						if ( iPinIndex == BAD_PININDEX ) continue;
 
 						int padOffsetX(0), padOffsetY(0);
-						if ( !bWire && !bVero )
+						if ( !bWire && !bVero && !bSOIC )
 						{
 							comp.GetCompPinOffsets(iPinIndex, padOffsetX, padOffsetY);	// Get offsets in mil
 							padOffsetX = (padOffsetX * W) / 100;	// Convert from mil to pixels
@@ -1403,13 +1403,13 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						}
 						else	// A regular pin is drawn as a circle
 						{
-							if ( bMonoPCB && bPlaced )
+							if ( bMonoPCB && bPlaced && !bSOIC )
 							{
 								GetLRTB(board, 100, j, i, L, R, T, B);	// 100% size square
 								painter.drawPoint(padOffsetX + (L+R)/2, padOffsetY + (T+B)/2);
 							}
-							else
-								painter.drawEllipse(L, T, R-L, B-T);
+							else if ( !bSOIC || bColor )	// OK to highlight pin location for SOICs in color mode
+								painter.drawEllipse(L, T, R-L, B-T);	
 						}
 					}
 				}
@@ -1570,11 +1570,6 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 		std::list<SpanningTreeHelper::AIRWIRE_POINT> spanTreePoints;
 
-		//TODO Problem with airwires and SOICs !!!
-		// We dont draw SOIC pins on the non-SOIC layer, yet we still would like to draw airwires to them
-		// to show missing connections.
-		// So we should have some way of showing SOIC pins on the other side of the board (like an x-ray)
-		// Short term, we should draw the air-wires, even if we dont draw the SOIC pins yet
 		for (int jj = minRow; jj <= maxRow; jj++)
 		for (int ii = minCol; ii <= maxCol; ii++)
 		{
