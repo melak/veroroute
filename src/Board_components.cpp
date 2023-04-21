@@ -476,11 +476,15 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 				}
 				else
 				{
+					// We've already done SetSoicChar() (thus setting up any TH pin flags).
+					// When a TH pin flag is set, Element::GetNodeId() will assume both layers
+					// have matching NodeIds, and so always return the base layer NodeId.
+					// So we must use p->TrackElement::GetNodeId() here to avoid tunneling between layers.
 					for (int iLyr = 0; iLyr < 2; iLyr++)
 					{
 						Element* p = ( iLyr == compLyr ) ? pGrid : pGrid->GetNbr(NBR_X);
-						if ( bWire && p ) wireNodeId = std::max(wireNodeId, p->GetNodeId());
-						const int origId = ( p && p->ReadFlagBits(USERSET) ) ? p->GetNodeId() : BAD_NODEID;
+						if ( bWire && p ) wireNodeId = std::max(wireNodeId, p->TrackElement::GetNodeId());
+						const int origId = ( p && p->ReadFlagBits(USERSET) ) ? p->TrackElement::GetNodeId() : BAD_NODEID;
 						comp.SetOrigId(iLyr, pinIndex, origId);
 					}
 				}
@@ -624,12 +628,12 @@ bool Board::TakeOff(Component& comp)
 										comp.GetOrigId(1, pinIndex) };	// ... on both layers
 				comp.SetOrigId(0, pinIndex, BAD_NODEID);				// ... before wiping
 				comp.SetOrigId(1, pinIndex, BAD_NODEID);				// ... them
-				assert( origId[0] == BAD_NODEID || origId[0] == comp.GetNodeId(pinIndex) || bSOIC );	// Base layer check does not apply to SOIC
-				assert( origId[1] == BAD_NODEID || origId[1] == comp.GetNodeId(pinIndex) );
 
 				// Wire-ends need special treatment, so just handle non-wire pins here
 				if ( !bWire )
 				{
+					assert( origId[0] == BAD_NODEID || origId[0] == comp.GetNodeId(pinIndex) || bSOIC );	// Base layer check does not apply to SOIC
+					assert( origId[1] == BAD_NODEID || origId[1] == comp.GetNodeId(pinIndex) );
 					for (int iLyr = 0, lyrs = std::min(GetLyrs(), 2); iLyr < lyrs; iLyr++)
 					{
 						if ( bSOIC && iLyr != LYR_TOP ) continue;
@@ -671,8 +675,6 @@ bool Board::TakeOff(Component& comp)
 					assert( comp.GetType() == COMP::WIRE );
 					origId0 = comp.GetOrigId(0, iPinIndex);
 					origId1 = comp.GetOrigId(1, iPinIndex);
-					assert( origId0 == BAD_NODEID || origId0 == comp.GetNodeId(iPinIndex) );
-					assert( origId1 == BAD_NODEID || origId1 == comp.GetNodeId(iPinIndex) );
 				}
 				if ( origId0 != BAD_NODEID || origId1 != BAD_NODEID) break;
 			}
