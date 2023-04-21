@@ -361,7 +361,7 @@ public:
 				const int iSlotA = pA->GetSlotFromCompId(compId);
 				const int iSlotB = pB->GetSlotFromCompId(compId);
 				pA->SetW( iSlotA, pB );	// Give pA a pointer to pB
-				pB->SetW( iSlotB, pA );	// Give pB a pointer to pA				
+				pB->SetW( iSlotB, pA );	// Give pB a pointer to pA
 			}
 		}
 	}
@@ -882,7 +882,7 @@ private:
 		for (int iCol = 0, iCols = GetCols(); iCol < iCols; iCol++)
 		{
 			Element* p = Get(0, iRow, iCol);	// Only need to check base layer
-			p->SetSoicChar( ( p->GetNumWires() == 2 ) ? SOIC_THL_2 : p->GetHasPin() ? SOIC_THL : SOIC_FREE );
+			p->SetSoicChar( ( p->GetNumWires() == 2 ) ? SOIC_THL_2 : ( p->GetIsPin() || p->GetIsPin2() ) ? SOIC_THL_1 : SOIC_FREE );
 		}
 	}
 	void SetHavePlacedWires() { m_bHavePlacedWires = GetCompMgr().GetHavePlacedWires(); }

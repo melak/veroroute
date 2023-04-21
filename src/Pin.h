@@ -76,8 +76,9 @@ Q_DECL_CONSTEXPR static const uchar  HOLE_FULL			= 2;
 Q_DECL_CONSTEXPR static const uchar  SOIC_FREE			= 0;	// Free space
 Q_DECL_CONSTEXPR static const uchar  SOIC_TRACKS_TOP	= 1;	// Pattern of SOIC tracks on top layer
 Q_DECL_CONSTEXPR static const uchar  SOIC_TRACKS_BOT	= 2;	// Pattern of SOIC tracks on top layer
-Q_DECL_CONSTEXPR static const uchar  SOIC_THL			= 4;	// One through-hole component or wire
+Q_DECL_CONSTEXPR static const uchar  SOIC_THL_1			= 4;	// One through-hole component or wire
 Q_DECL_CONSTEXPR static const uchar  SOIC_THL_2			= 8;	// Two through-hole components (i.e. two wires)
+Q_DECL_CONSTEXPR static const uchar  SOIC_THL			= SOIC_THL_1 | SOIC_THL_2;
 Q_DECL_CONSTEXPR static const uchar  SOIC_PAD			= 16;	// An SOIC pad
 Q_DECL_CONSTEXPR static const uchar  SOIC_FULL			= SOIC_PAD;	// In short term, don't allow SOICs pads to share with through-holes
 //Q_DECL_CONSTEXPR static const uchar  SOIC_FULL			= 20;	// Hence can handle at most (1xSOIC_THL + 1xSOIC_PAD) not (2xSOIC_PADs). (2xSOIC_THL is blocked by the SURFACE and HOLE info).
@@ -167,7 +168,7 @@ public:
 		{
 			SetHoleUse( GetIsPin() ? HOLE_FULL			: HOLE_FREE );		// Set hole occupancy for pins/non-pins
 		}
-		SetSoicChar( GetIsPin() ? SOIC_THL : SOIC_FREE );
+		SetSoicChar( GetIsPin() ? SOIC_THL_1 : SOIC_FREE );
 	}
 	void SetOccupancySOIC()	// Helper for SOIC components.
 	{
