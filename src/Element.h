@@ -233,10 +233,10 @@ public:
 	bool				GetIsPin2() const		{ return GetPinChar2() != BAD_PINCHAR; }
 	int					GetNumCompIds() const	{ int i(0); if ( GetCompId() != BAD_COMPID ) i++; if ( GetCompId2() != BAD_COMPID ) i++; return i; }
 	bool				GetHasComp() const		{ return GetCompId() != BAD_COMPID || GetCompId2() != BAD_COMPID; }
-	bool				GetHasPin() const		{ return GetIsPin() || GetIsPin2(); }
+	bool				GetHasPinLegacy() const	{ return GetIsPin() || GetIsPin2(); }	// Only kept for legacy purposes (e.g. old VRTs don't have SOIC codes)
+	bool				GetHasPin() const		{ return GetSoicChar() & (SOIC_PAD|SOIC_THL); }	// true ==> Have TH pin/SOIC pad on either layer
 	bool				GetHasPinTH() const		{ return GetSoicChar() & SOIC_THL; }			// true ==> Have TH pin on either layer
 	bool				GetHasPinSOIC() const	{ return GetSoicChar() & SOIC_PAD; }			// true ==> Have SOIC pad on either layer
-	bool				GetHasPinAny() const	{ return GetSoicChar() & (SOIC_PAD|SOIC_THL); }	// true ==> Have TH pin or SOIC pad on either layer
 	size_t				GetPinIndex2() const	{ return ( GetPinChar2() == BAD_PINCHAR ) ? BAD_PININDEX : GetPinChar2(); }
 	const bool&			GetSolderR() const		{ return GetBaseConst()->m_bSolderR; }
 	const bool&			GetIsVia() const		{ return GetBaseConst()->m_bIsVia; }
@@ -257,11 +257,11 @@ public:
 	bool HaveNoBlankPins(int iNbr) const
 	{
 		//TODO Old code (TH only) could stick to just using the base layer because presence of (TH) pin on base
-		// layer implied TH pin on top layer also.
-		// Now with SOICs, the GetHasPin() methods are now layer specific.   So should
-		// not take elements to be in base layer.  Conform this method still works OK by testing routing
-		// with blank pins on SOICs, TH parts, and wires in the 2 layer case.
-		const Element* pLyr	= this;//???? why was doing GetBaseConst();	// Use layer 0 for checking pins	//TODO SOIC layer ??
+		// layer implied TH pin on top layer also.  So we could always do "pLyr = GetBaseConst()" with no problems.
+		// Now with SOICs, the GetNodeId() method will return what is appropriate for the pin type (only tunnels if needed).
+		// So we should use "pLyr = this" below.
+		// Confirm this method still works OK by testing routing with blank pins on SOICs, TH parts, and wires in the 2 layer case.
+		const Element* pLyr = this;
 		const Element* pNbr = pLyr->GetNbr(iNbr);
 		return	( !pLyr->GetHasPin() || pLyr->GetNodeId() != BAD_NODEID || pLyr->GetHasWire() ) &&	// Only allow routing FROM blank pins if they are on wires
 				( !pNbr->GetHasPin() || pNbr->GetNodeId() != BAD_NODEID || pNbr->GetHasWire() );	// Only allow routing  TO  blank pins if they are on wires

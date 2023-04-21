@@ -230,7 +230,7 @@ void Board::UpdateVias()	// Sets the via flag to true on all candidate vias
 			Element* const p = GetAt(i);
 			Element* const q = p->GetNbr(NBR_X);
 			bool bIsVia(false);
-			if ( q && !p->GetHasPinAny() && p->GetNodeId() == q->GetNodeId() && p->GetNodeId() != BAD_NODEID )	// If candidate via ...
+			if ( q && !p->GetHasPin() && p->GetNodeId() == q->GetNodeId() && p->GetNodeId() != BAD_NODEID )	// If candidate via ...
 			{
 				m_targetPins.clear();
 				m_targetPins.push_back(p);
@@ -400,7 +400,7 @@ void Board::Flood_Helper(const bool bBuildTracks)
 						}
 						break;
 					case 2:	// Type 2 ==> Change layer at a via
-						if ( pJ->GetMH() + MH_LVIA == iMH && !pJ->GetHasPinAny() )
+						if ( pJ->GetMH() + MH_LVIA == iMH && !pJ->GetHasPin() )
 							Flood_Grow(iFloodNodeId, pJ, NBR_X, bBuildTracks, iMH, iMaxMH, bDone);
 						break;
 				}
@@ -508,9 +508,8 @@ Element* Board::Backtrace(Element* const pEnd, int nodeId)
 		Element* const pW0 = m_bHavePlacedWires ? p->GetW(0) : nullptr;
 		Element* const pW1 = m_bHavePlacedWires ? p->GetW(1) : nullptr;
 		const bool bWire		= (pW0 || pW1) && p->IsLayer0();	// Constrain wire-routing to layer 0
-		const bool bHasPin		= bWire || p->GetHasPin();		// Refers to this layer only
+		const bool bHasPin		= bWire || p->GetHasPin();		// Checks all layers 
 		const bool bHasPinTH	= bWire || p->GetHasPinTH();	// Checks all layers 
-		const bool bHasPinAny	= bWire || p->GetHasPinAny();	// Checks all layers 
 		const bool bAllLyrs		= bHasPinTH;
 		if ( !bHasPin || bWire ) // For non-pins and wires
 			BacktracePaint(p, nodeId, bAllLyrs, bWire);	// Paint element p
@@ -556,7 +555,7 @@ Element* Board::Backtrace(Element* const pEnd, int nodeId)
 						}
 						break;
 					case 2:	// Type 2 ==> Change layer at a via
-						if ( !bHasPinAny && iLastDirection != NBR_X )	// Was !bHasPin
+						if ( !bHasPin && iLastDirection != NBR_X )
 						{
 							bOK = BacktraceHelper(p, MH, nodeId, MH_LVIA, NBR_X, iLoop);
 							if ( bOK ) iLastDirection = NBR_X;
@@ -667,14 +666,7 @@ void Board::Manhatten(Element* p, bool bSingleRoute)
 
 	m_targetPins.clear();
 
-	Element* pFirst = p;
-
-	if ( p->GetHasPin() )	// p could be either a TH pin (or wire end) or SOIC pad on this layer
-	{
-		assert( p->GetHasPinTH() || p->GetIsTopLyr() );	// Could have SOIC pad on top layer
-		if ( p->GetHasPinTH() )
-			pFirst = p->IsLayer0() ? p : p->GetNbr(NBR_X);	// Use layer 0 for TH pins
-	}
+	Element* pFirst = ( p->GetHasPinTH() && !p->IsLayer0() ) ? p->GetNbr(NBR_X) : p;	// Use layer 0 for TH pins
 	if ( pFirst )
 		m_targetPins.push_back(pFirst);
 
@@ -682,7 +674,7 @@ void Board::Manhatten(Element* p, bool bSingleRoute)
 	for (int i = 0, iSize = ( GetLyrs() == 1 ) ? GetSize() : ( GetSize() / 2 ); i < iSize && !bSingleRoute; i++)	// Loop base layer only
 	{
 		Element* const q = GetAt(i);	// q is on layer 0
-		const bool bNonWirePin = q && q->GetHasPinAny() && !(m_bHavePlacedWires && q->GetHasWire());	// Skip wires
+		const bool bNonWirePin = q && q->GetHasPin() && !(m_bHavePlacedWires && q->GetHasWire());	// Skip wires
 		if ( !bNonWirePin ) continue;
 		Element* const r = q->GetHasPinTH() ? q : q->GetNbr(NBR_X);	assert(r);	// r is on layer 0 for TH pins, and layer 1 for SOIC pads
 		if ( r && r->GetNodeId() == iTraceNodeId && r != pFirst )	// Skip first

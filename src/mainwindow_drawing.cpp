@@ -1573,7 +1573,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		for (int ii = minCol; ii <= maxCol; ii++)
 		{
 			Element*	pD		= board.Get(0, jj, ii);	// Layer 0 only
-			const bool	bPin	= pD->GetHasPinAny() && !pD->GetHasWire();
+			const bool	bPin	= pD->GetHasPin() && !pD->GetHasWire();
 			if ( !bPin ) continue;
 
 			// We may just have an SOIC pad on layer 1, but pD is on layer 0, so ...

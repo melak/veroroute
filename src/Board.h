@@ -539,7 +539,7 @@ public:
 		for (int j = 0; j < numRows; j++)
 		for (int i = 0; i < numCols; i++)
 		{
-			if ( Get(k,j,i)->GetNodeId() == BAD_NODEID && !Get(k,j,i)->GetHasPin() ) continue;
+			if ( Get(k,j,i)->GetNodeId() == BAD_NODEID && !Get(k,j,i)->GetHasPinLegacy() ) continue;
 			minRow = std::min(minRow, j);	maxRow = std::max(maxRow, j);
 			minCol = std::min(minCol, i);	maxCol = std::max(maxCol, i);
 			bOK = true;
@@ -882,7 +882,7 @@ private:
 		for (int iCol = 0, iCols = GetCols(); iCol < iCols; iCol++)
 		{
 			Element* p = Get(0, iRow, iCol);	// Only need to check base layer
-			p->SetSoicChar( ( p->GetNumWires() == 2 ) ? SOIC_THL_2 : ( p->GetIsPin() || p->GetIsPin2() ) ? SOIC_THL_1 : SOIC_FREE );
+			p->SetSoicChar( ( p->GetNumWires() == 2 ) ? SOIC_THL_2 : ( p->GetHasPinLegacy() ) ? SOIC_THL_1 : SOIC_FREE );
 		}
 	}
 	void SetHavePlacedWires() { m_bHavePlacedWires = GetCompMgr().GetHavePlacedWires(); }
