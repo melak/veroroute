@@ -151,7 +151,7 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 			const Element*	pA			= Get(k, j, i);
 			const int&		nodeIdA		= pA->GetNodeId();
 			const bool		bHasPinA	= pA->GetHasPinTH();
-			const bool		bHasSoicA	= pA->GetHasPinSOIC() && k == LYR_TOP;
+			const bool		bSoicA		= pA->GetHasPinSOIC() && k == LYR_TOP;
 			if ( nodeIdA == BAD_NODEID && !bHasPinA ) continue;	// Skip if no track and no pin
 			const bool		bIsGndA		= bGroundFill && nodeIdA == GetGroundNodeId(k) && nodeIdA != BAD_NODEID;
 
@@ -178,11 +178,15 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 				bPadA = false;
 
 			std::list<MyPolygonF> blobA;	// Blob A points (in units of grid squares)
+			std::list<MyPolygonF> soicA;
+
 			const int	iPerimeterCodeA	= GetPerimeterCode(pA);
-			const int	iTagCodeA		= ( bPadA && bIsGndA ) ? GetTagCode(pA, iPerimeterCodeA) : 0;
+			const int	iTagCodeA		= ( bPadA && bIsGndA && !bSoicA ) ? GetTagCode(pA, iPerimeterCodeA) : 0;
 			const bool	bBlobA			= !bPadOffsetA || iPerimeterCodeA != 0 || ( bForceXthermals && bIsGndA );
 			if ( bBlobA )
-				CalcBlob(1, pointA, padA, iPadWidthMIL_A, iPerimeterCodeA, iTagCodeA, blobA, bHasPinA, bHasSoicA, bIsGndA);	// 1 ==> scale of 1 grid square
+				CalcBlob(1, pointA, padA, iPadWidthMIL_A, iPerimeterCodeA, iTagCodeA, blobA, bHasPinA, bSoicA, bIsGndA);	// 1 ==> scale of 1 grid square
+			if ( bSoicA )
+				CalcSOIC(1, pointA, pA->GetPinIndex(), GetCompMgr().GetComponentById(pA->GetCompId()).GetDirection(), soicA, false);
 
 			// Only need to loop half the directions in the following loop (the i,j scan takes care of the other half)
 			for (int jj = std::max(minRow,j-nRings); jj <= j; jj++)
@@ -192,7 +196,7 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 				const Element*	pB			= Get(k, jj, ii);
 				const int&		nodeIdB		= pB->GetNodeId();
 				const bool		bHasPinB	= pB->GetHasPinTH();
-				const bool		bHasSoicB	= pB->GetHasPinSOIC() && k == LYR_TOP;
+				const bool		bSoicB		= pB->GetHasPinSOIC() && k == LYR_TOP;
 				if ( nodeIdB == BAD_NODEID && !bHasPinB ) continue;	// Skip if no track and no pin
 				if ( nodeIdB == nodeIdA ) continue;
 				const bool		bIsGndB		= bGroundFill && nodeIdB == GetGroundNodeId(k) && nodeIdB != BAD_NODEID;
@@ -221,12 +225,15 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 					bPadB = false;
 
 				std::list<MyPolygonF> blobB;	// Blob B points (in units of grid squares)
+				std::list<MyPolygonF> soicB;
 				const int	iPerimeterCodeB	= GetPerimeterCode(pB);
-				const int	iTagCodeB		= ( bPadB && bIsGndB ) ? GetTagCode(pB, iPerimeterCodeB) : 0;
+				const int	iTagCodeB		= ( bPadB && bIsGndB && !bSoicB ) ? GetTagCode(pB, iPerimeterCodeB) : 0;
 				const bool	bBlobB			= !bPadOffsetB || iPerimeterCodeB != 0 || ( bForceXthermals && bIsGndB );
 				if ( bBlobB )
-					CalcBlob(1, pointB, padB, iPadWidthMIL_B, iPerimeterCodeB, iTagCodeB, blobB, bHasPinB, bHasSoicB, bIsGndB);	// 1 ==> scale of 1 grid square
-
+					CalcBlob(1, pointB, padB, iPadWidthMIL_B, iPerimeterCodeB, iTagCodeB, blobB, bHasPinB, bSoicB, bIsGndB);	// 1 ==> scale of 1 grid square
+				if ( bSoicB )
+					CalcSOIC(1, pointB, pB->GetPinIndex(), GetCompMgr().GetComponentById(pB->GetCompId()).GetDirection(), soicB, false);
+				
 				const bool bCompareBlobs = !bStandardBlobs || ( abs(jj - j) < 2 && abs(ii - i) < 2 );	// Standard blobs ==> just consider neighbouring grid points
 
 				// Pad A to Pad B
@@ -240,6 +247,22 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 
 				// Blob A to Blob B
 				if ( bCompareBlobs && bBlobA && bBlobB ) for(const auto& a : blobA) for(const auto& b : blobB) polygonHelper.CalcSeparation(a, b);
+
+				// SOIC track A to SOIC track B
+				if ( bCompareBlobs && bSoicA && bSoicB ) for(const auto& a : soicA) for(const auto& b : soicB) polygonHelper.CalcSeparation(a, b);
+
+				//TODO Need to consider other separations
+				// Pad A to SOIC track B
+				if ( bPadA && bSoicB ) for(const auto& b : soicB) polygonHelper.CalcSeparation(padA, b);
+
+				// Pad B to SOIC track A
+				if ( bPadB && bSoicA ) for(const auto& a : soicA) polygonHelper.CalcSeparation(padB, a);
+				
+				// SOIC track A to Blob B
+				if ( bCompareBlobs && bSoicA && bBlobB ) for(const auto& a : soicA) for(const auto& b : blobB) polygonHelper.CalcSeparation(a, b);
+				
+				// SOIC track B to Blob A
+				if ( bCompareBlobs && bSoicB && bBlobA ) for(const auto& b : soicB) for(const auto& a : blobA) polygonHelper.CalcSeparation(a, b);
 			}
 		}
 		if ( polygonHelper.m_Dmin > m_dMinSeparation ) continue;

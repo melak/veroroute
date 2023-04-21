@@ -260,7 +260,9 @@ public:
 		}
 
 		//TODO Check if we should use GetHasPinTH() instead of GetHasPin() on next line
-		if ( GetXthermals() && p->GetHasPinTH() && (GetTrackMode() == TRACKMODE::PCB || GetTrackMode() == TRACKMODE::MONO ) && GetGroundFill() && GetGroundNodeId(bBottomLayer ? 0 : 1) == p->GetNodeId() )
+		const bool bForceXthermals = GetXthermals() && p->GetHasPinTH() && !p->GetHasPinSOIC();
+
+		if ( bForceXthermals && (GetTrackMode() == TRACKMODE::PCB || GetTrackMode() == TRACKMODE::MONO ) && GetGroundFill() && GetGroundNodeId(bBottomLayer ? 0 : 1) == p->GetNodeId() )
 			return 0;
 
 		return iCode;
@@ -302,15 +304,18 @@ public:
 			if ( bOK ) SetCodeBit(iNbr, iCandidateTagBits);	// Update iCandidateTagBits
 		}
 
+		//TODO Check if we should use GetHasPinTH() instead of GetHasPin() on next line
+		const bool bForceXthermals = GetXthermals() && p->GetHasPinTH() && !p->GetHasPinSOIC();
+
 		if ( iCandidateTagBits == 0 )
 		{
-			if ( GetXthermals() && ( ( iLayerPrefP == LAYER_X ) || ( iLayerPrefP == ( bBottomLayer ? LAYER_B : LAYER_T ) ) ) )
+			if ( bForceXthermals && ( ( iLayerPrefP == LAYER_X ) || ( iLayerPrefP == ( bBottomLayer ? LAYER_B : LAYER_T ) ) ) )
 				return CODEBITS_DIAGS;	// If forcing X-thermals and we have no connections in the layer, rely on layer preference alone
 			else
 				return 0;	// No candidate tags, so we're done
 		}
 
-		if ( GetXthermals() ) return CODEBITS_DIAGS;
+		if ( bForceXthermals ) return CODEBITS_DIAGS;
 
 		if ( iCandidateTagBits == CODEBITS_LYR ) return CODEBITS_DIAGS;	// All tags are allowed, so just use the 4 diagonals
 

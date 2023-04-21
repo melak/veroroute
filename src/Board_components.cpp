@@ -292,8 +292,7 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 					if ( !bOK ) continue;
 
 					// Check relevant layer to get nodeID for pin
-					const Element*	p			= ( bSOIC ) ? ( LYR_TOP == compLyr ? pGrid : pGrid->GetNbr(NBR_X) ) : pGrid;
-					assert(p);
+					const Element*	p			= ( bSOIC ) ? ( LYR_TOP == compLyr ? pGrid : pGrid->GetNbr(NBR_X) ) : pGrid;	assert(p);
 					const int&		nodeId		= p->GetNodeId();			// Read nodeID on board
 					const int&		iCompNodeId	= comp.GetNodeId(pinIndex);	// Read component nodeID
 
@@ -370,11 +369,9 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 	const int&	rowTL		= comp.GetRow();
 	const int&	colTL		= comp.GetCol();
 
-	int wireNodeId(BAD_NODEID);	// If we're placing a wire, this will be it's nodeId
-
-	int iTraxNbrLT(NBR_LT);	// For handling diagonals on a rotated trax
 	if ( bTrax )
 	{
+		int iTraxNbrLT(NBR_LT);	// For handling diagonals on a rotated trax
 		switch( comp.GetDirection() )
 		{
 			case 'W': iTraxNbrLT = NBR_LT;	break;
@@ -382,11 +379,10 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 			case 'N': iTraxNbrLT = NBR_LB;	break;
 			case 'S': iTraxNbrLT = NBR_RT;	break;
 		}
-	}
 
-	std::set<int> blankWireIds;	// CompIds of unpainted wires in the area covered by trax
-	if ( bTrax )
-	{
+		std::set<int> blankWireIds;	// CompIds of unpainted wires in the area covered by trax
+
+		// First scan over comp
 		int jRow(rowTL);
 		for (int j = 0; j < compRows; j++, jRow++)
 		{
@@ -402,18 +398,17 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 				if ( pGrid->GetW(1) ) blankWireIds.insert( pGrid->GetCompId2() );	// ... store its compId
 			}
 		}
-	}
 
-	int jRow(rowTL);
-	for (int j = 0; j < compRows; j++, jRow++)
-	{
-		int iCol(colTL);
-		for (int i = 0; i < compCols; i++, iCol++)
+		// Second scan over comp
+		jRow = rowTL;
+		for (int j = 0; j < compRows; j++, jRow++)
 		{
-			const CompElement*	pComp = comp.GetCompElement(j, i);
-			Element*			pGrid = Get(compLyr, jRow, iCol);
-			if ( bTrax )
+			int iCol(colTL);
+			for (int i = 0; i < compCols; i++, iCol++)
 			{
+				const CompElement*	pComp = comp.GetCompElement(j, i);
+				Element*			pGrid = Get(compLyr, jRow, iCol);
+
 				const int traxNodeId = pComp->GetNodeId();
 				assert( traxNodeId == BAD_NODEID || pComp->ReadFlagBits(RECTSET) );	// Sanity check
 				if ( traxNodeId == BAD_NODEID ) continue;	// Skip blank trax points
@@ -435,14 +430,40 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 				if ( bDiagsOK && j > 0 && i > 0 && pComp->GetUsed(iTraxNbrLT) != pGrid->GetUsed(NBR_LT) )
 					pGrid->SwapDiagLinks();
 			}
-			else
+		}
+	}
+	else	// Regular component (not the "trax")
+	{
+		// First scan over comp.  We need to SetSoicChar() over the whole component area before we start painting NodeIds
+		int jRow(rowTL);
+		for (int j = 0; j < compRows; j++, jRow++)
+		{
+			int iCol(colTL);
+			for (int i = 0; i < compCols; i++, iCol++)
 			{
+				const CompElement*	pComp = comp.GetCompElement(j, i);
+				Element*			pGrid = Get(compLyr, jRow, iCol);
+
 				assert( !(pGrid->GetIsHole() && pComp->GetIsHole()) );	// Can't overlay holes
 
 				// Update surface and hole use
 				pGrid->SetSurface(  pGrid->GetSurface()  + pComp->GetSurface() );
 				pGrid->SetHoleUse(  pGrid->GetHoleUse()  + pComp->GetHoleUse() );
 				pGrid->SetSoicChar( pGrid->GetSoicChar() + pComp->GetSoicChar() );
+			}
+		}
+
+		int wireNodeId(BAD_NODEID);	// If we're placing a wire, this will be it's nodeId
+
+		// Second scan over comp		
+		jRow = rowTL;
+		for (int j = 0; j < compRows; j++, jRow++)
+		{
+			int iCol(colTL);
+			for (int i = 0; i < compCols; i++, iCol++)
+			{
+				const CompElement*	pComp = comp.GetCompElement(j, i);
+				Element*			pGrid = Get(compLyr, jRow, iCol);
 
 				// Update IDs at pin location (No pin ==> Leave existing pinIndexes and compIds)
 				const size_t pinIndex = pComp->GetPinIndex();
@@ -503,45 +524,47 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 				}
 			}
 		}
-	}
-	if ( bWire )	// Handle wires setting the wire ends on the board to same value
-	{
-		// pA and pB are the opposite ends of the wire
-		Element*	pA		= Get(compLyr, rowTL, colTL);						assert( pA );
-		Element*	pB		= Get(compLyr, rowTL+compRows-1, colTL+compCols-1);	assert( pB );
-		const int	iSlotA	= pA->GetSlotFromCompId(compId);
-		const int	iSlotB	= pB->GetSlotFromCompId(compId);
-		pA->SetW(iSlotA, pB);	// Link wire ends
-		pB->SetW(iSlotB, pA);	// Link wire ends
 
-		// Take logical OR of flags on wire ends, ignoring the RECTSET bit
-		const char iWireFlag = ( pA->GetFlag() | pB->GetFlag() ) & (USERSET|AUTOSET|VEROSET);
-
-		WIRELIST wireList;	// Helper for chains of wires
-
-		// Handle all connected wires.  (We just need the wirelist on one end, so use pA)
-		pA->GetWireList(wireList);	// Get list containing pA and its wired points
-
-		for (const auto& o : wireList)
+		if ( bWire )	// Handle wires setting the wire ends on the board to same value
 		{
-			Element* pW = const_cast<Element*> (o.first);
-			// Set the nodeId's on the wire components ...
-			for (int iSlot = 0; iSlot < 2; iSlot++)
+			// pA and pB are the opposite ends of the wire
+			Element*	pA		= Get(compLyr, rowTL, colTL);						assert( pA );
+			Element*	pB		= Get(compLyr, rowTL+compRows-1, colTL+compCols-1);	assert( pB );
+			const int	iSlotA	= pA->GetSlotFromCompId(compId);
+			const int	iSlotB	= pB->GetSlotFromCompId(compId);
+			pA->SetW(iSlotA, pB);	// Link wire ends
+			pB->SetW(iSlotB, pA);	// Link wire ends
+
+			// Take logical OR of flags on wire ends, ignoring the RECTSET bit
+			const char iWireFlag = ( pA->GetFlag() | pB->GetFlag() ) & (USERSET|AUTOSET|VEROSET);
+
+			WIRELIST wireList;	// Helper for chains of wires
+
+			// Handle all connected wires.  (We just need the wirelist on one end, so use pA)
+			pA->GetWireList(wireList);	// Get list containing pA and its wired points
+
+			for (const auto& o : wireList)
 			{
-				size_t	iPinIndex;
-				int		tmpCompId;
-				pW->GetSlotInfo(iSlot, iPinIndex, tmpCompId);
-				if ( iPinIndex == BAD_PININDEX ) continue;
-				Component& comp = m_compMgr.GetComponentById( tmpCompId );
-				assert( comp.GetType() == COMP::WIRE );
-				comp.SetNodeId(iPinIndex, wireNodeId);
+				Element* pW = const_cast<Element*> (o.first);
+				// Set the nodeId's on the wire components ...
+				for (int iSlot = 0; iSlot < 2; iSlot++)
+				{
+					size_t	iPinIndex;
+					int		tmpCompId;
+					pW->GetSlotInfo(iSlot, iPinIndex, tmpCompId);
+					if ( iPinIndex == BAD_PININDEX ) continue;
+					Component& comp = m_compMgr.GetComponentById( tmpCompId );
+					assert( comp.GetType() == COMP::WIRE );
+					comp.SetNodeId(iPinIndex, wireNodeId);
+				}
+				// ... and on the corresponding board points
+				const bool bAllLyrs(true);
+				SetNodeId(pW, wireNodeId, bAllLyrs);
+				MarkFlagBits(pW, iWireFlag, bAllLyrs);
 			}
-			// ... and on the corresponding board points
-			const bool bAllLyrs(true);
-			SetNodeId(pW, wireNodeId, bAllLyrs);
-			MarkFlagBits(pW, iWireFlag, bAllLyrs);
 		}
 	}
+
 	comp.SetIsPlaced(true);
 	if ( comp.GetType() == COMP::MARK ) Get(compLyr, rowTL, colTL)->SetIsMark(true);	// Set marker flag
 

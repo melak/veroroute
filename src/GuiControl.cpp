@@ -25,8 +25,6 @@ void GuiControl::CalcBlob(qreal W, const QPointF& pC, const QPointF& pCoffset,
 						  std::list<MyPolygonF>& out,
 						  bool bHavePad, bool bHaveSoic, bool bIsGnd, bool bGap) const
 {
-	//TODO Not entirely sure of the need to pass two flags for pads (bHavePad and bHaveSoic)
-
 	// Given a grid point (pC) and its perimeter code, this method populates "out" with a
 	// description of the local track pattern at the grid point (or "blob").
 	// The scale parameter W represents the width of a 100 mil grid square.
@@ -76,7 +74,7 @@ void GuiControl::CalcBlob(qreal W, const QPointF& pC, const QPointF& pCoffset,
 	bool bClosed = ( polygon.size() == 3 );	// true ==> closed polygon
 	if ( !bClosed && N > 2 )
 	{
-		if ( !bHavePad )
+		if ( !bHavePad && !bHaveSoic )
 			bClosed = true;
 		else
 		{
@@ -136,7 +134,7 @@ void GuiControl::CalcBlob(qreal W, const QPointF& pC, const QPointF& pCoffset,
 		}
 	}
 
-	const bool bGndPad = ( N == 0 && bHavePad && bIsGnd );
+	const bool bGndPad = ( N == 0 && (bHavePad || bHaveSoic) && bIsGnd );
 	if ( !bGndPad )	// Don't draw the blob for an isolated pad in the ground-fill
 	{
 		// Set other polygon attributes, then copy the polygon to the output polygon list
@@ -190,7 +188,7 @@ void GuiControl::CalcBlob(qreal W, const QPointF& pC, const QPointF& pCoffset,
 			}
 		}
 	}
-	if ( iTagCode > 0 && ( !bLeg || GetXthermals() ) )	// Only draw extra thermal relief tags if we don't have an offset pad, or are forcing X-shaped tags
+	if ( iTagCode > 0 && !bHaveSoic && ( !bLeg || GetXthermals() ) )	// Only draw extra thermal relief tags if we don't have an offset pad, or are forcing X-shaped tags
 	{
 		assert( bIsGnd );
 
@@ -246,229 +244,125 @@ void Bezier(MyPolygonF& polygon, const QPointF& pL, const QPointF& pC, const QPo
 	}
 }
 
-void GuiControl::CalcSOIC(qreal W, const QPointF& pLT, /*size_t pinIndex,*/ std::list<MyPolygonF>& out, bool bGap) const
+void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, char direction, std::list<MyPolygonF>& out, bool bSolderMask, bool bGap) const
 {
-	// Really need to give two bits of info here.  A pin index and pattern type (maybe some COMP type for SOICs).
-	// The pattern info should all be in the component.
-
-	// Given a grid point (pLT) this method populates "out" with a description of a/ SOIC track pattern.
-	// The scale parameter W represents the width of a 100 mil grid square.
-
-	// We have Gerber pen widths tied to the polygons but nodeId info.
-	// So that either needs to change, or we have to tag each polygon track/pad with a pin number
-	// so the rendering code in Color mode can choose colours for eaxh track/pad
-
 	out.clear();
+
+	// Given a grid point (pC) this method populates "out" with a description of an SOIC track from a "SOIC pin".
+	// The scale parameter W represents the width of a 100 mil grid square.
 
 	const qreal	Q			= W * 0.25;	// 1/4 square width
 	const qreal	padWidth	= 0.01 * GetPAD_IC_MIL();
 	const qreal	trkWidth	= 0.01 * ( GetTRACK_IC_MIL() + 2 * ( bGap ? GetGAP_MIL() : 0 ) );
 
-	const QPointF pC = pLT + QPointF(4.5*W,4*W);	// Centre of the shape
+	MyPolygonF polygonA;	// SOIC tracks
+	polygonA.m_eTrkPen		= bGap ?  GPEN::TRK_IC_GAP : GPEN::TRK_IC;
+	polygonA.m_ePadPen		= GPEN::NONE;
+	polygonA.m_radiusTrk	= trkWidth * 0.5;
+	polygonA.m_radiusPad	= 0;
+	polygonA.m_bClosed		= false;
+	polygonA.clear();
 
-	MyPolygonF polygon;
+	MyPolygonF polygonB;	// SOIC pads
+	polygonB.m_eTrkPen		= GPEN::NONE;
+	polygonB.m_ePadPen		= bGap ? GPEN::NONE : GPEN::PAD_IC;
+	polygonB.m_radiusTrk	= 0;
+	polygonB.m_radiusPad	= bGap ? 0 : padWidth * 0.5;
+	polygonB.m_bClosed		= bGap;
+	polygonB.clear();
 
-	if ( bGap )
+	MyPolygonF polygonC;	// Solder mask
+	polygonC.m_eTrkPen		= GPEN::NONE;
+	polygonC.m_ePadPen		= GPEN::NONE;
+	polygonC.m_radiusTrk	= 0;
+	polygonC.m_radiusPad	= 0;
+	polygonC.m_bClosed		= true;
+	polygonC.clear();
+
+	// If we're doing the gap then instead of showing a small gap around each SOIC pad strip,
+	// blank out a large area across the IC
+	if ( bGap && !bSolderMask ) polygonB << pC << pC+QPointF(W,0) << pC+QPointF(W,8*W) << pC+QPointF(0,8*W) << pC;
+
+	// 7 basic curves.  Start by repeating the curves for pins 21-27
+	switch(pinIndex)
 	{
-		polygon.m_eTrkPen	= GPEN::NONE;
-		polygon.m_ePadPen	= GPEN::NONE;
-		polygon.m_radiusTrk	= 0;
-		polygon.m_radiusPad	= 0;
-		polygon.m_bClosed	= true;
-		polygon << pC + QPointF(-4.5*W, -4*W) 
-				<< pC + QPointF( 4.5*W, -4*W)
-				<< pC + QPointF( 4.5*W,  4*W)
-				<< pC + QPointF(-4.5*W,  4*W)
-				<< pC + QPointF(-4.5*W, -4*W);
-		out.push_back(polygon);
+		case 27:	case  0:	case 13:	case 14:
+			polygonA << pC << pC+QPointF(5*Q,0);
+			if ( !bGap || bSolderMask )
+				polygonB << pC+QPointF(5*Q,-Q) << pC+QPointF(5*Q,4*Q);
+			else 
+				polygonB.clear();
+			break;
+		case 26:	case  1:	case 12:	case 15:
+			Bezier(polygonA, pC, pC+QPointF(6*Q,0.5*Q), pC+QPointF(7*Q,3*Q));
+			if ( !bGap || bSolderMask )
+				polygonB << pC+QPointF(7*Q,3*Q) << pC+QPointF(7*Q,8*Q);
+			else 
+				polygonB.clear();
+			break;
+		case 25:	case  2:	case 11:	case 16:
+			//Bezier(polygonA, pC, pC+QPointF(9*Q+dx*Q,5.4*Q+dy*Q), pC+QPointF(9*Q,7*Q) );
+			polygonA << pC << pC+QPointF(2.5*Q,2.5*Q);
+			Bezier(polygonA, pC+QPointF(2.5*Q,2.5*Q), pC+QPointF(8.1*Q,3.8*Q), pC+QPointF(9*Q,7*Q) );
+			if ( !bGap || bSolderMask )
+				polygonB << pC+QPointF(9*Q,7*Q) << pC+QPointF(9*Q,12*Q);
+			break;
+		case 24:	case  3:	case 10:	case 17:
+			Bezier(polygonA, pC, pC+QPointF(7*Q,4.5*Q), pC+QPointF(7*Q,7*Q));
+			if ( !bGap || bSolderMask )
+				polygonB << pC+QPointF(7*Q,7*Q) << pC+QPointF(7*Q,12*Q);
+			break;
+		case 23:	case  4:	case  9:	case 18:
+			Bezier(polygonA, pC, pC+QPointF(5*Q,3.5*Q), pC+QPointF(5*Q,7*Q));
+			if ( !bGap || bSolderMask )
+				polygonB << pC+QPointF(5*Q,7*Q) << pC+QPointF(5*Q,12*Q);
+			break;
+		case 22:	case  5:	case  8:	case 19:
+			Bezier(polygonA, pC, pC+QPointF(3*Q,2.5*Q), pC+QPointF(3*Q,7*Q));
+			if ( !bGap || bSolderMask )
+				polygonB << pC+QPointF(3*Q,7*Q) << pC+QPointF(3*Q,12*Q);
+			break;
+		case 21:	case  6:	case  7:	case 20:
+			Bezier(polygonA, pC, pC+QPointF(Q,2*Q), pC+QPointF(Q,7*Q) );
+			if ( !bGap || bSolderMask )
+				polygonB << pC+QPointF(Q,7*Q) << pC+QPointF(Q,12*Q);
+			break;
 	}
 
-	// Split description into two parts.  One starting at pin and ending at pad.  Other for the pad
-	// Units of Q should suffice. If W = 100 then Q is 25 mil.
-	// So just set Q = 25 in values below to get mil
-	
-	
-
- 	//  Coords w.r.t. pin x-> y down
-	// L ==> line   B==> Bezier
-	/*
-	enum class LINE_TYPE { LINEAR , BEZIER };
-	
-	struct Track
+	if ( bSolderMask )
 	{
-		Track(const std::vector<qreal>& A, const std::vector<qreal>& B)
-		{
-			pointsA.resize(3);
-			for (size_t i = 0, k = 0; k < 3; k++, i += 2)
-				pointsA[k] = QPointF(A[i], A[i+1]);
-
-			pointsB.resize(3);
-			for (size_t i = 0, k = 0; k < 2; k++, i += 2)
-				pointsB[k] = QPointF(B[i], B[i+1]);
-		}
-		Track& operator=(const Track& o)
-		{
-			lineTypeA = o.lineTypeA;
-			pointsA.resize(o.pointsA.size());
-			pointsB.resize(o.pointsB.size());
-			std::copy(o.pointsA.begin(), o.pointsA.end(), pointsA.begin());
-			std::copy(o.pointsB.begin(), o.pointsB.end(), pointsB.begin());
-			return *this;
-		}
-		void flipV()
-		{
-			for (auto& o : pointsA) o.setY( -o.y() );
-			for (auto& o : pointsB) o.setY( -o.y() );
-		}
-		void flipH()
-		{
-			for (auto& o : pointsA) o.setX( -o.x() );
-			for (auto& o : pointsB) o.setX( -o.x() );
-		}
-		void AddPolygonA(MyPolygonF& polygon, std::list<MyPolygonF>& out)
-		{
-			polygon.clear();
-			if ( lineTypeA == LINE_TYPE::LINEAR )
-				polygon << pointsA[0] << pointsA[1] <<  pointsA[2];
-			else
-				Bezier(polygon, pointsA[0], pointsA[1], pointsA[2]);
-			out.push_back(polygon);	
-		}
-		void AddPolygonB(MyPolygonF& polygon, std::list<MyPolygonF>& out)
-		{
-			polygon.clear();
-			polygon << pointsB[0] << pointsB[1];
-			out.push_back(polygon);	
-		}
-		// Data
-		LINE_TYPE	lineTypeA = LINE_TYPE::BEZIER;	// LineTypeB is always linear
-		std::vector<QPointF> pointsA;				// For track starting at pin
-		std::vector<QPointF> pointsB;				// For pad at end of track
-	};
-
-	std::vector<Track> track; track.resize(28);	// indexed by pinIndex
-
-	track[27]	= Track( {0,0,100,0,125,0},			{125,-25,125,150} );	track[27].lineTypeA = LINE_TYPE::LINEAR;
-	track[0]	= track[27];	track[0].flipV();
-	track[13]	= track[0];		track[12].flipH();
-	track[14]	= track[13];	track[14].flipV();
-	track[26]	= Track( {0,0,150,12.5,175,75},		{0,75,175,250} );
-	track[1]	= track[26];	track[1].flipV();
-	track[12]	= track[1];		track[12].flipH();
-	track[15]	= track[12];	track[15].flipV();
-	track[25]	= Track( {0,0,225,135,225,175},		{225,175,225,350} );
-	track[2]	= track[25];	track[2].flipV();
-	track[11]	= track[2];		track[11].flipH();
-	track[16]	= track[11];	track[16].flipV();
-	track[24]	= Track( {0,0,175,112.5,175,175},	{175,175,175,350} );
-	track[3]	= track[24];	track[3].flipV();
-	track[10]	= track[3];		track[10].flipH();
-	track[17]	= track[10];	track[17].flipV();
-	track[23]	= Track( {0,0,125,87.5,125,175},	{125,175,125,350} );
-	track[4]	= track[23];	track[3].flipV();
-	track[9]	= track[4];		track[10].flipH();
-	track[18]	= track[9];		track[17].flipV();
-	track[22]	= Track( {0,0,75,62.5,75,175},		{75,175,75,350} );
-	track[5]	= track[22];	track[5].flipV();
-	track[8]	= track[5];		track[8].flipH();
-	track[19]	= track[8];		track[19].flipV();
-	track[21]	= Track( {0,0,25,50,25,175},		{25,175,25,350} );
-	track[6]	= track[21];	track[6].flipV();
-	track[7]	= track[6];		track[7].flipH();
-	track[20]	= track[7];		track[20].flipV();
-
-	
-	// SOIC tracks -------------------------------------------------------------------------
-	polygon.m_eTrkPen	= bGap ?  GPEN::TRK_IC_GAP : GPEN::TRK_IC;
-	polygon.m_ePadPen	= GPEN::NONE;
-	polygon.m_radiusTrk	= trkWidth * 0.5;
-	polygon.m_radiusPad	= 0;
-	polygon.m_bClosed	= false;
-	track[iPinIndex].AddPolygonA(polygon, out);
-
-	// SOIC Pads ----------------------------------------------------------------------------
-	if ( !bGap )
-	{
-		polygon.m_eTrkPen	= GPEN::NONE;
-		polygon.m_ePadPen	= GPEN::PAD_IC;
-		polygon.m_radiusTrk	= 0;
-		polygon.m_radiusPad	= padWidth * 0.5;
-		polygon.m_bClosed	= false;
-		track[iPinIndex].AddPolygonB(polygon, out);
-	}
-	*/
-	
-	// SOIC Pads ----------------------------------------------------------------------------
-	if ( !bGap )
-	{
-		polygon.m_eTrkPen	= GPEN::NONE;
-		polygon.m_ePadPen	= GPEN::PAD_IC;
-		polygon.m_radiusTrk	= 0;
-		polygon.m_radiusPad	= padWidth * 0.5;
-		polygon.m_bClosed	= false;
-		
-		for (int iPinIndex = 0; iPinIndex < 28; iPinIndex++)
-		{
-			polygon.m_pinIndex = iPinIndex;
-			polygon.clear();
-		
-			const bool bLeft = iPinIndex < 14;
-			const qreal x    = Q * ( - 13 + 2 * ( bLeft ? iPinIndex : (27-iPinIndex) ) );
-			const qreal yLo	 = Q * ( bLeft ? 2 : -9 );
-			const qreal yHi	 = Q * ( bLeft ? 9 : -2 );
-			polygon.clear();
-			
-			polygon << pC + QPointF(x, yLo) << pC  + QPointF(x , yHi);	out.push_back(polygon);
-		}
+		// We don't care about the tracks or pads.  Use the pads to build the solder mask
+		const QPointF p1 = polygonB[0];
+		const QPointF p2 = polygonB[1];
+		const qreal L = p1.x() - Q;
+		const qreal R = p1.x() + Q;
+		const qreal T = p1.y();
+		const qreal B = p2.y() + Q;
+		polygonC << QPointF(L,T) << QPointF(R,T) << QPointF(R,B) << QPointF(L,B) << QPointF(L,T);
+		polygonB.clear();	// We dont need this
+		polygonA.clear();	// We dont need this
 	}
 
-	// SOIC tracks -------------------------------------------------------------------------
-	polygon.m_eTrkPen	= bGap ?  GPEN::TRK_IC_GAP : GPEN::TRK_IC;
-	polygon.m_ePadPen	= GPEN::NONE;
-	polygon.m_radiusTrk	= trkWidth * 0.5;
-	polygon.m_radiusPad	= 0;
-	polygon.m_bClosed	= false;
+	// Then reflect as necessary
+	if ( pinIndex < 14 )					{ polygonA.flipV(pC); polygonB.flipV(pC); polygonC.flipV(pC); }
+	if ( pinIndex >= 7 && pinIndex < 21 )	{ polygonA.flipH(pC); polygonB.flipH(pC); polygonC.flipH(pC); }
 
-	polygon.clear();
-	polygon.m_pinIndex = 27;	polygon << pC+QPointF(-18*Q,-8*Q) << pC+QPointF(-13*Q,-8*Q);out.push_back(polygon);
-	polygon.m_pinIndex =  0;	polygon.flipV();	polygon.translate( QPointF(0,4*W) );	out.push_back(polygon);
-	polygon.m_pinIndex = 13;	polygon.flipH();	polygon.translate( QPointF(9*W,0) );	out.push_back(polygon);
-	polygon.m_pinIndex = 14;	polygon.flipV();	polygon.translate( QPointF(0,-4*W) );	out.push_back(polygon);
+	// Handle component rotation
+	int numRotations(0);
+	switch( direction )
+	{
+		case 'N':	numRotations = 1;	break;
+		case 'E':	numRotations = 2;	break;
+		case 'S':	numRotations = 3;	break;
+	}
+	while (numRotations) { polygonA.rotateCW(pC); polygonB.rotateCW(pC); polygonC.rotateCW(pC); numRotations--; } 
 
-	polygon.clear();
-	polygon.m_pinIndex = 26;	Bezier(polygon, pC+QPointF(-18*Q,-12*Q), pC+QPointF(-12*Q,-11.5*Q), pC+QPointF(-11*Q,-9*Q));	out.push_back(polygon);
-	polygon.m_pinIndex =  1;	polygon.flipV();	polygon.translate( QPointF(0,6*W) );	out.push_back(polygon);
-	polygon.m_pinIndex = 12;	polygon.flipH();	polygon.translate( QPointF(9*W,0) );	out.push_back(polygon);
-	polygon.m_pinIndex = 15;	polygon.flipV();	polygon.translate( QPointF(0,-6*W) );	out.push_back(polygon);
-
-	polygon.clear();
-	polygon.m_pinIndex = 25;	Bezier(polygon, pC+QPointF(-18*Q,-16*Q), pC+QPointF(-9*Q,-10.6*Q), pC+QPointF(-9*Q,-9*Q) );		out.push_back(polygon);
-	polygon.m_pinIndex =  2;	polygon.flipV();	polygon.translate( QPointF(0,8*W) );	out.push_back(polygon);
-	polygon.m_pinIndex = 11;	polygon.flipH();	polygon.translate( QPointF(9*W,0) );	out.push_back(polygon);
-	polygon.m_pinIndex = 16;	polygon.flipV();	polygon.translate( QPointF(0,-8*W) );	out.push_back(polygon);
-
-	polygon.clear();
-	polygon.m_pinIndex = 24;	Bezier(polygon, pC+QPointF(-14*Q,-16*Q), pC+QPointF(-7*Q,-11.5*Q), pC+QPointF(-7*Q,-9*Q));		out.push_back(polygon);
-	polygon.m_pinIndex =  3;	polygon.flipV();	polygon.translate( QPointF(0,8*W) );	out.push_back(polygon);
-	polygon.m_pinIndex = 10;	polygon.flipH();	polygon.translate( QPointF(7*W,0) );	out.push_back(polygon);
-	polygon.m_pinIndex = 17;	polygon.flipV();	polygon.translate( QPointF(0,-8*W) );	out.push_back(polygon);
-
-	polygon.clear();
-	polygon.m_pinIndex = 23;	Bezier(polygon, pC+QPointF(-10*Q,-16*Q), pC+QPointF(-5*Q,-12.5*Q), pC+QPointF(-5*Q,-9*Q));	out.push_back(polygon);
-	polygon.m_pinIndex =  4;	polygon.flipV();	polygon.translate( QPointF(0,8*W) );	out.push_back(polygon);
-	polygon.m_pinIndex =  9;	polygon.flipH();	polygon.translate( QPointF(5*W,0) );	out.push_back(polygon);
-	polygon.m_pinIndex = 18;	polygon.flipV();	polygon.translate( QPointF(0,-8*W) );	out.push_back(polygon);
-
-	polygon.clear(); 
-	polygon.m_pinIndex = 22;	Bezier(polygon, pC+QPointF(-6*Q,-16*Q), pC+QPointF(-3*Q,-13.5*Q), pC+QPointF(-3*Q,-9*Q));	out.push_back(polygon);
-	polygon.m_pinIndex =  5;	polygon.flipV();	polygon.translate( QPointF(0,8*W) );	out.push_back(polygon);
-	polygon.m_pinIndex =  8;	polygon.flipH();	polygon.translate( QPointF(3*W,0) );	out.push_back(polygon);
-	polygon.m_pinIndex = 19;	polygon.flipV();	polygon.translate( QPointF(0,-8*W) );	out.push_back(polygon);
-
-	polygon.clear();
-	polygon.m_pinIndex = 21;	Bezier(polygon, pC+QPointF(-2*Q,-16*Q), pC+QPointF(-Q,-14*Q), pC+QPointF(-Q,-9*Q) );	out.push_back(polygon);
-	polygon.m_pinIndex =  6;	polygon.flipV();	polygon.translate( QPointF(0,8*W) );	out.push_back(polygon);
-	polygon.m_pinIndex =  7;	polygon.flipH();	polygon.translate( QPointF(W,0) );		out.push_back(polygon);
-	polygon.m_pinIndex = 20;	polygon.flipV();	polygon.translate( QPointF(0,-8*W) );	out.push_back(polygon);
+	if ( bSolderMask )
+		out.push_back(polygonC);
+	else
+	{
+		out.push_back(polygonA);
+		out.push_back(polygonB);
+	}
 }
 #endif

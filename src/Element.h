@@ -356,6 +356,14 @@ public:
 		if ( pNbr->GetIsHole() ) return true;			// Block connections to holes
 		if ( pNbr->GetSoicProtected() ) return true;	// Block connections to SOIC area
 
+		switch( iNbr )	// Block diagonals crossing the SOIC area
+		{
+			case NBR_LT: if ( GetNbr(NBR_L)->GetSoicProtected() || GetNbr(NBR_T)->GetSoicProtected() ) return true;	break;
+			case NBR_RT: if ( GetNbr(NBR_R)->GetSoicProtected() || GetNbr(NBR_T)->GetSoicProtected() ) return true;	break;
+			case NBR_LB: if ( GetNbr(NBR_L)->GetSoicProtected() || GetNbr(NBR_B)->GetSoicProtected() ) return true;	break;
+			case NBR_RB: if ( GetNbr(NBR_R)->GetSoicProtected() || GetNbr(NBR_B)->GetSoicProtected() ) return true;	break;
+		}
+
 		switch( iNbr )	// Then do additional checks for competing diagonals
 		{
 			case NBR_LT: return GetNbr(NBR_L)->IsClash(nodeId) && GetNbr(NBR_L)->GetUsed(NBR_RT);

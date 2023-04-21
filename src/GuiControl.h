@@ -457,8 +457,8 @@ public:
 	const int&			GetEDGE_MIL() const			{ return m_EDGE_MIL; }
 	const int&			GetVIAPAD_MIL() const		{ return m_VIAPAD_MIL; }
 	const int&			GetVIAHOLE_MIL() const		{ return m_VIAHOLE_MIL; }
-	Q_DECL_CONSTEXPR static inline int GetPAD_IC_MIL()		{ return 25; }
-	Q_DECL_CONSTEXPR static inline int GetTRACK_IC_MIL()	{ return 18; }
+	Q_DECL_CONSTEXPR static inline int GetPAD_IC_MIL()		{ return 30; }
+	Q_DECL_CONSTEXPR static inline int GetTRACK_IC_MIL()	{ return 25; }
 	const int&			GetRenderQuality() const	{ return m_iRenderQuality; }
 	const int&			GetSaturation() const		{ return m_iSaturation; }
 	const int&			GetFillSaturation() const	{ return m_iFillSaturation; }
@@ -511,7 +511,7 @@ public:
 					 std::list<MyPolygonF>& out,
 					 bool bHavePad, bool bHaveSoic, bool bIsGnd, bool bGap = false) const;
 #ifdef _TEST_SOIC
-	void	CalcSOIC(qreal W, const QPointF& pLT, std::list<MyPolygonF>& out, bool bGap = false) const;
+	void	CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, char direction, std::list<MyPolygonF>& out, bool bSolderMask, bool bGap = false) const;
 #endif
 
 	void Reset()	// For use with File->New()
