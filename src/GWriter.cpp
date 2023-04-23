@@ -263,6 +263,8 @@ void GStream::MakeApertures()	// Make "pens" for current stream
 				m_ePenList.push_back( GPenInfo(GPEN::PAD_MSK, pad + 2 * msk, code++, " is for pads", pad != padDefault) );
 			if ( m_bVias )
 				m_ePenList.push_back( GPenInfo(GPEN::VIA_MSK, via + 2 * msk, code++, " is for via-pads") );
+			if ( m_eType == GFILE::GTS && m_bSOIC )
+				m_ePenList.push_back( GPenInfo(GPEN::PAD_IC_MSK, padIC + 2 * msk, code++, " is for SOIC pads") );
 			break;
 		case GFILE::GTO:
 		case GFILE::GBO:

@@ -252,7 +252,7 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, char dire
 	// The scale parameter W represents the width of a 100 mil grid square.
 
 	const qreal	Q			= W * 0.25;	// 1/4 square width
-	const qreal	padWidth	= 0.01 * GetPAD_IC_MIL();
+	const qreal	padWidth	= 0.01 * ( GetPAD_IC_MIL() + 2 * ( bSolderMask ? GetMASK_MIL() : 0) );
 	const qreal	trkWidth	= 0.01 * ( GetTRACK_IC_MIL() + 2 * ( bGap ? GetGAP_MIL() : 0 ) );
 
 	MyPolygonF polygonA;	// SOIC tracks
@@ -265,87 +265,77 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, char dire
 
 	MyPolygonF polygonB;	// SOIC pads
 	polygonB.m_eTrkPen		= GPEN::NONE;
-	polygonB.m_ePadPen		= bGap ? GPEN::NONE : GPEN::PAD_IC;
+	polygonB.m_ePadPen		= bGap ? GPEN::NONE : bSolderMask ? GPEN::PAD_IC_MSK : GPEN::PAD_IC;
 	polygonB.m_radiusTrk	= 0;
 	polygonB.m_radiusPad	= bGap ? 0 : padWidth * 0.5;
 	polygonB.m_bClosed		= bGap;
 	polygonB.clear();
 
-	MyPolygonF polygonC;	// Solder mask
-	polygonC.m_eTrkPen		= GPEN::NONE;
-	polygonC.m_ePadPen		= GPEN::NONE;
-	polygonC.m_radiusTrk	= 0;
-	polygonC.m_radiusPad	= 0;
-	polygonC.m_bClosed		= true;
-	polygonC.clear();
-
 	// If we're doing the gap then instead of showing a small gap around each SOIC pad strip,
 	// blank out a large area across the IC
-	if ( bGap && !bSolderMask ) polygonB << pC << pC+QPointF(W,0) << pC+QPointF(W,8*W) << pC+QPointF(0,8*W) << pC;
+	if ( bGap )
+	{
+		assert(!bSolderMask);
+		polygonB << pC << pC+QPointF(W,0) << pC+QPointF(W,8*W) << pC+QPointF(0,8*W) << pC;
+	}
 
 	// 7 basic curves.  Start by repeating the curves for pins 21-27
 	switch(pinIndex)
 	{
 		case 27:	case  0:	case 13:	case 14:
-			polygonA << pC << pC+QPointF(5*Q,0);
-			if ( !bGap || bSolderMask )
-				polygonB << pC+QPointF(5*Q,-Q) << pC+QPointF(5*Q,4*Q);
+			if ( !bSolderMask )
+				polygonA << pC << pC+QPointF(5*Q,0);
+			if ( !bGap )
+				polygonB << pC+QPointF(5*Q,-Q) << pC+QPointF(5*Q,1.8*Q);
 			else 
 				polygonB.clear();
 			break;
 		case 26:	case  1:	case 12:	case 15:
-			Bezier(polygonA, pC, pC+QPointF(6*Q,0.5*Q), pC+QPointF(7*Q,3*Q));
-			if ( !bGap || bSolderMask )
-				polygonB << pC+QPointF(7*Q,3*Q) << pC+QPointF(7*Q,8*Q);
+			if ( !bSolderMask )
+				Bezier(polygonA, pC, pC+QPointF(6*Q,0.5*Q), pC+QPointF(7*Q,3*Q));
+			if ( !bGap )
+				polygonB << pC+QPointF(7*Q,3*Q) << pC+QPointF(7*Q,5.8*Q);
 			else 
 				polygonB.clear();
 			break;
 		case 25:	case  2:	case 11:	case 16:
-			//Bezier(polygonA, pC, pC+QPointF(9*Q+dx*Q,5.4*Q+dy*Q), pC+QPointF(9*Q,7*Q) );
-			polygonA << pC << pC+QPointF(2.5*Q,2.5*Q);
-			Bezier(polygonA, pC+QPointF(2.5*Q,2.5*Q), pC+QPointF(8.1*Q,3.8*Q), pC+QPointF(9*Q,7*Q) );
-			if ( !bGap || bSolderMask )
-				polygonB << pC+QPointF(9*Q,7*Q) << pC+QPointF(9*Q,12*Q);
+			if ( !bSolderMask )
+			{
+				polygonA << pC << pC+QPointF(2.5*Q,2.5*Q);
+				Bezier(polygonA, pC+QPointF(2.5*Q,2.5*Q), pC+QPointF(8.1*Q,3.8*Q), pC+QPointF(9*Q,7*Q) );
+			}
+			if ( !bGap )
+				polygonB << pC+QPointF(9*Q,7*Q) << pC+QPointF(9*Q,9.8*Q);
 			break;
 		case 24:	case  3:	case 10:	case 17:
-			Bezier(polygonA, pC, pC+QPointF(7*Q,4.5*Q), pC+QPointF(7*Q,7*Q));
-			if ( !bGap || bSolderMask )
-				polygonB << pC+QPointF(7*Q,7*Q) << pC+QPointF(7*Q,12*Q);
+			if ( !bSolderMask )
+				Bezier(polygonA, pC, pC+QPointF(7*Q,4.5*Q), pC+QPointF(7*Q,7*Q));
+			if ( !bGap )
+				polygonB << pC+QPointF(7*Q,7*Q) << pC+QPointF(7*Q,9.8*Q);
 			break;
 		case 23:	case  4:	case  9:	case 18:
-			Bezier(polygonA, pC, pC+QPointF(5*Q,3.5*Q), pC+QPointF(5*Q,7*Q));
-			if ( !bGap || bSolderMask )
-				polygonB << pC+QPointF(5*Q,7*Q) << pC+QPointF(5*Q,12*Q);
+			if ( !bSolderMask )
+				Bezier(polygonA, pC, pC+QPointF(5*Q,3.5*Q), pC+QPointF(5*Q,7*Q));
+			if ( !bGap )
+				polygonB << pC+QPointF(5*Q,7*Q) << pC+QPointF(5*Q,9.8*Q);
 			break;
 		case 22:	case  5:	case  8:	case 19:
-			Bezier(polygonA, pC, pC+QPointF(3*Q,2.5*Q), pC+QPointF(3*Q,7*Q));
-			if ( !bGap || bSolderMask )
-				polygonB << pC+QPointF(3*Q,7*Q) << pC+QPointF(3*Q,12*Q);
+			if ( !bSolderMask )
+				Bezier(polygonA, pC, pC+QPointF(3*Q,2.5*Q), pC+QPointF(3*Q,7*Q));
+			if ( !bGap )
+				polygonB << pC+QPointF(3*Q,7*Q) << pC+QPointF(3*Q,9.8*Q);
 			break;
 		case 21:	case  6:	case  7:	case 20:
-			Bezier(polygonA, pC, pC+QPointF(Q,2*Q), pC+QPointF(Q,7*Q) );
-			if ( !bGap || bSolderMask )
-				polygonB << pC+QPointF(Q,7*Q) << pC+QPointF(Q,12*Q);
+			if ( !bSolderMask )
+				Bezier(polygonA, pC, pC+QPointF(Q,2*Q), pC+QPointF(Q,7*Q) );
+			if ( !bGap )
+				polygonB << pC+QPointF(Q,7*Q) << pC+QPointF(Q,9.8*Q);
 			break;
-	}
-
-	if ( bSolderMask )
-	{
-		// We don't care about the tracks or pads.  Use the pads to build the solder mask
-		const QPointF p1 = polygonB[0];
-		const QPointF p2 = polygonB[1];
-		const qreal L = p1.x() - Q;
-		const qreal R = p1.x() + Q;
-		const qreal T = p1.y();
-		const qreal B = p2.y() + Q;
-		polygonC << QPointF(L,T) << QPointF(R,T) << QPointF(R,B) << QPointF(L,B) << QPointF(L,T);
-		polygonB.clear();	// We dont need this
-		polygonA.clear();	// We dont need this
 	}
 
 	// Then reflect as necessary
-	if ( pinIndex < 14 )					{ polygonA.flipV(pC); polygonB.flipV(pC); polygonC.flipV(pC); }
-	if ( pinIndex >= 7 && pinIndex < 21 )	{ polygonA.flipH(pC); polygonB.flipH(pC); polygonC.flipH(pC); }
+	if ( pinIndex < 14 )					{ polygonA.flipV(pC); polygonB.flipV(pC); } 
+	if ( pinIndex >= 7 && pinIndex < 21 )	{ polygonA.flipH(pC); polygonB.flipH(pC); }
 
 	// Handle component rotation
 	int numRotations(0);
@@ -355,14 +345,9 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, char dire
 		case 'E':	numRotations = 2;	break;
 		case 'S':	numRotations = 3;	break;
 	}
-	while (numRotations) { polygonA.rotateCW(pC); polygonB.rotateCW(pC); polygonC.rotateCW(pC); numRotations--; } 
+	while (numRotations) { polygonA.rotateCW(pC); polygonB.rotateCW(pC); numRotations--; } 
 
-	if ( bSolderMask )
-		out.push_back(polygonC);
-	else
-	{
-		out.push_back(polygonA);
-		out.push_back(polygonB);
-	}
+	out.push_back(polygonA);
+	out.push_back(polygonB);
 }
 #endif

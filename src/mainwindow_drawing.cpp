@@ -172,25 +172,33 @@ void MainWindow::PaintSOIC(const GuiControl& guiCtrl, QPainter& painter, const Q
 
 	if ( m_bWriteGerber )	// Write to Gerber
 	{
-		if ( bGap )	// Use this as an opportunity to get the solder mask info
+		if ( !bGap )	// Use this as an opportunity to get the solder mask info
 		{
 			std::list<MyPolygonF> solderMask;
-			guiCtrl.CalcSOIC(W, pC, pinIndex, pComp->GetDirection(), solderMask, true, false);	// Populate polygonList
-			if ( !solderMask.empty() )
+			guiCtrl.CalcSOIC(W, pC, pinIndex, pComp->GetDirection(), solderMask, true, bGap);	// Populate polygonList
+
+			GStream& os = m_gWriter.GetStream(GFILE::GTS);	// Top solder mask layer
+			for (auto& polygon : solderMask)
 			{
-				GStream& os = m_gWriter.GetStream(GFILE::GTS);	// Top solder mask layer
-				for (auto& polygon : solderMask)
+				const bool bTrk	= polygon.m_eTrkPen != GPEN::NONE;		assert(!bTrk);
+				const bool bPad	= polygon.m_ePadPen != GPEN::NONE;		assert(!bPad);
+				if ( !bTrk && !bPad && !polygon.m_bClosed ) continue;	assert(!polygon.m_bClosed);
+
+				const GPEN& ePen = bTrk ? polygon.m_eTrkPen : polygon.m_ePadPen;
+				if ( polygon.m_bClosed )
 				{
-					const bool bOK = (polygon.m_eTrkPen == GPEN::NONE) && (polygon.m_ePadPen == GPEN::NONE) && polygon.m_bClosed;	assert(bOK);
-					if ( bOK )
+					if ( bPad || bTrk )
+						os.AddLoop(polygon, ePen);	// Closed polygon outline
+					else
 						os.AddRegion(polygon);	// Top solder mask layer
 				}
+				else
+					os.AddTrack(polygon, ePen);
 			}
 		}
 		for (int k = 0; k < m_board.GetLyrs(); k++)
 		{
 			GStream& os = m_gWriter.GetStream(k == 0 ? GFILE::GBL : GFILE::GTL);	// Bottom/Top copper layer
-
 			for (auto& polygon : polygonList)
 			{
 				const bool bTrk	= polygon.m_eTrkPen != GPEN::NONE;

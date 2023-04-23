@@ -46,6 +46,7 @@ enum class GPEN
 	TRK_IC_GAP	= BIT_TRK_IC | BIT_GAP, // Used for gap around a curved track to SOIC pad
 	PAD_MSK		= BIT_PAD | BIT_MSK,	// Used for solder mask at a pad
 	VIA_MSK		= BIT_VIA | BIT_MSK,	// Used for solder mask at a via
+	PAD_IC_MSK	= BIT_PAD_IC | BIT_MSK,	// Used for solder mask at a SOIC pad
 	PAD_HLE		= BIT_PAD | BIT_HLE,	// Used for drill hole at a pad
 	VIA_HLE		= BIT_VIA | BIT_HLE		// Used for drill hole at a via
 };
