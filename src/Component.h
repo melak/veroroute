@@ -723,6 +723,10 @@ public:
 		}
 		if ( inStream.GetVersion() < VRT_VERSION_31 )
 			HandleLegacyLabelOffsets();
+
+		if ( inStream.GetVersion() < VRT_VERSION_55 )
+			SetupOccupanciesTH();
+
 		// Try to fix any missing definitions
 		SetDefaultPinFlags();
 		SetDefaultStrings(false);	// false ==> only set empty (m_prefixStr, m_guiStr, m_importStr)

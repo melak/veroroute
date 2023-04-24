@@ -180,6 +180,8 @@ void MainWindow::PaintSOIC(const GuiControl& guiCtrl, QPainter& painter, const Q
 			GStream& os = m_gWriter.GetStream(GFILE::GTS);	// Top solder mask layer
 			for (auto& polygon : solderMask)
 			{
+				if ( polygon.empty() ) continue;
+
 				const bool bTrk	= polygon.m_eTrkPen != GPEN::NONE;		assert(!bTrk);
 				const bool bPad	= polygon.m_ePadPen != GPEN::NONE;		assert(!bPad);
 				if ( !bTrk && !bPad && !polygon.m_bClosed ) continue;	assert(!polygon.m_bClosed);
@@ -201,6 +203,8 @@ void MainWindow::PaintSOIC(const GuiControl& guiCtrl, QPainter& painter, const Q
 			GStream& os = m_gWriter.GetStream(k == 0 ? GFILE::GBL : GFILE::GTL);	// Bottom/Top copper layer
 			for (auto& polygon : polygonList)
 			{
+				if ( polygon.empty() ) continue;
+
 				const bool bTrk	= polygon.m_eTrkPen != GPEN::NONE;
 				const bool bPad	= polygon.m_ePadPen != GPEN::NONE;
 				if ( !bTrk && !bPad && !polygon.m_bClosed ) continue;
@@ -232,6 +236,8 @@ void MainWindow::PaintSOIC(const GuiControl& guiCtrl, QPainter& painter, const Q
 
 		for (auto& polygon : polygonList)
 		{
+			if ( polygon.empty() ) continue;
+
 			const bool bTrk	= polygon.m_eTrkPen != GPEN::NONE;
 			const bool bPad	= polygon.m_ePadPen != GPEN::NONE;
 			if ( !bTrk && !bPad && !polygon.m_bClosed ) continue;
@@ -323,6 +329,8 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 
 			for (auto& polygon : polygonList)
 			{
+				if ( polygon.empty() ) continue;
+
 				const bool bPad	= polygon.m_ePadPen != GPEN::NONE;
 				const bool bTrk	= polygon.m_eTrkPen != GPEN::NONE;
 				if ( !bTrk && !bPad && !polygon.m_bClosed ) continue;
@@ -357,6 +365,8 @@ void MainWindow::PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const Q
 
 		for (auto& polygon : polygonList)
 		{
+			if ( polygon.empty() ) continue;
+
 			const bool bTrk	= polygon.m_eTrkPen != GPEN::NONE;
 			const bool bPad	= polygon.m_ePadPen != GPEN::NONE;
 			if ( !bTrk && !bPad && !polygon.m_bClosed ) continue;

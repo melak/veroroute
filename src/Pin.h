@@ -76,12 +76,14 @@ Q_DECL_CONSTEXPR static const uchar  HOLE_FULL			= 2;
 Q_DECL_CONSTEXPR static const uchar  SOIC_FREE			= 0;	// Free space
 Q_DECL_CONSTEXPR static const uchar  SOIC_TRACKS_TOP	= 1;	// Pattern of SOIC tracks on top layer
 Q_DECL_CONSTEXPR static const uchar  SOIC_TRACKS_BOT	= 2;	// Pattern of SOIC tracks on top layer
-Q_DECL_CONSTEXPR static const uchar  SOIC_THL_1			= 4;	// One through-hole component or wire
-Q_DECL_CONSTEXPR static const uchar  SOIC_THL_2			= 8;	// Two through-hole components (i.e. two wires)
-Q_DECL_CONSTEXPR static const uchar  SOIC_THL			= SOIC_THL_1 | SOIC_THL_2;
-Q_DECL_CONSTEXPR static const uchar  SOIC_PAD			= 16;	// An SOIC pad
+Q_DECL_CONSTEXPR static const uchar  SOIC_THL_COMP		= 4;	// A through-hole component pin (not a wire)
+Q_DECL_CONSTEXPR static const uchar  SOIC_THL_WIRE		= 8;	// A wire end
+Q_DECL_CONSTEXPR static const uchar  SOIC_THL_WIRES		= 16;	// 2 wire-ends sharing a hole
+Q_DECL_CONSTEXPR static const uchar  SOIC_THL			= SOIC_THL_COMP | SOIC_THL_WIRE | SOIC_THL_WIRES;
+Q_DECL_CONSTEXPR static const uchar  SOIC_PAD			= 32;	// An SOIC pad
 Q_DECL_CONSTEXPR static const uchar  SOIC_FULL			= SOIC_PAD;	// In short term, don't allow SOICs pads to share with through-holes
-//Q_DECL_CONSTEXPR static const uchar  SOIC_FULL			= 20;	// Hence can handle at most (1xSOIC_THL + 1xSOIC_PAD) not (2xSOIC_PADs). (2xSOIC_THL is blocked by the SURFACE and HOLE info).
+//Q_DECL_CONSTEXPR static const uchar  SOIC_FULL			= 36;	// Hence can handle at most (1xSOIC_THL_COMP + 1xSOIC_PAD) not (2xSOIC_PADs). (2xSOIC_THL_COMP is blocked by the SURFACE and HOLE info).
+
 
 // We can extend the SOIC bit concept in future to handle multiple SOIC components.
 // The existing coding can be interpreted as follows info for a grid point ...
@@ -163,12 +165,13 @@ public:
 		{
 			SetSurface( GetIsPin() ? SURFACE_WIRE_END	: SURFACE_WIRE );	// Set surface occupancy for pins/non-pins
 			SetHoleUse( GetIsPin() ? HOLE_WIRE			: HOLE_FREE );		// Set hole occupancy for pins/non-pins
+			SetSoicChar( GetIsPin() ? SOIC_THL_WIRE		: SOIC_FREE );		// Set SOIC code for pins/non-pins
 		}
 		else
 		{
 			SetHoleUse( GetIsPin() ? HOLE_FULL			: HOLE_FREE );		// Set hole occupancy for pins/non-pins
+			SetSoicChar( GetIsPin() ? SOIC_THL_COMP		: SOIC_FREE );		// Set SOIC code for pins/non-pins
 		}
-		SetSoicChar( GetIsPin() ? SOIC_THL_1 : SOIC_FREE );
 	}
 	void SetOccupancySOIC()	// Helper for SOIC components.
 	{
@@ -229,7 +232,7 @@ public:
 			inStream.Load(m_holeUse);	// Added in VRT_VERSION_26
 		if ( inStream.GetVersion() <= VRT_VERSION_39 )
 			if ( GetIsPin() && m_holeUse == HOLE_FREE ) m_holeUse = HOLE_FULL;	// Bug-fix non-wire hole-use
-		m_soicChar = SOIC_FREE;	// Can't set a default for all legacy cases here.  Need to handle things in CompElement::Load() and Board::Load()
+		m_soicChar = SOIC_FREE;	// Can't set a default for all legacy cases here.  Need to handle things in Component::Load() and Board::Load()
 		if ( inStream.GetVersion() >= VRT_VERSION_55 )
 			inStream.Load(m_soicChar);	// Added in VRT_VERSION_55
 	}

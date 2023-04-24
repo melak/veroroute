@@ -887,7 +887,9 @@ private:
 		for (int iCol = 0, iCols = GetCols(); iCol < iCols; iCol++)
 		{
 			Element* p = Get(0, iRow, iCol);	// Only need to check base layer
-			p->SetSoicChar( ( p->GetNumWires() == 2 ) ? SOIC_THL_2 : ( p->GetHasPinLegacy() ) ? SOIC_THL_1 : SOIC_FREE );
+			p->SetSoicChar( ( p->GetNumWires() == 2 ) ? SOIC_THL_WIRES :
+							( p->GetNumWires() == 1 ) ? SOIC_THL_WIRE :
+							( p->GetHasPinLegacy() )  ? SOIC_THL_COMP : SOIC_FREE );
 		}
 	}
 	void SetHavePlacedWires() { m_bHavePlacedWires = GetCompMgr().GetHavePlacedWires(); }
