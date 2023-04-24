@@ -1215,19 +1215,19 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			const bool		 bMark			= compType == COMP::MARK;
 			const bool		 bWire			= compType == COMP::WIRE;
 			const bool		 bVeroLabel		= compType == COMP::VERO_NUMBER || compType == COMP::VERO_LETTER;
+			const bool		 bSOIC			= comp.GetIsSOIC();
 			const bool		 bPlaced		= comp.GetIsPlaced();
 			if ( bPCB && (bMark || bVeroLabel) )	continue;	// Don't show markers and vero-lables in PCB mode
 			if ( m_bWriteGerber && !bPlaced ) continue;	// Don't write floating components to Gerber
 			if ( bWiresAsTracks && bWire && compMgr.GetWireCanBeTrack(&comp) ) continue;
 			const bool		 bFound			= compMgr.GetFound( comp.GetId() );
-			const bool		 bPinLabels		= !bMonoPCB && (comp.GetPinFlags() & PIN_LABELS) > 0 && board.GetShowPinLabels();
+			const bool		 bPinLabels		= !bMonoPCB && (comp.GetPinFlags() & PIN_LABELS) > 0 && board.GetShowPinLabels() && (!bSOIC || bTopLyr);	// Only show SOIC pin labels on top layer
 			const bool		 bRectPins		= !bMonoPCB && (comp.GetPinFlags() & PIN_RECT) > 0;
 			const bool		 bHighlightComp	= board.GetGroupMgr().GetIsUserComp( comp.GetId() );
 			const bool		 bCustomSize	= comp.GetCustomPads();
 			const int		 iPadWidthMIL	= bCustomSize ? comp.GetPadWidth()  : board.GetPAD_MIL();
 			const int		 iHoleWidthMIL	= bCustomSize ? comp.GetHoleWidth() : board.GetHOLE_MIL();
 			const bool		 blankWire		= bWire && comp.GetNodeId(0) == BAD_NODEID;
-			const bool		 bSOIC			= comp.GetIsSOIC();
 
 			// Begin draw component pins ---------------------------------------------------------
 			if ( !m_bWriteGerber && !blankWire && ( compMode != COMPSMODE::OFF || ( bMonoPCB && bPlaced && !bSOIC ) ) ) 	// Skip blank wires and SOIC parts
