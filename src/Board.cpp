@@ -389,14 +389,11 @@ bool Board::SetNodeIdByUser(int lyr, int row, int col, int nodeId, bool bPaintPi
 	Element*	p		= Get(lyr, row, col);
 	if ( p->GetIsHole() || ( p->GetSoicProtected() && nodeId != BAD_NODEID ) ) return false;	// No change
 
-	const bool	bWire		= p->GetHasWire();
-	const bool	bPinTH		= p->GetHasPinTH();
-	const bool	bPinSOIC	= p->GetHasPinSOIC();
-	const bool	bPin		= bPinTH || ( bPinSOIC && p->GetIsTopLyr() );
-
-	assert( !bPin || p->GetHasComp() );	// Sanity check
-	assert( !bWire || bPinTH );			// Wires must have TH pins
-	assert( !bWire || !bPinSOIC );		// Wires can't share with SOICs
+	const bool	bWire	= p->GetHasWire();
+	const bool	bPin	= p->GetLyrHasPin();
+	assert( !bPin || p->GetHasComp() );			// Sanity check
+	assert( !bWire || p->GetHasPinTH() );		// Wires must have TH pins
+	assert( !bWire || !p->GetHasPinSOIC() );	// Wires can't share with SOICs
 	
 	WIRELIST wireList;	// Helper for chains of wires
 
