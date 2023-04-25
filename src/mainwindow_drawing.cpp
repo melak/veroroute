@@ -1288,7 +1288,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 							m_varBrush.setColor(color);
 							painter.setBrush( bMonoPCB ? Qt::NoBrush : m_varBrush);	// No pin color fill in Mono/PCB mode
 
-							if ( bSOIC )	//	Draw tracks of floating IC
+							if ( bSOIC && bTopLyr )	//	Draw tracks of floating IC
 							{
 								int X, Y;
 								GetXY(board, j, i, X, Y);
@@ -1356,7 +1356,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 								GetLRTB(board, 100, j, i, L, R, T, B);	// 100% size square
 								painter.drawPoint(padOffsetX + (L+R)/2, padOffsetY + (T+B)/2);
 							}
-							else if ( !bSOIC || bColor )	// OK to highlight pin location for SOICs in color mode
+							else if ( !bSOIC || ( bColor && bPlaced && bTopLyr ) )	// OK to highlight pin location for placed SOICs in color mode
 								painter.drawEllipse(L, T, R-L, B-T);	
 						}
 					}
