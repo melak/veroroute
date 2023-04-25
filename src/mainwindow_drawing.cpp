@@ -162,20 +162,20 @@ void MainWindow::PaintPadGrey(const GuiControl& guiCtrl, QPainter& painter, QPen
 }
 
 #ifdef _TEST_SOIC
-void MainWindow::PaintSOIC(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, size_t pinIndex, const Component* pComp, bool bGap)
+void MainWindow::PaintSOIC(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, size_t pinIndex, const Component* pComp, bool bIsGnd, bool bGap)
 {
 	if ( pComp == nullptr ) return;
 	const int W = guiCtrl.GetGRIDPIXELS();
 
 	std::list<MyPolygonF> polygonList;
-	guiCtrl.CalcSOIC(W, pC, pinIndex, pComp->GetDirection(), polygonList, false, bGap);	// Populate polygonList
+	guiCtrl.CalcSOIC(W, pC, pinIndex, pComp->GetDirection(), polygonList, false, bIsGnd, bGap);	// Populate polygonList
 
 	if ( m_bWriteGerber )	// Write to Gerber
 	{
 		if ( !bGap )	// Use this as an opportunity to get the solder mask info
 		{
 			std::list<MyPolygonF> solderMask;
-			guiCtrl.CalcSOIC(W, pC, pinIndex, pComp->GetDirection(), solderMask, true, bGap);	// Populate polygonList
+			guiCtrl.CalcSOIC(W, pC, pinIndex, pComp->GetDirection(), solderMask, true, bIsGnd, bGap);	// Populate polygonList
 
 			GStream& os = m_gWriter.GetStream(GFILE::GTS);	// Top solder mask layer
 			for (auto& polygon : solderMask)
@@ -997,7 +997,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						if ( bDrawPad )  PaintPad(board, painter, color, pCentreOff, iPadWidthMIL, iHoleWidthMIL);
 					}
 	#ifdef _TEST_SOIC
-					if ( bSoicPad ) PaintSOIC(board, painter, color, pCentre, pC->GetPinIndex(), pCompSOIC);
+					if ( bSoicPad ) PaintSOIC(board, painter, color, pCentre, pC->GetPinIndex(), pCompSOIC, bIsGnd);
 	#endif
 #endif	// USE_PIXMAP_CACHE
 				}
@@ -1010,7 +1010,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						if ( bDrawVia ) PaintVia(board, painter, backgroundColor, pCentre, true);										// Draw fat "white" via
 						if ( bDrawPad ) PaintPad(board, painter, backgroundColor, pCentreOff, iPadWidthMIL, iHoleWidthMIL, true);		// Draw fat "white" pad
 #ifdef _TEST_SOIC
-						if ( bSoicPad ) PaintSOIC(board, painter, backgroundColor, pCentre, pC->GetPinIndex(), pCompSOIC, true);
+						if ( bSoicPad ) PaintSOIC(board, painter, backgroundColor, pCentre, pC->GetPinIndex(), pCompSOIC, bIsGnd, true);
 #endif
 					}
 					else if ( iLoop == 1 )	// Draw track "blobs" and pads directly
@@ -1019,7 +1019,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						if ( bDrawVia )  PaintVia(board, painter, color, pCentre);									// Draw via same color as track
 						if ( bDrawPad )  PaintPad(board, painter, color, pCentreOff, iPadWidthMIL, iHoleWidthMIL);	// Draw pad same color as track
 #ifdef _TEST_SOIC
-						if ( bSoicPad ) PaintSOIC(board, painter, color, pCentre, pC->GetPinIndex(), pCompSOIC);
+						if ( bSoicPad ) PaintSOIC(board, painter, color, pCentre, pC->GetPinIndex(), pCompSOIC, bIsGnd);
 #endif
 					}
 					else if ( bDrawGrey )
@@ -1036,7 +1036,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						if ( bDrawVia )  PaintVia(board, painter, color, pCentre);									// Draw via same color as track
 						if ( bDrawPad )  PaintPad(board, painter, color, pCentreOff, iPadWidthMIL, iHoleWidthMIL);	// Draw pad same color as track
 #ifdef _TEST_SOIC
-						if ( bSoicPad ) PaintSOIC(board, painter, color, pCentre, pC->GetPinIndex(), pCompSOIC);
+						if ( bSoicPad ) PaintSOIC(board, painter, color, pCentre, pC->GetPinIndex(), pCompSOIC, bIsGnd);
 #endif
 					}
 					else if ( bDrawGrey )
@@ -1292,7 +1292,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 							{
 								int X, Y;
 								GetXY(board, j, i, X, Y);
-								PaintSOIC(board, painter, Qt::red, QPointF(X,Y), iPinIndex, &comp, false);
+								PaintSOIC(board, painter, Qt::red, QPointF(X,Y), iPinIndex, &comp, false, false);
 							}
 						}
 

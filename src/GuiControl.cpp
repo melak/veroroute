@@ -244,7 +244,7 @@ void Bezier(MyPolygonF& polygon, const QPointF& pL, const QPointF& pC, const QPo
 	}
 }
 
-void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, char direction, std::list<MyPolygonF>& out, bool bSolderMask, bool bGap) const
+void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, char direction, std::list<MyPolygonF>& out, bool bSolderMask, bool bIsGnd, bool bGap) const
 {
 	out.clear();
 
@@ -279,11 +279,13 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, char dire
 		polygonB << pC << pC+QPointF(W,0) << pC+QPointF(W,8*W) << pC+QPointF(0,8*W) << pC;
 	}
 
+	const bool bNoTrackGap = bIsGnd && bGap;	// For tracks in the ground fill, don't draw a gap around them.	//TODO This really only applies to places with no TH pin
+	
 	// 7 basic curves.  Start by repeating the curves for pins 21-27
 	switch(pinIndex)
 	{
 		case 27:	case  0:	case 13:	case 14:
-			if ( !bSolderMask )
+			if ( !bSolderMask && !bNoTrackGap )
 				polygonA << pC << pC+QPointF(5*Q,0);
 			if ( !bGap )
 				polygonB << pC+QPointF(5*Q,-Q) << pC+QPointF(5*Q,1.8*Q);
@@ -291,7 +293,7 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, char dire
 				polygonB.clear();
 			break;
 		case 26:	case  1:	case 12:	case 15:
-			if ( !bSolderMask )
+			if ( !bSolderMask && !bNoTrackGap )
 				Bezier(polygonA, pC, pC+QPointF(6*Q,0.5*Q), pC+QPointF(7*Q,3*Q));
 			if ( !bGap )
 				polygonB << pC+QPointF(7*Q,3*Q) << pC+QPointF(7*Q,5.8*Q);
@@ -299,7 +301,7 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, char dire
 				polygonB.clear();
 			break;
 		case 25:	case  2:	case 11:	case 16:
-			if ( !bSolderMask )
+			if ( !bSolderMask && !bNoTrackGap )
 			{
 				polygonA << pC << pC+QPointF(2.5*Q,2.5*Q);
 				Bezier(polygonA, pC+QPointF(2.5*Q,2.5*Q), pC+QPointF(8.1*Q,3.8*Q), pC+QPointF(9*Q,7*Q) );
@@ -308,25 +310,25 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, char dire
 				polygonB << pC+QPointF(9*Q,7*Q) << pC+QPointF(9*Q,9.8*Q);
 			break;
 		case 24:	case  3:	case 10:	case 17:
-			if ( !bSolderMask )
+			if ( !bSolderMask && !bNoTrackGap )
 				Bezier(polygonA, pC, pC+QPointF(7*Q,4.5*Q), pC+QPointF(7*Q,7*Q));
 			if ( !bGap )
 				polygonB << pC+QPointF(7*Q,7*Q) << pC+QPointF(7*Q,9.8*Q);
 			break;
 		case 23:	case  4:	case  9:	case 18:
-			if ( !bSolderMask )
+			if ( !bSolderMask && !bNoTrackGap )
 				Bezier(polygonA, pC, pC+QPointF(5*Q,3.5*Q), pC+QPointF(5*Q,7*Q));
 			if ( !bGap )
 				polygonB << pC+QPointF(5*Q,7*Q) << pC+QPointF(5*Q,9.8*Q);
 			break;
 		case 22:	case  5:	case  8:	case 19:
-			if ( !bSolderMask )
+			if ( !bSolderMask && !bNoTrackGap )
 				Bezier(polygonA, pC, pC+QPointF(3*Q,2.5*Q), pC+QPointF(3*Q,7*Q));
 			if ( !bGap )
 				polygonB << pC+QPointF(3*Q,7*Q) << pC+QPointF(3*Q,9.8*Q);
 			break;
 		case 21:	case  6:	case  7:	case 20:
-			if ( !bSolderMask )
+			if ( !bSolderMask && !bNoTrackGap )
 				Bezier(polygonA, pC, pC+QPointF(Q,2*Q), pC+QPointF(Q,7*Q) );
 			if ( !bGap )
 				polygonB << pC+QPointF(Q,7*Q) << pC+QPointF(Q,9.8*Q);

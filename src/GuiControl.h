@@ -511,7 +511,7 @@ public:
 					 std::list<MyPolygonF>& out,
 					 bool bHavePad, bool bHaveSoic, bool bIsGnd, bool bGap = false) const;
 #ifdef _TEST_SOIC
-	void	CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, char direction, std::list<MyPolygonF>& out, bool bSolderMask, bool bGap = false) const;
+	void	CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, char direction, std::list<MyPolygonF>& out, bool bSolderMask, bool bIsGnd, bool bGap = false) const;
 #endif
 
 	void Reset()	// For use with File->New()

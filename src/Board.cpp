@@ -139,6 +139,7 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 	const bool&	bVero			= GetVeroTracks();
 	const bool	bMonoPCB		= GetTrackMode() == TRACKMODE::MONO || GetTrackMode() == TRACKMODE::PCB;
 	const bool	bGroundFill		= !bVero && bMonoPCB && GetGroundFill();
+	const bool	bSolderMask		= false;
 	const bool	bForceXthermals	= GetXthermals();
 
 	for (int k = 0, kMax = GetLyrs(); k < kMax; k++)	// Check all layers
@@ -186,7 +187,7 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 			if ( bBlobA )
 				CalcBlob(1, pointA, padA, iPadWidthMIL_A, iPerimeterCodeA, iTagCodeA, blobA, bHasPinA, bSoicA, bIsGndA);	// 1 ==> scale of 1 grid square
 			if ( bSoicA )
-				CalcSOIC(1, pointA, pA->GetPinIndex(), GetCompMgr().GetComponentById(pA->GetCompId()).GetDirection(), soicA, false);
+				CalcSOIC(1, pointA, pA->GetPinIndex(), GetCompMgr().GetComponentById(pA->GetCompId()).GetDirection(), soicA, bSolderMask, bIsGndA);
 
 			// Only need to loop half the directions in the following loop (the i,j scan takes care of the other half)
 			for (int jj = std::max(minRow,j-nRings); jj <= j; jj++)
@@ -232,7 +233,7 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 				if ( bBlobB )
 					CalcBlob(1, pointB, padB, iPadWidthMIL_B, iPerimeterCodeB, iTagCodeB, blobB, bHasPinB, bSoicB, bIsGndB);	// 1 ==> scale of 1 grid square
 				if ( bSoicB )
-					CalcSOIC(1, pointB, pB->GetPinIndex(), GetCompMgr().GetComponentById(pB->GetCompId()).GetDirection(), soicB, false);
+					CalcSOIC(1, pointB, pB->GetPinIndex(), GetCompMgr().GetComponentById(pB->GetCompId()).GetDirection(), soicB, bSolderMask, bIsGndB);
 				
 				const bool bCompareBlobs = !bStandardBlobs || ( abs(jj - j) < 2 && abs(ii - i) < 2 );	// Standard blobs ==> just consider neighbouring grid points
 
