@@ -812,9 +812,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				const int		iPerimeterCode	= board.GetPerimeterCode(pC);	// 0 to 255
 				const bool		bVia			= pC->GetIsVia()  ||  bWireAsVia;
 				const bool		bPad			= !bWireAsVia && pC->GetHasPinTH();	// Only want through-hole pads
-				const bool		bSoicAny		= pC->GetHasPinSOIC();	// true ==> have an SOIC pad on either this layer or the other
-				const bool		bSoicPad		= bTopLyr && bSoicAny;
-				assert( !(bVia && (bPad || bSoicAny)) );	// Can't be both a via and a pad
+				const bool		bSoicPad		= bTopLyr && pC->GetHasPinSOIC();
+				assert( !(bVia && bPad) );	// Can't be both a via and a pad
 				const bool		bIsGnd			= bGroundFill && nodeId == groundNodeId;
 				const int		iTagCode		= ( bPad && !bSoicPad && bIsGnd && nodeId != BAD_NODEID ) ? board.GetTagCode(pC, iPerimeterCode) : 0;
 	#ifdef _TEST_SOIC

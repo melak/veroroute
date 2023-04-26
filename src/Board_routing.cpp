@@ -230,7 +230,7 @@ void Board::UpdateVias()	// Sets the via flag to true on all candidate vias
 			Element* const p = GetAt(i);
 			Element* const q = p->GetNbr(NBR_X);
 			bool bIsVia(false);
-			if ( q && !p->GetHasPin() && p->GetNodeId() == q->GetNodeId() && p->GetNodeId() != BAD_NODEID )	// If candidate via ...
+			if ( q && !p->GetHasPinTH() && p->GetNodeId() == q->GetNodeId() && p->GetNodeId() != BAD_NODEID )	// If candidate via ...
 			{
 				m_targetPins.clear();
 				m_targetPins.push_back(p);
@@ -400,7 +400,7 @@ void Board::Flood_Helper(const bool bBuildTracks)
 						}
 						break;
 					case 2:	// Type 2 ==> Change layer at a via
-						if ( pJ->GetMH() + MH_LVIA == iMH && !pJ->GetHasPin() )
+						if ( pJ->GetMH() + MH_LVIA == iMH && !pJ->GetHasPinTH() )
 							Flood_Grow(iFloodNodeId, pJ, NBR_X, bBuildTracks, iMH, iMaxMH, bDone);
 						break;
 				}

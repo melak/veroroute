@@ -259,8 +259,7 @@ public:
 			}
 		}
 
-		//TODO Check if we should use GetHasPinTH() instead of GetHasPin() on next line
-		const bool bForceXthermals = GetXthermals() && p->GetHasPinTH() && !p->GetHasPinSOIC();
+		const bool bForceXthermals = GetXthermals() && p->GetHasPinTH() && !(p->GetHasPinSOIC() && p->GetIsTopLyr());
 
 		if ( bForceXthermals && (GetTrackMode() == TRACKMODE::PCB || GetTrackMode() == TRACKMODE::MONO ) && GetGroundFill() && GetGroundNodeId(bBottomLayer ? 0 : 1) == p->GetNodeId() )
 			return 0;
@@ -304,8 +303,7 @@ public:
 			if ( bOK ) SetCodeBit(iNbr, iCandidateTagBits);	// Update iCandidateTagBits
 		}
 
-		//TODO Check if we should use GetHasPinTH() instead of GetHasPin() on next line
-		const bool bForceXthermals = GetXthermals() && p->GetHasPinTH() && !p->GetHasPinSOIC();
+		const bool bForceXthermals = GetXthermals() && p->GetHasPinTH() && !(p->GetHasPinSOIC() && p->GetIsTopLyr());
 
 		if ( iCandidateTagBits == 0 )
 		{
