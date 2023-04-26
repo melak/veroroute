@@ -824,7 +824,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				const bool bPointOK = ( nodeId != BAD_NODEID || bWire || bSoicPad || (bMonoPCB && bPad) );	// Point OK ==> We have some track/pad to draw
 				if ( !bPointOK ) continue;
 
-				if ( bForceXthermal && !bPad && !bSoicPad && bIsGnd ) continue;	// Don't render ground tracks if forcing X shaped thermal reliefs
+				if ( bForceXthermal && !bPad && !bVia && !bSoicPad && bIsGnd ) continue;	// Don't render ground tracks if forcing X shaped thermal reliefs
 
 				bool	bCustomSize(false);
 				int		iPadWidthMIL(0), iHoleWidthMIL(0);	// 0 ==> Not a custom size value
@@ -1007,8 +1007,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					{
 						if ( !bIsGnd && bDrawBlob )	// Only the non-ground tracks have a "white" surround
 							PaintBlob(board, painter, backgroundColor, pCentre, pCentreOff, iPadWidthMIL, iPerimeterCode, iTagCode, bPad, bSoicPad, bIsGnd, true);	// Draw fat "white" track blob
-						if ( bDrawVia ) PaintVia(board, painter, backgroundColor, pCentre, true);										// Draw fat "white" via
-						if ( bDrawPad ) PaintPad(board, painter, backgroundColor, pCentreOff, iPadWidthMIL, iHoleWidthMIL, true);		// Draw fat "white" pad
+						if ( !bIsGnd && bDrawVia )	// Only the non-ground vias have a "white" surround
+							PaintVia(board, painter, backgroundColor, pCentre, true);	// Draw fat "white" via
+						if ( bDrawPad ) PaintPad(board, painter, backgroundColor, pCentreOff, iPadWidthMIL, iHoleWidthMIL, true);	// Draw fat "white" pad
 #ifdef _TEST_SOIC
 						if ( bSoicPad ) PaintSOIC(board, painter, backgroundColor, pCentre, pC->GetPinIndex(), pCompSOIC, bIsGnd, true);
 #endif
