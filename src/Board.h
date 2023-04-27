@@ -267,7 +267,7 @@ public:
 	{
 		const bool bDiagsOK		= GetDiagsMode() != DIAGSMODE::OFF;
 		const bool bMinDiags	= GetDiagsMode() == DIAGSMODE::MIN;
-		const bool bBottomLayer	= p->IsLayer0();	// true ==> p is on bottom layer
+		const bool bBottomLayer	= p->GetIsBotLyr();
 
 		// Get track perimeter code on this layer (without any layer preferences)
 		int iCode = p->GetPerimeterCode(bDiagsOK, bMinDiags);	// 0 to 255
@@ -310,8 +310,9 @@ public:
 	int GetTagCode(const Element* p, int iPerimeterCode) const	// Helper for the GUI "blobs"
 	{
 		const int&	iNodeId			= p->GetNodeId();
-		const bool	bBottomLayer	= p->IsLayer0();	// true ==> p is on bottom layer
+		const bool	bBottomLayer	= p->GetIsBotLyr();
 		const int	iLayerPrefP		= ( GetLyrs() == 1 || !p->GetPinSupportsLayerPref() ) ? LAYER_X : GetLayerPref(p);
+		const bool	bSOIC			= p->GetHasPinSOIC() && !bBottomLayer;
 
 #ifdef _DEBUG
 		const bool&	bVero			= GetVeroTracks();
@@ -321,7 +322,7 @@ public:
 		assert(bGroundFill && p->GetHasPinTH() && iNodeId == iGndNodeId && iNodeId != BAD_NODEID);
 #endif
 
-		if ( GetXthermals() && GetLyrs() == 1 ) return CODEBITS_DIAGS;
+		if ( GetXthermals() && GetLyrs() == 1 && !bSOIC ) return CODEBITS_DIAGS;
 
 		int iCandidateTagBits(0);
 		for (int iNbr = 0; iNbr < 8; iNbr ++)	// Loop nbrs in layer
@@ -333,7 +334,7 @@ public:
 			if ( ReadCodeBit((iNbr+1)%8 , iPerimeterCode) ) continue;	// Skip if adjacent CW  direction already has connection
 			if ( ReadCodeBit((iNbr+7)%8, iPerimeterCode) ) continue;	// Skip if adjacent CCW direction already has connection
 			if ( ( q->GetHasPinTH() || iNbrNodeId != BAD_NODEID ) && iNbrNodeId != iNodeId ) continue;	// Skip if direction is not empty, or has wrong NodeID
-			if ( p->IsBlocked(iNbr, iNodeId) ) continue;				// Skip is direction is blocked
+			if ( p->IsBlocked(iNbr, iNodeId) ) continue;				// Skip if direction is blocked
 
 			const int	iLayerPrefQ	= ( GetLyrs() == 1 || !q->GetPinSupportsLayerPref() ) ? LAYER_X : GetLayerPref(q);
 
@@ -343,19 +344,45 @@ public:
 			if ( bOK ) SetCodeBit(iNbr, iCandidateTagBits);	// Update iCandidateTagBits
 		}
 
-		const bool bForceXthermals = GetXthermals() && p->GetHasPinTH() && !(p->GetHasPinSOIC() && p->GetIsTopLyr());
+		const bool bForceXthermals = GetXthermals() && p->GetHasPinTH() && !bSOIC;
 
 		if ( iCandidateTagBits == 0 )
 		{
 			if ( bForceXthermals && ( ( iLayerPrefP == LAYER_X ) || ( iLayerPrefP == ( bBottomLayer ? LAYER_B : LAYER_T ) ) ) )
 				return CODEBITS_DIAGS;	// If forcing X-thermals and we have no connections in the layer, rely on layer preference alone
+			else if ( GetXthermals() && p->GetHasPinTH() && bSOIC && ( iLayerPrefP == LAYER_X || iLayerPrefP == LAYER_T ) )
+			{
+				//TODO Sort out the logic in this block
+				int iCandidateTagBits(0);
+				for (int iNbr = 1; iNbr < 8; iNbr+=2)	// Loop diagonal nbrs
+				{
+					const Element*	q		= p->GetNbr(iNbr);
+			//		const int	iNbrNodeId	= q->GetNodeId();
+
+					if ( ReadCodeBit(iNbr , iPerimeterCode) ) continue;			// Skip if direction already has connection
+					if ( ReadCodeBit((iNbr+1)%8 , iPerimeterCode) ) continue;	// Skip if adjacent CW  direction already has connection
+					if ( ReadCodeBit((iNbr+7)%8, iPerimeterCode) ) continue;	// Skip if adjacent CCW direction already has connection
+			//		if ( ( q->GetHasPinTH() || iNbrNodeId != BAD_NODEID ) && iNbrNodeId != iNodeId ) continue;	// Skip if direction is not empty, or has wrong NodeID
+			//		if ( p->IsBlocked(iNbr, iNodeId) ) continue;				// Skip if direction is blocked
+					if ( q->GetSoicProtected() ) continue;	// Block connections to SOIC area
+
+					//const int	iLayerPrefQ	= ( GetLyrs() == 1 || !q->GetPinSupportsLayerPref() ) ? LAYER_X : GetLayerPref(q); 
+
+					//const bool bOK = ( iLayerPrefP == LAYER_X && iLayerPrefQ == LAYER_X ) ||                                   
+					//				( bBottomLayer ? ( iLayerPrefP == LAYER_B || iLayerPrefQ == LAYER_B )                     
+					//								: ( iLayerPrefP == LAYER_T || iLayerPrefQ == LAYER_T ) );                  
+					//if ( bOK ) SetCodeBit(iNbr, iCandidateTagBits);	// Update iCandidateTagBits
+					SetCodeBit(iNbr, iCandidateTagBits);	// Update iCandidateTagBits
+				}
+				return iCandidateTagBits;
+			}
 			else
 				return 0;	// No candidate tags, so we're done
 		}
 
 		if ( bForceXthermals ) return CODEBITS_DIAGS;
 
-		if ( iCandidateTagBits == CODEBITS_LYR ) return CODEBITS_DIAGS;	// All tags are allowed, so just use the 4 diagonals
+		if ( iCandidateTagBits == CODEBITS_LYR && !bSOIC ) return CODEBITS_DIAGS;	// All tags are allowed, so just use the 4 diagonals
 
 		// Select a subset of the iCandidateTagBits
 
@@ -735,7 +762,7 @@ public:
 	// Helper for flying wires
 	bool GetAllowFlyWire(Element* p) const
 	{
-		return p->GetNodeId() != BAD_NODEID && p->GetHasPinTH() && !p->GetHasWire() && p->IsLayer0() && m_compMgr.GetAllowFlyWire(p->GetCompId());
+		return p->GetNodeId() != BAD_NODEID && p->GetHasPinTH() && !p->GetHasWire() && p->GetIsBotLyr() && m_compMgr.GetAllowFlyWire(p->GetCompId());
 	}
 
 	// Helpers for locations of close tracks

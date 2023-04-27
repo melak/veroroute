@@ -150,7 +150,9 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 	const bool&	bVero			= GetVeroTracks();
 	const bool	bMonoPCB		= GetTrackMode() == TRACKMODE::MONO || GetTrackMode() == TRACKMODE::PCB;
 	const bool	bGroundFill		= !bVero && bMonoPCB && GetGroundFill();
+#ifdef _TEST_SOIC
 	const bool	bSolderMask		= false;
+#endif
 	const bool	bForceXthermals	= GetXthermals();
 
 	for (int k = 0, kMax = GetLyrs(); k < kMax; k++)	// Check all layers
@@ -197,13 +199,14 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 			std::list<MyPolygonF> soicA;
 
 			const int	iPerimeterCodeA	= GetPerimeterCode(pA);
-			const int	iTagCodeA		= ( bPadA && bIsGndA && !bSoicA ) ? GetTagCode(pA, iPerimeterCodeA) : 0;
+			const int	iTagCodeA		= ( bPadA && bIsGndA ) ? GetTagCode(pA, iPerimeterCodeA) : 0;
 			const bool	bBlobA			= !bPadOffsetA || iPerimeterCodeA != 0 || ( bForceXthermals && bIsGndA );
 			if ( bBlobA )
 				CalcBlob(1, pointA, padA, iPadWidthMIL_A, iPerimeterCodeA, iTagCodeA, blobA, bHasPinA, bSoicA, bIsGndA);	// 1 ==> scale of 1 grid square
+#ifdef _TEST_SOIC
 			if ( bSoicA )
 				CalcSOIC(1, pointA, pA->GetPinIndex(), GetCompMgr().GetComponentById(pA->GetCompId()).GetDirection(), soicA, bSolderMask, bIsGndA);
-
+#endif
 			// Only need to loop half the directions in the following loop (the i,j scan takes care of the other half)
 			for (int jj = std::max(minRow,j-nRings); jj <= j; jj++)
 			for (int ii = std::max(minCol,i-nRings), iiMax = std::min(maxCol,i+nRings); ii <= iiMax; ii++)
@@ -247,13 +250,14 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 				std::list<MyPolygonF> blobB;	// Blob B points (in units of grid squares)
 				std::list<MyPolygonF> soicB;
 				const int	iPerimeterCodeB	= GetPerimeterCode(pB);
-				const int	iTagCodeB		= ( bPadB && bIsGndB && !bSoicB ) ? GetTagCode(pB, iPerimeterCodeB) : 0;
+				const int	iTagCodeB		= ( bPadB && bIsGndB ) ? GetTagCode(pB, iPerimeterCodeB) : 0;
 				const bool	bBlobB			= !bPadOffsetB || iPerimeterCodeB != 0 || ( bForceXthermals && bIsGndB );
 				if ( bBlobB )
 					CalcBlob(1, pointB, padB, iPadWidthMIL_B, iPerimeterCodeB, iTagCodeB, blobB, bHasPinB, bSoicB, bIsGndB);	// 1 ==> scale of 1 grid square
+#ifdef _TEST_SOIC
 				if ( bSoicB )
 					CalcSOIC(1, pointB, pB->GetPinIndex(), GetCompMgr().GetComponentById(pB->GetCompId()).GetDirection(), soicB, bSolderMask, bIsGndB);
-				
+#endif
 				const bool bCompareBlobs = !bStandardBlobs || ( abs(jj - j) < 2 && abs(ii - i) < 2 );	// Standard blobs ==> just consider neighbouring grid points
 
 				// Pad A to Pad B

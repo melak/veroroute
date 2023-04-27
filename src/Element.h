@@ -251,7 +251,6 @@ public:
 	const unsigned int&	GetMaxMH() const		{ return m_maxMH; }
 	Element*			GetNbr(int iNbr) const	{ return m_pNbr[iNbr]; }
 	Element*			GetW(int i) const		{ return GetBaseConst()->m_pW[i]; }
-	bool				IsLayer0() const 		{ return GetBaseConst() == this; }
 	bool				GetPinSupportsOffsetPads() const
 	{
 		return GetHasPinTH() /*&& !GetHasPinSOIC()*/ && !GetHasWire();	//TODO Should not allow at SOICs, and put checks into code for CanPutDown

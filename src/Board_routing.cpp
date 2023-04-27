@@ -93,7 +93,7 @@ void Board::BuildTargetPins(int nodeId)
 		Element* const p = GetAt(i);
 		if ( p->GetHasPin() && p->GetNodeId() == nodeId && !(m_bHavePlacedWires && p->GetHasWire()) )
 		{
-			if ( p->GetHasPinTH() && !p->IsLayer0() ) continue;	// Only put through hole pins on layer-0 or we'll double count them
+			if ( p->GetHasPinTH() && !p->GetIsBotLyr() ) continue;	// Only put TH pins on bottom layer or we'll double count them
 			m_targetPins.push_back(p); 
 		}
 	}
@@ -448,7 +448,7 @@ void Board::Flood_Grow(int iFloodNodeId, Element* const pJ, int iNbr, bool bBuil
 		{
 			UpdateMH(pK, j, iMH, iMaxMH);	// Add pK to set of visited points
 
-			const bool bWire = m_bHavePlacedWires && pK->IsLayer0() && pK->GetHasWire();	// Constrain wire-routing to layer 0
+			const bool bWire = m_bHavePlacedWires && pK->GetIsBotLyr() && pK->GetHasWire();	// Constrain wire-routing to bottom layer
 			if ( bWire )
 			{
 				pK->GetWireList(wireList);	// Get list of pK and its wired points
@@ -507,7 +507,7 @@ Element* Board::Backtrace(Element* const pEnd, int nodeId)
 
 		Element* const pW0 = m_bHavePlacedWires ? p->GetW(0) : nullptr;
 		Element* const pW1 = m_bHavePlacedWires ? p->GetW(1) : nullptr;
-		const bool bWire		= (pW0 || pW1) && p->IsLayer0();	// Constrain wire-routing to layer 0
+		const bool bWire		= (pW0 || pW1) && p->GetIsBotLyr();	// Constrain wire-routing to bottom layer
 		const bool bHasPin		= bWire || p->GetHasPin();		// Checks all layers (so returns true even for bottom layer under an SOIC pin)
 		const bool bHasPinTH	= bWire || p->GetHasPinTH();	// Checks all layers
 		const bool bLyrHasPin	= p->GetLyrHasPin();			// true ==> have a pin on this layer, so returns false for bottom layer under an SOIC pin (with no TH)
@@ -610,7 +610,7 @@ void Board::BacktraceErase(Element* const p)
 
 	Element* const pW0 = m_bHavePlacedWires ? p->GetW(0) : nullptr;
 	Element* const pW1 = m_bHavePlacedWires ? p->GetW(1) : nullptr;
-	const bool bWire		= (pW0 || pW1) && p->IsLayer0();	// Constrain wire-routing to layer 0
+	const bool bWire		= (pW0 || pW1) && p->GetIsBotLyr();	// Constrain wire-routing to bottom layer
 	const bool bAllLyrs		= bWire || p->GetHasPinTH();
 	const bool bWipeNodeId	= !p->ReadFlagBits(USERSET);
 
@@ -643,7 +643,7 @@ bool Board::BacktraceHelper(Element*& p, unsigned int& MH, int nodeId, unsigned 
 {
 	Element* const pNbr = p->GetNbr(iNbr);
 	if ( pNbr->GetRouteId() != p->GetRouteId() ) return false;	// Skip if nbr has wrong routeId
-	const bool bWire = m_bHavePlacedWires && pNbr->IsLayer0() && pNbr->GetHasWire();	// Constrain wire-routing to layer 0
+	const bool bWire = m_bHavePlacedWires && pNbr->GetIsBotLyr() && pNbr->GetHasWire();	// Constrain wire-routing to bottom layer
 	if ( iLoop == 0 &&  bWire ) return false;					// Skip if nbr is a wire
 	if ( iLoop == 1 && !bWire ) return false;					// Skip if nbr is a non-wire
 	if ( p->IsBlocked(iNbr, nodeId) ) return false;				// Skip if blocked
@@ -667,7 +667,7 @@ void Board::Manhatten(Element* p, bool bSingleRoute)
 
 	m_targetPins.clear();
 
-	Element* pFirst = ( p->GetHasPinTH() && !p->IsLayer0() ) ? p->GetNbr(NBR_X) : p;	// Use layer 0 for TH pins
+	Element* pFirst = ( p->GetHasPinTH() && !p->GetIsBotLyr() ) ? p->GetNbr(NBR_X) : p;	// Use bottom layer for TH pins
 	if ( pFirst )
 		m_targetPins.push_back(pFirst);
 

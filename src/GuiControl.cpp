@@ -188,7 +188,7 @@ void GuiControl::CalcBlob(qreal W, const QPointF& pC, const QPointF& pCoffset,
 			}
 		}
 	}
-	if ( iTagCode > 0 && !bHaveSoic && ( !bLeg || GetXthermals() ) )	// Only draw extra thermal relief tags if we don't have an offset pad, or are forcing X-shaped tags
+	if ( iTagCode > 0 && ( !bLeg || GetXthermals() ) )	// Only draw extra thermal relief tags if we don't have an offset pad, or are forcing X-shaped tags
 	{
 		assert( bIsGnd );
 

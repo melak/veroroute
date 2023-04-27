@@ -827,7 +827,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 #endif
 				assert( !(bVia && bPad) );	// Can't be both a via and a pad
 				const bool		bIsGnd			= bGroundFill && nodeId == groundNodeId;
-				const int		iTagCode		= ( bPad && !bSoicPad && bIsGnd && nodeId != BAD_NODEID ) ? board.GetTagCode(pC, iPerimeterCode) : 0;
+				const int		iTagCode		= ( bPad && bIsGnd && nodeId != BAD_NODEID ) ? board.GetTagCode(pC, iPerimeterCode) : 0;
 
 				// Skip places with no NodeID assigned unless they are wire ends, or pins in Mono/PCB mode
 				const bool bPointOK = ( nodeId != BAD_NODEID || bWire || bSoicPad || (bMonoPCB && bPad) );	// Point OK ==> We have some track/pad to draw
@@ -1296,12 +1296,14 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 							m_varBrush.setColor(color);
 							painter.setBrush( bMonoPCB ? Qt::NoBrush : m_varBrush);	// No pin color fill in Mono/PCB mode
 
+#ifdef _TEST_SOIC
 							if ( bSOIC && bTopLyr )	//	Draw tracks of floating IC
 							{
 								int X, Y;
 								GetXY(board, j, i, X, Y);
 								PaintSOIC(board, painter, Qt::red, QPointF(X,Y), iPinIndex, &comp, false, false);
 							}
+#endif
 						}
 
 						const int iPinSizeMIL = ( !bColor || bPlaced ) ? iHoleWidthMIL : std::min(3*iHoleWidthMIL/2, iPadWidthMIL);
