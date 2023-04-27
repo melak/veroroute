@@ -183,6 +183,39 @@ public:
 		}
 	}
 
+	int GetSlotForTH(const Element* p) const
+	{
+		for (int iSlot = 0; iSlot < 2; iSlot++)
+		{
+			size_t	pinIndex;
+			int		compId;
+			p->GetSlotInfo(iSlot, pinIndex, compId);
+			if ( compId == BAD_COMPID ) continue;
+			if ( m_compMgr.GetComponentById(compId).GetIsSOIC() ) continue;	// Only non-SOIC parts have non-TH pins
+			assert(pinIndex != BAD_PININDEX);
+			return iSlot;
+		}
+		assert(0);	// Should never get here
+		return 0;
+	}
+	void GetSlotInfoForTH(const Element* p, size_t& pinIndex, int& compId) const
+	{
+		const int iSlot = GetSlotForTH(p);
+		p->GetSlotInfo(iSlot, pinIndex, compId);
+	}
+	bool GetPadOffsets(const Element* p, int& padOffsetX, int& padOffsetY) const
+	{
+		if ( !p->GetPinSupportsOffsetPads() ) return false;
+
+		size_t	pinIndex;
+		int		compId;
+		GetSlotInfoForTH(p, pinIndex, compId);
+
+		const Component& comp = m_compMgr.GetComponentById( compId );
+		comp.GetCompPinOffsets(pinIndex, padOffsetX, padOffsetY);	// Get offsets in mil
+		return true;
+	}
+
 	void ResetPinLayerPrefs()
 	{
 		assert( GetLyrs() == 2 );
@@ -191,8 +224,10 @@ public:
 			Element* p = GetAt(i);
 			if ( !p->GetPinSupportsLayerPref() ) continue;
 
-			const int&		compId		= p->GetCompId();	assert(compId != BAD_COMPID);
-			const size_t	pinIndex	= p->GetPinIndex();	assert(pinIndex != BAD_PININDEX);
+			size_t	pinIndex;
+			int		compId;
+			GetSlotInfoForTH(p, pinIndex, compId);
+
 			Component&		comp		= m_compMgr.GetComponentById(compId);
 			comp.SetLayerPref(pinIndex, LAYER_X);
 		}
@@ -203,9 +238,11 @@ public:
 		Element* p = Get(iLyr, iRow, iCol);
 		if ( !p->GetPinSupportsLayerPref() ) return false;
 
-		const int&		compId		= p->GetCompId();	assert(compId != BAD_COMPID);
-		const size_t	pinIndex	= p->GetPinIndex();	assert(pinIndex != BAD_PININDEX);
-		Component&		comp		= m_compMgr.GetComponentById(compId);
+		size_t	pinIndex;
+		int		compId;
+		GetSlotInfoForTH(p, pinIndex, compId);
+
+		Component& comp = m_compMgr.GetComponentById(compId);
 		switch( comp.GetLayerPref(pinIndex) )
 		{
 			case LAYER_X:	comp.SetLayerPref(pinIndex, LAYER_B);	break;
@@ -218,8 +255,11 @@ public:
 	int GetLayerPref(const Element* p) const
 	{
 		assert( GetLyrs() == 2 && p && p->GetPinSupportsLayerPref() );
-		const int&		compId		= p->GetCompId();		assert(compId != BAD_COMPID);
-		const size_t	pinIndex	= p->GetPinIndex();		assert(pinIndex != BAD_PININDEX);
+
+		size_t	pinIndex;
+		int		compId;
+		GetSlotInfoForTH(p, pinIndex, compId);
+
 		return m_compMgr.GetComponentById(compId).GetLayerPref(pinIndex);
 	}
 

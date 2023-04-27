@@ -813,12 +813,22 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				const bool		bVia			= pC->GetIsVia()  ||  bWireAsVia;
 				const bool		bPad			= !bWireAsVia && pC->GetHasPinTH();	// Only want through-hole pads
 				const bool		bSoicPad		= bTopLyr && pC->GetHasPinSOIC();
+
+#ifdef _TEST_SOIC
+				size_t iPinIndexSOIC(BAD_PININDEX);
+				const Component* pCompSOIC(nullptr);
+				if ( bSoicPad )	// Work out which slot contains the SOIC component
+				{
+					const int iSOICslot = ( pC->GetCompId() != BAD_COMPID && compMgr.GetComponentById(pC->GetCompId()).GetIsSOIC() ) ? 0 : 1;
+					int compIdSOIC;
+					pC->GetSlotInfo(iSOICslot, iPinIndexSOIC, compIdSOIC);
+					pCompSOIC = &compMgr.GetComponentById(compIdSOIC);
+				}
+#endif
 				assert( !(bVia && bPad) );	// Can't be both a via and a pad
 				const bool		bIsGnd			= bGroundFill && nodeId == groundNodeId;
 				const int		iTagCode		= ( bPad && !bSoicPad && bIsGnd && nodeId != BAD_NODEID ) ? board.GetTagCode(pC, iPerimeterCode) : 0;
-	#ifdef _TEST_SOIC
-				const Component* pCompSOIC = ( bSoicPad ) ? &compMgr.GetComponentById(pC->GetCompId()) : nullptr;
-	#endif
+
 				// Skip places with no NodeID assigned unless they are wire ends, or pins in Mono/PCB mode
 				const bool bPointOK = ( nodeId != BAD_NODEID || bWire || bSoicPad || (bMonoPCB && bPad) );	// Point OK ==> We have some track/pad to draw
 				if ( !bPointOK ) continue;
@@ -832,20 +842,18 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				int		padOffsetX(0), padOffsetY(0);
 				if ( bPad && !bWire )
 				{
-					const size_t	 pinIndex	= pC->GetPinIndex();	assert(pinIndex != BAD_PININDEX);
 					const int		 compId		= pC->GetCompId();
 					const Component& comp		= compMgr.GetComponentById( compId );
 					assert( comp.GetType() != COMP::INVALID );
 
-					if ( !bVero )
+					if ( !bVero && board.GetPadOffsets(pC, padOffsetX, padOffsetY) )	// Get offsets in mil
 					{
-						comp.GetCompPinOffsets(pinIndex, padOffsetX, padOffsetY);	// Get offsets in mil
 						padOffsetX = (padOffsetX * W) / 100;	// Convert from mil to pixels
 						padOffsetY = (padOffsetY * W) / 100;	// Convert from mil to pixels
 					}
 
-					if ( board.GetLyrs() == 2 )
-						layerPref = comp.GetLayerPref(pinIndex);
+					if ( board.GetLyrs() == 2 && pC->GetPinSupportsLayerPref() )
+						layerPref = board.GetLayerPref(pC);
 
 					bCustomSize = comp.GetCustomPads();
 					if ( bCustomSize )
@@ -996,7 +1004,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						if ( bDrawPad )  PaintPad(board, painter, color, pCentreOff, iPadWidthMIL, iHoleWidthMIL);
 					}
 	#ifdef _TEST_SOIC
-					if ( bSoicPad ) PaintSOIC(board, painter, color, pCentre, pC->GetPinIndex(), pCompSOIC, bIsGnd);
+					if ( bSoicPad ) PaintSOIC(board, painter, color, pCentre, iPinIndexSOIC, pCompSOIC, bIsGnd);
 	#endif
 #endif	// USE_PIXMAP_CACHE
 				}
@@ -1010,7 +1018,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 							PaintVia(board, painter, backgroundColor, pCentre, true);	// Draw fat "white" via
 						if ( bDrawPad ) PaintPad(board, painter, backgroundColor, pCentreOff, iPadWidthMIL, iHoleWidthMIL, true);	// Draw fat "white" pad
 #ifdef _TEST_SOIC
-						if ( bSoicPad ) PaintSOIC(board, painter, backgroundColor, pCentre, pC->GetPinIndex(), pCompSOIC, bIsGnd, true);
+						if ( bSoicPad ) PaintSOIC(board, painter, backgroundColor, pCentre, iPinIndexSOIC, pCompSOIC, bIsGnd, true);
 #endif
 					}
 					else if ( iLoop == 1 )	// Draw track "blobs" and pads directly
@@ -1019,7 +1027,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						if ( bDrawVia )  PaintVia(board, painter, color, pCentre);									// Draw via same color as track
 						if ( bDrawPad )  PaintPad(board, painter, color, pCentreOff, iPadWidthMIL, iHoleWidthMIL);	// Draw pad same color as track
 #ifdef _TEST_SOIC
-						if ( bSoicPad ) PaintSOIC(board, painter, color, pCentre, pC->GetPinIndex(), pCompSOIC, bIsGnd);
+						if ( bSoicPad ) PaintSOIC(board, painter, color, pCentre, iPinIndexSOIC, pCompSOIC, bIsGnd);
 #endif
 					}
 					else if ( bDrawGrey )
@@ -1036,7 +1044,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						if ( bDrawVia )  PaintVia(board, painter, color, pCentre);									// Draw via same color as track
 						if ( bDrawPad )  PaintPad(board, painter, color, pCentreOff, iPadWidthMIL, iHoleWidthMIL);	// Draw pad same color as track
 #ifdef _TEST_SOIC
-						if ( bSoicPad ) PaintSOIC(board, painter, color, pCentre, pC->GetPinIndex(), pCompSOIC, bIsGnd);
+						if ( bSoicPad ) PaintSOIC(board, painter, color, pCentre, iPinIndexSOIC, pCompSOIC, bIsGnd);
 #endif
 					}
 					else if ( bDrawGrey )
@@ -1533,11 +1541,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			GetXY(board, jj, ii, X, Y);
 
 			// Handle offset pads
-			if ( !bVero && pD->GetPinSupportsLayerPref() )
+			if ( !bVero && board.GetPadOffsets(pD, padOffsetX, padOffsetY) )	// Get offsets in mil
 			{
-				const Component& comp = compMgr.GetComponentById( pD->GetCompId() );
-				assert( !comp.GetIsSOIC() );	// Only non-SOIC parts allow offset pads
-				comp.GetCompPinOffsets(pD->GetPinIndex(), padOffsetX, padOffsetY);	// Get offsets in mil
 				X += (padOffsetX * W) / 100;	// Convert from mil to pixels
 				Y += (padOffsetY * W) / 100;	// Convert from mil to pixels
 			}
@@ -1593,15 +1598,10 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			GetXY(board, j, i, X, Y);
 
 			// Handle offset pads
-			if ( !bVero )
+			if ( !bVero && board.GetPadOffsets(pC, padOffsetX, padOffsetY) )	// Get offsets in mil
 			{
-				const Component& comp = compMgr.GetComponentById( pC->GetCompId() );
-				if ( !comp.GetIsSOIC() )	// No offsets pads for SOIC parts
-				{
-					comp.GetCompPinOffsets(pC->GetPinIndex(), padOffsetX, padOffsetY);	// Get offsets in mil
-					X += (padOffsetX * W) / 100;	// Convert from mil to pixels
-					Y += (padOffsetY * W) / 100;	// Convert from mil to pixels
-				}
+				X += (padOffsetX * W) / 100;	// Convert from mil to pixels
+				Y += (padOffsetY * W) / 100;	// Convert from mil to pixels
 			}
 
 			spanTreePoints.push_back( QPointF(X, Y) );
@@ -1614,10 +1614,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 				GetXY(board, jj, ii, X, Y);
 
-				if ( !bVero )
+				// Handle offset pads
+				if ( !bVero && board.GetPadOffsets(pD, padOffsetX, padOffsetY) )	// Get offsets in mil
 				{
-					const Component& comp = compMgr.GetComponentById( pD->GetCompId() );
-					comp.GetCompPinOffsets(pD->GetPinIndex(), padOffsetX, padOffsetY);	// Get offsets in mil
 					X += (padOffsetX * W) / 100;	// Convert from mil to pixels
 					Y += (padOffsetY * W) / 100;	// Convert from mil to pixels
 				}
@@ -1834,14 +1833,11 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	if ( !m_bWriteGerber && !bVero && m_padOffsetDlg->isVisible() )
 	{
 		const Element* pC = m_board.Get(layer, m_gridRow, m_gridCol);
-		if ( pC->GetPinSupportsLayerPref() )
+
+		int padOffsetX(0), padOffsetY(0);
+		if ( board.GetPadOffsets(pC, padOffsetX, padOffsetY) )	// Get offsets in mil
 		{
 			GetXY(board, m_gridRow, m_gridCol, X, Y);
-
-			int padOffsetX, padOffsetY;	// For handling offset pads
-			const Component& comp = compMgr.GetComponentById( pC->GetCompId() );
-			comp.GetCompPinOffsets(pC->GetPinIndex(), padOffsetX, padOffsetY);	// Get offsets in mil
-
 			X += (padOffsetX * W) / 100;	// Convert from mil to pixels
 			Y += (padOffsetY * W) / 100;	// Convert from mil to pixels
 
@@ -2020,12 +2016,9 @@ void MainWindow::GetRulerExact(Board& board, const QPoint& p, QPointF& pOut) con
 	if ( !board.GetVeroTracks() )
 	{
 		const Element* pC = board.Get(0, p.y(), p.x());
-		if ( pC->GetPinSupportsLayerPref() )
-		{
-			int padOffsetX(0), padOffsetY(0);
-			const Component& comp = board.GetCompMgr().GetComponentById( pC->GetCompId() );
-			comp.GetCompPinOffsets(pC->GetPinIndex(), padOffsetX, padOffsetY);	// Get offsets in mil
+
+		int padOffsetX(0), padOffsetY(0);
+		if ( board.GetPadOffsets(pC, padOffsetX, padOffsetY) )	// Get offsets in mil
 			pOut += QPointF(0.01 * padOffsetX, 0.01 * padOffsetY);
-		}
 	}
 }

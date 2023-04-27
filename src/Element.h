@@ -175,6 +175,10 @@ public:
 		if ( GetW(1) != nullptr ) i++;
 		return i;
 	}
+	int  GetNumUsedSlots() const
+	{
+		return ( GetCompId() != BAD_COMPID ? 1 : 0 ) + ( GetCompId2() != BAD_COMPID ? 1 : 0 );
+	}
 	int  GetUsedSlot() const
 	{
 		return	( GetCompId()  != BAD_COMPID ) ? 0 :
@@ -248,10 +252,13 @@ public:
 	Element*			GetNbr(int iNbr) const	{ return m_pNbr[iNbr]; }
 	Element*			GetW(int i) const		{ return GetBaseConst()->m_pW[i]; }
 	bool				IsLayer0() const 		{ return GetBaseConst() == this; }
+	bool				GetPinSupportsOffsetPads() const
+	{
+		return GetHasPinTH() /*&& !GetHasPinSOIC()*/ && !GetHasWire();	//TODO Should not allow at SOICs, and put checks into code for CanPutDown
+	}
 	bool				GetPinSupportsLayerPref() const
 	{
-		// Must be a TH pin, but not a wire, and must not co-incide with an SOIC pad
-		return GetHasPinTH() && !GetHasPinSOIC() && !GetHasWire();
+		return GetHasPinTH() && !GetHasWire();
 	}
 
 	// Helpers

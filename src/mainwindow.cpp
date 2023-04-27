@@ -1888,11 +1888,13 @@ void MainWindow::PadMove(int deltaRowMil, int deltaColMil)
 	if ( m_board.GetVeroTracks() || m_board.GetCompEdit() ) return;
 
 	const Element* pC =  m_board.Get(0, m_gridRow, m_gridCol);
-	if ( !pC->GetPinSupportsLayerPref() ) return;
+	if ( !pC->GetPinSupportsOffsetPads() ) return;
 
-	Component&		comp		= m_board.GetCompMgr().GetComponentById( pC->GetCompId() );
-	const size_t	pinIndex	= pC->GetPinIndex();
+	size_t	pinIndex;
+	int		compId;
+	m_board.GetSlotInfoForTH(pC, pinIndex, compId);
 
+	Component& comp = m_board.GetCompMgr().GetComponentById(compId);
 	comp.IncCompPinOffsets(pinIndex, deltaColMil, deltaRowMil);
 	return RepaintWithRouting();
 }
@@ -1900,13 +1902,10 @@ void MainWindow::PadMove(int deltaRowMil, int deltaColMil)
 void MainWindow::UpdatePadInfo()
 {
 	const Element* pC =  m_board.Get(0, m_gridRow, m_gridCol);
-	if ( !m_padOffsetDlg->isVisible() || !pC->GetPinSupportsLayerPref() ) return;
-
-	const Component&	comp		= m_board.GetCompMgr().GetComponentById( pC->GetCompId() );
-	const size_t		pinIndex	= pC->GetPinIndex();
+	if ( !m_padOffsetDlg->isVisible() || !pC->GetPinSupportsOffsetPads() ) return;
 
 	int X,Y;
-	comp.GetCompPinOffsets(pinIndex, X, Y);	// Get offsets in mil
+	m_board.GetPadOffsets(pC, X, Y);	// Get offsets in mil
 
 	char buffer[256] = {'\0'};
 	sprintf(buffer,"(X, Y) pad offset = (%d, %d) mil,    (%.4f, %.4f) mm", X, Y, X * 0.0254, Y * 0.0254);

@@ -292,21 +292,20 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 					if ( !bOK ) continue;
 
 					// Check relevant layer to get nodeID for pin
-					const Element*	p			= ( bSOIC ) ? ( LYR_TOP == compLyr ? pGrid : pGrid->GetNbr(NBR_X) ) : pGrid;	assert(p);
-					const int&		nodeId		= p->GetNodeId();			// Read nodeID on board
-					const int&		iCompNodeId	= comp.GetNodeId(pinIndex);	// Read component nodeID
+					const Element*	p				= ( bSOIC || pGrid->GetHasPinSOIC() ) ? ( LYR_TOP == compLyr ? pGrid : pGrid->GetNbr(NBR_X) ) : pGrid;	assert(p);
+					const int&		nodeId			= p->GetNodeId();			// Read nodeID on board
+					const int&		iCompNodeId		= comp.GetNodeId(pinIndex);	// Read component nodeID
 
 					if ( bWire )	// Wires have no NodeId. Need matching IDs on both ends
 						assert( iCompNodeId == BAD_NODEID );	// Shouldn't have an ID yet
 					else			// Regular component ...
 					{
-						bOK = ( nodeId == BAD_NODEID || nodeId == iCompNodeId );	// Need no node ID or matching ID
-
-						if ( bOK && pGrid->GetHasPinTH() )
+						bOK = p->GetHasPin() ? ( nodeId != BAD_NODEID && nodeId == iCompNodeId )	// Need valid and matching ID
+											 : ( nodeId == BAD_NODEID || nodeId == iCompNodeId );	// Need no node ID or matching ID
+						if ( bOK && ( p->GetHasPinTH() || (pComp->GetSoicChar() & SOIC_THL_COMP)) )	// Check for short-circuit between layers
 						{
-							// Check for short-circuit between layers
-							Element* q = pGrid->GetNbr(NBR_X);
-							if ( q != nullptr && q != pGrid )
+							Element* q = p->GetNbr(NBR_X);
+							if ( q != nullptr && q != p )
 							{
 								const int& nodeId = q->GetNodeId();	// Read nodeId on other board layer
 								bOK = ( nodeId == BAD_NODEID || nodeId == iCompNodeId );	// Need no node ID or matching ID
@@ -469,17 +468,17 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 				const size_t pinIndex = pComp->GetPinIndex();
 				if ( pinIndex == BAD_PININDEX ) continue;
 
-				// Work out which slot to use if we have a wire
+				// Work out which slot to use
 				const int iSlot = pGrid->GetFreeSlot();
 				// Want GetIsPin() methods to be private so commented out following assert
 				// assert( ( iSlot == 0 && !pGrid->GetIsPin() ) || ( iSlot == 1 && !pGrid->GetIsPin2() ) );
 
 				// Store any user-painted nodeId's under the pin (i.e. "oridId") BEFORE placing
-				// If we are about to place a wire in the same hole as an existing wire, then
-				// inherit origId from the existing wire
-				if ( bWire && pGrid->GetNumWires() == 1 )
+				// If we are about to place a part/wire in the same hole as an existing part/wire,
+				// then inherit origId from the existing part/wire
+				if ( pGrid->GetNumUsedSlots() == 1 )
 				{
-					wireNodeId = std::max(wireNodeId, pGrid->GetNodeId());
+					if ( bWire ) wireNodeId = std::max(wireNodeId, pGrid->GetNodeId());
 
 					const int iSlotOther = ( iSlot == 0 ) ? 1 : 0;
 					size_t	iOtherPinIndex;
@@ -488,7 +487,7 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 					assert( iOtherPinIndex != BAD_PININDEX && iOtherCompId != BAD_COMPID );
 
 					const Component& otherComp = m_compMgr.GetComponentById( iOtherCompId );
-					assert( otherComp.GetType() == COMP::WIRE );
+					assert( bWire == (otherComp.GetType() == COMP::WIRE) );
 					for (int iLyr = 0; iLyr < 2; iLyr++)
 					{
 						const int& origId = otherComp.GetOrigId(iLyr, iOtherPinIndex);
@@ -630,18 +629,22 @@ bool Board::TakeOff(Component& comp)
 			{
 				assert( !pComp->GetIsHole() || pGrid->GetIsHole() );	// Component hole can only be taken off a grid hole
 
+				const int numUsedSlots = pGrid->GetNumUsedSlots();
+
 				// Update surface and hole use
 				pGrid->SetSurface(  pGrid->GetSurface()  - pComp->GetSurface() );
 				pGrid->SetHoleUse(  pGrid->GetHoleUse()  - pComp->GetHoleUse() );
 				pGrid->SetSoicChar( pGrid->GetSoicChar() - pComp->GetSoicChar() );
-				if ( pGrid->GetHoleUse() == HOLE_FREE )
+				if ( pGrid->GetSoicChar() == SOIC_FREE )
 				{
 					pGrid->SetSlotInfo(0, BAD_PININDEX, BAD_COMPID);	// Slot 0
 					pGrid->SetSlotInfo(1, BAD_PININDEX, BAD_COMPID);	// Slot 1
 				}
-				else if ( bWire && ( pGrid == pA || pGrid == pB ) )	// Taking off a wire-end
+				else if ( numUsedSlots == 2 )	// Removing a part/wire from a shared hole
 				{
-					pGrid->SetSlotInfo( ( pGrid == pA ) ? iSlotA : iSlotB, BAD_PININDEX, BAD_COMPID);
+					const int iSlot = ( bWire && ( pGrid == pA || pGrid == pB ) ) ? ( ( pGrid == pA ) ? iSlotA : iSlotB )
+																				  : ( ( pGrid->GetCompId() == compId ) ? 0 : 1 );
+					pGrid->SetSlotInfo(iSlot, BAD_PININDEX, BAD_COMPID);
 				}
 
 				// Update IDs at pin locations of component
@@ -658,15 +661,18 @@ bool Board::TakeOff(Component& comp)
 				// Wire-ends need special treatment, so just handle non-wire pins here
 				if ( !bWire )
 				{
-					for (int iLyr = 0, lyrs = std::min(GetLyrs(), 2); iLyr < lyrs; iLyr++)
+					if ( !pGrid->GetHasPin() ) // Only change nodeIds on board if we're taking the last pin out
 					{
-						if ( bSOIC && iLyr != LYR_TOP ) continue;
-						Element* p = ( iLyr == compLyr ) ? pGrid : pGrid->GetNbr(NBR_X);
-						if ( p == nullptr ) continue;
-						const bool bAllLyrs = false;
-						SetNodeId(p, origId[iLyr], bAllLyrs);	// Restore grid element to original nodeId
-						WipeFlagBits(p, AUTOSET|VEROSET, bAllLyrs);
-						MarkFlagBits(p, USERSET, bAllLyrs);
+						for (int iLyr = 0, lyrs = std::min(GetLyrs(), 2); iLyr < lyrs; iLyr++)
+						{
+							if ( bSOIC && iLyr != LYR_TOP ) continue;
+							Element* p = ( iLyr == compLyr ) ? pGrid : pGrid->GetNbr(NBR_X);
+							if ( p == nullptr ) continue;
+							const bool bAllLyrs = false;
+							SetNodeId(p, origId[iLyr], bAllLyrs);	// Restore grid element to original nodeId
+							WipeFlagBits(p, AUTOSET|VEROSET, bAllLyrs);
+							MarkFlagBits(p, USERSET, bAllLyrs);
+						}
 					}
 				}
 			}

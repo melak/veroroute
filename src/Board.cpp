@@ -32,6 +32,8 @@ int Board::GetComponentId(int row, int col)	// Pick the most relevant component 
 	{
 		const bool bReqPlaced = ( iLoop / 2 == 1 );	// true ==> Only consider placed components
 		const bool bReqPlug   = ( iLoop % 2 == 0 );	// true ==> Only consider components that can go under ICs
+
+		int iMinArea(INT_MAX), iBestCompID(BAD_COMPID);	// If two comps share a grid point, pick one with smallest area
 		for (const auto& mapObj : m_compMgr.GetMapIdToComp())
 		{
 			const Component&	comp	= mapObj.second;
@@ -46,8 +48,17 @@ int Board::GetComponentId(int row, int col)	// Pick the most relevant component 
 
 			if ( row >= rowTL && row < rowTL + comp.GetCompRows() &&
 				 col >= colTL && col < colTL + comp.GetCompCols() )
-				return comp.GetId();
+			{
+				const int area = comp.GetCompRows() * comp.GetCompCols();
+				if ( area <= iMinArea )
+				{
+					iMinArea	= area;
+					iBestCompID	= comp.GetId();
+				}
+			}
 		}
+		if ( iBestCompID != BAD_COMPID ) return iBestCompID;
+
 		Component& trax = m_compMgr.GetTrax();
 		if ( trax.GetSize() > 0 )
 		{
@@ -165,11 +176,15 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 				padA.m_radius = 0.005 * GetPAD_MIL();	// No custom pad size for wires
 			else if ( bHasPinA )
 			{
-				const Component& comp	= m_compMgr.GetComponentById( pA->GetCompId() );	// Non-wire part must use slot 0
+				size_t	pinIndex;
+				int		compId;
+				GetSlotInfoForTH(pA, pinIndex, compId);	//TODO If hole sharing, preferring TH part over SOIC par
+
+				const Component& comp	= m_compMgr.GetComponentById( compId );	// Non-wire part must use slot 0
 				iPadWidthMIL_A = comp.GetCustomPads() ? comp.GetPadWidth() : GetPAD_MIL();	// Handle custom pad sizes
 				padA.m_radius = 0.005 * iPadWidthMIL_A;
 				// Handle pad offsets
-				comp.GetCompPinOffsets(pA->GetPinIndex(), Xmil, Ymil);
+				comp.GetCompPinOffsets(pinIndex, Xmil, Ymil);
 				padA += QPointF(0.01 * Xmil, 0.01 * Ymil);
 				bPadOffsetA	= ( Xmil != 0 || Ymil != 0 );
 			}
@@ -212,11 +227,15 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 					padB.m_radius = 0.005 * GetPAD_MIL();	// No custom pad size for wires
 				else if ( bHasPinB )
 				{
-					const Component& comp	= m_compMgr.GetComponentById( pB->GetCompId() );	// Non-wire part must use slot 0
+					size_t	pinIndex;
+					int		compId;
+					GetSlotInfoForTH(pB, pinIndex, compId);	//TODO If hole sharing, preferring TH part over SOIC par
+
+					const Component& comp	= m_compMgr.GetComponentById( compId );	// Non-wire part must use slot 0
 					iPadWidthMIL_B = comp.GetCustomPads() ? comp.GetPadWidth() : GetPAD_MIL();	// Handle custom pad sizes
 					padB.m_radius = 0.005 * iPadWidthMIL_B;
 					// Handle pad offsets
-					comp.GetCompPinOffsets(pB->GetPinIndex(), Xmil, Ymil);
+					comp.GetCompPinOffsets(pinIndex, Xmil, Ymil);
 					padB += QPointF(0.01 * Xmil, 0.01 * Ymil);
 					bPadOffsetB	= ( Xmil != 0 || Ymil != 0 );
 				}
@@ -293,8 +312,9 @@ void Board::CalcGroundFillBounds()
 			if ( !p->GetHasPinTH() ) continue;
 			if ( p->GetHasWire() ) continue;	// Wires can't have custom sized pads or offset pads
 
-			const int	 compId		= p->GetCompId();	assert( compId != BAD_COMPID );
-			const size_t pinIndex	= p->GetPinIndex();	assert( pinIndex != BAD_PININDEX );
+			size_t	pinIndex;
+			int		compId;
+			GetSlotInfoForTH(p, pinIndex, compId);	//TODO If hole sharing, preferring TH part over SOIC part
 
 			const Component& comp	= m_compMgr.GetComponentById( compId );
 			int Xmil(0), Ymil(0);	// Pad offsets
@@ -405,21 +425,29 @@ bool Board::SetNodeIdByUser(int lyr, int row, int col, int nodeId, bool bPaintPi
 		// ... we can modify the "origId" for the pin, but are only allowed
 		// ... to wipe it or make it match the nodeId of the pin. Then quit.
 
-		const size_t	pinIndex	= p->GetPinIndex();
-		const int&		compId		= p->GetCompId();
-		Component&		comp		= m_compMgr.GetComponentById( compId );
-		assert( comp.GetType() != COMP::INVALID );
-		assert( comp.GetType() != COMP::WIRE );	// Sanity check
+		bool bChanged(false);
+		for (int iSlot = 0; iSlot < 2; iSlot++)
+		{
+			size_t	pinIndex;
+			int		compId;
+			p->GetSlotInfo(iSlot, pinIndex, compId);
+			if ( compId == BAD_COMPID ) continue;
+			Component& comp = m_compMgr.GetComponentById( compId );
+			assert( comp.GetType() != COMP::INVALID );
+			assert( comp.GetType() != COMP::WIRE );	// Sanity check
+			assert( pinIndex != BAD_PININDEX );
 
-		if ( nodeId != BAD_NODEID && nodeId != comp.GetNodeId(pinIndex) ) return false;	// Can't set a bad origId
+			if ( nodeId != BAD_NODEID && nodeId != comp.GetNodeId(pinIndex) ) continue;	// Can't set a bad origId
 
-		if ( comp.GetOrigId(lyr, pinIndex) == nodeId ) return false;	// origId is already as required
+			if ( comp.GetOrigId(lyr, pinIndex) == nodeId ) continue;	// origId is already as required
 
-		// Need to do (RemoveComp/ SetNodeId/ AddComp) to ensure m_nodeInfoMgr is updated OK
-		m_nodeInfoMgr.RemoveComp(comp);
-		comp.SetOrigId(lyr, pinIndex, nodeId);
-		m_nodeInfoMgr.AddComp(comp);
-		return true;
+			// Need to do (RemoveComp/ SetNodeId/ AddComp) to ensure m_nodeInfoMgr is updated OK
+			m_nodeInfoMgr.RemoveComp(comp);
+			comp.SetOrigId(lyr, pinIndex, nodeId);
+			m_nodeInfoMgr.AddComp(comp);
+			bChanged = true;
+		}
+		return bChanged;
 	}
 
 	// Now do regular cases:  Paint the board as needed...
@@ -488,19 +516,25 @@ bool Board::SetNodeIdByUser(int lyr, int row, int col, int nodeId, bool bPaintPi
 		}
 		else			// Regular component
 		{
-			const size_t	pinIndex	= p->GetPinIndex();
-			const int&		compId		= p->GetCompId();
-			Component&		comp		= m_compMgr.GetComponentById( compId );
-			assert( comp.GetType() != COMP::INVALID );
-			assert( bPaintPins && comp.GetType() != COMP::WIRE );	// Sanity check
+			for (int iSlot = 0; iSlot < 2; iSlot++)
+			{
+				size_t	pinIndex;
+				int		compId;
+				p->GetSlotInfo(iSlot, pinIndex, compId);
+				if ( compId == BAD_COMPID ) continue;
+				Component& comp = m_compMgr.GetComponentById( compId );
+				assert( comp.GetType() != COMP::INVALID );
+				assert( bPaintPins && comp.GetType() != COMP::WIRE );	// Sanity check
+				assert( pinIndex != BAD_PININDEX );
 
-			// Need to do (RemoveComp/ SetNodeId/ AddComp) to ensure m_nodeInfoMgr is updated OK
-			m_nodeInfoMgr.RemoveComp(comp);
-			comp.SetNodeId(pinIndex, nodeId);
-			for (int iLyr = 0; iLyr < 2; iLyr++)
-				if ( comp.GetOrigId(iLyr, pinIndex) != nodeId )	// Modifying a pin on a previously painted track ...
-					comp.SetOrigId(iLyr, pinIndex, BAD_NODEID);	// ... should wipe the track under the pin
-			m_nodeInfoMgr.AddComp(comp);
+				// Need to do (RemoveComp/ SetNodeId/ AddComp) to ensure m_nodeInfoMgr is updated OK
+				m_nodeInfoMgr.RemoveComp(comp);
+				comp.SetNodeId(pinIndex, nodeId);
+				for (int iLyr = 0; iLyr < 2; iLyr++)
+					if ( comp.GetOrigId(iLyr, pinIndex) != nodeId )	// Modifying a pin on a previously painted track ...
+						comp.SetOrigId(iLyr, pinIndex, BAD_NODEID);	// ... should wipe the track under the pin
+				m_nodeInfoMgr.AddComp(comp);
+			}
 		}
 	}
 	return true;
