@@ -480,10 +480,13 @@ bool Board::GetPinRowCol(int compId, size_t iPinIndex, int& row, int& col) const
 	for (int i = 0, iSize = GetSize(); i < iSize; i++)
 	{
 		const Element* p = GetAtConst(i);
-		if ( !p->GetHasWire() && p->GetCompId() == compId && p->GetPinIndex() == iPinIndex )
+		for (int iSlot = 0; iSlot < 2; iSlot++)
 		{
-			GetRowCol(p, row, col);
-			return true;
+			if ( !p->GetHasWire() && p->GetSlotCompId(iSlot) == compId && p->GetSlotPinIndex(iSlot) == iPinIndex )
+			{
+				GetRowCol(p, row, col);
+				return true;
+			}
 		}
 	}
 	return false;

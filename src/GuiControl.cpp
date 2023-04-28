@@ -251,6 +251,7 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, char dire
 	// Given a grid point (pC) this method populates "out" with a description of an SOIC track from a "SOIC pin".
 	// The scale parameter W represents the width of a 100 mil grid square.
 
+	const qreal	C			= W * 0.5;	// 1/2 square width
 	const qreal	Q			= W * 0.25;	// 1/4 square width
 	const qreal	padWidth	= 0.01 * ( GetPAD_IC_MIL() + 2 * ( bSolderMask ? GetMASK_MIL() : 0) );
 	const qreal	trkWidth	= 0.01 * ( GetTRACK_IC_MIL() + 2 * ( bGap ? GetGAP_MIL() : 0 ) );
@@ -276,11 +277,12 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, char dire
 	if ( bGap )
 	{
 		assert(!bSolderMask);
-		polygonB << pC << pC+QPointF(W,0) << pC+QPointF(W,8*W) << pC+QPointF(0,8*W) << pC;
+		const QPointF p = pC + QPointF(C,C);
+		polygonB << p << p+QPointF(W,0) << p+QPointF(W,2.25*W) << p+QPointF(0,2.25*W) << p;
 	}
 
-	const bool bNoTrackGap = bIsGnd && bGap;	// For tracks in the ground fill, don't draw a gap around them.	//TODO This really only applies to places with no TH pin
-	
+	const bool bNoTrackGap = bIsGnd && bGap;	// For tracks in the ground fill, don't draw a gap around them
+
 	// 7 basic curves.  Start by repeating the curves for pins 21-27
 	switch(pinIndex)
 	{

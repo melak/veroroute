@@ -180,7 +180,7 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 			{
 				size_t	pinIndex;
 				int		compId;
-				GetSlotInfoForTH(pA, pinIndex, compId);	//TODO If hole sharing, preferring TH part over SOIC par
+				GetSlotInfoForTH(pA, pinIndex, compId);	//TODO If hole sharing, preferring TH part over SOIC part
 
 				const Component& comp	= m_compMgr.GetComponentById( compId );	// Non-wire part must use slot 0
 				iPadWidthMIL_A = comp.GetCustomPads() ? comp.GetPadWidth() : GetPAD_MIL();	// Handle custom pad sizes
@@ -237,7 +237,7 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 				{
 					size_t	pinIndex;
 					int		compId;
-					GetSlotInfoForTH(pB, pinIndex, compId);	//TODO If hole sharing, preferring TH part over SOIC par
+					GetSlotInfoForTH(pB, pinIndex, compId);	//TODO If hole sharing, preferring TH part over SOIC part
 
 					const Component& comp	= m_compMgr.GetComponentById( compId );	// Non-wire part must use slot 0
 					iPadWidthMIL_B = comp.GetCustomPads() ? comp.GetPadWidth() : GetPAD_MIL();	// Handle custom pad sizes
@@ -285,7 +285,6 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 				// SOIC track A to SOIC track B
 				if ( bCompareBlobs && bSoicA && bSoicB ) for(const auto& a : soicA) for(const auto& b : soicB) polygonHelper.CalcSeparation(a, b);
 
-				//TODO Need to consider other separations
 				// Pad A to SOIC track B
 				if ( bPadA && bSoicB ) for(const auto& b : soicB) polygonHelper.CalcSeparation(padA, b);
 
@@ -470,7 +469,7 @@ bool Board::SetNodeIdByUser(int lyr, int row, int col, int nodeId, bool bPaintPi
 		// Just need to get origId.  Any used slot will do
 		size_t	pinIndex;
 		int		compId;
-		p->GetSlotInfo(p->GetUsedSlot(), pinIndex, compId);
+		p->GetSlotInfo(p->GetFirstUsedSlot(), pinIndex, compId);
 
 		const Component& comp	= m_compMgr.GetComponentById( compId );
 		assert( comp.GetType() == COMP::WIRE );	// Sanity check
@@ -567,7 +566,7 @@ void Board::FloodNodeId(int nodeId)
 			// Just need to get origId.  Any used slot will do
 			size_t pinIndex;
 			int compId;
-			p->GetSlotInfo(p->GetUsedSlot(), pinIndex, compId);
+			p->GetSlotInfo(p->GetFirstUsedSlot(), pinIndex, compId);
 
 			const Component& comp	= m_compMgr.GetComponentById( compId );
 			assert( comp.GetType() == COMP::WIRE );	// Sanity check

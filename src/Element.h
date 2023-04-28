@@ -64,17 +64,13 @@ public:
 	uchar	GetHoleUseRaw() const	{ return Pin::GetHoleUse(); }
 	uchar	GetSoicCharRaw() const	{ return Pin::GetSoicChar(); }
 	int		GetNodeIdRaw() const	{ return TrackElement::GetNodeId(); }
-	
-	void		 SetPinIndex(size_t i)		{ return GetBase()->Pin::SetPinIndex(i); }
 	void		 SetSurface(uchar c)		{ return GetBase()->Pin::SetSurface(c); }
 	void		 SetHoleUse(uchar c)		{ return GetBase()->Pin::SetHoleUse(c); }
 	void		 SetSoicChar(uchar c)		{ return GetBase()->Pin::SetSoicChar(c); }
 	void		 SetOccupancyTH(bool bWire)	{ return GetBase()->Pin::SetOccupancyTH(bWire); }
 	void		 SetOccupancySOIC()			{ return GetBase()->Pin::SetOccupancySOIC(); }
-	size_t		 GetPinIndex() const		{ return GetBaseConst()->Pin::GetPinIndex(); }
 	const uchar& GetSurface() const			{ return GetBaseConst()->Pin::GetSurface(); }
 	const uchar& GetHoleUse() const			{ return GetBaseConst()->Pin::GetHoleUse(); }
-	bool		 GetIsPin() const			{ return GetBaseConst()->Pin::GetIsPin(); }
 	bool		 GetIsHole() const			{ return GetBaseConst()->Pin::GetIsHole(); }
 	uchar		 GetSoicChar() const		{ return GetBaseConst()->Pin::GetSoicChar(); }
 	bool		 GetIsBotLyr() const		{ const Element* const p = GetNbr(NBR_X);	return p == nullptr || p > this; }
@@ -144,9 +140,6 @@ public:
 		return !(*this == o);
 	}
 	void SetIsMark(bool b)			{ GetBase()->m_bIsMark = b; }
-	void SetCompId(int i)			{ GetBase()->m_compId  = i; }
-	void SetCompId2(int i)			{ GetBase()->m_compId2 = i; }
-	void SetPinIndex2(size_t i)		{ GetBase()->m_pinChar2 = ( i >= BAD_PINCHAR ) ? BAD_PINCHAR : static_cast<uchar> (i); }
 	void SetSolderR(bool b)			{ GetBase()->m_bSolderR = b; }
 	void SetIsVia(bool b)			{ GetBase()->m_bIsVia	= b; }
 	void SetRoutable(int i)			{ m_iRoutable	= i; }
@@ -168,41 +161,56 @@ public:
 	void SetNbr(int iNbr, Element* p)	{ m_pNbr[iNbr]	= p; }
 	void ClearWires()			{ SetW(0, nullptr);	SetW(1, nullptr); }
 	bool GetHasWire() const		{ return GetW(0) != nullptr || GetW(1) != nullptr; }
-	int  GetNumWires() const
+	int GetNumWires() const
 	{
-		int i(0);
-		if ( GetW(0) != nullptr ) i++;
-		if ( GetW(1) != nullptr ) i++;
-		return i;
+		int nCount(0);
+		for (int iSlot = 0; iSlot < 2; iSlot++) if ( GetW(iSlot) != nullptr ) nCount++;
+		return nCount;
 	}
-	int  GetNumUsedSlots() const
+	int GetNumUsedSlots() const
 	{
-		return ( GetCompId() != BAD_COMPID ? 1 : 0 ) + ( GetCompId2() != BAD_COMPID ? 1 : 0 );
+		int nCount(0);
+		for (int iSlot = 0; iSlot < 2; iSlot++) if ( GetSlotCompId(iSlot) != BAD_COMPID ) nCount++;
+		return nCount;
 	}
-	int  GetUsedSlot() const
+	int GetFirstUsedSlot() const
 	{
-		return	( GetCompId()  != BAD_COMPID ) ? 0 :
-				( GetCompId2() != BAD_COMPID ) ? 1 : -1;
+		for (int iSlot = 0; iSlot < 2; iSlot++) if ( GetSlotCompId(iSlot) != BAD_COMPID ) return iSlot;
+		assert(0);
+		return -1;
 	}
-	int  GetFreeSlot() const
+	int GetFreeSlot() const
 	{
-		return	( GetCompId()  == BAD_COMPID ) ? 0 :
-				( GetCompId2() == BAD_COMPID ) ? 1 : -1;
+		for (int iSlot = 0; iSlot < 2; iSlot++) if ( GetSlotCompId(iSlot) == BAD_COMPID ) return iSlot;
+		assert(0);
+		return -1;
 	}
-	int  GetSlotFromCompId(int compId)
+	int GetSlotFromCompId(int compId) const
 	{
 		assert( GetCompId() != GetCompId2() || GetCompId() == BAD_COMPID );
-		if ( compId == GetCompId()  ) return 0;
-		if ( compId == GetCompId2() ) return 1;
-		assert(0);	// Error
+		for (int iSlot = 0; iSlot < 2; iSlot++) if ( GetSlotCompId(iSlot) == compId ) return iSlot;
 		return -1;
 	}
 	void SetSlotInfo(int iSlot, size_t pinIndex, int compId)
 	{
+		SetSlotPinIndex(iSlot, pinIndex);
+		SetSlotCompId(iSlot, compId);
+	}
+	void SetSlotPinIndex(int iSlot, size_t pinIndex)
+	{
 		switch( iSlot )
 		{
-			case 0:		SetPinIndex(pinIndex);	SetCompId(compId);	return;
-			case 1:		SetPinIndex2(pinIndex);	SetCompId2(compId);	return;
+			case 0:		return SetPinIndex(pinIndex);
+			case 1:		return SetPinIndex2(pinIndex);
+			default:	assert(0);
+		}
+	}
+	void SetSlotCompId(int iSlot, int compId)
+	{
+		switch( iSlot )
+		{
+			case 0:		return SetCompId(compId);
+			case 1:		return SetCompId2(compId);
 			default:	assert(0);
 		}
 	}
@@ -213,6 +221,24 @@ public:
 			case 0:		pinIndex = GetPinIndex();	compId = GetCompId();	return;
 			case 1:		pinIndex = GetPinIndex2();	compId = GetCompId2();	return;
 			default:	pinIndex = BAD_PININDEX;	compId = BAD_COMPID;	assert(0);
+		}
+	}
+	size_t GetSlotPinIndex(int iSlot) const
+	{
+		switch( iSlot )
+		{
+			case 0:		return GetPinIndex();
+			case 1:		return GetPinIndex2();
+			default:	assert(0);	return BAD_PININDEX;
+		}
+	}
+	int GetSlotCompId(int iSlot) const
+	{
+		switch( iSlot )
+		{
+			case 0:		return GetCompId();
+			case 1:		return GetCompId2();
+			default:	assert(0);	return BAD_COMPID;
 		}
 	}
 	bool GetWireExists(const Element* p) const
@@ -231,10 +257,6 @@ public:
 	}
 	void				SetMH(unsigned int iMH)	{ m_MH = iMH; }
 	const bool&			GetIsMark() const		{ return GetBaseConst()->m_bIsMark; }
-	const int&			GetCompId() const		{ return GetBaseConst()->m_compId; }
-	const int&			GetCompId2() const		{ return GetBaseConst()->m_compId2; }
-	const uchar&		GetPinChar2() const		{ return GetBaseConst()->m_pinChar2; }
-	bool				GetIsPin2() const		{ return GetPinChar2() != BAD_PINCHAR; }
 	int					GetNumCompIds() const	{ int i(0); if ( GetCompId() != BAD_COMPID ) i++; if ( GetCompId2() != BAD_COMPID ) i++; return i; }
 	bool				GetHasComp() const		{ return GetCompId() != BAD_COMPID || GetCompId2() != BAD_COMPID; }
 	bool				GetHasPinLegacy() const	{ return GetIsPin() || GetIsPin2(); }	// Only kept for legacy purposes (e.g. old VRTs don't have SOIC codes)
@@ -242,7 +264,6 @@ public:
 	bool				GetHasPinTH() const		{ return GetSoicChar() & SOIC_THL; }			// true ==> Have TH pin on either layer
 	bool				GetHasPinSOIC() const	{ return GetSoicChar() & SOIC_PAD; }			// true ==> Have SOIC pad on either layer
 	bool				GetLyrHasPin() const	{ return GetHasPinTH() || ( GetHasPinSOIC() && GetIsTopLyr() ); }
-	size_t				GetPinIndex2() const	{ return ( GetPinChar2() == BAD_PINCHAR ) ? BAD_PININDEX : GetPinChar2(); }
 	const bool&			GetSolderR() const		{ return GetBaseConst()->m_bSolderR; }
 	const bool&			GetIsVia() const		{ return GetBaseConst()->m_bIsVia; }
 	const int&			GetRoutable() const		{ return m_iRoutable; }
@@ -250,16 +271,9 @@ public:
 	const unsigned int&	GetMH() const			{ return m_MH; }
 	const unsigned int&	GetMaxMH() const		{ return m_maxMH; }
 	Element*			GetNbr(int iNbr) const	{ return m_pNbr[iNbr]; }
-	Element*			GetW(int i) const		{ return GetBaseConst()->m_pW[i]; }
-	bool				GetPinSupportsOffsetPads() const
-	{
-		return GetHasPinTH() /*&& !GetHasPinSOIC()*/ && !GetHasWire();	//TODO Should not allow at SOICs, and put checks into code for CanPutDown
-	}
-	bool				GetPinSupportsLayerPref() const
-	{
-		return GetHasPinTH() && !GetHasWire();
-	}
-
+	Element*			GetW(int iSlot) const	{ return GetBaseConst()->m_pW[iSlot]; }
+	bool				GetPinSupportsOffsetPads() const	{ return GetHasPinTH() && !GetHasWire(); }
+	bool				GetPinSupportsLayerPref() const		{ return GetHasPinTH() && !GetHasWire(); }
 	// Helpers
 	bool HaveNoBlankPins(int iNbr) const
 	{
@@ -386,6 +400,28 @@ public:
 		if ( m_compId2 != BAD_COMPID && m_compId2 != TRAX_COMPID )
 			o.deltaCompId = std::max(o.deltaCompId,  m_compId2 + 1);
 	}
+	void FixCorruption()
+	{
+		const bool bOK = GetCompId()	== BAD_COMPID	&&
+						 GetCompId2()	== BAD_COMPID	&&
+						 GetPinIndex()	== BAD_PININDEX	&&
+						 GetPinIndex2()	== BAD_PININDEX	&&
+						 GetSurface()	== SURFACE_FREE	&&
+						 GetHoleUse()	== HOLE_FREE	&&
+						 GetSoicChar()	== SOIC_FREE	&&
+						 GetIsMark()	== false;
+		if ( !bOK )
+		{
+			SetCompId(BAD_COMPID);
+			SetCompId2(BAD_COMPID);
+			SetPinIndex(BAD_PININDEX);
+			SetPinIndex2(BAD_PININDEX);
+			SetSurface(SURFACE_FREE);
+			SetHoleUse(HOLE_FREE);
+			SetSoicChar(SOIC_FREE);
+			SetIsMark(false);
+		}
+	}
 	virtual void ApplyMergeOffsets(const MergeOffsets& o) override
 	{
 		Pin::ApplyMergeOffsets(o);	// Does nothing
@@ -442,6 +478,17 @@ public:
 private:
 	Element*		GetBase()				{ Element*		 p = GetNbr(NBR_X);	return p == nullptr || p > this ? this : p; }
 	const Element*	GetBaseConst() const	{ const Element* p = GetNbr(NBR_X);	return p == nullptr || p > this ? this : p; }
+	const int&		GetCompId() const		{ return GetBaseConst()->m_compId; }
+	const int&		GetCompId2() const		{ return GetBaseConst()->m_compId2; }
+	const uchar&	GetPinChar2() const		{ return GetBaseConst()->m_pinChar2; }
+	bool			GetIsPin() const		{ return GetBaseConst()->Pin::GetIsPin(); }
+	bool			GetIsPin2() const		{ return GetPinChar2() != BAD_PINCHAR; }
+	size_t			GetPinIndex() const		{ return GetBaseConst()->Pin::GetPinIndex(); }
+	size_t			GetPinIndex2() const	{ return ( GetPinChar2() == BAD_PINCHAR ) ? BAD_PININDEX : GetPinChar2(); }
+	void			SetCompId(int i)		{ GetBase()->m_compId  = i; }
+	void			SetCompId2(int i)		{ GetBase()->m_compId2 = i; }
+	void			SetPinIndex(size_t i)	{ return GetBase()->Pin::SetPinIndex(i); }
+	void			SetPinIndex2(size_t i)	{ GetBase()->m_pinChar2 = ( i >= BAD_PINCHAR ) ? BAD_PINCHAR : static_cast<uchar> (i); }
 	bool WireListHelper(WIRELIST& wireList, const Element* p, unsigned int iStep) const
 	{
 		for (auto& o : wireList)

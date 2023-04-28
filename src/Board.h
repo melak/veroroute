@@ -187,13 +187,9 @@ public:
 	{
 		for (int iSlot = 0; iSlot < 2; iSlot++)
 		{
-			size_t	pinIndex;
-			int		compId;
-			p->GetSlotInfo(iSlot, pinIndex, compId);
+			const int compId = p->GetSlotCompId(iSlot);
 			if ( compId == BAD_COMPID ) continue;
-			if ( m_compMgr.GetComponentById(compId).GetIsSOIC() ) continue;
-			assert(pinIndex != BAD_PININDEX);
-			return iSlot;
+			if ( !m_compMgr.GetComponentById(compId).GetIsSOIC() ) return iSlot;
 		}
 		assert(0);	// Should never get here
 		return 0;
@@ -202,13 +198,9 @@ public:
 	{
 		for (int iSlot = 0; iSlot < 2; iSlot++)
 		{
-			size_t	pinIndex;
-			int		compId;
-			p->GetSlotInfo(iSlot, pinIndex, compId);
+			const int compId = p->GetSlotCompId(iSlot);
 			if ( compId == BAD_COMPID ) continue;
-			if ( !m_compMgr.GetComponentById(compId).GetIsSOIC() ) continue;
-			assert(pinIndex != BAD_PININDEX);
-			return iSlot;
+			if ( m_compMgr.GetComponentById(compId).GetIsSOIC() ) return iSlot;
 		}
 		assert(0);	// Should never get here
 		return 0;
@@ -451,8 +443,8 @@ public:
 				assert( pB->GetNumCompIds() > 0 && pB->GetNumCompIds() < 3 );
 				assert( pB->GetNodeId() == pA->GetNodeId() );	// Wire ends must have same NodeId
 
-				const int iSlotA = pA->GetSlotFromCompId(compId);
-				const int iSlotB = pB->GetSlotFromCompId(compId);
+				const int iSlotA = pA->GetSlotFromCompId(compId);	assert(iSlotA != -1);
+				const int iSlotB = pB->GetSlotFromCompId(compId);	assert(iSlotB != -1);
 				pA->SetW( iSlotA, pB );	// Give pA a pointer to pB
 				pB->SetW( iSlotB, pA );	// Give pB a pointer to pA
 			}
@@ -785,7 +777,14 @@ public:
 	// Helper for flying wires
 	bool GetAllowFlyWire(Element* p) const
 	{
-		return p->GetNodeId() != BAD_NODEID && p->GetHasPinTH() && !p->GetHasWire() && p->GetIsBotLyr() && m_compMgr.GetAllowFlyWire(p->GetCompId());
+		if ( p->GetNodeId() != BAD_NODEID && p->GetHasPinTH() && !p->GetHasWire() && p->GetIsBotLyr() )
+		{
+			size_t	pinIndex;
+			int		compId;
+			GetSlotInfoForTH(p, pinIndex, compId);
+			return m_compMgr.GetAllowFlyWire(compId);
+		}
+		return false;
 	}
 
 	// Helpers for locations of close tracks
@@ -958,8 +957,6 @@ private:
 					for (int i = 0, iCols = comp.GetCompCols(); i < iCols; i++, iCol++)
 					{
 						Element* p = Get(lyr, jRow, iCol);
-						// Want GetIsPin() methods to be private so commented out following assert
-						// assert( comp.GetCompElement(j, i)->GetIsPin() == p->GetIsPin() );
 						assert( p->GetSurface() == SURFACE_PLUG || p->GetSurface() == SURFACE_FULL );
 						const bool bGap = ( p->GetSurface() & SURFACE_GAP ) > 0;
 						p->SetOccupancyTH(true);	// true ==> WIRE

@@ -257,14 +257,6 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 						( compSurface  == SURFACE_FREE ) ||
 						( boardSurface + compSurface <= SURFACE_FULL );
 				bOK &=	( boardHoleUse + compHoleUse <= HOLE_FULL );
-
-				//if ( GetHaveTopLyr() )
-				//{
-				//	// TODO Have to prevent SOIC pins sharing hole with an offset pad
-				//	// Need to consider 2 cases...
-				//	// Trying to place SOIC on an existing offset pad
-				//	// Trying to place an offset pad on an existing SOIC
-				//}
 				bOK &=	( !GetHaveTopLyr() || !(compSoicChar & SOIC_TRACKS_TOP) || Get( LYR_TOP, jRow, iCol)->GetNodeId() == BAD_NODEID );	// Cannot place SOIC if board is painted in top SOIC tracks area
 				bOK &=	(                     !(compSoicChar & SOIC_TRACKS_BOT) || Get( LYR_BOT, jRow, iCol)->GetNodeId() == BAD_NODEID );	// Cannot place SOIC if board is painted in bottom SOIC tracks area
 				bOK &=	( boardSoicChar + compSoicChar <= SOIC_FULL );
@@ -393,8 +385,8 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 				if ( !pComp->ReadFlagBits(RECTSET) ) continue;		// Skip non-rect points
 				if ( pGrid->GetNodeId() != BAD_NODEID ) continue;	// Skip painted points
 				// If have wire(s) ...
-				if ( pGrid->GetW(0) ) blankWireIds.insert( pGrid->GetCompId()  );	// ... store its compId
-				if ( pGrid->GetW(1) ) blankWireIds.insert( pGrid->GetCompId2() );	// ... store its compId
+				if ( pGrid->GetW(0) ) blankWireIds.insert( pGrid->GetSlotCompId(0)  );	// ... store its compId
+				if ( pGrid->GetW(1) ) blankWireIds.insert( pGrid->GetSlotCompId(1) );	// ... store its compId
 			}
 		}
 
@@ -413,8 +405,8 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 				if ( traxNodeId == BAD_NODEID ) continue;	// Skip blank trax points
 
 				const bool bBlankWire		= pGrid->GetHasWire() &&
-											( blankWireIds.find( pGrid->GetCompId()  ) != blankWireIds.end() ||
-											  blankWireIds.find( pGrid->GetCompId2() ) != blankWireIds.end() );
+											( blankWireIds.find( pGrid->GetSlotCompId(0) ) != blankWireIds.end() ||
+											  blankWireIds.find( pGrid->GetSlotCompId(1) ) != blankWireIds.end() );
 				const bool bExistingNodeId	= !bBlankWire && ( pGrid->GetNodeId() == traxNodeId );
 
 				SetNodeIdByUser(compLyr, jRow, iCol, traxNodeId, false);	// false ==> don't paint pins
@@ -470,8 +462,6 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 
 				// Work out which slot to use
 				const int iSlot = pGrid->GetFreeSlot();
-				// Want GetIsPin() methods to be private so commented out following assert
-				// assert( ( iSlot == 0 && !pGrid->GetIsPin() ) || ( iSlot == 1 && !pGrid->GetIsPin2() ) );
 
 				// Store any user-painted nodeId's under the pin (i.e. "oridId") BEFORE placing
 				// If we are about to place a part/wire in the same hole as an existing part/wire,
@@ -529,8 +519,8 @@ bool Board::PutDown(Component& comp)	// Tries to place the (floating) component 
 			// pA and pB are the opposite ends of the wire
 			Element*	pA		= Get(compLyr, rowTL, colTL);						assert( pA );
 			Element*	pB		= Get(compLyr, rowTL+compRows-1, colTL+compCols-1);	assert( pB );
-			const int	iSlotA	= pA->GetSlotFromCompId(compId);
-			const int	iSlotB	= pB->GetSlotFromCompId(compId);
+			const int	iSlotA	= pA->GetSlotFromCompId(compId);	assert(iSlotA != -1);
+			const int	iSlotB	= pB->GetSlotFromCompId(compId);	assert(iSlotB != -1);
 			pA->SetW(iSlotA, pB);	// Link wire ends
 			pB->SetW(iSlotB, pA);	// Link wire ends
 
@@ -597,13 +587,13 @@ bool Board::TakeOff(Component& comp)
 	size_t	iPinIndex;
 	if ( pA )
 	{
-		iSlotA = pA->GetSlotFromCompId(compId);
+		iSlotA = pA->GetSlotFromCompId(compId);	assert(iSlotA != -1);
 		pA->GetSlotInfo(iSlotA, iPinIndex, tmpCompId);	assert( tmpCompId == compId );
 		for (int iLyr = 0; iLyr < 2; iLyr++) iOrigIdA[iLyr] = comp.GetOrigId(iLyr, iPinIndex);
 	}
 	if ( pB )
 	{
-		iSlotB = pB->GetSlotFromCompId(compId) ;
+		iSlotB = pB->GetSlotFromCompId(compId);	assert(iSlotB != -1);
 		pB->GetSlotInfo(iSlotB, iPinIndex, tmpCompId);	assert( tmpCompId == compId );
 		for (int iLyr = 0; iLyr < 2; iLyr++) iOrigIdB[iLyr] = comp.GetOrigId(iLyr, iPinIndex);
 	}
@@ -629,22 +619,22 @@ bool Board::TakeOff(Component& comp)
 			{
 				assert( !pComp->GetIsHole() || pGrid->GetIsHole() );	// Component hole can only be taken off a grid hole
 
-				const int numUsedSlots = pGrid->GetNumUsedSlots();
-
 				// Update surface and hole use
 				pGrid->SetSurface(  pGrid->GetSurface()  - pComp->GetSurface() );
 				pGrid->SetHoleUse(  pGrid->GetHoleUse()  - pComp->GetHoleUse() );
 				pGrid->SetSoicChar( pGrid->GetSoicChar() - pComp->GetSoicChar() );
-				if ( pGrid->GetSoicChar() == SOIC_FREE )
+
+				// Update compId and pinIndex use
+				if ( pGrid->GetSoicChar() == SOIC_FREE )	// Should not really need this case.  The else should suffice.
 				{
 					pGrid->SetSlotInfo(0, BAD_PININDEX, BAD_COMPID);	// Slot 0
 					pGrid->SetSlotInfo(1, BAD_PININDEX, BAD_COMPID);	// Slot 1
 				}
-				else if ( numUsedSlots == 2 )	// Removing a part/wire from a shared hole
+				else
 				{
-					const int iSlot = ( bWire && ( pGrid == pA || pGrid == pB ) ) ? ( ( pGrid == pA ) ? iSlotA : iSlotB )
-																				  : ( ( pGrid->GetCompId() == compId ) ? 0 : 1 );
-					pGrid->SetSlotInfo(iSlot, BAD_PININDEX, BAD_COMPID);
+					const int iSlot = pGrid->GetSlotFromCompId(compId);
+					if ( iSlot != -1 )
+						pGrid->SetSlotInfo(iSlot, BAD_PININDEX, BAD_COMPID);
 				}
 
 				// Update IDs at pin locations of component
@@ -1225,10 +1215,11 @@ void Board::FixCorruption()
 	for (int i = 0, iSize = GetSize(); i < iSize && !bBadGrid; i++)
 	{
 		Element* p = GetAt(i);
-		const int& compId	= p->GetCompId();
-		const int& compId2	= p->GetCompId2();
-		bBadGrid = ( compId  != BAD_COMPID && badCompIds.find(compId)  != badCompIds.end() )
-				|| ( compId2 != BAD_COMPID && badCompIds.find(compId2) != badCompIds.end() );
+		for (int iSlot = 0; iSlot < 2 && !bBadGrid; iSlot++)
+		{
+			const int compId = p->GetSlotCompId(iSlot);
+			bBadGrid = ( compId != BAD_COMPID && badCompIds.find(compId) != badCompIds.end() );
+		}
 	}
 	if ( !bBadGrid ) return;
 
@@ -1240,26 +1231,7 @@ void Board::FixCorruption()
 
 	// Ensure there are no component related effects on the board elements
 	for (int i = 0, iSize = GetSize(); i < iSize; i++)
-	{
-		Element* p = GetAt(i);
-		const bool bOK = p->GetCompId()		== BAD_COMPID	&&
-						 p->GetCompId2()	== BAD_COMPID	&&
-						 p->GetPinIndex()	== BAD_PININDEX	&&
-						 p->GetPinIndex2()	== BAD_PININDEX &&
-						 p->GetSurface()	== SURFACE_FREE &&
-						 p->GetHoleUse()	== HOLE_FREE	&&
-						 p->GetIsMark()		== false;
-		if ( !bOK )
-		{
-			p->SetCompId(BAD_COMPID);
-			p->SetCompId2(BAD_COMPID);
-			p->SetPinIndex(BAD_PININDEX);
-			p->SetPinIndex2(BAD_PININDEX);
-			p->SetSurface(SURFACE_FREE);
-			p->SetHoleUse(HOLE_FREE);
-			p->SetIsMark(false);
-		}
-	}
+		GetAt(i)->FixCorruption();
 
 	PlaceFloaters();	// Unfloat components
 }

@@ -528,7 +528,11 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 		const bool bToggled = m_board.ToggleLyrPref(layer, m_gridRow, m_gridCol);	assert(bToggled);
 		if ( bToggled )
 		{
-			SetMouseActionString("change pin layer preference", pC->GetCompId());
+			size_t	pinIndex;
+			int		compId;
+			m_board.GetSlotInfoForTH(pC, pinIndex, compId);
+
+			SetMouseActionString("change pin layer preference", compId);
 
 			// Also handle change of nodeID ...
 			if ( GetCurrentNodeId() != pC->GetNodeId() )

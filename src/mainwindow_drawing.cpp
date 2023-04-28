@@ -819,10 +819,11 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				const Component* pCompSOIC(nullptr);
 				if ( bSoicPad )	// Work out which slot contains the SOIC component
 				{
-					const int iSOICslot = ( pC->GetCompId() != BAD_COMPID && compMgr.GetComponentById(pC->GetCompId()).GetIsSOIC() ) ? 0 : 1;
+					const int iSOICslot = ( pC->GetSlotCompId(0) != BAD_COMPID && compMgr.GetComponentById(pC->GetSlotCompId(0)).GetIsSOIC() ) ? 0 : 1;
 					int compIdSOIC;
 					pC->GetSlotInfo(iSOICslot, iPinIndexSOIC, compIdSOIC);
 					pCompSOIC = &compMgr.GetComponentById(compIdSOIC);
+					assert( pCompSOIC->GetIsSOIC() );
 				}
 #endif
 				assert( !(bVia && bPad) );	// Can't be both a via and a pad
@@ -1156,7 +1157,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				case DEBUGMODE_SOICINFO:	iVal = (int) pC->GetSoicChar();	break;
 				case DEBUGMODE_ROUTEID:		iVal = pC->GetRouteId();		break;
 				case DEBUGMODE_NODEID:		iVal = pC->GetNodeId();			break;
-				case DEBUGMODE_PININDEX:	iVal = pC->GetPinIndex();		break;
+				case DEBUGMODE_PININDEX:	iVal = pC->GetSlotPinIndex(0);	break;
 			}
 			GetLRTB(board, 100, j, i, L, R, T, B);	// 100% size square
 			painter.save();
