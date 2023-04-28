@@ -288,6 +288,7 @@ public:
 		const bool bDiagsOK		= GetDiagsMode() != DIAGSMODE::OFF;
 		const bool bMinDiags	= GetDiagsMode() == DIAGSMODE::MIN;
 		const bool bBottomLayer	= p->GetIsBotLyr();
+		const bool bSOIC		= p->GetHasPinSOIC() && !bBottomLayer;
 
 		// Get track perimeter code on this layer (without any layer preferences)
 		int iCode = p->GetPerimeterCode(bDiagsOK, bMinDiags);	// 0 to 255
@@ -319,7 +320,7 @@ public:
 			}
 		}
 
-		const bool bForceXthermals = GetXthermals() && p->GetHasPinTH();
+		const bool bForceXthermals = GetXthermals() && ( p->GetHasPinTH() || bSOIC );
 
 		if ( bForceXthermals && (GetTrackMode() == TRACKMODE::PCB || GetTrackMode() == TRACKMODE::MONO ) && GetGroundFill() && GetGroundNodeId(bBottomLayer ? 0 : 1) == p->GetNodeId() )
 			return 0;
@@ -366,7 +367,7 @@ public:
 
 		int theDiags = CODEBITS_DIAGS;	// Default "theDiags" to X pattern
 
-		const bool bForceXthermals = GetXthermals() && p->GetHasPinTH();
+		const bool bForceXthermals = GetXthermals() && ( p->GetHasPinTH() || bSOIC );
 		if ( bForceXthermals && bSOIC )	// SOICs can't use the full X pattern for "theDiags"
 		{
 			theDiags = 0;	// Clear "theDiags"
