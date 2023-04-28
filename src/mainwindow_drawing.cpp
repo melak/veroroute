@@ -842,10 +842,6 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				int		padOffsetX(0), padOffsetY(0);
 				if ( bPad && !bWire )
 				{
-					const int		 compId		= pC->GetCompId();
-					const Component& comp		= compMgr.GetComponentById( compId );
-					assert( comp.GetType() != COMP::INVALID );
-
 					if ( !bVero && board.GetPadOffsets(pC, padOffsetX, padOffsetY) )	// Get offsets in mil
 					{
 						padOffsetX = (padOffsetX * W) / 100;	// Convert from mil to pixels
@@ -854,6 +850,13 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 					if ( board.GetLyrs() == 2 && pC->GetPinSupportsLayerPref() )
 						layerPref = board.GetLayerPref(pC);
+
+					size_t	pinIndex;
+					int		compId;
+					board.GetSlotInfoForTH(pC, pinIndex, compId);
+
+					const Component& comp = compMgr.GetComponentById( compId );
+					assert( comp.GetType() != COMP::INVALID );
 
 					bCustomSize = comp.GetCustomPads();
 					if ( bCustomSize )

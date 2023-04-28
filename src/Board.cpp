@@ -697,7 +697,11 @@ void Board::SetSolder(int nodeId, int col, bool bVertical)
 					rowPins++;
 				else
 				{
-					const Component& comp = m_compMgr.GetComponentById( pC->GetCompId() );
+					size_t	pinIndex;
+					int		compId;
+					GetSlotInfoForTH(pC, pinIndex, compId);
+
+					const Component& comp = m_compMgr.GetComponentById( compId );
 					assert( comp.GetType() != COMP::INVALID );
 					if ( comp.GetType() == COMP::PAD || comp.GetAllowFlyWire() )
 						rowPads++;
@@ -711,7 +715,11 @@ void Board::SetSolder(int nodeId, int col, bool bVertical)
 					rowPins++;
 				else
 				{
-					const Component& comp = m_compMgr.GetComponentById( pR->GetCompId() );
+					size_t	pinIndex;
+					int		compId;
+					GetSlotInfoForTH(pR, pinIndex, compId);
+
+					const Component& comp = m_compMgr.GetComponentById( compId );
 					assert( comp.GetType() != COMP::INVALID );
 					if ( comp.GetType() == COMP::PAD || comp.GetAllowFlyWire() )
 						rowPads++;

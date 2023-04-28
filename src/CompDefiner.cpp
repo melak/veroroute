@@ -92,7 +92,7 @@ void CompDefiner::Build(const TemplateManager& templateMgr, Component& comp) con
 	comp.SetImportStr( GetImportStr() );
 	comp.SetLabelOffsetRow( GetLabelOffsetRow() );
 	comp.SetLabelOffsetCol( GetLabelOffsetCol() );
-	
+
 	comp.SetType(COMP::CUSTOM);
 
 	const COMP eType = CompTypes::GetTypeFromImportStr( templateMgr.GetImportStrCut(m_importStr) );
