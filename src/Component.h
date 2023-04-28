@@ -520,6 +520,7 @@ public:
 	}
 	bool GetAllowCustomPads() const	// true ==> allow custom pad and hole widths
 	{
+		if ( GetIsSOIC() ) return false;
 		switch( GetType()  )
 		{
 			case COMP::TRACKS:	return false;
