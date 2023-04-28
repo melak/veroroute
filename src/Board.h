@@ -191,7 +191,22 @@ public:
 			int		compId;
 			p->GetSlotInfo(iSlot, pinIndex, compId);
 			if ( compId == BAD_COMPID ) continue;
-			if ( m_compMgr.GetComponentById(compId).GetIsSOIC() ) continue;	// Only non-SOIC parts have non-TH pins
+			if ( m_compMgr.GetComponentById(compId).GetIsSOIC() ) continue;
+			assert(pinIndex != BAD_PININDEX);
+			return iSlot;
+		}
+		assert(0);	// Should never get here
+		return 0;
+	}
+	int GetSlotForSOIC(const Element* p) const
+	{
+		for (int iSlot = 0; iSlot < 2; iSlot++)
+		{
+			size_t	pinIndex;
+			int		compId;
+			p->GetSlotInfo(iSlot, pinIndex, compId);
+			if ( compId == BAD_COMPID ) continue;
+			if ( !m_compMgr.GetComponentById(compId).GetIsSOIC() ) continue;
 			assert(pinIndex != BAD_PININDEX);
 			return iSlot;
 		}
@@ -201,6 +216,11 @@ public:
 	void GetSlotInfoForTH(const Element* p, size_t& pinIndex, int& compId) const
 	{
 		const int iSlot = GetSlotForTH(p);
+		p->GetSlotInfo(iSlot, pinIndex, compId);
+	}
+	void GetSlotInfoForSOIC(const Element* p, size_t& pinIndex, int& compId) const
+	{
+		const int iSlot = GetSlotForSOIC(p);
 		p->GetSlotInfo(iSlot, pinIndex, compId);
 	}
 	bool GetPadOffsets(const Element* p, int& padOffsetX, int& padOffsetY) const
@@ -299,7 +319,7 @@ public:
 			}
 		}
 
-		const bool bForceXthermals = GetXthermals() && p->GetHasPinTH() && !(p->GetHasPinSOIC() && p->GetIsTopLyr());
+		const bool bForceXthermals = GetXthermals() && p->GetHasPinTH();
 
 		if ( bForceXthermals && (GetTrackMode() == TRACKMODE::PCB || GetTrackMode() == TRACKMODE::MONO ) && GetGroundFill() && GetGroundNodeId(bBottomLayer ? 0 : 1) == p->GetNodeId() )
 			return 0;
@@ -344,45 +364,47 @@ public:
 			if ( bOK ) SetCodeBit(iNbr, iCandidateTagBits);	// Update iCandidateTagBits
 		}
 
-		const bool bForceXthermals = GetXthermals() && p->GetHasPinTH() && !bSOIC;
+		int theDiags = CODEBITS_DIAGS;	// Default "theDiags" to X pattern
 
+		const bool bForceXthermals = GetXthermals() && p->GetHasPinTH();
+		if ( bForceXthermals && bSOIC )	// SOICs can't use the full X pattern for "theDiags"
+		{
+			theDiags = 0;	// Clear "theDiags"
+			if ( iLayerPrefP == LAYER_X || iLayerPrefP == LAYER_T )
+			{
+				for (int iNbr = 1; iNbr < 8; iNbr += 2)	// Loop diagonal nbrs
+				{
+					const Element*	pNbr = p->GetNbr(iNbr);
+
+					// Use a subset of the checks in Element::IsBlocked()...
+					if ( pNbr->GetSoicProtected() ) continue;	// Block connections to SOIC area
+					bool bProtected(false);
+					switch( iNbr )	// Block diagonals crossing the SOIC area
+					{
+						case NBR_LT: bProtected = ( p->GetNbr(NBR_L)->GetSoicProtected() || p->GetNbr(NBR_T)->GetSoicProtected() );	break;
+						case NBR_RT: bProtected = ( p->GetNbr(NBR_R)->GetSoicProtected() || p->GetNbr(NBR_T)->GetSoicProtected() );	break;
+						case NBR_LB: bProtected = ( p->GetNbr(NBR_L)->GetSoicProtected() || p->GetNbr(NBR_B)->GetSoicProtected() );	break;
+						case NBR_RB: bProtected = ( p->GetNbr(NBR_R)->GetSoicProtected() || p->GetNbr(NBR_B)->GetSoicProtected() );	break;
+					}
+					if ( bProtected ) continue;
+	
+					SetCodeBit(iNbr, theDiags);	// Update "theDiags"
+				}
+			}
+		}
 		if ( iCandidateTagBits == 0 )
 		{
-			if ( bForceXthermals && ( ( iLayerPrefP == LAYER_X ) || ( iLayerPrefP == ( bBottomLayer ? LAYER_B : LAYER_T ) ) ) )
-				return CODEBITS_DIAGS;	// If forcing X-thermals and we have no connections in the layer, rely on layer preference alone
-			else if ( GetXthermals() && p->GetHasPinTH() && bSOIC && ( iLayerPrefP == LAYER_X || iLayerPrefP == LAYER_T ) )
-			{
-				//TODO Sort out the logic in this block
-				int iCandidateTagBits(0);
-				for (int iNbr = 1; iNbr < 8; iNbr+=2)	// Loop diagonal nbrs
-				{
-					const Element*	q		= p->GetNbr(iNbr);
-			//		const int	iNbrNodeId	= q->GetNodeId();
-
-					if ( ReadCodeBit(iNbr , iPerimeterCode) ) continue;			// Skip if direction already has connection
-					if ( ReadCodeBit((iNbr+1)%8 , iPerimeterCode) ) continue;	// Skip if adjacent CW  direction already has connection
-					if ( ReadCodeBit((iNbr+7)%8, iPerimeterCode) ) continue;	// Skip if adjacent CCW direction already has connection
-			//		if ( ( q->GetHasPinTH() || iNbrNodeId != BAD_NODEID ) && iNbrNodeId != iNodeId ) continue;	// Skip if direction is not empty, or has wrong NodeID
-			//		if ( p->IsBlocked(iNbr, iNodeId) ) continue;				// Skip if direction is blocked
-					if ( q->GetSoicProtected() ) continue;	// Block connections to SOIC area
-
-					//const int	iLayerPrefQ	= ( GetLyrs() == 1 || !q->GetPinSupportsLayerPref() ) ? LAYER_X : GetLayerPref(q); 
-
-					//const bool bOK = ( iLayerPrefP == LAYER_X && iLayerPrefQ == LAYER_X ) ||                                   
-					//				( bBottomLayer ? ( iLayerPrefP == LAYER_B || iLayerPrefQ == LAYER_B )                     
-					//								: ( iLayerPrefP == LAYER_T || iLayerPrefQ == LAYER_T ) );                  
-					//if ( bOK ) SetCodeBit(iNbr, iCandidateTagBits);	// Update iCandidateTagBits
-					SetCodeBit(iNbr, iCandidateTagBits);	// Update iCandidateTagBits
-				}
-				return iCandidateTagBits;
-			}
+			if ( bForceXthermals && !bSOIC && ( ( iLayerPrefP == LAYER_X ) || ( iLayerPrefP == ( bBottomLayer ? LAYER_B : LAYER_T ) ) ) )
+				return theDiags;	// If forcing X-thermals and we have no connections in the layer, rely on layer preference alone
+			else if ( bForceXthermals && bSOIC )
+				return theDiags;
 			else
 				return 0;	// No candidate tags, so we're done
 		}
 
-		if ( bForceXthermals ) return CODEBITS_DIAGS;
+		if ( bForceXthermals ) return theDiags;
 
-		if ( iCandidateTagBits == CODEBITS_LYR && !bSOIC ) return CODEBITS_DIAGS;	// All tags are allowed, so just use the 4 diagonals
+		if ( iCandidateTagBits == CODEBITS_LYR ) return theDiags;	// All tags are allowed, so just use the 4 diagonals
 
 		// Select a subset of the iCandidateTagBits
 

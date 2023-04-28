@@ -205,7 +205,12 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 				CalcBlob(1, pointA, padA, iPadWidthMIL_A, iPerimeterCodeA, iTagCodeA, blobA, bHasPinA, bSoicA, bIsGndA);	// 1 ==> scale of 1 grid square
 #ifdef _TEST_SOIC
 			if ( bSoicA )
-				CalcSOIC(1, pointA, pA->GetPinIndex(), GetCompMgr().GetComponentById(pA->GetCompId()).GetDirection(), soicA, bSolderMask, bIsGndA);
+			{
+				size_t	pinIndex;
+				int		compId;
+				GetSlotInfoForSOIC(pA, pinIndex, compId);
+				CalcSOIC(1, pointA, pinIndex, GetCompMgr().GetComponentById(compId).GetDirection(), soicA, bSolderMask, bIsGndA);
+			}
 #endif
 			// Only need to loop half the directions in the following loop (the i,j scan takes care of the other half)
 			for (int jj = std::max(minRow,j-nRings); jj <= j; jj++)
@@ -256,7 +261,12 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 					CalcBlob(1, pointB, padB, iPadWidthMIL_B, iPerimeterCodeB, iTagCodeB, blobB, bHasPinB, bSoicB, bIsGndB);	// 1 ==> scale of 1 grid square
 #ifdef _TEST_SOIC
 				if ( bSoicB )
-					CalcSOIC(1, pointB, pB->GetPinIndex(), GetCompMgr().GetComponentById(pB->GetCompId()).GetDirection(), soicB, bSolderMask, bIsGndB);
+				{
+					size_t	pinIndex;
+					int		compId;
+					GetSlotInfoForSOIC(pB, pinIndex, compId);
+					CalcSOIC(1, pointB, pinIndex, GetCompMgr().GetComponentById(compId).GetDirection(), soicB, bSolderMask, bIsGndB);
+				}
 #endif
 				const bool bCompareBlobs = !bStandardBlobs || ( abs(jj - j) < 2 && abs(ii - i) < 2 );	// Standard blobs ==> just consider neighbouring grid points
 
