@@ -1290,16 +1290,18 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 							padOffsetY = (padOffsetY * W) / 100;	// Convert from mil to pixels
 						}
 
-						if ( bColor && !bPlaced )	// Color pins of floating components (if in Color mode)
+						if ( !bPlaced )	// If floating component ...
 						{
-							const int&	 nodeId			= comp.GetNodeId(iPinIndex);
-							const bool	 bCurrentNodeId	= nodeId != BAD_NODEID && nodeId == GetCurrentNodeId();
-							const QColor color			= bCurrentNodeId ? colorMgr.GetPixmapColor(MY_GREY)
-																		 : colorMgr.GetColorFromNodeId(nodeId);
-							m_varPen.setColor(color);
-							m_varBrush.setColor(color);
-							painter.setBrush( bMonoPCB ? Qt::NoBrush : m_varBrush);	// No pin color fill in Mono/PCB mode
-
+							if ( bColor )	// Color pins (if in Color mode)
+							{
+								const int&	 nodeId			= comp.GetNodeId(iPinIndex);
+								const bool	 bCurrentNodeId	= nodeId != BAD_NODEID && nodeId == GetCurrentNodeId();
+								const QColor color			= bCurrentNodeId ? colorMgr.GetPixmapColor(MY_GREY)
+																			 : colorMgr.GetColorFromNodeId(nodeId);
+								m_varPen.setColor(color);
+								m_varBrush.setColor(color);
+								painter.setBrush( bMonoPCB ? Qt::NoBrush : m_varBrush);	// No pin color fill in Mono/PCB mode
+							}
 #ifdef _TEST_SOIC
 							if ( bSOIC && bTopLyr )	//	Draw tracks of floating IC
 							{
