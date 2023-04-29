@@ -423,8 +423,9 @@ bool Board::SetNodeIdByUser(int lyr, int row, int col, int nodeId, bool bPaintPi
 	Element*	p		= Get(lyr, row, col);
 	if ( p->GetIsHole() || ( p->GetSoicProtected() && nodeId != BAD_NODEID ) ) return false;	// No change
 
-	const bool	bWire	= p->GetHasWire();
-	const bool	bPin	= p->GetLyrHasPin();
+	const bool	bWire			= p->GetHasWire();
+	const bool	bPin			= p->GetLyrHasPin();
+	const bool	bUnderSOICpin	= !bPin && p->GetHasPinSOIC();	// Special case.  On bottom layer, under an SOIC pin
 	assert( !bPin || p->GetHasComp() );			// Sanity check
 	assert( !bWire || p->GetHasPinTH() );		// Wires must have TH pins
 	assert( !bWire || !p->GetHasPinSOIC() );	// Wires can't share with SOICs
@@ -432,7 +433,7 @@ bool Board::SetNodeIdByUser(int lyr, int row, int col, int nodeId, bool bPaintPi
 	WIRELIST wireList;	// Helper for chains of wires
 
 	// Handle special case first.
-	if ( bPin && !bWire && !bPaintPins )
+	if ( ( bPin || bUnderSOICpin ) && !bWire && !bPaintPins )
 	{
 		// If trying to paint the board under a non-wire pin ...
 		// ... we can modify the "origId" for the pin, but are only allowed
@@ -450,7 +451,7 @@ bool Board::SetNodeIdByUser(int lyr, int row, int col, int nodeId, bool bPaintPi
 			assert( comp.GetType() != COMP::WIRE );	// Sanity check
 			assert( pinIndex != BAD_PININDEX );
 
-			if ( nodeId != BAD_NODEID && nodeId != comp.GetNodeId(pinIndex) ) continue;	// Can't set a bad origId
+			if ( bPin && nodeId != BAD_NODEID && nodeId != comp.GetNodeId(pinIndex) ) continue;	// Can't set a bad origId
 
 			if ( comp.GetOrigId(lyr, pinIndex) == nodeId ) continue;	// origId is already as required
 
@@ -460,7 +461,9 @@ bool Board::SetNodeIdByUser(int lyr, int row, int col, int nodeId, bool bPaintPi
 			m_nodeInfoMgr.AddComp(comp);
 			bChanged = true;
 		}
-		return bChanged;
+
+		if ( bPin )	// Only return for the bPin case.  The bUnderSOICpin case has to paint the board.
+			return bChanged;
 	}
 
 	// Now do regular cases:  Paint the board as needed...

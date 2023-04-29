@@ -645,14 +645,15 @@ bool Board::TakeOff(Component& comp)
 										comp.GetOrigId(1, pinIndex) };	// ... on both layers
 				comp.SetOrigId(0, pinIndex, BAD_NODEID);				// ... before wiping
 				comp.SetOrigId(1, pinIndex, BAD_NODEID);				// ... them
-				assert( origId[0] == BAD_NODEID || origId[0] == comp.GetNodeId(pinIndex) || bSOIC );	// Base layer check does not apply to SOIC
-				assert( origId[1] == BAD_NODEID || origId[1] == comp.GetNodeId(pinIndex) );
 
 				// Wire-ends need special treatment, so just handle non-wire pins here
 				if ( !bWire )
 				{
-					if ( !pGrid->GetHasPin() ) // Only change nodeIds on board if we're taking the last pin out
+					if ( !pGrid->GetHasPin() )	// If we're removing the last pin, revert nodeId on each board layer.
 					{
+						assert( origId[0] == BAD_NODEID || origId[0] == comp.GetNodeId(pinIndex) || bSOIC );	// Base layer check does not apply to SOIC
+						assert( origId[1] == BAD_NODEID || origId[1] == comp.GetNodeId(pinIndex) );
+
 						for (int iLyr = 0, lyrs = std::min(GetLyrs(), 2); iLyr < lyrs; iLyr++)
 						{
 							if ( bSOIC && iLyr != LYR_TOP ) continue;
@@ -663,6 +664,13 @@ bool Board::TakeOff(Component& comp)
 							WipeFlagBits(p, AUTOSET|VEROSET, bAllLyrs);
 							MarkFlagBits(p, USERSET, bAllLyrs);
 						}
+					}
+					else if ( !bSOIC )	// Special case.  We're removing a TH pin from a TH/SOIC hole-share.  Only revert nodeId on bottom layer.
+					{
+						const bool bAllLyrs = false;
+						SetNodeId(pGrid, origId[0], bAllLyrs);	// Restore grid element on bottom layer (under the SOIC) to original nodeId
+						WipeFlagBits(pGrid, AUTOSET|VEROSET, bAllLyrs);
+						MarkFlagBits(pGrid, USERSET, bAllLyrs);
 					}
 				}
 			}

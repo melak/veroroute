@@ -1908,34 +1908,45 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		painter.translate((L+R)/2, (T+B)/2);
 		painter.scale(dTextScale, dTextScale);
 		painter.setPen(m_blackPen);
-		std::string txt("nodeId  // nodeId  Srf  Soic  Hole //  Pin  Comp  // Pin2  Comp2");
+		std::string txt("nodeId  // nodeId  Srf  Soic  Hole //  Comp1  Pin1  OrigId  //  Comp2  Pin2  OrigId");
 		painter.drawText(0,0,0,0, Qt::TextDontClip | Qt::AlignVCenter | Qt::AlignLeft, txt.c_str());
 		painter.restore();
 
-		for (int iLyr = 0; iLyr < board.GetLyrs(); iLyr++)
+		if ( m_iDebugMode == DEBUGMODE_LAYERINFO )
 		{
-			const Element* pC = m_board.Get(iLyr, m_gridRow, m_gridCol);
-			std::string txt;
-			if ( layer == iLyr )
-				txt = "*";
-			else
-				txt = " ";
-			const int iNodeId		= pC->GetNodeId();					txt += std::to_string(iNodeId) + " // ";	
-			const int iNodeIdRaw	= pC->GetNodeIdRaw();				txt += std::to_string(iNodeIdRaw) + " ";
-			const int iSurface		= (int)pC->GetSurfaceRaw();			txt += std::to_string(iSurface) + " ";
-			const int iSoic			= (int)pC->GetSoicCharRaw();		txt += std::to_string(iSoic) + " ";
-			const int iHole			= (int)pC->GetHoleUseRaw();			txt += std::to_string(iHole) + " // ";
-			const int iPinIndex		= pC->GetPinIndexRaw();				txt += std::to_string(iPinIndex) + " ";
-			const int iCompId		= pC->GetCompIdRaw();				txt += std::to_string(iCompId) + " // ";
-			const int iPinIndex2	= pC->GetPinIndex2Raw();			txt += std::to_string(iPinIndex2) + " ";
-			const int iCompId2		= pC->GetCompId2Raw();				txt += std::to_string(iCompId2) + " ";
-			GetLRTB(board, 100, 2 - iLyr, 0, L, R, T, B);	// 100% size square
-			painter.save();
-			painter.translate((L+R)/2, (T+B)/2);
-			painter.scale(dTextScale, dTextScale);
-			painter.setPen(m_blackPen);
-			painter.drawText(0,0,0,0, Qt::TextDontClip | Qt::AlignVCenter | Qt::AlignLeft, txt.c_str());
-			painter.restore();
+			for (int iLyr = 0; iLyr < board.GetLyrs(); iLyr++)
+			{
+				const Element* pC = m_board.Get(iLyr, m_gridRow, m_gridCol);
+				std::string txt;
+				if ( layer == iLyr )
+					txt = "*";
+				else
+					txt = " ";
+				const int iNodeId		= pC->GetNodeId();				txt += std::to_string(iNodeId) + " // ";	
+				const int iNodeIdRaw	= pC->GetNodeIdRaw();			txt += std::to_string(iNodeIdRaw) + " ";
+				const int iSurface		= (int)pC->GetSurfaceRaw();		txt += std::to_string(iSurface) + " ";
+				const int iSoic			= (int)pC->GetSoicCharRaw();	txt += std::to_string(iSoic) + " ";
+				const int iHole			= (int)pC->GetHoleUseRaw();		txt += std::to_string(iHole) + " // ";
+				const int iCompId		= pC->GetCompIdRaw();			txt += std::to_string(iCompId) + "  ";
+				const int iPinIndex		= pC->GetPinIndexRaw();			txt += std::to_string(iPinIndex) + " ";
+				if ( iCompId != BAD_COMPID )
+					txt += std::to_string( compMgr.GetComponentById(iCompId).GetOrigId(iLyr, iPinIndex) ) + " // ";
+				else
+					txt += "NA // ";
+				const int iCompId2		= pC->GetCompId2Raw();			txt += std::to_string(iCompId2) + " ";
+				const int iPinIndex2	= pC->GetPinIndex2Raw();		txt += std::to_string(iPinIndex2) + " ";
+				if ( iCompId2 != BAD_COMPID )
+					txt += std::to_string( compMgr.GetComponentById(iCompId2).GetOrigId(iLyr, iPinIndex2) ) + " // ";
+				else
+					txt += "NA // ";
+				GetLRTB(board, 100, 2 - iLyr, 0, L, R, T, B);	// 100% size square
+				painter.save();
+				painter.translate((L+R)/2, (T+B)/2);
+				painter.scale(dTextScale, dTextScale);
+				painter.setPen(m_blackPen);
+				painter.drawText(0,0,0,0, Qt::TextDontClip | Qt::AlignVCenter | Qt::AlignLeft, txt.c_str());
+				painter.restore();
+			}
 		}
 	}
 #endif
