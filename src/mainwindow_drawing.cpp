@@ -168,14 +168,14 @@ void MainWindow::PaintSOIC(const GuiControl& guiCtrl, QPainter& painter, const Q
 	const int W = guiCtrl.GetGRIDPIXELS();
 
 	std::list<MyPolygonF> polygonList;
-	guiCtrl.CalcSOIC(W, pC, pinIndex, pComp->GetDirection(), polygonList, false, bIsGnd, bGap);	// Populate polygonList
+	guiCtrl.CalcSOIC(W, pC, pinIndex, pComp->GetNumPins(), pComp->GetDirection(), polygonList, false, bIsGnd, bGap);	// Populate polygonList
 
 	if ( m_bWriteGerber )	// Write to Gerber
 	{
 		if ( !bGap )	// Use this as an opportunity to get the solder mask info
 		{
 			std::list<MyPolygonF> solderMask;
-			guiCtrl.CalcSOIC(W, pC, pinIndex, pComp->GetDirection(), solderMask, true, bIsGnd, bGap);	// Populate polygonList
+			guiCtrl.CalcSOIC(W, pC, pinIndex, pComp->GetNumPins(), pComp->GetDirection(), solderMask, true, bIsGnd, bGap);	// Populate polygonList
 
 			GStream& os = m_gWriter.GetStream(GFILE::GTS);	// Top solder mask layer
 			for (auto& polygon : solderMask)
@@ -183,7 +183,7 @@ void MainWindow::PaintSOIC(const GuiControl& guiCtrl, QPainter& painter, const Q
 				if ( polygon.empty() ) continue;
 
 				const bool bTrk	= polygon.m_eTrkPen != GPEN::NONE;		assert(!bTrk);
-				const bool bPad	= polygon.m_ePadPen != GPEN::NONE;		assert(!bPad);
+				const bool bPad	= polygon.m_ePadPen != GPEN::NONE;		assert(bPad);
 				if ( !bTrk && !bPad && !polygon.m_bClosed ) continue;	assert(!polygon.m_bClosed);
 
 				const GPEN& ePen = bTrk ? polygon.m_eTrkPen : polygon.m_ePadPen;

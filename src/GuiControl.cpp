@@ -106,8 +106,8 @@ void GuiControl::CalcBlob(qreal W, const QPointF& pC, const QPointF& pCoffset,
 					// Make an N-point curve from L to R passing near central control point C
 					// Current interpolation is quadratic.
 					// Using higher order (e.g. 2.5) gives bends passing closer to C (hence sharper corners)
-					static int		N = 10;
-					static double	d = 1.0 / N;
+					Q_DECL_CONSTEXPR static const int		N = 10;
+					Q_DECL_CONSTEXPR static const double	d = 1.0 / N;
 					const QPointF	pLC(p[iL] - pC), pRC(p[iR] - pC);
 					for (int i = 0; i <= N; i++)
 					{
@@ -233,8 +233,8 @@ void Bezier(MyPolygonF& polygon, const QPointF& pL, const QPointF& pC, const QPo
 	// Make an N-point curve from L to R passing near central control point C
 	// Current interpolation is quadratic.
 	// Using higher order (e.g. 2.5) gives bends passing closer to C (hence sharper corners)
-	static int		N = 10;
-	static double	d = 1.0 / N;
+	Q_DECL_CONSTEXPR static const int		N = 10;
+	Q_DECL_CONSTEXPR static const double	d = 1.0 / N;
 	const QPointF	pLC(pL - pC), pRC(pR - pC);
 	for (int i = 0; i <= N; i++)
 	{
@@ -244,15 +244,17 @@ void Bezier(MyPolygonF& polygon, const QPointF& pL, const QPointF& pC, const QPo
 	}
 }
 
-void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, char direction, std::list<MyPolygonF>& out, bool bSolderMask, bool bIsGnd, bool bGap) const
+void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, size_t numPins, char direction, std::list<MyPolygonF>& out, bool bSolderMask, bool bIsGnd, bool bGap) const
 {
+	assert( !bGap || !bSolderMask );
+	assert(numPins == 16 || numPins == 20 || numPins == 28);
 	out.clear();
 
 	// Given a grid point (pC) this method populates "out" with a description of an SOIC track from a "SOIC pin".
 	// The scale parameter W represents the width of a 100 mil grid square.
 
+	const qreal	T			= W * 0.025;	// 1/40 square width
 	const qreal	C			= W * 0.5;	// 1/2 square width
-	const qreal	Q			= W * 0.25;	// 1/4 square width
 	const qreal	padWidth	= 0.01 * ( GetPAD_IC_MIL() + 2 * ( bSolderMask ? GetMASK_MIL() : 0) );
 	const qreal	trkWidth	= 0.01 * ( GetTRACK_IC_MIL() + 2 * ( bGap ? GetGAP_MIL() : 0 ) );
 
@@ -272,44 +274,48 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, char dire
 	polygonB.m_bClosed		= bGap;
 	polygonB.clear();
 
-	assert( !bGap || !bSolderMask );
 	const bool bNoTrackGap	= bIsGnd && bGap;	// For tracks in the ground fill, don't draw a gap around them
 	const bool bDoTrack		= !bSolderMask && !bNoTrackGap;
 	const bool bDoPad		= !bGap;
 
+	if ( numPins == 28 )
+	{	// Start 28 Pin
 	// 7 basic curves, referenced by pins 21-27
 	const int iRefPin = ( pinIndex <  7 ) ? 27 - pinIndex :
 						( pinIndex < 14 ) ? 14 + pinIndex :
 						( pinIndex < 21 ) ? 41 - pinIndex : pinIndex;
 	assert(iRefPin >= 21 && iRefPin <= 27);
 
+
+
 	if ( bDoTrack )
 	{
 		switch(iRefPin)
 		{
-			case 27: polygonA << pC << pC+QPointF(5*Q,0);	break;
-			case 26: Bezier(polygonA, pC, pC+QPointF(6*Q,0.5*Q), pC+QPointF(7*Q,3*Q));	break;
-			case 25: polygonA << pC << pC+QPointF(2.5*Q,2.5*Q);
-					 Bezier(polygonA, pC+QPointF(2.5*Q,2.5*Q), pC+QPointF(8.1*Q,3.8*Q), pC+QPointF(9*Q,7*Q) );	break;
-			case 24: Bezier(polygonA, pC, pC+QPointF(7*Q,4.5*Q), pC+QPointF(7*Q,7*Q));	break;
-			case 23: Bezier(polygonA, pC, pC+QPointF(5*Q,3.5*Q), pC+QPointF(5*Q,7*Q));	break;
-			case 22: Bezier(polygonA, pC, pC+QPointF(3*Q,2.5*Q), pC+QPointF(3*Q,7*Q));	break;
-			case 21: Bezier(polygonA, pC, pC+QPointF(Q,2*Q), pC+QPointF(Q,7*Q) );		break;
+			case 27: polygonA << pC << pC+QPointF(50*T,0);	break;
+			case 26: Bezier(polygonA, pC, pC+QPointF(60*T,5*T),	pC+QPointF(70*T,30*T));	break;
+			case 25: polygonA << pC << pC+QPointF(25*T,25*T);
+					 Bezier(polygonA, pC+QPointF(25*T,25*T), pC+QPointF(81*T,38*T), pC+QPointF(90*T,70*T) );	break;
+			case 24: Bezier(polygonA, pC, pC+QPointF(70*T,45*T), pC+QPointF(70*T,70*T));	break;
+			case 23: Bezier(polygonA, pC, pC+QPointF(50*T,35*T), pC+QPointF(50*T,70*T));	break;
+			case 22: Bezier(polygonA, pC, pC+QPointF(30*T,25*T), pC+QPointF(30*T,70*T));	break;
+			case 21: Bezier(polygonA, pC, pC+QPointF(10*T,20*T), pC+QPointF(10*T,70*T) );	break;
 		}
 	}
 	if ( bDoPad )
 	{
 		switch(iRefPin)
 		{
-			case 27: polygonB << pC+QPointF(5*Q,-Q)  << pC+QPointF(5*Q,1.8*Q);	break;
-			case 26: polygonB << pC+QPointF(7*Q,3*Q) << pC+QPointF(7*Q,5.8*Q);	break;
-			case 25: polygonB << pC+QPointF(9*Q,7*Q) << pC+QPointF(9*Q,9.8*Q);	break;
-			case 24: polygonB << pC+QPointF(7*Q,7*Q) << pC+QPointF(7*Q,9.8*Q);	break;
-			case 23: polygonB << pC+QPointF(5*Q,7*Q) << pC+QPointF(5*Q,9.8*Q);	break;
-			case 22: polygonB << pC+QPointF(3*Q,7*Q) << pC+QPointF(3*Q,9.8*Q);	break;
-			case 21: polygonB << pC+QPointF(Q,7*Q)	 << pC+QPointF(Q,9.8*Q);	break;
+			case 27: polygonB << pC+QPointF(50*T,-10*T) << pC+QPointF(50*T,18*T);	break;
+			case 26: polygonB << pC+QPointF(70*T,30*T)  << pC+QPointF(70*T,58*T);	break;
+			case 25: polygonB << pC+QPointF(90*T,70*T)  << pC+QPointF(90*T,98*T);	break;
+			case 24: polygonB << pC+QPointF(70*T,70*T)  << pC+QPointF(70*T,98*T);	break;
+			case 23: polygonB << pC+QPointF(50*T,70*T)  << pC+QPointF(50*T,98*T);	break;
+			case 22: polygonB << pC+QPointF(30*T,70*T)  << pC+QPointF(30*T,98*T);	break;
+			case 21: polygonB << pC+QPointF(10*T,70*T)  << pC+QPointF(10*T,98*T);	break;
 		}
 	}
+
 	// If we're doing the gap then instead of showing a small gap around each SOIC pad, blank out a large rectangle
 	const bool bSidePin = ( iRefPin >= 26 );	// Omit the side pins 27 and 26.
 	if ( bGap && !bSidePin)
@@ -321,6 +327,102 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, char dire
 	// Reflect the polygon based on the reference pin as necessary
 	if ( pinIndex < 14 )					{ polygonA.flipV(pC); polygonB.flipV(pC); } 
 	if ( pinIndex >= 7 && pinIndex < 21 )	{ polygonA.flipH(pC); polygonB.flipH(pC); }
+	}	// End 28 Pin
+
+
+	if ( numPins == 20 )
+	{	// Start 20 Pin
+	// 5 basic curves, referenced by pins 15-19
+	const int iRefPin = ( pinIndex <  5 ) ? 19 - pinIndex :
+						( pinIndex < 10 ) ? 10 + pinIndex :
+						( pinIndex < 15 ) ? 29 - pinIndex : pinIndex;
+	assert(iRefPin >= 15 && iRefPin <= 19);
+
+	const double T = W * 0.025;
+
+	if ( bDoTrack )
+	{
+		switch(iRefPin)
+		{
+			case 19: polygonA << pC << pC+QPointF(25*T,25*T);
+					 Bezier(polygonA, pC+QPointF(25*T,25*T), pC+QPointF(81*T,38*T), pC+QPointF(90*T,70*T) );	break;
+			case 18: Bezier(polygonA, pC, pC+QPointF(70*T,45*T), pC+QPointF(70*T,70*T));	break;
+			case 17: Bezier(polygonA, pC, pC+QPointF(50*T,35*T), pC+QPointF(50*T,70*T));	break;
+			case 16: Bezier(polygonA, pC, pC+QPointF(30*T,25*T), pC+QPointF(30*T,70*T));	break;
+			case 15: Bezier(polygonA, pC, pC+QPointF(10*T,20*T), pC+QPointF(10*T,70*T) );	break;
+		}
+	}
+	if ( bDoPad )
+	{
+		switch(iRefPin)
+		{
+			case 19: polygonB << pC+QPointF(90*T,70*T)  << pC+QPointF(90*T,98*T);	break;
+			case 18: polygonB << pC+QPointF(70*T,70*T)  << pC+QPointF(70*T,98*T);	break;
+			case 17: polygonB << pC+QPointF(50*T,70*T)  << pC+QPointF(50*T,98*T);	break;
+			case 16: polygonB << pC+QPointF(30*T,70*T)  << pC+QPointF(30*T,98*T);	break;
+			case 15: polygonB << pC+QPointF(10*T,70*T)  << pC+QPointF(10*T,98*T);	break;
+		}
+	}
+
+	// If we're doing the gap then instead of showing a small gap around each SOIC pad, blank out a large rectangle
+	const bool bCornerPin = ( iRefPin == 19 );	// Omit the corner pins 19.
+	if ( bGap && !bCornerPin)
+	{
+		const QPointF p = pC + QPointF(C,C);
+		polygonB << p << p+QPointF(W,0) << p+QPointF(W,2.25*W) << p+QPointF(0,2.25*W) << p;
+	}
+
+	// Reflect the polygon based on the reference pin as necessary
+	if ( pinIndex < 10 )					{ polygonA.flipV(pC); polygonB.flipV(pC); } 
+	if ( pinIndex >= 5 && pinIndex < 15 )	{ polygonA.flipH(pC); polygonB.flipH(pC); }
+	}	// End 20 Pin
+
+	
+	if ( numPins == 16 )
+	{	// Start 16 Pin
+	// 4 basic curves, referenced by pins 12-15
+	const int iRefPin = ( pinIndex <  4 ) ? 15 - pinIndex :
+						( pinIndex <  8 ) ?  8 + pinIndex :
+						( pinIndex < 12 ) ? 23 - pinIndex : pinIndex;
+	assert(iRefPin >= 12 && iRefPin <= 15);
+
+	const double T = W * 0.025;
+
+	if ( bDoTrack )
+	{
+		switch(iRefPin)
+		{
+			case 15: Bezier(polygonA, pC, pC+QPointF(70*T,45*T), pC+QPointF(70*T,70*T));	break;
+			case 14: Bezier(polygonA, pC, pC+QPointF(50*T,35*T), pC+QPointF(50*T,70*T));	break;
+			case 13: Bezier(polygonA, pC, pC+QPointF(30*T,25*T), pC+QPointF(30*T,70*T));	break;
+			case 12: Bezier(polygonA, pC, pC+QPointF(10*T,20*T), pC+QPointF(10*T,70*T) );	break;
+		}
+	}
+	if ( bDoPad )
+	{
+		switch(iRefPin)
+		{
+			case 15: polygonB << pC+QPointF(70*T,70*T)  << pC+QPointF(70*T,98*T);	break;
+			case 14: polygonB << pC+QPointF(50*T,70*T)  << pC+QPointF(50*T,98*T);	break;
+			case 13: polygonB << pC+QPointF(30*T,70*T)  << pC+QPointF(30*T,98*T);	break;
+			case 12: polygonB << pC+QPointF(10*T,70*T)  << pC+QPointF(10*T,98*T);	break;
+		}
+	}
+
+	// If we're doing the gap then instead of showing a small gap around each SOIC pad, blank out a large rectangle
+	const bool bCornerPin =false;//TODO ( iRefPin == 19 );	// Omit the corner pins 19.
+	if ( bGap && !bCornerPin)
+	{
+		const QPointF p = pC + QPointF(C,C);
+		polygonB << p << p+QPointF(W,0) << p+QPointF(W,2.25*W) << p+QPointF(0,2.25*W) << p;
+	}
+
+	// Reflect the polygon based on the reference pin as necessary
+	if ( pinIndex < 8 )						{ polygonA.flipV(pC); polygonB.flipV(pC); } 
+	if ( pinIndex >= 4 && pinIndex < 12 )	{ polygonA.flipH(pC); polygonB.flipH(pC); }
+	}	// End 16 Pin
+
+
 
 	// Handle component rotation
 	int numRotations(0);
