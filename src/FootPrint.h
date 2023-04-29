@@ -213,14 +213,12 @@ public:
 	void SetupOccupanciesTH()
 	{
 		const bool bWire = ( m_type == COMP::WIRE );
-		assert( GetLyrs() == 1 );
 		assert( !bWire || (GetRows() == 1 && GetCols() > 1) );
 		for (int i = 0, iSize = GetSize(); i < iSize; i++)
 			GetAt(i)->SetOccupancyTH(bWire);
 	}
 	void SetupOccupanciesSOIC()
 	{
-		assert( GetLyrs() == 1 );
 		for (int i = 0, iSize = GetSize(); i < iSize; i++)
 			GetAt(i)->SetOccupancySOIC();
 	}
