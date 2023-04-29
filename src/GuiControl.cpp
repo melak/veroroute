@@ -272,72 +272,53 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, char dire
 	polygonB.m_bClosed		= bGap;
 	polygonB.clear();
 
-	// If we're doing the gap then instead of showing a small gap around each SOIC pad strip,
-	// blank out a large area across the IC
-	if ( bGap )
+	assert( !bGap || !bSolderMask );
+	const bool bNoTrackGap	= bIsGnd && bGap;	// For tracks in the ground fill, don't draw a gap around them
+	const bool bDoTrack		= !bSolderMask && !bNoTrackGap;
+	const bool bDoPad		= !bGap;
+
+	// 7 basic curves, referenced by pins 21-27
+	const int iRefPin = ( pinIndex <  7 ) ? 27 - pinIndex :
+						( pinIndex < 14 ) ? 14 + pinIndex :
+						( pinIndex < 21 ) ? 41 - pinIndex : pinIndex;
+	assert(iRefPin >= 21 && iRefPin <= 27);
+
+	if ( bDoTrack )
 	{
-		assert(!bSolderMask);
+		switch(iRefPin)
+		{
+			case 27: polygonA << pC << pC+QPointF(5*Q,0);	break;
+			case 26: Bezier(polygonA, pC, pC+QPointF(6*Q,0.5*Q), pC+QPointF(7*Q,3*Q));	break;
+			case 25: polygonA << pC << pC+QPointF(2.5*Q,2.5*Q);
+					 Bezier(polygonA, pC+QPointF(2.5*Q,2.5*Q), pC+QPointF(8.1*Q,3.8*Q), pC+QPointF(9*Q,7*Q) );	break;
+			case 24: Bezier(polygonA, pC, pC+QPointF(7*Q,4.5*Q), pC+QPointF(7*Q,7*Q));	break;
+			case 23: Bezier(polygonA, pC, pC+QPointF(5*Q,3.5*Q), pC+QPointF(5*Q,7*Q));	break;
+			case 22: Bezier(polygonA, pC, pC+QPointF(3*Q,2.5*Q), pC+QPointF(3*Q,7*Q));	break;
+			case 21: Bezier(polygonA, pC, pC+QPointF(Q,2*Q), pC+QPointF(Q,7*Q) );		break;
+		}
+	}
+	if ( bDoPad )
+	{
+		switch(iRefPin)
+		{
+			case 27: polygonB << pC+QPointF(5*Q,-Q)  << pC+QPointF(5*Q,1.8*Q);	break;
+			case 26: polygonB << pC+QPointF(7*Q,3*Q) << pC+QPointF(7*Q,5.8*Q);	break;
+			case 25: polygonB << pC+QPointF(9*Q,7*Q) << pC+QPointF(9*Q,9.8*Q);	break;
+			case 24: polygonB << pC+QPointF(7*Q,7*Q) << pC+QPointF(7*Q,9.8*Q);	break;
+			case 23: polygonB << pC+QPointF(5*Q,7*Q) << pC+QPointF(5*Q,9.8*Q);	break;
+			case 22: polygonB << pC+QPointF(3*Q,7*Q) << pC+QPointF(3*Q,9.8*Q);	break;
+			case 21: polygonB << pC+QPointF(Q,7*Q)	 << pC+QPointF(Q,9.8*Q);	break;
+		}
+	}
+	// If we're doing the gap then instead of showing a small gap around each SOIC pad, blank out a large rectangle
+	const bool bSidePin = ( iRefPin >= 26 );	// Omit the side pins 27 and 26.
+	if ( bGap && !bSidePin)
+	{
 		const QPointF p = pC + QPointF(C,C);
 		polygonB << p << p+QPointF(W,0) << p+QPointF(W,2.25*W) << p+QPointF(0,2.25*W) << p;
 	}
 
-	const bool bNoTrackGap = bIsGnd && bGap;	// For tracks in the ground fill, don't draw a gap around them
-
-	// 7 basic curves.  Start by repeating the curves for pins 21-27
-	switch(pinIndex)
-	{
-		case 27:	case  0:	case 13:	case 14:
-			if ( !bSolderMask && !bNoTrackGap )
-				polygonA << pC << pC+QPointF(5*Q,0);
-			if ( !bGap )
-				polygonB << pC+QPointF(5*Q,-Q) << pC+QPointF(5*Q,1.8*Q);
-			else 
-				polygonB.clear();
-			break;
-		case 26:	case  1:	case 12:	case 15:
-			if ( !bSolderMask && !bNoTrackGap )
-				Bezier(polygonA, pC, pC+QPointF(6*Q,0.5*Q), pC+QPointF(7*Q,3*Q));
-			if ( !bGap )
-				polygonB << pC+QPointF(7*Q,3*Q) << pC+QPointF(7*Q,5.8*Q);
-			else 
-				polygonB.clear();
-			break;
-		case 25:	case  2:	case 11:	case 16:
-			if ( !bSolderMask && !bNoTrackGap )
-			{
-				polygonA << pC << pC+QPointF(2.5*Q,2.5*Q);
-				Bezier(polygonA, pC+QPointF(2.5*Q,2.5*Q), pC+QPointF(8.1*Q,3.8*Q), pC+QPointF(9*Q,7*Q) );
-			}
-			if ( !bGap )
-				polygonB << pC+QPointF(9*Q,7*Q) << pC+QPointF(9*Q,9.8*Q);
-			break;
-		case 24:	case  3:	case 10:	case 17:
-			if ( !bSolderMask && !bNoTrackGap )
-				Bezier(polygonA, pC, pC+QPointF(7*Q,4.5*Q), pC+QPointF(7*Q,7*Q));
-			if ( !bGap )
-				polygonB << pC+QPointF(7*Q,7*Q) << pC+QPointF(7*Q,9.8*Q);
-			break;
-		case 23:	case  4:	case  9:	case 18:
-			if ( !bSolderMask && !bNoTrackGap )
-				Bezier(polygonA, pC, pC+QPointF(5*Q,3.5*Q), pC+QPointF(5*Q,7*Q));
-			if ( !bGap )
-				polygonB << pC+QPointF(5*Q,7*Q) << pC+QPointF(5*Q,9.8*Q);
-			break;
-		case 22:	case  5:	case  8:	case 19:
-			if ( !bSolderMask && !bNoTrackGap )
-				Bezier(polygonA, pC, pC+QPointF(3*Q,2.5*Q), pC+QPointF(3*Q,7*Q));
-			if ( !bGap )
-				polygonB << pC+QPointF(3*Q,7*Q) << pC+QPointF(3*Q,9.8*Q);
-			break;
-		case 21:	case  6:	case  7:	case 20:
-			if ( !bSolderMask && !bNoTrackGap )
-				Bezier(polygonA, pC, pC+QPointF(Q,2*Q), pC+QPointF(Q,7*Q) );
-			if ( !bGap )
-				polygonB << pC+QPointF(Q,7*Q) << pC+QPointF(Q,9.8*Q);
-			break;
-	}
-
-	// Then reflect as necessary
+	// Reflect the polygon based on the reference pin as necessary
 	if ( pinIndex < 14 )					{ polygonA.flipV(pC); polygonB.flipV(pC); } 
 	if ( pinIndex >= 7 && pinIndex < 21 )	{ polygonA.flipH(pC); polygonB.flipH(pC); }
 
