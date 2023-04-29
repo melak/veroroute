@@ -320,8 +320,8 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, size_t nu
 	const bool bSidePin = ( iRefPin >= 26 );	// Omit the side pins 27 and 26.
 	if ( bGap && !bSidePin)
 	{
-		const QPointF p = pC + QPointF(C,C);
-		polygonB << p << p+QPointF(W,0) << p+QPointF(W,2.25*W) << p+QPointF(0,2.25*W) << p;
+		const QPointF p = pC + QPointF(0.8*W,W);
+		polygonB << p << p+QPointF(W,0) << p+QPointF(W,1.75*W) << p+QPointF(0,1.75*W) << p;
 	}
 
 	// Reflect the polygon based on the reference pin as necessary
@@ -344,8 +344,7 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, size_t nu
 	{
 		switch(iRefPin)
 		{
-			case 19: polygonA << pC << pC+QPointF(25*T,25*T);
-					 Bezier(polygonA, pC+QPointF(25*T,25*T), pC+QPointF(81*T,38*T), pC+QPointF(90*T,70*T) );	break;
+			case 19: Bezier(polygonA, pC, pC+QPointF(40*T,10*T), pC+QPointF(50*T,30*T) );	break;
 			case 18: Bezier(polygonA, pC, pC+QPointF(70*T,45*T), pC+QPointF(70*T,70*T));	break;
 			case 17: Bezier(polygonA, pC, pC+QPointF(50*T,35*T), pC+QPointF(50*T,70*T));	break;
 			case 16: Bezier(polygonA, pC, pC+QPointF(30*T,25*T), pC+QPointF(30*T,70*T));	break;
@@ -356,7 +355,7 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, size_t nu
 	{
 		switch(iRefPin)
 		{
-			case 19: polygonB << pC+QPointF(90*T,70*T)  << pC+QPointF(90*T,98*T);	break;
+			case 19: polygonB << pC+QPointF(50*T,30*T)  << pC+QPointF(50*T,58*T);	break;
 			case 18: polygonB << pC+QPointF(70*T,70*T)  << pC+QPointF(70*T,98*T);	break;
 			case 17: polygonB << pC+QPointF(50*T,70*T)  << pC+QPointF(50*T,98*T);	break;
 			case 16: polygonB << pC+QPointF(30*T,70*T)  << pC+QPointF(30*T,98*T);	break;
@@ -365,11 +364,11 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, size_t nu
 	}
 
 	// If we're doing the gap then instead of showing a small gap around each SOIC pad, blank out a large rectangle
-	const bool bCornerPin = ( iRefPin == 19 );	// Omit the corner pins 19.
-	if ( bGap && !bCornerPin)
+	const bool bSidePin = ( iRefPin == 19 );	// Omit the side pin 19.
+	if ( bGap && !bSidePin)
 	{
-		const QPointF p = pC + QPointF(C,C);
-		polygonB << p << p+QPointF(W,0) << p+QPointF(W,2.25*W) << p+QPointF(0,2.25*W) << p;
+		const QPointF p = pC + QPointF(0.8*W,W);
+		polygonB << p << p+QPointF(W,0) << p+QPointF(W,1.75*W) << p+QPointF(0,1.75*W) << p;
 	}
 
 	// Reflect the polygon based on the reference pin as necessary
@@ -392,7 +391,7 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, size_t nu
 	{
 		switch(iRefPin)
 		{
-			case 15: Bezier(polygonA, pC, pC+QPointF(70*T,45*T), pC+QPointF(70*T,70*T));	break;
+			case 15: Bezier(polygonA, pC, pC+QPointF(30*T, 5*T), pC+QPointF(30*T,30*T));	break;
 			case 14: Bezier(polygonA, pC, pC+QPointF(50*T,35*T), pC+QPointF(50*T,70*T));	break;
 			case 13: Bezier(polygonA, pC, pC+QPointF(30*T,25*T), pC+QPointF(30*T,70*T));	break;
 			case 12: Bezier(polygonA, pC, pC+QPointF(10*T,20*T), pC+QPointF(10*T,70*T) );	break;
@@ -402,7 +401,7 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, size_t nu
 	{
 		switch(iRefPin)
 		{
-			case 15: polygonB << pC+QPointF(70*T,70*T)  << pC+QPointF(70*T,98*T);	break;
+			case 15: polygonB << pC+QPointF(30*T,30*T)  << pC+QPointF(30*T,58*T);	break;
 			case 14: polygonB << pC+QPointF(50*T,70*T)  << pC+QPointF(50*T,98*T);	break;
 			case 13: polygonB << pC+QPointF(30*T,70*T)  << pC+QPointF(30*T,98*T);	break;
 			case 12: polygonB << pC+QPointF(10*T,70*T)  << pC+QPointF(10*T,98*T);	break;
@@ -410,11 +409,11 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, size_t nu
 	}
 
 	// If we're doing the gap then instead of showing a small gap around each SOIC pad, blank out a large rectangle
-	const bool bCornerPin =false;//TODO ( iRefPin == 19 );	// Omit the corner pins 19.
-	if ( bGap && !bCornerPin)
+	const bool bSidePin = ( iRefPin == 15 );	// Omit the side pin 15.
+	if ( bGap && !bSidePin)
 	{
-		const QPointF p = pC + QPointF(C,C);
-		polygonB << p << p+QPointF(W,0) << p+QPointF(W,2.25*W) << p+QPointF(0,2.25*W) << p;
+		const QPointF p = pC + QPointF(0.3*W,W);
+		polygonB << p << p+QPointF(W,0) << p+QPointF(W,1.75*W) << p+QPointF(0,1.75*W) << p;
 	}
 
 	// Reflect the polygon based on the reference pin as necessary
