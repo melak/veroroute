@@ -138,7 +138,9 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 
 	if ( GetCompEdit() || GetVeroTracks() ) return;
 
-	const int nRings = 2;	// 2 ==> Max pad size supported by VeroRoute could be up to 200 mil in future
+	// Some SOIC designs in VeroRoute have an SOIC pad/track that is adjacent to a useable non-SOIC grid point (X),
+	// but the SOIC "pin" for that track may not be adjacent to X.  So we have to increase "nRings" below to 3 to capture these cases.
+	const int nRings = m_compMgr.GetHaveSOIC() ? 3 : 2;	// 2 ==> Max pad size supported by VeroRoute could be up to 200 mil in future
 	int Xmil, Ymil;	// For pad offsets
 
 	const bool bStandardBlobs = ( MAX_PAD_OFFSET_MIL <= 50 );	// true ==> legs for offset pads will be within a grid square
@@ -285,19 +287,19 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 				if ( bCompareBlobs && bBlobA && bBlobB ) for(const auto& a : blobA) for(const auto& b : blobB) polygonHelper.CalcSeparation(a, b);
 
 				// SOIC track A to SOIC track B
-				if ( bCompareBlobs && bSoicA && bSoicB ) for(const auto& a : soicA) for(const auto& b : soicB) polygonHelper.CalcSeparation(a, b);
+				if ( bSoicA && bSoicB ) for(const auto& a : soicA) for(const auto& b : soicB) polygonHelper.CalcSeparation(a, b);
 
 				// Pad A to SOIC track B
 				if ( bPadA && bSoicB ) for(const auto& b : soicB) polygonHelper.CalcSeparation(padA, b);
 
 				// Pad B to SOIC track A
 				if ( bPadB && bSoicA ) for(const auto& a : soicA) polygonHelper.CalcSeparation(padB, a);
-				
+
 				// SOIC track A to Blob B
-				if ( bCompareBlobs && bSoicA && bBlobB ) for(const auto& a : soicA) for(const auto& b : blobB) polygonHelper.CalcSeparation(a, b);
-				
+				if ( bSoicA && bBlobB ) for(const auto& a : soicA) for(const auto& b : blobB) polygonHelper.CalcSeparation(a, b);
+
 				// SOIC track B to Blob A
-				if ( bCompareBlobs && bSoicB && bBlobA ) for(const auto& b : soicB) for(const auto& a : blobA) polygonHelper.CalcSeparation(a, b);
+				if ( bSoicB && bBlobA ) for(const auto& b : soicB) for(const auto& a : blobA) polygonHelper.CalcSeparation(a, b);
 			}
 		}
 		if ( polygonHelper.m_Dmin > m_dMinSeparation ) continue;

@@ -182,8 +182,8 @@ void MainWindow::PaintSOIC(const GuiControl& guiCtrl, QPainter& painter, const Q
 			{
 				if ( polygon.empty() ) continue;
 
-				const bool bTrk	= polygon.m_eTrkPen != GPEN::NONE;		assert(!bTrk);
-				const bool bPad	= polygon.m_ePadPen != GPEN::NONE;		assert(bPad);
+				const bool bTrk	= polygon.m_eTrkPen != GPEN::NONE;		assert(bTrk);
+				const bool bPad	= polygon.m_ePadPen != GPEN::NONE;		assert(!bPad);
 				if ( !bTrk && !bPad && !polygon.m_bClosed ) continue;	assert(!polygon.m_bClosed);
 
 				const GPEN& ePen = bTrk ? polygon.m_eTrkPen : polygon.m_ePadPen;
