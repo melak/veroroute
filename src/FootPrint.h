@@ -221,6 +221,18 @@ public:
 	{
 		for (int i = 0, iSize = GetSize(); i < iSize; i++)
 			GetAt(i)->SetOccupancySOIC();
+
+#ifdef _TEST_SOIC
+		//TODO Following is a hack for the test SOICs.  Need to do this properly.
+		// Above logic in Pin::SetOccupancySOIC() maps SURFACE_FULL to SOIC_TRACKS_TOP in all non-pin locations
+		// If we have large enough gap between SOIC pads, we could actually route tracks on the top there
+		for (int iRow = 0, rows = GetRows(); iRow < rows; iRow++)
+		{
+			if ( iRow < 3 || iRow > 5 ) continue;
+			for (int iCol = 0, cols = GetCols(); iCol < cols; iCol++)
+				Get(iRow, iCol)->SetSoicChar(SOIC_FREE);
+		}
+#endif		
 	}
 	// Persist interface functions
 	virtual void Load(DataStream& inStream) override

@@ -508,7 +508,6 @@ Element* Board::Backtrace(Element* const pEnd, int nodeId)
 		Element* const pW0 = m_bHavePlacedWires ? p->GetW(0) : nullptr;
 		Element* const pW1 = m_bHavePlacedWires ? p->GetW(1) : nullptr;
 		const bool bWire		= (pW0 || pW1) && p->GetIsBotLyr();	// Constrain wire-routing to bottom layer
-		const bool bHasPin		= bWire || p->GetHasPin();		// Checks all layers (so returns true even for bottom layer under an SOIC pin)
 		const bool bHasPinTH	= bWire || p->GetHasPinTH();	// Checks all layers
 		const bool bLyrHasPin	= p->GetLyrHasPin();			// true ==> have a pin on this layer, so returns false for bottom layer under an SOIC pin (with no TH)
 		const bool bAllLyrs		= bHasPinTH;

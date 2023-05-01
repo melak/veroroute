@@ -277,7 +277,7 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, size_t nu
 	const bool bDoTrack		= !bSolderMask && !bNoTrackGap;
 	const bool bDoPad		= !bGap;
 
-	const QPointF padGapLR(15*T,0), padGapTB(0,12*T);	// Gaps for the SOIC pads
+	const QPointF padGapLR(15*T,0), padGapTB(0,20*T);	// Gaps for the SOIC pads
 	QPointF padTop, padBot;	// Limits of SOIC pads
 
 	// 28 pin =========================================================================
