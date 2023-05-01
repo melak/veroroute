@@ -556,7 +556,7 @@ Element* Board::Backtrace(Element* const pEnd, int nodeId)
 						}
 						break;
 					case 2:	// Type 2 ==> Change layer at a via
-						if ( !bHasPin && iLastDirection != NBR_X )
+						if ( !bHasPinTH && iLastDirection != NBR_X )
 						{
 							bOK = BacktraceHelper(p, MH, nodeId, MH_LVIA, NBR_X, iLoop);
 							if ( bOK ) iLastDirection = NBR_X;
