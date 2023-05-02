@@ -247,7 +247,7 @@ void Bezier(MyPolygonF& polygon, const QPointF& pL, const QPointF& pC, const QPo
 void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, size_t numPins, char direction, std::list<MyPolygonF>& out, bool bSolderMask, bool bIsGnd, bool bGap) const
 {
 	assert( !bGap || !bSolderMask );
-	assert(numPins == 14 || numPins == 16 || numPins == 20 || numPins == 24 || numPins == 28);
+	assert(numPins == 8 || numPins == 14 || numPins == 16 || numPins == 20 || numPins == 24 || numPins == 28);
 	out.clear();
 
 	// Given a grid point (pC) this method populates "out" with a description of an SOIC track from a "SOIC pin".
@@ -297,7 +297,8 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, size_t nu
 				case 26: Bezier(polygonA, pC, pC+QPointF(60*T,5*T),	pC+QPointF(70*T,30*T)); break;
 				case 25: polygonA << pC << pC+QPointF(25*T,25*T);
 						 Bezier(polygonA, pC+QPointF(25*T,25*T), pC+QPointF(81*T,38*T), pC+QPointF(90*T,70*T) ); break;
-				case 24: Bezier(polygonA, pC, pC+QPointF(70*T,45*T), pC+QPointF(70*T,70*T)); break;
+				case 24: polygonA << pC << pC+QPointF(10*T,10*T);
+						 Bezier(polygonA, pC+QPointF(10*T,10*T), pC+QPointF(70*T,45*T), pC+QPointF(70*T,70*T)); break;
 				case 23: Bezier(polygonA, pC, pC+QPointF(50*T,35*T), pC+QPointF(50*T,70*T)); break;
 				case 22: Bezier(polygonA, pC, pC+QPointF(30*T,25*T), pC+QPointF(30*T,70*T)); break;
 				case 21: Bezier(polygonA, pC, pC+QPointF(10*T,20*T), pC+QPointF(10*T,70*T)); break;
@@ -346,7 +347,8 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, size_t nu
 			{
 				case 23: polygonA << pC << pC+QPointF(30*T,0); break;
 				case 22: Bezier(polygonA, pC, pC+QPointF(40*T, 5*T), pC+QPointF(50*T,30*T)); break;
-				case 21: Bezier(polygonA, pC, pC+QPointF(70*T,45*T), pC+QPointF(70*T,70*T)); break;
+				case 21: polygonA << pC << pC+QPointF(25*T,25*T);
+						 Bezier(polygonA, pC+QPointF(25*T,25*T), pC+QPointF(70*T,45*T), pC+QPointF(70*T,70*T)); break;
 				case 20: Bezier(polygonA, pC, pC+QPointF(50*T,35*T), pC+QPointF(50*T,70*T)); break;
 				case 19: Bezier(polygonA, pC, pC+QPointF(30*T,25*T), pC+QPointF(30*T,70*T)); break;
 				case 18: Bezier(polygonA, pC, pC+QPointF(10*T,20*T), pC+QPointF(10*T,70*T)); break;
@@ -425,7 +427,6 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, size_t nu
 	}
 	// 20 pin =========================================================================
 
-	
 	// 16 pin =========================================================================
 	if ( numPins == 16 )
 	{
@@ -439,8 +440,8 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, size_t nu
 		{
 			switch(iRefPin)
 			{
-				case 15: Bezier(polygonA, pC, pC+QPointF(30*T, 5*T), pC+QPointF(30*T,30*T)); break;
-				case 14: Bezier(polygonA, pC, pC+QPointF(50*T,35*T), pC+QPointF(50*T,70*T)); break;
+				case 15: polygonA << pC << pC+QPointF(30*T,30*T); break;//Bezier(polygonA, pC, pC+QPointF(30*T, 5*T), pC+QPointF(30*T,30*T)); break;
+				case 14: Bezier(polygonA, pC, pC+QPointF(50*T,45*T), pC+QPointF(50*T,70*T)); break;
 				case 13: Bezier(polygonA, pC, pC+QPointF(30*T,25*T), pC+QPointF(30*T,70*T)); break;
 				case 12: Bezier(polygonA, pC, pC+QPointF(10*T,20*T), pC+QPointF(10*T,70*T)); break;
 			}
@@ -470,7 +471,6 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, size_t nu
 	}
 	// 16 pin =========================================================================
 
-
 	// 14 pin =========================================================================
 	if ( numPins == 14 )
 	{
@@ -484,7 +484,7 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, size_t nu
 		{
 			switch(iRefPin)
 			{
-				case 13: Bezier(polygonA, pC, pC+QPointF(20*T, 5*T), pC+QPointF(20*T,30*T)); break;
+				case 13: polygonA << pC << pC+QPointF(20*T,30*T); break;//Bezier(polygonA, pC, pC+QPointF(20*T, 5*T), pC+QPointF(20*T,30*T)); break;
 				case 12: Bezier(polygonA, pC, pC+QPointF(40*T,35*T), pC+QPointF(40*T,70*T)); break;
 				case 11: Bezier(polygonA, pC, pC+QPointF(20*T,25*T), pC+QPointF(20*T,70*T)); break;
 				case 10: Bezier(polygonA, pC, pC+QPointF(   T,20*T), pC+QPointF(   T,70*T)); break;
@@ -514,6 +514,46 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, size_t nu
 		if ( pinIndex >= 4 && pinIndex < 10 )	{ polygonA.flipH(pC); polygonB.flipH(pC); }
 	}
 	// 14 pin =========================================================================
+
+	// 8 pin ==========================================================================
+	if ( numPins == 8 )
+	{
+		// 2 basic curves, referenced by pins 6-7
+		const int iRefPin = ( pinIndex < 2 ) ?  7 - pinIndex :
+							( pinIndex < 4 ) ?  4 + pinIndex :
+							( pinIndex < 6 ) ? 11 - pinIndex : pinIndex;
+		assert(iRefPin >= 6 && iRefPin <= 7);
+
+		if ( bDoTrack )
+		{
+			switch(iRefPin)
+			{
+				case 7: polygonA << pC << pC+QPointF(30*T,30*T); break;//Bezier(polygonA, pC, pC+QPointF(30*T, 5*T), pC+QPointF(30*T,30*T)); break;
+				case 6: polygonA << pC << pC+QPointF(10*T,30*T); break;//Bezier(polygonA, pC, pC+QPointF(10*T, 0*T), pC+QPointF(10*T,30*T)); break;
+			}
+		}
+
+		switch(iRefPin)
+		{
+			case 7: padTop = pC+QPointF(30*T,30*T); break;
+			case 6: padTop = pC+QPointF(10*T,30*T); break;
+		}
+		padBot = padTop + QPointF(0,28*T);
+
+		if ( bDoPad )
+			polygonB << padTop << padBot;
+
+		if ( bGap )
+		{
+			padTop -= padGapTB;	padBot += padGapTB;
+			polygonB << padTop-padGapLR << padTop+padGapLR << padBot+padGapLR << padBot-padGapLR << padTop-padGapLR;
+		}
+
+		// Reflect the polygon based on the reference pin as necessary
+		if ( pinIndex < 4 )						{ polygonA.flipV(pC); polygonB.flipV(pC); }
+		if ( pinIndex >= 2 && pinIndex < 6 )	{ polygonA.flipH(pC); polygonB.flipH(pC); }
+	}
+	// 8 pin ==========================================================================
 
 	// Handle component rotation
 	int numRotations(0);

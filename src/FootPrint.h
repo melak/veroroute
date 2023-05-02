@@ -226,11 +226,31 @@ public:
 		//TODO Following is a hack for the test SOICs.  Need to do this properly.
 		// Above logic in Pin::SetOccupancySOIC() maps SURFACE_FULL to SOIC_TRACKS_TOP in all non-pin locations
 		// If we have large enough gap between SOIC pads, we could actually route tracks on the top there
-		for (int iRow = 0, rows = GetRows(); iRow < rows; iRow++)
+		if ( GetRows() == 5 )
 		{
-			if ( iRow < 3 || iRow > 5 ) continue;
-			for (int iCol = 0, cols = GetCols(); iCol < cols; iCol++)
-				Get(iRow, iCol)->SetSoicChar(SOIC_FREE);
+			for (int iRow = 0, rows = GetRows(); iRow < rows; iRow++)
+			{
+				if ( iRow < 1 || iRow > 4 ) continue;
+				for (int iCol = 0, cols = GetCols(); iCol < cols; iCol++)
+				{
+					if ( iRow == 1 || iRow == 4 )
+					{
+						if ( iCol == 0 || iCol == cols-1 )
+							Get(iRow, iCol)->SetSoicChar(SOIC_FREE);
+					}
+					else
+						Get(iRow, iCol)->SetSoicChar(SOIC_FREE);
+				}
+			}
+		}
+		if ( GetRows() == 8 || GetRows() == 9 )
+		{
+			for (int iRow = 0, rows = GetRows(); iRow < rows; iRow++)
+			{
+				if ( iRow < 3 || iRow > rows-4 ) continue;
+				for (int iCol = 0, cols = GetCols(); iCol < cols; iCol++)
+					Get(iRow, iCol)->SetSoicChar(SOIC_FREE);
+			}
 		}
 #endif		
 	}
