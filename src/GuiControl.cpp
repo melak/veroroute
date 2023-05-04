@@ -1,4 +1,4 @@
-/*
+ /*
 	VeroRoute - Qt based Veroboard/Perfboard/PCB layout & routing application.
 
 	Copyright (C) 2017  Alex Lawrow    ( dralx@users.sourceforge.net )
@@ -19,6 +19,7 @@
 
 #include "GuiControl.h"
 #include "PolygonHelper.h"
+#include "Component.h"
 
 void GuiControl::CalcBlob(qreal W, const QPointF& pC, const QPointF& pCoffset,
 						  int iPadWidthMIL, int iPerimeterCode, int iTagCode,
@@ -244,8 +245,13 @@ void Bezier(MyPolygonF& polygon, const QPointF& pL, const QPointF& pC, const QPo
 	}
 }
 
-void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, size_t numPins, char direction, std::list<MyPolygonF>& out, bool bSolderMask, bool bIsGnd, bool bGap) const
+void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, const Component* pComp, std::list<MyPolygonF>& out, bool bSolderMask, bool bIsGnd, bool bGap) const
 {
+	assert(pComp);
+	const size_t	numPins		= pComp->GetNumPins();
+	const char		direction	= pComp->GetDirection();
+	const bool		bNarrow		= false;//pComp->GetRows() < 9;	//TODO Should use COMP type
+
 	assert( !bGap || !bSolderMask );
 	assert(numPins == 8 || numPins == 14 || numPins == 16 || numPins == 20 || numPins == 24 || numPins == 28);
 	out.clear();
@@ -277,7 +283,8 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, size_t nu
 	const bool bDoTrack		= !bSolderMask && !bNoTrackGap;
 	const bool bDoPad		= !bGap;
 
-	const QPointF padGapLR(15*T,0), padGapTB(0,20*T);	// Gaps for the SOIC pads
+	const QPointF padLength(0,36*T);					// Pad length (36T ==> 90 mil)
+	const QPointF padGapLR(15*T,0), padGapTB(0,15*T);	// Gaps for the SOIC pads
 	QPointF padTop, padBot;	// Limits of SOIC pads
 
 	// 28 pin =========================================================================
@@ -289,36 +296,36 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, size_t nu
 							( pinIndex < 21 ) ? 41 - pinIndex : pinIndex;
 		assert(iRefPin >= 21 && iRefPin <= 27);
 
+		switch(iRefPin)
+		{
+			case 27: padTop = pC+QPointF(50*T,-12*T); break;
+			case 26: padTop = pC+QPointF(70*T,28*T); break;
+			case 25: padTop = pC+QPointF(90*T,68*T); break;
+			case 24: padTop = pC+QPointF(70*T,68*T); break;
+			case 23: padTop = pC+QPointF(50*T,68*T); break;
+			case 22: padTop = pC+QPointF(30*T,68*T); break;
+			case 21: padTop = pC+QPointF(10*T,68*T); break;
+		}
+		padBot = padTop + padLength;
+
+		if ( bDoPad )
+			polygonB << padTop << padBot;
+
 		if ( bDoTrack )
 		{
 			switch(iRefPin)
 			{
 				case 27: polygonA << pC << pC+QPointF(50*T,0); break;
-				case 26: Bezier(polygonA, pC, pC+QPointF(60*T,5*T),	pC+QPointF(70*T,30*T)); break;
+				case 26: Bezier(polygonA, pC, pC+QPointF(60*T,3*T),	padTop); break;
 				case 25: polygonA << pC << pC+QPointF(25*T,25*T);
-						 Bezier(polygonA, pC+QPointF(25*T,25*T), pC+QPointF(81*T,38*T), pC+QPointF(90*T,70*T) ); break;
+						 Bezier(polygonA, pC+QPointF(25*T,25*T), pC+QPointF(81*T,38*T), padTop); break;
 				case 24: polygonA << pC << pC+QPointF(10*T,10*T);
-						 Bezier(polygonA, pC+QPointF(10*T,10*T), pC+QPointF(70*T,45*T), pC+QPointF(70*T,70*T)); break;
-				case 23: Bezier(polygonA, pC, pC+QPointF(50*T,35*T), pC+QPointF(50*T,70*T)); break;
-				case 22: Bezier(polygonA, pC, pC+QPointF(30*T,25*T), pC+QPointF(30*T,70*T)); break;
-				case 21: Bezier(polygonA, pC, pC+QPointF(10*T,20*T), pC+QPointF(10*T,70*T)); break;
+						 Bezier(polygonA, pC+QPointF(10*T,10*T), pC+QPointF(70*T,45*T), padTop); break;
+				case 23: Bezier(polygonA, pC, pC+QPointF(50*T,35*T), padTop); break;
+				case 22: Bezier(polygonA, pC, pC+QPointF(30*T,25*T), padTop); break;
+				case 21: Bezier(polygonA, pC, pC+QPointF(10*T,20*T), padTop); break;
 			}
 		}
-
-		switch(iRefPin)
-		{
-			case 27: padTop = pC+QPointF(50*T,-10*T); break;
-			case 26: padTop = pC+QPointF(70*T,30*T); break;
-			case 25: padTop = pC+QPointF(90*T,70*T); break;
-			case 24: padTop = pC+QPointF(70*T,70*T); break;
-			case 23: padTop = pC+QPointF(50*T,70*T); break;
-			case 22: padTop = pC+QPointF(30*T,70*T); break;
-			case 21: padTop = pC+QPointF(10*T,70*T); break;
-		}
-		padBot = padTop + QPointF(0,28*T);
-
-		if ( bDoPad )
-			polygonB << padTop << padBot;
 
 		if ( bGap )
 		{
@@ -341,33 +348,33 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, size_t nu
 							( pinIndex < 18 ) ? 35 - pinIndex : pinIndex;
 		assert(iRefPin >= 18 && iRefPin <= 23);
 
+		switch(iRefPin)
+		{
+			case 23: padTop = pC+QPointF(30*T,-12*T); break;
+			case 22: padTop = pC+QPointF(50*T,28*T); break;
+			case 21: padTop = pC+QPointF(70*T,68*T); break;
+			case 20: padTop = pC+QPointF(50*T,68*T); break;
+			case 19: padTop = pC+QPointF(30*T,68*T); break;
+			case 18: padTop = pC+QPointF(10*T,68*T); break;
+		}
+		padBot = padTop + padLength;
+
+		if ( bDoPad )
+			polygonB << padTop << padBot;
+
 		if ( bDoTrack )
 		{
 			switch(iRefPin)
 			{
 				case 23: polygonA << pC << pC+QPointF(30*T,0); break;
-				case 22: Bezier(polygonA, pC, pC+QPointF(40*T, 5*T), pC+QPointF(50*T,30*T)); break;
+				case 22: Bezier(polygonA, pC, pC+QPointF(40*T, 5*T), padTop); break;
 				case 21: polygonA << pC << pC+QPointF(25*T,25*T);
-						 Bezier(polygonA, pC+QPointF(25*T,25*T), pC+QPointF(70*T,45*T), pC+QPointF(70*T,70*T)); break;
-				case 20: Bezier(polygonA, pC, pC+QPointF(50*T,35*T), pC+QPointF(50*T,70*T)); break;
-				case 19: Bezier(polygonA, pC, pC+QPointF(30*T,25*T), pC+QPointF(30*T,70*T)); break;
-				case 18: Bezier(polygonA, pC, pC+QPointF(10*T,20*T), pC+QPointF(10*T,70*T)); break;
+						 Bezier(polygonA, pC+QPointF(25*T,25*T), pC+QPointF(70*T,45*T), padTop); break;
+				case 20: Bezier(polygonA, pC, pC+QPointF(50*T,35*T), padTop); break;
+				case 19: Bezier(polygonA, pC, pC+QPointF(30*T,25*T), padTop); break;
+				case 18: Bezier(polygonA, pC, pC+QPointF(10*T,20*T), padTop); break;
 			}
 		}
-
-		switch(iRefPin)
-		{
-			case 23: padTop = pC+QPointF(30*T,-10*T); break;
-			case 22: padTop = pC+QPointF(50*T,30*T); break;
-			case 21: padTop = pC+QPointF(70*T,70*T); break;
-			case 20: padTop = pC+QPointF(50*T,70*T); break;
-			case 19: padTop = pC+QPointF(30*T,70*T); break;
-			case 18: padTop = pC+QPointF(10*T,70*T); break;
-		}
-		padBot = padTop + QPointF(0,28*T);
-
-		if ( bDoPad )
-			polygonB << padTop << padBot;
 
 		if ( bGap )
 		{
@@ -390,30 +397,30 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, size_t nu
 							( pinIndex < 15 ) ? 29 - pinIndex : pinIndex;
 		assert(iRefPin >= 15 && iRefPin <= 19);
 
+		switch(iRefPin)
+		{
+			case 19: padTop = pC+QPointF(50*T,28*T); break;
+			case 18: padTop = pC+QPointF(70*T,68*T); break;
+			case 17: padTop = pC+QPointF(50*T,68*T); break;
+			case 16: padTop = pC+QPointF(30*T,68*T); break;
+			case 15: padTop = pC+QPointF(10*T,68*T); break;
+		}
+		padBot = padTop + padLength;
+
+		if ( bDoPad )
+			polygonB << padTop << padBot;
+
 		if ( bDoTrack )
 		{
 			switch(iRefPin)
 			{
-				case 19: Bezier(polygonA, pC, pC+QPointF(40*T, 5*T), pC+QPointF(50*T,30*T)); break;
-				case 18: Bezier(polygonA, pC, pC+QPointF(70*T,45*T), pC+QPointF(70*T,70*T)); break;
-				case 17: Bezier(polygonA, pC, pC+QPointF(50*T,35*T), pC+QPointF(50*T,70*T)); break;
-				case 16: Bezier(polygonA, pC, pC+QPointF(30*T,25*T), pC+QPointF(30*T,70*T)); break;
-				case 15: Bezier(polygonA, pC, pC+QPointF(10*T,20*T), pC+QPointF(10*T,70*T)); break;
+				case 19: Bezier(polygonA, pC, pC+QPointF(40*T, 5*T), padTop); break;
+				case 18: Bezier(polygonA, pC, pC+QPointF(70*T,45*T), padTop); break;
+				case 17: Bezier(polygonA, pC, pC+QPointF(50*T,35*T), padTop); break;
+				case 16: Bezier(polygonA, pC, pC+QPointF(30*T,25*T), padTop); break;
+				case 15: Bezier(polygonA, pC, pC+QPointF(10*T,20*T), padTop); break;
 			}
 		}
-
-		switch(iRefPin)
-		{
-			case 19: padTop = pC+QPointF(50*T,30*T); break;
-			case 18: padTop = pC+QPointF(70*T,70*T); break;
-			case 17: padTop = pC+QPointF(50*T,70*T); break;
-			case 16: padTop = pC+QPointF(30*T,70*T); break;
-			case 15: padTop = pC+QPointF(10*T,70*T); break;
-		}
-		padBot = padTop + QPointF(0,28*T);
-
-		if ( bDoPad )
-			polygonB << padTop << padBot;
 
 		if ( bGap )
 		{
@@ -436,28 +443,28 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, size_t nu
 							( pinIndex < 12 ) ? 23 - pinIndex : pinIndex;
 		assert(iRefPin >= 12 && iRefPin <= 15);
 
+		switch(iRefPin)
+		{
+			case 15: padTop = pC+QPointF(30*T,28*T); break;
+			case 14: padTop = pC+QPointF(50*T,68*T); break;
+			case 13: padTop = pC+QPointF(30*T,68*T); break;
+			case 12: padTop = pC+QPointF(10*T,68*T); break;
+		}
+		padBot = padTop + padLength;
+
+		if ( bDoPad )
+			polygonB << padTop << padBot;
+
 		if ( bDoTrack )
 		{
 			switch(iRefPin)
 			{
-				case 15: polygonA << pC << pC+QPointF(30*T,30*T); break;//Bezier(polygonA, pC, pC+QPointF(30*T, 5*T), pC+QPointF(30*T,30*T)); break;
-				case 14: Bezier(polygonA, pC, pC+QPointF(50*T,45*T), pC+QPointF(50*T,70*T)); break;
-				case 13: Bezier(polygonA, pC, pC+QPointF(30*T,25*T), pC+QPointF(30*T,70*T)); break;
-				case 12: Bezier(polygonA, pC, pC+QPointF(10*T,20*T), pC+QPointF(10*T,70*T)); break;
+				case 15: polygonA << pC << padTop; break;
+				case 14: Bezier(polygonA, pC, pC+QPointF(50*T,45*T), padTop); break;
+				case 13: Bezier(polygonA, pC, pC+QPointF(30*T,25*T), padTop); break;
+				case 12: Bezier(polygonA, pC, pC+QPointF(10*T,20*T), padTop); break;
 			}
 		}
-
-		switch(iRefPin)
-		{
-			case 15: padTop = pC+QPointF(30*T,30*T); break;
-			case 14: padTop = pC+QPointF(50*T,70*T); break;
-			case 13: padTop = pC+QPointF(30*T,70*T); break;
-			case 12: padTop = pC+QPointF(10*T,70*T); break;
-		}
-		padBot = padTop + QPointF(0,28*T);
-
-		if ( bDoPad )
-			polygonB << padTop << padBot;
 
 		if ( bGap )
 		{
@@ -480,28 +487,28 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, size_t nu
 							( pinIndex < 10 ) ? 20 - pinIndex : pinIndex;
 		assert(iRefPin >= 10 && iRefPin <= 13);
 
+		switch(iRefPin)
+		{
+			case 13: padTop = pC+QPointF(20*T,28*T); break;
+			case 12: padTop = pC+QPointF(40*T,68*T); break;
+			case 11: padTop = pC+QPointF(20*T,68*T); break;
+			case 10: padTop = pC+QPointF(   0,68*T); break;
+		}
+		padBot = padTop + padLength;
+
+		if ( bDoPad )
+			polygonB << padTop << padBot;
+
 		if ( bDoTrack )
 		{
 			switch(iRefPin)
 			{
-				case 13: polygonA << pC << pC+QPointF(20*T,30*T); break;//Bezier(polygonA, pC, pC+QPointF(20*T, 5*T), pC+QPointF(20*T,30*T)); break;
-				case 12: Bezier(polygonA, pC, pC+QPointF(40*T,35*T), pC+QPointF(40*T,70*T)); break;
-				case 11: Bezier(polygonA, pC, pC+QPointF(20*T,25*T), pC+QPointF(20*T,70*T)); break;
-				case 10: Bezier(polygonA, pC, pC+QPointF(   T,20*T), pC+QPointF(   T,70*T)); break;
+				case 13: polygonA << pC << padTop; break;
+				case 12: Bezier(polygonA, pC, pC+QPointF(40*T,35*T), padTop); break;
+				case 11: Bezier(polygonA, pC, pC+QPointF(20*T,25*T), padTop); break;
+				case 10: polygonA << pC << padTop; break;
 			}
 		}
-
-		switch(iRefPin)
-		{
-			case 13: padTop = pC+QPointF(20*T,30*T); break;
-			case 12: padTop = pC+QPointF(40*T,70*T); break;
-			case 11: padTop = pC+QPointF(20*T,70*T); break;
-			case 10: padTop = pC+QPointF(   T,70*T); break;
-		}
-		padBot = padTop + QPointF(0,28*T);
-
-		if ( bDoPad )
-			polygonB << padTop << padBot;
 
 		if ( bGap )
 		{
@@ -524,24 +531,18 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, size_t nu
 							( pinIndex < 6 ) ? 11 - pinIndex : pinIndex;
 		assert(iRefPin >= 6 && iRefPin <= 7);
 
-		if ( bDoTrack )
-		{
-			switch(iRefPin)
-			{
-				case 7: polygonA << pC << pC+QPointF(30*T,30*T); break;//Bezier(polygonA, pC, pC+QPointF(30*T, 5*T), pC+QPointF(30*T,30*T)); break;
-				case 6: polygonA << pC << pC+QPointF(10*T,30*T); break;//Bezier(polygonA, pC, pC+QPointF(10*T, 0*T), pC+QPointF(10*T,30*T)); break;
-			}
-		}
-
 		switch(iRefPin)
 		{
-			case 7: padTop = pC+QPointF(30*T,30*T); break;
-			case 6: padTop = pC+QPointF(10*T,30*T); break;
+			case 7: padTop = pC+QPointF(30*T,28*T); break;
+			case 6: padTop = pC+QPointF(10*T,28*T); break;
 		}
-		padBot = padTop + QPointF(0,28*T);
+		padBot = padTop + padLength;
 
 		if ( bDoPad )
 			polygonB << padTop << padBot;
+
+		if ( bDoTrack )
+			polygonA << pC << padTop; 
 
 		if ( bGap )
 		{

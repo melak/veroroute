@@ -164,32 +164,33 @@ void MainWindow::PaintPadGrey(const GuiControl& guiCtrl, QPainter& painter, QPen
 #ifdef _TEST_SOIC
 void MainWindow::PaintSOIC(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, size_t pinIndex, const Component* pComp, bool bIsGnd, bool bGap)
 {
-	if ( pComp == nullptr ) return;
+	assert(pComp);
 	const int W = guiCtrl.GetGRIDPIXELS();
 
 	std::list<MyPolygonF> polygonList;
-	guiCtrl.CalcSOIC(W, pC, pinIndex, pComp->GetNumPins(), pComp->GetDirection(), polygonList, false, bIsGnd, bGap);	// Populate polygonList
+	guiCtrl.CalcSOIC(W, pC, pinIndex, pComp, polygonList, false, bIsGnd, bGap);	// Populate polygonList
 
 	if ( m_bWriteGerber )	// Write to Gerber
 	{
 		if ( !bGap )	// Use this as an opportunity to get the solder mask info
 		{
 			std::list<MyPolygonF> solderMask;
-			guiCtrl.CalcSOIC(W, pC, pinIndex, pComp->GetNumPins(), pComp->GetDirection(), solderMask, true, bIsGnd, bGap);	// Populate polygonList
+			guiCtrl.CalcSOIC(W, pC, pinIndex, pComp, solderMask, true, bIsGnd, bGap);	// Populate polygonList
 
 			GStream& os = m_gWriter.GetStream(GFILE::GTS);	// Top solder mask layer
 			for (auto& polygon : solderMask)
 			{
 				if ( polygon.empty() ) continue;
 
-				const bool bTrk	= polygon.m_eTrkPen != GPEN::NONE;		assert(bTrk);
-				const bool bPad	= polygon.m_ePadPen != GPEN::NONE;		assert(!bPad);
-				if ( !bTrk && !bPad && !polygon.m_bClosed ) continue;	assert(!polygon.m_bClosed);
+				assert(polygon.m_ePadPen == GPEN::NONE);
 
-				const GPEN& ePen = bTrk ? polygon.m_eTrkPen : polygon.m_ePadPen;
+				const bool bTrk	= polygon.m_eTrkPen != GPEN::NONE;		assert(bTrk);
+				if ( !bTrk && !polygon.m_bClosed ) continue;	assert(!polygon.m_bClosed);
+
+				const GPEN& ePen = bTrk ? polygon.m_eTrkPen : GPEN::NONE;
 				if ( polygon.m_bClosed )
 				{
-					if ( bPad || bTrk )
+					if ( bTrk )
 						os.AddLoop(polygon, ePen);	// Closed polygon outline
 					else
 						os.AddRegion(polygon);	// Top solder mask layer
@@ -205,14 +206,15 @@ void MainWindow::PaintSOIC(const GuiControl& guiCtrl, QPainter& painter, const Q
 			{
 				if ( polygon.empty() ) continue;
 
-				const bool bTrk	= polygon.m_eTrkPen != GPEN::NONE;
-				const bool bPad	= polygon.m_ePadPen != GPEN::NONE;
-				if ( !bTrk && !bPad && !polygon.m_bClosed ) continue;
+				assert(polygon.m_ePadPen == GPEN::NONE);
 
-				const GPEN& ePen = bTrk ? polygon.m_eTrkPen : polygon.m_ePadPen;
+				const bool bTrk	= polygon.m_eTrkPen != GPEN::NONE;
+				if ( !bTrk && !polygon.m_bClosed ) continue;
+
+				const GPEN& ePen = bTrk ? polygon.m_eTrkPen : GPEN::NONE;
 				if ( polygon.m_bClosed )
 				{
-					if ( bPad || bTrk )
+					if ( bTrk )
 						os.AddLoop(polygon, ePen);	// Closed polygon outline
 					if ( bGap )
 						os.AddRegion(polygon);		// For SOICs the gap polygon needs filling
@@ -238,8 +240,17 @@ void MainWindow::PaintSOIC(const GuiControl& guiCtrl, QPainter& painter, const Q
 		{
 			if ( polygon.empty() ) continue;
 
-			const bool bTrk	= polygon.m_eTrkPen != GPEN::NONE;
-			const bool bPad	= polygon.m_ePadPen != GPEN::NONE;
+			assert(polygon.m_ePadPen == GPEN::NONE);
+
+			bool bTrk(false), bPad(false);	// Determine track/pad from m_eTrkPen
+			switch(polygon.m_eTrkPen)
+			{
+				case GPEN::TRK_IC:	
+				case GPEN::TRK_IC_GAP:	bTrk = true;	break;
+				case GPEN::PAD_IC:
+				case GPEN::PAD_IC_MSK:	bPad = true;	break;
+				default:				break;
+			}
 			if ( !bTrk && !bPad && !polygon.m_bClosed ) continue;
 
 			pen.setWidth(bTrk ? trackWidth : bPad ? padWidth : 0);
