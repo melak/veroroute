@@ -592,6 +592,18 @@ struct CompTypes
 			case COMP::VERO_NUMBER			: rows = 1; cols = 10; return "..........";
 			case COMP::VERO_LETTER			: rows = 1; cols = 10; return "..........";
 			case COMP::CUSTOM				: rows = 1; cols = 1;  return ".";
+			//TODO Test build instructions with new "*" symbol meaning SURFACE_FULL and SOIC_TRACKS_TOP
+			// These parts all need custom code to set correct SOIC values at the SOIC pins
+			/*
+			case COMP::SOP8:				: rows = 6; cols = 4;  return "8765+**++++++++++**+1234";
+			case COMP::SOP14:				: rows = 8; cols = 5;  return "DCBA9E***8*****++++++++++*****1***723456";
+			case COMP::SOP16:				: rows = 8; cols = 6;  return "FEDCBAG****9.****..++++..++++..****.1**** 8234567";
+			case COMP::SOP14W:				: rows = 9; cols = 5;  return "DCBA9E***8+***+++++++++++++++++***+1***723456";
+			case COMP::SOP16W:				: rows = 9; cols = 6;  return "FEDCBAG****9.****..++++..++++..++++..****.1****8234567";
+			case COMP::SOP20W:				: rows = 9; cols = 8;  return "JIHGFEDCK******B.******..++++++..++++++..++++++..******.1******A23456789";
+			case COMP::SOP24W:				: rows = 9; cols = 8;  return "MLKJIHGFN******EO******D.++++++..++++++..++++++.1******C2******B3456789A";
+			case COMP::SOP28W:				: rows = 9; cols = 10; return "QPONMLKJIHR********GS********F.++++++++..++++++++..++++++++.1********E2********D3456789ABC";
+			*/
 			case COMP::INVALID				: rows = 0; cols = 0;  return "";
 			default:	assert(0);			  rows = 0; cols = 0;  return "";	// Unhandled eType
 		}

@@ -48,6 +48,7 @@ void FootPrint::BuildDefault(COMP type)
 		{
 			case '.':	p->SetSurface(SURFACE_FREE);	break;
 			case '-':	p->SetSurface(SURFACE_GAP);		break;
+			case '*':	p->SetSurface(SURFACE_FULL);	p->SetSoicChar(SOIC_TRACKS_TOP);	break;
 			default:	p->SetSurface(bPlug ? SURFACE_PLUG : SURFACE_FULL);
 		}
 		p->SetPinIndex( GetPinIndexFromLegacyPinChar(static_cast<uchar>(pinChar)) );

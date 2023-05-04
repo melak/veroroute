@@ -250,7 +250,6 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, const Com
 	assert(pComp);
 	const size_t	numPins		= pComp->GetNumPins();
 	const char		direction	= pComp->GetDirection();
-	const bool		bNarrow		= false;//pComp->GetRows() < 9;	//TODO Should use COMP type
 
 	assert( !bGap || !bSolderMask );
 	assert(numPins == 8 || numPins == 14 || numPins == 16 || numPins == 20 || numPins == 24 || numPins == 28);
@@ -259,7 +258,7 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, const Com
 	// Given a grid point (pC) this method populates "out" with a description of an SOIC track from a "SOIC pin".
 	// The scale parameter W represents the width of a 100 mil grid square.
 
-	const qreal	T			= W * 0.025;	// 1/40 square width
+	const qreal	T			= W * 0.025;	// (1/40 square width)  i.e. T = 2.5 mil
 	const qreal	padWidth	= 0.01 * ( GetPAD_IC_MIL() + 2 * ( bSolderMask ? GetMASK_MIL() : 0) );
 	const qreal	trkWidth	= 0.01 * ( GetTRACK_IC_MIL() + 2 * ( bGap ? GetGAP_MIL() : 0 ) );
 

@@ -459,7 +459,7 @@ public:
 	const int&			GetVIAPAD_MIL() const		{ return m_VIAPAD_MIL; }
 	const int&			GetVIAHOLE_MIL() const		{ return m_VIAHOLE_MIL; }
 	Q_DECL_CONSTEXPR static inline int GetPAD_IC_MIL()		{ return 30; }
-	Q_DECL_CONSTEXPR static inline int GetTRACK_IC_MIL()	{ return 24; }
+	Q_DECL_CONSTEXPR static inline int GetTRACK_IC_MIL()	{ return 18; }
 	const int&			GetRenderQuality() const	{ return m_iRenderQuality; }
 	const int&			GetSaturation() const		{ return m_iSaturation; }
 	const int&			GetFillSaturation() const	{ return m_iFillSaturation; }
