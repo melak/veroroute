@@ -622,7 +622,7 @@ struct CompTypes
 			case COMP::RELAY_DIP_4PIN		: rows = 4; cols = 7;  return "4+++++3+++++++++++++++1+++2+";
 			case COMP::RELAY_DIP_8PIN		: rows = 4; cols = 7;  return "87+++65++++++++++++++12+++34";
 			case COMP::FUSE_HOLDER			: rows = 3; cols = 10; return "++++++++++1++++++++2++++++++++";
-			case COMP::SOP8					: rows = 6; cols = 4;  return "8765+**++++++++++**+1234";
+			case COMP::SOP8					: rows = 6; cols = 4;  return "8765.**..++..++..**.1234";
 			case COMP::SOP14				: rows = 8; cols = 5;  return "DCBA9E***8+***++++++++++++***+1***723456";
 			case COMP::SOP16				: rows = 8; cols = 6;  return "FEDCBAG****9.****..++++..++++..****.1****8234567";
 			case COMP::SOP14W				: rows = 9; cols = 5;  return "DCBA9E***8+***+++++++++++++++++***+1***723456";
