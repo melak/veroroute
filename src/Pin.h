@@ -157,7 +157,7 @@ public:
 			SetSoicChar( GetIsPin() ? SOIC_THL_COMP		: SOIC_FREE );		// Set SOIC code for pins/non-pins
 		}
 	}
-	void SetOccupancySOIC()	// Helper for SOIC components.
+	void SetOccupancySOIC()	// Helper for SOIC components
 	{
 		SetHoleUse(HOLE_FREE);
 		if ( GetIsPin() )
@@ -165,8 +165,6 @@ public:
 			SetSurface(SURFACE_FREE);
 			SetSoicChar(SOIC_PAD);
 		}
-		else
-			SetSoicChar( GetSurface() == SURFACE_FULL ? SOIC_TRACKS_TOP : SOIC_FREE );
 	}
 	size_t		 GetPinIndex() const		{ return ( m_pinChar == BAD_PINCHAR ) ? BAD_PININDEX : m_pinChar; }
 	const uchar& GetSurface() const			{ return m_surface; }

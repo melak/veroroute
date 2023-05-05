@@ -182,7 +182,7 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 			{
 				size_t	pinIndex;
 				int		compId;
-				GetSlotInfoForTH(pA, pinIndex, compId);	//TODO If hole sharing, preferring TH part over SOIC part
+				GetSlotInfoForTH(pA, pinIndex, compId);	// If hole sharing, preferring TH part over SOIC part
 
 				const Component& comp	= m_compMgr.GetComponentById( compId );	// Non-wire part must use slot 0
 				iPadWidthMIL_A = comp.GetCustomPads() ? comp.GetPadWidth() : GetPAD_MIL();	// Handle custom pad sizes
@@ -240,7 +240,7 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 				{
 					size_t	pinIndex;
 					int		compId;
-					GetSlotInfoForTH(pB, pinIndex, compId);	//TODO If hole sharing, preferring TH part over SOIC part
+					GetSlotInfoForTH(pB, pinIndex, compId);	// If hole sharing, preferring TH part over SOIC part
 
 					const Component& comp	= m_compMgr.GetComponentById( compId );	// Non-wire part must use slot 0
 					iPadWidthMIL_B = comp.GetCustomPads() ? comp.GetPadWidth() : GetPAD_MIL();	// Handle custom pad sizes
@@ -331,7 +331,7 @@ void Board::CalcGroundFillBounds()
 
 			size_t	pinIndex;
 			int		compId;
-			GetSlotInfoForTH(p, pinIndex, compId);	//TODO If hole sharing, preferring TH part over SOIC part
+			GetSlotInfoForTH(p, pinIndex, compId);	// If hole sharing, preferring TH part over SOIC part
 
 			const Component& comp	= m_compMgr.GetComponentById( compId );
 			int Xmil(0), Ymil(0);	// Pad offsets

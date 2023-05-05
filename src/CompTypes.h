@@ -98,6 +98,14 @@ enum class COMP {	INVALID					=   -1,
 					RELAY_DIP_4PIN			= 4050,
 					RELAY_DIP_8PIN			= 4052,
 					FUSE_HOLDER				= 5000,
+					SOP8					= 6000,
+					SOP14					= 6001,
+					SOP16					= 6002,
+					SOP14W					= 6003,
+					SOP16W					= 6004,
+					SOP20W					= 6005,
+					SOP24W					= 6006,
+					SOP28W					= 6007,
 					VERO_NUMBER				= 10000,	// Not a real component. Used for labeling vero-boards
 					VERO_LETTER				= 10001,	// Not a real component. Used for labeling vero-boards
 					CUSTOM					= 100000,	// A user-defined component
@@ -188,6 +196,15 @@ struct CompTypes
 		UpdateMaps(COMP::RELAY_DIP_4PIN,		"DIP 4-pin",					"RELAY_DIP_4PIN");
 		UpdateMaps(COMP::RELAY_DIP_8PIN,		"DIP 8-pin",					"RELAY_DIP_8PIN");
 		UpdateMaps(COMP::FUSE_HOLDER,			"Fuse Holder",					"FUSE_HOLDER");
+		//TODO Review these SOP strings before release.  Test alias dialog. 
+		UpdateMaps(COMP::SOP8,					"SOP-8",						"SOP_8");
+		UpdateMaps(COMP::SOP14,					"SOP-14",						"SOP_14");
+		UpdateMaps(COMP::SOP16,					"SOP-16",						"SOP_16");
+		UpdateMaps(COMP::SOP14W,				"SOP-14W",						"SOP_14W");
+		UpdateMaps(COMP::SOP16W,				"SOP-16W",						"SOP_16W");
+		UpdateMaps(COMP::SOP20W,				"SOP-20W",						"SOP_20W");
+		UpdateMaps(COMP::SOP24W,				"SOP-24W",						"SOP_24W");
+		UpdateMaps(COMP::SOP28W,				"SOP-28W",						"SOP_28W");
 		UpdateMaps(COMP::VERO_NUMBER,			"Vero Numbers",					"");	// No import string
 		UpdateMaps(COMP::VERO_LETTER,			"Vero Letters",					"");	// No import string
 		UpdateMaps(COMP::CUSTOM,				"Custom",						"");	// No import string (user-defined parts have their own strings)
@@ -294,6 +311,14 @@ struct CompTypes
 			case COMP::RELAY_DIP_4PIN:
 			case COMP::RELAY_DIP_8PIN:		return 17;
 			case COMP::FUSE_HOLDER:			return 18;
+			case COMP::SOP8:			
+			case COMP::SOP14:			
+			case COMP::SOP16:			
+			case COMP::SOP14W:			
+			case COMP::SOP16W:			
+			case COMP::SOP20W:			
+			case COMP::SOP24W:			
+			case COMP::SOP28W:				return 19;
 			case COMP::MARK:				return 100;
 			case COMP::VERO_NUMBER:			return 200;
 			case COMP::VERO_LETTER:			return 201;
@@ -452,6 +477,14 @@ struct CompTypes
 			case COMP::RELAY_DIP_4PIN:
 			case COMP::RELAY_DIP_8PIN:		return "SW";
 			case COMP::FUSE_HOLDER:			return "F";
+			case COMP::SOP8:			
+			case COMP::SOP14:			
+			case COMP::SOP16:			
+			case COMP::SOP14W:			
+			case COMP::SOP16W:			
+			case COMP::SOP20W:			
+			case COMP::SOP24W:			
+			case COMP::SOP28W:				return "IC";
 			case COMP::CUSTOM:				return "";
 			case COMP::VERO_NUMBER:			return "Vero Numbers";
 			case COMP::VERO_LETTER:			return "Vero Letters";
@@ -589,23 +622,34 @@ struct CompTypes
 			case COMP::RELAY_DIP_4PIN		: rows = 4; cols = 7;  return "4+++++3+++++++++++++++1+++2+";
 			case COMP::RELAY_DIP_8PIN		: rows = 4; cols = 7;  return "87+++65++++++++++++++12+++34";
 			case COMP::FUSE_HOLDER			: rows = 3; cols = 10; return "++++++++++1++++++++2++++++++++";
+			case COMP::SOP8					: rows = 6; cols = 4;  return "8765+**++++++++++**+1234";
+			case COMP::SOP14				: rows = 8; cols = 5;  return "DCBA9E***8+***++++++++++++***+1***723456";
+			case COMP::SOP16				: rows = 8; cols = 6;  return "FEDCBAG****9.****..++++..++++..****.1****8234567";
+			case COMP::SOP14W				: rows = 9; cols = 5;  return "DCBA9E***8+***+++++++++++++++++***+1***723456";
+			case COMP::SOP16W				: rows = 9; cols = 6;  return "FEDCBAG****9.****..++++..++++..++++..****.1****8234567";
+			case COMP::SOP20W				: rows = 9; cols = 8;  return "JIHGFEDCK******B.******..++++++..++++++..++++++..******.1******A23456789";
+			case COMP::SOP24W				: rows = 9; cols = 8;  return "MLKJIHGFN******EO******D.++++++..++++++..++++++.1******C2******B3456789A";
+			case COMP::SOP28W				: rows = 9; cols = 10; return "QPONMLKJIHR********GS********F.++++++++..++++++++..++++++++.1********E2********D3456789ABC";
 			case COMP::VERO_NUMBER			: rows = 1; cols = 10; return "..........";
 			case COMP::VERO_LETTER			: rows = 1; cols = 10; return "..........";
 			case COMP::CUSTOM				: rows = 1; cols = 1;  return ".";
-			//TODO Test build instructions with new "*" symbol meaning SURFACE_FULL and SOIC_TRACKS_TOP
-			// These parts all need custom code to set correct SOIC values at the SOIC pins
-			/*
-			case COMP::SOP8:				: rows = 6; cols = 4;  return "8765+**++++++++++**+1234";
-			case COMP::SOP14:				: rows = 8; cols = 5;  return "DCBA9E***8*****++++++++++*****1***723456";
-			case COMP::SOP16:				: rows = 8; cols = 6;  return "FEDCBAG****9.****..++++..++++..****.1**** 8234567";
-			case COMP::SOP14W:				: rows = 9; cols = 5;  return "DCBA9E***8+***+++++++++++++++++***+1***723456";
-			case COMP::SOP16W:				: rows = 9; cols = 6;  return "FEDCBAG****9.****..++++..++++..++++..****.1****8234567";
-			case COMP::SOP20W:				: rows = 9; cols = 8;  return "JIHGFEDCK******B.******..++++++..++++++..++++++..******.1******A23456789";
-			case COMP::SOP24W:				: rows = 9; cols = 8;  return "MLKJIHGFN******EO******D.++++++..++++++..++++++.1******C2******B3456789A";
-			case COMP::SOP28W:				: rows = 9; cols = 10; return "QPONMLKJIHR********GS********F.++++++++..++++++++..++++++++.1********E2********D3456789ABC";
-			*/
 			case COMP::INVALID				: rows = 0; cols = 0;  return "";
 			default:	assert(0);			  rows = 0; cols = 0;  return "";	// Unhandled eType
+		}
+	}
+	static bool	GetIsSOIC(COMP eType)
+	{
+		switch( eType )
+		{
+			case COMP::SOP8:
+			case COMP::SOP14:
+			case COMP::SOP16:
+			case COMP::SOP14W:
+			case COMP::SOP16W:
+			case COMP::SOP20W:
+			case COMP::SOP24W:
+			case COMP::SOP28W:	return true;
+			default:			return false;
 		}
 	}
 	static std::string GetDefaultPinLabel(size_t iPinIndex)
@@ -697,6 +741,14 @@ struct CompTypes
 			case COMP::RELAY_DIP_4PIN:		return 4;
 			case COMP::RELAY_DIP_8PIN:		return 8;
 			case COMP::FUSE_HOLDER:			return 2;
+			case COMP::SOP8:				return 8;
+			case COMP::SOP14:				return 14;
+			case COMP::SOP16:				return 16;
+			case COMP::SOP14W:				return 14;
+			case COMP::SOP16W:				return 16;
+			case COMP::SOP20W:				return 20;
+			case COMP::SOP24W:				return 24;
+			case COMP::SOP28W:				return 28;
 			case COMP::VERO_NUMBER:			return 0;
 			case COMP::VERO_LETTER:			return 0;
 			case COMP::CUSTOM:				return 0;

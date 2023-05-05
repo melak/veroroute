@@ -376,12 +376,13 @@ public:
 	const int&			GetHoleWidth() const		{ return m_iHoleWidth; }
 	const bool&			GetAllowFlyWire() const		{ return m_bAllowFlyWire; }
 	const std::vector<Shape>& GetShapes() const		{ return m_shapes; }
-#ifdef _TEST_SOIC
-	bool				GetIsSOIC() const			{ return GetValueStr() == "SOIC28_TEST"; };	//TODO Take out this hack and use a proper COMP type
-#else
-	bool				GetIsSOIC() const			{ return false; };
-#endif	
-
+	bool				GetIsSOIC() const
+	{
+#ifdef _TEST_SOIC		
+		if ( GetValueStr() == "SOIC28_TEST" ) return true;	// So we can make test SOICs using component editor
+#endif			
+		return CompTypes::GetIsSOIC( GetType() );
+	}
 	// Helpers for labels
 	void SetDefaultLabelOffsets();
 	void GetLabelOffsets(int& offsetRow, int& offsetCol) const;	// w.r.t. screen, not comp rotation

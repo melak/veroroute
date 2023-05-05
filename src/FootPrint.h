@@ -223,36 +223,44 @@ public:
 			GetAt(i)->SetOccupancySOIC();
 
 #ifdef _TEST_SOIC
-		//TODO Following is a hack for the test SOICs.  Need to do this properly.
-		// Above logic in Pin::SetOccupancySOIC() maps SURFACE_FULL to SOIC_TRACKS_TOP in all non-pin locations
-		// If we have large enough gap between SOIC pads, we could actually route tracks on the top there
-		if ( GetRows() == 5 )
+		if ( !CompTypes::GetIsSOIC(m_type) )
 		{
-			for (int iRow = 0, rows = GetRows(); iRow < rows; iRow++)
+			// Set SetSoicChar based on pin type and surface type
+			for (int i = 0, iSize = GetSize(); i < iSize; i++)
 			{
-				if ( iRow < 1 || iRow > 4 ) continue;
-				for (int iCol = 0, cols = GetCols(); iCol < cols; iCol++)
+				Pin* p = GetAt(i);
+				if ( !p->GetIsPin() )
+					p->SetSoicChar( p->GetSurface() == SURFACE_FULL ? SOIC_TRACKS_TOP : SOIC_FREE );
+			}
+			// Apply corrections for different test parts ...
+			if ( GetRows() == 5 )
+			{
+				for (int iRow = 0, rows = GetRows(); iRow < rows; iRow++)
 				{
-					if ( iRow == 1 || iRow == 4 )
+					if ( iRow < 1 || iRow > 4 ) continue;
+					for (int iCol = 0, cols = GetCols(); iCol < cols; iCol++)
 					{
-						if ( iCol == 0 || iCol == cols-1 )
+						if ( iRow == 1 || iRow == 4 )
+						{
+							if ( iCol == 0 || iCol == cols-1 )
+								Get(iRow, iCol)->SetSoicChar(SOIC_FREE);
+						}
+						else
 							Get(iRow, iCol)->SetSoicChar(SOIC_FREE);
 					}
-					else
+				}
+			}
+			if ( GetRows() == 8 || GetRows() == 9 )
+			{
+				for (int iRow = 0, rows = GetRows(); iRow < rows; iRow++)
+				{
+					if ( iRow < 3 || iRow > rows-4 ) continue;
+					for (int iCol = 0, cols = GetCols(); iCol < cols; iCol++)
 						Get(iRow, iCol)->SetSoicChar(SOIC_FREE);
 				}
 			}
 		}
-		if ( GetRows() == 8 || GetRows() == 9 )
-		{
-			for (int iRow = 0, rows = GetRows(); iRow < rows; iRow++)
-			{
-				if ( iRow < 3 || iRow > rows-4 ) continue;
-				for (int iCol = 0, cols = GetCols(); iCol < cols; iCol++)
-					Get(iRow, iCol)->SetSoicChar(SOIC_FREE);
-			}
-		}
-#endif		
+#endif
 	}
 	// Persist interface functions
 	virtual void Load(DataStream& inStream) override

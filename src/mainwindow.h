@@ -36,11 +36,8 @@
 #include "GWriter.h"
 #include "myscrollarea.h"
 
-#ifndef VEROROUTE_ANDROID
-	#ifndef SUPPORT_SOIC
-	#define USE_PIXMAP_CACHE
-	#endif
-#endif
+//TODO Remove the pixmap cache code completely once SOICs are fully introduced
+//	#define USE_PIXMAP_CACHE
 
 #ifdef _TEST_SOIC
 enum DEBUGMODE { DEBUGMODE_OFF = 0 , DEBUGMODE_SOICINFO, DEBUGMODE_ROUTEID, DEBUGMODE_NODEID, DEBUGMODE_PININDEX, DEBUGMODE_LAYERINFO, DEBUGMODE_END };

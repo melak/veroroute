@@ -20,16 +20,12 @@
 #pragma once
 
 // Comment out following 3 lines on debug builds to enable assert()
-#ifndef NDEBUG
-#define NDEBUG
-#endif
+//#ifndef NDEBUG
+//#define NDEBUG
+//#endif
 
-// Uncomment next line to test SOIC stuff	//TODO
+// Uncomment next line to allow test SOICs using component editor
 //#define _TEST_SOIC
-
-#ifdef _TEST_SOIC
-	#define SUPPORT_SOIC
-#endif
 
 #include <cmath>
 #include <stdio.h>

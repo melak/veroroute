@@ -2298,7 +2298,7 @@ void MainWindow::DefinerToggleEditor()
 		const Component* pComp = ( m_dockTemplatesDlg->isVisible() ) ? m_templatesDlg->GetCurrentUserComp() : nullptr;
 		if ( pComp == nullptr && m_board.GetGroupMgr().GetNumUserComps() == 1 )
 			pComp = &m_board.GetUserComponent();
-		if ( pComp && !pComp->GetShapes().empty() )	//TODO Add && !pComp->GetIsSOIC() once SOIC parts are introduced
+		if ( pComp && !pComp->GetShapes().empty() && !CompTypes::GetIsSOIC(pComp->GetType()) )
 			GetCompDefiner().Populate( *pComp );
 		UpdateHistory("enter component editor mode", 0);
 		UpdateCompDialog();

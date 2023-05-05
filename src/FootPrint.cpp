@@ -53,7 +53,7 @@ void FootPrint::BuildDefault(COMP type)
 		}
 		p->SetPinIndex( GetPinIndexFromLegacyPinChar(static_cast<uchar>(pinChar)) );
 	}
-	bool bIsSOIC(false);	//TODO If SOIC parts are introduced as a COMP type, then we need to set this as necessary
+	const bool bIsSOIC = CompTypes::GetIsSOIC(m_type);
 	if ( bIsSOIC )
 		SetupOccupanciesSOIC();	// Setup hole use, and SOIC info
 	else
