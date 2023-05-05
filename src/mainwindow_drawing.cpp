@@ -48,7 +48,6 @@ void MainWindow::PaintPadGrey(const GuiControl& guiCtrl, QPainter& painter, QPen
 	painter.drawPoint(pC);
 }
 
-#ifdef _TEST_SOIC
 void MainWindow::PaintSOIC(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, size_t pinIndex, const Component* pComp, bool bIsGnd, bool bGap)
 {
 	assert(pComp);
@@ -157,7 +156,6 @@ void MainWindow::PaintSOIC(const GuiControl& guiCtrl, QPainter& painter, const Q
 		}
 	}
 }
-#endif
 
 void MainWindow::PaintVia(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, bool bGap)
 {
@@ -702,7 +700,6 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				const bool		bPad			= !bWireAsVia && pC->GetHasPinTH();	// Only want through-hole pads
 				const bool		bSoicPad		= bTopLyr && pC->GetHasPinSOIC();
 
-#ifdef _TEST_SOIC
 				size_t iPinIndexSOIC(BAD_PININDEX);
 				const Component* pCompSOIC(nullptr);
 				if ( bSoicPad )	// Work out which slot contains the SOIC component
@@ -713,7 +710,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					pCompSOIC = &compMgr.GetComponentById(compIdSOIC);
 					assert( pCompSOIC->GetIsSOIC() );
 				}
-#endif
+
 				assert( !(bVia && bPad) );	// Can't be both a via and a pad
 				const bool		bIsGnd			= bGroundFill && nodeId == groundNodeId;
 				const int		iTagCode		= ( bPad && bIsGnd && nodeId != BAD_NODEID ) ? board.GetTagCode(pC, iPerimeterCode) : 0;
@@ -836,18 +833,14 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						if ( !bIsGnd && bDrawVia )	// Only the non-ground vias have a "white" surround
 							PaintVia(board, painter, backgroundColor, pCentre, true);	// Draw fat "white" via
 						if ( bDrawPad ) PaintPad(board, painter, backgroundColor, pCentreOff, iPadWidthMIL, iHoleWidthMIL, true);	// Draw fat "white" pad
-#ifdef _TEST_SOIC
 						if ( bSoicPad ) PaintSOIC(board, painter, backgroundColor, pCentre, iPinIndexSOIC, pCompSOIC, bIsGnd, true);
-#endif
 					}
 					else if ( iLoop == 1 )	// Draw track "blobs" and pads directly
 					{
 						if ( bDrawBlob ) PaintBlob(board, painter, color, pCentre, pCentreOff, iPadWidthMIL, iPerimeterCode, iTagCode, bPad, bSoicPad, bIsGnd);	// Draw track blob
 						if ( bDrawVia )  PaintVia(board, painter, color, pCentre);									// Draw via same color as track
 						if ( bDrawPad )  PaintPad(board, painter, color, pCentreOff, iPadWidthMIL, iHoleWidthMIL);	// Draw pad same color as track
-#ifdef _TEST_SOIC
 						if ( bSoicPad ) PaintSOIC(board, painter, color, pCentre, iPinIndexSOIC, pCompSOIC, bIsGnd);
-#endif
 					}
 					else if ( bDrawGrey )
 					{
@@ -862,9 +855,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						if ( bDrawBlob ) PaintBlob(board, painter, color, pCentre, pCentreOff, iPadWidthMIL, iPerimeterCode, iTagCode, bPad, bSoicPad, false);	// Draw track blob
 						if ( bDrawVia )  PaintVia(board, painter, color, pCentre);									// Draw via same color as track
 						if ( bDrawPad )  PaintPad(board, painter, color, pCentreOff, iPadWidthMIL, iHoleWidthMIL);	// Draw pad same color as track
-#ifdef _TEST_SOIC
 						if ( bSoicPad ) PaintSOIC(board, painter, color, pCentre, iPinIndexSOIC, pCompSOIC, bIsGnd);
-#endif
 					}
 					else if ( bDrawGrey )
 					{
@@ -956,8 +947,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		painter.restore();
 	}
 
-#ifdef _TEST_SOIC
-	if ( m_iDebugMode != DEBUGMODE_OFF && m_iDebugMode != DEBUGMODE_LAYERINFO )	//TODO debug stuff
+#ifdef _GRID_DEBUG
+	if ( m_iGridDebugMode != DEBUGMODE_OFF && m_iGridDebugMode != DEBUGMODE_LAYERINFO )
 	{
 		painter.save();
 		painter.setPen(Qt::NoPen);
@@ -967,7 +958,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		{
 			const Element* pC = board.Get(layer, j, i);
 			int iVal;
-			switch( m_iDebugMode )
+			switch( m_iGridDebugMode )
 			{
 				case DEBUGMODE_SOICINFO:	iVal = (int) pC->GetSoicChar();	break;
 				case DEBUGMODE_ROUTEID:		iVal = pC->GetRouteId();		break;
@@ -986,7 +977,6 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	}
 #endif
 
-	
 	// Draw solder ===============================================================================
 	if ( ( bColor || bMono ) && bVero )
 	{
@@ -1117,14 +1107,12 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 								m_varBrush.setColor(color);
 								painter.setBrush( bMonoPCB ? Qt::NoBrush : m_varBrush);	// No pin color fill in Mono/PCB mode
 							}
-#ifdef _TEST_SOIC
 							if ( bSOIC && bTopLyr )	//	Draw tracks of floating IC
 							{
 								int X, Y;
 								GetXY(board, j, i, X, Y);
 								PaintSOIC(board, painter, Qt::red, QPointF(X,Y), iPinIndex, &comp, false, false);
 							}
-#endif
 						}
 
 						const int iPinSizeMIL = ( !bColor || bPlaced ) ? iHoleWidthMIL : std::min(3*iHoleWidthMIL/2, iPadWidthMIL);
@@ -1716,9 +1704,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	if ( m_bWriteGerber )
 		m_gWriter.GetStream(GFILE::GTO).DrawBuffers();	// Top silk layer
 
-	
-#ifdef _TEST_SOIC
-	if ( m_iDebugMode ==  DEBUGMODE_LAYERINFO )
+#ifdef _GRID_DEBUG
+	if ( m_iGridDebugMode == DEBUGMODE_LAYERINFO )
 	{
 		GetLRTB(board, 100, 0, 0, L, R, T, B);	// 100% size square
 		painter.save();
@@ -1729,45 +1716,42 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		painter.drawText(0,0,0,0, Qt::TextDontClip | Qt::AlignVCenter | Qt::AlignLeft, txt.c_str());
 		painter.restore();
 
-		if ( m_iDebugMode == DEBUGMODE_LAYERINFO )
+		for (int iLyr = 0; iLyr < board.GetLyrs(); iLyr++)
 		{
-			for (int iLyr = 0; iLyr < board.GetLyrs(); iLyr++)
-			{
-				const Element* pC = m_board.Get(iLyr, m_gridRow, m_gridCol);
-				std::string txt;
-				if ( layer == iLyr )
-					txt = "*";
-				else
-					txt = " ";
-				const int iNodeId		= pC->GetNodeId();				txt += std::to_string(iNodeId) + " // ";	
-				const int iNodeIdRaw	= pC->GetNodeIdRaw();			txt += std::to_string(iNodeIdRaw) + " ";
-				const int iSurface		= (int)pC->GetSurfaceRaw();		txt += std::to_string(iSurface) + " ";
-				const int iSoic			= (int)pC->GetSoicCharRaw();	txt += std::to_string(iSoic) + " ";
-				const int iHole			= (int)pC->GetHoleUseRaw();		txt += std::to_string(iHole) + " // ";
-				const int iCompId		= pC->GetCompIdRaw();			txt += std::to_string(iCompId) + "  ";
-				const int iPinIndex		= pC->GetPinIndexRaw();			txt += std::to_string(iPinIndex) + " ";
-				if ( iCompId != BAD_COMPID )
-					txt += std::to_string( compMgr.GetComponentById(iCompId).GetOrigId(iLyr, iPinIndex) ) + " // ";
-				else
-					txt += "NA // ";
-				const int iCompId2		= pC->GetCompId2Raw();			txt += std::to_string(iCompId2) + " ";
-				const int iPinIndex2	= pC->GetPinIndex2Raw();		txt += std::to_string(iPinIndex2) + " ";
-				if ( iCompId2 != BAD_COMPID )
-					txt += std::to_string( compMgr.GetComponentById(iCompId2).GetOrigId(iLyr, iPinIndex2) ) + " // ";
-				else
-					txt += "NA // ";
-				GetLRTB(board, 100, 2 - iLyr, 0, L, R, T, B);	// 100% size square
-				painter.save();
-				painter.translate((L+R)/2, (T+B)/2);
-				painter.scale(dTextScale, dTextScale);
-				painter.setPen(m_blackPen);
-				painter.drawText(0,0,0,0, Qt::TextDontClip | Qt::AlignVCenter | Qt::AlignLeft, txt.c_str());
-				painter.restore();
-			}
+			const Element* pC = m_board.Get(iLyr, m_gridRow, m_gridCol);
+			std::string txt;
+			if ( layer == iLyr )
+				txt = "*";
+			else
+				txt = " ";
+			const int iNodeId		= pC->GetNodeId();				txt += std::to_string(iNodeId) + " // ";	
+			const int iNodeIdRaw	= pC->GetNodeIdRaw();			txt += std::to_string(iNodeIdRaw) + " ";
+			const int iSurface		= (int)pC->GetSurfaceRaw();		txt += std::to_string(iSurface) + " ";
+			const int iSoic			= (int)pC->GetSoicCharRaw();	txt += std::to_string(iSoic) + " ";
+			const int iHole			= (int)pC->GetHoleUseRaw();		txt += std::to_string(iHole) + " // ";
+			const int iCompId		= pC->GetCompIdRaw();			txt += std::to_string(iCompId) + "  ";
+			const int iPinIndex		= pC->GetPinIndexRaw();			txt += std::to_string(iPinIndex) + " ";
+			if ( iCompId != BAD_COMPID )
+				txt += std::to_string( compMgr.GetComponentById(iCompId).GetOrigId(iLyr, iPinIndex) ) + " // ";
+			else
+				txt += "NA // ";
+			const int iCompId2		= pC->GetCompId2Raw();			txt += std::to_string(iCompId2) + " ";
+			const int iPinIndex2	= pC->GetPinIndex2Raw();		txt += std::to_string(iPinIndex2) + " ";
+			if ( iCompId2 != BAD_COMPID )
+				txt += std::to_string( compMgr.GetComponentById(iCompId2).GetOrigId(iLyr, iPinIndex2) ) + " // ";
+			else
+				txt += "NA // ";
+			GetLRTB(board, 100, 2 - iLyr, 0, L, R, T, B);	// 100% size square
+			painter.save();
+			painter.translate((L+R)/2, (T+B)/2);
+			painter.scale(dTextScale, dTextScale);
+			painter.setPen(m_blackPen);
+			painter.drawText(0,0,0,0, Qt::TextDontClip | Qt::AlignVCenter | Qt::AlignLeft, txt.c_str());
+			painter.restore();
 		}
 	}
 #endif
-	
+
 	painter.end();
 
 	delete pdfWriter;

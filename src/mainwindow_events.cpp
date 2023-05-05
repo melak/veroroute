@@ -934,10 +934,10 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
 	const int			nComps			= groupMgr.GetNumUserComps();
 	const bool			bIsAutoRepeat	= event->isAutoRepeat();
 
-#ifdef _TEST_SOIC
+#ifdef _GRID_DEBUG
 	switch(event->key())
 	{
-		case Qt::Key_F4: m_iDebugMode = ( m_iDebugMode + 1 ) % DEBUGMODE_END;	break;
+		case Qt::Key_F4: m_iGridDebugMode = ( m_iGridDebugMode + 1 ) % DEBUGMODE_END;	break;
 	}
 #endif
 	

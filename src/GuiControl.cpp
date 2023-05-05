@@ -228,7 +228,6 @@ void GuiControl::CalcBlob(qreal W, const QPointF& pC, const QPointF& pCoffset,
 	}
 }
 
-#ifdef _TEST_SOIC
 void Bezier(MyPolygonF& polygon, const QPointF& pL, const QPointF& pC, const QPointF& pR)
 {
 	// Make an N-point curve from L to R passing near central control point C
@@ -568,4 +567,3 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, const Com
 	out.push_back(polygonA);
 	out.push_back(polygonB);
 }
-#endif

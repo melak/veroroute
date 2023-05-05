@@ -27,6 +27,9 @@
 // Uncomment next line to allow test SOICs using component editor
 //#define _TEST_SOIC
 
+// Uncomment next line to allow grid debug info via F4 key
+//#define _GRID_DEBUG
+
 #include <cmath>
 #include <stdio.h>
 #include <string.h>

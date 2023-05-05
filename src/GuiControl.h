@@ -511,9 +511,8 @@ public:
 					 int iPadWidthMIL, int iPerimeterCode, int iTagCode,
 					 std::list<MyPolygonF>& out,
 					 bool bHavePad, bool bHaveSoic, bool bIsGnd, bool bGap = false) const;
-#ifdef _TEST_SOIC
+
 	void	CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, const Component* pComp, std::list<MyPolygonF>& out, bool bSolderMask, bool bIsGnd, bool bGap = false) const;
-#endif
 
 	void Reset()	// For use with File->New()
 	{

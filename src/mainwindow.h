@@ -36,7 +36,7 @@
 #include "GWriter.h"
 #include "myscrollarea.h"
 
-#ifdef _TEST_SOIC
+#ifdef _GRID_DEBUG
 enum DEBUGMODE { DEBUGMODE_OFF = 0 , DEBUGMODE_SOICINFO, DEBUGMODE_ROUTEID, DEBUGMODE_NODEID, DEBUGMODE_PININDEX, DEBUGMODE_LAYERINFO, DEBUGMODE_END };
 #endif
 
@@ -495,9 +495,7 @@ private:
 
 	void PaintViaGrey(const GuiControl& guiCtrl, QPainter& painter, const QPointF& pC);
 	void PaintPadGrey(const GuiControl& guiCtrl, QPainter& painter, QPen& pen, const QPointF& pC, int iPadWidthMIL = 0);
-#ifdef _TEST_SOIC
 	void PaintSOIC(const GuiControl& guiCtrl, QPainter& painter,  const QColor& color, const QPointF& pC, size_t pinIndex, const Component* pComp, bool bIsGnd, bool bGap = false);
-#endif
 	void PaintVia(const GuiControl& guiCtrl, QPainter& painter,  const QColor& color, const QPointF& pC, bool bGap = false);	// Helper
 	void PaintPad(const GuiControl& guiCtrl, QPainter& painter,  const QColor& color, const QPointF& pC, int iPadWidthMIL = 0, int iHoleWidth_MIL = 0, bool bGap = false);	// Helper
 	void PaintBlob(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pC, const QPointF& pCoffset,
@@ -674,7 +672,7 @@ private:
 	QPoint		m_rulerA;
 	QPoint		m_rulerB;
 	int			m_iTutorialNumber	= -1;		// Tutorial file number 0,1,2,... (or -1 if not in tutorial mode)
-#ifdef _TEST_SOIC
-	int			m_iDebugMode = DEBUGMODE_OFF;
+#ifdef _GRID_DEBUG
+	int			m_iGridDebugMode = DEBUGMODE_OFF;
 #endif
 };
