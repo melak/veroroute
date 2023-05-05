@@ -457,10 +457,10 @@ void MainWindow::MousePressEvent(const QPoint& pos, bool bLeftClick, bool bRight
 	}
 	else
 	{
-		if ( ALLOW_DELAY_BASED_PAD_SHIFT && pC->GetHasPin() && !pC->GetHasWire() )
+		if ( ALLOW_DELAY_BASED_PAD_SHIFT && pC->GetPinSupportsOffsetPads() )
 			g_bPinClicked = true;
 
-		if ( !pC->GetHasPin() || pC->GetHasWire() )	// Hide the pad offset dialog if we click on a place that cannot have a pad offset
+		if ( !pC->GetPinSupportsOffsetPads() )	// Hide the pad offset dialog if we click on a place that cannot have a pad offset
 			HidePadOffsetDialog();
 	}
 
