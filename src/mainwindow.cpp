@@ -379,7 +379,6 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 
 MainWindow::~MainWindow()
 {
-	DestroyPixmapCache();
 	delete m_dockCompDlg;
 	delete m_dockControlDlg;
 	delete m_dockTemplatesDlg;
@@ -591,7 +590,6 @@ void MainWindow::ResetView(MOUSE_MODE eMouseMode, bool bTutorial)
 
 	UpdateUndoRedoControls();
 	activateWindow();	// Select mainwindow rather than child dialogs
-	DestroyPixmapCache();
 
 	if ( !bUndoRedo && !m_board.GetCompEdit() )
 		m_scrollArea->SetRequestTopLeftView(true);
@@ -1136,7 +1134,6 @@ void MainWindow::ZoomHelper(int delta)	// delta == change in GRIDPIXELS
 	const int	W	= m_board.GetGRIDPIXELS();	// Current scale
 	m_board.SetGRIDPIXELS(W + delta);			// Change scale
 
-	DestroyPixmapCache();
 	UpdateControls();
 	RepaintSkipRouting(true);
 
@@ -1669,16 +1666,16 @@ void MainWindow::HandleNetworkReply(QNetworkReply* pReply)
 }
 
 // View controls (Update history BEFORE calling UpdateControls() since that triggers more history writes)
-void MainWindow::TrackSliderChanged(int i)		{ if ( m_board.SetTrackSliderValue(i) )	{ UpdateHistory("toggle Mono/Color/PCB", 0);	UpdateControls(); DestroyPixmapCache(); RepaintSkipRouting(); m_board.CustomPCBshapes(); } }
+void MainWindow::TrackSliderChanged(int i)		{ if ( m_board.SetTrackSliderValue(i) )	{ UpdateHistory("toggle Mono/Color/PCB", 0);	UpdateControls(); RepaintSkipRouting(); m_board.CustomPCBshapes(); } }
 void MainWindow::CheckBoxMonoChanged(bool b)	{ if ( b != (m_board.GetTrackSliderValue() == 1) ) TrackSliderChanged(b ? 1 : 0); }
 void MainWindow::CheckBoxColorChanged(bool b)	{ if ( b != (m_board.GetTrackSliderValue() == 2) ) TrackSliderChanged(b ? 2 : 0); }
 void MainWindow::CheckBoxPcbChanged(bool b)		{ if ( b != (m_board.GetTrackSliderValue() == 3) ) TrackSliderChanged(b ? 3 : 0); }
-void MainWindow::SaturationSliderChanged(int i) { if ( m_board.SetSaturation(i) )		{ UpdateHistory("change saturation", 0);		UpdateControls(); DestroyPixmapCache(); RepaintSkipRouting(); } }
+void MainWindow::SaturationSliderChanged(int i) { if ( m_board.SetSaturation(i) )		{ UpdateHistory("change saturation", 0);		UpdateControls(); RepaintSkipRouting(); } }
 void MainWindow::CompSliderChanged(int i)		{ if ( m_board.SetCompSliderValue(i) )	{ UpdateHistory("toggle Line/Name/Value", 0);	UpdateControls(); RepaintSkipRouting(); } }
 void MainWindow::CheckBoxLineChanged(bool b)	{ if ( b != (m_board.GetCompSliderValue() == 1) ) CompSliderChanged(b ? 1 : 0); }
 void MainWindow::CheckBoxNameChanged(bool b)	{ if ( b != (m_board.GetCompSliderValue() == 2) ) CompSliderChanged(b ? 2 : 0); }
 void MainWindow::CheckBoxValueChanged(bool b)	{ if ( b != (m_board.GetCompSliderValue() == 3) ) CompSliderChanged(b ? 3 : 0); }
-void MainWindow::FillSliderChanged(int i)		{ if ( m_board.SetFillSaturation(i) )	{ UpdateHistory("change fill opacity", 0);		UpdateControls(); DestroyPixmapCache();	RepaintSkipRouting(); } }
+void MainWindow::FillSliderChanged(int i)		{ if ( m_board.SetFillSaturation(i) )	{ UpdateHistory("change fill opacity", 0);		UpdateControls(); RepaintSkipRouting(); } }
 void MainWindow::SetShowGrid(bool b)			{ if ( m_board.SetShowGrid(b) )			{ UpdateHistory("toggle grid", 0);				UpdateControls(); RepaintSkipRouting(); } }
 void MainWindow::SetShowText(bool b)			{ if ( m_board.SetShowText(b) )			{ UpdateHistory("toggle show text", 0);			UpdateControls(); RepaintSkipRouting(); } }
 void MainWindow::SetFlipH(bool b)				{ if ( m_board.SetFlipH(b) )			{ UpdateHistory("flip horizontal", 0);			UpdateControls(); RepaintSkipRouting(); } }
@@ -2071,7 +2068,6 @@ void MainWindow::SetTracksFat(bool b)
 	m_board.SetFatTracks(true);
 	UpdateHistory("change track style", 0);
 	UpdateControls();
-	DestroyPixmapCache();
 	if ( bDiagsModeChanged ) RepaintWithListNodes(); else RepaintSkipRouting();
 }
 void MainWindow::SetTracksThin(bool b)
@@ -2085,7 +2081,6 @@ void MainWindow::SetTracksThin(bool b)
 	m_board.SetFatTracks(false);
 	UpdateHistory("change track style", 0);
 	UpdateControls();
-	DestroyPixmapCache();
 	if ( bDiagsModeChanged ) RepaintWithListNodes(); else RepaintSkipRouting();
 }
 void MainWindow::SetTracksCurved(bool b)
@@ -2098,22 +2093,21 @@ void MainWindow::SetTracksCurved(bool b)
 	m_board.SetCurvedTracks(true);
 	UpdateHistory("change track style", 0);
 	UpdateControls();
-	DestroyPixmapCache();
 	if ( bDiagsModeChanged ) RepaintWithListNodes(); else RepaintSkipRouting();
 }
 void MainWindow::SetDiagonalsOff(bool b)
 {
-	if ( b && m_board.SetDiagsMode(DIAGSMODE::OFF) )	{ UpdateHistory("change diagonals mode", 0); UpdateControls(); DestroyPixmapCache(); RepaintWithListNodes();; }
+	if ( b && m_board.SetDiagsMode(DIAGSMODE::OFF) )	{ UpdateHistory("change diagonals mode", 0); UpdateControls(); RepaintWithListNodes();; }
 }
 void MainWindow::SetDiagonalsMin(bool b)
 {
 	const bool bListNodes = ( m_board.GetDiagsMode() == DIAGSMODE::OFF );	// Only ListNodes() again if necessary
-	if ( b && m_board.SetDiagsMode(DIAGSMODE::MIN) )	{ UpdateHistory("change diagonals mode", 0); UpdateControls(); DestroyPixmapCache(); if ( bListNodes ) RepaintWithListNodes(); else RepaintWithRouting(); }
+	if ( b && m_board.SetDiagsMode(DIAGSMODE::MIN) )	{ UpdateHistory("change diagonals mode", 0); UpdateControls(); if ( bListNodes ) RepaintWithListNodes(); else RepaintWithRouting(); }
 }
 void MainWindow::SetDiagonalsMax(bool b)
 {
 	const bool bListNodes = ( m_board.GetDiagsMode() == DIAGSMODE::OFF );	// Only ListNodes() again if necessary
-	if ( b && m_board.SetDiagsMode(DIAGSMODE::MAX) )	{ UpdateHistory("change diagonals mode", 0); UpdateControls(); DestroyPixmapCache(); if ( bListNodes ) RepaintWithListNodes(); else RepaintWithRouting(); }
+	if ( b && m_board.SetDiagsMode(DIAGSMODE::MAX) )	{ UpdateHistory("change diagonals mode", 0); UpdateControls(); if ( bListNodes ) RepaintWithListNodes(); else RepaintWithRouting(); }
 }
 
 // Rendering options
@@ -2121,18 +2115,18 @@ void MainWindow::SetBrightness(int i)
 {
 	const bool bNewFormat = ( i >= 0 && i <= 100 );		// Before VeroRoute V2.20, "Brightness" was stored as a grey level in the range [200,255].
 	const int  ii = ( bNewFormat ) ? ( 155 + i ) : i;	// From   VeroRoute V2.20, "Brightness" is a percentage value [0,100] that is stored as a grey level in the range [155,255].
-	if ( m_board.SetBackgroundColor(MyRGB(ii,ii,ii)) )	{ UpdateHistory("change background brightness", 0);	DestroyPixmapCache();	RepaintSkipRouting(); }
+	if ( m_board.SetBackgroundColor(MyRGB(ii,ii,ii)) )	{ UpdateHistory("change background brightness", 0);	RepaintSkipRouting(); }
 }
-void MainWindow::SetPadWidth(int i)			{ if ( m_board.SetPAD_MIL(i)   ) { UpdateHistory("change pad width", 0);				UpdateControls();	DestroyPixmapCache();	RepaintSkipRouting(); } }
-void MainWindow::SetTrackWidth(int i)		{ if ( m_board.SetTRACK_MIL(i) ) { UpdateHistory("change track width", 0);				UpdateControls();	DestroyPixmapCache();	RepaintSkipRouting(); } }
-void MainWindow::SetTagWidth(int i)			{ if ( m_board.SetTAG_MIL(i) )   { UpdateHistory("change thermal width", 0);			UpdateControls();	DestroyPixmapCache();	RepaintSkipRouting(); } }
+void MainWindow::SetPadWidth(int i)			{ if ( m_board.SetPAD_MIL(i)   ) { UpdateHistory("change pad width", 0);				UpdateControls();	RepaintSkipRouting(); } }
+void MainWindow::SetTrackWidth(int i)		{ if ( m_board.SetTRACK_MIL(i) ) { UpdateHistory("change track width", 0);				UpdateControls();	RepaintSkipRouting(); } }
+void MainWindow::SetTagWidth(int i)			{ if ( m_board.SetTAG_MIL(i) )   { UpdateHistory("change thermal width", 0);			UpdateControls();	RepaintSkipRouting(); } }
 void MainWindow::SetHoleWidth(int i)		{ if ( m_board.SetHOLE_MIL(i)  ) { UpdateHistory("change hole width", 0);				UpdateControls();	RepaintSkipRouting(); } }
 void MainWindow::SetGapWidth(int i)			{ if ( m_board.SetGAP_MIL(i)   ) { UpdateHistory("change gap width", 0);				UpdateControls();	RepaintSkipRouting(); } }
 void MainWindow::SetMaskWidth(int i)		{ if ( m_board.SetMASK_MIL(i)  ) { UpdateHistory("change solder mask margin", 0);		UpdateControls();	RepaintSkipRouting(); } }
 void MainWindow::SetSilkWidth(int i)		{ if ( m_board.SetSILK_MIL(i)  ) { UpdateHistory("change silkscreen line width", 0);	UpdateControls();	RepaintSkipRouting(); } }
 void MainWindow::SetEdgeWidth(int i)		{ if ( m_board.SetEDGE_MIL(i)  ) { UpdateHistory("change board edge margin", 0);		UpdateControls();	RepaintSkipRouting(); } }
-void MainWindow::SetViaPadWidth(int i)		{ if ( m_board.SetVIAPAD_MIL(i)) { UpdateHistory("change via pad width", 0);			UpdateControls();	DestroyPixmapCache();	RepaintSkipRouting(); } }
-void MainWindow::SetViaHoleWidth(int i)		{ if ( m_board.SetVIAHOLE_MIL(i)){ UpdateHistory("change via hole width", 0);			UpdateControls();	DestroyPixmapCache();	RepaintSkipRouting(); } }
+void MainWindow::SetViaPadWidth(int i)		{ if ( m_board.SetVIAPAD_MIL(i)) { UpdateHistory("change via pad width", 0);			UpdateControls();	RepaintSkipRouting(); } }
+void MainWindow::SetViaHoleWidth(int i)		{ if ( m_board.SetVIAHOLE_MIL(i)){ UpdateHistory("change via hole width", 0);			UpdateControls();	RepaintSkipRouting(); } }
 void MainWindow::SetTextSizeComp(int i)		{ if ( m_board.SetTextSizeComp(i) )		  { UpdateHistory("change text size (component)", 0);	RepaintSkipRouting(); } }
 void MainWindow::SetTextSizePins(int i)		{ if ( m_board.SetTextSizePins(i) )		  { UpdateHistory("change text size (pins)", 0);		RepaintSkipRouting(); } }
 void MainWindow::SetTargetRows(int i)		{ if ( m_board.SetTargetRows(i) )		  { UpdateHistory("change target board height", 0);		RepaintSkipRouting(); } }
@@ -2140,8 +2134,8 @@ void MainWindow::SetTargetCols(int i)		{ if ( m_board.SetTargetCols(i) )		  { Up
 void MainWindow::SetShowTarget(bool b)		{ if ( m_board.SetShowTarget(b) )		  { UpdateHistory("toggle show target board area", 0);	RepaintSkipRouting(); } }
 void MainWindow::SetXthermals(bool b)		{ if ( m_board.SetXthermals(b) )		  { UpdateHistory("toggle X-pattern thermal relief", 0);UpdateControls();	RepaintSkipRouting(); } }
 void MainWindow::SetShowCloseTracks(bool b)	{ if ( m_board.SetShowCloseTracks(b) )	  { UpdateHistory("toggle show closest tracks", 0);		UpdateControls();	RepaintSkipRouting(); } }
-void MainWindow::SetAntialiasOff(bool b)	{ if ( b && m_board.SetRenderQuality(0) ) { UpdateHistory("toggle anti-alias", 0);	DestroyPixmapCache(); RepaintSkipRouting(); } }
-void MainWindow::SetAntialiasOn(bool b)		{ if ( b && m_board.SetRenderQuality(1) ) { UpdateHistory("toggle anti-alias", 0);	DestroyPixmapCache(); RepaintSkipRouting(); } }
+void MainWindow::SetAntialiasOff(bool b)	{ if ( b && m_board.SetRenderQuality(0) ) { UpdateHistory("toggle anti-alias", 0);	RepaintSkipRouting(); } }
+void MainWindow::SetAntialiasOn(bool b)		{ if ( b && m_board.SetRenderQuality(1) ) { UpdateHistory("toggle anti-alias", 0);	RepaintSkipRouting(); } }
 
 // Wire dialog
 void MainWindow::SetWireShare(bool b)		{ if ( m_board.SetWireShare(b) ) { UpdateHistory("toggle allow wires to share a hole", 0);	RepaintSkipRouting(); } }

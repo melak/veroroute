@@ -36,9 +36,6 @@
 #include "GWriter.h"
 #include "myscrollarea.h"
 
-//TODO Remove the pixmap cache code completely once SOICs are fully introduced
-//	#define USE_PIXMAP_CACHE
-
 #ifdef _TEST_SOIC
 enum DEBUGMODE { DEBUGMODE_OFF = 0 , DEBUGMODE_SOICINFO, DEBUGMODE_ROUTEID, DEBUGMODE_NODEID, DEBUGMODE_PININDEX, DEBUGMODE_LAYERINFO, DEBUGMODE_END };
 #endif
@@ -496,11 +493,6 @@ private:
 	void UpdateTemplatesDialog();
 	void UpdateTextDialog(bool bFull = false);
 
-	void DestroyPixmapCache();
-#ifdef USE_PIXMAP_CACHE
-	void CreatePixmapCache(const GuiControl& guiCtrl, ColorManager& colorManager);
-	void PaintDiag(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pCorner, bool bLT);
-#endif
 	void PaintViaGrey(const GuiControl& guiCtrl, QPainter& painter, const QPointF& pC);
 	void PaintPadGrey(const GuiControl& guiCtrl, QPainter& painter, QPen& pen, const QPointF& pC, int iPadWidthMIL = 0);
 #ifdef _TEST_SOIC
@@ -651,19 +643,6 @@ private:
 	std::string				m_localDataPathStr;	// The path to the "history" and "templates" folders
 	std::string				m_tutorialsPathStr;	// The path to the "tutorials" folder and "veroroute.png"
 
-	// Cached pixmaps containing pre-colored pads and blobs.
-#ifdef USE_PIXMAP_CACHE
-	QPixmap**	m_ppPixmapPad		= nullptr;	// A pad in the host element
-	QPixmap**	m_ppPixmapVia		= nullptr;	// A via in the host element
-	QPixmap**	m_ppPixmapDiag		= nullptr;	// For filling small diagonal gaps not covered by blob pixmaps
-	QPixmap**	m_ppPixmapBlob		= nullptr;	// A composite shape with all the host element connections
-	QPixmap*	m_pPixmapDiagLT		= nullptr;	// Used instead of m_ppPixmapDiag for custom colors
-	QPixmap*	m_pPixmapDiagRT		= nullptr;	// Used instead of m_ppPixmapDiag for custom colors
-	int			m_radPixmapPad		= 0;		// Half pixmap width ...
-	int			m_radPixmapVia		= 0;		// ...
-	int			m_radPixmapDiag		= 0;		// ...
-	int			m_radPixmapBlob		= 0;		// ...
-#endif
 	QPoint		m_mousePos;
 	QPoint		m_clickedPos;
 	bool		m_bRepaint			= false;	// Flag to make paintEvent() do something useful

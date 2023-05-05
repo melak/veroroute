@@ -25,119 +25,6 @@
 
 //#define PAINTBOARD_TIMER
 
-void MainWindow::DestroyPixmapCache()
-{
-#ifdef USE_PIXMAP_CACHE
-	if ( m_ppPixmapPad )	for (int i = 0; i <     NUM_PIXMAP_COLORS; i++)	delete m_ppPixmapPad[i];
-	if ( m_ppPixmapVia )	for (int i = 0; i <     NUM_PIXMAP_COLORS; i++)	delete m_ppPixmapVia[i];
-	if ( m_ppPixmapDiag )	for (int i = 0; i < 2 * NUM_PIXMAP_COLORS; i++)	delete m_ppPixmapDiag[i];
-	if ( m_ppPixmapBlob )	for (int i = 0; i < 256; i++)					delete m_ppPixmapBlob[i];
-	delete[] m_ppPixmapPad;		m_ppPixmapPad	= nullptr;
-	delete[] m_ppPixmapVia;		m_ppPixmapVia	= nullptr;
-	delete[] m_ppPixmapDiag;	m_ppPixmapDiag	= nullptr;
-	delete[] m_ppPixmapBlob;	m_ppPixmapBlob	= nullptr;
-	delete   m_pPixmapDiagLT;	m_pPixmapDiagLT = nullptr;
-	delete   m_pPixmapDiagRT;	m_pPixmapDiagRT = nullptr;
-#endif
-}
-
-#ifdef USE_PIXMAP_CACHE
-void MainWindow::CreatePixmapCache(const GuiControl& guiCtrl, ColorManager& colorMgr)
-{
-	if ( m_ppPixmapPad ) return;	// Cache exists
-
-	grabMouse(Qt::WaitCursor);
-
-	// The set of used connections for a grid point are represented by an 8-bit "perimeter code".
-	// There are 256 possible ways for a grid point to have connections to its 8 neigbours.
-	// Each way produces a different local track pattern (or "blob") for the grid point.
-	// The pixmap cache provides a way of quickly mapping the "perimeter code" to a "blob" pixmap.
-
-	m_radPixmapPad	= guiCtrl.GetHalfPixelsFromMIL( guiCtrl.GetPAD_MIL() );		// Half pad width in pixels
-	m_radPixmapVia	= guiCtrl.GetHalfPixelsFromMIL( guiCtrl.GetVIAPAD_MIL() );	// Half via width in pixels
-	m_radPixmapDiag	= static_cast<int>( ceil(1.414 * guiCtrl.GetHalfPixelsFromMIL( guiCtrl.GetTRACK_MIL() )) );
-	m_radPixmapBlob	= guiCtrl.GetGRIDPIXELS() >> 1;	// Half grid-square width in pixels
-
-	m_ppPixmapPad	= new QPixmap*[NUM_PIXMAP_COLORS];
-	m_ppPixmapVia	= new QPixmap*[NUM_PIXMAP_COLORS];
-	m_ppPixmapDiag	= new QPixmap*[2 * NUM_PIXMAP_COLORS];
-	m_ppPixmapBlob	= new QPixmap*[256];
-
-	m_pPixmapDiagLT = new QPixmap(2*m_radPixmapDiag, 2*m_radPixmapDiag);
-	m_pPixmapDiagLT->fill(Qt::transparent);
-	m_pPixmapDiagRT	= new QPixmap(2*m_radPixmapDiag, 2*m_radPixmapDiag);
-	m_pPixmapDiagRT->fill(Qt::transparent);
-
-	QPainter painter;
-	for (int i = 0; i < NUM_PIXMAP_COLORS; i++)
-	{
-		const QColor color = colorMgr.GetPixmapColor(i);
-
-		m_ppPixmapPad[i] = new QPixmap(2*m_radPixmapPad, 2*m_radPixmapPad);
-		m_ppPixmapPad[i]->fill(Qt::transparent);
-
-		painter.begin(m_ppPixmapPad[i]);
-		PaintPad(guiCtrl, painter, color, QPointF(m_radPixmapPad, m_radPixmapPad));
-		painter.end();
-
-		m_ppPixmapVia[i] = new QPixmap(2*m_radPixmapVia, 2*m_radPixmapVia);
-		m_ppPixmapVia[i]->fill(Qt::transparent);
-
-		painter.begin(m_ppPixmapVia[i]);
-		PaintVia(guiCtrl, painter, color, QPointF(m_radPixmapVia, m_radPixmapVia));
-		painter.end();
-
-		for (int jDiagCode = 0; jDiagCode < 2; jDiagCode++)	// 0 ==> LT, 1 ==> RT
-		{
-			const int ii = i + jDiagCode * NUM_PIXMAP_COLORS;
-
-			m_ppPixmapDiag[ii] = new QPixmap(2*m_radPixmapDiag, 2*m_radPixmapDiag);
-			m_ppPixmapDiag[ii]->fill(Qt::transparent);
-
-			painter.begin(m_ppPixmapDiag[ii]);
-			PaintDiag(guiCtrl, painter, color, QPointF(m_radPixmapDiag, m_radPixmapDiag), jDiagCode == 0);
-			painter.end();
-		}
-	}
-	const QColor backgroundColor = GetBackgroundColor();
-	const bool bHavePad(false), bHaveSoic(false), bIsGnd(false);
-	const int iTagCode(0), iPadWidthMIL(0);
-	for (int i = 0; i < 256; i++)	// Loop all possible perimeter codes
-	{
-		m_ppPixmapBlob[i] = new QPixmap(2*m_radPixmapBlob, 2*m_radPixmapBlob);
-		m_ppPixmapBlob[i]->fill(backgroundColor);
-
-		painter.begin(m_ppPixmapBlob[i]);
-		const QPointF pC(m_radPixmapBlob, m_radPixmapBlob);
-		PaintBlob(guiCtrl, painter, Qt::black, pC, pC, iPadWidthMIL, i, iTagCode, bHavePad, bHaveSoic, bIsGnd);
-		painter.end();
-
-		// Now turn the black blob area transparent, so we can overlay it over colored nodes.
-		QBitmap mask = m_ppPixmapBlob[i]->createMaskFromColor(backgroundColor, Qt::MaskOutColor);
-		m_ppPixmapBlob[i]->setMask(mask);
-	}
-
-	releaseMouse();
-}
-
-void MainWindow::PaintDiag(const GuiControl& guiCtrl, QPainter& painter, const QColor& color, const QPointF& pCorner, bool bLT)
-{
-	// Only use this method for pixmap based track rendering
-	const int&	H			= m_radPixmapDiag;
-	const int	trackWidth	= guiCtrl.GetHalfPixelsFromMIL( guiCtrl.GetTRACK_MIL() ) << 1;	// Track width in pixels
-
-	static QPen	pen(Qt::black, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
-	pen.setColor(color);
-	pen.setWidth(trackWidth);
-	painter.setPen(pen);
-	painter.setBrush(Qt::NoBrush);
-	if ( bLT )
-		painter.drawLine(pCorner + QPointF(-H,-H), pCorner + QPointF(H, H));
-	else // bRT
-		painter.drawLine(pCorner + QPointF(-H, H), pCorner + QPointF(H,-H));
-}
-#endif
-
 void MainWindow::PaintViaGrey(const GuiControl& guiCtrl, QPainter& painter, const QPointF& pC)
 {
 	assert(!m_bWriteGerber);
@@ -629,12 +516,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	const bool		 bMonoPCB		= bMono || bPCB;
 	const bool		 bGroundFill	= !bVero && bMonoPCB && board.GetGroundFill();
 	const bool		 bForceXthermal	= board.GetXthermals();
-#ifdef USE_PIXMAP_CACHE
-	const bool		 bPixmapCache	= !bVero && ( bMono || bColor ) && !bGroundFill && !m_bWritePDF;	// true ==> Faster rendering (Mono/Color modes)
-#else
-	const bool		 bPixmapCache	= false;
-#endif
-	const bool		 bDirect		= !bVero && !bPixmapCache && !bGroundFill;	// true ==> Draw track "blobs" and pads directly (PDF/Gerber)
+	const bool		 bDirect		= !bVero && !bGroundFill;	// true ==> Draw track "blobs" and pads directly (PDF/Gerber)
 	const int&		 layer			= board.GetCurrentLayer();
 	const int&		 groundNodeId	= board.GetGroundNodeId(layer);
 	const bool		 bTopLyr		= ( layer == LYR_TOP );
@@ -659,10 +541,6 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 	colorMgr.SetSaturation( board.GetSaturation() );			// Must do this BEFORE making pixmaps
 	colorMgr.SetFillSaturation( board.GetFillSaturation() );	// Must do this BEFORE making pixmaps
-#ifdef USE_PIXMAP_CACHE
-	if ( bPixmapCache )
-		CreatePixmapCache(board, colorMgr);	// Builds pixmaps if the cache is empty
-#endif
 
 	board.CalculateColors();	// Work out best way to color things
 
@@ -793,9 +671,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	{
 		painter.save();
 		const bool	bGreyPads	= bPCB && !m_bWriteGerber;
-		const int	numLoops	= ( bPixmapCache ? 3 : ( bGroundFill ? 2 : 1 ) ) + ( bGreyPads ? 1 : 0);
+		const int	numLoops	= ( bGroundFill ? 2 : 1 ) + ( bGreyPads ? 1 : 0);
 		// bGroundFill		==> 1st pass draws fat tracks in white, 2nd pass draws tracks
-		// bPixmapCache		==> 1st pass draws the pixmaps,			2nd pass fixes up diagonals,  3rd pass draws custom sized pads
 		// bGreyPads		==> A final pass will draw the pads in grey
 		for (int iLoop = 0; iLoop < numLoops; iLoop++)
 		{
@@ -911,7 +788,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					if ( !bSoicPad ) continue;	// Next grid square
 				}
 
-				// Note that bVero, bPixmapCache, bGroundFill, bDirect are mutually exclusive
+				// Note that bVero, bGroundFill, bDirect are mutually exclusive
 
 				if ( bVero ) // Vero shows squares and strips with holes
 				{
@@ -949,79 +826,6 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 						if ( i > minCol && pC->GetNbr(NBR_L)->IsClash(nodeId) ) painter.drawRect(L-iHalfGap, T, iGap, B-T);
 						if ( i < maxCol && pC->GetNbr(NBR_R)->IsClash(nodeId) ) painter.drawRect(R-iHalfGap, B, iGap, B-T);
 					}
-				}
-				if ( bPixmapCache )	// Draw track "blobs" and pads using pre-calculated pixmaps for speed
-				{
-#ifdef USE_PIXMAP_CACHE
-					assert( !bPCB );
-					const bool bCustomColor = bAllowCustomColor && colorMgr.GetIsFixed(nodeId);
-					if ( iLoop == 0 )
-					{
-						painter.setPen(Qt::NoPen);
-						painter.setBrush(color);
-						// Draw blob
-						if ( bDrawBlob && !bCustomSize && !bPadOffset )		// Custom/offset stuff is rendered on last loop
-						{
-							// Draw background square first in relevant color
-							painter.drawRect(L+C-m_radPixmapBlob, T+C-m_radPixmapBlob, m_radPixmapBlob << 1, m_radPixmapBlob << 1);
-
-							// Set the area that is not in the "blob" to the background color
-							painter.drawPixmap(L+C-m_radPixmapBlob, T+C-m_radPixmapBlob, *(m_ppPixmapBlob[iPerimeterCode]));
-						}
-						// Draw pad/via
-						if ( bCustomColor )
-						{
-							if ( bDrawVia )
-								PaintVia(board, painter, color, pCentre);
-							if ( bDrawPad && !bCustomSize && !bPadOffset )	// Custom/offset stuff is rendered on last loop
-								PaintPad(board, painter, color, pCentre);
-						}
-						else	// Non-custom color means we can use a cached pixmap
-						{
-							if ( bDrawVia )
-								painter.drawPixmap(L+C-m_radPixmapVia, T+C-m_radPixmapVia, *(m_ppPixmapVia[iEffColorId]));
-							if ( bDrawPad && !bCustomSize && !bPadOffset )	// Custom/offset stuff is rendered on last loop
-								painter.drawPixmap(L+C-m_radPixmapPad, T+C-m_radPixmapPad, *(m_ppPixmapPad[iEffColorId]));
-						}
-					}
-					else if ( iLoop == 1 && bPointOK )
-					{
-						// Read flags for LT and RT so we can fill diagonal gaps produced on previous iLoop
-						const bool bUsedLT = ReadCodeBit(NBR_LT, iPerimeterCode);
-						const bool bUsedRT = ReadCodeBit(NBR_RT, iPerimeterCode);
-						if ( bUsedLT || bUsedRT )
-						{
-							QPixmap* pLT = bCustomColor ? m_pPixmapDiagLT : m_ppPixmapDiag[iEffColorId];
-							QPixmap* pRT = bCustomColor ? m_pPixmapDiagRT : m_ppPixmapDiag[iEffColorId + NUM_PIXMAP_COLORS];
-							if ( bCustomColor )
-							{
-								QPainter painterTmp;
-								if ( bUsedLT )
-								{
-									painterTmp.begin(m_pPixmapDiagLT);
-									PaintDiag(board, painterTmp, color, QPointF(m_radPixmapDiag, m_radPixmapDiag), true);
-									painterTmp.end();
-								}
-								if ( bUsedRT )
-								{
-									painterTmp.begin(m_pPixmapDiagRT);
-									PaintDiag(board, painterTmp, color, QPointF(m_radPixmapDiag, m_radPixmapDiag), false);
-									painterTmp.end();
-								}
-							}
-							if ( bUsedLT ) painter.drawPixmap(L-m_radPixmapDiag, T-m_radPixmapDiag, *pLT);
-							if ( bUsedRT ) painter.drawPixmap(R-m_radPixmapDiag, T-m_radPixmapDiag, *pRT);
-						}
-					}
-					else if ( bCustomSize || bPadOffset )	// Custom/offset stuff ...
-					{
-						if ( bDrawBlob ) PaintBlob(board, painter, color, pCentre, pCentreOff, iPadWidthMIL, iPerimeterCode, iTagCode, bPad, bSoicPad, false);
-						if ( bDrawPad )  PaintPad(board, painter, color, pCentreOff, iPadWidthMIL, iHoleWidthMIL);
-					}
-	#ifdef _TEST_SOIC
-					if ( bSoicPad ) PaintSOIC(board, painter, color, pCentre, iPinIndexSOIC, pCompSOIC, bIsGnd);
-	#endif
-#endif	// USE_PIXMAP_CACHE
 				}
 				if ( bGroundFill )	// Draw track "blobs" and pads directly (PDF/Gerber)
 				{
