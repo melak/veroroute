@@ -26,7 +26,7 @@
 // Bits used to construct the GPEN enum
 Q_DECL_CONSTEXPR static const int	BIT_GKO(1),	 BIT_PAD(2), BIT_VIA(4), BIT_TRK(8), BIT_TAG(16),
 									BIT_SLK(32), BIT_GAP(64), BIT_MSK(128), BIT_HLE(256),
-									BIT_PAD_IC(512), BIT_TRK_IC(1024);
+									BIT_TRK_IC(512), BIT_MIN_IC(1024);
 
 // The GPEN enum defines "pen" types for writing to Gerber/Excellon files
 enum class GPEN
@@ -38,15 +38,15 @@ enum class GPEN
 	TRK			= BIT_TRK,				// Used for track
 	TAG			= BIT_TAG,				// Used for thermal relief tags
 	SLK			= BIT_SLK,				// Used for silkscreen
-	PAD_IC		= BIT_PAD_IC,			// Used for SOIC pads
-	TRK_IC		= BIT_TRK_IC,			// Used for curved tracks to SOIC pads
+	TRK_IC		= BIT_TRK_IC,			// Used for tracks to SOIC pads
+	MIN_IC		= BIT_MIN_IC,			// Used for thin tracks to SOIC pads
 	PAD_GAP		= BIT_PAD | BIT_GAP,	// Used for gap around a pad
 	VIA_GAP		= BIT_VIA | BIT_GAP,	// Used for gap around a via
 	TRK_GAP		= BIT_TRK | BIT_GAP,	// Used for gap around a track
-	TRK_IC_GAP	= BIT_TRK_IC | BIT_GAP, // Used for gap around a curved track to SOIC pad
+	TRK_IC_GAP	= BIT_TRK_IC | BIT_GAP, // Used for gap around a track to SOIC pad
+	MIN_IC_GAP	= BIT_MIN_IC | BIT_GAP, // Used for gap around a thin track to SOIC pad
 	PAD_MSK		= BIT_PAD | BIT_MSK,	// Used for solder mask at a pad
 	VIA_MSK		= BIT_VIA | BIT_MSK,	// Used for solder mask at a via
-	PAD_IC_MSK	= BIT_PAD_IC | BIT_MSK,	// Used for solder mask at a SOIC pad
 	PAD_HLE		= BIT_PAD | BIT_HLE,	// Used for drill hole at a pad
 	VIA_HLE		= BIT_VIA | BIT_HLE		// Used for drill hole at a via
 };

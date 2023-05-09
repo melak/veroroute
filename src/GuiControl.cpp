@@ -258,31 +258,34 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, const Com
 	// The scale parameter W represents the width of a 100 mil grid square.
 
 	const qreal	T			= W * 0.025;	// (1/40 square width)  i.e. T = 2.5 mil
-	const qreal	padWidth	= 0.01 * ( GetPAD_IC_MIL() + 2 * ( bSolderMask ? GetMASK_MIL() : 0) );
-	const qreal	trkWidth	= 0.01 * ( GetTRACK_IC_MIL() + 2 * ( bGap ? GetGAP_MIL() : 0 ) );
+	const qreal	padWidth	= W * 0.01 * GetPAD_IC_MIL();
+	const qreal	padHeight	= W * 0.01 * 90;	// Pad length = 90 mil
+	const qreal	maskDelta	= W * 0.01 * GetMASK_MIL();
+	const bool	bThinTrack	= ( numPins == 16 ) && ( pinIndex == 1 || pinIndex == 6 || pinIndex == 9 || pinIndex == 14 );
+	const qreal	trkWidth	= 0.01 * ( ( bThinTrack ? GetMIN_IC_MIL() : GetTRACK_IC_MIL() )+ 2 * ( bGap ? GetGAP_MIL() : 0 ) );
 
 	MyPolygonF polygonA;	// SOIC tracks
-	polygonA.m_eTrkPen		= bGap ?  GPEN::TRK_IC_GAP : GPEN::TRK_IC;
-	polygonA.m_ePadPen		= GPEN::NONE;
+	if ( bThinTrack )
+		polygonA.m_eTrkPen	= bGap ?  GPEN::MIN_IC_GAP : GPEN::MIN_IC;
+	else
+		polygonA.m_eTrkPen	= bGap ?  GPEN::TRK_IC_GAP : GPEN::TRK_IC;
 	polygonA.m_radiusTrk	= trkWidth * 0.5;
-	polygonA.m_radiusPad	= 0;
-	polygonA.m_bClosed		= false;
 	polygonA.clear();
 
-	MyPolygonF polygonB;	// SOIC pads are actually a kind of track, so use m_eTrkPen and m_radiusTrk
-	polygonB.m_eTrkPen		= bGap ? GPEN::NONE : bSolderMask ? GPEN::PAD_IC_MSK : GPEN::PAD_IC;
-	polygonB.m_ePadPen		= GPEN::NONE;
-	polygonB.m_radiusTrk	= bGap ? 0 : padWidth * 0.5;
-	polygonB.m_radiusPad	= 0;
-	polygonB.m_bClosed		= bGap;
+	MyPolygonF polygonB;	// SOIC pads are drawn as a filled closed rectangle using GPEN::NONE
+	polygonB.m_bClosed		= true;
 	polygonB.clear();
 
 	const bool bNoTrackGap	= bIsGnd && bGap;	// For tracks in the ground fill, don't draw a gap around them
 	const bool bDoTrack		= !bSolderMask && !bNoTrackGap;
-	const bool bDoPad		= !bGap;
+	const bool bDoPad		= !bSolderMask && !bGap;
+	const bool bDoMask		=  bSolderMask && !bGap;
 
-	const QPointF padLength(0,36*T);					// Pad length (36T ==> 90 mil)
-	const QPointF padGapLR(15*T,0), padGapTB(0,15*T);	// Gaps for the SOIC pads
+	const QPointF padLength(0, padHeight);
+	const QPointF padLR(padWidth * 0.5, 0);
+	const QPointF padLeg(0,4*T);
+	const QPointF padGapLR(15*T,0), padGapTB(0,12*T);	// Gaps for the SOIC pads
+	const QPointF padMaskLR(padWidth * 0.5 + maskDelta, 0), padMaskTB(0, maskDelta);
 	QPointF padTop, padBot;	// Limits of SOIC pads
 
 	// 28 pin =========================================================================
@@ -306,9 +309,6 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, const Com
 		}
 		padBot = padTop + padLength;
 
-		if ( bDoPad )
-			polygonB << padTop << padBot;
-
 		if ( bDoTrack )
 		{
 			switch(iRefPin)
@@ -324,7 +324,13 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, const Com
 				case 21: Bezier(polygonA, pC, pC+QPointF(10*T,20*T), padTop); break;
 			}
 		}
-
+		if ( bDoPad )
+			polygonB << padTop-padLR << padTop+padLR << padBot+padLR << padBot-padLR << padTop-padLR;
+		if ( bDoMask )
+		{
+			padTop -= padMaskTB;	padBot += padMaskTB;
+			polygonB << padTop-padMaskLR << padTop+padMaskLR << padBot+padMaskLR << padBot-padMaskLR << padTop-padMaskLR;
+		}
 		if ( bGap )
 		{
 			padTop -= padGapTB;	padBot += padGapTB;
@@ -357,9 +363,6 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, const Com
 		}
 		padBot = padTop + padLength;
 
-		if ( bDoPad )
-			polygonB << padTop << padBot;
-
 		if ( bDoTrack )
 		{
 			switch(iRefPin)
@@ -373,7 +376,13 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, const Com
 				case 18: Bezier(polygonA, pC, pC+QPointF(10*T,20*T), padTop); break;
 			}
 		}
-
+		if ( bDoPad )
+			polygonB << padTop-padLR << padTop+padLR << padBot+padLR << padBot-padLR << padTop-padLR;
+		if ( bDoMask )
+		{
+			padTop -= padMaskTB;	padBot += padMaskTB;
+			polygonB << padTop-padMaskLR << padTop+padMaskLR << padBot+padMaskLR << padBot-padMaskLR << padTop-padMaskLR;
+		}
 		if ( bGap )
 		{
 			padTop -= padGapTB;	padBot += padGapTB;
@@ -405,9 +414,6 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, const Com
 		}
 		padBot = padTop + padLength;
 
-		if ( bDoPad )
-			polygonB << padTop << padBot;
-
 		if ( bDoTrack )
 		{
 			switch(iRefPin)
@@ -419,7 +425,13 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, const Com
 				case 15: Bezier(polygonA, pC, pC+QPointF(10*T,20*T), padTop); break;
 			}
 		}
-
+		if ( bDoPad )
+			polygonB << padTop-padLR << padTop+padLR << padBot+padLR << padBot-padLR << padTop-padLR;
+		if ( bDoMask )
+		{
+			padTop -= padMaskTB;	padBot += padMaskTB;
+			polygonB << padTop-padMaskLR << padTop+padMaskLR << padBot+padMaskLR << padBot-padMaskLR << padTop-padMaskLR;
+		}
 		if ( bGap )
 		{
 			padTop -= padGapTB;	padBot += padGapTB;
@@ -443,27 +455,30 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, const Com
 
 		switch(iRefPin)
 		{
-			case 15: padTop = pC+QPointF(30*T,28*T); break;
-			case 14: padTop = pC+QPointF(50*T,68*T); break;
-			case 13: padTop = pC+QPointF(30*T,68*T); break;
-			case 12: padTop = pC+QPointF(10*T,68*T); break;
+			case 15: padTop = pC+QPointF(30*T,-12*T); break;
+			case 14: padTop = pC+QPointF(50*T,28*T); break;
+			case 13: padTop = pC+QPointF(30*T,28*T); break;
+			case 12: padTop = pC+QPointF(10*T,28*T); break;
 		}
 		padBot = padTop + padLength;
-
-		if ( bDoPad )
-			polygonB << padTop << padBot;
 
 		if ( bDoTrack )
 		{
 			switch(iRefPin)
 			{
-				case 15: polygonA << pC << padTop; break;
-				case 14: Bezier(polygonA, pC, pC+QPointF(50*T,45*T), padTop); break;
-				case 13: Bezier(polygonA, pC, pC+QPointF(30*T,25*T), padTop); break;
-				case 12: Bezier(polygonA, pC, pC+QPointF(10*T,20*T), padTop); break;
+				case 15: polygonA << pC << pC+QPointF(30*T,0); break;
+				case 14: Bezier(polygonA, pC, pC+QPointF(0,11*T), padTop-padLeg);	polygonA << padTop; break;
+				case 13: polygonA << pC << padTop-padLeg << padTop; break;
+				case 12: polygonA << pC << padTop-padLeg << padTop; break;
 			}
 		}
-
+		if ( bDoPad )
+			polygonB << padTop-padLR << padTop+padLR << padBot+padLR << padBot-padLR << padTop-padLR;
+		if ( bDoMask )
+		{
+			padTop -= padMaskTB;	padBot += padMaskTB;
+			polygonB << padTop-padMaskLR << padTop+padMaskLR << padBot+padMaskLR << padBot-padMaskLR << padTop-padMaskLR;
+		}
 		if ( bGap )
 		{
 			padTop -= padGapTB;	padBot += padGapTB;
@@ -487,27 +502,30 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, const Com
 
 		switch(iRefPin)
 		{
-			case 13: padTop = pC+QPointF(20*T,28*T); break;
-			case 12: padTop = pC+QPointF(40*T,68*T); break;
-			case 11: padTop = pC+QPointF(20*T,68*T); break;
-			case 10: padTop = pC+QPointF(   0,68*T); break;
+			case 13: padTop = pC+QPointF(20*T,-12*T); break;
+			case 12: padTop = pC+QPointF(40*T,28*T); break;
+			case 11: padTop = pC+QPointF(20*T,28*T); break;
+			case 10: padTop = pC+QPointF(   0,28*T); break;
 		}
 		padBot = padTop + padLength;
-
-		if ( bDoPad )
-			polygonB << padTop << padBot;
 
 		if ( bDoTrack )
 		{
 			switch(iRefPin)
 			{
-				case 13: polygonA << pC << padTop; break;
-				case 12: Bezier(polygonA, pC, pC+QPointF(40*T,35*T), padTop); break;
-				case 11: Bezier(polygonA, pC, pC+QPointF(20*T,25*T), padTop); break;
+				case 13: polygonA << pC << pC+QPointF(20*T,0); break;
+				case 12: Bezier(polygonA, pC, pC+QPointF(0,7*T), padTop-padLeg);	polygonA << padTop; break;
+				case 11: polygonA << pC << padTop-padLeg << padTop; break;
 				case 10: polygonA << pC << padTop; break;
 			}
 		}
-
+		if ( bDoPad )
+			polygonB << padTop-padLR << padTop+padLR << padBot+padLR << padBot-padLR << padTop-padLR;
+		if ( bDoMask )
+		{
+			padTop -= padMaskTB;	padBot += padMaskTB;
+			polygonB << padTop-padMaskLR << padTop+padMaskLR << padBot+padMaskLR << padBot-padMaskLR << padTop-padMaskLR;
+		}
 		if ( bGap )
 		{
 			padTop -= padGapTB;	padBot += padGapTB;
@@ -536,12 +554,15 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, const Com
 		}
 		padBot = padTop + padLength;
 
-		if ( bDoPad )
-			polygonB << padTop << padBot;
-
 		if ( bDoTrack )
-			polygonA << pC << padTop; 
-
+			polygonA << pC << padTop-padLeg << padTop; 
+		if ( bDoPad )
+			polygonB << padTop-padLR << padTop+padLR << padBot+padLR << padBot-padLR << padTop-padLR;
+		if ( bDoMask )
+		{
+			padTop -= padMaskTB;	padBot += padMaskTB;
+			polygonB << padTop-padMaskLR << padTop+padMaskLR << padBot+padMaskLR << padBot-padMaskLR << padTop-padMaskLR;
+		}
 		if ( bGap )
 		{
 			padTop -= padGapTB;	padBot += padGapTB;

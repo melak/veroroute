@@ -171,12 +171,12 @@ public:
 		}
 		return false;
 	}
-	bool GetHaveSOIC() const
+	bool GetHaveSOIC(size_t numPins = 0) const
 	{
 		for (const auto& mapObj : m_mapIdToComp)
 		{
 			const Component& comp = mapObj.second;
-			if ( comp.GetIsSOIC() ) return true;
+			if ( comp.GetIsSOIC() && ( numPins == 0 || numPins == comp.GetNumPins() ) ) return true;
 		}
 		return false;
 	}

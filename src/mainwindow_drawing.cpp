@@ -67,22 +67,9 @@ void MainWindow::PaintSOIC(const GuiControl& guiCtrl, QPainter& painter, const Q
 			for (auto& polygon : solderMask)
 			{
 				if ( polygon.empty() ) continue;
+				assert(polygon.m_ePadPen == GPEN::NONE && polygon.m_eTrkPen == GPEN::NONE && polygon.m_bClosed);
 
-				assert(polygon.m_ePadPen == GPEN::NONE);
-
-				const bool bTrk	= polygon.m_eTrkPen != GPEN::NONE;		assert(bTrk);
-				if ( !bTrk && !polygon.m_bClosed ) continue;	assert(!polygon.m_bClosed);
-
-				const GPEN& ePen = bTrk ? polygon.m_eTrkPen : GPEN::NONE;
-				if ( polygon.m_bClosed )
-				{
-					if ( bTrk )
-						os.AddLoop(polygon, ePen);	// Closed polygon outline
-					else
-						os.AddRegion(polygon);	// Top solder mask layer
-				}
-				else
-					os.AddTrack(polygon, ePen);
+				os.AddRegion(polygon);
 			}
 		}
 		for (int k = 0; k < m_board.GetLyrs(); k++)
@@ -91,30 +78,24 @@ void MainWindow::PaintSOIC(const GuiControl& guiCtrl, QPainter& painter, const Q
 			for (auto& polygon : polygonList)
 			{
 				if ( polygon.empty() ) continue;
-
 				assert(polygon.m_ePadPen == GPEN::NONE);
 
-				const bool bTrk	= polygon.m_eTrkPen != GPEN::NONE;
-				if ( !bTrk && !polygon.m_bClosed ) continue;
+				const bool bTrk	= polygon.m_eTrkPen != GPEN::NONE && !polygon.m_bClosed;
+				const bool bPad	= polygon.m_eTrkPen == GPEN::NONE &&  polygon.m_bClosed;
+				if ( !bTrk && !bPad ) continue;
 
-				const GPEN& ePen = bTrk ? polygon.m_eTrkPen : GPEN::NONE;
-				if ( polygon.m_bClosed )
-				{
-					if ( bTrk )
-						os.AddLoop(polygon, ePen);	// Closed polygon outline
-					if ( bGap )
-						os.AddRegion(polygon);		// For SOICs the gap polygon needs filling
-				}
+				if ( bPad )
+					os.AddRegion(polygon);
 				else
-					os.AddTrack(polygon, ePen);
+					os.AddTrack(polygon, polygon.m_eTrkPen);
 			}
 		}
 	}
 	else	// Draw to pixmap
 	{
 		const int	gapWidth	= bGap ? guiCtrl.GetPixelsFromMIL( guiCtrl.GetGAP_MIL() ) : 0;
-		const int	padWidth	= guiCtrl.GetHalfPixelsFromMIL( guiCtrl.GetPAD_IC_MIL() ) << 1;						// Pad width in pixels
 		const int	trackWidth	= ( guiCtrl.GetHalfPixelsFromMIL( guiCtrl.GetTRACK_IC_MIL() ) + gapWidth ) << 1;	// Track width in pixels
+		const int	minWidth	= ( guiCtrl.GetHalfPixelsFromMIL( guiCtrl.GetMIN_IC_MIL() ) + gapWidth ) << 1;		// Thin track width in pixels
 
 		static QPen		pen(Qt::black, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 		static QBrush	brush(Qt::black,  Qt::SolidPattern);
@@ -128,23 +109,24 @@ void MainWindow::PaintSOIC(const GuiControl& guiCtrl, QPainter& painter, const Q
 
 			assert(polygon.m_ePadPen == GPEN::NONE);
 
-			bool bTrk(false), bPad(false);	// Determine track/pad from m_eTrkPen
+			bool bTrk(false), bMin(false), bPad(false);	// Determine track/pad from m_eTrkPen
 			switch(polygon.m_eTrkPen)
 			{
-				case GPEN::TRK_IC:	
-				case GPEN::TRK_IC_GAP:	bTrk = true;	break;
-				case GPEN::PAD_IC:
-				case GPEN::PAD_IC_MSK:	bPad = true;	break;
+				case GPEN::MIN_IC:	
+				case GPEN::MIN_IC_GAP:	bMin = !polygon.m_bClosed;	break;
+				case GPEN::TRK_IC:
+				case GPEN::TRK_IC_GAP:	bTrk = !polygon.m_bClosed;	break;
+				case GPEN::NONE:		bPad =  polygon.m_bClosed;	break;
 				default:				break;
 			}
-			if ( !bTrk && !bPad && !polygon.m_bClosed ) continue;
+			if ( !bTrk && !bMin && !bPad ) continue;
 
-			pen.setWidth(bTrk ? trackWidth : bPad ? padWidth : 0);
+			pen.setWidth(bMin ? minWidth : bTrk ? trackWidth : 0);
 			painter.setPen(pen);
 
-			if ( polygon.m_bClosed )
+			if ( bPad )
 				painter.drawPolygon(polygon);
-			else if ( bPad || bTrk )
+			else	// bTrk || bMin
 			{
 				auto iterA = polygon.begin();
 				auto iterB = iterA; iterB++;
@@ -1333,7 +1315,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		painter.setPen(m_redPen);
 		painter.setBrush(Qt::NoBrush);
 
-		int padOffsetX, padOffsetY;	// For handling offset pads
+		int padOffsetX(0), padOffsetY(0);	// For handling offset pads
 
 		std::list<SpanningTreeHelper::AIRWIRE_POINT> spanTreePoints;
 
@@ -1386,7 +1368,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		const int		dH = static_cast<int>(0.1*W);	// Param for wire rounded rect
 		const double	dW(0.35*W);						// Param for wire rounded rect
 
-		int padOffsetX, padOffsetY;	// For handling offset pads
+		int padOffsetX(0), padOffsetY(0);	// For handling offset pads
 
 		std::set<int> visitedNodeIds;
 

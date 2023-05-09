@@ -49,7 +49,7 @@ void GStream::Close()
 	if ( m_file.isOpen() )
 		m_file.close();
 }
-bool GStream::Open(const QString& fileName, GFILE eType, bool bMetric, const Board& board, bool bVias, bool bSOIC, bool bConfirmEachFile)
+bool GStream::Open(const QString& fileName, GFILE eType, bool bMetric, const Board& board, bool bVias, bool bSOIC, bool bSOIC16, bool bConfirmEachFile)
 {
 	Clear();
 	m_eType		= eType;
@@ -57,6 +57,7 @@ bool GStream::Open(const QString& fileName, GFILE eType, bool bMetric, const Boa
 	m_pBoard	= &board;
 	m_bVias		= bVias;
 	m_bSOIC		= bSOIC;
+	m_bSOIC16	= bSOIC16;
 
 	QString str(fileName);
 	QString suffix;
@@ -221,8 +222,8 @@ void GStream::MakeApertures()	// Make "pens" for current stream
 	const int		msk		= m_pBoard->GetMASK_MIL();
 	const int		slk		= m_pBoard->GetSILK_MIL();
 	const int		gko		= 10;	// Draw border in 10 mil pen
-	const int		padIC	= m_pBoard->GetPAD_IC_MIL();
 	const int		trkIC	= m_pBoard->GetTRACK_IC_MIL();
+	const int		minIC	= m_pBoard->GetMIN_IC_MIL();
 
 	// Build aperture list
 	int code = 10;	// Start with aperture D10
@@ -243,8 +244,9 @@ void GStream::MakeApertures()	// Make "pens" for current stream
 				m_ePenList.push_back( GPenInfo(GPEN::TAG, tag, code++, " is for tracks") );
 			if ( m_eType == GFILE::GTL && m_bSOIC )
 			{
-				m_ePenList.push_back( GPenInfo(GPEN::PAD_IC, padIC, code++, " is for SOIC pads") );
 				m_ePenList.push_back( GPenInfo(GPEN::TRK_IC, trkIC, code++, " is for SOIC tracks") );
+				if ( m_bSOIC16 )
+					m_ePenList.push_back( GPenInfo(GPEN::MIN_IC, minIC, code++, " is for thin SOIC tracks") );
 			}
 			// Ground fill pens ...
 			if ( !m_pBoard->GetGroundFill() ) break;
@@ -255,7 +257,11 @@ void GStream::MakeApertures()	// Make "pens" for current stream
 			if ( true )
 				m_ePenList.push_back( GPenInfo(GPEN::TRK_GAP, trk + 2 * gap, code++, " is for separating tracks from fill") );
 			if ( m_eType == GFILE::GTL && m_bSOIC )
+			{
 				m_ePenList.push_back( GPenInfo(GPEN::TRK_IC_GAP, trkIC + 2 * gap, code++, " is for separating SOIC tracks from fill") );
+				if ( m_bSOIC16 )
+					m_ePenList.push_back( GPenInfo(GPEN::MIN_IC_GAP, minIC + 2 * gap, code++, " is for separating thin SOIC tracks from fill") );
+			}
 			break;
 		case GFILE::GBS:
 		case GFILE::GTS:
@@ -263,8 +269,6 @@ void GStream::MakeApertures()	// Make "pens" for current stream
 				m_ePenList.push_back( GPenInfo(GPEN::PAD_MSK, pad + 2 * msk, code++, " is for pads", pad != padDefault) );
 			if ( m_bVias )
 				m_ePenList.push_back( GPenInfo(GPEN::VIA_MSK, via + 2 * msk, code++, " is for via-pads") );
-			if ( m_eType == GFILE::GTS && m_bSOIC )
-				m_ePenList.push_back( GPenInfo(GPEN::PAD_IC_MSK, padIC + 2 * msk, code++, " is for SOIC pads") );
 			break;
 		case GFILE::GTO:
 		case GFILE::GBO:
@@ -635,7 +639,7 @@ void GStream::GetQPolygon(const QPolygonF& in, QPolygon& out) const
 }
 
 // Wrapper for handling a set of Gerber files
-bool GWriter::Open(const QString& fileName, const Board& board, bool bVias, bool bSOIC, bool bTwoLayerGerber, bool bMetric, bool bConfirmEachFile)
+bool GWriter::Open(const QString& fileName, const Board& board, bool bVias, bool bSOIC, bool bSOIC16, bool bTwoLayerGerber, bool bMetric, bool bConfirmEachFile)
 {
 	QDateTime	local(QDateTime::currentDateTime());
 	QString		UTC = local.toTimeSpec(Qt::UTC).toString(Qt::ISODate);
@@ -656,7 +660,7 @@ bool GWriter::Open(const QString& fileName, const Board& board, bool bVias, bool
 		if ( GFILE(i) == GFILE::GTL ) bDoFileClose = !bTwoLayerGerber;
 		if ( GFILE(i) == GFILE::GTS ) bDoFileClose = !bTwoLayerGerber;
 
-		bOK = m_os[i].Open(fileName, GFILE(i), bMetric, board, bVias, bSOIC, bConfirmEachFile);
+		bOK = m_os[i].Open(fileName, GFILE(i), bMetric, board, bVias, bSOIC, bSOIC16, bConfirmEachFile);
 
 		if ( bDoFileClose )
 			m_os[i].Close();

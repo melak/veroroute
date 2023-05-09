@@ -20,9 +20,9 @@
 #pragma once
 
 // Comment out following 3 lines on debug builds to enable assert()
-//#ifndef NDEBUG
-//#define NDEBUG
-//#endif
+#ifndef NDEBUG
+#define NDEBUG
+#endif
 
 // Uncomment next line to allow test SOICs using component editor
 //#define _TEST_SOIC

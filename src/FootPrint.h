@@ -219,8 +219,24 @@ public:
 	}
 	void SetupOccupanciesSOIC()
 	{
+		bool bSpecialCase(false);
+		switch(m_type)
+		{
+			case COMP::SOP14:
+			case COMP::SOP14W:	bSpecialCase = true;	break;
+			default:	break;
+		}
+
 		for (int i = 0, iSize = GetSize(); i < iSize; i++)
+		{
 			GetAt(i)->SetOccupancySOIC();
+			if (bSpecialCase)
+			{
+				const size_t iPinIndex = GetAt(i)->GetPinIndex();
+				if ( iPinIndex == 0 || iPinIndex == 6 || iPinIndex == 7 || iPinIndex == 13 )
+					GetAt(i)->SetSurface(SURFACE_FULL);	// Prevent TH sharing at these pins as they are close to their pads
+			}
+		}
 
 #ifdef _TEST_SOIC
 		if ( !CompTypes::GetIsSOIC(m_type) )

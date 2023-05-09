@@ -1010,7 +1010,8 @@ void MainWindow::WriteGerber(bool bTwoLayerGerber, bool bMetric)
 		const bool bWireVias	= m_bTwoLayerGerber && m_board.GetLyrs() == 1 && m_board.GetCompMgr().GetHavePlacedWires();
 		const bool bVias		= m_board.GetHasVias() || bWireVias;
 		const bool bSOIC		= m_board.GetCompMgr().GetHaveSOIC();
-		if ( m_gWriter.Open(m_gerberFileName, m_board, bVias, bSOIC, m_bTwoLayerGerber, bMetric, bConfirmEachFile) )
+		const bool bSOIC16		= m_board.GetCompMgr().GetHaveSOIC(16);
+		if ( m_gWriter.Open(m_gerberFileName, m_board, bVias, bSOIC, bSOIC16, m_bTwoLayerGerber, bMetric, bConfirmEachFile) )
 		{
 			const int origlayer = m_board.GetCurrentLayer();
 			for (int lyr = 0, lyrs = m_board.GetLyrs(); lyr < lyrs; lyr++)
@@ -1901,11 +1902,11 @@ void MainWindow::UpdatePadInfo()
 	const Element* pC =  m_board.Get(0, m_gridRow, m_gridCol);
 	if ( !m_padOffsetDlg->isVisible() || !pC->GetPinSupportsOffsetPads() ) return;
 
-	int X,Y;
-	m_board.GetPadOffsets(pC, X, Y);	// Get offsets in mil
+	int padOffsetX(0), padOffsetY(0);
+	m_board.GetPadOffsets(pC, padOffsetX, padOffsetY);	// Get offsets in mil
 
 	char buffer[256] = {'\0'};
-	sprintf(buffer,"(X, Y) pad offset = (%d, %d) mil,    (%.4f, %.4f) mm", X, Y, X * 0.0254, Y * 0.0254);
+	sprintf(buffer,"(X, Y) pad offset = (%d, %d) mil,    (%.4f, %.4f) mm", padOffsetX, padOffsetY, padOffsetX * 0.0254, padOffsetY * 0.0254);
 	ui->statusBar->showMessage(QString(buffer));
 }
 

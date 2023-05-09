@@ -280,6 +280,7 @@ struct CompTypes
 			case COMP::TRIM_3362W:
 			case COMP::TRIM_3362X:
 			case COMP::TRIM_3362Z:			return 8;
+			case COMP::CRYSTAL:				return 9;
 			case COMP::DIODE:
 			case COMP::LED:					return 10;
 			case COMP::TO92:
@@ -289,14 +290,21 @@ struct CompTypes
 			case COMP::DIP:					return 12;
 			case COMP::DIP_RECTIFIER:		return 13;
 			case COMP::SIP:					return 14;
+			case COMP::SOP8:			
+			case COMP::SOP14:			
+			case COMP::SOP16:			
+			case COMP::SOP14W:			
+			case COMP::SOP16W:			
+			case COMP::SOP20W:			
+			case COMP::SOP24W:			
+			case COMP::SOP28W:				return 15;
 			case COMP::STRIP_100:
 			case COMP::BLOCK_100:
-			case COMP::BLOCK_200:			return 15;
+			case COMP::BLOCK_200:			return 16;
 			case COMP::SWITCH_ST:
 			case COMP::SWITCH_DT:
 			case COMP::SWITCH_ST_DIP:
-			case COMP::SWITCH_BUTTON_4PIN:	return 16;
-			case COMP::CRYSTAL:				return 9;
+			case COMP::SWITCH_BUTTON_4PIN:	return 17;
 			case COMP::RELAY_HK19F:
 			case COMP::RELAY_HJR_4102:
 			case COMP::RELAY_FTR_B3C:
@@ -309,16 +317,8 @@ struct CompTypes
 			case COMP::RELAY_S1A050000:
 			case COMP::RELAY_TRCD:
 			case COMP::RELAY_DIP_4PIN:
-			case COMP::RELAY_DIP_8PIN:		return 17;
-			case COMP::FUSE_HOLDER:			return 18;
-			case COMP::SOP8:			
-			case COMP::SOP14:			
-			case COMP::SOP16:			
-			case COMP::SOP14W:			
-			case COMP::SOP16W:			
-			case COMP::SOP20W:			
-			case COMP::SOP24W:			
-			case COMP::SOP28W:				return 19;
+			case COMP::RELAY_DIP_8PIN:		return 18;
+			case COMP::FUSE_HOLDER:			return 19;
 			case COMP::MARK:				return 100;
 			case COMP::VERO_NUMBER:			return 200;
 			case COMP::VERO_LETTER:			return 201;
@@ -623,10 +623,10 @@ struct CompTypes
 			case COMP::RELAY_DIP_8PIN		: rows = 4; cols = 7;  return "87+++65++++++++++++++12+++34";
 			case COMP::FUSE_HOLDER			: rows = 3; cols = 10; return "++++++++++1++++++++2++++++++++";
 			case COMP::SOP8					: rows = 6; cols = 4;  return "8765.**..++..++..**.1234";
-			case COMP::SOP14				: rows = 8; cols = 5;  return "DCBA9E***8+***++++++++++++***+1***723456";
-			case COMP::SOP16				: rows = 8; cols = 6;  return "FEDCBAG****9.****..++++..++++..****.1****8234567";
-			case COMP::SOP14W				: rows = 9; cols = 5;  return "DCBA9E***8+***+++++++++++++++++***+1***723456";
-			case COMP::SOP16W				: rows = 9; cols = 6;  return "FEDCBAG****9.****..++++..++++..++++..****.1****8234567";
+			case COMP::SOP14				: rows = 6; cols = 5;  return "DCBA9E***8++++++++++1***723456";
+			case COMP::SOP16				: rows = 6; cols = 6;  return "FEDCBAG****9.++++..++++.1****8234567";
+			case COMP::SOP14W				: rows = 7; cols = 5;  return "DCBA9E***8+++++++++++++++1***723456";
+			case COMP::SOP16W				: rows = 7; cols = 6;  return "FEDCBAG****9.++++..++++..++++.1****8234567";
 			case COMP::SOP20W				: rows = 9; cols = 8;  return "JIHGFEDCK******B.******..++++++..++++++..++++++..******.1******A23456789";
 			case COMP::SOP24W				: rows = 9; cols = 8;  return "MLKJIHGFN******EO******D.++++++..++++++..++++++.1******C2******B3456789A";
 			case COMP::SOP28W				: rows = 9; cols = 10; return "QPONMLKJIHR********GS********F.++++++++..++++++++..++++++++.1********E2********D3456789ABC";
