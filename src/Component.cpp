@@ -58,14 +58,14 @@ void Component::SetDefaultPinFlags()
 		case COMP::RELAY_S1A050000:
 		case COMP::RELAY_TRCD:
 		case COMP::FUSE_HOLDER:		return SetPinFlags(static_cast<uchar>(PIN_RECT | iCustomFlag));
-		case COMP::SOP8:
-		case COMP::SOP14:
-		case COMP::SOP16:
-		case COMP::SOP14W:
-		case COMP::SOP16W:
-		case COMP::SOP20W:
-		case COMP::SOP24W:
-		case COMP::SOP28W:			return SetPinFlags(static_cast<uchar>(PIN_LABELS));
+		case COMP::SOIC8:
+		case COMP::SOIC14:
+		case COMP::SOIC16:
+		case COMP::SOIC14W:
+		case COMP::SOIC16W:
+		case COMP::SOIC20W:
+		case COMP::SOIC24W:
+		case COMP::SOIC28W:			return SetPinFlags(static_cast<uchar>(PIN_LABELS));
 		case COMP::RELAY_DIP_4PIN:
 		case COMP::RELAY_DIP_8PIN:	return SetPinFlags(static_cast<uchar>(PIN_RECT | PIN_LABELS | iCustomFlag));
 		case COMP::MARK:
@@ -208,26 +208,26 @@ void Component::SetDefaultShapes(bool bUsePCBshapes)
 		case COMP::RELAY_S1A050000:			AddTwo( Shape(SHAPE::RECT,		true, true,		-3.74,  3.74, -1.00,  1.00) );	break;
 		case COMP::RELAY_TRCD:				AddTwo( Shape(SHAPE::RECT,		true, true,		-4.53,  4.53, -3.17,  3.17) );	break;
 		case COMP::FUSE_HOLDER:				AddTwo( Shape(SHAPE::RECT,		true, true,		-4.85,  4.85, -1.35,  1.35) );	break;
-		case COMP::SOP8:
-		case COMP::SOP14:
-		case COMP::SOP16:
-		case COMP::SOP14W:
-		case COMP::SOP16W:
-		case COMP::SOP20W:
-		case COMP::SOP24W:
-		case COMP::SOP28W:
+		case COMP::SOIC8:
+		case COMP::SOIC14:
+		case COMP::SOIC16:
+		case COMP::SOIC14W:
+		case COMP::SOIC16W:
+		case COMP::SOIC20W:
+		case COMP::SOIC24W:
+		case COMP::SOIC28W:
 		{
 			double w(0), h(0);
 			switch( GetType() )
 			{
-				case COMP::SOP8:	w = 1.00;	h = 0.50;	break;	
-				case COMP::SOP14:	w = 1.75;	h = 0.50;	break;
-				case COMP::SOP16:	w = 2.00;	h = 0.50;	break;
-				case COMP::SOP14W:	w = 1.75;	h = 1.00;	break;
-				case COMP::SOP16W:	w = 2.00;	h = 1.00;	break;
-				case COMP::SOP20W:	w = 2.50;	h = 1.00;	break;
-				case COMP::SOP24W:	w = 3.00;	h = 1.00;	break;
-				case COMP::SOP28W:	w = 3.50;	h = 1.00;	break;
+				case COMP::SOIC8:	w = 1.00;	h = 0.38;	break;
+				case COMP::SOIC14:	w = 1.75;	h = 0.38;	break;
+				case COMP::SOIC16:	w = 2.00;	h = 0.38;	break;
+				case COMP::SOIC14W:	w = 1.75;	h = 1.05;	break;
+				case COMP::SOIC16W:	w = 2.00;	h = 1.05;	break;
+				case COMP::SOIC20W:	w = 2.50;	h = 1.05;	break;
+				case COMP::SOIC24W:	w = 3.00;	h = 1.05;	break;
+				case COMP::SOIC28W:	w = 3.50;	h = 1.05;	break;
 				default:			assert(0);				break;
 			}
 			AddOne( Shape(SHAPE::LINE,	true, false,	-w, -w,  0.25,  h) );
@@ -426,14 +426,14 @@ void Component::SetDefaultColor()
 		case COMP::RELAY_S1A050000:
 		case COMP::RELAY_TRCD:				return SetFillColor(MyRGB(0x84C0D0));
 		case COMP::FUSE_HOLDER:				return SetFillColor(MyRGB(0x909090));
-		case COMP::SOP8:
-		case COMP::SOP14:
-		case COMP::SOP16:
-		case COMP::SOP14W:
-		case COMP::SOP16W:
-		case COMP::SOP20W:
-		case COMP::SOP24W:
-		case COMP::SOP28W:
+		case COMP::SOIC8:
+		case COMP::SOIC14:
+		case COMP::SOIC16:
+		case COMP::SOIC14W:
+		case COMP::SOIC16W:
+		case COMP::SOIC20W:
+		case COMP::SOIC24W:
+		case COMP::SOIC28W:
 		case COMP::DIP:
 		case COMP::SIP:
 		case COMP::DIP_RECTIFIER:

@@ -222,8 +222,8 @@ public:
 		bool bSpecialCase(false);
 		switch(m_type)
 		{
-			case COMP::SOP14:
-			case COMP::SOP14W:	bSpecialCase = true;	break;
+			case COMP::SOIC14:
+			case COMP::SOIC14W:	bSpecialCase = true;	break;
 			default:	break;
 		}
 
