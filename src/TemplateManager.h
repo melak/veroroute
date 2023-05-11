@@ -277,6 +277,8 @@ public:
 							 : bLED_IPC		? COMP::LED
 							 : CompTypes::GetTypeFromImportStr(o.m_importStr);
 
+			o.m_notesStr = CompTypes::GetAliasNotes(eType);
+
 			if (eType == COMP::DIODE || eType == COMP::LED)
 			{
 				if ( bDIODE_IPC || bLED_IPC )	o.m_notesStr += "Pin 2 is Anode.  ";

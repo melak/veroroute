@@ -286,7 +286,7 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, const Com
 	const QPointF padLength(0, padHeight);
 	const QPointF padLR(padWidth * 0.5, 0);
 	const QPointF padLeg(0,4*T);
-	const QPointF padGapLR(12*T,0), padGapTB(0,bNarrow ? 5*T : 12*T);	// Gaps for the SOIC pads
+	const QPointF padGapLR(12*T,0), padGapT(0,5*T), padGapB(0,bNarrow ? 5*T : 12*T);	// Gaps for the SOIC pads
 	const QPointF padMaskLR(padWidth * 0.5 + maskDelta, 0), padMaskTB(0, maskDelta);
 	QPointF padTop, padBot;	// Limits of SOIC pads
 
@@ -335,7 +335,7 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, const Com
 		}
 		if ( bGap )
 		{
-			padTop -= padGapTB;	padBot += padGapTB;
+			padTop -= padGapT;	padBot += padGapB;
 			polygonB << padTop-padGapLR << padTop+padGapLR << padBot+padGapLR << padBot-padGapLR << padTop-padGapLR;
 		}
 
@@ -387,7 +387,7 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, const Com
 		}
 		if ( bGap )
 		{
-			padTop -= padGapTB;	padBot += padGapTB;
+			padTop -= padGapT;	padBot += padGapB;
 			polygonB << padTop-padGapLR << padTop+padGapLR << padBot+padGapLR << padBot-padGapLR << padTop-padGapLR;
 		}
 
@@ -436,7 +436,7 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, const Com
 		}
 		if ( bGap )
 		{
-			padTop -= padGapTB;	padBot += padGapTB;
+			padTop -= padGapT;	padBot += padGapB;
 			polygonB << padTop-padGapLR << padTop+padGapLR << padBot+padGapLR << padBot-padGapLR << padTop-padGapLR;
 		}
 
@@ -468,7 +468,7 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, const Com
 		{
 			switch(iRefPin)
 			{
-				case 15: polygonA << pC << pC+QPointF(30*T,0); if ( bNarrow ) polygonA << padTop; break;
+				case 15: if ( bNarrow ) polygonA << pC << padTop; else polygonA << pC << pC+QPointF(30*T,0); break;
 				case 14: Bezier(polygonA, pC, pC+QPointF(0,11*T), padTop-padLeg);	polygonA << padTop; break;
 				case 13: polygonA << pC << padTop-padLeg << padTop; break;
 				case 12: polygonA << pC << padTop-padLeg << padTop; break;
@@ -483,7 +483,7 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, const Com
 		}
 		if ( bGap )
 		{
-			padTop -= padGapTB;	padBot += padGapTB;
+			padTop -= padGapT;	padBot += padGapB;
 			polygonB << padTop-padGapLR << padTop+padGapLR << padBot+padGapLR << padBot-padGapLR << padTop-padGapLR;
 		}
 
@@ -515,7 +515,7 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, const Com
 		{
 			switch(iRefPin)
 			{
-				case 13: polygonA << pC << pC+QPointF(20*T,0); if ( bNarrow ) polygonA << padTop;	break;
+				case 13: if ( bNarrow ) polygonA << pC << padTop; else polygonA << pC << pC+QPointF(20*T,0); break;
 				case 12: Bezier(polygonA, pC, pC+QPointF(0,7*T), padTop-padLeg);	polygonA << padTop; break;
 				case 11: polygonA << pC << padTop-padLeg << padTop; break;
 				case 10: polygonA << pC << padTop; break;
@@ -530,7 +530,7 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, const Com
 		}
 		if ( bGap )
 		{
-			padTop -= padGapTB;	padBot += padGapTB;
+			padTop -= padGapT;	padBot += padGapB;
 			polygonB << padTop-padGapLR << padTop+padGapLR << padBot+padGapLR << padBot-padGapLR << padTop-padGapLR;
 		}
 
@@ -567,7 +567,7 @@ void GuiControl::CalcSOIC(qreal W, const QPointF& pC, size_t pinIndex, const Com
 		}
 		if ( bGap )
 		{
-			padTop -= padGapTB;	padBot += padGapTB;
+			padTop -= padGapT;	padBot += padGapB;
 			polygonB << padTop-padGapLR << padTop+padGapLR << padBot+padGapLR << padBot-padGapLR << padTop-padGapLR;
 		}
 

@@ -637,6 +637,21 @@ struct CompTypes
 			default:	assert(0);			  rows = 0; cols = 0;  return "";	// Unhandled eType
 		}
 	}
+	static std::string GetAliasNotes(COMP eType)
+	{
+		switch( eType )
+		{
+			case COMP::SOIC8:	return "Body Size (3.9mm x 4.9mm)";
+			case COMP::SOIC14:	return "Body Size (3.9mm x 8.7mm)";
+			case COMP::SOIC16:	return "Body Size (3.9mm x 9.9mm)";
+			case COMP::SOIC14W:	return "Body Size (7.5mm x 9.0mm)";
+			case COMP::SOIC16W:	return "Body Size (7.5mm x 10.3mm)";
+			case COMP::SOIC20W:	return "Body Size (7.5mm x 12.8mm)";
+			case COMP::SOIC24W:	return "Body Size (7.5mm x 15.4mm)";
+			case COMP::SOIC28W:	return "Body Size (7.5mm x 17.9mm)";
+			default:			return "";
+		}
+	}
 	static bool	GetIsSOIC(COMP eType)
 	{
 		switch( eType )
