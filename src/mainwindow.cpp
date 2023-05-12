@@ -298,6 +298,14 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	QObject::connect(ui->actionTO18,					SIGNAL(triggered()), this, SLOT(AddTO18()));
 	QObject::connect(ui->actionTO39,					SIGNAL(triggered()), this, SLOT(AddTO39()));
 	QObject::connect(ui->actionTO220,					SIGNAL(triggered()), this, SLOT(AddTO220()));
+	QObject::connect(ui->actionSOIC8,					SIGNAL(triggered()), this, SLOT(AddSOIC8()));
+	QObject::connect(ui->actionSOIC14,					SIGNAL(triggered()), this, SLOT(AddSOIC14()));
+	QObject::connect(ui->actionSOIC16,					SIGNAL(triggered()), this, SLOT(AddSOIC16()));
+	QObject::connect(ui->actionSOIC14W,					SIGNAL(triggered()), this, SLOT(AddSOIC14W()));
+	QObject::connect(ui->actionSOIC16W,					SIGNAL(triggered()), this, SLOT(AddSOIC16W()));
+	QObject::connect(ui->actionSOIC20W,					SIGNAL(triggered()), this, SLOT(AddSOIC20W()));
+	QObject::connect(ui->actionSOIC24W,					SIGNAL(triggered()), this, SLOT(AddSOIC24W()));
+	QObject::connect(ui->actionSOIC28W,					SIGNAL(triggered()), this, SLOT(AddSOIC28W()));
 	QObject::connect(ui->actionDIP,						SIGNAL(triggered()), this, SLOT(AddDIP()));
 	QObject::connect(ui->actionSIP,						SIGNAL(triggered()), this, SLOT(AddSIP()));
 	QObject::connect(ui->actionStrip100,				SIGNAL(triggered()), this, SLOT(AddStrip100()));

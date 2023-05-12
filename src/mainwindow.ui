@@ -164,6 +164,19 @@
      <addaction name="actionBlock100"/>
      <addaction name="actionBlock200"/>
     </widget>
+    <widget class="QMenu" name="menuSOIC">
+     <property name="title">
+      <string>SOIC</string>
+     </property>
+     <addaction name="actionSOIC8"/>
+     <addaction name="actionSOIC14"/>
+     <addaction name="actionSOIC16"/>
+     <addaction name="actionSOIC14W"/>
+     <addaction name="actionSOIC16W"/>
+     <addaction name="actionSOIC20W"/>
+     <addaction name="actionSOIC24W"/>
+     <addaction name="actionSOIC28W"/>
+    </widget>
     <addaction name="actionPad"/>
     <addaction name="actionPad_FlyWire"/>
     <addaction name="actionWire"/>
@@ -178,6 +191,7 @@
     <addaction name="actionTO18"/>
     <addaction name="actionTO39"/>
     <addaction name="actionTO220"/>
+    <addaction name="menuSOIC"/>
     <addaction name="actionDIP"/>
     <addaction name="actionSIP"/>
     <addaction name="menuConnector"/>
@@ -1497,6 +1511,46 @@
   <action name="actionResetLayerPrefs">
    <property name="text">
     <string>Reset Pin Layer Preferences</string>
+   </property>
+  </action>
+  <action name="actionSOIC8">
+   <property name="text">
+    <string>SOIC-8</string>
+   </property>
+  </action>
+  <action name="actionSOIC14">
+   <property name="text">
+    <string>SOIC-14</string>
+   </property>
+  </action>
+  <action name="actionSOIC16">
+   <property name="text">
+    <string>SOIC-16</string>
+   </property>
+  </action>
+  <action name="actionSOIC14W">
+   <property name="text">
+    <string>SOIC-14W</string>
+   </property>
+  </action>
+  <action name="actionSOIC16W">
+   <property name="text">
+    <string>SOIC-16W</string>
+   </property>
+  </action>
+  <action name="actionSOIC20W">
+   <property name="text">
+    <string>SOIC-20W</string>
+   </property>
+  </action>
+  <action name="actionSOIC24W">
+   <property name="text">
+    <string>SOIC-24W</string>
+   </property>
+  </action>
+  <action name="actionSOIC28W">
+   <property name="text">
+    <string>SOIC-28W</string>
    </property>
   </action>
  </widget>

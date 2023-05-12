@@ -287,9 +287,6 @@ struct CompTypes
 			case COMP::TO18:
 			case COMP::TO39:
 			case COMP::TO220:				return 11;
-			case COMP::DIP:					return 12;
-			case COMP::DIP_RECTIFIER:		return 13;
-			case COMP::SIP:					return 14;
 			case COMP::SOIC8:			
 			case COMP::SOIC14:			
 			case COMP::SOIC16:			
@@ -297,7 +294,10 @@ struct CompTypes
 			case COMP::SOIC16W:			
 			case COMP::SOIC20W:			
 			case COMP::SOIC24W:			
-			case COMP::SOIC28W:				return 15;
+			case COMP::SOIC28W:				return 12;
+			case COMP::DIP:					return 13;
+			case COMP::DIP_RECTIFIER:		return 14;
+			case COMP::SIP:					return 15;
 			case COMP::STRIP_100:
 			case COMP::BLOCK_100:
 			case COMP::BLOCK_200:			return 16;

@@ -43,6 +43,14 @@ public:
 			case COMP::TO18:
 			case COMP::TO39:
 			case COMP::TO220:
+			case COMP::SOIC8:
+			case COMP::SOIC14:
+			case COMP::SOIC16:
+			case COMP::SOIC14W:
+			case COMP::SOIC16W:
+			case COMP::SOIC20W:
+			case COMP::SOIC24W:
+			case COMP::SOIC28W:
 			case COMP::DIP:
 			case COMP::DIP_RECTIFIER:
 			case COMP::SIP:

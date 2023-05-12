@@ -256,6 +256,14 @@ public slots:
 	void AddTrimFlatWide()		{ AddPart(COMP::TRIM_FLAT_WIDE); }
 	void AddSIP()				{ AddPart(COMP::SIP); }
 	void AddDIP()				{ AddPart(COMP::DIP); }
+	void AddSOIC8()				{ AddPart(COMP::SOIC8); }
+	void AddSOIC14()			{ AddPart(COMP::SOIC14); }
+	void AddSOIC16()			{ AddPart(COMP::SOIC16); }
+	void AddSOIC14W()			{ AddPart(COMP::SOIC14W); }
+	void AddSOIC16W()			{ AddPart(COMP::SOIC16W); }	
+	void AddSOIC20W()			{ AddPart(COMP::SOIC20W); }
+	void AddSOIC24W()			{ AddPart(COMP::SOIC24W); }
+	void AddSOIC28W()			{ AddPart(COMP::SOIC28W); }	
 	void AddStrip100()			{ AddPart(COMP::STRIP_100); }
 	void AddBlock100()			{ AddPart(COMP::BLOCK_100); }
 	void AddBlock200()			{ AddPart(COMP::BLOCK_200); }
