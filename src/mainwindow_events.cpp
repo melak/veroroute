@@ -395,7 +395,7 @@ void MainWindow::MousePressEvent(const QPoint& pos, bool bLeftClick, bool bRight
 			}
 		}
 
-		const bool bTruePin = pC->GetHasPin() && !pC->GetHasWire();
+		const bool bTruePin = pC->GetLyrHasPin() && !pC->GetHasWire();
 		if ( ( GetPaintPins() || GetErasePins() ) && !bTruePin && !bDoSwap )	// Restrict painting/erasing pins to true pins (not wires)
 			return;
 
@@ -515,7 +515,7 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 	const int&	layer		= m_board.GetCurrentLayer();
 	Element*	pC			= m_board.Get(layer, m_gridRow, m_gridCol);
 	const bool	bWire		= pC->GetHasWire();
-	const bool	bTruePin	= pC->GetHasPin() && !bWire;
+	const bool	bTruePin	= pC->GetLyrHasPin() && !bWire;
 
 	// Cursor modification
 	centralWidget()->setCursor(Qt::CrossCursor);
