@@ -196,7 +196,6 @@ struct CompTypes
 		UpdateMaps(COMP::RELAY_DIP_4PIN,		"DIP 4-pin",					"RELAY_DIP_4PIN");
 		UpdateMaps(COMP::RELAY_DIP_8PIN,		"DIP 8-pin",					"RELAY_DIP_8PIN");
 		UpdateMaps(COMP::FUSE_HOLDER,			"Fuse Holder",					"FUSE_HOLDER");
-		//TODO Review these SOP strings before release.  Test alias dialog. 
 		UpdateMaps(COMP::SOIC8,					"SOIC-8",						"SOIC_8");
 		UpdateMaps(COMP::SOIC14,				"SOIC-14",						"SOIC_14");
 		UpdateMaps(COMP::SOIC16,				"SOIC-16",						"SOIC_16");

@@ -86,7 +86,7 @@ void FootPrint::BuildTrax(CompManager* pCompMgr, const RectManager& rectMgr, con
 
 			int iNodeId = pSource->GetNodeId();
 
-			if ( pSource->GetHasPin() )	// For pins/wires, let the track contain the origId before the part was placed
+			if ( pSource->GetLyrHasPin() )	// For pins/wires, let the track contain the origId before the part was placed
 			{
 				for (int iSlot = 0; iSlot < 2; iSlot++)
 				{

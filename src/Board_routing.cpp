@@ -750,16 +750,17 @@ void Board::PasteTracks(bool bTidy)
 		if ( bRestrict && !trax.GetCompElement(j,i)->ReadFlagBits(RECTSET) ) continue;	// Skip points outside grey area
 
 		Element* const	p		= Get(k, jRow, iCol);
-		const bool		bHasPin	= p->GetHasPin();
+		const bool		bHasPin	= p->GetLyrHasPin();
 
 		// Tidy clears all non-pins and wires that are USER_SET ...
 		if ( bTidy && ( !bHasPin || p->GetHasWire() ) && p->ReadFlagBits(USERSET) && !p->ReadFlagBits(AUTOSET|VEROSET) )
 		{
-			SetNodeId(p, BAD_NODEID, bHasPin);
+			assert( p->GetHasWire() == p->GetHasPinTH() );	// Either we have a wire (and therefore a TH), or we have no TH part
+			SetNodeId(p, BAD_NODEID, p->GetHasPinTH());	// Last argument is "bAllLyrs" so use GetHasPinTH()
 			for (int iSlot = 0; iSlot < 2; iSlot++)
 			{
 				Element* const pW = p->GetW(iSlot);
-				if ( pW ) SetNodeId(pW, BAD_NODEID, bHasPin);
+				if ( pW ) SetNodeId(pW, BAD_NODEID, pW->GetHasPinTH());	// Last argument is "bAllLyrs" so use GetHasPinTH()
 			}
 		}
 
@@ -811,10 +812,9 @@ void Board::WipeTracks()
 	{
 		if ( bRestrict && !trax.GetCompElement(j,i)->ReadFlagBits(RECTSET) ) continue;	// Skip points outside grey area
 		Element* const p = Get(k, jRow, iCol);
-		assert( !p->GetHasPin() && !p->GetIsHole() && !p->GetHasComp() );	// Sanity check
+		assert( !p->GetHasPin() && !p->GetIsHole() && !p->GetHasComp() );	// Sanity check.  Components are floated, so board should have no pins, holes, or components
+		p->FixCorruption();	// As all components are floated, use this as an opportunity to fix any board corruption that may have occurred
 		SetNodeId(p, BAD_NODEID, !bRestrict);
-		p->SetSurface(SURFACE_FREE);
-		p->SetSoicChar(SOIC_FREE);
 		WipeFlagBits(p, bRestrict ? (AUTOSET|VEROSET|RECTSET) : (AUTOSET|VEROSET), !bRestrict);
 		MarkFlagBits(p, USERSET, !bRestrict);
 	}

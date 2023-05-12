@@ -624,7 +624,7 @@ public:
 		for (int j = 0; j < numRows; j++)
 		for (int i = 0; i < numCols; i++)
 		{
-			if ( Get(k,j,i)->GetNodeId() == BAD_NODEID && !Get(k,j,i)->GetHasPinLegacy() ) continue;
+			if ( Get(k,j,i)->GetNodeId() == BAD_NODEID && !Get(k,j,i)->GetLyrHasPin() ) continue;
 			minRow = std::min(minRow, j);	maxRow = std::max(maxRow, j);
 			minCol = std::min(minCol, i);	maxCol = std::max(maxCol, i);
 			bOK = true;

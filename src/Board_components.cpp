@@ -204,7 +204,7 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 
 				bOK =  ( traxNodeId == BAD_NODEID )
 					|| ( traxNodeId == pGrid->GetNodeId() )
-					|| ( !pGrid->GetHasPin() && pGrid->GetNodeId() == BAD_NODEID && !pGrid->GetIsHole() && !(pGrid->GetSoicProtected() && traxNodeId != BAD_NODEID) );
+					|| ( !pGrid->GetLyrHasPin() && pGrid->GetNodeId() == BAD_NODEID && !pGrid->GetIsHole() && !(pGrid->GetSoicProtected() && traxNodeId != BAD_NODEID) );
 
 				if ( !bOK ) // Special check for unpainted wires on the board
 				{
@@ -612,7 +612,7 @@ bool Board::TakeOff(Component& comp)
 				const bool bAllLyrs(false);
 				if ( !pComp->ReadFlagBits(RECTSET) ) continue;		// Skip non-rect points
 				if ( pComp->GetNodeId() == BAD_NODEID ) continue;	// Skip blank areas of the trax comp
-				if ( !pGrid->ReadFlagBits(RECTSET) && ( !pGrid->GetHasPin() || pGrid->GetHasWire() ) )
+				if ( !pGrid->ReadFlagBits(RECTSET) && ( !pGrid->GetLyrHasPin() || pGrid->GetHasWire() ) )
 					SetNodeIdByUser(compLyr, jRow, iCol, BAD_NODEID, false);	// false ==> don't paint pins
 				WipeFlagBits(pGrid, RECTSET, bAllLyrs);
 			}

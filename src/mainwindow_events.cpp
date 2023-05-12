@@ -130,7 +130,8 @@ bool MainWindow::GetHaveFloatingPinTH(int& iFloatingNodeId)	// Checks for a floa
 	iFloatingNodeId = BAD_NODEID;
 
 	const Element* pC = m_board.Get(m_board.GetCurrentLayer(), m_gridRow, m_gridCol);
-	if ( pC->GetHasPin() ) return false;	// Skip if we already have a placed pin
+	// This method is called to see if we should automatically erase both layers (to help a floating pin TH be placed)
+	if ( pC->GetHasPin() ) return false;	// Skip if we already have a placed pin on either layer
 
 	for (auto& mapObj : m_board.GetCompMgr().GetMapIdToComp())
 	{
