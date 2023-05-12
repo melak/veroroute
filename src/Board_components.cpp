@@ -165,7 +165,7 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 	const bool	bDiagsOK		= GetDiagsMode() != DIAGSMODE::OFF;
 	const bool	bWire			= comp.GetType() == COMP::WIRE;	// Wire's only get NodeIDs while placed
 	const bool	bSOIC			= comp.GetIsSOIC();
-	const bool	bMark			= comp.GetType() == COMP::MARK;	// Marker can go anywhere without a pin
+	const bool	bMark			= comp.GetType() == COMP::MARK;	// Marker can go anywhere without a pin or SOIC pattern
 	const bool	bTrax			= comp.GetType() == COMP::TRACKS;
 	const int&	compCols		= comp.GetCompCols();
 	const int&	compRows		= comp.GetCompRows();
@@ -260,14 +260,15 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 				bOK &=	( !GetHaveTopLyr() || !(compSoicChar & SOIC_TRACKS_TOP) || Get( LYR_TOP, jRow, iCol)->GetNodeId() == BAD_NODEID );	// Cannot place SOIC if board is painted in top SOIC tracks area
 				bOK &=	(                     !(compSoicChar & SOIC_TRACKS_BOT) || Get( LYR_BOT, jRow, iCol)->GetNodeId() == BAD_NODEID );	// Cannot place SOIC if board is painted in bottom SOIC tracks area
 				bOK &=	( boardSoicChar + compSoicChar <= SOIC_FULL );
+				bOK &=	( !pGrid->GetIsMark() || (compSoicChar & (SOIC_TRACKS_TOP | SOIC_TRACKS_BOT)) == 0 );
 				bOK &=	( !bWire || bAllowHoleShare || ( boardHoleUse + compHoleUse <= HOLE_WIRE ) );
 				bOK &=	( !bWire || bAllowWireCross || ( boardSurface <= ( bAllowHoleShare ? SURFACE_WIRE_END | SURFACE_GAP : SURFACE_GAP ) ) );
 				if ( !bOK ) continue;
 
 				// Check pins
-				if ( bMark )	// Marker can go anywhere except for pins, holes, (or other marker)
+				if ( bMark )	// Marker can go anywhere except for pins, holes, SOIC pattern areas (or other marker)
 				{
-					bOK = !pGrid->GetHasPin() && !pGrid->GetIsHole() && !pGrid->GetIsMark();
+					bOK = !pGrid->GetHasPin() && !pGrid->GetIsHole() && !pGrid->GetIsMark() && (boardSoicChar & (SOIC_TRACKS_TOP | SOIC_TRACKS_BOT)) == 0;
 				}
 				else if ( pComp->GetIsHole() )	// Check holes
 				{
