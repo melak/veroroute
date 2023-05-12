@@ -261,7 +261,7 @@ public:
 		outList.push_back( StringPair("LED_IPC") );		// Special case.  LED   using IPC standard pin numbering like KiCaD (opposite to VeroRoute)
 		for (const auto& o : m_listGeneric)
 			if ( !o.GetImportStr().empty() )
-				outList.push_back( StringPair(o.GetImportStr()) );
+				outList.push_back( StringPair( GetImportStrCut(o.GetImportStr()) ) );
 		for (const auto& o : m_listUser)
 			if ( o.GetType() == COMP::CUSTOM && !o.GetImportStr().empty() )
 				outList.push_back( StringPair(o.GetImportStr()) );
@@ -275,7 +275,7 @@ public:
 			const COMP eType = bPADS		? COMP::SIP		// Treat PADS like SIP (regarding number of pins)
 							 : bDIODE_IPC	? COMP::DIODE
 							 : bLED_IPC		? COMP::LED
-							 : CompTypes::GetTypeFromImportStr(o.m_importStr);
+							 : CompTypes::GetTypeFromImportStr( GetImportStrCut(o.m_importStr) );
 
 			o.m_notesStr = CompTypes::GetAliasNotes(eType);
 
