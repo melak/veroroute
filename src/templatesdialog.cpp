@@ -106,7 +106,7 @@ void TemplatesDialog::Update()
 			const Component&	comp	= mgr.GetNth(bGeneric, static_cast<size_t>(i));
 			const COMP&			eType	= comp.GetType();
 
-			strType		= comp.GetFullTypeStr();			// e.g. "Film" or "DIP16"
+			strType		= bGeneric ? comp.GetTypeStr() : comp.GetFullTypeStr();	// e.g. Use "DIP" in generic list rather than "DIP16"
 			strValue	= comp.GetValueStr();
 			strFull		= CompTypes::GetFamilyStr( eType );	// e.g. "Capacitor"
 			if ( !StringHelper::IsEmptyStr(strFull) ) strFull += ": ";
