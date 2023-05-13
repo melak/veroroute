@@ -140,7 +140,7 @@ void Board::CalcMIN_SEPARATION()	// Sets m_dMinSeparation and m_warnPoints[]
 
 	// Some SOIC designs in VeroRoute have an SOIC pad/track that is adjacent to a useable non-SOIC grid point (X),
 	// but the SOIC "pin" for that track may not be adjacent to X.  So we have to increase "nRings" below to 3 to capture these cases.
-	const int nRings = m_compMgr.GetHaveSOIC() ? 3 : 2;	// 2 ==> Max pad size supported by VeroRoute could be up to 200 mil in future
+	const int nRings = ( m_compMgr.GetNumSOIC() > 0 ) ? 3 : 2;	// 2 ==> Max pad size supported by VeroRoute could be up to 200 mil in future
 	int Xmil, Ymil;	// For pad offsets
 
 	const bool bStandardBlobs = ( MAX_PAD_OFFSET_MIL <= 50 );	// true ==> legs for offset pads will be within a grid square

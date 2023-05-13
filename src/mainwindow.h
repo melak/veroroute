@@ -546,6 +546,9 @@ private:
 		SetCurrentCompId(compId);
 
 		UpdateHistory("add part"); UpdateControls(); UpdateBOM(); RepaintSkipRouting();
+
+		if ( CompTypes::GetIsSOIC(eType) && m_board.GetLyrs() == 1 && m_board.GetCompMgr().GetNumSOIC() == 1 )	// If it's the only SOIC on a 1-layer board
+			QMessageBox::information(this, tr("Information"), tr("SOICs can only be placed on a 2-layer board.  Add a second layer by doing 'Layers -> Add Top Layer'."));
 	}
 	void AddFromTemplate(bool bGeneric, const Component& compTemp)
 	{

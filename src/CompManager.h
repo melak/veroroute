@@ -171,14 +171,15 @@ public:
 		}
 		return false;
 	}
-	bool GetHaveSOIC(size_t numPins = 0) const
+	size_t GetNumSOIC(size_t numPins = 0) const
 	{
+		size_t count(0);
 		for (const auto& mapObj : m_mapIdToComp)
 		{
 			const Component& comp = mapObj.second;
-			if ( comp.GetIsSOIC() && ( numPins == 0 || numPins == comp.GetNumPins() ) ) return true;
+			if ( comp.GetIsSOIC() && ( numPins == 0 || numPins == comp.GetNumPins() ) ) count++;
 		}
-		return false;
+		return count;
 	}
 	void GetPadWidths(std::list<int>& o, int iDefaultWidth) const
 	{
