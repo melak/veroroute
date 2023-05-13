@@ -458,7 +458,7 @@ public:
 	const int&			GetEDGE_MIL() const			{ return m_EDGE_MIL; }
 	const int&			GetVIAPAD_MIL() const		{ return m_VIAPAD_MIL; }
 	const int&			GetVIAHOLE_MIL() const		{ return m_VIAHOLE_MIL; }
-	Q_DECL_CONSTEXPR static inline int GetPAD_IC_MIL()		{ return 27; }
+	Q_DECL_CONSTEXPR static inline int GetPAD_IC_MIL()		{ return 24; }
 	Q_DECL_CONSTEXPR static inline int GetTRACK_IC_MIL()	{ return 18; }
 	Q_DECL_CONSTEXPR static inline int GetMIN_IC_MIL()		{ return 14; }
 	const int&			GetRenderQuality() const	{ return m_iRenderQuality; }

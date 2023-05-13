@@ -293,8 +293,8 @@ bool Board::CanPutDown(Component& comp)	// Checks if its possible to place the (
 						assert( iCompNodeId == BAD_NODEID );	// Shouldn't have an ID yet
 					else			// Regular component ...
 					{
-						bOK = p->GetHasPin() ? ( nodeId != BAD_NODEID && nodeId == iCompNodeId )	// Need valid and matching ID
-											 : ( nodeId == BAD_NODEID || nodeId == iCompNodeId );	// Need no node ID or matching ID
+						bOK = p->GetHasPin() ? ( nodeId == iCompNodeId )							// Need matching node ID
+											 : ( nodeId == BAD_NODEID || nodeId == iCompNodeId );	// Need no node ID or matching node ID
 						if ( bOK && ( p->GetHasPinTH() || (pComp->GetSoicChar() & SOIC_THL_COMP)) )	// Check for short-circuit between layers
 						{
 							Element* q = p->GetNbr(NBR_X);
