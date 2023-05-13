@@ -230,14 +230,8 @@ void Component::SetDefaultShapes(bool bUsePCBshapes)
 				case COMP::SOIC28W:	w = 3.50;	h = 1.05;	break;
 				default:			assert(0);				break;
 			}
-			AddOne( Shape(SHAPE::LINE,	true, false,	-w, -w,  0.25,  h) );
-			AddOne( Shape(SHAPE::LINE,	true, false,	-w,  w,  h,  h) );
-			AddOne( Shape(SHAPE::LINE,	true, false,	 w,  w,  h, -h) );
-			AddOne( Shape(SHAPE::LINE,	true, false,	 w, -w, -h, -h) );
-			AddOne( Shape(SHAPE::LINE,	true, false,	-w, -w, -h, -0.25) );
-			AddOne( Shape(SHAPE::ARC,	true, false,	-w-0.25, -w+0.25, -0.25,  0.25, -90, 90) );
-			// Fill ...
-			AddOne( Shape(SHAPE::RECT,	false, true,	-w, w, -h, h));
+			AddOne( Shape(SHAPE::ELLIPSE,	true, false, -w+0.1, -w+0.35, h-0.35, h-0.1));
+			AddTwo( Shape(SHAPE::RECT,		true, true,	 -w, w, -h, h));
 			break;
 		}
 		// Following handle variable length components
