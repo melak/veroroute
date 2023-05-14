@@ -1701,8 +1701,8 @@ void MainWindow::SetFill(bool b)
 		RepaintSkipRouting();
 	}
 }
-void MainWindow::Crop()					{ if ( m_board.Crop() ) { UpdateHistory("auto-crop", 0);	RepaintSkipRouting(); } }
-void MainWindow::MarginChanged(int i)	{ if ( m_board.SetCropMargin(i) && m_board.Crop() ) { UpdateHistory("margin change", 0);	RepaintSkipRouting(); } }
+void MainWindow::Crop()					{ if ( m_board.Crop() ) { UpdateHistory("auto-crop", 0); UpdateControls(); RepaintSkipRouting(); } }
+void MainWindow::MarginChanged(int i)	{ if ( m_board.SetCropMargin(i) && m_board.Crop() ) { UpdateHistory("margin change", 0); UpdateControls(); RepaintSkipRouting(); } }
 void MainWindow::ToggleGrid()			{ SetShowGrid( !m_board.GetShowGrid() ); }
 void MainWindow::ToggleText()			{ SetShowText( !m_board.GetShowText() ); if ( !m_board.GetShowText() ) SetCurrentTextId(BAD_TEXTID); }
 void MainWindow::ToggleFlipH()			{ SetFlipH( !m_board.GetFlipH() ); }
