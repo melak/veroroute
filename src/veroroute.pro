@@ -163,7 +163,8 @@ assets.files = ../tutorials/tutorial_0.vrt \
     ../tutorials/tutorial_22.vrt \
     ../tutorials/tutorial_23.vrt \
     ../tutorials/tutorial_24.vrt \
-    ../tutorials/tutorial_25.vrt
+    ../tutorials/tutorial_25.vrt \
+    ../tutorials/tutorial_26.vrt
 
 assets.path = /assets/tutorials/
 

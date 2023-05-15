@@ -576,8 +576,8 @@ void MainWindow::ResetView(MOUSE_MODE eMouseMode, bool bTutorial)
 	m_infoDlg->Update();
 	m_infoDlg->SetReadOnly(bTutorial);
 	m_infoDlg->ShowButtons(bTutorial);
-	m_infoDlg->EnablePrev(bTutorial && m_iTutorialNumber > 0);	// Tutorials go to 0 to 25
-	m_infoDlg->EnableNext(bTutorial && m_iTutorialNumber < 25);	// Tutorials go to 0 to 25
+	m_infoDlg->EnablePrev(bTutorial && m_iTutorialNumber > 0);	// Tutorials go to 0 to 26
+	m_infoDlg->EnableNext(bTutorial && m_iTutorialNumber < 26);	// Tutorials go to 0 to 26
 	if ( !bTutorial ) m_iTutorialNumber = -1;	// Cancel tutorial mode
 	UpdateControls();
 	UpdateBOM();
@@ -1675,7 +1675,7 @@ void MainWindow::HandleNetworkReply(QNetworkReply* pReply)
 }
 
 // View controls (Update history BEFORE calling UpdateControls() since that triggers more history writes)
-void MainWindow::TrackSliderChanged(int i)		{ if ( m_board.SetTrackSliderValue(i) )	{ UpdateHistory("toggle Mono/Color/PCB", 0);	UpdateControls(); RepaintSkipRouting(); m_board.CustomPCBshapes(); } }
+void MainWindow::TrackSliderChanged(int i)		{ if ( m_board.SetTrackSliderValue(i) )	{ UpdateHistory("toggle Mono/Color/PCB", 0);	m_board.CustomPCBshapes();	UpdateControls(); RepaintSkipRouting(); } }
 void MainWindow::CheckBoxMonoChanged(bool b)	{ if ( b != (m_board.GetTrackSliderValue() == 1) ) TrackSliderChanged(b ? 1 : 0); }
 void MainWindow::CheckBoxColorChanged(bool b)	{ if ( b != (m_board.GetTrackSliderValue() == 2) ) TrackSliderChanged(b ? 2 : 0); }
 void MainWindow::CheckBoxPcbChanged(bool b)		{ if ( b != (m_board.GetTrackSliderValue() == 3) ) TrackSliderChanged(b ? 3 : 0); }
@@ -2449,7 +2449,7 @@ void MainWindow::UpdateControls()
 	ui->menuExport_as_Gerber_2_Layer->setEnabled(bPCB && !bCompEdit && !m_board.GetMirrored() && !m_board.GetVeroTracks());
 	ui->actionSave->setEnabled( !bTutorial);
 	ui->actionSave_As->setEnabled( !bTutorial );
-	ui->actionMerge->setEnabled(    !bPCB && !bCompEdit && !bTutorial );
+	ui->actionMerge->setEnabled( !bCompEdit && !bTutorial );
 	ui->actionWrite_PDF->setEnabled(!bPCB && !bCompEdit);
 	ui->actionWrite_PNG->setEnabled( !bCompEdit );
 	ui->menuAdd->menuAction()->setVisible( !bCompEdit );
