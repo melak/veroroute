@@ -853,6 +853,7 @@ public:
 			if ( comp.GetId() >= o.deltaCompId )	// Only want to add the new components
 				m_nodeInfoMgr.AddComp(comp);
 		}
+		CustomPCBshapes();	// Use correct shapes for the current view type
 
 		GlueWires();	// Set pointers between wired grid elements
 
