@@ -342,11 +342,20 @@ public:
 		{
 			const Element*	q		= p->GetNbr(iNbr);
 			const int	iNbrNodeId	= q->GetNodeId();
-
+			const bool	bDiag		= ( iNbr % 2 ) == 1;
 			if ( ReadCodeBit(iNbr , iPerimeterCode) ) continue;			// Skip if direction already has connection
 			if ( ReadCodeBit((iNbr+1)%8 , iPerimeterCode) ) continue;	// Skip if adjacent CW  direction already has connection
 			if ( ReadCodeBit((iNbr+7)%8, iPerimeterCode) ) continue;	// Skip if adjacent CCW direction already has connection
 			if ( ( q->GetHasPinTH() || iNbrNodeId != BAD_NODEID ) && iNbrNodeId != iNodeId ) continue;	// Skip if direction is not empty, or has wrong NodeID
+			if ( bDiag ) // Extra check for diagonal reliefs.  Needed because wide diagonal reliefs can get close to pads in the H/V directions
+			{
+				const Element* qPrev		= p->GetNbr((iNbr+7)%8);
+				const int iNbrPrevNodeId	= qPrev->GetNodeId();
+				if ( ( qPrev->GetHasPinTH() || iNbrPrevNodeId != BAD_NODEID ) && iNbrPrevNodeId != iNodeId ) continue;	// Skip if prev direction is not empty, or has wrong NodeID
+				const Element* qNext		= p->GetNbr((iNbr+1)%8);
+				const int iNbrNextNodeId	= qNext->GetNodeId();
+				if ( ( qNext->GetHasPinTH() || iNbrNextNodeId != BAD_NODEID ) && iNbrNextNodeId != iNodeId ) continue;	// Skip if next direction is not empty, or has wrong NodeID
+			}
 			if ( p->IsBlocked(iNbr, iNodeId) ) continue;				// Skip if direction is blocked
 
 			const int	iLayerPrefQ	= ( GetLyrs() == 1 || !q->GetPinSupportsLayerPref() ) ? LAYER_X : GetLayerPref(q);
