@@ -1,7 +1,18 @@
 #pragma once
 
 static const char* szVEROROUTE_VERSION =
-"2.32";		// Bug fix: When adding a new library part, should allow overwrite of an existing library part
+"2.33"		// Bug fix: Label offsets were not persisted by the Component Editor.
+			// Bug fix: If not forcing X-thermals, the code for producing additional thermal relief tags was missing extra checks for tags in the diagonal direction.
+			// Bug fix: File -> Open (merge into current) could show the newly loaded board with PCB style shapes while in Color mode.
+			// Bug fix: Autocrop and Margin controls were not immediately updating the board size info in the status bar.
+			// Bug fix: The Generic Parts list in the Parts Library should not mention the number of default pins (e.g. should say DIP not DIP8).
+			// Bug fix: Vias within the ground fill were not rendered correctly, especially if forcing X-thermals.
+			// Bug fix: Code for placing board holes (i.e. unusable locations) was only checking that the bottom layer was not painted instead of all layers.
+			// Bug fix: Could get duplicate target points in the routing list.
+			// Improvement: Allow non-custom library parts (e.g. T092) to be overwritten if the Import string has not changed but the Prefix string has.
+			// Improvement: Allow editing of a library part without placing it, by selecting it in the Parts Library then switching to Component Editor mode.
+			// New feature: Added support for some SOICs (8,14,16,20,24,28 pin).  See Tutorial 26.
+//"2.32";	// Bug fix: When adding a new library part, should allow overwrite of an existing library part
 			//          with matching Type string and matching (non-empty) Import string, but different Value string.
 			// Added veroroute.appdata.xml metainfo to installation.
 //"2.31";	// New feature: Part Aliases dialog for easier import of netlists with unknown footprint/package types.
