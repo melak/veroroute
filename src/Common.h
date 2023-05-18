@@ -47,7 +47,9 @@
 #include <map>
 #include <unordered_map>
 #include <chrono>
+#include "qcompilerdetection.h"	// For Q_DECL_CONSTEXPR
 
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
+Q_DECL_CONSTEXPR static const double DBL_PI				= 3.14159265358979323846;
+Q_DECL_CONSTEXPR static const double DBL_PI_4			= DBL_PI / 4.0;
+Q_DECL_CONSTEXPR static const double RADIANS_PER_DEGREE	= DBL_PI / 180.0;
+Q_DECL_CONSTEXPR static const double DEGREES_PER_RADIAN	= 180.0 / DBL_PI;

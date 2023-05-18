@@ -1426,7 +1426,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				const int		dL	= static_cast<int>(PolygonHelper::Length(vec) * 0.5);
 				painter.save();
 				painter.translate(mid.x(), mid.y());
-				painter.rotate(atan2(vec.y(), vec.x()) * 180.0 / M_PI);
+				painter.rotate(atan2(vec.y(), vec.x()) * DEGREES_PER_RADIAN);
 				painter.setPen(m_varPen);		painter.drawLine(-dL, 0, dL, 0);
 				painter.setPen(fillBlackPen);	painter.drawRoundedRect(-dL, -dH, dL+dL, dH+dH, dW, dW);
 				painter.restore();

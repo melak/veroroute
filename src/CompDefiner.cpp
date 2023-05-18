@@ -226,7 +226,7 @@ int CompDefiner::GetShapeId(double dRowIn, double dColIn) const	// Pick the most
 		const double DY		= s.GetDY();
 		const double CX		= s.GetCX();
 		const double CY		= s.GetCY();
-		const double dA3	= s.GetA3() * M_PI / 180.0;	// Convert to radians
+		const double dA3	= s.GetA3() * RADIANS_PER_DEGREE;	// Convert to radians
 		const double dCos	= cos(dA3);
 		const double dSin	= sin(dA3);
 		const double dX		= dCol - CX;
@@ -248,7 +248,7 @@ int CompDefiner::GetShapeId(double dRowIn, double dColIn) const	// Pick the most
 			case SHAPE::ARC:
 			case SHAPE::CHORD:
 			{
-				dArea	= M_PI * 0.25*DX*DY;	// Area of the ellipse
+				dArea	= DBL_PI_4*DX*DY;	// Area of the ellipse
 				double epsilon(dArea < 0.1 ? 0.1 : 0);
 				bOK		= rx*DY*rx*DY + ry*DX*ry*DX <= 0.25*DX*DX*DY*DY + epsilon;
 				break;

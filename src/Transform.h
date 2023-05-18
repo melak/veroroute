@@ -47,7 +47,7 @@ struct Transform
 		{
 			case TRANSFORM::SCALE:		o.setX(x * m_A);	o.setY(y * m_B);	return;
 			case TRANSFORM::TRANSLATE:	o.setX(x + m_A);	o.setY(y + m_B);	return;
-			case TRANSFORM::ROTATE:		dRadians = m_A * M_PI / 180;
+			case TRANSFORM::ROTATE:		dRadians = m_A * RADIANS_PER_DEGREE;
 										C = cos(dRadians);	S = sin(dRadians);
 										o.setX(x*C - y*S);	o.setY(x*S + y*C);	return;
 			default:					assert(m_eType == TRANSFORM::NONE);		return;

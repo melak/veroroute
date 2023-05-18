@@ -185,7 +185,7 @@ struct GPainter : public QPainter
 		const double rY		= 0.5 * h;
 		const double cX		= x + rX;
 		const double cY		= y + rY;
-		const double dFact	= M_PI / 2880;	// To convert from 16ths of a degree to radians
+		Q_DECL_CONSTEXPR static const double dFact = RADIANS_PER_DEGREE / 16.0;	// To convert from 16ths of a degree to radians
 		const double dA_lo	= dFact * a;
 		const double dA_hi	= dFact * ( a + alen );
 		m_polygon.clear();
