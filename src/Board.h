@@ -417,9 +417,9 @@ public:
 
 		int iTagBits(0);	// The chosen subset of iCandidateTagBits
 		bool bIsBlankCCW(true);
-		for (int i = iBlank + 1, iEnd = iBlank + 9; i < iEnd; i++)
+		for (int i = 1; i < 9; i++)
 		{
-			const int iNbr = i % 8;
+			const int iNbr = (i + iBlank) % 8;
 			if ( bIsBlankCCW && ReadCodeBit(iNbr, iCandidateTagBits) )	// If bit is set, and preceeding bit is blank
 			{
 				SetCodeBit(iNbr, iTagBits);
