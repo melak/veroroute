@@ -309,6 +309,9 @@ void TemplatesDialog::AddTemplatesFromBoard(Board& board, bool bAllComps, bool b
 
 	const bool bGeneric = false;
 
+	bool bOverWriteAll_AlreadyExists(false);	// To handle the "Yes To All" case
+	bool bOverWriteAll_UsedImportStr(false);	// To handle the "Yes To All" case
+
 	std::list< std::string > errorStrList;
 	int nCount(0);
 	for (const auto& mapObj : compMgr.GetMapIdToComp())
@@ -330,14 +333,34 @@ void TemplatesDialog::AddTemplatesFromBoard(Board& board, bool bAllComps, bool b
 
 					bool bOverWrite(false);
 					if ( bAlreadyExists )
-						bOverWrite = QMessageBox::question(this, tr("Confirm Overwrite"),
-																 tr(errorStr.c_str()) + tr(" and will be overwritten.  There is no undo for this operation.  Continue?"),
-																 QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::Yes;
+					{
+						if ( bOverWriteAll_AlreadyExists )
+							bOverWrite = true;
+						else
+						{
+							auto button = QMessageBox::question(this, tr("Confirm Overwrite"),
+																tr(errorStr.c_str()) + tr(" and will be overwritten.  There is no undo for this operation.  Continue?"),
+																QMessageBox::Yes | QMessageBox::YesToAll | QMessageBox::No, QMessageBox::No);
+							if ( button == QMessageBox::YesToAll )
+								bOverWriteAll_AlreadyExists = true;
+							bOverWrite = bOverWriteAll_AlreadyExists || ( button == QMessageBox::Yes );
+						}
+					}
 					else if ( bUsedImportStr )
-						bOverWrite = QMessageBox::question(this, tr("Confirm Overwrite"),
-																 tr(errorStr.c_str()) + tr(".  It will be overwritten with (Value ='") + tr(comp.GetValueStr().c_str()) +
-																 tr("').  There is no undo for this operation.  Continue?"),
-																 QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::Yes;
+					{
+						if ( bOverWriteAll_UsedImportStr )
+							bOverWrite = true;
+						else
+						{
+							auto button = QMessageBox::question(this, tr("Confirm Overwrite"),
+																tr(errorStr.c_str()) + tr(".  It will be overwritten with (Value ='") + tr(comp.GetValueStr().c_str()) +
+																tr("').  There is no undo for this operation.  Continue?"),
+																QMessageBox::Yes | QMessageBox::YesToAll | QMessageBox::No, QMessageBox::No);
+							if ( button == QMessageBox::YesToAll )
+								bOverWriteAll_UsedImportStr = true;
+							bOverWrite = bOverWriteAll_UsedImportStr || ( button == QMessageBox::Yes );
+						}
+					}
 					if ( bOverWrite )
 						bOK = mgr.Add(bGeneric, comp, bAlreadyExists, bUsedImportStr, &errorStr);	// Repeat Add() with bAlreadyExists or bUsedImportStr set true to allow overwrite
 				}
