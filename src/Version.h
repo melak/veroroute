@@ -1,7 +1,9 @@
 #pragma once
 
 static const char* szVEROROUTE_VERSION =
-"2.33";		// Bug fix: Label offsets were not persisted by the Component Editor.
+"2.34";		// Bug fix: Component editor was not storing pin info correctly., so pins of placed part not protected by regular track painting.
+			// Improvement: Added "Yes To All" option for overwriting library parts when adding to library from VRT/layout.
+//"2.33";	// Bug fix: Label offsets were not persisted by the Component Editor.
 			// Bug fix: If not forcing X-thermals, the code for producing additional thermal relief tags was missing extra checks for tags in the diagonal direction.
 			// Bug fix: File -> Open (merge into current) could show the newly loaded board with PCB style shapes while in Color mode.
 			// Bug fix: Autocrop and Margin controls were not immediately updating the board size info in the status bar.
