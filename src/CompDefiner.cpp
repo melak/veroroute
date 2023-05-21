@@ -118,8 +118,10 @@ void CompDefiner::Build(const TemplateManager& templateMgr, Component& comp) con
 		comp.AddOne(mapObj.second);
 
 #ifdef _TEST_SOIC
-	if ( comp.GetIsSOIC() ) comp.SetupOccupanciesSOIC();	// Setup hole use, and SOIC info
+	if ( comp.GetIsSOIC() )
+		return comp.SetupOccupanciesSOIC();	// Setup hole use, and SOIC info
 #endif
+	return comp.SetupOccupanciesTH();		// Setup hole use, and SOIC info
 }
 
 void CompDefiner::MoveCurrentShape(double dDown, double dRight)
