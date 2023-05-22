@@ -26,9 +26,10 @@
 #define MYNUMCOLORS 		12
 #define MY_GREY				(MYNUMCOLORS)
 #define MY_BLACK			(MYNUMCOLORS+1)
-#define NUM_PIXMAP_COLORS	(MYNUMCOLORS+2)
-#define MY_LYR_BOT			(MYNUMCOLORS+3)
-#define MY_LYR_TOP			(MYNUMCOLORS+4)
+#define MY_WHITE			(MYNUMCOLORS+2)
+#define NUM_PIXMAP_COLORS	(MYNUMCOLORS+3)
+#define MY_LYR_BOT			(MYNUMCOLORS+4)
+#define MY_LYR_TOP			(MYNUMCOLORS+5)
 
 // Manager class to handle assignment of colors to nodeIds
 
@@ -184,6 +185,7 @@ public:
 		int R(0), G(0), B(0);
 		if		( colorId == BAD_COLORID )	{ R = G = B = 255; }
 		else if ( colorId == MY_GREY )		{ R = G = B = 96; }
+		else if ( colorId == MY_WHITE )		{ R = G = B = 255; }
 		else if ( colorId == MY_LYR_BOT )	{ G = 128; }
 		else if ( colorId == MY_LYR_TOP )	{ G = 96; B = 192; }
 		else if	( colorId >= 0 && colorId < MYNUMCOLORS )

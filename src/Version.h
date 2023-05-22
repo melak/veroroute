@@ -1,7 +1,8 @@
 #pragma once
 
 static const char* szVEROROUTE_VERSION =
-"2.34";		// Bug fix: Component editor was not storing pin info correctly., so pins of placed part not protected by regular track painting.
+"2.35";		// New feature: Added View menu item to toggle between Inverse/Normal Mono mode.
+//"2.34";	// Bug fix: Component editor was not storing pin info correctly, so pins of placed part not protected by regular track painting.
 			// Improvement: Added "Yes To All" option for overwriting library parts when adding to library from VRT/layout.
 //"2.33";	// Bug fix: Label offsets were not persisted by the Component Editor.
 			// Bug fix: If not forcing X-thermals, the code for producing additional thermal relief tags was missing extra checks for tags in the diagonal direction.

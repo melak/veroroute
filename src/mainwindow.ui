@@ -224,6 +224,8 @@
     <addaction name="separator"/>
     <addaction name="actionToggleFlipH"/>
     <addaction name="actionToggleFlipV"/>
+    <addaction name="separator"/>
+    <addaction name="actionToggleInverseMono"/>
    </widget>
    <widget class="QMenu" name="menuWindow">
     <property name="title">
@@ -1551,6 +1553,14 @@
   <action name="actionSOIC28W">
    <property name="text">
     <string>SOIC-28W</string>
+   </property>
+  </action>
+  <action name="actionToggleInverseMono">
+   <property name="text">
+    <string>Inverse Mono</string>
+   </property>
+   <property name="toolTip">
+    <string>Swap black and white in Mono mode</string>
    </property>
   </action>
  </widget>

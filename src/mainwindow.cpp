@@ -329,6 +329,7 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	QObject::connect(ui->actionToggleRuler,				SIGNAL(triggered()), this, SLOT(ToggleRuler()));
 	QObject::connect(ui->actionToggleFlipH,				SIGNAL(triggered()), this, SLOT(ToggleFlipH()));
 	QObject::connect(ui->actionToggleFlipV,				SIGNAL(triggered()), this, SLOT(ToggleFlipV()));
+	QObject::connect(ui->actionToggleInverseMono,		SIGNAL(triggered()), this, SLOT(ToggleInverseMono()));
 	// Paint menu actions
 	QObject::connect(ui->actionPaintGrid,				SIGNAL(triggered()), this, SLOT(TogglePaintGrid()));
 	QObject::connect(ui->actionEraseGrid,				SIGNAL(triggered()), this, SLOT(ToggleEraseGrid()));
@@ -1691,6 +1692,7 @@ void MainWindow::SetFlipH(bool b)				{ if ( m_board.SetFlipH(b) )			{ UpdateHist
 void MainWindow::SetFlipV(bool b)				{ if ( m_board.SetFlipV(b) )			{ UpdateHistory("flip vertical", 0);			UpdateControls(); RepaintSkipRouting(); } }
 void MainWindow::SetShowPinLabels(bool b)		{ if ( m_board.SetShowPinLabels(b) )	{ UpdateHistory("toggle show pin labels", 0);	UpdateControls(); RepaintSkipRouting(); } }
 void MainWindow::SetShowFlyWires(bool b)		{ if ( m_board.SetShowFlyWires(b) )		{ UpdateHistory("toggle show flying wires", 0);	UpdateControls(); RepaintSkipRouting(); } }
+void MainWindow::SetInverseMono(bool b)			{ if ( m_board.SetInverseMono(b) )		{ UpdateHistory("toggle inverse Mono", 0);		UpdateControls(); RepaintSkipRouting(); } }
 void MainWindow::SetFill(bool b)
 {
 	if ( m_board.SetGroundFill(b) )
@@ -1709,6 +1711,7 @@ void MainWindow::ToggleFlipH()			{ SetFlipH( !m_board.GetFlipH() ); }
 void MainWindow::ToggleFlipV()			{ SetFlipV( !m_board.GetFlipV() ); }
 void MainWindow::TogglePinLabels()		{ SetShowPinLabels( !m_board.GetShowPinLabels() ); }
 void MainWindow::ToggleFlyWires()		{ SetShowFlyWires( !m_board.GetShowFlyWires() ); }
+void MainWindow::ToggleInverseMono()	{ SetInverseMono( !m_board.GetInverseMono() ); }
 void MainWindow::ToggleRuler()			{ m_bRuler = !m_bRuler; if ( !m_bRuler ) ResetRuler();
 										  if ( m_bRuler ) HidePadOffsetDialog();
 										  UpdateControls(); RepaintSkipRouting();
@@ -2516,6 +2519,7 @@ void MainWindow::UpdateControls()
 	ui->actionTogglePinLabels->setEnabled( bPinLabels );
 	const bool bFlyWires  = m_board.GetCompMode() != COMPSMODE::OFF && ( bNoTracks || bColor );	// No flying wires in Mono/PCB mode
 	ui->actionToggleFlyWires->setEnabled( bFlyWires );
+	ui->actionToggleInverseMono->setEnabled( bMono );
 	ui->actionToggleRuler->setEnabled( !bCompEdit );
 	ui->actionFind->setEnabled( !bCompEdit );
 
@@ -2526,6 +2530,8 @@ void MainWindow::UpdateControls()
 	ui->actionTogglePinLabels->setChecked( m_board.GetShowPinLabels() && bPinLabels );
 	ui->actionToggleFlyWires->setChecked( m_board.GetShowFlyWires() && bFlyWires );
 	ui->actionToggleFlyWires->setText( m_board.GetShowFlyWires() ? QString("Hide Flying Wires") : QString("Show Flying Wires"));
+	ui->actionToggleInverseMono->setChecked( m_board.GetInverseMono() && bMono );
+	ui->actionToggleInverseMono->setText( m_board.GetInverseMono() ? QString("Normal Mono Mode") : QString("Inverse Mono Mode"));
 	ui->actionToggleRuler->setChecked( m_bRuler );
 	ui->actionToggleRuler->setText( m_bRuler ? QString("Hide Distance Tool") : QString("Show Distance Tool"));
 

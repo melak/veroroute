@@ -512,15 +512,12 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 	int X(0), Y(0), L(0), R(0), T(0), B(0);
 
-	const int		groundFillColorId	= ( bPCB ) ? ( layer == 0 ? MY_LYR_BOT : MY_LYR_TOP ) : MY_BLACK;
-	const QColor	groundFillColor		= colorMgr.GetPixmapColor(groundFillColorId);
-
 	QPen penGry(QColor(200,200,200,255), 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
 	QPen penTop(penGry);	penTop.setColor( colorMgr.GetPixmapColor(MY_LYR_TOP) );
 	QPen penBot(penGry);	penBot.setColor( colorMgr.GetPixmapColor(MY_LYR_BOT) );
 
-	colorMgr.SetSaturation( board.GetSaturation() );			// Must do this BEFORE making pixmaps
-	colorMgr.SetFillSaturation( board.GetFillSaturation() );	// Must do this BEFORE making pixmaps
+	colorMgr.SetSaturation( board.GetSaturation() );			// Must do this BEFORE making pixmaps (if these are reintroduced)
+	colorMgr.SetFillSaturation( board.GetFillSaturation() );	// Must do this BEFORE making pixmaps (if these are reintroduced)
 
 	board.CalculateColors();	// Work out best way to color things
 
@@ -585,10 +582,15 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		painter.scale(1, -1);	// Mirror T-B
 	}
 
-	const QColor backgroundColor = ( m_bWritePDF ) ? Qt::white : GetBackgroundColor();
+	bool bInverseMono(bMono && board.GetInverseMono());
+
+	const QColor backgroundColor	= ( bInverseMono ) ? Qt::black : ( m_bWritePDF ) ? Qt::white : GetBackgroundColor();
 	m_backgroundPen.setColor(backgroundColor);
 	m_backgroundBrush.setColor(backgroundColor);
-	QPen wirePen(m_blackPen );
+
+	const int	 groundFillColorId	= bPCB ? ( layer == 0 ? MY_LYR_BOT : MY_LYR_TOP ) : ( bInverseMono ? MY_WHITE : MY_BLACK );
+	const QColor groundFillColor	= colorMgr.GetPixmapColor(groundFillColorId);	
+	QPen wirePen(m_blackPen);
 	wirePen.setColor(bGroundFill ? backgroundColor : groundFillColor);
 	wirePen.setWidth(iWirePenWidth);
 
@@ -742,13 +744,13 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				QPen& greyPen = ( layerPref == LAYER_X ) ? penGry :
 								( layerPref == LAYER_T ) ? penTop : penBot;
 
-				// Use GetPixmapRGB for pixmaps.  It can handle MY_GREY, MY_BLACK as special cases
+				// Use GetPixmapRGB for pixmaps.  It can handle MY_GREY, MY_WHITE, MY_BLACK as special cases
 				const int	colorId				= colorMgr.GetColorId(nodeId);
 				const bool	bInvalidColor		= colorId == BAD_COLORID || ( bMonoPCB && nodeId != GetCurrentNodeId() );
-				const int	iEffColorId			= ( bInvalidColor )	? ( bPCB ? ( layer == 0 ? MY_LYR_BOT : MY_LYR_TOP ) : MY_BLACK )
+				
+				const int	iEffColorId			= ( bInvalidColor )	? groundFillColorId
 												: ( nodeId == GetCurrentNodeId() ) ? MY_GREY : ( colorId % MYNUMCOLORS );
-
-				const bool	 bAllowCustomColor	=	iEffColorId != MY_GREY		&&	iEffColorId != MY_BLACK
+				const bool	 bAllowCustomColor	=	iEffColorId != MY_GREY		&&	iEffColorId != MY_WHITE		&&	iEffColorId != MY_BLACK
 												&&	iEffColorId != MY_LYR_BOT	&&	iEffColorId != MY_LYR_TOP;
 				const QColor color				= bAllowCustomColor ? colorMgr.GetColorFromNodeId(nodeId)
 																	: colorMgr.GetPixmapColor(iEffColorId);

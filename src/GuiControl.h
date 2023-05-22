@@ -94,6 +94,7 @@ public:
 		m_bVerticalStrips	= o.m_bVerticalStrips;
 		m_bCompEdit			= o.m_bCompEdit;
 		m_bXthermals		= o.m_bXthermals;
+		m_bInverseMono		= o.m_bInverseMono;
 		return *this;
 	}
 	bool operator==(const GuiControl& o) const	// Compare persisted info
@@ -147,7 +148,8 @@ public:
 			&&	m_bGroundFill		== o.m_bGroundFill
 			&&	m_bVerticalStrips	== o.m_bVerticalStrips
 			&&	m_bCompEdit			== o.m_bCompEdit
-			&&	m_bXthermals		== o.m_bXthermals;
+			&&	m_bXthermals		== o.m_bXthermals
+			&&	m_bInverseMono		== o.m_bInverseMono;
 	}
 	bool operator!=(const GuiControl& o) const
 	{
@@ -323,6 +325,10 @@ public:
 		m_bXthermals = false;
 		if ( inStream.GetVersion() >= VRT_VERSION_53 )
 			inStream.Load(m_bXthermals);		// Added in VRT_VERSION_53
+		m_bInverseMono = false;
+		if ( inStream.GetVersion() >= VRT_VERSION_57 )
+			inStream.Load(m_bInverseMono);		// Added in VRT_VERSION_57
+				
 	}
 	virtual void Save(DataStream& outStream) override
 	{
@@ -376,6 +382,7 @@ public:
 		outStream.Save(m_bVerticalStrips);	// Added in VRT_VERSION_12
 		outStream.Save(m_bCompEdit);		// Added in VRT_VERSION_19
 		outStream.Save(m_bXthermals);		// Added in VRT_VERSION_53
+		outStream.Save(m_bInverseMono);		// Added in VRT_VERSION_57
 	}
 	bool SetBackgroundColor(const MyRGB& o)	{ const bool bChanged = m_backgroundColor	!= o; m_backgroundColor	= o; return bChanged;}
 	bool SetCurrentLayer(int i)				{ const bool bChanged = m_currentLayer		!= i; m_currentLayer	= i; return bChanged; }
@@ -436,6 +443,7 @@ public:
 	bool SetVerticalStrips(bool b)			{ const bool bChanged = m_bVerticalStrips	!= b; m_bVerticalStrips	= b; return bChanged; }
 	bool SetCompEdit(bool b)				{ const bool bChanged = m_bCompEdit			!= b; m_bCompEdit		= b; return bChanged; }
 	bool SetXthermals(bool b)				{ const bool bChanged = m_bXthermals		!= b; m_bXthermals		= b; return bChanged; }
+	bool SetInverseMono(bool b)				{ const bool bChanged = m_bInverseMono		!= b; m_bInverseMono	= b; return bChanged; }
 	const MyRGB&		GetBackgroundColor() const	{ return m_backgroundColor; }
 	const int&			GetCurrentLayer() const		{ return m_currentLayer; }
 	const int&			GetCurrentNodeId() const	{ return m_currentNodeId; }
@@ -489,6 +497,7 @@ public:
 	const bool&			GetVerticalStrips() const	{ return m_bVerticalStrips; }
 	const bool&			GetCompEdit() const			{ return m_bCompEdit; }
 	const bool&			GetXthermals() const		{ return m_bXthermals; }
+	const bool&			GetInverseMono() const		{ return m_bInverseMono; }
 	// Helpers
 	bool		SetGroundNodeId()					{ return ( GetCurrentLayer() == 0 ) ? SetGroundNodeId0( GetCurrentNodeId() ) : SetGroundNodeId1( GetCurrentNodeId() ); }
 	const int&	GetGroundNodeId(int lyr) const		{ return ( lyr == 0 ) ? GetGroundNodeId0() : GetGroundNodeId1(); }
@@ -543,6 +552,7 @@ public:
 		m_bGroundFill		= false;
 		m_bCompEdit			= false;
 		m_bXthermals		= false;
+		m_bInverseMono		= false;
 	}
 private:
 	MyRGB		m_backgroundColor	= MyRGB(0xFFFFFF);
@@ -595,4 +605,5 @@ private:
 	bool		m_bVerticalStrips	= true;
 	bool		m_bCompEdit			= false;			// true ==> component editor mode
 	bool		m_bXthermals		= false;			// true ==> force X thermal reliefs and hide tracks in ground-fill
+	bool		m_bInverseMono		= false;			// true ==> white tracks on black background
 };
