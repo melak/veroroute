@@ -533,7 +533,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	int gndL, gndR, gndT, gndB;
 	board.CalcGroundFillBounds();
 	board.GetGroundFillBounds(gndL, gndR, gndT, gndB);
-	const int reqW(gndR - gndL), reqH(gndB - gndT);
+
+	const int dEdge = static_cast<int>( board.GetEdgeWidth() );
+	const int reqW(gndR - gndL + (dEdge<<1)), reqH(gndB - gndT + (dEdge<<1));
 
 	m_XCORRECTION = -gndL;
 	m_YCORRECTION = -gndT;
@@ -601,8 +603,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	{
 		// Grow board outline to guarantee separation from tracks and ground
 		const double dEdge = board.GetEdgeWidth();
-		const double R(reqW), B(reqH);
-		const int& X = m_XGRIDOFFSET; const int& Y = m_YGRIDOFFSET;
+		const double R(reqW - dEdge*2), B(reqH - dEdge*2);
+		const double X = m_XGRIDOFFSET + dEdge;
+		const double Y = m_YGRIDOFFSET + dEdge;
 		gndPoly << QPointF(X,     Y);		edge << QPointF(X	  - dEdge, Y	 - dEdge);
 		gndPoly << QPointF(X + R, Y);		edge << QPointF(X + R + dEdge, Y	 - dEdge);
 		gndPoly << QPointF(X + R, Y + B);	edge << QPointF(X + R + dEdge, Y + B + dEdge);
@@ -615,7 +618,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	}
 	else
 	{
-		painter.fillRect(m_XGRIDOFFSET, m_YGRIDOFFSET, reqW, reqH, bGroundFill ? groundFillColor : backgroundColor);
+		painter.fillRect(m_XGRIDOFFSET, m_YGRIDOFFSET, reqW, reqH, backgroundColor);
+		if ( bGroundFill )
+			painter.fillRect(m_XGRIDOFFSET + dEdge, m_YGRIDOFFSET + dEdge, reqW - (dEdge<<1), reqH - (dEdge<<1), groundFillColor);
 	}
 
 	// Draw rect around whole board area =========================================================
@@ -628,15 +633,14 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		const int iPenWidth = ( bPCB ) ? static_cast<int>(W * 0.100) : 0;	// Like GPEN::GKO = 10 mil used for Gerber
 		m_blackPen.setWidth(iPenWidth);
 		m_whitePen.setWidth(iPenWidth);
-		painter.setPen(GetBackgroundColor() == Qt::black ? m_whitePen : m_blackPen);
+		painter.setPen( ( bPCB || bInverseMono ) ? m_whitePen :  m_blackPen );
 		painter.setBrush(Qt::NoBrush);
-
-		const int dEdge = static_cast<int>( board.GetEdgeWidth() );
-		painter.drawRect(m_XGRIDOFFSET - dEdge, m_YGRIDOFFSET - dEdge, reqW + (dEdge<<1), reqH + (dEdge<<1));
+		painter.drawRect(m_XGRIDOFFSET, m_YGRIDOFFSET, reqW, reqH);
 	}
 
 	// Draw grid points ==========================================================================
 	if ( !bPCB && board.GetShowGrid() )
+	{
 		for (int j = 0, jMax = board.GetRows(); j < jMax; j++)
 		for (int i = 0, iMax = board.GetCols(); i < iMax; i++)
 		{
@@ -647,6 +651,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				painter.drawPoint(X, Y);
 			}
 		}
+	}
 
 	// Draw tracks ===============================================================================
 	if ( bPCB || trackMode != TRACKMODE::OFF )	// Force tracks in PCB mode
@@ -1760,8 +1765,9 @@ void MainWindow::GetXY(const GuiControl& guiCtrl, double row, double col, int& X
 	// Takes a point in the Board and returns coordinates in the drawn image.
 	const int& W = guiCtrl.GetGRIDPIXELS();	// Square width in pixels
 	const int  C = W >> 1;					// Half square width in pixels
-	X = m_XGRIDOFFSET + m_XCORRECTION + C + static_cast<int>(col * W);
-	Y = m_YGRIDOFFSET + m_YCORRECTION + C + static_cast<int>(row * W);
+	const int  dEdge = static_cast<int>( guiCtrl.GetEdgeWidth() );
+	X = m_XGRIDOFFSET + m_XCORRECTION + C + static_cast<int>(col * W) + dEdge;
+	Y = m_YGRIDOFFSET + m_YCORRECTION + C + static_cast<int>(row * W) + dEdge;
 }
 
 void MainWindow::GetLRTB(const GuiControl& guiCtrl, double percent, double row, double col, int& L, int& R, int& T, int& B) const

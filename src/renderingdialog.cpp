@@ -105,7 +105,7 @@ void RenderingDialog::UpdateControls()
 	ui->gapWidth->setDisabled(		bCompEdit || !bGroundFill );
 	ui->maskWidth->setDisabled(		bCompEdit || bVero || !bPCB );
 	ui->silkWidth->setDisabled(		bCompEdit || bVero || !bPCB );
-	ui->edgeWidth->setDisabled(		bCompEdit || bVero || !bPCB );
+	ui->edgeWidth->setDisabled(		bCompEdit );
 
 	// ... and corresponding labels
 	ui->label_brightness->setDisabled(	bCompEdit || bPCB );
@@ -122,7 +122,7 @@ void RenderingDialog::UpdateControls()
 	ui->label_gap->setDisabled(			bCompEdit || !bGroundFill );
 	ui->label_mask->setDisabled(		bCompEdit || bVero || !bPCB );
 	ui->label_silk->setDisabled(		bCompEdit || bVero || !bPCB );
-	ui->label_edge->setDisabled(		bCompEdit || bVero || !bPCB );
+	ui->label_edge->setDisabled(		bCompEdit );
 	ui->label_info->setDisabled(		bCompEdit || bVero );
 	ui->label_info_2->setDisabled(		bCompEdit || !bGroundFill );
 	ui->Xthermals->setDisabled(			!bTags );

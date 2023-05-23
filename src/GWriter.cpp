@@ -105,7 +105,7 @@ void GStream::WriteHeader(const QString& UTC)	// Write header for current stream
 	QString	strLayer	= "Layer: ";
 	QString	strProgram	= "VeroRoute V" + QString(szVEROROUTE_VERSION);
 	QString	strUTC		= QString::fromStdString( UTC.toStdString() );
-	QString	strGen		= QString("Gerber Generator version 1.0");
+	QString	strGen		= QString("Gerber Generator version 1.1");
 	switch(m_eType)
 	{
 		case GFILE::GKO: strLayer += "BoardOutline";			break;
@@ -628,9 +628,9 @@ void GStream::GetQPoint(const QPointF& in, QPoint& out) const
 {
 	// GRIDPIXELS == 100 means each integer ordinate is 1 mil
 	assert( m_pBoard && m_pBoard->GetGRIDPIXELS() == 1000 );	// Confirm each integer ordinate == 0.0001 inches
-	const double dEdge = m_pBoard->GetEdgeWidth();	// Add/subtract this offset so bottom-left corner of board outline is at (0,0)
-	out.setX( static_cast<int>(in.x() + dEdge) );
-	out.setY( m_pBoard->GetGRIDPIXELS() * m_pBoard->GetRows() - static_cast<int>(in.y() - dEdge) ); // Gerber y-axis goes up screen
+	const double dEdge = m_pBoard->GetEdgeWidth();	// Use this offset so bottom-left corner of board outline is at (0,0)
+	out.setX( static_cast<int>(in.x()) );
+	out.setY( m_pBoard->GetGRIDPIXELS() * m_pBoard->GetRows() + dEdge * 2 - static_cast<int>(in.y()) ); // Gerber y-axis goes up screen
 }
 void GStream::GetQPolygon(const QPolygonF& in, QPolygon& out) const
 {
