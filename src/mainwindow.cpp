@@ -962,10 +962,13 @@ void MainWindow::WritePDF()
 	ui->statusBar->showMessage( tr("Exporting to PDF..."), 500 );
 
 	const int oldGridPixels	= m_board.GetGRIDPIXELS();
-	const int pdfGridPixels = 120;	// 1200 dpi
+	Q_DECL_CONSTEXPR static int pdfGridPixels		= 120;	// 1200 dpi
+	Q_DECL_CONSTEXPR static int pdfHalfGridPixels	= pdfGridPixels / 2;
 	m_board.SetGRIDPIXELS(pdfGridPixels);
-	m_XGRIDOFFSET = pdfGridPixels * ( 58 - m_board.GetCols() / 2 );	// A4 landscape is about 116 * 0.1 inches wide
-	m_YGRIDOFFSET = pdfGridPixels * ( 41 - m_board.GetRows() / 2 );	// A4 landscape is about  82 * 0.1 inches tall
+
+	// Need additional correction of 1.5 grid squares (i.e. 3 * pdfHalfGridPixels) to get the centering correct
+	m_XGRIDOFFSET = ( (117 - 3) - m_board.GetCols() ) * pdfHalfGridPixels;	// A4 landscape is about 117 * 0.1 inches wide
+	m_YGRIDOFFSET = ( (83  - 3) - m_board.GetRows() ) * pdfHalfGridPixels ;	// A4 landscape is about  83 * 0.1 inches tall
 
 	m_bWritePDF = true;			// Makes paintEvent() write to PDF instead of pixmap
 	RepaintSkipRouting(true);	// true  ==> force use of repaint() rather than update()
