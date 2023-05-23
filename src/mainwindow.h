@@ -151,6 +151,7 @@ public:
 protected:
 	void paintEvent(QPaintEvent* event);
 	void wheelEvent(QWheelEvent* event);
+	void closeEvent(QCloseEvent* event);
 	void keyPressEvent(QKeyEvent* event);
 	void keyReleaseEvent(QKeyEvent* event);
 #ifndef VEROROUTE_ANDROID

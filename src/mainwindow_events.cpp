@@ -25,6 +25,7 @@
 #include "finddialog.h"
 #include "pindialog.h"
 #include <QtGlobal>
+#include <QCloseEvent>
 
 Q_DECL_CONSTEXPR static const bool ALLOW_DELAY_BASED_SMART_PAN = true;
 Q_DECL_CONSTEXPR static const bool ALLOW_DELAY_BASED_PAD_SHIFT = true;
@@ -119,6 +120,20 @@ void MainWindow::wheelEvent(QWheelEvent* event)
 	else if ( !m_board.GetMirrored() )
 		CompStretch(!bBack);
 	event->accept();	// If we don't do this, we can get the same event passed multiple times if we're on MS Windows.
+}
+
+void MainWindow::closeEvent(QCloseEvent* event)
+{
+#ifndef VEROROUTE_ANDROID	
+	if ( GetIsModified() )
+	{
+		if ( QMessageBox::question(this, tr("Really Quit?"),
+										 tr("Your layout is not saved. You will lose changes if you quit.  Continue?"),
+										 QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::No )
+			return event->ignore();
+	}
+#endif
+	event->accept();
 }
 
 bool MainWindow::CanModifyRuler() const
