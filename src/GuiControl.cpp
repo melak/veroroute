@@ -203,7 +203,7 @@ void GuiControl::CalcBlob(qreal W, const QPointF& pC, const QPointF& pCoffset,
 		const qreal X(W * 0.005 * (i + 1));	// Using (i+1) instead of (i) increases tag length by 0.5 mil.  Avoids short tags from rounding errors.
 		const qreal T(W * 0.005 * GetTAG_MIL());
 		const qreal f(sqrt(0.5));
-		const qreal x(f * X), t(f * T);	// Scale for diagonal diretions
+		const qreal x(f * X), t(f * T);	// Scale for diagonal directions
 		const qreal p(x + t), q(x - t); // Transform for diagonal connections
 
 		for (int iNbr = 0; iNbr < 8; iNbr++)
