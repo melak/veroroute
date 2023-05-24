@@ -1,4 +1,7 @@
 V2.35  New feature: Added View menu item to toggle between Inverse/Normal Mono mode.
+       Bug fix: Writing to PDF was not centering the page correctly.
+       Improvement: If closing via X-button or windows toolbar, ask for confirmation if layout has been modified.
+       Made the Board Edge Margin (PCB parameter) apply to all view types, and account for it when drawing to screen.
 V2.34  Bug fix: Component editor was not storing pin info correctly, so pins of placed part not protected by regular track painting.
        Improvement: Added "Yes To All" option for overwriting library parts when adding to library from VRT/layout.
 V2.33  Bug fix: Label offsets were not persisted by the Component Editor.

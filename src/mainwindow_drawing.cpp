@@ -590,8 +590,14 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	m_backgroundPen.setColor(backgroundColor);
 	m_backgroundBrush.setColor(backgroundColor);
 
+	const int	 dotColorID			= bInverseMono ? MY_WHITE : MY_BLACK;
+	const QColor dotColor			= ( !m_bWritePDF && dotColorID == MY_WHITE ) ? GetBackgroundColor() : colorMgr.GetPixmapColor(dotColorID);
 	const int	 groundFillColorId	= bPCB ? ( layer == 0 ? MY_LYR_BOT : MY_LYR_TOP ) : ( bInverseMono ? MY_WHITE : MY_BLACK );
-	const QColor groundFillColor	= colorMgr.GetPixmapColor(groundFillColorId);	
+	const QColor groundFillColor	= ( !m_bWritePDF && groundFillColorId == MY_WHITE ) ? GetBackgroundColor() : colorMgr.GetPixmapColor(groundFillColorId);
+
+	QPen dotPen(m_blackPen);
+	dotPen.setColor(dotColor);
+
 	QPen wirePen(m_blackPen);
 	wirePen.setColor(bGroundFill ? backgroundColor : groundFillColor);
 	wirePen.setWidth(iWirePenWidth);
@@ -631,9 +637,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	else
 	{
 		const int iPenWidth = ( bPCB ) ? static_cast<int>(W * 0.100) : 0;	// Like GPEN::GKO = 10 mil used for Gerber
-		m_blackPen.setWidth(iPenWidth);
+		dotPen.setWidth(iPenWidth);
 		m_whitePen.setWidth(iPenWidth);
-		painter.setPen( ( bPCB || bInverseMono ) ? m_whitePen :  m_blackPen );
+		painter.setPen( bPCB ? m_whitePen :  dotPen );
 		painter.setBrush(Qt::NoBrush);
 		painter.drawRect(m_XGRIDOFFSET, m_YGRIDOFFSET, reqW, reqH);
 	}
@@ -758,7 +764,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				const bool	 bAllowCustomColor	=	iEffColorId != MY_GREY		&&	iEffColorId != MY_WHITE		&&	iEffColorId != MY_BLACK
 												&&	iEffColorId != MY_LYR_BOT	&&	iEffColorId != MY_LYR_TOP;
 				const QColor color				= bAllowCustomColor ? colorMgr.GetColorFromNodeId(nodeId)
-																	: colorMgr.GetPixmapColor(iEffColorId);
+																	: ( !m_bWritePDF && iEffColorId == MY_WHITE ) ? GetBackgroundColor() :  colorMgr.GetPixmapColor(iEffColorId);
 
 				GetLRTB(board, 100, j, i, L, R, T, B);	// 100% size square
 				const int X((L+R)/2), Y((T+B)/2);
