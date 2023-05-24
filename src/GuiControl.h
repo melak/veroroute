@@ -241,7 +241,7 @@ public:
 			inStream.Load(m_MASK_MIL);			// Added in VRT_VERSION_32
 			inStream.Load(m_SILK_MIL);			// Added in VRT_VERSION_32
 		}
-		m_EDGE_MIL = 20;
+		m_EDGE_MIL = 0;
 		if ( inStream.GetVersion() >= VRT_VERSION_33 )
 			inStream.Load(m_EDGE_MIL);			// Added in VRT_VERSION_33
 		m_VIAPAD_MIL	= 50;
@@ -574,7 +574,7 @@ private:
 	int			m_GAP_MIL			= 10;				// Range  5 to 30
 	int			m_MASK_MIL			= 4;				// Range  0 to 10
 	int			m_SILK_MIL			= 7;				// Range  1 to 10
-	int			m_EDGE_MIL			= 20;				// Range  0 to 50
+	int			m_EDGE_MIL			= 0;				// Range  0 to 50
 	int			m_VIAPAD_MIL		= 50;				// Range 50 to 80
 	int			m_VIAHOLE_MIL		= 25;				// Range 20 to 40
 	int			m_iRenderQuality	= 1;				// 0 (Low) to 1 (High)
