@@ -54,10 +54,10 @@ void MainWindow::GetPixMapXY(const QPoint& currentPoint, int& pixmapX, int& pixm
 	int gndL, gndR, gndT, gndB;
 	m_board.GetGroundFillBounds(gndL, gndR, gndT, gndB);
 
-	const int dEdge = static_cast<int>( m_board.GetEdgeWidth() );
+	const int iEdge = static_cast<int>( m_board.GetEdgeWidth() );
 
-	pixmapX += gndL - dEdge;
-	pixmapY += gndT - dEdge;
+	pixmapX += gndL - iEdge;
+	pixmapY += gndT - iEdge;
 }
 
 bool MainWindow::GetRowCol(const QPoint& currentPoint, int& row, int& col, double& deltaRow, double& deltaCol) const

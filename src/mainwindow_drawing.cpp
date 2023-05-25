@@ -534,8 +534,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	board.CalcGroundFillBounds();
 	board.GetGroundFillBounds(gndL, gndR, gndT, gndB);
 
-	const int dEdge = static_cast<int>( board.GetEdgeWidth() );
-	const int reqW(gndR - gndL + (dEdge<<1)), reqH(gndB - gndT + (dEdge<<1));
+	const double dEdge = board.GetEdgeWidth();
+	const int iEdge = static_cast<int>( dEdge );
+	const int reqW(gndR - gndL + (iEdge<<1)), reqH(gndB - gndT + (iEdge<<1));
 
 	m_XCORRECTION = -gndL;
 	m_YCORRECTION = -gndT;
@@ -608,7 +609,6 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	if ( m_bWriteGerber )
 	{
 		// Grow board outline to guarantee separation from tracks and ground
-		const double dEdge = board.GetEdgeWidth();
 		const double R(reqW - dEdge*2), B(reqH - dEdge*2);
 		const double X = m_XGRIDOFFSET + dEdge;
 		const double Y = m_YGRIDOFFSET + dEdge;
@@ -626,7 +626,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	{
 		painter.fillRect(m_XGRIDOFFSET, m_YGRIDOFFSET, reqW, reqH, backgroundColor);
 		if ( bGroundFill )
-			painter.fillRect(m_XGRIDOFFSET + dEdge, m_YGRIDOFFSET + dEdge, reqW - (dEdge<<1), reqH - (dEdge<<1), groundFillColor);
+			painter.fillRect(m_XGRIDOFFSET + iEdge, m_YGRIDOFFSET + iEdge, reqW - (iEdge<<1), reqH - (iEdge<<1), groundFillColor);
 	}
 
 	// Draw rect around whole board area =========================================================
@@ -1771,9 +1771,9 @@ void MainWindow::GetXY(const GuiControl& guiCtrl, double row, double col, int& X
 	// Takes a point in the Board and returns coordinates in the drawn image.
 	const int& W = guiCtrl.GetGRIDPIXELS();	// Square width in pixels
 	const int  C = W >> 1;					// Half square width in pixels
-	const int  dEdge = static_cast<int>( guiCtrl.GetEdgeWidth() );
-	X = m_XGRIDOFFSET + m_XCORRECTION + C + static_cast<int>(col * W) + dEdge;
-	Y = m_YGRIDOFFSET + m_YCORRECTION + C + static_cast<int>(row * W) + dEdge;
+	const int  iEdge = static_cast<int>( guiCtrl.GetEdgeWidth() );
+	X = m_XGRIDOFFSET + m_XCORRECTION + C + static_cast<int>(col * W) + iEdge;
+	Y = m_YGRIDOFFSET + m_YCORRECTION + C + static_cast<int>(row * W) + iEdge;
 }
 
 void MainWindow::GetLRTB(const GuiControl& guiCtrl, double percent, double row, double col, int& L, int& R, int& T, int& B) const

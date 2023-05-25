@@ -55,6 +55,7 @@ void RenderingDialog::SetMainWindow(MainWindow* p)
 	QObject::connect(ui->maskWidth,			SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SetMaskWidth(int)));
 	QObject::connect(ui->silkWidth,			SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SetSilkWidth(int)));
 	QObject::connect(ui->edgeWidth,			SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SetEdgeWidth(int)));
+	QObject::connect(ui->fillWidth,			SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SetFillWidth(int)));
 	QObject::connect(ui->viapadWidth,		SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SetViaPadWidth(int)));
 	QObject::connect(ui->viaholeWidth,		SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SetViaHoleWidth(int)));
 	QObject::connect(ui->Xthermals,			SIGNAL(toggled(bool)),		m_pMainWindow,	SLOT(SetXthermals(bool)));
@@ -106,6 +107,7 @@ void RenderingDialog::UpdateControls()
 	ui->maskWidth->setDisabled(		bCompEdit || bVero || !bPCB );
 	ui->silkWidth->setDisabled(		bCompEdit || bVero || !bPCB );
 	ui->edgeWidth->setDisabled(		bCompEdit );
+	ui->fillWidth->setDisabled(		bCompEdit || !bGroundFill );
 
 	// ... and corresponding labels
 	ui->label_brightness->setDisabled(	bCompEdit || bPCB );
@@ -123,6 +125,7 @@ void RenderingDialog::UpdateControls()
 	ui->label_mask->setDisabled(		bCompEdit || bVero || !bPCB );
 	ui->label_silk->setDisabled(		bCompEdit || bVero || !bPCB );
 	ui->label_edge->setDisabled(		bCompEdit );
+	ui->label_fill->setDisabled(		bCompEdit || !bGroundFill );
 	ui->label_info->setDisabled(		bCompEdit || bVero );
 	ui->label_info_2->setDisabled(		bCompEdit || !bGroundFill );
 	ui->Xthermals->setDisabled(			!bTags );
@@ -144,6 +147,7 @@ void RenderingDialog::UpdateControls()
 	ui->maskWidth->setValue(	board.GetMASK_MIL()		);
 	ui->silkWidth->setValue(	board.GetSILK_MIL()		);
 	ui->edgeWidth->setValue(	board.GetEDGE_MIL()		);
+	ui->fillWidth->setValue(	board.GetFILL_MIL()		);
 	ui->viapadWidth->setValue(	board.GetVIAPAD_MIL()	);
 	ui->viaholeWidth->setValue(	board.GetVIAHOLE_MIL()	);
 	ui->Xthermals->setChecked(	board.GetXthermals()	);

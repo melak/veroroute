@@ -546,8 +546,8 @@ void GStream::WriteXY(const QPoint& p, bool bFullLine)
 	if ( !m_file.isOpen() ) return;
 	const int ix = ( m_bMetric ) ? ( 2540 * p.x() ) : p.x();	// metric ==> convert deciMil to nanometres
 	const int iy = ( m_bMetric ) ? ( 2540 * p.y() ) : p.y();	// metric ==> convert deciMil to nanometres
-	if ( bFullLine || m_iLastX != ix ) m_os << "X" << ix;
-	if ( bFullLine || m_iLastY != iy ) m_os << "Y" << iy;
+	if ( bFullLine || m_iLastX != p.x() ) m_os << "X" << ix;
+	if ( bFullLine || m_iLastY != p.y() ) m_os << "Y" << iy;
 	m_iLastX = p.x();
 	m_iLastY = p.y();
 }
@@ -628,9 +628,12 @@ void GStream::GetQPoint(const QPointF& in, QPoint& out) const
 {
 	// GRIDPIXELS == 100 means each integer ordinate is 1 mil
 	assert( m_pBoard && m_pBoard->GetGRIDPIXELS() == 1000 );	// Confirm each integer ordinate == 0.0001 inches
-	const double dEdge = m_pBoard->GetEdgeWidth();	// Use this offset so bottom-left corner of board outline is at (0,0)
-	out.setX( static_cast<int>(in.x()) );
-	out.setY( m_pBoard->GetGRIDPIXELS() * m_pBoard->GetRows() + dEdge * 2 - static_cast<int>(in.y()) ); // Gerber y-axis goes up screen
+	int gndL, gndR, gndT, gndB;
+	m_pBoard->GetGroundFillBounds(gndL, gndR, gndT, gndB);
+	const int iEdge = static_cast<int>( m_pBoard->GetEdgeWidth() );
+	const int iHeight(gndB - gndT + (iEdge<<1));
+ 	out.setX( static_cast<int>(in.x()) );
+	out.setY( iHeight - static_cast<int>(in.y()) ); // Gerber y-axis goes up screen
 }
 void GStream::GetQPolygon(const QPolygonF& in, QPolygon& out) const
 {

@@ -64,6 +64,7 @@ public:
 		m_MASK_MIL			= o.m_MASK_MIL;
 		m_SILK_MIL			= o.m_SILK_MIL;
 		m_EDGE_MIL			= o.m_EDGE_MIL;
+		m_FILL_MIL			= o.m_FILL_MIL;
 		m_VIAPAD_MIL		= o.m_VIAPAD_MIL;
 		m_VIAHOLE_MIL		= o.m_VIAHOLE_MIL;
 		m_iRenderQuality	= o.m_iRenderQuality;
@@ -119,6 +120,7 @@ public:
 			&&	m_MASK_MIL			== o.m_MASK_MIL
 			&&	m_SILK_MIL			== o.m_SILK_MIL
 			&&	m_EDGE_MIL			== o.m_EDGE_MIL
+			&&	m_FILL_MIL			== o.m_FILL_MIL
 			&&	m_VIAPAD_MIL		== o.m_VIAPAD_MIL
 			&&	m_VIAHOLE_MIL		== o.m_VIAHOLE_MIL
 			&&	m_iRenderQuality	== o.m_iRenderQuality
@@ -244,6 +246,9 @@ public:
 		m_EDGE_MIL = 0;
 		if ( inStream.GetVersion() >= VRT_VERSION_33 )
 			inStream.Load(m_EDGE_MIL);			// Added in VRT_VERSION_33
+		m_FILL_MIL = 0;
+		if ( inStream.GetVersion() >= VRT_VERSION_58 )
+			inStream.Load(m_FILL_MIL);			// Added in VRT_VERSION_58
 		m_VIAPAD_MIL	= 50;
 		m_VIAHOLE_MIL	= 25;
 		if ( inStream.GetVersion() >= VRT_VERSION_35 )
@@ -352,6 +357,7 @@ public:
 		outStream.Save(m_MASK_MIL);			// Added in VRT_VERSION_32
 		outStream.Save(m_SILK_MIL);			// Added in VRT_VERSION_32
 		outStream.Save(m_EDGE_MIL);			// Added in VRT_VERSION_33
+		outStream.Save(m_FILL_MIL);			// Added in VRT_VERSION_58
 		outStream.Save(m_VIAPAD_MIL);		// Added in VRT_VERSION_35
 		outStream.Save(m_VIAHOLE_MIL);		// Added in VRT_VERSION_35
 		outStream.Save(m_iRenderQuality);
@@ -408,6 +414,7 @@ public:
 	bool SetMASK_MIL(int i)					{ const bool bChanged = m_MASK_MIL			!= i; m_MASK_MIL		= i; return bChanged; }
 	bool SetSILK_MIL(int i)					{ const bool bChanged = m_SILK_MIL			!= i; m_SILK_MIL		= i; return bChanged; }
 	bool SetEDGE_MIL(int i)					{ const bool bChanged = m_EDGE_MIL			!= i; m_EDGE_MIL		= i; return bChanged; }
+	bool SetFILL_MIL(int i)					{ const bool bChanged = m_FILL_MIL			!= i; m_FILL_MIL		= i; return bChanged; }
 	bool SetVIAPAD_MIL(int i)				{ const bool bChanged = m_VIAPAD_MIL		!= i; m_VIAPAD_MIL		= i;
 											  if ( bChanged && GetVIAHOLE_MIL() > i-8 ) SetVIAHOLE_MIL( i-8 );	// 8 ==> minimum annular ring = 4 mil
 											  return bChanged;
@@ -464,6 +471,7 @@ public:
 	const int&			GetMASK_MIL() const			{ return m_MASK_MIL; }
 	const int&			GetSILK_MIL() const			{ return m_SILK_MIL; }
 	const int&			GetEDGE_MIL() const			{ return m_EDGE_MIL; }
+	const int&			GetFILL_MIL() const			{ return m_FILL_MIL; }
 	const int&			GetVIAPAD_MIL() const		{ return m_VIAPAD_MIL; }
 	const int&			GetVIAHOLE_MIL() const		{ return m_VIAHOLE_MIL; }
 	Q_DECL_CONSTEXPR static inline int GetPAD_IC_MIL()		{ return 24; }
@@ -509,6 +517,7 @@ public:
 	int			GetCompSliderValue() const			{ return static_cast<int>(GetCompMode());  }
 	double		GetSilkWidth() const				{ return std::max(1.0, GetGRIDPIXELS() * GetSILK_MIL() * 0.010 );  }	// Silk-screen pen width in pixels
 	double		GetEdgeWidth() const				{ return std::max(1.0, GetGRIDPIXELS() * GetEDGE_MIL() * 0.010 );  }	// Board edge margin in pixels
+	double		GetFillWidth() const				{ return std::max(1.0, GetGRIDPIXELS() * GetFILL_MIL() * 0.010 );  }	// Ground-fill perimeter in pixels
 	int			GetHalfPixelsFromMIL(int iMIL) const
 	{
 		return std::max(1, static_cast<int> (GetGRIDPIXELS() * iMIL	* 0.005 ));
@@ -575,6 +584,7 @@ private:
 	int			m_MASK_MIL			= 4;				// Range  0 to 10
 	int			m_SILK_MIL			= 7;				// Range  1 to 10
 	int			m_EDGE_MIL			= 0;				// Range  0 to 50
+	int			m_FILL_MIL			= 0;				// Range  0 to 50
 	int			m_VIAPAD_MIL		= 50;				// Range 50 to 80
 	int			m_VIAHOLE_MIL		= 25;				// Range 20 to 40
 	int			m_iRenderQuality	= 1;				// 0 (Low) to 1 (High)

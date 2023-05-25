@@ -966,9 +966,10 @@ void MainWindow::WritePDF()
 	Q_DECL_CONSTEXPR static int pdfHalfGridPixels	= pdfGridPixels / 2;
 	m_board.SetGRIDPIXELS(pdfGridPixels);
 
+	const int iDelta = static_cast<int> ( m_board.GetEdgeWidth() + m_board.GetFillWidth() );
 	// Need additional correction of 1.5 grid squares (i.e. 3 * pdfHalfGridPixels) to get the centering correct
-	m_XGRIDOFFSET = ( (117 - 3) - m_board.GetCols() ) * pdfHalfGridPixels;	// A4 landscape is about 117 * 0.1 inches wide
-	m_YGRIDOFFSET = ( (83  - 3) - m_board.GetRows() ) * pdfHalfGridPixels ;	// A4 landscape is about  83 * 0.1 inches tall
+	m_XGRIDOFFSET = ( (117 - 3) - m_board.GetCols() ) * pdfHalfGridPixels - iDelta;	// A4 landscape is about 117 * 0.1 inches wide
+	m_YGRIDOFFSET = ( (83  - 3) - m_board.GetRows() ) * pdfHalfGridPixels - iDelta;	// A4 landscape is about  83 * 0.1 inches tall
 
 	m_bWritePDF = true;			// Makes paintEvent() write to PDF instead of pixmap
 	RepaintSkipRouting(true);	// true  ==> force use of repaint() rather than update()
@@ -2140,6 +2141,7 @@ void MainWindow::SetGapWidth(int i)			{ if ( m_board.SetGAP_MIL(i)   ) { UpdateH
 void MainWindow::SetMaskWidth(int i)		{ if ( m_board.SetMASK_MIL(i)  ) { UpdateHistory("change solder mask margin", 0);		UpdateControls();	RepaintSkipRouting(); } }
 void MainWindow::SetSilkWidth(int i)		{ if ( m_board.SetSILK_MIL(i)  ) { UpdateHistory("change silkscreen line width", 0);	UpdateControls();	RepaintSkipRouting(); } }
 void MainWindow::SetEdgeWidth(int i)		{ if ( m_board.SetEDGE_MIL(i)  ) { UpdateHistory("change board edge margin", 0);		UpdateControls();	RepaintSkipRouting(); } }
+void MainWindow::SetFillWidth(int i)		{ if ( m_board.SetFILL_MIL(i)  ) { UpdateHistory("change ground fill perimeter", 0);	UpdateControls();	RepaintSkipRouting(); } }
 void MainWindow::SetViaPadWidth(int i)		{ if ( m_board.SetVIAPAD_MIL(i)) { UpdateHistory("change via pad width", 0);			UpdateControls();	RepaintSkipRouting(); } }
 void MainWindow::SetViaHoleWidth(int i)		{ if ( m_board.SetVIAHOLE_MIL(i)){ UpdateHistory("change via hole width", 0);			UpdateControls();	RepaintSkipRouting(); } }
 void MainWindow::SetTextSizeComp(int i)		{ if ( m_board.SetTextSizeComp(i) )		  { UpdateHistory("change text size (component)", 0);	RepaintSkipRouting(); } }

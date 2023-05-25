@@ -125,7 +125,7 @@ void Board::GetSeparations(double& minTrackSeparation_mil, double& minGroundFill
 	minTrackSeparation_mil	= std::min(dGap, dMinSep);
 	// Calc minimum ground-fill width in mil
 	// To have a ground fill with no isolated islands, this must be > 0 (and probably at least 8 mil)
-	minGroundFill_mil		= GetGroundFill() ? std::max(0.0, dMinSep - dGap * 2.0) : 100.0;
+	minGroundFill_mil		= GetGroundFill() ? std::min(100.0, std::max(0.0, dMinSep - dGap * 2.0)) : 100.0;
 
 	// If the minimum track separation is determined by the gap,
 	// then all locations have min separation, so don't show warning points in the view
@@ -347,6 +347,12 @@ void Board::CalcGroundFillBounds()
 	m_gndT = 0 - deltaT;
 	m_gndR = W * GetCols() + deltaR;
 	m_gndB = W * GetRows() + deltaB;
+
+	const double iFillWidth = static_cast<int> ( GetFillWidth() );
+	m_gndL -= iFillWidth;
+	m_gndT -= iFillWidth;
+	m_gndR += iFillWidth;
+	m_gndB += iFillWidth;
 
 	// Loop all shapes and get a safe estimate of their outer bounds
 	const bool bMonoPCB		= GetTrackMode() == TRACKMODE::MONO || GetTrackMode() == TRACKMODE::PCB;

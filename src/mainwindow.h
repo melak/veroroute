@@ -414,6 +414,7 @@ public slots:
 	void SetMaskWidth(int i);
 	void SetSilkWidth(int i);
 	void SetEdgeWidth(int i);
+	void SetFillWidth(int i);
 	void SetViaPadWidth(int i);
 	void SetViaHoleWidth(int i);
 	void SetTextSizeComp(int i);
