@@ -1,3 +1,5 @@
+V2.36  Improvement: Automatically force text-box text to black or white when in Mono mode.
+       Bug fix: Text-box text should be mirrored in Mono mode on all layers (not bottom-layer only).
 V2.35  New feature: Added View menu item to toggle between Inverse/Normal Mono mode.
        New feature: Added Ground Fill Perimeter parameter to PCB parameters.
                     Made the Board Edge Margin (PCB parameter) apply to all view types, and account for it when drawing to screen.
