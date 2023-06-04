@@ -1617,7 +1617,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			font.setPointSize( rect.GetSize() );
 			painter.setFont(font);
 
-			m_varPen.setColor( rect.GetQColor() );
+			m_varPen.setColor(!bMono ? rect.GetQColor() : ( bGroundFill == bInverseMono ) ? Qt::black : Qt::white);
 			painter.setPen(m_varPen);
 			painter.setBrush(Qt::NoBrush);
 			painter.save();
