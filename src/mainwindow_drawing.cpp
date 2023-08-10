@@ -1611,6 +1611,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			const int textW = static_cast<int>((R-L)/dTextScale);
 			const int textH = static_cast<int>((B-T)/dTextScale);
 
+			painter.save();
 			font.setBold( rect.GetStyle() & TEXT_BOLD );
 			font.setItalic( rect.GetStyle() & TEXT_ITALIC );
 			font.setUnderline( rect.GetStyle() & TEXT_UNDERLINE );
@@ -1620,7 +1621,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			m_varPen.setColor(!bMono ? rect.GetQColor() : ( bGroundFill == bInverseMono ) ? Qt::black : Qt::white);
 			painter.setPen(m_varPen);
 			painter.setBrush(Qt::NoBrush);
-			painter.save();
+
 			painter.translate((bMono && layer == 0) ? R : L, T);							// Mirror all text boxes in Mono mode for bottom layer
 			painter.scale((bMono && layer == 0) ? -dTextScale : dTextScale, dTextScale);	// Mirror all text boxes in Mono mode for bottom layer
 			painter.drawText(0, 0, textW, textH, Qt::TextWordWrap | rect.GetFlagsH() | rect.GetFlagsV(), QString::fromStdString(rect.GetStr()));
