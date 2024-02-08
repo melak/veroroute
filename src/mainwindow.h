@@ -93,7 +93,8 @@ public:
 		PAINT_FLOOD		= 5,	// Flood-fill all connected tracks & pins
 		DEFINE_RECT		= 6,	// Define grey rectangle areas
 		RESIZE_TEXT		= 7,	// Resize text rectangle
-		SMART_PAN		= 8		// Move whole layout and resize/crop grid
+		SMART_PAN		= 8,	// Move whole layout and resize/crop grid
+		EDIT_LAYER_PREF	= 9		// Edit pin layer preferences
 	};
 
 	explicit MainWindow(const QString& localDataPathStr, const QString& tutorialsPathStr, QWidget* parent = nullptr);
@@ -120,15 +121,16 @@ public:
 	const bool&	GetCtrlKeyDown() const	{ return m_bCtrlKeyDown;	}
 	const bool&	GetShiftKeyDown() const	{ return m_bShiftKeyDown;	}
 
-	bool		GetPaintAction() const	{ return m_eMouseMode >= MOUSE_MODE::PAINT_PINS && m_eMouseMode <= MOUSE_MODE::PAINT_FLOOD; }
-	bool		GetPaintPins() const	{ return m_eMouseMode == MOUSE_MODE::PAINT_PINS; }
-	bool		GetErasePins() const	{ return m_eMouseMode == MOUSE_MODE::ERASE_PINS; }
-	bool		GetPaintBoard() const	{ return m_eMouseMode == MOUSE_MODE::PAINT_GRID; }
-	bool		GetEraseBoard() const	{ return m_eMouseMode == MOUSE_MODE::ERASE_GRID; }
-	bool		GetPaintFlood() const	{ return m_eMouseMode == MOUSE_MODE::PAINT_FLOOD; }
-	bool		GetDefiningRect() const	{ return m_eMouseMode == MOUSE_MODE::DEFINE_RECT; }
-	bool		GetResizingText() const	{ return m_eMouseMode == MOUSE_MODE::RESIZE_TEXT; }
-	bool		GetSmartPan() const		{ return m_eMouseMode == MOUSE_MODE::SMART_PAN || GetCtrlKeyDown(); }
+	bool		GetPaintAction() const		{ return m_eMouseMode >= MOUSE_MODE::PAINT_PINS && m_eMouseMode <= MOUSE_MODE::PAINT_FLOOD; }
+	bool		GetPaintPins() const		{ return m_eMouseMode == MOUSE_MODE::PAINT_PINS; }
+	bool		GetErasePins() const		{ return m_eMouseMode == MOUSE_MODE::ERASE_PINS; }
+	bool		GetPaintBoard() const		{ return m_eMouseMode == MOUSE_MODE::PAINT_GRID; }
+	bool		GetEraseBoard() const		{ return m_eMouseMode == MOUSE_MODE::ERASE_GRID; }
+	bool		GetPaintFlood() const		{ return m_eMouseMode == MOUSE_MODE::PAINT_FLOOD; }
+	bool		GetEditLayerPref() const	{ return m_eMouseMode == MOUSE_MODE::EDIT_LAYER_PREF; }
+	bool		GetDefiningRect() const		{ return m_eMouseMode == MOUSE_MODE::DEFINE_RECT; }
+	bool		GetResizingText() const		{ return m_eMouseMode == MOUSE_MODE::RESIZE_TEXT; }
+	bool		GetSmartPan() const			{ return m_eMouseMode == MOUSE_MODE::SMART_PAN || GetCtrlKeyDown(); }
 
 	void		SetCtrlKeyDown(bool b)	{ m_bCtrlKeyDown	= b; }
 	void		SetShiftKeyDown(bool b)	{ m_bShiftKeyDown	= b; }
@@ -137,6 +139,7 @@ public:
 	void		SetPaintBoard(bool b);
 	void		SetEraseBoard(bool b);
 	void		SetPaintFlood(bool b);
+	void		SetEditLayerPref(bool b);
 	void		SetDefiningRect(bool b);
 	void		SetResizingText(bool b);
 	void		SetSmartPan(bool b);
@@ -211,6 +214,7 @@ public slots:
 	void TogglePaintPins();
 	void ToggleErasePins();
 	void TogglePaintFlood();
+	void ToggleEditLayerPrefs();
 	void ResetMouseMode();
 	// Edit menu items
 	void Undo();
@@ -262,10 +266,10 @@ public slots:
 	void AddSOIC14()			{ AddPart(COMP::SOIC14); }
 	void AddSOIC16()			{ AddPart(COMP::SOIC16); }
 	void AddSOIC14W()			{ AddPart(COMP::SOIC14W); }
-	void AddSOIC16W()			{ AddPart(COMP::SOIC16W); }	
+	void AddSOIC16W()			{ AddPart(COMP::SOIC16W); }
 	void AddSOIC20W()			{ AddPart(COMP::SOIC20W); }
 	void AddSOIC24W()			{ AddPart(COMP::SOIC24W); }
-	void AddSOIC28W()			{ AddPart(COMP::SOIC28W); }	
+	void AddSOIC28W()			{ AddPart(COMP::SOIC28W); }
 	void AddStrip100()			{ AddPart(COMP::STRIP_100); }
 	void AddBlock100()			{ AddPart(COMP::BLOCK_100); }
 	void AddBlock200()			{ AddPart(COMP::BLOCK_200); }

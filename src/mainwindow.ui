@@ -263,6 +263,7 @@
     <addaction name="separator"/>
     <addaction name="actionSwitchLayer"/>
     <addaction name="actionToggleVias"/>
+    <addaction name="actionEditLayerPrefs"/>
     <addaction name="actionResetLayerPrefs"/>
    </widget>
    <widget class="QMenu" name="menuTrack_Style">
@@ -440,6 +441,7 @@
    <addaction name="separator"/>
    <addaction name="actionFill"/>
    <addaction name="separator"/>
+   <addaction name="actionEditLayerPrefs"/>
    <addaction name="actionSwitchLayer"/>
   </widget>
   <action name="actionNew">
@@ -1561,6 +1563,18 @@
    </property>
    <property name="toolTip">
     <string>Swap black and white in Mono mode</string>
+   </property>
+  </action>
+  <action name="actionEditLayerPrefs">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="veroroute.qrc">
+     <normaloff>:/images/layerpref.png</normaloff>:/images/layerpref.png</iconset>
+   </property>
+   <property name="text">
+    <string>Edit Pin Layer Preferences</string>
    </property>
   </action>
  </widget>

@@ -336,6 +336,7 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	QObject::connect(ui->actionPaintPins,				SIGNAL(triggered()), this, SLOT(TogglePaintPins()));
 	QObject::connect(ui->actionErasePins,				SIGNAL(triggered()), this, SLOT(ToggleErasePins()));
 	QObject::connect(ui->actionPaintFlood,				SIGNAL(triggered()), this, SLOT(TogglePaintFlood()));
+	QObject::connect(ui->actionEditLayerPrefs,			SIGNAL(triggered()), this, SLOT(ToggleEditLayerPrefs()));
 	// Track Style menu actions
 	QObject::connect(ui->actionFat,						SIGNAL(triggered()), this, SLOT(Fat()));
 	QObject::connect(ui->actionThin,					SIGNAL(triggered()), this, SLOT(Thin()));
@@ -1680,7 +1681,7 @@ void MainWindow::HandleNetworkReply(QNetworkReply* pReply)
 }
 
 // View controls (Update history BEFORE calling UpdateControls() since that triggers more history writes)
-void MainWindow::TrackSliderChanged(int i)		{ if ( m_board.SetTrackSliderValue(i) )	{ UpdateHistory("toggle Mono/Color/PCB", 0);	m_board.CustomPCBshapes();	UpdateControls(); RepaintSkipRouting(); } }
+void MainWindow::TrackSliderChanged(int i)		{ if ( m_board.SetTrackSliderValue(i) )	{ UpdateHistory("toggle Mono/Color/PCB", 0);	SetEditLayerPref(false);	m_board.CustomPCBshapes();	UpdateControls(); RepaintSkipRouting(); } }
 void MainWindow::CheckBoxMonoChanged(bool b)	{ if ( b != (m_board.GetTrackSliderValue() == 1) ) TrackSliderChanged(b ? 1 : 0); }
 void MainWindow::CheckBoxColorChanged(bool b)	{ if ( b != (m_board.GetTrackSliderValue() == 2) ) TrackSliderChanged(b ? 2 : 0); }
 void MainWindow::CheckBoxPcbChanged(bool b)		{ if ( b != (m_board.GetTrackSliderValue() == 3) ) TrackSliderChanged(b ? 3 : 0); }
@@ -1773,6 +1774,16 @@ void MainWindow::TogglePaintFlood()
 	m_board.GetRectMgr().Clear();
 	UpdateControls();
 	if ( !GetPaintFlood() ) RepaintSkipRouting();
+}
+void MainWindow::ToggleEditLayerPrefs()
+{
+	if ( m_board.GetLyrs() == 1 )
+		SetEditLayerPref( false );
+	else
+		SetEditLayerPref( !GetEditLayerPref() );
+	m_board.GetRectMgr().Clear();
+	UpdateControls();
+	if ( !GetEditLayerPref() ) RepaintSkipRouting();
 }
 void MainWindow::ResetMouseMode()
 {
@@ -2449,6 +2460,7 @@ void MainWindow::UpdateControls()
 	const bool		bShapeOK		=  bCompEdit && ( GetCurrentShapeId() != BAD_ID );
 	const bool		bTutorial		= ( m_iTutorialNumber >= 0 );
 	const bool		bSingleLayer	= ( m_board.GetLyrs() == 1 );
+	const bool		bEditLayerPrefOK	=  bPCB && !bSingleLayer && !m_board.GetMirrored();
 
 	ui->toolBar->setVisible( !bCompEdit );
 	ui->toolBar_3->setVisible( bCompEdit );
@@ -2584,12 +2596,14 @@ void MainWindow::UpdateControls()
 	ui->actionPaintPins->setEnabled(	bPaintPinsOK);
 	ui->actionErasePins->setEnabled(	bPaintPinsOK);
 	ui->actionPaintFlood->setEnabled(	bPaintPinsOK && !m_board.GetRoutingEnabled() );
+	ui->actionEditLayerPrefs->setEnabled(	bEditLayerPrefOK  );
 
-	ui->actionPaintPins->setChecked(	m_eMouseMode == MOUSE_MODE::PAINT_PINS);
-	ui->actionErasePins->setChecked(	m_eMouseMode == MOUSE_MODE::ERASE_PINS);
-	ui->actionPaintGrid->setChecked(	m_eMouseMode == MOUSE_MODE::PAINT_GRID);
-	ui->actionEraseGrid->setChecked(	m_eMouseMode == MOUSE_MODE::ERASE_GRID);
-	ui->actionPaintFlood->setChecked(	m_eMouseMode == MOUSE_MODE::PAINT_FLOOD);
+	ui->actionPaintPins->setChecked(		m_eMouseMode == MOUSE_MODE::PAINT_PINS);
+	ui->actionErasePins->setChecked(		m_eMouseMode == MOUSE_MODE::ERASE_PINS);
+	ui->actionPaintGrid->setChecked(		m_eMouseMode == MOUSE_MODE::PAINT_GRID);
+	ui->actionEraseGrid->setChecked(		m_eMouseMode == MOUSE_MODE::ERASE_GRID);
+	ui->actionPaintFlood->setChecked(		m_eMouseMode == MOUSE_MODE::PAINT_FLOOD);
+	ui->actionEditLayerPrefs->setChecked(	m_eMouseMode == MOUSE_MODE::EDIT_LAYER_PREF);
 
 	UpdateTextDialog(true);	// true ==> full
 

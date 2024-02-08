@@ -231,7 +231,7 @@ void MainWindow::MousePressEvent(const QPoint& pos, bool bLeftClick, bool bRight
 	// Cursor modification
 	if ( GetSmartPan() )
 		centralWidget()->setCursor(Qt::ClosedHandCursor);
-	else if ( GetPaintPins() || GetErasePins() || GetPaintBoard() || GetEraseBoard() || GetPaintFlood() )
+	else if ( GetPaintPins() || GetErasePins() || GetPaintBoard() || GetEraseBoard() || GetPaintFlood() || GetEditLayerPref() )
 		centralWidget()->setCursor(Qt::CrossCursor);
 	else if ( GetResizingText() )
 		centralWidget()->setCursor(Qt::SizeFDiagCursor);
@@ -473,6 +473,22 @@ void MainWindow::MousePressEvent(const QPoint& pos, bool bLeftClick, bool bRight
 			m_bReRoute = m_bReListNodes = true;
 		}
 	}
+	else if ( GetEditLayerPref() )
+	{
+		const bool bCloseToGridPoint = ( hypot(dRow - 0.5, dCol - 0.5) <= 0.5 );	// true ==> clicked close to grid point
+		if ( bCloseToGridPoint && pC->GetPinSupportsLayerPref() )
+		{
+			const bool bToggled = m_board.ToggleLyrPref(layer, m_gridRow, m_gridCol);	assert(bToggled);
+			if ( bToggled )
+			{
+				size_t	pinIndex;
+				int		compId;
+				m_board.GetSlotInfoForTH(pC, pinIndex, compId);
+	
+				SetMouseActionString("change pin layer preference", compId);
+			}
+		}
+	}
 	else
 	{
 		if ( ALLOW_DELAY_BASED_PAD_SHIFT && pC->GetPinSupportsOffsetPads() )
@@ -518,7 +534,6 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 
 	const bool bCompsOn	= m_board.GetCompMode()  != COMPSMODE::OFF;
 	const bool bTrackOn	= m_board.GetTrackMode() != TRACKMODE::OFF;
-	const bool bPCB		= m_board.GetTrackMode() == TRACKMODE::PCB;
 
 	if ( !bTrackOn && !bCompsOn ) return;
 
@@ -539,28 +554,6 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 	centralWidget()->setCursor(Qt::CrossCursor);
 
 	const bool bCloseToGridPoint = ( hypot(dRow - 0.5, dCol - 0.5) <= 0.5 );	// true ==> clicked close to grid point
-
-	// Handle changing layer preference for PCBs via double-clicking on a component pin
-	if ( bPCB && pC->GetPinSupportsLayerPref() && !GetPaintAction() && m_board.GetLyrs() == 2 && bCloseToGridPoint )	// Only consider clicks that are close to the grid point
-	{
-		const bool bToggled = m_board.ToggleLyrPref(layer, m_gridRow, m_gridCol);	assert(bToggled);
-		if ( bToggled )
-		{
-			size_t	pinIndex;
-			int		compId;
-			m_board.GetSlotInfoForTH(pC, pinIndex, compId);
-
-			SetMouseActionString("change pin layer preference", compId);
-
-			// Also handle change of nodeID ...
-			if ( GetCurrentNodeId() != pC->GetNodeId() )
-			{
-				SetCurrentNodeId( pC->GetNodeId() );
-				m_bReRoute = true;	// Dont' need to set m_bReListNodes when choosing different nodeID
-			}
-			return;
-		}
-	}
 
 	// Handle competing diagonals
 	if ( bTrackOn && !GetPaintAction() )
@@ -658,7 +651,7 @@ void MainWindow::MouseMoveEvent(const QPoint& pos)
 		centralWidget()->setCursor(Qt::ClosedHandCursor);
 	else if ( GetDefiningRect() || GetResizingText() )
 		centralWidget()->setCursor(Qt::SizeFDiagCursor);
-	else if ( GetPaintBoard() || GetEraseBoard() )
+	else if ( GetPaintBoard() || GetEraseBoard() || GetPaintPins() || GetErasePins() || GetPaintFlood() || GetEditLayerPref() )
 		centralWidget()->setCursor(Qt::CrossCursor);
 	else if ( GetCurrentTextId() != BAD_TEXTID && m_bMouseClick )
 		centralWidget()->setCursor(Qt::ClosedHandCursor);
@@ -914,7 +907,7 @@ void MainWindow::MouseReleaseEvent(const QPoint& pos)
 		SelectAllInRects();
 		ShowCurrentRectSize();
 	}
-	else if ( GetPaintPins() || GetErasePins() || GetPaintBoard() || GetEraseBoard() || GetPaintFlood() )
+	else if ( GetPaintPins() || GetErasePins() || GetPaintBoard() || GetEraseBoard() || GetPaintFlood() || GetEditLayerPref() )
 		centralWidget()->setCursor(Qt::CrossCursor);
 	else
 		centralWidget()->setCursor(Qt::OpenHandCursor);
@@ -1201,6 +1194,15 @@ void MainWindow::SetPaintFlood(bool b)
 	centralWidget()->setCursor(b ? Qt::CrossCursor : Qt::OpenHandCursor);
 	UpdateControls();
 }
+void MainWindow::SetEditLayerPref(bool b)
+{
+	if ( b == GetEditLayerPref() ) return;
+	if ( b ) HideAllNonDockedDlgs();
+	m_eMouseMode = ( b ) ? MOUSE_MODE::EDIT_LAYER_PREF : MOUSE_MODE::SELECT;
+	centralWidget()->setCursor(b ? Qt::CrossCursor : Qt::OpenHandCursor);
+	UpdateControls();
+}
+
 void MainWindow::SetDefiningRect(bool b)
 {
 	if ( b == GetDefiningRect() ) return;
