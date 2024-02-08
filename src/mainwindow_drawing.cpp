@@ -1188,7 +1188,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					m_orangePen.setWidth(4);// Make found components stand out
 				else if ( bPlaced )
 				{
-					if ( bPCB )	// Use floating point pen width to better match Gerber output
+					if ( bMonoPCB )	// Use floating point pen width to better match Gerber output
 						penPlaced.setWidthF( bHighlightComp ? ( board.GetSilkWidth() * 1.5 )
 															: ( bMark ? ( board.GetSilkWidth() * 0.5 )
 																	  :   board.GetSilkWidth() ) );
@@ -1467,7 +1467,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 			painter.save();
 			double dCopyTextScale = dTextScale;
-			if ( bPCB )
+			if ( bMonoPCB )
 			{
 				dCopyTextScale *= m_board.GetTextSizeComp() * (20.0 / 243 );	// Scale to make the Gerber font size similar to regular component font size
 			}
@@ -1480,7 +1480,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 			// Use floating point pen width to better match Gerber output.
 			// Scale the pen width down to compensate for painter.scale() scaling things up in the loop below.
-			const double dPenWidth = ( bPCB ) ? board.GetSilkWidth() / dCopyTextScale : 0;
+			const double dPenWidth = ( bMonoPCB ) ? board.GetSilkWidth() / dCopyTextScale : 0;
 			m_orangePen.setWidthF(dPenWidth);	// Use colored text for found components
 			m_redPen.setWidthF(dPenWidth);		// Use red text for floating components
 			penPlaced.setWidthF(dPenWidth);		// Use this for placed components
@@ -1502,7 +1502,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 			painter.scale(dCopyTextScale, dCopyTextScale);
 			painter.setPen(bFound ? m_orangePen : bPlaced ? penPlaced : m_redPen);
-			painter.drawText(0,0,0,0, Qt::AlignCenter | Qt::TextDontClip, myStr.c_str(), bPCB);
+			painter.drawText(0,0,0,0, Qt::AlignCenter | Qt::TextDontClip, myStr.c_str(), bMonoPCB);
 			painter.restore();
 		}
 	}

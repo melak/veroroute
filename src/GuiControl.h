@@ -509,7 +509,7 @@ public:
 	// Helpers
 	bool		SetGroundNodeId()					{ return ( GetCurrentLayer() == 0 ) ? SetGroundNodeId0( GetCurrentNodeId() ) : SetGroundNodeId1( GetCurrentNodeId() ); }
 	const int&	GetGroundNodeId(int lyr) const		{ return ( lyr == 0 ) ? GetGroundNodeId0() : GetGroundNodeId1(); }
-	bool		GetUsePCBshapes()					{ return GetTrackMode() == TRACKMODE::PCB; }
+	bool		GetUsePCBshapes()					{ return GetTrackMode() != TRACKMODE::COLOR; }
 	bool		GetMirrored() const					{ return GetFlipH() || GetFlipV(); }
 	bool		SetTrackSliderValue(int i)			{ const bool bChanged = ( GetTrackSliderValue() != i ); SetTrackMode( static_cast<TRACKMODE>(i) ); return bChanged; }
 	bool		SetCompSliderValue(int i)			{ const bool bChanged = ( GetCompSliderValue()  != i ); SetCompMode(  static_cast<COMPSMODE>(i) ); return bChanged; }

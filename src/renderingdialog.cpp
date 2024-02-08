@@ -105,7 +105,7 @@ void RenderingDialog::UpdateControls()
 	ui->viaholeWidth->setDisabled(	bCompEdit || bNoTrackOptions || bVero || !bVias );
 	ui->gapWidth->setDisabled(		bCompEdit || !bGroundFill );
 	ui->maskWidth->setDisabled(		bCompEdit || bVero || !bPCB );
-	ui->silkWidth->setDisabled(		bCompEdit || bVero || !bPCB );
+	ui->silkWidth->setDisabled(		bCompEdit || bVero || !bMonoPCB );
 	ui->edgeWidth->setDisabled(		bCompEdit );
 	ui->fillWidth->setDisabled(		bCompEdit || !bGroundFill );
 
@@ -123,7 +123,7 @@ void RenderingDialog::UpdateControls()
 	ui->label_viahole->setDisabled(		bCompEdit || bNoTrackOptions || bVero || !bVias );
 	ui->label_gap->setDisabled(			bCompEdit || !bGroundFill );
 	ui->label_mask->setDisabled(		bCompEdit || bVero || !bPCB );
-	ui->label_silk->setDisabled(		bCompEdit || bVero || !bPCB );
+	ui->label_silk->setDisabled(		bCompEdit || bVero || !bMonoPCB );
 	ui->label_edge->setDisabled(		bCompEdit );
 	ui->label_fill->setDisabled(		bCompEdit || !bGroundFill );
 	ui->label_info->setDisabled(		bCompEdit || bVero );
