@@ -235,7 +235,7 @@ void MainWindow::MousePressEvent(const QPoint& pos, bool bLeftClick, bool bRight
 		centralWidget()->setCursor(Qt::CrossCursor);
 	else if ( GetResizingText() )
 		centralWidget()->setCursor(Qt::SizeFDiagCursor);
-	else if ( GetCurrentTextId() != BAD_TEXTID || GetCurrentCompId() != BAD_COMPID )
+	else if ( AllowCurrentTextId() || AllowCurrentCompId() )
 		centralWidget()->setCursor(Qt::ClosedHandCursor);
 	else
 		centralWidget()->setCursor(Qt::OpenHandCursor);
@@ -316,7 +316,7 @@ void MainWindow::MousePressEvent(const QPoint& pos, bool bLeftClick, bool bRight
 		if ( compMode != COMPSMODE::OFF )
 		{
 			// Component selection (if text is not selected)
-			const int compId = ( GetCurrentTextId() == BAD_TEXTID ) ? m_board.GetComponentId(m_gridRow, m_gridCol) : BAD_COMPID;
+			const int compId = !AllowCurrentTextId() ? m_board.GetComponentId(m_gridRow, m_gridCol) : BAD_COMPID;
 			if ( GetCurrentCompId() != compId ) SetCurrentCompId(compId);
 
 			// Group manipulation
@@ -325,7 +325,7 @@ void MainWindow::MousePressEvent(const QPoint& pos, bool bLeftClick, bool bRight
 			{
 				groupMgr.UpdateUserGroup( GetCurrentCompId() );	// Add/remove current comp (and its siblings) to user group
 				UpdateControls();
-				if ( GetCurrentTextId() == BAD_TEXTID )
+				if ( !AllowCurrentTextId() )
 					SetMouseActionString("(un)select part(s)");
 			}
 			else if ( !groupMgr.GetIsUserComp( GetCurrentCompId() ) )
@@ -334,7 +334,7 @@ void MainWindow::MousePressEvent(const QPoint& pos, bool bLeftClick, bool bRight
 				groupMgr.ResetUserGroup( GetCurrentCompId() );	// Reset the user group with the current comp (and its siblings)
 				compMgr.ClearTrax();
 				UpdateControls();
-				if ( GetCurrentTextId() == BAD_TEXTID )
+				if ( !AllowCurrentTextId() )
 					SetMouseActionString("(un)select part(s)");
 			}
 		}
@@ -343,7 +343,7 @@ void MainWindow::MousePressEvent(const QPoint& pos, bool bLeftClick, bool bRight
 	// Painting/Unpainting the component pins or board
 	if ( GetSmartPan() || GetShiftKeyDown() || trackMode == TRACKMODE::OFF ) return;
 
-	if ( GetCurrentTextId() != BAD_TEXTID )
+	if ( AllowCurrentTextId() )
 	{
 		if ( m_dockPinDlg->isVisible() ) m_dockPinDlg->hide();
 		HidePadOffsetDialog();
@@ -529,7 +529,7 @@ void MainWindow::MouseDoubleClickEvent(const QPoint& pos)
 		return;
 	}
 
-	if ( GetCurrentTextId() != BAD_TEXTID )
+	if ( AllowCurrentTextId() )
 		return ShowTextDialog();
 
 	const bool bCompsOn	= m_board.GetCompMode()  != COMPSMODE::OFF;
@@ -637,7 +637,7 @@ void MainWindow::MouseMoveEvent(const QPoint& pos)
 
 	if ( ALLOW_DELAY_BASED_SMART_PAN
 		 && !m_board.GetCompEdit() && !GetDefiningRect() && !GetPaintBoard() && !GetEraseBoard() && !CanModifyRuler()
-		 && GetCurrentTextId() == BAD_TEXTID && GetCurrentCompId() == BAD_COMPID )
+		 && !AllowCurrentTextId() && !AllowCurrentCompId() )
 	{
 		const auto elapsed		= std::chrono::steady_clock::now() - g_lastMouseClickTime;
 		const auto duration_ms	= std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
@@ -653,9 +653,9 @@ void MainWindow::MouseMoveEvent(const QPoint& pos)
 		centralWidget()->setCursor(Qt::SizeFDiagCursor);
 	else if ( GetPaintBoard() || GetEraseBoard() || GetPaintPins() || GetErasePins() || GetPaintFlood() || GetEditLayerPref() )
 		centralWidget()->setCursor(Qt::CrossCursor);
-	else if ( GetCurrentTextId() != BAD_TEXTID && m_bMouseClick )
+	else if ( AllowCurrentTextId() && m_bMouseClick )
 		centralWidget()->setCursor(Qt::ClosedHandCursor);
-	else if ( GetCurrentCompId() != BAD_COMPID && m_bMouseClick )
+	else if ( AllowCurrentCompId() && m_bMouseClick )
 		centralWidget()->setCursor(Qt::ClosedHandCursor);
 	else
 		centralWidget()->setCursor(Qt::OpenHandCursor);
@@ -770,7 +770,7 @@ void MainWindow::MouseMoveEvent(const QPoint& pos)
 		m_board.WipeAutoSetPoints();
 		m_board.PlaceFloaters();	// See if we can now place floating components down
 	}
-	else if ( !GetSmartPan() && GetCurrentTextId() != BAD_TEXTID )
+	else if ( !GetSmartPan() && AllowCurrentTextId() )
 	{
 		if ( HaveZeroDeltaRowCol(deltaRow, deltaCol) ) return;	// No change
 
@@ -797,7 +797,7 @@ void MainWindow::MouseMoveEvent(const QPoint& pos)
 		}
 		SetMouseActionString(GetResizingText() ? "resize text box" : "move text box", GetCurrentTextId());
 	}
-	else if ( !GetSmartPan() && GetCurrentCompId() != BAD_COMPID && compMode != COMPSMODE::OFF )	// Move user-group components
+	else if ( !GetSmartPan() && AllowCurrentCompId() && compMode != COMPSMODE::OFF )	// Move user-group components
 	{
 		if ( HaveZeroDeltaRowCol(deltaRow, deltaCol) ) return;	// No change
 
@@ -1007,7 +1007,7 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
 		{
 			case Qt::Key_Z:			CompRotateCCW();	break;
 			case Qt::Key_X:			CompRotateCW();		break;
-			case Qt::Key_Delete:	if ( GetCurrentTextId() != BAD_TEXTID || ( nComps && compMode != COMPSMODE::OFF ) )
+			case Qt::Key_Delete:	if ( AllowCurrentTextId() || ( nComps && compMode != COMPSMODE::OFF ) )
 										Delete();	//	So delete works like the backspace keyboard shortcut
 									break;
 		}
@@ -1066,9 +1066,9 @@ void MainWindow::keyReleaseEvent(QKeyEvent* event)
 			case Qt::Key_F:		SetPaintFlood(false);	break;
 			case Qt::Key_Space:	SetPaintBoard(false);	break;
 			default:
-				if ( GetCurrentTextId() != BAD_TEXTID && m_bMouseClick )
+				if ( AllowCurrentTextId() && m_bMouseClick )
 					centralWidget()->setCursor(Qt::ClosedHandCursor);
-				else if ( GetCurrentCompId() != BAD_COMPID && m_bMouseClick )
+				else if ( AllowCurrentCompId() && m_bMouseClick )
 					centralWidget()->setCursor(Qt::ClosedHandCursor);
 				else
 					centralWidget()->setCursor(Qt::OpenHandCursor);
@@ -1214,7 +1214,7 @@ void MainWindow::SetDefiningRect(bool b)
 void MainWindow::SetResizingText(bool b)
 {
 	if ( b == GetResizingText() ) return;
-	if ( b ) { m_wireDlg->hide();	m_bomDlg->hide();	m_findDlg->hide(); }	// Mutually exclusive with 	m_textDlg
+	if ( b ) { m_wireDlg->hide();	m_bomDlg->hide();	m_findDlg->hide(); }	// Mutually exclusive with m_textDlg
 	m_eMouseMode = ( b ) ? MOUSE_MODE::RESIZE_TEXT : MOUSE_MODE::SELECT;
 	UpdateControls();
 }

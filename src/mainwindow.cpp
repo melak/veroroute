@@ -1200,7 +1200,7 @@ void MainWindow::Copy()
 		UpdateHistory("copy shape");
 		RepaintSkipRouting();
 	}
-	else if ( GetCurrentTextId() != BAD_TEXTID )
+	else if ( AllowCurrentTextId() )
 	{
 		if ( StringHelper::IsEmptyStr( GetCurrentTextRect().GetStr() ) ) return;	// Don't copy empty text boxes
 		int iRow, iCol;
@@ -1273,7 +1273,7 @@ void MainWindow::Delete()
 		UpdateHistory("delete shape");
 		RepaintSkipRouting();
 	}
-	else if ( GetCurrentTextId() != BAD_TEXTID )
+	else if ( AllowCurrentTextId() )
 	{
 		m_board.GetTextMgr().DestroyRect(GetCurrentTextId());
 		SetCurrentTextId(BAD_TEXTID);
@@ -2441,7 +2441,7 @@ void MainWindow::UpdateControls()
 	const bool		bCompEdit		=  m_board.GetCompEdit();
 	const bool		bCompActionsOK	= !bCompEdit && !m_board.GetMirrored() && ( m_board.GetCompMode() != COMPSMODE::OFF );
 	const bool		bTextActionsOK	= !bCompEdit && !m_board.GetMirrored() && ( m_board.GetShowText() );
-	const bool		bTextOK			=  bTextActionsOK && GetCurrentTextId() != BAD_TEXTID;
+	const bool		bTextOK			=  bTextActionsOK && AllowCurrentTextId();
 	const int		numUserComps	=  groupMgr.GetNumUserComps();
 	const bool		bCompOK			=  bCompActionsOK && numUserComps;
 	const bool		bNoTracks		= !bCompEdit && m_board.GetTrackMode() == TRACKMODE::OFF;

@@ -530,6 +530,8 @@ private:
 	int  GetCurrentTextId() const	{ return m_board.GetCurrentTextId(); }
 	int  GetCurrentPinId() const	{ return m_board.GetCurrentPinId(); }
 	int  GetCurrentShapeId() const	{ return m_board.GetCurrentShapeId(); }
+	bool AllowCurrentCompId() const	{ return GetCurrentCompId() != BAD_COMPID; }
+	bool AllowCurrentTextId() const	{ return GetCurrentTextId() != BAD_TEXTID && m_board.GetTrackMode() != TRACKMODE::PCB; }	// Helper to disable text box operations in PCB mode
 	void SetCurrentNodeId(int i)	{ m_board.SetCurrentNodeId(i);	ListNodes(false); }
 	void SetCurrentCompId(int i)	{ m_board.SetCurrentCompId(i);	UpdateControls(); }
 	void SetCurrentTextId(int i)	{ m_board.SetCurrentTextId(i);	UpdateControls(); }
