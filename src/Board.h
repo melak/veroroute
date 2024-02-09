@@ -228,21 +228,81 @@ public:
 		return true;
 	}
 
-	void ResetPinLayerPrefs()
+	void ResetPinLayerPrefs(bool bAutoSet)
 	{
 		assert( GetLyrs() == 2 );
-		for (int i = 0, iSize = ( GetLyrs() == 1 ) ? GetSize() : ( GetSize() / 2 ); i < iSize; i++)	// Use layer 0 only for TH pins
+		size_t	pinIndex;
+		int		compId;
+		for (int i = 0, iSize = GetSize() / 2; i < iSize; i++)	// Use layer 0 only for TH pins
 		{
 			Element* p = GetAt(i);
 			if ( !p->GetPinSupportsLayerPref() ) continue;
 
-			size_t	pinIndex;
-			int		compId;
 			GetSlotInfoForTH(p, pinIndex, compId);
 
-			Component&		comp		= m_compMgr.GetComponentById(compId);
+			Component& comp = m_compMgr.GetComponentById(compId);
 			comp.SetLayerPref(pinIndex, LAYER_X);
 		}
+		if ( !bAutoSet ) return;
+
+		const DIAGSMODE diagsModeOld = GetDiagsMode();	// Note current diagonals mode
+		if ( diagsModeOld == DIAGSMODE::MAX )
+			SetDiagsMode(DIAGSMODE::MIN);	// Use DIAGSMODE::MIN instead of DIAGSMODE::MAX for the algorithm below
+
+		while(true) // Try to choose layer for pins that have the default LAYER_X setting
+		{
+			size_t nChanged(0);	// Counts the number of LAYER_X pins changed
+			for (int i = 0, iSize = GetSize() / 2; i < iSize; i++)	// Use layer 0 only for TH pins
+			{
+				Element* p = GetAt(i);	// Bottom layer point
+				if ( !p->GetPinSupportsLayerPref() ) continue;
+
+				GetSlotInfoForTH(p, pinIndex, compId);
+	
+				Component& comp = m_compMgr.GetComponentById(compId);
+				if ( comp.GetLayerPref(pinIndex) != LAYER_X ) continue;	// Skip if not LAYER_X
+
+				Element* q = p->GetNbr(NBR_X);	assert(q);	// Top layer point
+		
+				const int	nodeId			= p->GetNodeId();	assert(nodeId == q->GetNodeId());
+				const int	codeBot			= GetPerimeterCode(p);
+				const int	codeTop			= GetPerimeterCode(q);
+				const bool	bGndBot			= GetGroundFill() && nodeId == GetGroundNodeId0();
+				const bool	bGndTop			= GetGroundFill() && nodeId == GetGroundNodeId1();
+				const bool	bHaveTrackBot	= bGndBot || ( codeBot > 0 );
+				const bool	bHaveTrackTop	= bGndTop || ( codeTop > 0 );
+
+				if ( !bHaveTrackBot && !bHaveTrackTop )
+					continue;
+				if ( bHaveTrackBot != bHaveTrackTop )
+				{
+					comp.SetLayerPref(pinIndex, bHaveTrackBot ? LAYER_B : LAYER_T);
+					nChanged++;
+					continue;
+				}
+				assert(bHaveTrackBot && bHaveTrackTop);
+				if ( bGndBot || bGndTop )
+					continue;
+
+				// At this point, we have simple tracks on top and bottom (no ground fill connections), 
+				// so try to determine layer preference based on the numbers of track directions on the two layers.
+				int countTop(0), countBot(0);
+				for (int iNbr = 0; iNbr < NBR_X; iNbr++)	// Loop directions in a layer
+				{
+					if ( ReadCodeBit(iNbr, codeBot) ) countBot++;
+					if ( ReadCodeBit(iNbr, codeTop) ) countTop++;
+				}
+				if ( countTop != countBot )
+				{
+					comp.SetLayerPref(pinIndex, ( countBot > countTop ) ? LAYER_B : LAYER_T);
+					nChanged++;
+					continue;
+				}
+			}
+			if ( nChanged == 0 ) break;
+		}
+
+		SetDiagsMode(diagsModeOld);	// Restore diagonals mode
 	}
 
 	bool ToggleLyrPref(int iLyr, int iRow, int iCol)
@@ -257,9 +317,9 @@ public:
 		Component& comp = m_compMgr.GetComponentById(compId);
 		switch( comp.GetLayerPref(pinIndex) )
 		{
-			case LAYER_X:	comp.SetLayerPref(pinIndex, LAYER_B);	break;
-			case LAYER_B:	comp.SetLayerPref(pinIndex, LAYER_T);	break;
-			case LAYER_T:	comp.SetLayerPref(pinIndex, LAYER_X);	break;
+			case LAYER_X:	comp.SetLayerPref(pinIndex, ( GetCurrentLayer() == 0 ) ? LAYER_B : LAYER_T);	break;
+			case LAYER_B:	comp.SetLayerPref(pinIndex, ( GetCurrentLayer() == 0 ) ? LAYER_T : LAYER_X);	break;
+			case LAYER_T:	comp.SetLayerPref(pinIndex, ( GetCurrentLayer() == 0 ) ? LAYER_X : LAYER_B);	break;
 		}
 		return true;
 	}

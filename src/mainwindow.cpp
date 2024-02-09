@@ -362,6 +362,7 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	QObject::connect(ui->actionSwitchLayer,				SIGNAL(triggered()), this, SLOT(SwitchLayer()));
 	QObject::connect(ui->actionToggleVias,				SIGNAL(triggered()), this, SLOT(ToggleVias()));
 	QObject::connect(ui->actionResetLayerPrefs,			SIGNAL(triggered()), this, SLOT(ResetLayerPrefs()));
+	QObject::connect(ui->actionAutosetLayerPrefs,		SIGNAL(triggered()), this, SLOT(AutosetLayerPrefs()));
 	// Help menu actions
 	QObject::connect(ui->actionAbout,					SIGNAL(triggered()), this, SLOT(ShowAbout()));
 	QObject::connect(ui->actionSupport,					SIGNAL(triggered()), this, SLOT(ShowSupport()));
@@ -1566,8 +1567,17 @@ void MainWindow::ToggleVias()
 void MainWindow::ResetLayerPrefs()
 {
 	assert( m_board.GetLyrs() == 2 );
-	m_board.ResetPinLayerPrefs();
+	m_board.ResetPinLayerPrefs(false);
 	UpdateHistory("reset pin layer preferences", 0);
+//	UpdateControls();	// Not needed
+	RepaintSkipRouting();
+}
+
+void MainWindow::AutosetLayerPrefs()
+{
+	assert( m_board.GetLyrs() == 2 );
+	m_board.ResetPinLayerPrefs(true);
+	UpdateHistory("auto-set pin layer preferences", 0);
 //	UpdateControls();	// Not needed
 	RepaintSkipRouting();
 }
@@ -2481,6 +2491,7 @@ void MainWindow::UpdateControls()
 	ui->actionRemoveLayer->setEnabled(		!bSingleLayer );
 	ui->actionToggleVias->setEnabled(		!bSingleLayer );
 	ui->actionResetLayerPrefs->setEnabled(	!bSingleLayer );
+	ui->actionAutosetLayerPrefs->setEnabled(!bSingleLayer );
 	ui->actionSwitchLayer->setEnabled(		!bSingleLayer );
 	ui->actionToggleVias->setText(			!bSingleLayer && m_board.GetViasEnabled() ? QString("Disable Vias") : QString("Enable Vias") );
 	ui->actionSwitchLayer->setText(			m_board.GetCurrentLayer() == 0 ? QString("Switch to Top Layer") : QString("Switch to Bottom Layer") );

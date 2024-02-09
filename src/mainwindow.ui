@@ -265,6 +265,7 @@
     <addaction name="actionToggleVias"/>
     <addaction name="actionEditLayerPrefs"/>
     <addaction name="actionResetLayerPrefs"/>
+    <addaction name="actionAutosetLayerPrefs"/>
    </widget>
    <widget class="QMenu" name="menuTrack_Style">
     <property name="title">
@@ -1575,6 +1576,11 @@
    </property>
    <property name="text">
     <string>Edit Pin Layer Preferences</string>
+   </property>
+  </action>
+  <action name="actionAutosetLayerPrefs">
+   <property name="text">
+    <string>Auto-Set Pin Layer Preferences</string>
    </property>
   </action>
  </widget>

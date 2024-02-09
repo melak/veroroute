@@ -328,6 +328,7 @@ public slots:
 	void SwitchLayer();
 	void ToggleVias();
 	void ResetLayerPrefs();
+	void AutosetLayerPrefs();
 	// Help menu items
 	void LoadFirstTutorial();
 	void LoadPrevTutorial();
