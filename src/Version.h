@@ -1,7 +1,12 @@
 #pragma once
 
 static const char* szVEROROUTE_VERSION =
-"2.36";		// Improvement: Automatically force text-box text to black or white when in Mono mode.
+"V2.37";    // Draw components using PCB style when in Mono mode.
+            // Bug fix: In PCB mode, the GUI could select and move text boxes, even though they are not displayed.
+			// Improvement: No longer double-click to modify pin layer preference.
+			//              Added a toolbar button to allow pin layer preferences to be changed using single clicks.
+			// Improvement: Added "Auto-set Pin Layer Preferences" option to Layers menu.
+//"2.36";	// Improvement: Automatically force text-box text to black or white when in Mono mode.
 //"2.35";	// New feature: Added View menu item to toggle between Inverse/Normal Mono mode.
 			// New feature: Added Ground Fill Perimeter parameter to PCB parameters.
 			//              Made the Board Edge Margin (PCB parameter) apply to all view types, and account for it when drawing to screen.
