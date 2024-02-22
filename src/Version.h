@@ -1,8 +1,9 @@
 #pragma once
 
 static const char* szVEROROUTE_VERSION =
-"V2.37";    // Draw components using PCB style when in Mono mode.
-            // Bug fix: In PCB mode, the GUI could select and move text boxes, even though they are not displayed.
+"2.38";		// New feature: New View menu item to allow tracks to be colored in Mono mode. 
+//"2.37";	// Draw components using PCB style when in Mono mode.
+			// Bug fix: In PCB mode, the GUI could select and move text boxes, even though they are not displayed.
 			// Improvement: No longer double-click to modify pin layer preference.
 			//              Added a toolbar button to allow pin layer preferences to be changed using single clicks.
 			// Improvement: Added "Auto-set Pin Layer Preferences" option to Layers menu.

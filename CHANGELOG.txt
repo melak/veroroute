@@ -1,3 +1,4 @@
+V2.38  New feature: New View menu item to allow tracks to be colored in Mono mode.
 V2.37  Draw components using PCB style when in Mono mode.
        Bug fix: In PCB mode, the GUI could select and move text boxes, even though they are not displayed.
        Improvement: No longer double-click to modify pin layer preference.

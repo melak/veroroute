@@ -1,6 +1,6 @@
 VeroRoute - Qt based Veroboard/Perfboard/PCB layout & routing application.
 
-Version 2.37
+Version 2.38
 
 Copyright (C) 2017-2024  Alex Lawrow    ( dralx@users.sourceforge.net )
 
