@@ -226,6 +226,7 @@
     <addaction name="actionToggleFlipV"/>
     <addaction name="separator"/>
     <addaction name="actionToggleInverseMono"/>
+    <addaction name="actionToggleColoredMono"/>
    </widget>
    <widget class="QMenu" name="menuWindow">
     <property name="title">
@@ -1564,6 +1565,14 @@
    </property>
    <property name="toolTip">
     <string>Swap black and white in Mono mode</string>
+   </property>
+  </action>
+  <action name="actionToggleColoredMono">
+   <property name="text">
+    <string>Allow colored tracks in Mono mode</string>
+   </property>
+   <property name="toolTip">
+    <string>Enable/Disable colored tracks in Mono mode</string>
    </property>
   </action>
   <action name="actionEditLayerPrefs">

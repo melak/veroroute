@@ -198,6 +198,7 @@ public slots:
 	void TogglePinLabels();
 	void ToggleFlyWires();
 	void ToggleInverseMono();
+	void ToggleColoredMono();
 	void ToggleRuler();
 	// Toolbar items
 	void VeroV();
@@ -363,6 +364,7 @@ public slots:
 	void SetShowPinLabels(bool b);
 	void SetShowFlyWires(bool b);
 	void SetInverseMono(bool b);
+	void SetColoredMono(bool b);
 	void SetFill(bool b);
 	// Part controls
 	void SetCompName(const QString& str);

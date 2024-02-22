@@ -18,7 +18,6 @@
 */
 
 #include "mainwindow.h"
-#include "ui_mainwindow.h"
 #include "padoffsetdialog.h"
 #include "GPainter.h"
 #include "SpanningTreeHelper.h"
@@ -585,7 +584,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 		painter.scale(1, -1);	// Mirror T-B
 	}
 
-	bool bInverseMono(bMono && board.GetInverseMono());
+	const bool bInverseMono(bMono && board.GetInverseMono());
+	const bool bColoredMono(bMono && board.GetColoredMono());
 
 	const QColor backgroundColor	= ( bInverseMono ) ? Qt::black : ( m_bWritePDF ) ? Qt::white : GetBackgroundColor();
 	m_backgroundPen.setColor(backgroundColor);
@@ -757,8 +757,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 
 				// Use GetPixmapRGB for pixmaps.  It can handle MY_GREY, MY_WHITE, MY_BLACK as special cases
 				const int	colorId				= colorMgr.GetColorId(nodeId);
-				const bool	bInvalidColor		= colorId == BAD_COLORID || ( bMonoPCB && nodeId != GetCurrentNodeId() );
-				
+				const bool	bInvalidColor		= colorId == BAD_COLORID || ( bPCB  && nodeId != GetCurrentNodeId() )
+																		 || ( bMono && nodeId != GetCurrentNodeId() && !bColoredMono )
+																		 || ( bMono && nodeId != GetCurrentNodeId() &&  bColoredMono && bGroundFill && nodeId == groundNodeId );
 				const int	iEffColorId			= ( bInvalidColor )	? groundFillColorId
 												: ( nodeId == GetCurrentNodeId() ) ? MY_GREY : ( colorId % MYNUMCOLORS );
 				const bool	 bAllowCustomColor	=	iEffColorId != MY_GREY		&&	iEffColorId != MY_WHITE		&&	iEffColorId != MY_BLACK

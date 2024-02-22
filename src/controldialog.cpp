@@ -280,6 +280,7 @@ void ControlDialog::UpdateControls()	// Non-component controls
 	const bool bCompEdit	= board.GetCompEdit();
 	const bool bNoTracks	= board.GetTrackMode() == TRACKMODE::OFF;
 	const bool bColor		= board.GetTrackMode() == TRACKMODE::COLOR;
+	const bool bColoredMono	= board.GetTrackMode() == TRACKMODE::MONO && board.GetColoredMono();
 	const bool bComps		= board.GetCompMode()  != COMPSMODE::OFF;
 	const bool bVero		= board.GetVeroTracks();
 
@@ -287,7 +288,7 @@ void ControlDialog::UpdateControls()	// Non-component controls
 	ui->margin->setDisabled( bCompEdit );
 	ui->margin->setValue( board.GetCropMargin() );
 
-	ui->label_saturation->setEnabled( !bCompEdit && bColor );
+	ui->label_saturation->setEnabled( !bCompEdit && (bColor || bColoredMono) );
 	ui->label_fill->setEnabled( !bCompEdit && bComps && ( bColor || bNoTracks) );
 
 	ui->autoRoute->setChecked( board.GetRoutingEnabled() );
@@ -303,7 +304,7 @@ void ControlDialog::UpdateControls()	// Non-component controls
 	ui->checkBoxLine->setEnabled(  !bCompEdit );
 	ui->checkBoxName->setEnabled(  !bCompEdit );
 	ui->checkBoxValue->setEnabled( !bCompEdit );
-	ui->saturation->setEnabled( !bCompEdit && bColor );
+	ui->saturation->setEnabled( !bCompEdit && (bColor || bColoredMono) );
 	ui->fill->setEnabled( !bCompEdit && bComps && ( bColor || bNoTracks) );
 
 	ui->checkBoxMono->setChecked(  board.GetTrackSliderValue() == 1 );
@@ -316,11 +317,11 @@ void ControlDialog::UpdateControls()	// Non-component controls
 	ui->fill->setValue( board.GetFillSaturation() );
 
 	const bool bNodeIdOK = board.GetCurrentNodeId() != BAD_NODEID;
-	ui->autoColor->setEnabled( bColor && bNodeIdOK );
-	ui->setColor->setEnabled( bColor && bNodeIdOK );
+	ui->autoColor->setEnabled( (bColor || bColoredMono) && bNodeIdOK );
+	ui->setColor->setEnabled( (bColor || bColoredMono) && bNodeIdOK );
 	ui->autoColor->setChecked( bNodeIdOK && !board.GetColorMgr().GetIsFixed( board.GetCurrentNodeId() ) );
 
-	QColor color = bColor ? board.GetColorMgr().GetColorFromNodeId( board.GetCurrentNodeId(), false ) : Qt::black;
+	QColor color = (bColor || bColoredMono) ? board.GetColorMgr().GetColorFromNodeId( board.GetCurrentNodeId(), false ) : Qt::black;
 	ui->setColor->setStyleSheet("border:2px solid " + color.name());
 
 	m_bUpdatingControls = false;

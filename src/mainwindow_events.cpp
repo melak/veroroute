@@ -352,8 +352,9 @@ void MainWindow::MousePressEvent(const QPoint& pos, bool bLeftClick, bool bRight
 
 	const Element* pC = m_board.Get(layer, m_gridRow, m_gridCol);
 
-	const bool bColor = ( trackMode == TRACKMODE::COLOR );
-	if ( GetPaintFlood() && bColor )
+	const bool bColor		= ( trackMode == TRACKMODE::COLOR );
+	const bool bColoredMono	= ( trackMode == TRACKMODE::MONO && m_board.GetColoredMono() );
+	if ( GetPaintFlood() && (bColor || bColoredMono) )
 	{
 		if ( m_dockPinDlg->isVisible() ) m_dockPinDlg->hide();
 		HidePadOffsetDialog();
@@ -381,7 +382,7 @@ void MainWindow::MousePressEvent(const QPoint& pos, bool bLeftClick, bool bRight
 			m_bReRoute = m_bReListNodes = true;
 		}
 	}
-	else if ( ( (GetPaintPins() || GetErasePins()) && bColor ) || GetPaintBoard() || GetEraseBoard() )
+	else if ( ( (GetPaintPins() || GetErasePins()) && (bColor || bColoredMono) ) || GetPaintBoard() || GetEraseBoard() )
 	{
 		if ( m_dockPinDlg->isVisible() ) m_dockPinDlg->hide();
 		HidePadOffsetDialog();
@@ -1015,14 +1016,16 @@ void MainWindow::keyPressEvent(QKeyEvent* event)
 	// Painting/Unpainting
 	if ( !bIsAutoRepeat )
 	{
+		const bool bAllowPaintPins = ( compMode != COMPSMODE::OFF ) &&
+									 ( ( trackMode == TRACKMODE::COLOR ) || ( trackMode == TRACKMODE::MONO && m_board.GetColoredMono() ) );
 		// Only one flag for paint-board/paint-pins/paint-flood must be true
 		switch( event->key() )
 		{
-			case Qt::Key_P:		if ( trackMode != TRACKMODE::COLOR || compMode == COMPSMODE::OFF || GetPaintBoard() || GetEraseBoard() || GetPaintFlood() ) return;
+			case Qt::Key_P:		if ( !bAllowPaintPins || GetPaintBoard() || GetEraseBoard() || GetPaintFlood() ) return;
 								SetPaintPins(true);		break;
 			case Qt::Key_Space:	if ( trackMode == TRACKMODE::OFF || GetPaintPins() || GetErasePins() || GetPaintFlood() ) return;
 								SetPaintBoard(true);	break;
-			case Qt::Key_F:		if ( trackMode != TRACKMODE::COLOR || compMode == COMPSMODE::OFF || GetPaintBoard() || GetEraseBoard() || GetPaintPins() || GetErasePins() || m_board.GetRoutingEnabled() ) return;
+			case Qt::Key_F:		if ( !bAllowPaintPins || GetPaintBoard() || GetEraseBoard() || GetPaintPins() || GetErasePins() || m_board.GetRoutingEnabled() ) return;
 								SetPaintFlood(true);	break;
 			case Qt::Key_W:		WipeTracks();	break;
 		}
