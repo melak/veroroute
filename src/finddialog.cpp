@@ -27,6 +27,15 @@ FindDialog::FindDialog(MainWindow* parent)
 , m_pMainWindow(parent)
 {
 	ui->setupUi(this);
+
+#ifdef VEROROUTE_FONT_SIZE
+	VEROROUTE_FONT_SIZE(ui->groupBox)
+	VEROROUTE_FONT_SIZE(ui->radioName)
+	VEROROUTE_FONT_SIZE(ui->radioValue)
+	VEROROUTE_FONT_SIZE(ui->checkExact)
+	VEROROUTE_FONT_SIZE(ui->nameEdit)
+#endif
+
 	ui->radioName->setChecked(true);
 	QObject::connect(ui->radioName,		SIGNAL(toggled(bool)),			this,	SLOT(ToggleName(bool)));
 	QObject::connect(ui->checkExact,	SIGNAL(toggled(bool)),			this,	SLOT(ToggleExact(bool)));

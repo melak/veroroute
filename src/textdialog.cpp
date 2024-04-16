@@ -27,6 +27,24 @@ TextDialog::TextDialog(MainWindow* parent)
 , m_pMainWindow(parent)
 {
 	ui->setupUi(this);
+
+#ifdef VEROROUTE_FONT_SIZE
+	VEROROUTE_FONT_SIZE(ui->label)
+	VEROROUTE_FONT_SIZE(ui->spinBox)
+	VEROROUTE_FONT_SIZE(ui->pushButtonB)
+	VEROROUTE_FONT_SIZE(ui->pushButtonI)
+	VEROROUTE_FONT_SIZE(ui->pushButtonU)
+	VEROROUTE_FONT_SIZE(ui->pushButtonRGB)
+	VEROROUTE_FONT_SIZE(ui->pushButtonL)
+	VEROROUTE_FONT_SIZE(ui->pushButtonC)
+	VEROROUTE_FONT_SIZE(ui->pushButtonR)
+	VEROROUTE_FONT_SIZE(ui->pushButtonJ)
+	VEROROUTE_FONT_SIZE(ui->pushButtonTop)
+	VEROROUTE_FONT_SIZE(ui->pushButtonMid)
+	VEROROUTE_FONT_SIZE(ui->pushButtonBot)
+	VEROROUTE_FONT_SIZE(ui->plainTextEdit)
+#endif
+
 	QObject::connect(ui->spinBox,		SIGNAL(valueChanged(int)),	m_pMainWindow,	SLOT(SizeChanged(int)));
 	QObject::connect(ui->pushButtonB,	SIGNAL(clicked()),			m_pMainWindow,	SLOT(ToggleBold()));
 	QObject::connect(ui->pushButtonI,	SIGNAL(clicked()),			m_pMainWindow,	SLOT(ToggleItalic()));

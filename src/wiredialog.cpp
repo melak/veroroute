@@ -27,6 +27,13 @@ WireDialog::WireDialog(MainWindow* parent)
 , m_pMainWindow(parent)
 {
 	ui->setupUi(this);
+
+#ifdef VEROROUTE_FONT_SIZE
+	VEROROUTE_FONT_SIZE(ui->groupBox)
+	VEROROUTE_FONT_SIZE(ui->checkBox_share)
+	VEROROUTE_FONT_SIZE(ui->checkBox_cross)
+#endif
+
 	QObject::connect(ui->checkBox_share,	SIGNAL(toggled(bool)),	m_pMainWindow,	SLOT(SetWireShare(bool)));
 	QObject::connect(ui->checkBox_cross,	SIGNAL(toggled(bool)),	m_pMainWindow,	SLOT(SetWireCross(bool)));
 	QObject::connect(this,					SIGNAL(rejected()),		m_pMainWindow,	SLOT(UpdateControls()));	// Close using X button

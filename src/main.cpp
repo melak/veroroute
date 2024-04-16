@@ -39,7 +39,9 @@ void helpmsg()
 int main(int argc, char *argv[])
 {
 #ifdef VEROROUTE_ANDROID
-	QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+	#ifndef VEROROUTE_NO_DPI_SCALING
+		QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+	#endif
 #endif
 
 	QString	pathStr(".");	// By default, take the home directory to be the current one

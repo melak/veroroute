@@ -238,6 +238,10 @@ MainWindow::MainWindow(const QString& localDataPathStr, const QString& tutorials
 	m_darkBrush			= QBrush(QColor(0,0,0,150),			Qt::SolidPattern);	// using alpha
 	m_varBrush			= QBrush(QColor(255,255,255,0),		Qt::SolidPattern);
 
+#ifdef VEROROUTE_FONT_SIZE
+	VEROROUTE_FONT_SIZE(ui->statusBar)
+#endif
+
 	// File menu actions
 	QObject::connect(ui->actionNew,						SIGNAL(triggered()), this, SLOT(New()));
 	QObject::connect(ui->actionOpen,					SIGNAL(triggered()), this, SLOT(Open()));
@@ -2489,6 +2493,8 @@ void MainWindow::UpdateControls()
 	ui->menuAdd->menuAction()->setVisible( !bCompEdit );
 	ui->menuAdd->setEnabled( bCompEdit || ( m_board.GetCompMode() != COMPSMODE::OFF && !m_board.GetMirrored() ) );
 	ui->menuAddShape->menuAction()->setVisible( bCompEdit );
+	ui->actionVeroNumbers->setEnabled( !bPCB );
+	ui->actionVeroLetters->setEnabled( !bPCB );
 	ui->menuPaint->setEnabled( !bCompEdit );
 	ui->menuLayers->setEnabled( !bCompEdit );
 	ui->actionAddLayer->setEnabled(			 bSingleLayer );

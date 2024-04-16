@@ -421,7 +421,14 @@ void MainWindow::PaintCompDefiner()	// The paint method in "component editor mod
 
 	// Draw pins =================================================================================
 	QFont pinsFont = painter.font();	// Copy of current font
+#ifdef VEROROUTE_NO_DPI_SCALING
+	if ( !m_bWritePDF )
+		pinsFont.setPixelSize( m_board.GetTextSizePins() );
+	else
+		pinsFont.setPointSize( m_board.GetTextSizePins() );
+#else
 	pinsFont.setPointSize( m_board.GetTextSizePins() );
+#endif
 	painter.setFont(pinsFont);
 
 	m_varBrush.setColor(QColor(192,192,255,128));	// Light blue
@@ -506,7 +513,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	const int		 iGap			= iHalfGap + iHalfGap;			// For vero only
 	const int		 iWirePenWidth	= board.GetHalfPixelsFromMIL( board.GetPAD_MIL() ) / 4;	// For wires with no NodeID
 	const int		 iWireBoxWidth	= 3 * iWirePenWidth;			// For wires with no NodeID
-	const double	 dTextScale		= ( m_bWritePDF ) ? (48.0 / W) : (W / 24.0);	// For scaling text when zooming
+	const double	 dTextScale		= ( m_bWritePDF ) ? ( 48.0 / W ) : (W / 24.0);				// For scaling text box text when zooming
+	const double	 dPinTextScale	= dTextScale;												// For scaling pin labels text when zooming
+	const double	 dCompTextScale	= ( m_bWritePDF && !bMonoPCB ) ? ( 48.0 / W ) : (W / 24.0);	// For scaling component names/value text when zooming
 	if ( bVero && trackMode != TRACKMODE::OFF ) board.CalcSolder();	// Calculate positions of solder blobs for stripboard builds
 
 	int X(0), Y(0), L(0), R(0), T(0), B(0);
@@ -515,8 +524,8 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	QPen penTop(penGry);	penTop.setColor( colorMgr.GetPixmapColor(MY_LYR_TOP) );
 	QPen penBot(penGry);	penBot.setColor( colorMgr.GetPixmapColor(MY_LYR_BOT) );
 
-	colorMgr.SetSaturation( board.GetSaturation() );			// Must do this BEFORE making pixmaps (if these are reintroduced)
-	colorMgr.SetFillSaturation( board.GetFillSaturation() );	// Must do this BEFORE making pixmaps (if these are reintroduced)
+	colorMgr.SetSaturation( board.GetSaturation() );						// Must do this BEFORE making pixmaps (if these are reintroduced)
+	colorMgr.SetFillSaturation( bMonoPCB ? 0 : board.GetFillSaturation() );	// Must do this BEFORE making pixmaps (if these are reintroduced)
 
 	board.CalculateColors();	// Work out best way to color things
 
@@ -1048,7 +1057,14 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				painter.save();
 
 				QFont pinsFont = painter.font();	// Copy of current font
+#ifdef VEROROUTE_NO_DPI_SCALING
+				if ( !m_bWritePDF )
+					pinsFont.setPixelSize( m_board.GetTextSizePins() );
+				else
+					pinsFont.setPointSize( m_board.GetTextSizePins() );
+#else
 				pinsFont.setPointSize( m_board.GetTextSizePins() );
+#endif
 				painter.setFont(pinsFont);
 
 				if ( bMonoPCB && bPlaced && !bSOIC )
@@ -1147,7 +1163,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 							}
 							iFlag |= ( Qt::TextDontClip | Qt::AlignVCenter );
 
-							painter.scale(dTextScale, dTextScale);
+							painter.scale(dPinTextScale, dPinTextScale);
 							painter.setPen(bFound ? m_orangePen : bPlaced ? penPlaced : m_redPen);
 							painter.drawText(0,0,0,0, iFlag, comp.GetPinLabel(iPinIndex).c_str());
 							painter.restore();
@@ -1262,6 +1278,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 					for (size_t i = 0, numShapes = comp.GetNumShapes(); i < numShapes; i++)
 					{
 						const Shape& s = comp.GetShape(i);
+						if ( s.GetDX() == 0 && s.GetDY() == 0 ) continue;	// Don't draw shapes of size zero.  Keeps PDF consistent with Gerber line drawing
 
 						if ( iLoop == 0 && !s.GetDrawFill() ) continue;
 						if ( iLoop == 1 && (s.GetDrawFill() || !s.GetDrawLine()) ) continue;
@@ -1467,7 +1484,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			const bool		 bFound			= compMgr.GetFound( comp.GetId() );
 
 			painter.save();
-			double dCopyTextScale = dTextScale;
+			double dCopyTextScale = dCompTextScale;
 			if ( bMonoPCB )
 			{
 				dCopyTextScale *= m_board.GetTextSizeComp() * (20.0 / 243 );	// Scale to make the Gerber font size similar to regular component font size
@@ -1475,7 +1492,14 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			else
 			{
 				QFont compFont = painter.font();	// Copy of current font
+#ifdef VEROROUTE_NO_DPI_SCALING
+				if ( !m_bWritePDF )
+					compFont.setPixelSize( m_board.GetTextSizeComp() );
+				else
+					compFont.setPointSize( m_board.GetTextSizeComp() );
+#else
 				compFont.setPointSize( m_board.GetTextSizeComp() );
+#endif
 				painter.setFont(compFont);
 			}
 
@@ -1536,13 +1560,29 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 	{
 		painter.save();
 
-		QFont labelsFont = painter.font();	// Copy of current font
-		labelsFont.setPointSize( m_board.GetTextSizeComp() );
-		painter.setFont(labelsFont);
+		double dCopyTextScale = dCompTextScale;
+		if ( bMonoPCB )
+		{
+			dCopyTextScale *= m_board.GetTextSizeComp() * (20.0 / 243 );	// Scale to make the Gerber font size similar to regular component font size
+		}
+		else
+		{
+			QFont labelsFont = painter.font();	// Copy of current font
+#ifdef VEROROUTE_NO_DPI_SCALING
+			if ( !m_bWritePDF )
+				labelsFont.setPixelSize( m_board.GetTextSizeComp() );
+			else
+				labelsFont.setPointSize( m_board.GetTextSizeComp() );
+#else			
+			labelsFont.setPointSize( m_board.GetTextSizeComp() );
+#endif
+			painter.setFont(labelsFont);
+		}
 
+		const double dPenWidth = ( bMono ) ? board.GetSilkWidth() / dCopyTextScale : 0;
 		painter.setBrush(Qt::NoBrush);
-		penPlaced.setWidth(0);
-		m_redPen.setWidth(0);
+		penPlaced.setWidth(dPenWidth);
+		m_redPen.setWidth(dPenWidth);
 
 		for (const auto& pComp : sortedComps)	// Iterate sorted components
 		{
@@ -1586,9 +1626,9 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				if ( board.GetFlipH() )	painter.scale(-1, 1);	// Mirror L-R
 				if ( board.GetFlipV() )	painter.scale(1, -1);	// Mirror T-B
 
-				painter.scale(dTextScale, dTextScale);
+				painter.scale(dCopyTextScale, dCopyTextScale);
 				painter.setPen(bPlaced ? penPlaced : m_redPen);
-				painter.drawText(0,0,0,0, Qt::TextDontClip | Qt::AlignVCenter | Qt::AlignHCenter, label.c_str());
+				painter.drawText(0,0,0,0, Qt::TextDontClip | Qt::AlignVCenter | Qt::AlignHCenter, label.c_str(), bMonoPCB);
 				painter.restore();
 			}
 		}
@@ -1616,7 +1656,14 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 			font.setBold( rect.GetStyle() & TEXT_BOLD );
 			font.setItalic( rect.GetStyle() & TEXT_ITALIC );
 			font.setUnderline( rect.GetStyle() & TEXT_UNDERLINE );
+#ifdef VEROROUTE_NO_DPI_SCALING
+			if ( !m_bWritePDF )
+				font.setPixelSize( rect.GetSize() );
+			else
+				font.setPointSize( rect.GetSize() );
+#else
 			font.setPointSize( rect.GetSize() );
+#endif
 			painter.setFont(font);
 
 			m_varPen.setColor(!bMono ? rect.GetQColor() : ( bGroundFill == bInverseMono ) ? Qt::black : Qt::white);
@@ -1721,7 +1768,7 @@ void MainWindow::PaintBoard()	// The paint method in "circuit layout mode"
 				txt = "*";
 			else
 				txt = " ";
-			const int iNodeId		= pC->GetNodeId();				txt += std::to_string(iNodeId) + " // ";	
+			const int iNodeId		= pC->GetNodeId();				txt += std::to_string(iNodeId) + " // ";
 			const int iNodeIdRaw	= pC->GetNodeIdRaw();			txt += std::to_string(iNodeIdRaw) + " ";
 			const int iSurface		= (int)pC->GetSurfaceRaw();		txt += std::to_string(iSurface) + " ";
 			const int iSoic			= (int)pC->GetSoicCharRaw();	txt += std::to_string(iSoic) + " ";

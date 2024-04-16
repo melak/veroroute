@@ -30,3 +30,7 @@
 
 // Remove the following comment so we can dump some debug info into the status bar
 //#define VEROROUTE_DEBUG
+
+// Following are experimental attempts with font size/scaling on builds for Android phones
+//#define VEROROUTE_NO_DPI_SCALING
+//#define VEROROUTE_FONT_SIZE(x) { QFont font = x->font(); font.setPixelSize(12); x->setFont(font); }

@@ -29,6 +29,16 @@ AliasDialog::AliasDialog(MainWindow* parent)
 , m_iRow(-1)
 {
 	ui->setupUi(this);
+
+#ifdef VEROROUTE_FONT_SIZE
+	VEROROUTE_FONT_SIZE(ui->label)
+	VEROROUTE_FONT_SIZE(ui->pushButton)
+	VEROROUTE_FONT_SIZE(ui->pushButton_2)
+	VEROROUTE_FONT_SIZE(ui->pushButton_3)
+	VEROROUTE_FONT_SIZE(ui->tableWidget_2)
+	VEROROUTE_FONT_SIZE(ui->tableWidget)
+#endif
+
 #ifdef VEROROUTE_ANDROID
 	ui->tableWidget->verticalScrollBar()->setStyleSheet( ANDROID_VSCROLL_WIDTH );
 	ui->tableWidget->horizontalScrollBar()->setStyleSheet( ANDROID_HSCROLL_HEIGHT );

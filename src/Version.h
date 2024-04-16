@@ -1,7 +1,12 @@
 #pragma once
 
 static const char* szVEROROUTE_VERSION =
-"2.38";		// New feature: New View menu item to allow tracks to be colored in Mono mode. 
+"2.39";		// Bug fix: Mono mode was using grey for track colors when Fill level was not zero.
+			// Bug fix: Shapes of zero size should not be rendered (so their PDF export works like Gerber export).
+			// Bug fix: Component Name/Value text size was wrong when doing PDF export in Mono mode.
+			// Bug fix: Vero labels should use same font as components when in Mono mode.
+			// Bug fix: It should not be possible to add Vero labels in PCB mode.
+//"2.38";	// New feature: New View menu item to allow tracks to be colored in Mono mode. 
 //"2.37";	// Draw components using PCB style when in Mono mode.
 			// Bug fix: In PCB mode, the GUI could select and move text boxes, even though they are not displayed.
 			// Improvement: No longer double-click to modify pin layer preference.

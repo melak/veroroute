@@ -37,6 +37,15 @@ PadOffsetDialog::PadOffsetDialog(MainWindow* parent)
 	ui->textT->setFont(font);
 	ui->textB->setFont(font);
 
+#ifdef VEROROUTE_FONT_SIZE
+	VEROROUTE_FONT_SIZE(ui->label)
+	VEROROUTE_FONT_SIZE(ui->textL)
+	VEROROUTE_FONT_SIZE(ui->textR)
+	VEROROUTE_FONT_SIZE(ui->textT)
+	VEROROUTE_FONT_SIZE(ui->textB)
+	VEROROUTE_FONT_SIZE(ui->textC)
+#endif
+
 	// Unicode triangles ...
 	ui->textL->setText(QChar(0x25c0));
 	ui->textR->setText(QChar(0x25b6));

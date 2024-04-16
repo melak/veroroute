@@ -30,6 +30,14 @@ InfoDialog::InfoDialog(QWidget* parent)
 #ifdef VEROROUTE_ANDROID
 	ui->textEdit->verticalScrollBar()->setStyleSheet( ANDROID_VSCROLL_WIDTH );
 	ui->textEdit->horizontalScrollBar()->setStyleSheet( ANDROID_HSCROLL_HEIGHT );
+
+#ifdef VEROROUTE_FONT_SIZE
+	VEROROUTE_FONT_SIZE(ui->textEdit)
+	VEROROUTE_FONT_SIZE(ui->prev)
+	VEROROUTE_FONT_SIZE(ui->reload)
+	VEROROUTE_FONT_SIZE(ui->next)
+#endif
+
 #endif
 	ShowButtons(false);
 }

@@ -28,6 +28,12 @@ BomDialog::BomDialog(MainWindow* parent)
 , m_pMainWindow(parent)
 {
 	ui->setupUi(this);
+
+#ifdef VEROROUTE_FONT_SIZE
+	VEROROUTE_FONT_SIZE(ui->pushButton)
+	VEROROUTE_FONT_SIZE(ui->tableWidget)
+#endif
+
 #ifdef VEROROUTE_ANDROID
 	ui->tableWidget->verticalScrollBar()->setStyleSheet( ANDROID_VSCROLL_WIDTH );
 	ui->tableWidget->horizontalScrollBar()->setStyleSheet( ANDROID_HSCROLL_HEIGHT );

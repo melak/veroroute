@@ -28,6 +28,10 @@ HotkeysDialog::HotkeysDialog(MainWindow* parent)
 {
 	ui->setupUi(this);
 
+#ifdef VEROROUTE_FONT_SIZE
+	VEROROUTE_FONT_SIZE(ui->tableWidget)
+#endif
+			
 	Setup();
 }
 

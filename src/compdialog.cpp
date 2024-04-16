@@ -41,6 +41,74 @@ CompDialog::CompDialog(QWidget* parent)
 	ui->spinBox_Width->installEventFilter( this );	// Prevent accidental wheel behaviour from wiping the footprint
 	ui->spinBox_Height->installEventFilter( this );	// Prevent accidental wheel behaviour from wiping the footprint
 
+#ifdef Q_OS_ANDROID
+	QFont tmp = ui->comboBox_PinShape->font();
+	tmp.setPointSize(12);
+	ui->comboBox_PinShape->setFont(tmp);
+	ui->comboBox_Surface->setFont(tmp);
+	ui->comboBox_Shape->setFont(tmp);
+#endif
+
+#ifdef VEROROUTE_FONT_SIZE
+	VEROROUTE_FONT_SIZE(ui->checkBox_Fill)
+	VEROROUTE_FONT_SIZE(ui->checkBox_Line)
+	VEROROUTE_FONT_SIZE(ui->checkBox_PinLabels)
+	VEROROUTE_FONT_SIZE(ui->comboBox_PinShape)
+	VEROROUTE_FONT_SIZE(ui->comboBox_Shape)
+	VEROROUTE_FONT_SIZE(ui->comboBox_Surface)
+	VEROROUTE_FONT_SIZE(ui->custom)
+	VEROROUTE_FONT_SIZE(ui->doubleSpinBox_A1)
+	VEROROUTE_FONT_SIZE(ui->doubleSpinBox_A2)
+	VEROROUTE_FONT_SIZE(ui->doubleSpinBox_A3)
+	VEROROUTE_FONT_SIZE(ui->doubleSpinBox_CX)
+	VEROROUTE_FONT_SIZE(ui->doubleSpinBox_CY)
+	VEROROUTE_FONT_SIZE(ui->doubleSpinBox_DX)
+	VEROROUTE_FONT_SIZE(ui->doubleSpinBox_DY)
+	VEROROUTE_FONT_SIZE(ui->holeWidth)
+	VEROROUTE_FONT_SIZE(ui->label)
+	VEROROUTE_FONT_SIZE(ui->label_2)
+	VEROROUTE_FONT_SIZE(ui->label_3)
+	VEROROUTE_FONT_SIZE(ui->label_5)
+	VEROROUTE_FONT_SIZE(ui->label_A1)
+	VEROROUTE_FONT_SIZE(ui->label_A2)
+	VEROROUTE_FONT_SIZE(ui->label_A3)
+	VEROROUTE_FONT_SIZE(ui->label_CX)
+	VEROROUTE_FONT_SIZE(ui->label_CY)
+	VEROROUTE_FONT_SIZE(ui->label_DX)
+	VEROROUTE_FONT_SIZE(ui->label_DY)
+	VEROROUTE_FONT_SIZE(ui->label_Height)
+	VEROROUTE_FONT_SIZE(ui->label_Import)
+	VEROROUTE_FONT_SIZE(ui->label_PinNumber)
+	VEROROUTE_FONT_SIZE(ui->label_Prefix)
+	VEROROUTE_FONT_SIZE(ui->label_Shape)
+	VEROROUTE_FONT_SIZE(ui->label_Surface)
+	VEROROUTE_FONT_SIZE(ui->label_Type)
+	VEROROUTE_FONT_SIZE(ui->label_Value)
+	VEROROUTE_FONT_SIZE(ui->label_Width)
+	VEROROUTE_FONT_SIZE(ui->label_hole)
+	VEROROUTE_FONT_SIZE(ui->label_pad)
+	VEROROUTE_FONT_SIZE(ui->label_title)
+	VEROROUTE_FONT_SIZE(ui->label_units_3)
+	VEROROUTE_FONT_SIZE(ui->label_units_4)
+	VEROROUTE_FONT_SIZE(ui->label_units_5)
+	VEROROUTE_FONT_SIZE(ui->label_units_6)
+	VEROROUTE_FONT_SIZE(ui->label_units_7)
+	VEROROUTE_FONT_SIZE(ui->label_units_8)
+	VEROROUTE_FONT_SIZE(ui->label_units_9)
+	VEROROUTE_FONT_SIZE(ui->lineEdit_Import)
+	VEROROUTE_FONT_SIZE(ui->lineEdit_Prefix)
+	VEROROUTE_FONT_SIZE(ui->lineEdit_Type)
+	VEROROUTE_FONT_SIZE(ui->lineEdit_Value)
+	VEROROUTE_FONT_SIZE(ui->padWidth)
+	VEROROUTE_FONT_SIZE(ui->pushButtonD)
+	VEROROUTE_FONT_SIZE(ui->pushButtonRGB)
+	VEROROUTE_FONT_SIZE(ui->pushButtonU)
+	VEROROUTE_FONT_SIZE(ui->pushButton_Build)
+	VEROROUTE_FONT_SIZE(ui->spinBox_Height)
+	VEROROUTE_FONT_SIZE(ui->spinBox_PinNumber)
+	VEROROUTE_FONT_SIZE(ui->spinBox_Width)
+#endif
+
 	ui->comboBox_Shape->blockSignals(true);		// Block signals while populating box
 	ui->comboBox_Shape->clear();
 	for (const auto& str : Shape::GetListShapeStrings())
@@ -57,14 +125,6 @@ CompDialog::CompDialog(QWidget* parent)
 	ui->comboBox_PinShape->addItem(QString("Circle"));
 	ui->comboBox_PinShape->addItem(QString("Rectangle"));
 	ui->comboBox_PinShape->blockSignals(false);	// We're done populating, so unblock signals
-
-#ifdef Q_OS_ANDROID
-	QFont tmp = ui->comboBox_PinShape->font();
-	tmp.setPointSize(12);
-	ui->comboBox_PinShape->setFont(tmp);
-	ui->comboBox_Surface->setFont(tmp);
-	ui->comboBox_Shape->setFont(tmp);
-#endif
 }
 
 void CompDialog::SetMainWindow(MainWindow* p)
