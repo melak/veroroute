@@ -87,7 +87,7 @@ void Board::BuildTargetPins(int nodeId)
 	m_targetPins.clear();
 
 	// Can limit target pins (and loop) to layer-0 if we don't have SOIC parts
-	const int iSize	= ( m_compMgr.GetNumSOIC() > 0 && GetLyrs() == 2 ) ? GetSize() : ( GetSize() / GetLyrs() );
+	const int iSize	= ( m_compMgr.GetNumPlacedSOIC() > 0 && GetLyrs() == 2 ) ? GetSize() : ( GetSize() / GetLyrs() );
 	for (int i = 0; i < iSize; i++)	
 	{
 		Element* const p = GetAt(i);

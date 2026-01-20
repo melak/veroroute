@@ -181,6 +181,17 @@ public:
 		}
 		return count;
 	}
+	size_t GetNumPlacedSOIC(size_t numPins = 0) const
+	{
+		size_t count(0);
+		for (const auto& mapObj : m_mapIdToComp)
+		{
+			const Component& comp = mapObj.second;
+			if ( !comp.GetIsPlaced() ) continue;
+			if ( comp.GetIsSOIC() && ( numPins == 0 || numPins == comp.GetNumPins() ) ) count++;
+		}
+		return count;
+	}
 	void GetPadWidths(std::list<int>& o, int iDefaultWidth) const
 	{
 		o.clear();
@@ -304,7 +315,7 @@ public:
 					// If one wire is overlaid (i.e. shifted) but the other is not then don't consider this a cross.
 					// The point being that we could still convert the other wire to a track.
 					if ( ( infoH.m_iShift == 0 && infoV.m_iShift != 0 ) ||
-						 ( infoV.m_iShift == 0 && infoH.m_iShift != 0 ) )continue;
+						 ( infoV.m_iShift == 0 && infoH.m_iShift != 0 ) ) continue;
 					infoH.m_iCross++;
 					infoV.m_iCross++;
 				};

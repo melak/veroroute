@@ -1029,8 +1029,8 @@ void MainWindow::WriteGerber(bool bTwoLayerGerber, bool bMetric)
 
 		const bool bWireVias	= m_bTwoLayerGerber && m_board.GetLyrs() == 1 && m_board.GetCompMgr().GetHavePlacedWires();
 		const bool bVias		= m_board.GetHasVias() || bWireVias;
-		const bool bSOIC		= m_board.GetCompMgr().GetNumSOIC() > 0;
-		const bool bSOIC16		= m_board.GetCompMgr().GetNumSOIC(16) > 0;
+		const bool bSOIC		= m_board.GetCompMgr().GetNumPlacedSOIC() > 0;
+		const bool bSOIC16		= m_board.GetCompMgr().GetNumPlacedSOIC(16) > 0;
 		if ( m_gWriter.Open(m_gerberFileName, m_board, bVias, bSOIC, bSOIC16, m_bTwoLayerGerber, bMetric, bConfirmEachFile) )
 		{
 			const int origlayer = m_board.GetCurrentLayer();
