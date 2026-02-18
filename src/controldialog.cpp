@@ -189,7 +189,7 @@ void ControlDialog::SetListItem(const int nodeId)
 	for (int i = 0; i < pList->count() && !bFound; i++)
 	{
 		const QString& str = pList->item(i)->text();
-		bFound = ( str.leftRef(str.size() - 11).toInt() == nodeId );	// 11 because of " (Floating)" suffix below
+		bFound = ( str.left(str.size() - 11).toInt() == nodeId );	// 11 because of " (Floating)" suffix below
 		if ( bFound ) pList->setCurrentRow(i);
 	}
 	if ( !bFound && pList->count() > 0 ) pList->setCurrentRow(0, QItemSelectionModel::Clear);
