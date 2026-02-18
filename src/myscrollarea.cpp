@@ -84,16 +84,16 @@ bool MyScrollArea::viewportEvent(QEvent* event)
 			if ( pMainWindow )
 			{
 				QTouchEvent*	ev		= (QTouchEvent*)event;
-				const auto&		points	= ev->touchPoints();
+				const auto&		points	= ev->points();
 
 				m_maxPoints			= points.size();	// Reset m_maxPoints
 				m_bTouchCancelled	= false;			// Reset m_bTouchCancelled
 				m_dSpread			= 0;				// Reset m_dSpread
 
 				if ( bDoubleClicked )
-					pMainWindow->MouseDoubleClickEvent(points.begin()->pos().toPoint());
+					pMainWindow->MouseDoubleClickEvent(points.begin()->position().toPoint());
 				else
-					pMainWindow->MousePressEvent(points.begin()->pos().toPoint());
+					pMainWindow->MousePressEvent(points.begin()->position().toPoint());
 			}
 			m_lastTouchBegin = std::chrono::steady_clock::now();	// Processing the events could have taken some time, so measure from here
 			event->accept();
@@ -106,7 +106,7 @@ bool MyScrollArea::viewportEvent(QEvent* event)
 			if ( pMainWindow )
 			{
 				QTouchEvent*	ev			= (QTouchEvent*)event;
-				const auto&		points		= ev->touchPoints();
+				const auto&		points		= ev->points();
 				const int		numPoints	= points.size();
 
 				m_maxPoints = std::max(m_maxPoints, numPoints);
@@ -119,7 +119,7 @@ bool MyScrollArea::viewportEvent(QEvent* event)
 					{
 						if ( m_maxPoints > 1 ) return QScrollArea::viewportEvent(event);
 
-						pMainWindow->MouseMoveEvent(points.begin()->pos().toPoint());	break;	// Only ever had one point ==> mouse move
+						pMainWindow->MouseMoveEvent(points.begin()->position().toPoint());	break;	// Only ever had one point ==> mouse move
 					}
 					case 2:	// 2 points ==> try handle zoom
 					{
@@ -157,11 +157,11 @@ bool MyScrollArea::viewportEvent(QEvent* event)
 			if ( pMainWindow )
 			{
 				QTouchEvent*	ev		= (QTouchEvent*)event;
-				const auto&		points	= ev->touchPoints();
+				const auto&		points	= ev->points();
 
 				// The MouseReleaseEvent() can take some time due to updating the broken nets list.  Measure how long it takes.
 				const auto	begin		= std::chrono::steady_clock::now();
-				pMainWindow->MouseReleaseEvent(points.begin()->pos().toPoint());
+				pMainWindow->MouseReleaseEvent(points.begin()->position().toPoint());
 				const auto	elapsed		= std::chrono::steady_clock::now() - begin;
 				m_releaseDuration_ms	= std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
 			}
@@ -176,5 +176,5 @@ bool MyScrollArea::viewportEvent(QEvent* event)
 qreal MyScrollArea::GetSpread(const QList<QTouchEvent::TouchPoint>& points) const
 {
 	// Just use first 2 points
-	return ( points.size() > 1 ) ? PolygonHelper::Length( points[0].pos() - points[1].pos() ) : 0;
+	return ( points.size() > 1 ) ? PolygonHelper::Length( points[0].position() - points[1].position() ) : 0;
 }

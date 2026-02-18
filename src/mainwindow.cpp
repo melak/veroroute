@@ -1104,7 +1104,12 @@ void MainWindow::WritePNG()
 	ui->statusBar->showMessage( tr("Exporting to PNG..."), 500 );
 
 	QFile file(pngFileName);
-	file.open(QIODevice::WriteOnly);
+
+	if ( ! file.open(QIODevice::WriteOnly) )
+	{
+		QMessageBox::critical(this, tr("File open error"), tr("FAILED: File open error: ") + file.errorString());
+		return;
+	}
 	m_mainPixmap.save(&file, "PNG");
 
 	QDesktopServices::openUrl(pngFileName);	// Ask the system to open the PNG file.

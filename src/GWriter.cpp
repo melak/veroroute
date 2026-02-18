@@ -644,8 +644,7 @@ void GStream::GetQPolygon(const QPolygonF& in, QPolygon& out) const
 // Wrapper for handling a set of Gerber files
 bool GWriter::Open(const QString& fileName, const Board& board, bool bVias, bool bSOIC, bool bSOIC16, bool bTwoLayerGerber, bool bMetric, bool bConfirmEachFile)
 {
-	QDateTime	local(QDateTime::currentDateTime());
-	QString		UTC = local.toTimeSpec(Qt::UTC).toString(Qt::ISODate);
+	QString		UTC = QDateTime::currentDateTimeUtc().toString(Qt::ISODate);
 
 	// Open all Gerber files for writing
 	bool bOK(!fileName.isEmpty());
