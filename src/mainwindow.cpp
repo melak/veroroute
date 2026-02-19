@@ -1107,7 +1107,7 @@ void MainWindow::WritePNG()
 
 	if ( ! file.open(QIODevice::WriteOnly) )
 	{
-		QMessageBox::critical(this, tr("File open error"), tr("FAILED: File open error: ") + file.errorString());
+		QMessageBox::critical(this, tr("File open error"), tr("Failed to open ") + pngFileName + ": " + file.errorString());
 		return;
 	}
 	m_mainPixmap.save(&file, "PNG");
