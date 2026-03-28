@@ -1,0 +1,6 @@
+.qmake.stash
+*.o
+moc_*
+Makefile
+/veroroute
+ui_*.h
