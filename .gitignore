@@ -4,3 +4,4 @@ moc_*
 Makefile
 /veroroute
 ui_*.h
+qrc_*
