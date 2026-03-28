@@ -173,13 +173,12 @@ INSTALLS += target assets
 
 unix : !android {
     target.path = $${PREFIX}/bin/
-    target.files = ../veroroute
 
     manpage.path = $${PREFIX}/share/man/man1
-    manpage.files = ../veroroute.1
+    manpage.files = $${PWD}/../veroroute.1
 
     metainfo.path = $${PREFIX}/share/metainfo
-    metainfo.files = ../veroroute.appdata.xml
+    metainfo.files = $${PWD}/../veroroute.appdata.xml
 
     # If we've specified a PREFIX then replace the existing "../veroroute.desktop"
     # with one produced from "../veroroute.desktop.default"
@@ -188,25 +187,25 @@ unix : !android {
     }
 
     desktopentry.path = $${PREFIX}/share/applications
-    desktopentry.files = ../veroroute.desktop
+    desktopentry.files = $${PWD}/../veroroute.desktop
 
     pixmapA.path = $${PREFIX}/share/pixmaps
-    pixmapA.files = ../veroroute.png
+    pixmapA.files = $${PWD}/../veroroute.png
 
     pixmapB.path = $${PREFIX}/share/veroroute
-    pixmapB.files = ../veroroute.png
+    pixmapB.files = $${PWD}/../veroroute.png
 
     pixmapC.path = $${PREFIX}/share/icons/hicolor/72x72/apps
-    pixmapC.files = ../veroroute.png
+    pixmapC.files = $${PWD}/../veroroute.png
 
     tutorials.path = $${PREFIX}/share/veroroute/tutorials
-    tutorials.files = ../tutorials/*
+    tutorials.files = $${PWD}/../tutorials/*
 
     gedasymbols.path = $${PREFIX}/share/gEDA/sym
-    gedasymbols.files = ../libraries/gEDA/veroroute_*
+    gedasymbols.files = $${PWD}/../libraries/gEDA/veroroute_*
 
     gedalib.path = $${PREFIX}/share/gEDA/gafrc.d
-    gedalib.files = ../libraries/gEDA/veroroute-clib.scm
+    gedalib.files = $${PWD}/../libraries/gEDA/veroroute-clib.scm
 
     INSTALLS += target manpage metainfo desktopentry pixmapA pixmapB pixmapC tutorials gedasymbols gedalib
 }
