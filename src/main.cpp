@@ -92,27 +92,23 @@ int main(int argc, char *argv[])
 #ifdef Q_OS_ANDROID
 	QString tutorialsPathStr = "assets:/";
 #else
-	// Fallback "tutorials" path should be in same folder as the exe (until distribution method for Windows changes)
 	QString tutorialsPathStr = pathStr;
+	QString binDir = QCoreApplication::applicationDirPath();
 
-	// Search for relative "tutorials" path assuming the binary is installed in usr/bin
-	QString relativeTutorialsPathStr = ("../share/veroroute");
-	QDir tutorialsDir(relativeTutorialsPathStr + QString("/tutorials"));
-	if ( tutorialsDir.exists() )
-		tutorialsPathStr = relativeTutorialsPathStr;
-	else	// Search for system wide "tutorials" path
+	const QStringList locs = { 
+		binDir, 
+		QDir::cleanPath(binDir + "/../share/veroroute"),
+		QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)
+	};
+
+	const QStringList allLocs = locs + QStandardPaths::standardLocations(QStandardPaths::AppDataLocation);
+
+	for (const QString& dataPath : allLocs)
 	{
-		QStringList locs(a.applicationDirPath());
-		locs << QStandardPaths::standardLocations(QStandardPaths::AppDataLocation);
-		for (const auto& dataLocationPath : locs)
+		if (QDir(dataPath + "/tutorials").exists())
 		{
-			QDir tutorialsDir(dataLocationPath + QString("/tutorials"));
-			// Take first hit
-			if ( tutorialsDir.exists() )
-			{
-				tutorialsPathStr = dataLocationPath;
-				break;
-			}
+		tutorialsPathStr = dataPath;
+		break;
 		}
 	}
 #endif
